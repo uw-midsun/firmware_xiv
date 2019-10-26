@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ $GIT_AUTHOR_NAME == 'vagrant' || $GIT_AUTHOR_EMAIL == 'vagrant@midsunbox' ]]; then
+  echo "You didn't set up your git config! Please follow the Software 101 modules on Confluence."
+  echo "https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/60260353/Module+1+Setup"
+  exit 1
+fi

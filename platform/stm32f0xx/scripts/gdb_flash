@@ -1,0 +1,16 @@
+# Program and run the current file (pausing at main) through openOCD.
+# Disables pagination and enables history for convenience.
+set pagination off
+set remotetimeout 5
+set history save on
+set history size unlimited
+set history filename ~/.gdb_history
+set print array on
+set print pretty on
+target extended-remote :3333
+# monitor arm semihosting enable
+monitor reset halt
+load
+tb main
+tb LoopForever
+c

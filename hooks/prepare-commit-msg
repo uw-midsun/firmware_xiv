@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+BRANCH=$(git branch | grep '^\*' | cut -b3-)
+
+# Extract ticket number from branch and prepend commit message with ELEC-#:
+if [[ $BRANCH =~ elec_([[:digit:]]+) ]]; then
+  sed -i.bak -e "1s/^/ELEC-${BASH_REMATCH[1]}: /" "$1"
+fi

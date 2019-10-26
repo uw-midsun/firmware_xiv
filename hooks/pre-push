@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# Add MS_RUN_NATIVE=1 to your environment variables to run format and lint natively.
+
+# Check for any changes
+if [[ -n $(git status --porcelain) ]]; then
+  echo "Uncommitted changes detected! Cannot test for formatting."
+  echo "Please commit all local changes before pushing."
+  exit 1
+fi
+
+if [[ $(whoami) == 'vagrant' || $MS_RUN_NATIVE ]]; then
+  make test_format
+else
+  vagrant ssh -c 'cd shared/firmware; make test_format'
+fi
+
+if [[ $? -ne 0 ]]; then
+  echo "Formatting applied - adding new commit"
+  git add .
+  git commit -m "Formatting (Automated commit)"
+  echo "Please push again to include formatting commit."
+  exit 1
+fi
+
+if [[ $(whoami) == 'vagrant' || $MS_RUN_NATIVE ]]; then
+  make lint && make pylint
+else
+  vagrant ssh -c 'cd shared/firmware; make lint && make pylint'
+fi
+
+if [[ $? -ne 0 ]]; then
+  echo "Failed lint"
+  exit 1
+fi
