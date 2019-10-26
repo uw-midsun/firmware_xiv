@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/uw-midsun/firmware.svg?branch=master)](https://travis-ci.org/uw-midsun/firmware)
 
-This repository contains all the latest firmware for the [University of Waterloo](https://uwaterloo.ca/)'s [Midnight Sun Solar Rayce Car](http://www.uwmidsun.com/) team.
+This repository contains all firmware for the [University of Waterloo](https://uwaterloo.ca/)'s [Midnight Sun Solar Rayce Car](http://www.uwmidsun.com/) team's 14th car.
 
 ## Getting Started
 
