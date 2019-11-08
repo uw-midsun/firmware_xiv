@@ -21,12 +21,12 @@ branches:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-8
-      #    packages:
+          packages:
             - gcc-7
             - g++-7
             - clang-5.0
             - clang-format-5.0
-      #      # xenial repos
+            # xenial repos
             - python3
             - python3-pip
             - libc6-i386
