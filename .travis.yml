@@ -2,7 +2,7 @@
 sudo: true
 
 # Use xenial
-#   https://docs.travis-ci.com/user/trusty-ci-environment/
+#   https://docs.travis-ci.com/user/reference/xenial/
 dist: xenial
 
 notifications:
@@ -17,11 +17,11 @@ branches:
   only:
     - master
 
-      #addons:
-      #  apt:
-      #    sources:
-      #      - ubuntu-toolchain-r-test
-      #      - llvm-toolchain-trusty-5.0
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-8
       #    packages:
       #      # ubuntu-toolchain-r-test
       #      - gcc-6
