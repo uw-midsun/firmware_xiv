@@ -1,5 +1,3 @@
 #include "wait.h"
 
-void wait(void) {
-  return;
-}
+void wait(void) { return; }

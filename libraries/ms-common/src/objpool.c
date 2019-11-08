@@ -6,20 +6,24 @@
 #include "objpool.h"
 #include "status.h"
 
-#define OBJPOOL_GET(pool, index) \
+#define OBJPOOL_GET(pool, index)                                               \
   ((void *)((uint8_t *)(pool)->nodes + ((index) * (pool)->node_size)))
 
 // Check in range and alignment
-#define OBJPOOL_NODE_INVALID(pool, node)                                                      \
-  ((pool)->nodes > (node) ||                                                                  \
-   ((uint8_t *)(pool)->nodes + (pool)->num_nodes * (pool)->node_size) <= (uint8_t *)(node) || \
-   (size_t)((uint8_t *)(node) - (uint8_t *)(pool)->nodes) % (pool)->node_size != 0)
+#define OBJPOOL_NODE_INVALID(pool, node)                                       \
+  ((pool)->nodes > (node) ||                                                   \
+   ((uint8_t *)(pool)->nodes + (pool)->num_nodes * (pool)->node_size) <=       \
+       (uint8_t *)(node) ||                                                    \
+   (size_t)((uint8_t *)(node) - (uint8_t *)(pool)->nodes) %                    \
+           (pool)->node_size !=                                                \
+       0)
 
-#define OBJPOOL_GET_INDEX(pool, node) \
+#define OBJPOOL_GET_INDEX(pool, node)                                          \
   ((size_t)((uint8_t *)(node) - (uint8_t *)(pool)->nodes) / (pool->node_size))
 
-StatusCode objpool_init_verbose(ObjectPool *pool, void *nodes, size_t node_size, size_t num_nodes,
-                                ObjpoolNodeInitFn init_node, void *context) {
+StatusCode objpool_init_verbose(ObjectPool *pool, void *nodes, size_t node_size,
+                                size_t num_nodes, ObjpoolNodeInitFn init_node,
+                                void *context) {
   if (num_nodes > OBJPOOL_MAX_NODES) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
   }

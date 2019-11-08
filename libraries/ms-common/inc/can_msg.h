@@ -13,12 +13,12 @@
 // TODO(ELEC-202): determine which messages are considered "critical"
 #define CAN_MSG_IS_CRITICAL(msg) ((msg)->msg_id < 14)
 
-#define CAN_MSG_SET_RAW_ID(can_msg, can_id) \
-  do {                                      \
-    CanId id = { .raw = (can_id) };         \
-    (can_msg)->source_id = id.source_id;    \
-    (can_msg)->msg_id = id.msg_id;          \
-    (can_msg)->type = id.type;              \
+#define CAN_MSG_SET_RAW_ID(can_msg, can_id)                                    \
+  do {                                                                         \
+    CanId id = {.raw = (can_id)};                                              \
+    (can_msg)->source_id = id.source_id;                                       \
+    (can_msg)->msg_id = id.msg_id;                                             \
+    (can_msg)->type = id.type;                                                 \
   } while (0)
 
 typedef enum {

@@ -1,5 +1,6 @@
 // Implements a min-heap.
-// Modified from http://cs.smu.ca/~pawan/teach/csc342/98-99-2/book/chapter9/minheap.h
+// Modified from
+// http://cs.smu.ca/~pawan/teach/csc342/98-99-2/book/chapter9/minheap.h
 #include <stdlib.h>
 #include <string.h>
 
@@ -12,7 +13,7 @@ void pqueue_init(PQueue *queue, PQueueNode *nodes, size_t num_nodes) {
   memset(queue, 0, sizeof(*queue));
 
   queue->nodes = nodes;
-  queue->max_nodes = num_nodes - 1;  // 1-indexed heap - throw away one node
+  queue->max_nodes = num_nodes - 1; // 1-indexed heap - throw away one node
   critical_section_end(disabled);
 }
 
@@ -57,7 +58,8 @@ void *pqueue_pop(PQueue *queue) {
   size_t i = 1, child = 2;
   while (child <= queue->size) {
     // Set child to min(left, right)
-    if (child < queue->size && queue->nodes[child].prio > queue->nodes[child + 1].prio) {
+    if (child < queue->size &&
+        queue->nodes[child].prio > queue->nodes[child + 1].prio) {
       child++;
     }
 
@@ -88,6 +90,4 @@ void *pqueue_peek(PQueue *queue) {
   return ret;
 }
 
-size_t pqueue_size(PQueue *queue) {
-  return queue->size;
-}
+size_t pqueue_size(PQueue *queue) { return queue->size; }

@@ -8,6 +8,6 @@
 #define FLASH_MCU_PAGE_BYTES 0x400
 
 typedef enum {
-  FLASH_PAGE_0 = 0,     //
-  NUM_FLASH_PAGES = 64  //
+  FLASH_PAGE_0 = 0,    //
+  NUM_FLASH_PAGES = 64 //
 } FlashPage;

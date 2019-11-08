@@ -1,4 +1,3 @@
-#include <inttypes.h>
 #include "can_hw.h"
 #include "delay.h"
 #include "interrupt.h"
@@ -6,6 +5,7 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include <inttypes.h>
 
 static volatile size_t s_msg_rx;
 static volatile uint32_t s_rx_id;
@@ -15,7 +15,8 @@ static volatile size_t s_rx_len;
 
 static void prv_handle_rx(void *context) {
   while (can_hw_receive(&s_rx_id, &s_extended, &s_rx_data, &s_rx_len)) {
-    LOG_DEBUG("RX msg 0x%" PRIu32 " (extended %d) %zu bytes\n", s_rx_id, s_extended, s_rx_len);
+    LOG_DEBUG("RX msg 0x%" PRIu32 " (extended %d) %zu bytes\n", s_rx_id,
+              s_extended, s_rx_len);
     s_msg_rx++;
   }
 }
@@ -34,10 +35,10 @@ void setup_test(void) {
   soft_timer_init();
 
   CanHwSettings can_settings = {
-    .bitrate = CAN_HW_BITRATE_125KBPS,
-    .loopback = true,
-    .tx = { GPIO_PORT_A, 12 },
-    .rx = { GPIO_PORT_A, 11 },
+      .bitrate = CAN_HW_BITRATE_125KBPS,
+      .loopback = true,
+      .tx = {GPIO_PORT_A, 12},
+      .rx = {GPIO_PORT_A, 11},
   };
   StatusCode ret = can_hw_init(&can_settings);
   TEST_ASSERT_OK(ret);

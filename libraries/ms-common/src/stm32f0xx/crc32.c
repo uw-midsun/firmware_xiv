@@ -13,8 +13,8 @@ StatusCode crc32_init(void) {
 uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
   CRC_ResetDR();
 
-  // The CRC32 peripheral consumes words (u32) by default - split into u32 and remaining bytes
-  // so we can process the remaining bytes separately
+  // The CRC32 peripheral consumes words (u32) by default - split into u32 and
+  // remaining bytes so we can process the remaining bytes separately
   size_t num_u32 = buffer_len / sizeof(uint32_t);
   size_t remaining_bytes = buffer_len % sizeof(uint32_t);
   uint32_t crc = CRC_CalcBlockCRC((const uint32_t *)buffer, num_u32);

@@ -10,15 +10,15 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-static GpioAddress s_interrupt_address = { 1, 0 };
+static GpioAddress s_interrupt_address = {1, 0};
 static InterruptSettings s_interrupt_settings = {
-  .type = INTERRUPT_TYPE_INTERRUPT,       //
-  .priority = INTERRUPT_PRIORITY_NORMAL,  //
+    .type = INTERRUPT_TYPE_INTERRUPT,      //
+    .priority = INTERRUPT_PRIORITY_NORMAL, //
 };
-static GpioAddress s_event_address = { 1, 1 };
+static GpioAddress s_event_address = {1, 1};
 static InterruptSettings s_event_settings = {
-  .type = INTERRUPT_TYPE_EVENT,           //
-  .priority = INTERRUPT_PRIORITY_NORMAL,  //
+    .type = INTERRUPT_TYPE_EVENT,          //
+    .priority = INTERRUPT_PRIORITY_NORMAL, //
 };
 
 static volatile bool s_correct_port = false;
@@ -47,8 +47,9 @@ void teardown_test(void) {
 
 // Test interrupt in critical section
 void test_gpio_it_interrupt_critical(void) {
-  TEST_ASSERT_OK(gpio_it_register_interrupt(&s_interrupt_address, &s_interrupt_settings,
-                                            INTERRUPT_EDGE_RISING, prv_test_callback, NULL));
+  TEST_ASSERT_OK(gpio_it_register_interrupt(
+      &s_interrupt_address, &s_interrupt_settings, INTERRUPT_EDGE_RISING,
+      prv_test_callback, NULL));
 
   // Run the interrupt in critical section.
   bool disabled = critical_section_start();
@@ -63,8 +64,9 @@ void test_gpio_it_interrupt_critical(void) {
 
 // End to end interrupt.
 void test_gpio_it_interrupt(void) {
-  TEST_ASSERT_OK(gpio_it_register_interrupt(&s_interrupt_address, &s_interrupt_settings,
-                                            INTERRUPT_EDGE_RISING, prv_test_callback, NULL));
+  TEST_ASSERT_OK(gpio_it_register_interrupt(
+      &s_interrupt_address, &s_interrupt_settings, INTERRUPT_EDGE_RISING,
+      prv_test_callback, NULL));
   // Run the interrupt normally.
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_interrupt_address));
   TEST_ASSERT_TRUE(s_interrupt_ran);

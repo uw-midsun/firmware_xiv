@@ -15,7 +15,8 @@ typedef struct {
 
 // Initializes the timer for PWM input.
 
-// In order to choose a timer, and a timer channel for a GPIO pin, please consult:
+// In order to choose a timer, and a timer channel for a GPIO pin, please
+// consult:
 //
 // https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/16253071/Resources?preview=/16253071/38486554/stm32f072_af.xlsx
 //
@@ -31,11 +32,11 @@ StatusCode pwm_input_init(PwmTimer timer, PwmChannel channel);
 
 // Gets the PWM reading from a timer.
 //
-// Known issue: if the PWM DC reading transitions from a non zero number to zero,
-// then the next |pwm_input_get_reading| will return the previous value instead of
-// 0. The one after that will return the correct value DC and period value of 0.
-// This is because a flag needs to be cleared first (internally, the stm32
-// register does not update for a PWM reading of 0)
+// Known issue: if the PWM DC reading transitions from a non zero number to
+// zero, then the next |pwm_input_get_reading| will return the previous value
+// instead of 0. The one after that will return the correct value DC and period
+// value of 0. This is because a flag needs to be cleared first (internally, the
+// stm32 register does not update for a PWM reading of 0)
 //
 // Therefore we need to do this check twice to see if it works. The end user
 // should not need to worry about this too much assuming they are calling the

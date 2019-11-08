@@ -1,8 +1,8 @@
 // Retargets STDOUT to UART
 #include "retarget.h"
-#include <stdio.h>
 #include "retarget_cfg.h"
 #include "stm32f0xx.h"
+#include <stdio.h>
 
 static void prv_init_gpio(void) {
   RETARGET_CFG_UART_GPIO_ENABLE_CLK();
@@ -13,11 +13,12 @@ static void prv_init_gpio(void) {
                    RETARGET_CFG_UART_GPIO_ALTFN);
 
   GPIO_InitTypeDef gpio_init = {
-    .GPIO_Pin = (1 << RETARGET_CFG_UART_GPIO_TX) | (1 << RETARGET_CFG_UART_GPIO_RX),
-    .GPIO_Mode = GPIO_Mode_AF,
-    .GPIO_Speed = GPIO_Speed_10MHz,
-    .GPIO_OType = GPIO_OType_PP,
-    .GPIO_PuPd = GPIO_PuPd_UP,
+      .GPIO_Pin =
+          (1 << RETARGET_CFG_UART_GPIO_TX) | (1 << RETARGET_CFG_UART_GPIO_RX),
+      .GPIO_Mode = GPIO_Mode_AF,
+      .GPIO_Speed = GPIO_Speed_10MHz,
+      .GPIO_OType = GPIO_OType_PP,
+      .GPIO_PuPd = GPIO_PuPd_UP,
   };
 
   GPIO_Init(RETARGET_CFG_UART_GPIO_PORT, &gpio_init);
@@ -57,21 +58,21 @@ __attribute__((naked, section(".hardfault"))) void HardFault_Handler(void) {
   // and use it as the parameter to the C handler. This function
   // will never return
 
-  __asm(
-      ".syntax unified\n"
-      "MOVS   R0, #4  \n"
-      "MOV    R1, LR  \n"
-      "TST    R0, R1  \n"
-      "BEQ    _MSP    \n"
-      "MRS    R0, PSP \n"
-      "B      HardFault_HandlerC      \n"
-      "_MSP:  \n"
-      "MRS    R0, MSP \n"
-      "B      HardFault_HandlerC      \n"
-      ".syntax divided\n");
+  __asm(".syntax unified\n"
+        "MOVS   R0, #4  \n"
+        "MOV    R1, LR  \n"
+        "TST    R0, R1  \n"
+        "BEQ    _MSP    \n"
+        "MRS    R0, PSP \n"
+        "B      HardFault_HandlerC      \n"
+        "_MSP:  \n"
+        "MRS    R0, MSP \n"
+        "B      HardFault_HandlerC      \n"
+        ".syntax divided\n");
 }
 
-__attribute__((used, section(".hardfault"))) void HardFault_HandlerC(uint32_t *hardfault_args) {
+__attribute__((used, section(".hardfault"))) void
+HardFault_HandlerC(uint32_t *hardfault_args) {
   volatile uint32_t stacked_r0;
   volatile uint32_t stacked_r1;
   volatile uint32_t stacked_r2;
@@ -132,5 +133,5 @@ __attribute__((used, section(".hardfault"))) void HardFault_HandlerC(uint32_t *h
   printf("MMAR: 0x%lx\n", _MMAR);
   printf("BFAR: 0x%lx\n", _BFAR);
 
-  __asm("BKPT #0\n");  // Break into the debugger
+  __asm("BKPT #0\n"); // Break into the debugger
 }

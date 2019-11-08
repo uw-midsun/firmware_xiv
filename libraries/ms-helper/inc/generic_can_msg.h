@@ -15,7 +15,9 @@ typedef struct GenericCanMsg {
 } GenericCanMsg;
 
 // Converts a GenericCanMsg to a CanMessage.
-StatusCode generic_can_msg_to_can_message(const GenericCanMsg *src, CanMessage *dst);
+StatusCode generic_can_msg_to_can_message(const GenericCanMsg *src,
+                                          CanMessage *dst);
 
 // Converts a CanMessage to a GenericCanMsg.
-StatusCode can_message_to_generic_can_message(const CanMessage *src, GenericCanMsg *dst);
+StatusCode can_message_to_generic_can_message(const CanMessage *src,
+                                              GenericCanMsg *dst);

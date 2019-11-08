@@ -2,9 +2,10 @@
 
 #include "can_msg_defs.h"
 
-// This file stores enums which are exported between projects to allow both sides to use the same
-// enums when sending and receiving CAN Messages over the primary network. To make things easier all
-// enums in this file must follow a slightly modified naming convention.
+// This file stores enums which are exported between projects to allow both
+// sides to use the same enums when sending and receiving CAN Messages over the
+// primary network. To make things easier all enums in this file must follow a
+// slightly modified naming convention.
 //
 // Example:
 // typedef enum {
@@ -53,16 +54,16 @@ typedef enum EELightType {
 
 // Light state to be used with a SYSTEM_CAN_MESSAGE_LIGHTS_STATE message.
 typedef enum EELightState {
-  EE_LIGHT_STATE_OFF = 0,  //
-  EE_LIGHT_STATE_ON,       //
-  NUM_EE_LIGHT_STATES,     //
+  EE_LIGHT_STATE_OFF = 0, //
+  EE_LIGHT_STATE_ON,      //
+  NUM_EE_LIGHT_STATES,    //
 } EELightState;
 
 // Horn state, used with a SYSTEM_CAN_MESSAGE_HORN message.
 typedef enum EEHornState {
-  EE_HORN_STATE_OFF = 0,  //
-  EE_HORN_STATE_ON,       //
-  NUM_EE_HORN_STATES,     //
+  EE_HORN_STATE_OFF = 0, //
+  EE_HORN_STATE_ON,      //
+  NUM_EE_HORN_STATES,    //
 } EEHornState;
 
 // Used with most _RELAY messages to request a relay state change.
@@ -72,8 +73,8 @@ typedef enum EERelayState {
   NUM_EE_RELAY_STATES,
 } EERelayState;
 
-// Used with the POWER_STATE message sent from driver controls to power distribution to request a
-// state change.
+// Used with the POWER_STATE message sent from driver controls to power
+// distribution to request a state change.
 typedef enum {
   EE_POWER_STATE_IDLE = 0,
   EE_POWER_STATE_CHARGE,
@@ -95,12 +96,18 @@ typedef enum {
 // BPS heartbeat bitset representing fault reason
 typedef uint8_t EEBpsHeartbeatState;
 #define EE_BPS_HEARTBEAT_STATE_OK 0x0
-#define EE_BPS_HEARTBEAT_STATE_FAULT_KILLSWITCH (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_KILLSWITCH)
-#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_AFE_CELL (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_AFE_CELL)
-#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_AFE_TEMP (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_AFE_TEMP)
-#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_AFE_FSM (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_AFE_FSM)
-#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_ADC (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_ADC)
-#define EE_BPS_HEARTBEAT_STATE_FAULT_ACK_TIMEOUT (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_ACK_TIMEOUT)
+#define EE_BPS_HEARTBEAT_STATE_FAULT_KILLSWITCH                                \
+  (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_KILLSWITCH)
+#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_AFE_CELL                              \
+  (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_AFE_CELL)
+#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_AFE_TEMP                              \
+  (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_AFE_TEMP)
+#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_AFE_FSM                               \
+  (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_AFE_FSM)
+#define EE_BPS_HEARTBEAT_STATE_FAULT_LTC_ADC                                   \
+  (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_LTC_ADC)
+#define EE_BPS_HEARTBEAT_STATE_FAULT_ACK_TIMEOUT                               \
+  (1 << EE_BPS_HEARTBEAT_FAULT_SOURCE_ACK_TIMEOUT)
 
 typedef enum {
   EE_FAN_CONTROL_STATE_ENABLE = 0,

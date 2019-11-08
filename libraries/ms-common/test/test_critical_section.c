@@ -7,12 +7,13 @@
 void setup_test(void) {}
 
 void teardown_test(void) {
-  // After a test concludes forcibly enable interrupts if they aren't already enabled.
+  // After a test concludes forcibly enable interrupts if they aren't already
+  // enabled.
   critical_section_end(true);
 }
 
-// Verifies the logic of critical sections. The validation of internal behavior needs to be
-// performed at an interrupt module level ie in test_gpio_it.c.
+// Verifies the logic of critical sections. The validation of internal behavior
+// needs to be performed at an interrupt module level ie in test_gpio_it.c.
 void test_critical_section_disable_enable(void) {
   bool disabled = critical_section_start();
   TEST_ASSERT_TRUE(disabled);

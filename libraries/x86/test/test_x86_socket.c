@@ -1,13 +1,13 @@
+#include "log.h"
+#include "test_helpers.h"
+#include "unity.h"
+#include "x86_socket.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include "log.h"
-#include "test_helpers.h"
-#include "unity.h"
-#include "x86_socket.h"
 
 #define TEST_X86_SOCKET_NAME "test_x86_socket"
 #define TEST_X86_EXPECTED_RESPONSE "Success!\n"
@@ -17,8 +17,8 @@ static X86SocketThread s_thread;
 static char s_rx_data[30];
 static size_t s_rx_len;
 
-static void prv_handler(X86SocketThread *thread, int client_fd, const char *rx_data, size_t rx_len,
-                        void *context) {
+static void prv_handler(X86SocketThread *thread, int client_fd,
+                        const char *rx_data, size_t rx_len, void *context) {
   bool *received = context;
 
   // Write response to client
@@ -43,7 +43,8 @@ void teardown_test(void) {}
 
 void test_x86_socket_connect(void) {
   volatile bool received = false;
-  TEST_ASSERT_OK(x86_socket_init(&s_thread, TEST_X86_SOCKET_NAME, prv_handler, &received));
+  TEST_ASSERT_OK(
+      x86_socket_init(&s_thread, TEST_X86_SOCKET_NAME, prv_handler, &received));
 
   int client_fd = test_x86_socket_client_init(TEST_X86_SOCKET_NAME);
 
@@ -58,7 +59,7 @@ void test_x86_socket_connect(void) {
   TEST_ASSERT_EQUAL_STRING(msg, s_rx_data);
   TEST_ASSERT_EQUAL(strlen(msg), s_rx_len);
 
-  char buffer[50] = { 0 };
+  char buffer[50] = {0};
   ssize_t read_len = read(client_fd, buffer, sizeof(buffer));
   LOG_DEBUG("Response: %s\n", buffer);
   TEST_ASSERT_EQUAL_STRING(TEST_X86_EXPECTED_RESPONSE, buffer);

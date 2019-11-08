@@ -3,11 +3,14 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-// Example of a mock - add function name to $(T)_test_[name]_MOCKS to override behavior
+// Example of a mock - add function name to $(T)_test_[name]_MOCKS to override
+// behavior
 
-StatusCode TEST_MOCK(status_impl_update)(StatusCode code, const char *source, const char *caller,
+StatusCode TEST_MOCK(status_impl_update)(StatusCode code, const char *source,
+                                         const char *caller,
                                          const char *message) {
-  LOG_DEBUG("Mock: code %d\nsrc: %s\ncaller: %s\nmsg: %s\n", code, source, caller, message);
+  LOG_DEBUG("Mock: code %d\nsrc: %s\ncaller: %s\nmsg: %s\n", code, source,
+            caller, message);
 
   return STATUS_CODE_OK;
 }

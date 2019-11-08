@@ -42,15 +42,17 @@ typedef void (*AdcCallback)(AdcChannel adc_channel, void *context);
 void adc_init(AdcMode adc_mode);
 
 // Enable or disable a given channel.
-// A race condition may occur when setting a channel during a conversion. However, it should not
-// cause issues given the intended use cases
+// A race condition may occur when setting a channel during a conversion.
+// However, it should not cause issues given the intended use cases
 StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state);
 
 // Return a channel corresponding to the given GPIO address
 StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel);
 
-// Register a callback function to be called when the specified channel completes a conversion
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context);
+// Register a callback function to be called when the specified channel
+// completes a conversion
+StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback,
+                                 void *context);
 
 // Obtain the raw 12-bit value read by the specified channel
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading);

@@ -5,7 +5,8 @@
 #include "gpio_mcu.h"
 #include "status.h"
 
-// GPIO address to be used to change that pin's settings. Both port and pin are zero indexed.
+// GPIO address to be used to change that pin's settings. Both port and pin are
+// zero indexed.
 typedef struct GpioAddress {
   uint8_t port;
   uint8_t pin;
@@ -15,7 +16,7 @@ typedef struct GpioAddress {
 typedef enum {
   GPIO_DIR_IN = 0,
   GPIO_DIR_OUT,
-  GPIO_DIR_OUT_OD,  // Output open-drain
+  GPIO_DIR_OUT_OD, // Output open-drain
   NUM_GPIO_DIRS,
 } GpioDir;
 
@@ -34,9 +35,9 @@ typedef enum {
   NUM_GPIO_RESES,
 } GpioRes;
 
-// For setting the alternate function on the pin. The specific meaning of each depends on the
-// architecture and platform refer to the datasheet for the stm32f0xx for specifics. Not
-// implemented on x86.
+// For setting the alternate function on the pin. The specific meaning of each
+// depends on the architecture and platform refer to the datasheet for the
+// stm32f0xx for specifics. Not implemented on x86.
 typedef enum {
   GPIO_ALTFN_NONE = 0,
   GPIO_ALTFN_0,
@@ -59,12 +60,14 @@ typedef struct GpioSettings {
   GpioAltFn alt_function;
 } GpioSettings;
 
-// Initializes GPIO globally by setting all pins to their default state. ONLY CALL ONCE or it will
-// deinit all current settings. Change setting by calling gpio_init_pin.
+// Initializes GPIO globally by setting all pins to their default state. ONLY
+// CALL ONCE or it will deinit all current settings. Change setting by calling
+// gpio_init_pin.
 StatusCode gpio_init(void);
 
 // Initializes a GPIO pin by address.
-StatusCode gpio_init_pin(const GpioAddress *address, const GpioSettings *settings);
+StatusCode gpio_init_pin(const GpioAddress *address,
+                         const GpioSettings *settings);
 
 // Set the pin state by address.
 StatusCode gpio_set_state(const GpioAddress *address, GpioState state);
@@ -72,5 +75,6 @@ StatusCode gpio_set_state(const GpioAddress *address, GpioState state);
 // Toggles the output state of the pin.
 StatusCode gpio_toggle_state(const GpioAddress *address);
 
-// Gets the value of the input register for a pin and assigns it to the state that is passed in.
+// Gets the value of the input register for a pin and assigns it to the state
+// that is passed in.
 StatusCode gpio_get_state(const GpioAddress *address, GpioState *input_state);

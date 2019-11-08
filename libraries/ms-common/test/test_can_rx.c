@@ -7,7 +7,8 @@
 static CanRxHandlers s_rx_handlers;
 static CanRxHandler s_rx_handler_storage[TEST_CAN_RX_NUM_HANDLERS];
 
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_rx_callback(const CanMessage *msg, void *context,
+                                  CanAckStatus *ack_reply) {
   *ack_reply = (CanAckStatus)context;
 
   return STATUS_CODE_OK;
@@ -21,13 +22,17 @@ void teardown_test(void) {}
 
 void test_can_rx_handle(void) {
   StatusCode ret;
-  ret = can_rx_register_handler(&s_rx_handlers, 0x7FF, prv_rx_callback, (void *)0x00);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x7FF, prv_rx_callback,
+                                (void *)0x00);
   TEST_ASSERT_OK(ret);
-  ret = can_rx_register_handler(&s_rx_handlers, 0x08, prv_rx_callback, (void *)0x01);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x08, prv_rx_callback,
+                                (void *)0x01);
   TEST_ASSERT_OK(ret);
-  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback, (void *)0x02);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback,
+                                (void *)0x02);
   TEST_ASSERT_OK(ret);
-  ret = can_rx_register_handler(&s_rx_handlers, 0x02, prv_rx_callback, (void *)0x03);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x02, prv_rx_callback,
+                                (void *)0x03);
   TEST_ASSERT_OK(ret);
 
   CanRxHandler *handler = NULL;
@@ -49,9 +54,11 @@ void test_can_rx_handle(void) {
 
 void test_can_rx_duplicate(void) {
   StatusCode ret;
-  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback, (void *)0x00);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback,
+                                (void *)0x00);
   TEST_ASSERT_OK(ret);
-  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback, (void *)0x01);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback,
+                                (void *)0x01);
   TEST_ASSERT_NOT_EQUAL(STATUS_CODE_OK, ret);
 
   CanRxHandler *handler = NULL;
@@ -62,10 +69,12 @@ void test_can_rx_duplicate(void) {
 
 void test_can_rx_default(void) {
   StatusCode ret;
-  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback, (void *)0x00);
+  ret = can_rx_register_handler(&s_rx_handlers, 0x01, prv_rx_callback,
+                                (void *)0x00);
   TEST_ASSERT_OK(ret);
 
-  ret = can_rx_register_default_handler(&s_rx_handlers, prv_rx_callback, (void *)0xA);
+  ret = can_rx_register_default_handler(&s_rx_handlers, prv_rx_callback,
+                                        (void *)0xA);
   TEST_ASSERT_OK(ret);
 
   CanRxHandler *handler = NULL;

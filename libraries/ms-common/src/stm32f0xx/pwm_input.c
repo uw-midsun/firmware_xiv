@@ -19,24 +19,24 @@ typedef struct {
 } PwmTimerData;
 
 static PwmTimerData s_port[] = {
-  [PWM_TIMER_1] = { .rcc_cmd = RCC_APB2PeriphClockCmd,
-                    .periph = RCC_APB2Periph_TIM1,
-                    .base = TIM1 },
-  [PWM_TIMER_3] = { .rcc_cmd = RCC_APB1PeriphClockCmd,
-                    .periph = RCC_APB1Periph_TIM3,
-                    .base = TIM3 },
-  [PWM_TIMER_14] = { .rcc_cmd = RCC_APB1PeriphClockCmd,
-                     .periph = RCC_APB1Periph_TIM14,
-                     .base = TIM14 },
-  [PWM_TIMER_15] = { .rcc_cmd = RCC_APB2PeriphClockCmd,
-                     .periph = RCC_APB2Periph_TIM15,
-                     .base = TIM15 },
-  [PWM_TIMER_16] = { .rcc_cmd = RCC_APB2PeriphClockCmd,
-                     .periph = RCC_APB2Periph_TIM16,
-                     .base = TIM16 },
-  [PWM_TIMER_17] = { .rcc_cmd = RCC_APB2PeriphClockCmd,
-                     .periph = RCC_APB2Periph_TIM17,
-                     .base = TIM17 },
+    [PWM_TIMER_1] = {.rcc_cmd = RCC_APB2PeriphClockCmd,
+                     .periph = RCC_APB2Periph_TIM1,
+                     .base = TIM1},
+    [PWM_TIMER_3] = {.rcc_cmd = RCC_APB1PeriphClockCmd,
+                     .periph = RCC_APB1Periph_TIM3,
+                     .base = TIM3},
+    [PWM_TIMER_14] = {.rcc_cmd = RCC_APB1PeriphClockCmd,
+                      .periph = RCC_APB1Periph_TIM14,
+                      .base = TIM14},
+    [PWM_TIMER_15] = {.rcc_cmd = RCC_APB2PeriphClockCmd,
+                      .periph = RCC_APB2Periph_TIM15,
+                      .base = TIM15},
+    [PWM_TIMER_16] = {.rcc_cmd = RCC_APB2PeriphClockCmd,
+                      .periph = RCC_APB2Periph_TIM16,
+                      .base = TIM16},
+    [PWM_TIMER_17] = {.rcc_cmd = RCC_APB2PeriphClockCmd,
+                      .periph = RCC_APB2Periph_TIM17,
+                      .base = TIM17},
 };
 
 StatusCode pwm_input_init(PwmTimer timer, PwmChannel channel) {
@@ -59,24 +59,25 @@ StatusCode pwm_input_init(PwmTimer timer, PwmChannel channel) {
   RCC_ClocksTypeDef clocks;
   RCC_GetClocksFreq(&clocks);
 
-  // Struct to configure PWM frequency (this will determine what unit the user gets)
+  // Struct to configure PWM frequency (this will determine what unit the user
+  // gets)
   TIM_TimeBaseInitTypeDef tim_init = {
-    .TIM_Prescaler = (clocks.PCLK_Frequency / 1000000) - 1,
-    .TIM_CounterMode = TIM_CounterMode_Up,
-    .TIM_Period = 0xFFFFFFFF,
-    .TIM_ClockDivision = TIM_CKD_DIV1,
-    .TIM_RepetitionCounter = 0,
+      .TIM_Prescaler = (clocks.PCLK_Frequency / 1000000) - 1,
+      .TIM_CounterMode = TIM_CounterMode_Up,
+      .TIM_Period = 0xFFFFFFFF,
+      .TIM_ClockDivision = TIM_CKD_DIV1,
+      .TIM_RepetitionCounter = 0,
   };
 
   TIM_TimeBaseInit(tim_location, &tim_init);
 
   // Struct to configure the timer for PWM input mode
   TIM_ICInitTypeDef tim_icinit = {
-    .TIM_Channel = s_port[timer].channel,
-    .TIM_ICPolarity = TIM_ICPolarity_Rising,
-    .TIM_ICSelection = TIM_ICSelection_DirectTI,
-    .TIM_ICPrescaler = TIM_ICPSC_DIV1,
-    .TIM_ICFilter = 0x0,
+      .TIM_Channel = s_port[timer].channel,
+      .TIM_ICPolarity = TIM_ICPolarity_Rising,
+      .TIM_ICSelection = TIM_ICSelection_DirectTI,
+      .TIM_ICPrescaler = TIM_ICPSC_DIV1,
+      .TIM_ICFilter = 0x0,
   };
 
   TIM_PWMIConfig(tim_location, &tim_icinit);
@@ -123,8 +124,8 @@ StatusCode pwm_input_get_reading(PwmTimer timer, PwmInputReading *reading) {
     IC2Value_1 = TIM_GetCapture1(tim_location);
   }
 
-  // Perform the PWM calculation. IC2Value_1 is the period, and IC2Value_2 is the time
-  // that the signal is high
+  // Perform the PWM calculation. IC2Value_1 is the period, and IC2Value_2 is
+  // the time that the signal is high
   if (IC2Value_1 != 0) {
     dc_percent = (IC2Value_2 * MAX_DC_PERCENT) / IC2Value_1;
     period_us = IC2Value_1;

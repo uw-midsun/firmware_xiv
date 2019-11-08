@@ -26,7 +26,7 @@ static volatile uint8_t s_active_timers = 0;
 
 static void prv_soft_timer_interrupt(void) {
   const bool critical = critical_section_start();
-  struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
+  struct itimerspec spec = {{0, 0}, {0, 0}};
   for (uint16_t i = 0; i < SOFT_TIMER_MAX_TIMERS; i++) {
     if (!s_active_timers) {
       // No active timers left.
@@ -35,8 +35,8 @@ static void prv_soft_timer_interrupt(void) {
     if (s_posix_timers[i].inuse) {
       timer_gettime(s_posix_timers[i].timer_id, &spec);
       if (spec.it_value.tv_sec == 0 && spec.it_value.tv_nsec == 0) {
-        // Mark as no longer inuse in case a timer is cancelled within its callback resulting in
-        // underflow of |s_active_timers|.
+        // Mark as no longer inuse in case a timer is cancelled within its
+        // callback resulting in underflow of |s_active_timers|.
         s_posix_timers[i].inuse = false;
         s_posix_timers[i].callback(i, s_posix_timers[i].context);
         s_active_timers--;
@@ -58,8 +58,8 @@ void soft_timer_init(void) {
   uint8_t handler_id;
   x86_interrupt_register_handler(prv_soft_timer_handler, &handler_id);
   InterruptSettings it_settings = {
-    .type = INTERRUPT_TYPE_INTERRUPT,       //
-    .priority = INTERRUPT_PRIORITY_NORMAL,  //
+      .type = INTERRUPT_TYPE_INTERRUPT,      //
+      .priority = INTERRUPT_PRIORITY_NORMAL, //
   };
   uint8_t interrupt_id;
   x86_interrupt_register_interrupt(handler_id, &it_settings, &interrupt_id);
@@ -81,8 +81,8 @@ void soft_timer_init(void) {
   }
 }
 
-StatusCode soft_timer_start(uint32_t duration_us, SoftTimerCallback callback, void *context,
-                            SoftTimerId *timer_id) {
+StatusCode soft_timer_start(uint32_t duration_us, SoftTimerCallback callback,
+                            void *context, SoftTimerId *timer_id) {
   if (duration_us < SOFT_TIMER_MIN_TIME_US) {
     return status_msg(STATUS_CODE_INVALID_ARGS, "Soft timer too short!");
   }
@@ -93,8 +93,8 @@ StatusCode soft_timer_start(uint32_t duration_us, SoftTimerCallback callback, vo
       // Look for an empty timer.
 
       // Set the timer with it_val.
-      struct itimerspec spec = { { 0, 0 },
-                                 { duration_us / 1000000, duration_us % 1000000 * 1000 } };
+      struct itimerspec spec = {
+          {0, 0}, {duration_us / 1000000, duration_us % 1000000 * 1000}};
       timer_settime(s_posix_timers[i].timer_id, 0, &spec, NULL);
       s_posix_timers[i].inuse = true;
       s_posix_timers[i].context = context;
@@ -124,7 +124,7 @@ bool soft_timer_cancel(SoftTimerId timer_id) {
   const bool critical = critical_section_start();
   if (timer_id < SOFT_TIMER_MAX_TIMERS && s_posix_timers[timer_id].inuse) {
     // Clear the timer if it is in use by setting it_val to 0, 0.
-    struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
+    struct itimerspec spec = {{0, 0}, {0, 0}};
     timer_settime(s_posix_timers[timer_id].timer_id, 0, &spec, NULL);
     s_posix_timers[timer_id].inuse = false;
     s_active_timers--;
@@ -136,7 +136,7 @@ bool soft_timer_cancel(SoftTimerId timer_id) {
 }
 
 uint32_t soft_timer_remaining_time(SoftTimerId timer_id) {
-  struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
+  struct itimerspec spec = {{0, 0}, {0, 0}};
   timer_gettime(s_posix_timers[timer_id].timer_id, &spec);
   return spec.it_value.tv_sec * 1000000 + spec.it_value.tv_nsec / 1000;
 }

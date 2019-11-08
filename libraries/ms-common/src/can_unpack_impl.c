@@ -5,14 +5,15 @@
 
 #include "can_msg.h"
 
-#define CAN_UNPACK_IF_NOT_NULL(msg_data, f_ptr) \
-  if ((f_ptr) != NULL) {                        \
-    *(f_ptr) = (msg_data);                      \
+#define CAN_UNPACK_IF_NOT_NULL(msg_data, f_ptr)                                \
+  if ((f_ptr) != NULL) {                                                       \
+    *(f_ptr) = (msg_data);                                                     \
   }
 
-StatusCode can_unpack_impl_u8(const CanMessage *msg, size_t expected_dlc, uint8_t *f1, uint8_t *f2,
-                              uint8_t *f3, uint8_t *f4, uint8_t *f5, uint8_t *f6, uint8_t *f7,
-                              uint8_t *f8) {
+StatusCode can_unpack_impl_u8(const CanMessage *msg, size_t expected_dlc,
+                              uint8_t *f1, uint8_t *f2, uint8_t *f3,
+                              uint8_t *f4, uint8_t *f5, uint8_t *f6,
+                              uint8_t *f7, uint8_t *f8) {
   if (expected_dlc != msg->dlc) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "DLC mismatch");
   }
@@ -27,8 +28,9 @@ StatusCode can_unpack_impl_u8(const CanMessage *msg, size_t expected_dlc, uint8_
   return STATUS_CODE_OK;
 }
 
-StatusCode can_unpack_impl_u16(const CanMessage *msg, size_t expected_dlc, uint16_t *f1,
-                               uint16_t *f2, uint16_t *f3, uint16_t *f4) {
+StatusCode can_unpack_impl_u16(const CanMessage *msg, size_t expected_dlc,
+                               uint16_t *f1, uint16_t *f2, uint16_t *f3,
+                               uint16_t *f4) {
   if (expected_dlc != msg->dlc) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "DLC mismatch");
   }
@@ -39,8 +41,8 @@ StatusCode can_unpack_impl_u16(const CanMessage *msg, size_t expected_dlc, uint1
   return STATUS_CODE_OK;
 }
 
-StatusCode can_unpack_impl_u32(const CanMessage *msg, size_t expected_dlc, uint32_t *f1,
-                               uint32_t *f2) {
+StatusCode can_unpack_impl_u32(const CanMessage *msg, size_t expected_dlc,
+                               uint32_t *f1, uint32_t *f2) {
   if (expected_dlc != msg->dlc) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "DLC mismatch");
   }
@@ -49,7 +51,8 @@ StatusCode can_unpack_impl_u32(const CanMessage *msg, size_t expected_dlc, uint3
   return STATUS_CODE_OK;
 }
 
-StatusCode can_unpack_impl_u64(const CanMessage *msg, size_t expected_dlc, uint64_t *f1) {
+StatusCode can_unpack_impl_u64(const CanMessage *msg, size_t expected_dlc,
+                               uint64_t *f1) {
   if (expected_dlc != msg->dlc) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "DLC mismatch");
   }

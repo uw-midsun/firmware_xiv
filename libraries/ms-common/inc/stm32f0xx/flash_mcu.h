@@ -12,6 +12,6 @@ extern uint32_t _flash_page_size;
 #define FLASH_MCU_PAGE_BYTES ((size_t)&_flash_page_size)
 
 typedef enum {
-  FLASH_PAGE_0 = 0,     //
-  NUM_FLASH_PAGES = 64  //
+  FLASH_PAGE_0 = 0,    //
+  NUM_FLASH_PAGES = 64 //
 } FlashPage;

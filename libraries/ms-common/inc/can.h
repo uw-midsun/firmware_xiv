@@ -3,19 +3,20 @@
 // Requires GPIO, soft timers, event queue, and interrupts to be initialized.
 //
 // Application code should only use functions in this header.
-// Note that the CAN FSM must be clocked. Call `can_process_event(&e)` in your event loop.
+// Note that the CAN FSM must be clocked. Call `can_process_event(&e)` in your
+// event loop.
 //
 // See:
 // * can_rx: CanRxHandlerCb
 // * can_ack: CanAckRequest
-#include <stdbool.h>
-#include <stdint.h>
 #include "can_ack.h"
 #include "can_fifo.h"
 #include "can_hw.h"
 #include "can_rx.h"
 #include "fsm.h"
 #include "gpio.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #define CAN_NUM_RX_HANDLERS 10
 
@@ -50,13 +51,17 @@ StatusCode can_init(CanStorage *storage, const CanSettings *settings);
 StatusCode can_add_filter(CanMessageId msg_id);
 
 // Registers a default RX handler for messages without specific RX handlers.
-StatusCode can_register_rx_default_handler(CanRxHandlerCb handler, void *context);
+StatusCode can_register_rx_default_handler(CanRxHandlerCb handler,
+                                           void *context);
 
 // Registers an RX handler for a specific message ID.
-StatusCode can_register_rx_handler(CanMessageId msg_id, CanRxHandlerCb handler, void *context);
+StatusCode can_register_rx_handler(CanMessageId msg_id, CanRxHandlerCb handler,
+                                   void *context);
 
 // Attempts to transmit the CAN message as soon as possible.
-StatusCode can_transmit(const CanMessage *msg, const CanAckRequest *ack_request);
+StatusCode can_transmit(const CanMessage *msg,
+                        const CanAckRequest *ack_request);
 
-// Processes the registered events. This must be called for the CAN network layer to work.
+// Processes the registered events. This must be called for the CAN network
+// layer to work.
 bool can_process_event(const Event *e);

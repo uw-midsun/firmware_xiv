@@ -6,8 +6,8 @@
 // trigger.
 //
 // Max allowable time is UINT32_MAX in microseconds (4294.967295 seconds).
-// If a longer duration is needed, check the condition you are waiting on in a loop and then call
-// this function again if the condition is not met.
+// If a longer duration is needed, check the condition you are waiting on in a
+// loop and then call this function again if the condition is not met.
 
 #include <stdint.h>
 
