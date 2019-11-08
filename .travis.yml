@@ -16,7 +16,6 @@ language: c
 branches:
   only:
     - master
-
       addons:
         apt:
           sources:
