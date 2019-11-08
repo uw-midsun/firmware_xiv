@@ -9,7 +9,7 @@ notifications:
   email: false
 
 language: c
-
+ 
 # enable "Build pushes" and "Build pull requests" in Travis CI
 # - pull requests will always be built
 # - only build pushes to master
