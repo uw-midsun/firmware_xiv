@@ -1,7 +1,7 @@
 # Use full virtualisation to allow adding kernel modules
 sudo: true
 
-# Use trusty
+# Use xenial
 #   https://docs.travis-ci.com/user/trusty-ci-environment/
 dist: xenial
 
@@ -17,22 +17,22 @@ branches:
   only:
     - master
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-trusty-5.0
-    packages:
-      # ubuntu-toolchain-r-test
-      - gcc-6
-      - g++-6
-      # llvm-toolchain-trusty-5.0
-      - clang-5.0
-      - clang-format-5.0
-      # trusty repos
-      - python3
-      - python3-pip
-      - libc6-i386
+      #addons:
+      #  apt:
+      #    sources:
+      #      - ubuntu-toolchain-r-test
+      #      - llvm-toolchain-trusty-5.0
+      #    packages:
+      #      # ubuntu-toolchain-r-test
+      #      - gcc-6
+      #      - g++-6
+      #      # llvm-toolchain-trusty-5.0
+      #      - clang-5.0
+      #      - clang-format-5.0
+      #      # trusty repos
+      #      - python3
+      #      - python3-pip
+      #      - libc6-i386
 
 cache:
   directories:
