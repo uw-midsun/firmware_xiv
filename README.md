@@ -1,6 +1,6 @@
 # firmware
 [![Build Status](https://travis-ci.com/uw-midsun/firmware_xiv.svg?branch=master)](https://travis-ci.com/uw-midsun/firmware_xiv)
-
+   
 This repository contains all firmware for the [University of Waterloo](https://uwaterloo.ca/)'s [Midnight Sun Solar Rayce Car](http://www.uwmidsun.com/) team's 14th car.
 
 ## Getting Started
