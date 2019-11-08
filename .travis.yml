@@ -22,16 +22,14 @@ branches:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-8
       #    packages:
-      #      # ubuntu-toolchain-r-test
-      #      - gcc-6
-      #      - g++-6
-      #      # llvm-toolchain-trusty-5.0
-      #      - clang-5.0
-      #      - clang-format-5.0
-      #      # trusty repos
-      #      - python3
-      #      - python3-pip
-      #      - libc6-i386
+            - gcc-7
+            - g++-7
+            - clang-5.0
+            - clang-format-5.0
+      #      # xenial repos
+            - python3
+            - python3-pip
+            - libc6-i386
 
 cache:
   directories:
