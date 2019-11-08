@@ -91,6 +91,8 @@ before_script:
   - make --version
   - clang --version
   - clang-format --version
+  - pip3 --version
+  - python3 --version
   - pylint --version
 
 script:
