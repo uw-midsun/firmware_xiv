@@ -16,7 +16,7 @@ typedef struct GpioAddress {
 typedef enum {
   GPIO_DIR_IN = 0,
   GPIO_DIR_OUT,
-  GPIO_DIR_OUT_OD, // Output open-drain
+  GPIO_DIR_OUT_OD,  // Output open-drain
   NUM_GPIO_DIRS,
 } GpioDir;
 
@@ -66,8 +66,7 @@ typedef struct GpioSettings {
 StatusCode gpio_init(void);
 
 // Initializes a GPIO pin by address.
-StatusCode gpio_init_pin(const GpioAddress *address,
-                         const GpioSettings *settings);
+StatusCode gpio_init_pin(const GpioAddress *address, const GpioSettings *settings);
 
 // Set the pin state by address.
 StatusCode gpio_set_state(const GpioAddress *address, GpioState state);

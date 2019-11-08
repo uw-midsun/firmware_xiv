@@ -23,8 +23,8 @@ void can_interval_init(void);
 
 // Returns |interval| a pointer to a CANInterval object which stores the
 // provided settings. NOTE: msg will be persisted.
-StatusCode can_interval_factory(const GenericCan *can, const GenericCanMsg *msg,
-                                uint32_t period, CanInterval **interval);
+StatusCode can_interval_factory(const GenericCan *can, const GenericCanMsg *msg, uint32_t period,
+                                CanInterval **interval);
 
 // Immediately sends a message and continues to send messages. Requires the
 // interval to be enabled.

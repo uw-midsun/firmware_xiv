@@ -1,7 +1,7 @@
 #include "can_uart.h"
+#include <string.h>
 #include "cobs.h"
 #include "log.h"
-#include <string.h>
 
 // CTX in ASCII
 #define CAN_UART_TX_MARKER 0x585443
@@ -17,17 +17,17 @@
 // 26-27 | reserved
 // 28:31 | dlc
 
-#define CAN_UART_BUILD_HEADER(marker, extended, rtr, dlc)                      \
-  (((uint32_t)(marker)&0xFFFFFF) | ((uint32_t)(extended)&0x1) << 24 |          \
+#define CAN_UART_BUILD_HEADER(marker, extended, rtr, dlc)             \
+  (((uint32_t)(marker)&0xFFFFFF) | ((uint32_t)(extended)&0x1) << 24 | \
    ((uint32_t)(rtr)&0x1) << 25 | ((uint32_t)(dlc)&0xF) << 28)
-#define CAN_UART_EXTRACT_HEADER(header, marker, extended, rtr, dlc)            \
-  ({                                                                           \
-    uint32_t _header = header;                                                 \
-    *(marker) = _header & 0xFFFFFF;                                            \
-    *(extended) = (_header >> 24) & 0x1;                                       \
-    *(rtr) = (_header >> 25) & 0x1;                                            \
-    *(dlc) = (_header >> 28) & 0xF;                                            \
-    true;                                                                      \
+#define CAN_UART_EXTRACT_HEADER(header, marker, extended, rtr, dlc) \
+  ({                                                                \
+    uint32_t _header = header;                                      \
+    *(marker) = _header & 0xFFFFFF;                                 \
+    *(extended) = (_header >> 24) & 0x1;                            \
+    *(rtr) = (_header >> 25) & 0x1;                                 \
+    *(dlc) = (_header >> 28) & 0xF;                                 \
+    true;                                                           \
   })
 
 typedef struct CanUartPacket {
@@ -65,8 +65,7 @@ static void prv_rx_uart(const uint8_t *rx_arr, size_t len, void *context) {
   if (marker == CAN_UART_RX_MARKER) {
     // RX'd CAN message - alert system
     if (can_uart->rx_cb != NULL) {
-      can_uart->rx_cb(can_uart, packet.id, extended, &packet.data, dlc,
-                      can_uart->context);
+      can_uart->rx_cb(can_uart, packet.id, extended, &packet.data, dlc, can_uart->context);
     }
   } else if (marker == CAN_UART_TX_MARKER) {
     // TX request - attempt to transmit message
@@ -83,10 +82,9 @@ static void prv_handle_can_rx(void *context) {
   size_t dlc;
   while (can_hw_receive(&id, &extended, &data, &dlc)) {
     CanUartPacket packet = {
-        .header =
-            CAN_UART_BUILD_HEADER(CAN_UART_RX_MARKER, extended, false, dlc), //
-        .id = id,                                                            //
-        .data = data                                                         //
+      .header = CAN_UART_BUILD_HEADER(CAN_UART_RX_MARKER, extended, false, dlc),  //
+      .id = id,                                                                   //
+      .data = data                                                                //
     };
 
     uint8_t encoded_data[COBS_MAX_ENCODED_LEN(sizeof(packet)) + 1];
@@ -107,22 +105,19 @@ StatusCode can_uart_init(CanUart *can_uart) {
 }
 
 StatusCode can_uart_enable_passthrough(CanUart *can_uart) {
-  return can_hw_register_callback(CAN_HW_EVENT_MSG_RX, prv_handle_can_rx,
-                                  can_uart);
+  return can_hw_register_callback(CAN_HW_EVENT_MSG_RX, prv_handle_can_rx, can_uart);
 }
 
-StatusCode can_uart_req_slave_tx(const CanUart *can_uart, uint32_t id,
-                                 bool extended, const uint64_t *data,
-                                 size_t dlc) {
+StatusCode can_uart_req_slave_tx(const CanUart *can_uart, uint32_t id, bool extended,
+                                 const uint64_t *data, size_t dlc) {
   CanUartPacket packet = {
-      .header = CAN_UART_BUILD_HEADER(CAN_UART_TX_MARKER, extended, false, dlc),
-      .id = id,
-      .data = *data,
+    .header = CAN_UART_BUILD_HEADER(CAN_UART_TX_MARKER, extended, false, dlc),
+    .id = id,
+    .data = *data,
   };
   uint8_t encoded_data[COBS_MAX_ENCODED_LEN(sizeof(packet)) + 1];
   size_t encoded_len = SIZEOF_ARRAY(encoded_data);
-  status_ok_or_return(cobs_encode((uint8_t *)&packet, sizeof(packet),
-                                  encoded_data, &encoded_len));
+  status_ok_or_return(cobs_encode((uint8_t *)&packet, sizeof(packet), encoded_data, &encoded_len));
   // Frame the packet with a 0
   encoded_data[encoded_len] = 0;
 

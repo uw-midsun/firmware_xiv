@@ -64,8 +64,8 @@ typedef void (*StatusCallback)(const Status *status);
 
 // Updates a status struct containing an error code and optionally a message.
 // This should only be called via the macros.
-StatusCode status_impl_update(StatusCode code, const char *source,
-                              const char *caller, const char *message);
+StatusCode status_impl_update(StatusCode code, const char *source, const char *caller,
+                              const char *message);
 
 // Get a copy of the global status so it can be used safely.
 Status status_get(void);
@@ -74,16 +74,13 @@ Status status_get(void);
 void status_register_callback(StatusCallback callback);
 
 // Macros for convenience.
-#define status_code(code)                                                      \
-  status_impl_update((code), (__FILE__ ":" STRINGIFY(__LINE__)),               \
-                     (__FUNCTION__), "")
-#define status_msg(code, message)                                              \
-  status_impl_update((code), (__FILE__ ":" STRINGIFY(__LINE__)),               \
-                     (__FUNCTION__), (message))
+#define status_code(code) \
+  status_impl_update((code), (__FILE__ ":" STRINGIFY(__LINE__)), (__FUNCTION__), "")
+#define status_msg(code, message) \
+  status_impl_update((code), (__FILE__ ":" STRINGIFY(__LINE__)), (__FUNCTION__), (message))
 #define status_ok(code) (STATUS_CODE_OK == (code))
 #define status_clear() status_msg(STATUS_CODE_OK, "Clear")
 
 // Use to forward failures or continue on success.
-#define status_ok_or_return(code)                                              \
-  if (code)                                                                    \
-  return (code)
+#define status_ok_or_return(code) \
+  if (code) return (code)

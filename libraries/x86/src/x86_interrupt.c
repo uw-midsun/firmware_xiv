@@ -53,9 +53,8 @@ static void prv_sig_handler(int signum, siginfo_t *info, void *ptr) {
     if (!s_x86_interrupt_interrupts_map[info->si_value.sival_int].is_event) {
       // Execute the handler passing it the interrupt ID. To determine which
       // handler look up in the interrupts map by interrupt ID.
-      s_x86_interrupt_handlers
-          [s_x86_interrupt_interrupts_map[info->si_value.sival_int].handler_id](
-              info->si_value.sival_int);
+      s_x86_interrupt_handlers[s_x86_interrupt_interrupts_map[info->si_value.sival_int].handler_id](
+          info->si_value.sival_int);
     }
   }
   s_in_handler_flag = false;
@@ -99,8 +98,7 @@ void x86_interrupt_init(void) {
   // Create a handler sigaction.
   struct sigaction act;
   act.sa_sigaction = prv_sig_handler;
-  act.sa_flags = SA_SIGINFO |
-                 SA_RESTART; // Set SA_RESTART to allow syscalls to be retried.
+  act.sa_flags = SA_SIGINFO | SA_RESTART;  // Set SA_RESTART to allow syscalls to be retried.
 
   // Define an empty blocking mask (no signals are blocked to start).
   sigset_t block_mask;
@@ -134,13 +132,11 @@ void x86_interrupt_init(void) {
   s_in_handler_flag = false;
   s_x86_interrupt_next_interrupt_id = 0;
   s_x86_interrupt_next_handler_id = 0;
-  memset(&s_x86_interrupt_interrupts_map, 0,
-         sizeof(s_x86_interrupt_interrupts_map));
+  memset(&s_x86_interrupt_interrupts_map, 0, sizeof(s_x86_interrupt_interrupts_map));
   memset(&s_x86_interrupt_handlers, 0, sizeof(s_x86_interrupt_handlers));
 }
 
-StatusCode x86_interrupt_register_handler(x86InterruptHandler handler,
-                                          uint8_t *handler_id) {
+StatusCode x86_interrupt_register_handler(x86InterruptHandler handler, uint8_t *handler_id) {
   if (s_x86_interrupt_next_handler_id >= NUM_X86_INTERRUPT_HANDLERS) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
   }
@@ -152,23 +148,20 @@ StatusCode x86_interrupt_register_handler(x86InterruptHandler handler,
   return STATUS_CODE_OK;
 }
 
-StatusCode x86_interrupt_register_interrupt(uint8_t handler_id,
-                                            const InterruptSettings *settings,
+StatusCode x86_interrupt_register_interrupt(uint8_t handler_id, const InterruptSettings *settings,
                                             uint8_t *interrupt_id) {
   if (handler_id >= s_x86_interrupt_next_handler_id ||
-      settings->priority >= NUM_INTERRUPT_PRIORITIES ||
-      settings->type >= NUM_INTERRUPT_TYPES) {
+      settings->priority >= NUM_INTERRUPT_PRIORITIES || settings->type >= NUM_INTERRUPT_TYPES) {
     return status_code(STATUS_CODE_INVALID_ARGS);
-  } else if (s_x86_interrupt_next_interrupt_id >=
-             NUM_X86_INTERRUPT_INTERRUPTS) {
+  } else if (s_x86_interrupt_next_interrupt_id >= NUM_X86_INTERRUPT_INTERRUPTS) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
   }
 
   *interrupt_id = s_x86_interrupt_next_interrupt_id;
   s_x86_interrupt_next_interrupt_id++;
-  Interrupt interrupt = {.priority = settings->priority,
-                         .handler_id = handler_id,
-                         .is_event = (bool)settings->type};
+  Interrupt interrupt = {
+    .priority = settings->priority, .handler_id = handler_id, .is_event = (bool)settings->type
+  };
   s_x86_interrupt_interrupts_map[*interrupt_id] = interrupt;
 
   return STATUS_CODE_OK;
@@ -183,9 +176,7 @@ StatusCode x86_interrupt_trigger(uint8_t interrupt_id) {
   // determined by the id for the callback it is going to run.
   siginfo_t value_store;
   value_store.si_value.sival_int = interrupt_id;
-  sigqueue(s_pid,
-           SIGRTMIN +
-               (int)s_x86_interrupt_interrupts_map[interrupt_id].priority,
+  sigqueue(s_pid, SIGRTMIN + (int)s_x86_interrupt_interrupts_map[interrupt_id].priority,
            value_store.si_value);
 
   return STATUS_CODE_OK;
@@ -213,4 +204,6 @@ void x86_interrupt_unmask(void) {
   sigqueue(s_pid, SIGRTMIN + NUM_INTERRUPT_PRIORITIES, value_store.si_value);
 }
 
-bool x86_interrupt_in_handler(void) { return s_in_handler_flag; }
+bool x86_interrupt_in_handler(void) {
+  return s_in_handler_flag;
+}

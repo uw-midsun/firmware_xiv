@@ -1,10 +1,10 @@
 #include "flash.h"
-#include "critical_section.h"
-#include "log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "critical_section.h"
+#include "log.h"
 
 #define FLASH_DEFAULT_FILENAME "x86_flash"
 #define FLASH_USER_ENV "MIDSUN_X86_FLASH_FILE"
@@ -39,8 +39,7 @@ StatusCode flash_init(void) {
   return STATUS_CODE_OK;
 }
 
-StatusCode flash_read(uintptr_t address, size_t read_bytes, uint8_t *buffer,
-                      size_t buffer_len) {
+StatusCode flash_read(uintptr_t address, size_t read_bytes, uint8_t *buffer, size_t buffer_len) {
   if (buffer_len < read_bytes || address < FLASH_BASE_ADDR ||
       (address + read_bytes) > FLASH_END_ADDR || (intptr_t)address < 0) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
@@ -57,8 +56,7 @@ StatusCode flash_write(uintptr_t address, uint8_t *buffer, size_t buffer_len) {
   if (address < FLASH_BASE_ADDR || (address + buffer_len) > FLASH_END_ADDR ||
       (intptr_t)address < 0) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
-  } else if (buffer_len % FLASH_WRITE_BYTES != 0 ||
-             address % FLASH_WRITE_BYTES != 0) {
+  } else if (buffer_len % FLASH_WRITE_BYTES != 0 || address % FLASH_WRITE_BYTES != 0) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 

@@ -10,8 +10,7 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
   return STATUS_CODE_UNIMPLEMENTED;
 }
 
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback,
-                                 void *context) {
+StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
   return STATUS_CODE_UNIMPLEMENTED;
 }
 

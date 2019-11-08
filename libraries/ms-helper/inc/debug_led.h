@@ -7,9 +7,9 @@
 // Blue: PB4
 // Green: PB3
 // Red: PA15
+#include <stdbool.h>
 #include "gpio.h"
 #include "status.h"
-#include <stdbool.h>
 
 typedef enum {
   DEBUG_LED_BLUE_A,

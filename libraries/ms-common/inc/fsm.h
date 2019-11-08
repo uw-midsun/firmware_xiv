@@ -40,7 +40,7 @@
 // Adds an entry to the state transition table.
 #define FSM_ADD_TRANSITION(event_id, state) _FSM_ADD_TRANSITION(event_id, state)
 // Adds an entry with a conditional boolean guard to the state transition table.
-#define FSM_ADD_GUARDED_TRANSITION(event_id, guard, state)                     \
+#define FSM_ADD_GUARDED_TRANSITION(event_id, guard, state) \
   _FSM_ADD_GUARDED_TRANSITION(event_id, guard, state)
 
 // Initializes an FSM state with an output function.
@@ -48,10 +48,8 @@
 
 struct Fsm;
 typedef void (*FsmStateOutput)(struct Fsm *fsm, const Event *e, void *context);
-typedef void (*FsmStateTransition)(struct Fsm *fsm, const Event *e,
-                                   bool *transitioned);
-typedef bool (*FsmStateTransitionGuard)(const struct Fsm *fsm, const Event *e,
-                                        void *context);
+typedef void (*FsmStateTransition)(struct Fsm *fsm, const Event *e, bool *transitioned);
+typedef bool (*FsmStateTransitionGuard)(const struct Fsm *fsm, const Event *e, void *context);
 
 typedef struct State {
   const char *name;
@@ -67,8 +65,7 @@ typedef struct Fsm {
 } Fsm;
 
 // Initializes the FSM.
-void fsm_init(Fsm *fsm, const char *name, FsmState *default_state,
-              void *context);
+void fsm_init(Fsm *fsm, const char *name, FsmState *default_state, void *context);
 
 // Returns whether a transition occurred in the FSM.
 bool fsm_process_event(Fsm *fsm, const Event *e);

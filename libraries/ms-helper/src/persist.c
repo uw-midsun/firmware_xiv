@@ -1,8 +1,8 @@
 #include "persist.h"
+#include <inttypes.h>
 #include "crc32.h"
 #include "log.h"
 #include "soft_timer.h"
-#include <inttypes.h>
 // The persistance layer allocates one page of flash so we can erase the entire
 // page when full. To reduce the number of erases, we partition the page into a
 // number of sections. Each section is the size of the specified blob plus a
@@ -43,8 +43,7 @@ static void prv_periodic_commit(SoftTimerId timer_id, void *context) {
     persist_commit(persist);
   } else {
     // Check if our data has changed from the stored copy
-    uint32_t new_hash =
-        crc32_arr((const uint8_t *)persist->blob, persist->blob_size);
+    uint32_t new_hash = crc32_arr((const uint8_t *)persist->blob, persist->blob_size);
     if (new_hash != persist->prev_hash) {
       // Data has changed - commit
       persist_commit(persist);
@@ -52,12 +51,12 @@ static void prv_periodic_commit(SoftTimerId timer_id, void *context) {
     persist->prev_hash = new_hash;
   }
 
-  soft_timer_start_millis(PERSIST_COMMIT_TIMEOUT_MS, prv_periodic_commit,
-                          persist, &persist->timer_id);
+  soft_timer_start_millis(PERSIST_COMMIT_TIMEOUT_MS, prv_periodic_commit, persist,
+                          &persist->timer_id);
 }
 
-StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob,
-                        size_t blob_size, bool overwrite) {
+StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob, size_t blob_size,
+                        bool overwrite) {
   if (blob_size > FLASH_PAGE_BYTES || page >= NUM_FLASH_PAGES) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
   } else if (blob_size % FLASH_WRITE_BYTES != 0) {
@@ -71,8 +70,8 @@ StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob,
 
   // Load stored data
   PersistHeader header = {
-      .marker = PERSIST_VALID_MARKER, //
-      .size_bytes = 0                 //
+    .marker = PERSIST_VALID_MARKER,  //
+    .size_bytes = 0                  //
   };
   persist->flash_addr = PERSIST_BASE_ADDR;
 
@@ -85,8 +84,8 @@ StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob,
   // * This is a valid section. Use this address.
   //   Marker == 0xFFFFFFFF, Size != 0xFFFFFFFF
   do {
-    status_ok_or_return(flash_read(persist->flash_addr, sizeof(header),
-                                   (uint8_t *)&header, sizeof(header)));
+    status_ok_or_return(
+        flash_read(persist->flash_addr, sizeof(header), (uint8_t *)&header, sizeof(header)));
     if (header.marker != PERSIST_VALID_MARKER) {
       persist->flash_addr += sizeof(header) + header.size_bytes;
     }
@@ -100,10 +99,8 @@ StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob,
   } while (header.marker != PERSIST_VALID_MARKER);
 
   if (header.size_bytes == PERSIST_INVALID_SIZE) {
-    LOG_DEBUG(
-        "No valid sections found! New persist data will live at 0x%" PRIx32
-        "\n",
-        (uint32_t)persist->flash_addr);
+    LOG_DEBUG("No valid sections found! New persist data will live at 0x%" PRIx32 "\n",
+              (uint32_t)persist->flash_addr);
     persist_commit(persist);
   } else if (header.size_bytes != persist->blob_size) {
     if (overwrite) {
@@ -116,32 +113,28 @@ StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob,
       return status_code(STATUS_CODE_INTERNAL_ERROR);
     }
   } else {
-    LOG_DEBUG("Found valid section at 0x%" PRIx32 " (0x%" PRIx32
-              " bytes), loading data\n",
+    LOG_DEBUG("Found valid section at 0x%" PRIx32 " (0x%" PRIx32 " bytes), loading data\n",
               (uint32_t)persist->flash_addr, (uint32_t)header.size_bytes);
-    StatusCode ret =
-        flash_read(persist->flash_addr + sizeof(header), persist->blob_size,
-                   (uint8_t *)persist->blob, persist->blob_size);
+    StatusCode ret = flash_read(persist->flash_addr + sizeof(header), persist->blob_size,
+                                (uint8_t *)persist->blob, persist->blob_size);
     status_ok_or_return(ret);
 
     // Calculate valid section's hash
-    persist->prev_hash =
-        crc32_arr((const uint8_t *)persist->blob, persist->blob_size);
+    persist->prev_hash = crc32_arr((const uint8_t *)persist->blob, persist->blob_size);
 
     // Increment flash_addr to the next new section
     persist->prev_flash_addr = persist->flash_addr;
     persist->flash_addr += sizeof(header) + header.size_bytes;
   }
 
-  return soft_timer_start_millis(PERSIST_COMMIT_TIMEOUT_MS, prv_periodic_commit,
-                                 persist, &persist->timer_id);
+  return soft_timer_start_millis(PERSIST_COMMIT_TIMEOUT_MS, prv_periodic_commit, persist,
+                                 &persist->timer_id);
 }
 
 StatusCode persist_ctrl_periodic(PersistStorage *persist, bool enabled) {
   if (persist->timer_id == SOFT_TIMER_INVALID_TIMER && enabled) {
     // Enable periodic commit - previously disabled
-    return soft_timer_start_millis(PERSIST_COMMIT_TIMEOUT_MS,
-                                   prv_periodic_commit, persist,
+    return soft_timer_start_millis(PERSIST_COMMIT_TIMEOUT_MS, prv_periodic_commit, persist,
                                    &persist->timer_id);
   } else if (persist->timer_id != SOFT_TIMER_INVALID_TIMER && !enabled) {
     // Disable periodic commit - previously enabled
@@ -160,24 +153,21 @@ StatusCode persist_commit(PersistStorage *persist) {
   }
 
   // Check if we're overrunning the page
-  if (persist->flash_addr + sizeof(PersistHeader) + persist->blob_size >=
-      PERSIST_END_ADDR) {
+  if (persist->flash_addr + sizeof(PersistHeader) + persist->blob_size >= PERSIST_END_ADDR) {
     flash_erase(persist->page);
     persist->flash_addr = PERSIST_BASE_ADDR;
   }
 
   // Write persist blob size, skipping the marker
-  PersistHeader header = {.size_bytes = persist->blob_size};
-  LOG_DEBUG("Committing persistance layer to 0x%" PRIx32 "\n",
-            (uint32_t)persist->flash_addr);
-  StatusCode ret =
-      flash_write(persist->flash_addr + sizeof(header.marker),
-                  (uint8_t *)&header.size_bytes, sizeof(header.size_bytes));
+  PersistHeader header = { .size_bytes = persist->blob_size };
+  LOG_DEBUG("Committing persistance layer to 0x%" PRIx32 "\n", (uint32_t)persist->flash_addr);
+  StatusCode ret = flash_write(persist->flash_addr + sizeof(header.marker),
+                               (uint8_t *)&header.size_bytes, sizeof(header.size_bytes));
   status_ok_or_return(ret);
 
   // Write persist blob
-  ret = flash_write(persist->flash_addr + sizeof(header),
-                    (uint8_t *)persist->blob, persist->blob_size);
+  ret = flash_write(persist->flash_addr + sizeof(header), (uint8_t *)persist->blob,
+                    persist->blob_size);
   status_ok_or_return(ret);
 
   persist->prev_flash_addr = persist->flash_addr;

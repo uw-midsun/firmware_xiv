@@ -59,12 +59,12 @@ void adc_init(AdcMode adc_mode) {
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, true);
 
   ADC_InitTypeDef adc_settings = {
-      .ADC_Resolution = ADC_Resolution_12b,
-      .ADC_ContinuousConvMode = adc_mode,
-      .ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None,
-      .ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_TRGO,
-      .ADC_DataAlign = ADC_DataAlign_Right,
-      .ADC_ScanDirection = ADC_ScanDirection_Upward,
+    .ADC_Resolution = ADC_Resolution_12b,
+    .ADC_ContinuousConvMode = adc_mode,
+    .ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None,
+    .ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_TRGO,
+    .ADC_DataAlign = ADC_DataAlign_Right,
+    .ADC_ScanDirection = ADC_ScanDirection_Upward,
   };
 
   ADC_Init(ADC1, &adc_settings);
@@ -113,28 +113,27 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
   }
 
   if (new_state) {
-    ADC_ChannelConfig(ADC1, ((uint32_t)1 << adc_channel),
-                      ADC_SampleTime_239_5Cycles);
+    ADC_ChannelConfig(ADC1, ((uint32_t)1 << adc_channel), ADC_SampleTime_239_5Cycles);
   } else {
     ADC1->CHSELR &= ~((uint32_t)1 << adc_channel);
   }
 
   // Keep internal channels enabled only when set
   switch (adc_channel) {
-  case ADC_CHANNEL_BAT:
-    ADC_VbatCmd(new_state);
-    break;
+    case ADC_CHANNEL_BAT:
+      ADC_VbatCmd(new_state);
+      break;
 
-  case ADC_CHANNEL_REF:
-    ADC_VrefintCmd(new_state);
-    break;
+    case ADC_CHANNEL_REF:
+      ADC_VrefintCmd(new_state);
+      break;
 
-  case ADC_CHANNEL_TEMP:
-    ADC_TempSensorCmd(new_state);
-    break;
+    case ADC_CHANNEL_TEMP:
+      ADC_TempSensorCmd(new_state);
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   s_adc_status.sequence = ADC1->CHSELR;
@@ -148,23 +147,23 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
   *adc_channel = address.pin;
 
   switch (address.port) {
-  case GPIO_PORT_A:
-    if (address.pin > 7) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    break;
-  case GPIO_PORT_B:
-    if (address.pin > 1) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    *adc_channel += 8;
-    break;
-  case GPIO_PORT_C:
-    if (address.pin > 5) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    *adc_channel += 10;
-    break;
+    case GPIO_PORT_A:
+      if (address.pin > 7) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+      break;
+    case GPIO_PORT_B:
+      if (address.pin > 1) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+      *adc_channel += 8;
+      break;
+    case GPIO_PORT_C:
+      if (address.pin > 5) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+      *adc_channel += 10;
+      break;
   }
 
   if (*adc_channel > ADC_CHANNEL_15) {
@@ -173,8 +172,7 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback,
-                                 void *context) {
+StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -219,20 +217,20 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
   adc_read_raw(adc_channel, &adc_reading);
 
   switch (adc_channel) {
-  case ADC_CHANNEL_TEMP:
-    *reading = prv_get_temp(adc_reading);
-    return STATUS_CODE_OK;
+    case ADC_CHANNEL_TEMP:
+      *reading = prv_get_temp(adc_reading);
+      return STATUS_CODE_OK;
 
-  case ADC_CHANNEL_REF:
-    *reading = prv_get_vdda(adc_reading);
-    return STATUS_CODE_OK;
+    case ADC_CHANNEL_REF:
+      *reading = prv_get_vdda(adc_reading);
+      return STATUS_CODE_OK;
 
-  case ADC_CHANNEL_BAT:
-    adc_reading *= 2;
-    break;
+    case ADC_CHANNEL_BAT:
+      adc_reading *= 2;
+      break;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   uint16_t vdda;
@@ -249,8 +247,8 @@ void ADC1_COMP_IRQHandler() {
       AdcChannel current_channel = __builtin_ctz(s_adc_status.sequence);
 
       if (s_adc_interrupts[current_channel].callback != NULL) {
-        s_adc_interrupts[current_channel].callback(
-            current_channel, s_adc_interrupts[current_channel].context);
+        s_adc_interrupts[current_channel].callback(current_channel,
+                                                   s_adc_interrupts[current_channel].context);
       }
 
       s_adc_interrupts[current_channel].reading = reading;

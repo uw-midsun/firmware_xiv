@@ -21,9 +21,8 @@
 //   CRITICAL_SECTION_AUTOEND;
 //   // Critical code here.
 // }
-#define CRITICAL_SECTION_AUTOEND                                               \
-  __attribute__((cleanup(_critical_section_cleanup))) bool _disabled =         \
-      critical_section_start();
+#define CRITICAL_SECTION_AUTOEND \
+  __attribute__((cleanup(_critical_section_cleanup))) bool _disabled = critical_section_start();
 
 // Disables all interrupts across all lines/inputs. Returns true if the function
 // disabled interrupts.

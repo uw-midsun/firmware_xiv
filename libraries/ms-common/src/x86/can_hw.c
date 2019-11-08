@@ -50,14 +50,14 @@ static sem_t s_tx_sem;
 // Locked if the TX/RX threads should be alive, unlocked on exit
 static pthread_mutex_t s_keep_alive = PTHREAD_MUTEX_INITIALIZER;
 
-static CanHwSocketData s_socket_data = {.can_fd = -1};
+static CanHwSocketData s_socket_data = { .can_fd = -1 };
 
 static uint32_t prv_get_delay(CanHwBitrate bitrate) {
   const uint32_t delay_us[NUM_CAN_HW_BITRATES] = {
-      1000, // 125 kbps
-      500,  // 250 kbps
-      250,  // 500 kbps
-      125,  // 1 mbps
+    1000,  // 125 kbps
+    500,   // 250 kbps
+    250,   // 500 kbps
+    125,   // 1 mbps
   };
 
   return delay_us[bitrate];
@@ -69,7 +69,7 @@ static void *prv_rx_thread(void *arg) {
 
   pthread_barrier_wait(&s_barrier);
 
-  struct timeval timeout = {.tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US};
+  struct timeval timeout = { .tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US };
 
   // Mutex is unlocked when the thread should exit
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
@@ -81,8 +81,8 @@ static void *prv_rx_thread(void *arg) {
     select(s_socket_data.can_fd + 1, &input_fds, NULL, NULL, &timeout);
 
     if (FD_ISSET(s_socket_data.can_fd, &input_fds)) {
-      int bytes = read(s_socket_data.can_fd, &s_socket_data.rx_frame,
-                       sizeof(s_socket_data.rx_frame));
+      int bytes =
+          read(s_socket_data.can_fd, &s_socket_data.rx_frame, sizeof(s_socket_data.rx_frame));
 
       if (s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
         s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
@@ -102,7 +102,7 @@ static void *prv_rx_thread(void *arg) {
 static void *prv_tx_thread(void *arg) {
   x86_interrupt_pthread_init();
   LOG_DEBUG("CAN HW TX thread started\n");
-  struct can_frame frame = {0};
+  struct can_frame frame = { 0 };
 
   pthread_barrier_wait(&s_barrier);
 
@@ -158,20 +158,18 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   s_socket_data.can_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   if (s_socket_data.can_fd == -1) {
     LOG_CRITICAL("CAN HW: Failed to open SocketCAN socket\n");
-    return status_msg(STATUS_CODE_INTERNAL_ERROR,
-                      "CAN HW: Failed to open socket");
+    return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to open socket");
   }
 
   // Loopback - expects to receive its own messages
   int loopback = settings->loopback;
-  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS,
-                 &loopback, sizeof(loopback)) < 0) {
+  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &loopback,
+                 sizeof(loopback)) < 0) {
     LOG_CRITICAL("CAN HW: Failed to set loopback mode on socket\n");
-    return status_msg(STATUS_CODE_INTERNAL_ERROR,
-                      "CAN HW: Failed to set loopback mode on socket");
+    return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to set loopback mode on socket");
   }
 
-  struct ifreq ifr = {0};
+  struct ifreq ifr = { 0 };
   snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", CAN_HW_DEV_INTERFACE);
   if (ioctl(s_socket_data.can_fd, SIOCGIFINDEX, &ifr) < 0) {
     LOG_CRITICAL("CAN HW: Device %s not found\n", CAN_HW_DEV_INTERFACE);
@@ -182,13 +180,12 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   fcntl(s_socket_data.can_fd, F_SETFL, O_NONBLOCK);
 
   struct sockaddr_can addr = {
-      .can_family = AF_CAN,
-      .can_ifindex = ifr.ifr_ifindex,
+    .can_family = AF_CAN,
+    .can_ifindex = ifr.ifr_ifindex,
   };
   if (bind(s_socket_data.can_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     LOG_CRITICAL("CAN HW: Failed to bind socket\n");
-    return status_msg(STATUS_CODE_INTERNAL_ERROR,
-                      "CAN HW: Failed to bind socket");
+    return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to bind socket");
   }
 
   LOG_DEBUG("CAN HW initialized on %s\n", CAN_HW_DEV_INTERFACE);
@@ -206,16 +203,14 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
 }
 
 // Registers a callback for the given event
-StatusCode can_hw_register_callback(CanHwEvent event,
-                                    CanHwEventHandlerCb callback,
-                                    void *context) {
+StatusCode can_hw_register_callback(CanHwEvent event, CanHwEventHandlerCb callback, void *context) {
   if (event >= NUM_CAN_HW_EVENTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
   s_socket_data.handlers[event] = (CanHwEventHandler){
-      .callback = callback, //
-      .context = context,   //
+    .callback = callback,  //
+    .context = context,    //
   };
 
   return STATUS_CODE_OK;
@@ -223,37 +218,31 @@ StatusCode can_hw_register_callback(CanHwEvent event,
 
 StatusCode can_hw_add_filter(uint32_t mask, uint32_t filter, bool extended) {
   if (s_socket_data.num_filters >= CAN_HW_MAX_FILTERS) {
-    return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED,
-                      "CAN HW: Ran out of filters.");
+    return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED, "CAN HW: Ran out of filters.");
   }
 
   uint32_t reg_mask = extended ? CAN_EFF_MASK : CAN_SFF_MASK;
   uint32_t ide = extended ? CAN_EFF_FLAG : 0;
-  s_socket_data.filters[s_socket_data.num_filters].can_id =
-      (filter & reg_mask) | ide;
-  s_socket_data.filters[s_socket_data.num_filters].can_mask =
-      (mask & reg_mask) | CAN_EFF_FLAG;
+  s_socket_data.filters[s_socket_data.num_filters].can_id = (filter & reg_mask) | ide;
+  s_socket_data.filters[s_socket_data.num_filters].can_mask = (mask & reg_mask) | CAN_EFF_FLAG;
   s_socket_data.num_filters++;
 
-  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_FILTER,
-                 s_socket_data.filters,
-                 sizeof(s_socket_data.filters[0]) * s_socket_data.num_filters) <
-      0) {
-    return status_msg(STATUS_CODE_INTERNAL_ERROR,
-                      "CAN HW: Failed to set raw filters");
+  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_FILTER, s_socket_data.filters,
+                 sizeof(s_socket_data.filters[0]) * s_socket_data.num_filters) < 0) {
+    return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to set raw filters");
   }
 
   return STATUS_CODE_OK;
 }
 
-CanHwBusStatus can_hw_bus_status(void) { return CAN_HW_BUS_STATUS_OK; }
+CanHwBusStatus can_hw_bus_status(void) {
+  return CAN_HW_BUS_STATUS_OK;
+}
 
-StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data,
-                           size_t len) {
+StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size_t len) {
   uint32_t mask = extended ? CAN_EFF_MASK : CAN_SFF_MASK;
   uint32_t extended_bit = extended ? CAN_EFF_FLAG : 0;
-  struct can_frame frame = {.can_id = (id & mask) | extended_bit,
-                            .can_dlc = len};
+  struct can_frame frame = { .can_id = (id & mask) | extended_bit, .can_dlc = len };
   memcpy(&frame.data, data, len);
 
   StatusCode ret = fifo_push(&s_socket_data.tx_fifo, &frame);

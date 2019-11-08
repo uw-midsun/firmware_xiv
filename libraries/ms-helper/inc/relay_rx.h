@@ -16,15 +16,14 @@
 #include "status.h"
 
 // Wrapped by a CanRxHandlerCb.
-typedef StatusCode (*RelayRxHandler)(SystemCanMessage msg_id, uint8_t state,
-                                     void *context);
+typedef StatusCode (*RelayRxHandler)(SystemCanMessage msg_id, uint8_t state, void *context);
 
 typedef struct RelayRxStorage {
   RelayRxHandler handler;
-  SystemCanMessage msg_id; // Unused but helpful in debugging.
+  SystemCanMessage msg_id;  // Unused but helpful in debugging.
   uint8_t curr_state;
-  uint8_t state_bound; // Non-inclusive upper bound |[0, state_bound)| on
-                       // |curr_state|.
+  uint8_t state_bound;  // Non-inclusive upper bound |[0, state_bound)| on
+                        // |curr_state|.
   void *context;
 } RelayRxStorage;
 
@@ -41,7 +40,5 @@ typedef struct RelayRxStorage {
 // module could be used for any CAN controlled element that uses a message
 // format of a single uint8_t. Also note that the |storage| is also extensible
 // for this reason.
-StatusCode relay_rx_configure_handler(RelayRxStorage *storage,
-                                      SystemCanMessage msg_id,
-                                      uint8_t state_bound,
-                                      RelayRxHandler handler, void *context);
+StatusCode relay_rx_configure_handler(RelayRxStorage *storage, SystemCanMessage msg_id,
+                                      uint8_t state_bound, RelayRxHandler handler, void *context);

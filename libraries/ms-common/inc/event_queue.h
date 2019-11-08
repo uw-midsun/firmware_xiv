@@ -42,13 +42,11 @@ typedef struct Event {
 void event_queue_init(void);
 
 // Raises an event in the global event queue at the default priority.
-StatusCode event_raise_priority(EventPriority priority, EventId id,
-                                uint16_t data);
+StatusCode event_raise_priority(EventPriority priority, EventId id, uint16_t data);
 
 // Raises an event in the global event queue at the default priority. Provided
 // for legacy compatibility.
-#define event_raise(id, data)                                                  \
-  event_raise_priority(EVENT_PRIORITY_NORMAL, (id), (data))
+#define event_raise(id, data) event_raise_priority(EVENT_PRIORITY_NORMAL, (id), (data))
 
 // Returns the next event to be processed.
 // Note that events are processed by priority.

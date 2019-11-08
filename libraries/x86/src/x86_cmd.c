@@ -1,8 +1,8 @@
 #include "x86_cmd.h"
-#include "log.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 
 typedef struct X86CmdHandler {
   const char *cmd;
@@ -18,9 +18,8 @@ typedef struct X86CmdThread {
 
 static X86CmdThread s_cmd_thread;
 
-static void prv_socket_handler(struct X86SocketThread *thread, int client_fd,
-                               const char *rx_data, size_t rx_len,
-                               void *context) {
+static void prv_socket_handler(struct X86SocketThread *thread, int client_fd, const char *rx_data,
+                               size_t rx_len, void *context) {
   X86CmdThread *cmd_thread = context;
 
   LOG_DEBUG("Received command %s\n", rx_data);
@@ -30,7 +29,7 @@ static void prv_socket_handler(struct X86SocketThread *thread, int client_fd,
   char *buf = malloc(rx_len + 1);
   buf[rx_len] = '\0';
 
-  const char *args[X86_CMD_MAX_ARGS] = {0};
+  const char *args[X86_CMD_MAX_ARGS] = { 0 };
   strncpy(buf, rx_data, rx_len);
 
   // Don't support more than one command per packet
@@ -54,12 +53,10 @@ static void prv_socket_handler(struct X86SocketThread *thread, int client_fd,
 }
 
 void x86_cmd_init(void) {
-  x86_socket_init(&s_cmd_thread.socket, X86_CMD_SOCKET_NAME, prv_socket_handler,
-                  &s_cmd_thread);
+  x86_socket_init(&s_cmd_thread.socket, X86_CMD_SOCKET_NAME, prv_socket_handler, &s_cmd_thread);
 }
 
-StatusCode x86_cmd_register_handler(const char *cmd, X86CmdHandlerFn fn,
-                                    void *context) {
+StatusCode x86_cmd_register_handler(const char *cmd, X86CmdHandlerFn fn, void *context) {
   X86CmdThread *thread = &s_cmd_thread;
 
   if (thread->num_handlers >= X86_CMD_MAX_HANDLERS) {
@@ -67,9 +64,9 @@ StatusCode x86_cmd_register_handler(const char *cmd, X86CmdHandlerFn fn,
   }
 
   thread->handlers[thread->num_handlers] = (X86CmdHandler){
-      .cmd = cmd,        //
-      .fn = fn,          //
-      .context = context //
+    .cmd = cmd,         //
+    .fn = fn,           //
+    .context = context  //
   };
   thread->num_handlers++;
 

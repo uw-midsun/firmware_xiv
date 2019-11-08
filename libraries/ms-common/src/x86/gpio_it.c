@@ -31,16 +31,14 @@ static void prv_gpio_it_handler(uint8_t interrupt_id) {
 void gpio_it_init(void) {
   x86_interrupt_register_handler(prv_gpio_it_handler, &s_gpio_it_handler_id);
 
-  GpioItInterrupt empty_cfg = {0};
+  GpioItInterrupt empty_cfg = { 0 };
   for (uint16_t i = 0; i < GPIO_PINS_PER_PORT; i++) {
     s_gpio_it_interrupts[i] = empty_cfg;
   }
 }
 
-StatusCode gpio_it_register_interrupt(const GpioAddress *address,
-                                      const InterruptSettings *settings,
-                                      InterruptEdge edge,
-                                      GpioItCallback callback, void *context) {
+StatusCode gpio_it_register_interrupt(const GpioAddress *address, const InterruptSettings *settings,
+                                      InterruptEdge edge, GpioItCallback callback, void *context) {
   if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   } else if (s_gpio_it_interrupts[address->pin].callback) {
@@ -48,8 +46,8 @@ StatusCode gpio_it_register_interrupt(const GpioAddress *address,
   }
 
   uint8_t interrupt_id;
-  status_ok_or_return(x86_interrupt_register_interrupt(
-      s_gpio_it_handler_id, settings, &interrupt_id));
+  status_ok_or_return(
+      x86_interrupt_register_interrupt(s_gpio_it_handler_id, settings, &interrupt_id));
 
   s_gpio_it_interrupts[address->pin].interrupt_id = interrupt_id;
   s_gpio_it_interrupts[address->pin].address = *address;

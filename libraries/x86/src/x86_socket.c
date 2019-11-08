@@ -1,7 +1,4 @@
 #include "x86_socket.h"
-#include "log.h"
-#include "misc.h"
-#include "x86_interrupt.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -10,6 +7,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include "log.h"
+#include "misc.h"
+#include "x86_interrupt.h"
 
 #define X86_SOCKET_INVALID_FD -1
 #define X86_SOCKET_BUFFER_LEN 1024
@@ -24,20 +24,18 @@ static StatusCode prv_setup_socket(X86SocketThread *thread, int *server_fd) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "Failed to create socket");
   }
 
-  struct sockaddr_un addr = {.sun_family = AF_UNIX};
+  struct sockaddr_un addr = { .sun_family = AF_UNIX };
   // First character is \0 to signal abstract domain socket
   snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, "%d/%s/%s", getpid(),
            program_invocation_short_name, thread->module_name);
 
   if (bind(*server_fd, (struct sockaddr *)&addr,
-           offsetof(struct sockaddr_un, sun_path) + 1 +
-               strlen(addr.sun_path + 1)) < 0) {
+           offsetof(struct sockaddr_un, sun_path) + 1 + strlen(addr.sun_path + 1)) < 0) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "Failed to bind socket");
   }
 
   if (listen(*server_fd, X86_SOCKET_MAX_PENDING_CONNECTIONS) < 0) {
-    return status_msg(STATUS_CODE_INTERNAL_ERROR,
-                      "Failed to specify maximum pending connections");
+    return status_msg(STATUS_CODE_INTERNAL_ERROR, "Failed to specify maximum pending connections");
   }
 
   return STATUS_CODE_OK;
@@ -54,8 +52,7 @@ static void *prv_server_thread(void *context) {
     return NULL;
   }
 
-  LOG_DEBUG("Started RX server for %s (PID %d)\n", thread->module_name,
-            getpid());
+  LOG_DEBUG("Started RX server for %s (PID %d)\n", thread->module_name, getpid());
   pthread_barrier_wait(&thread->barrier);
 
   // Mutex unlocked when thread should exit
@@ -81,8 +78,7 @@ static void *prv_server_thread(void *context) {
       if (new_socket < 0) {
         LOG_DEBUG("Failed to accept new client!\n");
       }
-      LOG_DEBUG("New client %d connected to %s!\n", new_socket,
-                thread->module_name);
+      LOG_DEBUG("New client %d connected to %s!\n", new_socket, thread->module_name);
 
       for (size_t i = 0; i < X86_SOCKET_MAX_CLIENTS; i++) {
         if (thread->client_fds[i] == X86_SOCKET_INVALID_FD) {
@@ -95,19 +91,16 @@ static void *prv_server_thread(void *context) {
     // Handle client reads
     for (size_t i = 0; i < X86_SOCKET_MAX_CLIENTS; i++) {
       int client_fd = thread->client_fds[i];
-      if (client_fd != X86_SOCKET_INVALID_FD &&
-          FD_ISSET(client_fd, &read_fds)) {
-        char buffer[X86_SOCKET_BUFFER_LEN] = {0};
+      if (client_fd != X86_SOCKET_INVALID_FD && FD_ISSET(client_fd, &read_fds)) {
+        char buffer[X86_SOCKET_BUFFER_LEN] = { 0 };
         ssize_t read_len = read(client_fd, buffer, X86_SOCKET_BUFFER_LEN);
         if (read_len <= 0) {
           // Disconnected
-          LOG_DEBUG("Client %d disconnected from %s\n", client_fd,
-                    thread->module_name);
+          LOG_DEBUG("Client %d disconnected from %s\n", client_fd, thread->module_name);
           close(client_fd);
           thread->client_fds[i] = X86_SOCKET_INVALID_FD;
         } else {
-          thread->handler(thread, client_fd, buffer, (size_t)read_len,
-                          thread->context);
+          thread->handler(thread, client_fd, buffer, (size_t)read_len, thread->context);
         }
       }
     }
@@ -116,8 +109,8 @@ static void *prv_server_thread(void *context) {
   return NULL;
 }
 
-StatusCode x86_socket_init(X86SocketThread *thread, char *module_name,
-                           X86SocketHandler handler, void *context) {
+StatusCode x86_socket_init(X86SocketThread *thread, char *module_name, X86SocketHandler handler,
+                           void *context) {
   // TODO(ELEC-395): need to handle reinit
   memset(thread, 0, sizeof(*thread));
   thread->module_name = module_name;
@@ -143,12 +136,10 @@ StatusCode x86_socket_init(X86SocketThread *thread, char *module_name,
   return STATUS_CODE_OK;
 }
 
-StatusCode x86_socket_broadcast(X86SocketThread *thread, const char *tx_data,
-                                size_t tx_len) {
+StatusCode x86_socket_broadcast(X86SocketThread *thread, const char *tx_data, size_t tx_len) {
   for (size_t i = 0; i < X86_SOCKET_MAX_CLIENTS; i++) {
     if (thread->client_fds[i] != X86_SOCKET_INVALID_FD) {
-      status_ok_or_return(
-          x86_socket_write(thread->client_fds[i], tx_data, tx_len));
+      status_ok_or_return(x86_socket_write(thread->client_fds[i], tx_data, tx_len));
     }
   }
 
@@ -174,13 +165,12 @@ int test_x86_socket_client_init(const char *module_name) {
     LOG_CRITICAL("Failed to create socket: %s\n", strerror(errno));
   }
 
-  struct sockaddr_un addr = {.sun_family = AF_UNIX};
+  struct sockaddr_un addr = { .sun_family = AF_UNIX };
   snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, "%d/%s/%s", getpid(),
            program_invocation_short_name, module_name);
 
   int result = connect(client_fd, (struct sockaddr_un *)&addr,
-                       offsetof(struct sockaddr_un, sun_path) + 1 +
-                           strlen(addr.sun_path + 1));
+                       offsetof(struct sockaddr_un, sun_path) + 1 + strlen(addr.sun_path + 1));
 
   if (result < 0) {
     LOG_CRITICAL("Failed to connect to socket: %s\n", strerror(errno));

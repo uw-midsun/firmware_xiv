@@ -25,18 +25,15 @@ static StatusCode prv_relay_rx_can_handler(const CanMessage *msg, void *context,
     *ack_reply = CAN_ACK_STATUS_INVALID;
   } else {
     storage->curr_state = state;
-    if (!status_ok(storage->handler(storage->msg_id, storage->curr_state,
-                                    storage->context))) {
+    if (!status_ok(storage->handler(storage->msg_id, storage->curr_state, storage->context))) {
       *ack_reply = CAN_ACK_STATUS_INVALID;
     }
   }
   return STATUS_CODE_OK;
 }
 
-StatusCode relay_rx_configure_handler(RelayRxStorage *storage,
-                                      SystemCanMessage msg_id,
-                                      uint8_t state_bound,
-                                      RelayRxHandler handler, void *context) {
+StatusCode relay_rx_configure_handler(RelayRxStorage *storage, SystemCanMessage msg_id,
+                                      uint8_t state_bound, RelayRxHandler handler, void *context) {
   if (handler == NULL || storage == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -46,8 +43,7 @@ StatusCode relay_rx_configure_handler(RelayRxStorage *storage,
   // that the storage is also extensible for this reason.
 
   bool disabled_in_scope = critical_section_start();
-  StatusCode status =
-      can_register_rx_handler(msg_id, prv_relay_rx_can_handler, storage);
+  StatusCode status = can_register_rx_handler(msg_id, prv_relay_rx_can_handler, storage);
   if (!status_ok(status)) {
     critical_section_end(disabled_in_scope);
     return status;

@@ -39,10 +39,8 @@ typedef struct HeartbeatRxHandlerStorage {
 // takes |context| as an argument. This configuration is stored in |storage|
 // which must persist indefinitely. To automatically respond in the affirmative
 // register |heartbeat_rx_auto_ack_handler|.
-StatusCode heartbeat_rx_register_handler(HeartbeatRxHandlerStorage *storage,
-                                         CanMessageId msg_id,
-                                         HeartbeatRxHandler handler,
-                                         void *context);
+StatusCode heartbeat_rx_register_handler(HeartbeatRxHandlerStorage *storage, CanMessageId msg_id,
+                                         HeartbeatRxHandler handler, void *context);
 
 // An instance of HeartbeatRxHandler that can be used to automatically ack and
 // return true with no other behavior.

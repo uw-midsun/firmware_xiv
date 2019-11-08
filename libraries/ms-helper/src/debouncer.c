@@ -5,8 +5,8 @@
 // soft timer. Once the timer times out, prv_timer_callback is called
 //   which compares the states and runs the users callback if required.
 //   Interrupt is reset after.
-#include "soft_timer.h"
 #include <stddef.h>
+#include "soft_timer.h"
 
 #define DEBOUNCER_INTERRUPT_MASKING_DURATION_MS 50
 
@@ -30,30 +30,28 @@ static void prv_it_callback(const GpioAddress *address, void *context) {
 
   gpio_it_mask_interrupt(address, true);
 
-  soft_timer_start_millis(DEBOUNCER_INTERRUPT_MASKING_DURATION_MS,
-                          prv_timer_callback, debouncer, NULL);
+  soft_timer_start_millis(DEBOUNCER_INTERRUPT_MASKING_DURATION_MS, prv_timer_callback, debouncer,
+                          NULL);
 }
 
-StatusCode debouncer_init_pin(DebouncerStorage *debouncer,
-                              const GpioAddress *address,
+StatusCode debouncer_init_pin(DebouncerStorage *debouncer, const GpioAddress *address,
                               GpioItCallback callback, void *context) {
   GpioSettings gpio_settings = {
-      .direction = GPIO_DIR_IN,  //
-      .resistor = GPIO_RES_NONE, //
+    .direction = GPIO_DIR_IN,   //
+    .resistor = GPIO_RES_NONE,  //
   };
 
   gpio_init_pin(address, &gpio_settings);
 
   InterruptSettings interrupt_settings = {
-      .type = INTERRUPT_TYPE_INTERRUPT,
-      .priority = INTERRUPT_PRIORITY_LOW,
+    .type = INTERRUPT_TYPE_INTERRUPT,
+    .priority = INTERRUPT_PRIORITY_LOW,
   };
 
   debouncer->address = *address;
   debouncer->callback = callback;
   debouncer->context = context;
 
-  return gpio_it_register_interrupt(address, &interrupt_settings,
-                                    INTERRUPT_EDGE_RISING_FALLING,
+  return gpio_it_register_interrupt(address, &interrupt_settings, INTERRUPT_EDGE_RISING_FALLING,
                                     prv_it_callback, debouncer);
 }

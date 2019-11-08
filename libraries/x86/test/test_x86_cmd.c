@@ -1,15 +1,15 @@
+#include <stdbool.h>
+#include <string.h>
 #include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
 #include "x86_cmd.h"
-#include <stdbool.h>
-#include <string.h>
 
 static char s_cmd[30];
 static size_t s_num_args;
 
-static void prv_handler(int client_fd, const char *cmd, const char *args[],
-                        size_t num_args, void *context) {
+static void prv_handler(int client_fd, const char *cmd, const char *args[], size_t num_args,
+                        void *context) {
   bool *received = context;
   LOG_DEBUG("Handling cmd %s (%d args) from %d\n", cmd, num_args, client_fd);
   for (size_t i = 0; i < num_args; i++) {

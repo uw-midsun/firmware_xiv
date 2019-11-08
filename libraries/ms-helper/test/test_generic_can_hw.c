@@ -36,14 +36,13 @@ void setup_test(void) {
   gpio_init();
 
   const CanHwSettings can_hw_settings = {
-      .bitrate = CAN_HW_BITRATE_250KBPS,
-      .tx = {GPIO_PORT_A, 12},
-      .rx = {GPIO_PORT_A, 11},
-      .loopback = true,
+    .bitrate = CAN_HW_BITRATE_250KBPS,
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
+    .loopback = true,
   };
 
-  TEST_ASSERT_OK(generic_can_hw_init(&s_can, &can_hw_settings,
-                                     TEST_GENERIC_CAN_HW_FAULT_EVENT));
+  TEST_ASSERT_OK(generic_can_hw_init(&s_can, &can_hw_settings, TEST_GENERIC_CAN_HW_FAULT_EVENT));
 }
 
 void teardown_test(void) {}
@@ -54,17 +53,16 @@ void test_generic_can(void) {
   volatile uint8_t counter = 0;
 
   GenericCanMsg msg = {
-      .id = 0x0000FF,
-      .data = 255,
-      .dlc = 1,
-      .extended = true,
+    .id = 0x0000FF,
+    .data = 255,
+    .dlc = 1,
+    .extended = true,
   };
 
-  TEST_ASSERT_OK(generic_can_register_rx(can, prv_can_rx_callback,
-                                         GENERIC_CAN_EMPTY_MASK, msg.id, true,
-                                         &counter));
+  TEST_ASSERT_OK(generic_can_register_rx(can, prv_can_rx_callback, GENERIC_CAN_EMPTY_MASK, msg.id,
+                                         true, &counter));
 
-  Event e = {0, 0};
+  Event e = { 0, 0 };
   StatusCode status = NUM_STATUS_CODES;
   // TX
   TEST_ASSERT_OK(generic_can_tx(can, &msg));

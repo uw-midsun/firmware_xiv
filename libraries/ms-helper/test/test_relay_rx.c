@@ -42,9 +42,8 @@ typedef struct TestRelayRxHandlerCtx {
 static CanStorage s_can_storage;
 
 // CanAckRequestCb
-static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device,
-                                   CanAckStatus status, uint16_t num_remaining,
-                                   void *context) {
+static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+                                   uint16_t num_remaining, void *context) {
   (void)num_remaining;
   CanAckStatus *expected_status = context;
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN, msg_id);
@@ -54,8 +53,7 @@ static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device,
 }
 
 // RelayRxHandler
-static StatusCode prv_relay_rx_handler(SystemCanMessage msg_id, uint8_t state,
-                                       void *context) {
+static StatusCode prv_relay_rx_handler(SystemCanMessage msg_id, uint8_t state, void *context) {
   TestRelayRxHandlerCtx *data = context;
   TEST_ASSERT_EQUAL(data->expected_msg_id, msg_id);
   TEST_ASSERT_EQUAL(data->expected_state, state);
@@ -69,14 +67,14 @@ void setup_test(void) {
   soft_timer_init();
 
   CanSettings can_settings = {
-      .device_id = TEST_RELAY_CAN_DEVICE_ID,
-      .bitrate = CAN_HW_BITRATE_250KBPS,
-      .rx_event = TEST_RELAY_RX_CAN_RX,
-      .tx_event = TEST_RELAY_RX_CAN_TX,
-      .fault_event = TEST_RELAY_RX_CAN_FAULT,
-      .tx = {GPIO_PORT_A, 12},
-      .rx = {GPIO_PORT_A, 11},
-      .loopback = true,
+    .device_id = TEST_RELAY_CAN_DEVICE_ID,
+    .bitrate = CAN_HW_BITRATE_250KBPS,
+    .rx_event = TEST_RELAY_RX_CAN_RX,
+    .tx_event = TEST_RELAY_RX_CAN_TX,
+    .fault_event = TEST_RELAY_RX_CAN_FAULT,
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
+    .loopback = true,
   };
   TEST_ASSERT_OK(can_init(&s_can_storage, &can_settings));
 }
@@ -85,41 +83,40 @@ void teardown_test(void) {}
 
 void test_relay_rx_guards(void) {
   TestRelayRxHandlerCtx context = {
-      .ret_code = STATUS_CODE_OK,
-      .expected_msg_id = SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
-      .expected_state = TEST_RELAY_RX_STATE_OPEN,
-      .executed = false,
+    .ret_code = STATUS_CODE_OK,
+    .expected_msg_id = SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
+    .expected_state = TEST_RELAY_RX_STATE_OPEN,
+    .executed = false,
   };
-  RelayRxStorage relay_storage_a = {0};
-  TEST_ASSERT_OK(relay_rx_configure_handler(
-      &relay_storage_a, SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
-      NUM_TEST_RELAY_RX_STATES, prv_relay_rx_handler, &context));
+  RelayRxStorage relay_storage_a = { 0 };
+  TEST_ASSERT_OK(relay_rx_configure_handler(&relay_storage_a, SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
+                                            NUM_TEST_RELAY_RX_STATES, prv_relay_rx_handler,
+                                            &context));
   // Fail to register duplicates.
-  RelayRxStorage relay_storage_b = {0};
-  TEST_ASSERT_EQUAL(STATUS_CODE_RESOURCE_EXHAUSTED,
-                    relay_rx_configure_handler(
-                        &relay_storage_b, SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
-                        NUM_TEST_RELAY_RX_STATES, prv_relay_rx_handler,
-                        &context));
+  RelayRxStorage relay_storage_b = { 0 };
+  TEST_ASSERT_EQUAL(
+      STATUS_CODE_RESOURCE_EXHAUSTED,
+      relay_rx_configure_handler(&relay_storage_b, SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
+                                 NUM_TEST_RELAY_RX_STATES, prv_relay_rx_handler, &context));
 }
 
 void test_relay_rx(void) {
   TestRelayRxHandlerCtx context = {
-      .ret_code = STATUS_CODE_OK,
-      .expected_msg_id = SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
-      .expected_state = TEST_RELAY_RX_STATE_OPEN,
-      .executed = false,
+    .ret_code = STATUS_CODE_OK,
+    .expected_msg_id = SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
+    .expected_state = TEST_RELAY_RX_STATE_OPEN,
+    .executed = false,
   };
-  RelayRxStorage relay_storage = {0};
-  TEST_ASSERT_OK(relay_rx_configure_handler(
-      &relay_storage, SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
-      NUM_TEST_RELAY_RX_STATES, prv_relay_rx_handler, &context));
+  RelayRxStorage relay_storage = { 0 };
+  TEST_ASSERT_OK(relay_rx_configure_handler(&relay_storage, SYSTEM_CAN_MESSAGE_BATTERY_RELAY_MAIN,
+                                            NUM_TEST_RELAY_RX_STATES, prv_relay_rx_handler,
+                                            &context));
 
   CanAckStatus expected_status = CAN_ACK_STATUS_OK;
   CanAckRequest req = {
-      .callback = prv_ack_callback,
-      .context = &expected_status,
-      .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_RELAY_CAN_DEVICE_ID),
+    .callback = prv_ack_callback,
+    .context = &expected_status,
+    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_RELAY_CAN_DEVICE_ID),
   };
 
   // Open.

@@ -15,7 +15,5 @@
 
 // Registers |rx_handler| for |id| to |can| which will be passed |context| when
 // triggered.
-StatusCode generic_can_helpers_register_rx(GenericCan *can,
-                                           GenericCanRx rx_handler,
-                                           uint32_t mask, uint32_t filter,
-                                           void *context, uint16_t *idx);
+StatusCode generic_can_helpers_register_rx(GenericCan *can, GenericCanRx rx_handler, uint32_t mask,
+                                           uint32_t filter, void *context, uint16_t *idx);

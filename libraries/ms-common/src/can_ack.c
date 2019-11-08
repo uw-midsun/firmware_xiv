@@ -5,8 +5,7 @@
 #include <string.h>
 
 static StatusCode prv_update_req(CanAckRequests *requests, CanMessageId msg_id,
-                                 SoftTimerId timer_id, CanAckStatus status,
-                                 uint16_t device);
+                                 SoftTimerId timer_id, CanAckStatus status, uint16_t device);
 
 static void prv_timeout_cb(SoftTimerId timer_id, void *context);
 
@@ -34,8 +33,8 @@ StatusCode can_ack_add_request(CanAckRequests *requests, CanMessageId msg_id,
   pending_ack->expected_bitset = ack_request->expected_bitset;
   pending_ack->callback = ack_request->callback;
   pending_ack->context = ack_request->context;
-  StatusCode ret = soft_timer_start_millis(CAN_ACK_TIMEOUT_MS, prv_timeout_cb,
-                                           requests, &pending_ack->timer);
+  StatusCode ret =
+      soft_timer_start_millis(CAN_ACK_TIMEOUT_MS, prv_timeout_cb, requests, &pending_ack->timer);
 
   if (ret != STATUS_CODE_OK) {
     objpool_free_node(&requests->pool, pending_ack);
@@ -48,13 +47,11 @@ StatusCode can_ack_add_request(CanAckRequests *requests, CanMessageId msg_id,
 }
 
 StatusCode can_ack_handle_msg(CanAckRequests *requests, const CanMessage *msg) {
-  return prv_update_req(requests, msg->msg_id, SOFT_TIMER_INVALID_TIMER,
-                        msg->data, msg->source_id);
+  return prv_update_req(requests, msg->msg_id, SOFT_TIMER_INVALID_TIMER, msg->data, msg->source_id);
 }
 
 static StatusCode prv_update_req(CanAckRequests *requests, CanMessageId msg_id,
-                                 SoftTimerId timer_id, CanAckStatus status,
-                                 uint16_t device) {
+                                 SoftTimerId timer_id, CanAckStatus status, uint16_t device) {
   CanAckPendingReq *found_request = NULL;
   size_t index = 0;
 
@@ -94,15 +91,14 @@ static StatusCode prv_update_req(CanAckRequests *requests, CanMessageId msg_id,
   if (found_request->callback != NULL) {
     // Since we always check if a device was expected, we don't need to actually
     // mask it
-    uint16_t num_remaining = __builtin_popcount(found_request->response_bitset ^
-                                                found_request->expected_bitset);
+    uint16_t num_remaining =
+        __builtin_popcount(found_request->response_bitset ^ found_request->expected_bitset);
     if (num_remaining == 0 && device == CAN_MSG_INVALID_DEVICE) {
       // TODO(ELEC-457): Does this get cleaned up?
       return STATUS_CODE_OK;
     }
-    StatusCode ret =
-        found_request->callback(found_request->msg_id, device, status,
-                                num_remaining, found_request->context);
+    StatusCode ret = found_request->callback(found_request->msg_id, device, status, num_remaining,
+                                             found_request->context);
     // If we ran into an error and the return code was not ok,
     // we want to pretend the ACK has not been received
     if (ret != STATUS_CODE_OK && device != CAN_MSG_INVALID_DEVICE) {
@@ -121,10 +117,8 @@ static StatusCode prv_update_req(CanAckRequests *requests, CanMessageId msg_id,
     requests->num_requests--;
     if (index != requests->num_requests) {
       // Shift all requests to the left by 1
-      memmove(&requests->active_requests[index],
-              &requests->active_requests[index + 1],
-              sizeof(requests->active_requests[0]) *
-                  (requests->num_requests - index));
+      memmove(&requests->active_requests[index], &requests->active_requests[index + 1],
+              sizeof(requests->active_requests[0]) * (requests->num_requests - index));
     }
 
     requests->active_requests[requests->num_requests] = NULL;

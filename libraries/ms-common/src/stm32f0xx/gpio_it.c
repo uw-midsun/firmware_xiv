@@ -18,7 +18,7 @@ typedef struct GpioItInterrupt {
 static GpioItInterrupt s_gpio_it_interrupts[GPIO_PINS_PER_PORT];
 
 void gpio_it_init(void) {
-  GpioItInterrupt empty_interrupt = {0};
+  GpioItInterrupt empty_interrupt = { 0 };
   for (int16_t i = 0; i < GPIO_PINS_PER_PORT; i++) {
     s_gpio_it_interrupts[i] = empty_interrupt;
   }
@@ -34,10 +34,8 @@ static uint8_t prv_get_irq_channel(uint8_t pin) {
   return 7;
 }
 
-StatusCode gpio_it_register_interrupt(const GpioAddress *address,
-                                      const InterruptSettings *settings,
-                                      InterruptEdge edge,
-                                      GpioItCallback callback, void *context) {
+StatusCode gpio_it_register_interrupt(const GpioAddress *address, const InterruptSettings *settings,
+                                      InterruptEdge edge, GpioItCallback callback, void *context) {
   if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   } else if (s_gpio_it_interrupts[address->pin].callback) {
@@ -51,16 +49,14 @@ StatusCode gpio_it_register_interrupt(const GpioAddress *address,
   s_gpio_it_interrupts[address->pin].context = context;
 
   SYSCFG_EXTILineConfig(address->port, address->pin);
-  StatusCode status =
-      stm32f0xx_interrupt_exti_enable(address->pin, settings, edge);
+  StatusCode status = stm32f0xx_interrupt_exti_enable(address->pin, settings, edge);
   // If the operation failed clean up by removing the callback and pass the
   // error up the stack.
   if (!status_ok(status)) {
     s_gpio_it_interrupts[address->pin].callback = NULL;
     return status;
   }
-  status = stm32f0xx_interrupt_nvic_enable(prv_get_irq_channel(address->pin),
-                                           settings->priority);
+  status = stm32f0xx_interrupt_nvic_enable(prv_get_irq_channel(address->pin), settings->priority);
   // If the operation failed clean up by removing the callback and pass the
   // error up the stack.
   if (!status_ok(status)) {
@@ -95,13 +91,19 @@ static void prv_run_gpio_callbacks(uint8_t lower_bound, uint8_t upper_bound) {
 }
 
 // IV Handler for pins 0, 1.
-void EXTI0_1_IRQHandler(void) { prv_run_gpio_callbacks(0, 1); }
+void EXTI0_1_IRQHandler(void) {
+  prv_run_gpio_callbacks(0, 1);
+}
 
 // IV Handler for pins 2, 3.
-void EXTI2_3_IRQHandler(void) { prv_run_gpio_callbacks(2, 3); }
+void EXTI2_3_IRQHandler(void) {
+  prv_run_gpio_callbacks(2, 3);
+}
 
 // IV Handler for pins 4 - 15.
-void EXTI4_15_IRQHandler(void) { prv_run_gpio_callbacks(4, 15); }
+void EXTI4_15_IRQHandler(void) {
+  prv_run_gpio_callbacks(4, 15);
+}
 
 StatusCode gpio_it_mask_interrupt(const GpioAddress *address, bool masked) {
   if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {

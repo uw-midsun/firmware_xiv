@@ -51,8 +51,7 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel);
 
 // Register a callback function to be called when the specified channel
 // completes a conversion
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback,
-                                 void *context);
+StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context);
 
 // Obtain the raw 12-bit value read by the specified channel
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading);

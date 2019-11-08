@@ -1,9 +1,8 @@
 #include "fifo.h"
-#include "critical_section.h"
 #include <string.h>
+#include "critical_section.h"
 
-StatusCode fifo_init_impl(Fifo *fifo, void *buffer, size_t elem_size,
-                          size_t num_elems) {
+StatusCode fifo_init_impl(Fifo *fifo, void *buffer, size_t elem_size, size_t num_elems) {
   memset(fifo, 0, sizeof(*fifo));
   memset(buffer, 0, num_elems * elem_size);
 
@@ -87,8 +86,7 @@ StatusCode fifo_pop_impl(Fifo *fifo, void *dest_elem, size_t elem_size) {
   return STATUS_CODE_OK;
 }
 
-StatusCode fifo_push_arr_impl(Fifo *fifo, void *source_arr, size_t elem_size,
-                              size_t num_elems) {
+StatusCode fifo_push_arr_impl(Fifo *fifo, void *source_arr, size_t elem_size, size_t num_elems) {
   if (fifo->num_elems + num_elems > fifo->max_elems) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
   } else if (fifo->elem_size != elem_size) {
@@ -121,8 +119,7 @@ StatusCode fifo_push_arr_impl(Fifo *fifo, void *source_arr, size_t elem_size,
   return STATUS_CODE_OK;
 }
 
-StatusCode fifo_pop_arr_impl(Fifo *fifo, void *dest_arr, size_t elem_size,
-                             size_t num_elems) {
+StatusCode fifo_pop_arr_impl(Fifo *fifo, void *dest_arr, size_t elem_size, size_t num_elems) {
   if (fifo->num_elems < num_elems) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
   } else if (fifo->elem_size != elem_size && dest_arr != NULL) {

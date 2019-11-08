@@ -9,10 +9,10 @@
 // Due to the way this is implemented, multiple persistance instances can be
 // active at once. However, note that there is no protection against multiple
 // persistance instances writing to the same page.
+#include <stddef.h>
 #include "flash.h"
 #include "soft_timer.h"
 #include "status.h"
-#include <stddef.h>
 
 // Commit data every second if dirty
 #define PERSIST_COMMIT_TIMEOUT_MS 1000
@@ -32,8 +32,8 @@ typedef struct PersistStorage {
 // instance Note that the blob must be a multiple of FLASH_WRITE_BYTES and must
 // persist If |overwrite| is true, the persist layer overwrites invalid blobs.
 // Otherwise, it fails.
-StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob,
-                        size_t blob_size, bool overwrite);
+StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob, size_t blob_size,
+                        bool overwrite);
 
 // Control whether the periodic commit is enabled (enabled by default)
 StatusCode persist_ctrl_periodic(PersistStorage *persist, bool enabled);

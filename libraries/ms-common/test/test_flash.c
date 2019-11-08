@@ -16,21 +16,20 @@ void teardown_test(void) {
 }
 
 void test_flash_basic_rw(void) {
-  uint8_t data[] = {0x12, 0x34, 0x56, 0x78};
+  uint8_t data[] = { 0x12, 0x34, 0x56, 0x78 };
   uint8_t read[SIZEOF_ARRAY(data)];
 
   StatusCode ret = flash_write(TEST_FLASH_ADDR, data, SIZEOF_ARRAY(data));
   TEST_ASSERT_OK(ret);
 
-  ret =
-      flash_read(TEST_FLASH_ADDR, SIZEOF_ARRAY(data), read, SIZEOF_ARRAY(read));
+  ret = flash_read(TEST_FLASH_ADDR, SIZEOF_ARRAY(data), read, SIZEOF_ARRAY(read));
   TEST_ASSERT_OK(ret);
 
   TEST_ASSERT_EQUAL_HEX8_ARRAY(data, read, SIZEOF_ARRAY(data));
 }
 
 void test_flash_overwrite(void) {
-  uint8_t data[] = {0x55, 0x55, 0x55, 0x55};
+  uint8_t data[] = { 0x55, 0x55, 0x55, 0x55 };
   uint8_t read[SIZEOF_ARRAY(data)];
 
   StatusCode ret = flash_write(TEST_FLASH_ADDR, data, SIZEOF_ARRAY(data));
@@ -56,8 +55,7 @@ void test_flash_overwrite(void) {
 void test_flash_misaligned_write(void) {
   uint32_t data = 0x00;
 
-  StatusCode ret =
-      flash_write(TEST_FLASH_ADDR + 1, (uint8_t *)&data, sizeof(data));
+  StatusCode ret = flash_write(TEST_FLASH_ADDR + 1, (uint8_t *)&data, sizeof(data));
   TEST_ASSERT_NOT_OK(ret);
 
   ret = flash_write(TEST_FLASH_ADDR, (uint8_t *)&data, FLASH_WRITE_BYTES + 1);
@@ -70,8 +68,7 @@ void test_flash_out_of_bounds(void) {
   StatusCode ret = flash_write(0, (uint8_t *)&data, sizeof(data));
   TEST_ASSERT_NOT_OK(ret);
 
-  ret = flash_write(FLASH_END_ADDR + FLASH_WRITE_BYTES, (uint8_t *)&data,
-                    sizeof(data));
+  ret = flash_write(FLASH_END_ADDR + FLASH_WRITE_BYTES, (uint8_t *)&data, sizeof(data));
   TEST_ASSERT_NOT_OK(ret);
 
   ret = flash_erase(NUM_FLASH_PAGES);

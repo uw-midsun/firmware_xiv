@@ -25,9 +25,8 @@ typedef struct GenericCanInterface {
   StatusCode (*tx)(const struct GenericCan *can, const GenericCanMsg *msg);
   // Doesn't support responding with errors to ACKable messages (defaults to
   // OK).
-  StatusCode (*register_rx)(struct GenericCan *can, GenericCanRx rx_handler,
-                            uint32_t mask, uint32_t filter, bool extended,
-                            void *context);
+  StatusCode (*register_rx)(struct GenericCan *can, GenericCanRx rx_handler, uint32_t mask,
+                            uint32_t filter, bool extended, void *context);
 } GenericCanInterface;
 
 typedef struct GenericCan {
@@ -79,6 +78,5 @@ StatusCode generic_can_tx(const GenericCan *can, const GenericCanMsg *msg);
 // Registers a |rx_handler| to |can| for cases where (GenericCanMsg.id & |mask|)
 // == |filter|. Use GENERIC_CAN_EMPTY_MASK for |mask| if an exact match is
 // desired.
-StatusCode generic_can_register_rx(GenericCan *can, GenericCanRx rx_handler,
-                                   uint32_t mask, uint32_t filter,
-                                   bool extended, void *context);
+StatusCode generic_can_register_rx(GenericCan *can, GenericCanRx rx_handler, uint32_t mask,
+                                   uint32_t filter, bool extended, void *context);

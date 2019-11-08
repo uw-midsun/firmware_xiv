@@ -38,14 +38,13 @@ void setup_test(void) {
   gpio_init();
 
   const CanHwSettings can_settings = {
-      .bitrate = CAN_HW_BITRATE_250KBPS,
-      .tx = {GPIO_PORT_A, 12},
-      .rx = {GPIO_PORT_A, 11},
-      .loopback = true,
+    .bitrate = CAN_HW_BITRATE_250KBPS,
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
+    .loopback = true,
   };
 
-  TEST_ASSERT_OK(
-      generic_can_hw_init(&s_can, &can_settings, TEST_CAN_INTERVAL_FAULT));
+  TEST_ASSERT_OK(generic_can_hw_init(&s_can, &can_settings, TEST_CAN_INTERVAL_FAULT));
   can_interval_init();
 }
 
@@ -54,22 +53,20 @@ void teardown_test(void) {}
 void test_can_interval(void) {
   GenericCan *can = (GenericCan *)&s_can;
   volatile uint8_t counter = 0;
-  Event e = {0, 0};
+  Event e = { 0, 0 };
   StatusCode status = NUM_STATUS_CODES;
 
   const GenericCanMsg msg = {
-      .id = 256,
-      .data = 255,
-      .dlc = 1,
-      .extended = true,
+    .id = 256,
+    .data = 255,
+    .dlc = 1,
+    .extended = true,
   };
-  TEST_ASSERT_OK(generic_can_register_rx(can, prv_can_rx_callback,
-                                         GENERIC_CAN_EMPTY_MASK, msg.id, true,
-                                         &counter));
+  TEST_ASSERT_OK(generic_can_register_rx(can, prv_can_rx_callback, GENERIC_CAN_EMPTY_MASK, msg.id,
+                                         true, &counter));
 
   CanInterval *interval = NULL;
-  TEST_ASSERT_OK(
-      can_interval_factory(can, &msg, TEST_CAN_INTERVAL_PERIOD_US, &interval));
+  TEST_ASSERT_OK(can_interval_factory(can, &msg, TEST_CAN_INTERVAL_PERIOD_US, &interval));
   // First Send:
   TEST_ASSERT_OK(can_interval_enable(interval));
   // Callback is triggered.

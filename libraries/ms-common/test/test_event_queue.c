@@ -3,14 +3,16 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-void setup_test(void) { event_queue_init(); }
+void setup_test(void) {
+  event_queue_init();
+}
 
 void teardown_test(void) {}
 
 // Test a single priority level.
 void test_event_queue_raise(void) {
   // Fill the event queue
-  Event events[EVENT_QUEUE_SIZE] = {{0}};
+  Event events[EVENT_QUEUE_SIZE] = { { 0 } };
   for (int i = 0; i < EVENT_QUEUE_SIZE; i++) {
     events[i].id = i;
     events[i].data = i * 100;
@@ -18,8 +20,7 @@ void test_event_queue_raise(void) {
   }
 
   // Attempt to insert an element when full
-  TEST_ASSERT_EQUAL(STATUS_CODE_RESOURCE_EXHAUSTED,
-                    event_raise(NUM_EVENT_PRIORITIES, 0));
+  TEST_ASSERT_EQUAL(STATUS_CODE_RESOURCE_EXHAUSTED, event_raise(NUM_EVENT_PRIORITIES, 0));
 
   Event e;
   uint16_t i = 0;

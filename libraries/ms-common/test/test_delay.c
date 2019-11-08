@@ -14,4 +14,6 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-void test_delay_us(void) { delay_us(10000); }
+void test_delay_us(void) {
+  delay_us(10000);
+}

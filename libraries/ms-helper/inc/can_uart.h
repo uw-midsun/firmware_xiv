@@ -9,9 +9,8 @@
 
 // Process RX'd CAN message from UART
 struct CanUart;
-typedef void (*CanUartRxCb)(const struct CanUart *can_uart, uint32_t id,
-                            bool extended, const uint64_t *data, size_t dlc,
-                            void *context);
+typedef void (*CanUartRxCb)(const struct CanUart *can_uart, uint32_t id, bool extended,
+                            const uint64_t *data, size_t dlc, void *context);
 
 typedef struct CanUart {
   UartPort uart;
@@ -29,6 +28,5 @@ StatusCode can_uart_enable_passthrough(CanUart *can_uart);
 
 // Intended to request a TX on the receiver
 // i.e. from Master to Slave
-StatusCode can_uart_req_slave_tx(const CanUart *can_uart, uint32_t id,
-                                 bool extended, const uint64_t *data,
-                                 size_t dlc);
+StatusCode can_uart_req_slave_tx(const CanUart *can_uart, uint32_t id, bool extended,
+                                 const uint64_t *data, size_t dlc);

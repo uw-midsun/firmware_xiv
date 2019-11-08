@@ -73,8 +73,7 @@
  *         that failed. If expr is true, it returns no value.
  * @retval None
  */
-#define assert_param(expr)                                                     \
-  ((expr) ? (void)0 : assert_failed((uint8_t *)__FILE__, __LINE__))
+#define assert_param(expr) ((expr) ? (void)0 : assert_failed((uint8_t *)__FILE__, __LINE__))
 /* Exported functions ------------------------------------------------------- */
 void assert_failed(uint8_t *file, uint32_t line);
 #else

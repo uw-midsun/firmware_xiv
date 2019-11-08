@@ -17,8 +17,7 @@ static void prv_can_interval_timer_cb(SoftTimerId id, void *context) {
   (void)id;
   CanInterval *interval = context;
   generic_can_tx(interval->can, &interval->msg);
-  soft_timer_start(interval->period, prv_can_interval_timer_cb, context,
-                   &interval->timer_id);
+  soft_timer_start(interval->period, prv_can_interval_timer_cb, context, &interval->timer_id);
 }
 
 static void prv_init_can_interval(void *object, void *context) {
@@ -31,12 +30,11 @@ static void prv_init_can_interval(void *object, void *context) {
 }
 
 void can_interval_init(void) {
-  objpool_init(&s_can_interval_pool, s_can_interval_storage,
-               prv_init_can_interval, NULL);
+  objpool_init(&s_can_interval_pool, s_can_interval_storage, prv_init_can_interval, NULL);
 }
 
-StatusCode can_interval_factory(const GenericCan *can, const GenericCanMsg *msg,
-                                uint32_t period, CanInterval **interval) {
+StatusCode can_interval_factory(const GenericCan *can, const GenericCanMsg *msg, uint32_t period,
+                                CanInterval **interval) {
   CanInterval *interval_impl = objpool_get_node(&s_can_interval_pool);
   if (interval_impl == NULL) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
@@ -63,9 +61,8 @@ StatusCode can_interval_enable(CanInterval *interval) {
   if (interval->timer_id == SOFT_TIMER_INVALID_TIMER) {
     // Send now.
     status_ok_or_return(generic_can_tx(interval->can, &interval->msg));
-    status_ok_or_return(
-        soft_timer_start(interval->period, prv_can_interval_timer_cb,
-                         (void *)interval, &interval->timer_id));
+    status_ok_or_return(soft_timer_start(interval->period, prv_can_interval_timer_cb,
+                                         (void *)interval, &interval->timer_id));
   }
 
   return STATUS_CODE_OK;

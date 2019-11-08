@@ -7,23 +7,21 @@
 // Channel rotation is implemented through the use of bitsets. The main bitset
 // holds the state of each channel(enable/disable). The pending bitset
 // determines the next enabled channel by the find first set operation.
+#include <status.h>
+#include <string.h>
 #include "ads1015_def.h"
 #include "gpio_it.h"
 #include "log.h"
-#include <status.h>
-#include <string.h>
 
 #define ADS1015_DATA_RATE ADS1015_DATA_RATE_920
 
 // Checks if a channel is enabled (true) or disabled (false).
-static bool channel_is_enabled(Ads1015Storage *storage,
-                               Ads1015Channel channel) {
+static bool channel_is_enabled(Ads1015Storage *storage, Ads1015Channel channel) {
   return ((storage->channel_bitset & (1 << channel)) != 0);
 }
 
 // Updates the channel_bitset when a channel is enabled/disabled.
-static void prv_mark_channel_enabled(Ads1015Channel channel, bool enable,
-                                     uint8_t *channel_bitset) {
+static void prv_mark_channel_enabled(Ads1015Channel channel, bool enable, uint8_t *channel_bitset) {
   if (enable) {
     *channel_bitset |= (1 << channel);
   } else {
@@ -32,17 +30,16 @@ static void prv_mark_channel_enabled(Ads1015Channel channel, bool enable,
 }
 
 // Writes to register given upper and lower bytes.
-static StatusCode prv_setup_register(Ads1015Storage *storage, uint8_t reg,
-                                     uint8_t msb, uint8_t lsb) {
-  uint8_t ads1015_setup_register[] = {reg, msb, lsb};
+static StatusCode prv_setup_register(Ads1015Storage *storage, uint8_t reg, uint8_t msb,
+                                     uint8_t lsb) {
+  uint8_t ads1015_setup_register[] = { reg, msb, lsb };
   return i2c_write(storage->i2c_port, storage->i2c_addr, ads1015_setup_register,
                    SIZEOF_ARRAY(ads1015_setup_register));
 }
 
 // Reads the register and stores the value in the given array.
-static StatusCode prv_read_register(I2CPort i2c_port, uint8_t i2c_addr,
-                                    uint8_t reg, uint8_t *rx_data,
-                                    size_t rx_len) {
+static StatusCode prv_read_register(I2CPort i2c_port, uint8_t i2c_addr, uint8_t reg,
+                                    uint8_t *rx_data, size_t rx_len) {
   status_ok_or_return(i2c_write(i2c_port, i2c_addr, &reg, sizeof(reg)));
 
   status_ok_or_return(i2c_read(i2c_port, i2c_addr, rx_data, rx_len));
@@ -50,15 +47,13 @@ static StatusCode prv_read_register(I2CPort i2c_port, uint8_t i2c_addr,
 }
 
 // Switches to the given channel by writing to config register.
-static StatusCode prv_set_channel(Ads1015Storage *storage,
-                                  Ads1015Channel channel) {
+static StatusCode prv_set_channel(Ads1015Storage *storage, Ads1015Channel channel) {
   if (channel >= NUM_ADS1015_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  status_ok_or_return(
-      prv_setup_register(storage, ADS1015_ADDRESS_POINTER_CONFIG,
-                         ADS1015_CONFIG_REGISTER_MSB(channel),
-                         ADS1015_CONFIG_REGISTER_LSB(ADS1015_DATA_RATE)));
+  status_ok_or_return(prv_setup_register(storage, ADS1015_ADDRESS_POINTER_CONFIG,
+                                         ADS1015_CONFIG_REGISTER_MSB(channel),
+                                         ADS1015_CONFIG_REGISTER_LSB(ADS1015_DATA_RATE)));
   storage->current_channel = channel;
   return STATUS_CODE_OK;
 }
@@ -86,12 +81,11 @@ static void prv_interrupt_handler(const GpioAddress *address, void *context) {
   Ads1015Storage *storage = context;
   Ads1015Channel current_channel = storage->current_channel;
   uint8_t channel_bitset = storage->channel_bitset;
-  uint8_t read_conv_register[2] = {0, 0};
+  uint8_t read_conv_register[2] = { 0, 0 };
 
   if (channel_is_enabled(storage, current_channel)) {
-    prv_read_register(storage->i2c_port, storage->i2c_addr,
-                      ADS1015_ADDRESS_POINTER_CONV, read_conv_register,
-                      SIZEOF_ARRAY(read_conv_register));
+    prv_read_register(storage->i2c_port, storage->i2c_addr, ADS1015_ADDRESS_POINTER_CONV,
+                      read_conv_register, SIZEOF_ARRAY(read_conv_register));
     // Following line puts the two read bytes into an int16.
     // 4 least significant bits are not part of the result hence the bitshift.
     storage->channel_readings[current_channel] =
@@ -102,13 +96,12 @@ static void prv_interrupt_handler(const GpioAddress *address, void *context) {
 
     // Runs the users callback if not NULL.
     if (storage->channel_callback[current_channel] != NULL) {
-      storage->channel_callback[current_channel](
-          current_channel, storage->callback_context[current_channel]);
+      storage->channel_callback[current_channel](current_channel,
+                                                 storage->callback_context[current_channel]);
     }
   }
 
-  prv_mark_channel_enabled(current_channel, false,
-                           &storage->pending_channel_bitset);
+  prv_mark_channel_enabled(current_channel, false, &storage->pending_channel_bitset);
   if (storage->pending_channel_bitset == ADS1015_BITSET_EMPTY) {
     // Reset the pending bitset once gone through a cycle of channel rotation.
     storage->pending_channel_bitset = channel_bitset;
@@ -122,8 +115,8 @@ static void prv_interrupt_handler(const GpioAddress *address, void *context) {
 
 // Initiates ads1015 by setting up registers and enabling ALRT/RDY Pin.
 // It also registers the interrupt handler on ALRT/RDY pin.
-StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port,
-                        Ads1015Address i2c_addr, GpioAddress *ready_pin) {
+StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port, Ads1015Address i2c_addr,
+                        GpioAddress *ready_pin) {
   if ((storage == NULL) || (ready_pin == NULL)) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -139,36 +132,34 @@ StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port,
   storage->i2c_addr = i2c_addr + ADS1015_I2C_BASE_ADDRESS;
   storage->ready_pin = *ready_pin;
   // Set up config register.
-  status_ok_or_return(prv_setup_register(
-      storage, ADS1015_ADDRESS_POINTER_CONFIG, ADS1015_CONFIG_REGISTER_MSB_IDLE,
-      ADS1015_CONFIG_REGISTER_LSB(ADS1015_DATA_RATE)));
+  status_ok_or_return(prv_setup_register(storage, ADS1015_ADDRESS_POINTER_CONFIG,
+                                         ADS1015_CONFIG_REGISTER_MSB_IDLE,
+                                         ADS1015_CONFIG_REGISTER_LSB(ADS1015_DATA_RATE)));
   // Set up hi/lo-thresh registers. This particular setup enables the ALRT/RDY
   // pin.
-  status_ok_or_return(prv_setup_register(
-      storage, ADS1015_ADDRESS_POINTER_LO_THRESH,
-      ADS1015_LO_THRESH_REGISTER_MSB, ADS1015_LO_THRESH_REGISTER_LSB));
-  status_ok_or_return(prv_setup_register(
-      storage, ADS1015_ADDRESS_POINTER_HI_THRESH,
-      ADS1015_HI_THRESH_REGISTER_MSB, ADS1015_HI_THRESH_REGISTER_LSB));
+  status_ok_or_return(prv_setup_register(storage, ADS1015_ADDRESS_POINTER_LO_THRESH,
+                                         ADS1015_LO_THRESH_REGISTER_MSB,
+                                         ADS1015_LO_THRESH_REGISTER_LSB));
+  status_ok_or_return(prv_setup_register(storage, ADS1015_ADDRESS_POINTER_HI_THRESH,
+                                         ADS1015_HI_THRESH_REGISTER_MSB,
+                                         ADS1015_HI_THRESH_REGISTER_LSB));
   GpioSettings gpio_settings = {
-      .direction = GPIO_DIR_IN, //
+    .direction = GPIO_DIR_IN,  //
   };
   InterruptSettings it_settings = {
-      .type = INTERRUPT_TYPE_INTERRUPT,      //
-      .priority = INTERRUPT_PRIORITY_NORMAL, //
+    .type = INTERRUPT_TYPE_INTERRUPT,       //
+    .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
   status_ok_or_return(gpio_init_pin(ready_pin, &gpio_settings));
-  status_ok_or_return(
-      gpio_it_register_interrupt(ready_pin, &it_settings, INTERRUPT_EDGE_RISING,
-                                 prv_interrupt_handler, storage));
+  status_ok_or_return(gpio_it_register_interrupt(ready_pin, &it_settings, INTERRUPT_EDGE_RISING,
+                                                 prv_interrupt_handler, storage));
   // Mask the interrupt until channels are enabled by the user.
   return gpio_it_mask_interrupt(ready_pin, true);
 }
 
 // This function enable/disables channels, and registers callbacks for each
 // channel.
-StatusCode ads1015_configure_channel(Ads1015Storage *storage,
-                                     Ads1015Channel channel, bool enable,
+StatusCode ads1015_configure_channel(Ads1015Storage *storage, Ads1015Channel channel, bool enable,
                                      Ads1015Callback callback, void *context) {
   if (storage == NULL || channel >= NUM_ADS1015_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
@@ -206,8 +197,7 @@ StatusCode ads1015_configure_channel(Ads1015Storage *storage,
 
 // Reads raw 12 bit conversion results which are expressed in two's complement
 // format.
-StatusCode ads1015_read_raw(Ads1015Storage *storage, Ads1015Channel channel,
-                            int16_t *reading) {
+StatusCode ads1015_read_raw(Ads1015Storage *storage, Ads1015Channel channel, int16_t *reading) {
   if (channel >= NUM_ADS1015_CHANNELS || storage == NULL || reading == NULL ||
       !channel_is_enabled(storage, channel)) {
     return status_code(STATUS_CODE_INVALID_ARGS);
@@ -220,8 +210,8 @@ StatusCode ads1015_read_raw(Ads1015Storage *storage, Ads1015Channel channel,
 }
 
 // Reads conversion value in mVolt.
-StatusCode ads1015_read_converted(Ads1015Storage *storage,
-                                  Ads1015Channel channel, int16_t *reading) {
+StatusCode ads1015_read_converted(Ads1015Storage *storage, Ads1015Channel channel,
+                                  int16_t *reading) {
   if (channel >= NUM_ADS1015_CHANNELS || storage == NULL || reading == NULL ||
       !channel_is_enabled(storage, channel)) {
     return status_code(STATUS_CODE_INVALID_ARGS);

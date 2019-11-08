@@ -5,19 +5,19 @@
 // insertion due to the ordered requirement. This tradeoff is worth it for
 // faster interrupts.
 #include "soft_timer.h"
+#include <string.h>
 #include "critical_section.h"
 #include "misc.h"
 #include "objpool.h"
 #include "stm32f0xx.h"
-#include <string.h>
 
 #define SOFT_TIMER_GET_ID(timer) ((timer)-s_storage)
 // A expires before B:
 // A has a lower rollover count than b
 // A and B have the same rollover count and A's expiry time is less than B's
-#define SOFT_TIMER_EXPIRES_BEFORE(a, b)                                        \
-  (((a)->expiry_rollover_count < (b)->expiry_rollover_count ||                 \
-    ((a)->expiry_rollover_count == (b)->expiry_rollover_count &&               \
+#define SOFT_TIMER_EXPIRES_BEFORE(a, b)                          \
+  (((a)->expiry_rollover_count < (b)->expiry_rollover_count ||   \
+    ((a)->expiry_rollover_count == (b)->expiry_rollover_count && \
      (a)->expiry_us < (b)->expiry_us)))
 
 typedef struct SoftTimer {
@@ -35,8 +35,8 @@ typedef struct SoftTimerList {
   ObjectPool pool;
 } SoftTimerList;
 
-static volatile SoftTimerList s_timers = {0};
-static volatile SoftTimer s_storage[SOFT_TIMER_MAX_TIMERS] = {0};
+static volatile SoftTimerList s_timers = { 0 };
+static volatile SoftTimer s_storage[SOFT_TIMER_MAX_TIMERS] = { 0 };
 
 static void prv_init_periph(void);
 static bool prv_insert_timer(SoftTimer *timer);
@@ -52,23 +52,21 @@ void soft_timer_init(void) {
 }
 
 // Seems to take around 5us to start a timer
-StatusCode soft_timer_start(uint32_t duration_us, SoftTimerCallback callback,
-                            void *context, SoftTimerId *timer_id) {
+StatusCode soft_timer_start(uint32_t duration_us, SoftTimerCallback callback, void *context,
+                            SoftTimerId *timer_id) {
   if (duration_us < SOFT_TIMER_MIN_TIME_US) {
     return status_msg(STATUS_CODE_INVALID_ARGS, "Soft timer too short!");
   }
   SoftTimer *node = objpool_get_node(&s_timers.pool);
   if (node == NULL) {
-    return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED,
-                      "Out of software timers.");
+    return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED, "Out of software timers.");
   }
 
   // Set the expected counter value for a expiry - if count + time_us < count,
   // we overflowed
   const uint32_t count = TIM_GetCounter(TIM2);
   node->expiry_us = count + duration_us;
-  node->expiry_rollover_count =
-      s_timers.rollover_count + (node->expiry_us < count);
+  node->expiry_rollover_count = s_timers.rollover_count + (node->expiry_us < count);
   node->callback = callback;
   node->context = context;
 
@@ -98,7 +96,9 @@ bool soft_timer_cancel(SoftTimerId timer_id) {
   return true;
 }
 
-bool soft_timer_inuse(void) { return s_timers.head != NULL; }
+bool soft_timer_inuse(void) {
+  return s_timers.head != NULL;
+}
 
 uint32_t soft_timer_remaining_time(SoftTimerId timer_id) {
   if (s_storage[timer_id].expiry_us == 0) {
@@ -125,10 +125,10 @@ static void prv_init_periph(void) {
   RCC_GetClocksFreq(&clocks);
 
   TIM_TimeBaseInitTypeDef timer_init = {
-      .TIM_Prescaler = (clocks.PCLK_Frequency / 1000000) - 1, // 1 Mhz
-      .TIM_CounterMode = TIM_CounterMode_Up,
-      .TIM_Period = UINT32_MAX,
-      .TIM_ClockDivision = TIM_CKD_DIV1,
+    .TIM_Prescaler = (clocks.PCLK_Frequency / 1000000) - 1,  // 1 Mhz
+    .TIM_CounterMode = TIM_CounterMode_Up,
+    .TIM_Period = UINT32_MAX,
+    .TIM_ClockDivision = TIM_CKD_DIV1,
   };
   TIM_TimeBaseInit(TIM2, &timer_init);
 
@@ -201,12 +201,10 @@ static void prv_update_timer(void) {
   // Loop through any timers that have expired and fire their callbacks.
   // The magic offset is most likely the time it takes for the comparison
   // and for the compare register to update. (10 us)
-  while (active_timer != NULL &&
-         (active_timer->expiry_rollover_count < s_timers.rollover_count ||
-          (active_timer->expiry_rollover_count == s_timers.rollover_count &&
-           active_timer->expiry_us <= TIM_GetCounter(TIM2) + 10))) {
-    active_timer->callback(SOFT_TIMER_GET_ID(active_timer),
-                           active_timer->context);
+  while (active_timer != NULL && (active_timer->expiry_rollover_count < s_timers.rollover_count ||
+                                  (active_timer->expiry_rollover_count == s_timers.rollover_count &&
+                                   active_timer->expiry_us <= TIM_GetCounter(TIM2) + 10))) {
+    active_timer->callback(SOFT_TIMER_GET_ID(active_timer), active_timer->context);
 
     prv_remove_timer(active_timer);
     active_timer = s_timers.head;
@@ -234,8 +232,7 @@ static void prv_update_timer(void) {
       // If the minimum occurs after a rollover but the head expiry doesn't then
       // it is by definition later so we use the minimum interval time.
       // Conversely, we take the head expiry time if it occurs after a rollover.
-      TIM_SetCompare1(TIM2, (min_interval_rollover) ? min_interval_time
-                                                    : s_timers.head->expiry_us);
+      TIM_SetCompare1(TIM2, (min_interval_rollover) ? min_interval_time : s_timers.head->expiry_us);
     }
     TIM_CCxCmd(TIM2, TIM_Channel_1, TIM_CCx_Enable);
   }

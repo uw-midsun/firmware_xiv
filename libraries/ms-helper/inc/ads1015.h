@@ -8,11 +8,11 @@
 // Although we use GPIO interrupts to detect conversion ready, it seems like
 // it's possible for us to miss it during bus glitching. This forces an
 // interrupt if we haven't triggered within a few conversion periods.
+#include <stdbool.h>
 #include "gpio.h"
 #include "i2c.h"
 #include "soft_timer.h"
 #include "status.h"
-#include <stdbool.h>
 
 // Arbitrary watchdog timeout period
 #define ADS1015_WATCHDOG_TIMEOUT_MS 100
@@ -53,19 +53,17 @@ typedef struct Ads1015Storage {
 } Ads1015Storage;
 
 // Initiates ads1015 by setting up registers and enabling ALRT/RDY Pin.
-StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port,
-                        Ads1015Address i2c_addr, GpioAddress *ready_pin);
+StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port, Ads1015Address i2c_addr,
+                        GpioAddress *ready_pin);
 
 // Enable/disables a channel, and registers a callback on the channel.
-StatusCode ads1015_configure_channel(Ads1015Storage *storage,
-                                     Ads1015Channel channel, bool enable,
+StatusCode ads1015_configure_channel(Ads1015Storage *storage, Ads1015Channel channel, bool enable,
                                      Ads1015Callback callback, void *context);
 
 // Reads raw 12 bit conversion results which are expressed in two's complement
 // format.
-StatusCode ads1015_read_raw(Ads1015Storage *storage, Ads1015Channel channel,
-                            int16_t *reading);
+StatusCode ads1015_read_raw(Ads1015Storage *storage, Ads1015Channel channel, int16_t *reading);
 
 // Reads conversion value in mVolt.
-StatusCode ads1015_read_converted(Ads1015Storage *storage,
-                                  Ads1015Channel channel, int16_t *reading);
+StatusCode ads1015_read_converted(Ads1015Storage *storage, Ads1015Channel channel,
+                                  int16_t *reading);

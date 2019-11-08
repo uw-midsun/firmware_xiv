@@ -1,15 +1,14 @@
 #include "flash.h"
+#include <string.h>
 #include "critical_section.h"
 #include "stm32f0xx.h"
-#include <string.h>
 
 StatusCode flash_init(void) {
   // Flash prefetch and latency are set up in system init
   return STATUS_CODE_OK;
 }
 
-StatusCode flash_read(uintptr_t address, size_t read_bytes, uint8_t *buffer,
-                      size_t buffer_len) {
+StatusCode flash_read(uintptr_t address, size_t read_bytes, uint8_t *buffer, size_t buffer_len) {
   if (buffer_len < read_bytes || address < FLASH_BASE_ADDR ||
       (address + read_bytes) > FLASH_END_ADDR) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
@@ -25,8 +24,7 @@ StatusCode flash_read(uintptr_t address, size_t read_bytes, uint8_t *buffer,
 StatusCode flash_write(uintptr_t address, uint8_t *buffer, size_t buffer_len) {
   if (address < FLASH_BASE_ADDR || (address + buffer_len) > FLASH_END_ADDR) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
-  } else if (buffer_len % FLASH_WRITE_BYTES != 0 ||
-             address % FLASH_WRITE_BYTES != 0) {
+  } else if (buffer_len % FLASH_WRITE_BYTES != 0 || address % FLASH_WRITE_BYTES != 0) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 

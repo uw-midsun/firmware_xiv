@@ -1,8 +1,8 @@
 #include "can_hw.h"
+#include <string.h>
 #include "interrupt.h"
 #include "log.h"
 #include "stm32f0xx.h"
-#include <string.h>
 
 #define CAN_HW_BASE CAN
 #define CAN_HW_NUM_FILTER_BANKS 14
@@ -23,25 +23,26 @@ typedef struct CanHwEventHandler {
 // from the calculated value to compenstate. The same is true for the prescaler,
 // but the library subtracts 1 internally. The total time quanta is thus (BS1 +
 // 1) + (BS2 + 1) + SJW (1) ~= 16 tq.
-static CanHwTiming s_timing[NUM_CAN_HW_BITRATES] = { // For 48MHz clock
-    [CAN_HW_BITRATE_125KBPS] = {.prescaler = 24, .bs1 = 12, .bs2 = 1},
-    [CAN_HW_BITRATE_250KBPS] = {.prescaler = 12, .bs1 = 12, .bs2 = 1},
-    [CAN_HW_BITRATE_500KBPS] = {.prescaler = 6, .bs1 = 12, .bs2 = 1},
-    [CAN_HW_BITRATE_1000KBPS] = {.prescaler = 3, .bs1 = 12, .bs2 = 1}};
+static CanHwTiming s_timing[NUM_CAN_HW_BITRATES] = {  // For 48MHz clock
+  [CAN_HW_BITRATE_125KBPS] = { .prescaler = 24, .bs1 = 12, .bs2 = 1 },
+  [CAN_HW_BITRATE_250KBPS] = { .prescaler = 12, .bs1 = 12, .bs2 = 1 },
+  [CAN_HW_BITRATE_500KBPS] = { .prescaler = 6, .bs1 = 12, .bs2 = 1 },
+  [CAN_HW_BITRATE_1000KBPS] = { .prescaler = 3, .bs1 = 12, .bs2 = 1 }
+};
 static CanHwEventHandler s_handlers[NUM_CAN_HW_EVENTS];
 static uint8_t s_num_filters;
 
 static void prv_add_filter(uint8_t filter_num, uint32_t mask, uint32_t filter) {
   CAN_FilterInitTypeDef filter_cfg = {
-      .CAN_FilterNumber = filter_num,
-      .CAN_FilterMode = CAN_FilterMode_IdMask,
-      .CAN_FilterScale = CAN_FilterScale_32bit,
-      .CAN_FilterIdHigh = filter >> 16,
-      .CAN_FilterIdLow = filter,
-      .CAN_FilterMaskIdHigh = mask >> 16,
-      .CAN_FilterMaskIdLow = mask,
-      .CAN_FilterFIFOAssignment = (filter_num % 2),
-      .CAN_FilterActivation = ENABLE,
+    .CAN_FilterNumber = filter_num,
+    .CAN_FilterMode = CAN_FilterMode_IdMask,
+    .CAN_FilterScale = CAN_FilterScale_32bit,
+    .CAN_FilterIdHigh = filter >> 16,
+    .CAN_FilterIdLow = filter,
+    .CAN_FilterMaskIdHigh = mask >> 16,
+    .CAN_FilterMaskIdLow = mask,
+    .CAN_FilterFIFOAssignment = (filter_num % 2),
+    .CAN_FilterActivation = ENABLE,
   };
 
   CAN_FilterInit(&filter_cfg);
@@ -52,8 +53,8 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   s_num_filters = 0;
 
   GpioSettings gpio_settings = {
-      .alt_function = GPIO_ALTFN_4, //
-      .direction = GPIO_DIR_OUT,    //
+    .alt_function = GPIO_ALTFN_4,  //
+    .direction = GPIO_DIR_OUT,     //
   };
   gpio_init_pin(&settings->tx, &gpio_settings);
   gpio_settings.direction = GPIO_DIR_IN;
@@ -66,8 +67,7 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   CAN_InitTypeDef can_cfg;
   CAN_StructInit(&can_cfg);
 
-  can_cfg.CAN_Mode =
-      settings->loopback ? CAN_Mode_Silent_LoopBack : CAN_Mode_Normal;
+  can_cfg.CAN_Mode = settings->loopback ? CAN_Mode_Silent_LoopBack : CAN_Mode_Normal;
   can_cfg.CAN_SJW = CAN_SJW_1tq;
   can_cfg.CAN_ABOM = ENABLE;
   can_cfg.CAN_BS1 = s_timing[settings->bitrate].bs1;
@@ -89,16 +89,14 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   return STATUS_CODE_OK;
 }
 
-StatusCode can_hw_register_callback(CanHwEvent event,
-                                    CanHwEventHandlerCb callback,
-                                    void *context) {
+StatusCode can_hw_register_callback(CanHwEvent event, CanHwEventHandlerCb callback, void *context) {
   if (event >= NUM_CAN_HW_EVENTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
   s_handlers[event] = (CanHwEventHandler){
-      .callback = callback, //
-      .context = context,   //
+    .callback = callback,  //
+    .context = context,    //
   };
 
   return STATUS_CODE_OK;
@@ -106,8 +104,7 @@ StatusCode can_hw_register_callback(CanHwEvent event,
 
 StatusCode can_hw_add_filter(uint32_t mask, uint32_t filter, bool extended) {
   if (s_num_filters >= CAN_HW_NUM_FILTER_BANKS) {
-    return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED,
-                      "CAN HW: Ran out of filter banks.");
+    return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED, "CAN HW: Ran out of filter banks.");
   }
 
   // 32-bit Filter - Identifer Mask
@@ -134,14 +131,13 @@ CanHwBusStatus can_hw_bus_status(void) {
   return CAN_HW_BUS_STATUS_OK;
 }
 
-StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data,
-                           size_t len) {
+StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size_t len) {
   // We can set both since the used ID is determined by tx_msg.IDE
   CanTxMsg tx_msg = {
-      .StdId = id,                                         //
-      .ExtId = id,                                         //
-      .IDE = extended ? CAN_Id_Extended : CAN_Id_Standard, //
-      .DLC = len,                                          //
+    .StdId = id,                                          //
+    .ExtId = id,                                          //
+    .IDE = extended ? CAN_Id_Extended : CAN_Id_Standard,  //
+    .DLC = len,                                           //
   };
 
   memcpy(tx_msg.Data, data, len);
@@ -168,7 +164,7 @@ bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
     return false;
   }
 
-  CanRxMsg rx_msg = {0};
+  CanRxMsg rx_msg = { 0 };
   CAN_Receive(CAN_HW_BASE, fifo, &rx_msg);
 
   *extended = (rx_msg.IDE == CAN_Id_Extended);
@@ -181,12 +177,10 @@ bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
 
 void CEC_CAN_IRQHandler(void) {
   bool run_cb[NUM_CAN_HW_EVENTS] = {
-      [CAN_HW_EVENT_TX_READY] = CAN_GetITStatus(CAN_HW_BASE, CAN_IT_TME) == SET,
-      [CAN_HW_EVENT_MSG_RX] =
-          CAN_GetITStatus(CAN_HW_BASE, CAN_IT_FMP0) == SET ||
-          CAN_GetITStatus(CAN_HW_BASE, CAN_IT_FMP1) == SET,
-      [CAN_HW_EVENT_BUS_ERROR] =
-          CAN_GetITStatus(CAN_HW_BASE, CAN_IT_ERR) == SET,
+    [CAN_HW_EVENT_TX_READY] = CAN_GetITStatus(CAN_HW_BASE, CAN_IT_TME) == SET,
+    [CAN_HW_EVENT_MSG_RX] = CAN_GetITStatus(CAN_HW_BASE, CAN_IT_FMP0) == SET ||
+                            CAN_GetITStatus(CAN_HW_BASE, CAN_IT_FMP1) == SET,
+    [CAN_HW_EVENT_BUS_ERROR] = CAN_GetITStatus(CAN_HW_BASE, CAN_IT_ERR) == SET,
   };
 
   for (int event = 0; event < NUM_CAN_HW_EVENTS; event++) {

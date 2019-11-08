@@ -17,10 +17,9 @@ static bool s_extended = false;
 static uint64_t s_data = 0;
 static size_t s_dlc = 0;
 
-static void prv_handle_rx(uint32_t id, bool extended, uint64_t data, size_t dlc,
-                          void *context) {
-  LOG_DEBUG("RX id 0x%lx (extended %d) dlc %d data 0x%lx%lx\n", id, extended,
-            dlc, (uint32_t)(data >> 32), (uint32_t)data);
+static void prv_handle_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  LOG_DEBUG("RX id 0x%lx (extended %d) dlc %d data 0x%lx%lx\n", id, extended, dlc,
+            (uint32_t)(data >> 32), (uint32_t)data);
 
   s_id = id;
   s_extended = extended;
@@ -43,17 +42,17 @@ void setup_test(void) {
   s_dlc = 0;
 
   const Mcp2515Settings mcp2515_settings = {
-      .spi_port = SPI_PORT_1,
-      .baudrate = 750000,
-      .mosi = {.port = GPIO_PORT_A, 7},
-      .miso = {.port = GPIO_PORT_A, 6},
-      .sclk = {.port = GPIO_PORT_A, 5},
-      .cs = {.port = GPIO_PORT_A, 4},
-      .int_pin = {.port = GPIO_PORT_A, 3},
+    .spi_port = SPI_PORT_1,
+    .baudrate = 750000,
+    .mosi = { .port = GPIO_PORT_A, 7 },
+    .miso = { .port = GPIO_PORT_A, 6 },
+    .sclk = { .port = GPIO_PORT_A, 5 },
+    .cs = { .port = GPIO_PORT_A, 4 },
+    .int_pin = { .port = GPIO_PORT_A, 3 },
 
-      .loopback = true,
-      .rx_cb = prv_handle_rx,
-      .context = NULL,
+    .loopback = true,
+    .rx_cb = prv_handle_rx,
+    .context = NULL,
   };
   TEST_ASSERT_OK(mcp2515_init(&s_mcp2515, &mcp2515_settings));
 }
