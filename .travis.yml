@@ -25,6 +25,7 @@ addons:
     packages:
       - gcc-6
       - g++-6
+      - make
       - clang-5.0
       - clang-format-5.0
       # bionic repos
@@ -54,17 +55,6 @@ before_script:
   - export PATH=${PATH}:${GCC_DIR}/bin
 
   - ln -sf `which gcc-6` ${HOME}/.local/bin/gcc
-
-  # build GNU Make 4.2.1 from source
-  # TODO: cache this block as well
-  - wget http://ftp.gnu.org/gnu/make/make-4.2.1.tar.gz
-  - tar xvf make-4.2.1.tar.gz
-  - cd make-4.2.1
-  - ./configure --prefix=${HOME}/.local
-  - make
-  - make install
-  - cd ..
-  - rm -rf make-4.2.1
 
   # clang
   - ln -sf `which clang-5.0` ${HOME}/.local/bin/clang
