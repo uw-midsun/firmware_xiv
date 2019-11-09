@@ -20,8 +20,8 @@ branches:
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-bionic-8
+      - sourceline: 'ppa:ubuntu-toolchain-r-test'
+      - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main'
     packages:
       - gcc-7
       - g++-7
