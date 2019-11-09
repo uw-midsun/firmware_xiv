@@ -61,7 +61,6 @@ before_script:
   - ln -sf `which clang-format-5.0` ${HOME}/.local/bin/clang-format
 
   - sudo pip3 install --upgrade setuptools
-  - sudo pip3 install --upgrade distribute
   # Install pylint for python3
   - pip3 install --user pylint
 
