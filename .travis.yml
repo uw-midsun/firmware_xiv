@@ -23,8 +23,8 @@ addons:
       - sourceline: 'deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu bionic main'
       - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main'
     packages:
-      - gcc-7
-      - g++-7
+      - gcc-6
+      - g++-6
       - clang-5.0
       - clang-format-5.0
       # bionic repos
