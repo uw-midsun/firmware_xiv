@@ -16,14 +16,14 @@
 // board.
 
 // Controller board LEDs
- static const GpioAddress leds[] = {
+static const GpioAddress leds[] = {
   { .port = GPIO_PORT_B, .pin = 5 },   //
   { .port = GPIO_PORT_B, .pin = 4 },   //
   { .port = GPIO_PORT_B, .pin = 3 },   //
   { .port = GPIO_PORT_A, .pin = 15 },  //
 };
 // Discovery board LEDs
-//static const GpioAddress leds[] = {
+// static const GpioAddress leds[] = {
 //  { .port = GPIO_PORT_C, .pin = 8 },  //
 //  { .port = GPIO_PORT_C, .pin = 9 },  //
 //  { .port = GPIO_PORT_C, .pin = 6 },  //

@@ -1,20 +1,16 @@
 #include "adc.h"
+#include "delay.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
-#include "delay.h"
 #include "soft_timer.h"
-
 
 int main(void) {
   interrupt_init();
   soft_timer_init();
   gpio_init();
 
-  GpioAddress potentiometer_addr = {
-    .port = GPIO_PORT_A,
-    .pin = 1
-  };
+  GpioAddress potentiometer_addr = { .port = GPIO_PORT_A, .pin = 1 };
 
   GpioSettings pot_settings = {
     GPIO_DIR_IN,        //
@@ -45,4 +41,3 @@ int main(void) {
 
   return 0;
 }
-
