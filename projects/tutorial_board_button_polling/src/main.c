@@ -20,9 +20,9 @@ static GpioAddress button_addresses[] = {
   [BUTTON_YELLOW] = { .port = GPIO_PORT_A, .pin = 8 },
 };
 
-static GpioSettings s_button_settings = { .direction = GPIO_DIR_IN,
-                                       .alt_function = GPIO_ALTFN_NONE,
-                                       .resistor = GPIO_RES_PULLDOWN};
+static GpioSettings s_button_settings = {
+  .direction = GPIO_DIR_IN, .alt_function = GPIO_ALTFN_NONE, .resistor = GPIO_RES_PULLDOWN
+};
 
 static GpioSettings s_led_settings = { .direction = GPIO_DIR_OUT,
                                        .state = GPIO_STATE_HIGH,
