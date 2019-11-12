@@ -17,7 +17,7 @@ static GpioAddress led_addresses[] = {
 
 static GpioAddress button_addresses[] = {
   [BUTTON_GREEN] = { .port = GPIO_PORT_A, .pin = 7 },
-  [BUTTON_YELLOW] = { .port = GPIO_PORT_A, .pin = 8 },
+  [BUTTON_YELLOW] = { .port = GPIO_PORT_A, .pin = 6 },
 };
 
 static GpioSettings s_button_settings = {
