@@ -1,10 +1,9 @@
-#include "log.h"
-#include "gpio.h"
-#include "interrupt.h"
 #include "can.h"
 #include "event_queue.h"
+#include "gpio.h"
+#include "interrupt.h"
+#include "log.h"
 #include "soft_timer.h"
-
 
 #define TEST_CAN_DEVICE_ID 0x1
 
@@ -43,7 +42,6 @@ int main() {
   interrupt_init();
   soft_timer_init();
 
-
   init_can();
   LOG_DEBUG("Hello World!\n");
 
@@ -54,7 +52,7 @@ int main() {
     while (event_process(&e) != STATUS_CODE_OK) {
       LOG_DEBUG("Event Queue: empty%d!\r", i);
       i++;
-      i%=2;
+      i %= 2;
     }
     can_process_event(&e);
   }
