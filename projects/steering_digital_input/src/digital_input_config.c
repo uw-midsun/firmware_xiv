@@ -27,18 +27,18 @@ static const GpioAddress steering_digital_input[NUM_STEERING_DIGITAL_INPUT_IDS] 
   [STEERING_DIGITAL_DIGITAL_INPUT_ID_Cc_DECREASE_SPEED] = { .port = GPIO_PORT_A, .pin = 2 }
 };
 
-// Raises an event
+
 void prv_callback_raise_event(const GpioAddress *address, void *context) {
-  // Sends the index as the id and the data to the event(which is defined in the
-  // enum in the digital_input_event file)
+  GpioState state;
+  gpio_get_state(address, &state);
+  EventId *can_event = context;
 
-  EventId *id = context;
-  uint16_t *data = context;
-
-  event_raise_priority(EVENT_PRIORITY_NORMAL, *id, *data);
+  //Raises a event through a CAN message
+  CAN_TRANSMIT_STEERING_EVENT(can_event[(size_t)state],0);
 }
 
-StatusCode steering_digital_input_init() {
+//Sends in the array of the events for digital input
+StatusCode steering_digital_input_init(SteeringDigitalInputCanEvents *storage) {
   // Initialize all GPIO pins for Digital Inputs
   GpioSettings digital_input_settings = {
     .direction = GPIO_DIR_IN,         //
@@ -57,28 +57,10 @@ StatusCode steering_digital_input_init() {
 
     // Registers interrupts for each digital input pin
     gpio_it_register_interrupt(&steering_digital_input[i], &interrupt_settings,
-                               INTERRUPT_EDGE_RISING_FALLING, prv_callback_raise_event, &i);
+                   INTERRUPT_EDGE_RISING_FALLING, prv_callback_raise_event, storage[i].can_event);
   }
 
   return STATUS_CODE_OK;
 }
 
-int main() {
-  // Initialize all modules
-  gpio_init();
-  interrupt_init();
-  gpio_it_init();
-  soft_timer_init();
-  event_queue_init();
 
-  // Initialize an event
-  Event e = { .id = 0, .data = 0 };
-
-  while (true) {
-
-    // Pops events off of the queue if there is an item in the queue
-    if (event_process(&e) != STATUS_CODE_EMPTY) {
-      CAN_TRANSMIT_STEERING_EVENT(e.id, e.data);
-    }
-  }
-}
