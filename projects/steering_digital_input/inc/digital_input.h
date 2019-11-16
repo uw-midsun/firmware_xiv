@@ -6,6 +6,7 @@
 #include "gpio.h"
 #include "status.h"
 
+//Digital inputs IDs
 typedef enum {
   STEERING_DIGITAL_INPUT_ID_HORN = 0,
   STEERING_DIGITAL_INPUT_ID_RADIO_PPT,
@@ -16,7 +17,13 @@ typedef enum {
   STEERING_DIGITAL_INPUT_ID_CC_ON_OFF,
   STEERING_DIGITAL_DIGITAL_INPUT_ID_CC_INCREASE_SPEED,
   STEERING_DIGITAL_DIGITAL_INPUT_ID_Cc_DECREASE_SPEED,
+  NUM_STEERING_DIGITAL_INPUT_IDS,
 } SteeringInterfaceDigitalInput;
 
+//CAN IDs
+typedef enum {
+  STEERING_DIGITAL_INPUT_CAN_TX=0,
+  STEERING_DIGITAL_INPUT_CAN_RX,
+} SteeringInterfaceCANIDs;
 
 StatusCode steering_digital_input_init();
