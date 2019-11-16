@@ -26,4 +26,12 @@ typedef enum {
   STEERING_DIGITAL_INPUT_CAN_RX,
 } SteeringInterfaceCANIDs;
 
+// Digital Inputs
+typedef struct {
+  // CAN Events that will be raised
+  EventId can_event[NUM_GPIO_STATES];
+  //Pin for the input
+  GpioAddress pin;
+} SteeringDigitalInputCanEvents;
+
 StatusCode steering_digital_input_init();
