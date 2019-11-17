@@ -163,7 +163,7 @@ def main():
     logging.basicConfig(level=logging.DEBUG, format='"%(asctime)s",%(message)s', filename=log_file)
 
     print('Masking IDs {}'.format(args.mask))
-    if args.device in ['slcan0' , 'can0']:
+    if args.device in ['slcan0', 'can0']:
         datasource = SocketCanDataSource(masked=args.mask, device=args.device)
     else:
         datasource = SerialCanDataSource(masked=args.mask, device=args.device)
