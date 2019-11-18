@@ -35,6 +35,25 @@ def data_dump(*args):
     """Generic data dump format"""
     return ' '.join(['{}'.format(arg) for arg in args])
 
+SOURCE_LOOKUP = [
+  'RESERVED '
+  'PLUTUS '
+  'PLUTUS_SLAVE '
+  'CHAOS '
+  'TELEMETRY '
+  'LIGHTS_FRONT '
+  'LIGHTS_REAR '
+  'MOTOR_CONTROLLER '
+  'DRIVER_CONTROLS_PEDAL '
+  'DRIVER_CONTROLS_CENTER_CONSOLE '
+  'SOLAR_MASTER_FRONT '
+  'SOLAR_MASTER_REAR '
+  'SENSOR_BOARD '
+  'CHARGER '
+  'DRIVER_CONTROLS_STEERING '
+  'NUM_SYSTEM_CAN_DEVICES '
+]
+
 # Name, struct format, data format 0, ...
 MESSAGE_LOOKUP = {
     0: ('BPS Heartbeat', '<B', data_dump),
@@ -110,7 +129,7 @@ class CanMessage:
             if msg_type_name == 'ACK':
                 source = self.source_id
                 if self.source_id in MESSAGE_LOOKUP:
-                    source = MESSAGE_LOOKUP[self.source_id][0]
+                    source = SOURCE_LOOKUP[self.source_id]
                 print('{} ACK from {}'.format(name, source))
             else:
                 print('{}: {}'.format(name, data_fn(*unpacked_data)))
