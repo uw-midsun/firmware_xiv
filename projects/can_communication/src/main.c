@@ -42,12 +42,10 @@ static const GpioAddress s_leds[] = {
 };
 
 static void prv_init_leds() {
-  GpioSettings led_settings = {
-    .direction = GPIO_DIR_OUT,
-    .state = GPIO_STATE_HIGH,
-    .alt_function = GPIO_ALTFN_NONE,
-    .resistor = GPIO_RES_NONE
-  };
+  GpioSettings led_settings = { .direction = GPIO_DIR_OUT,
+                                .state = GPIO_STATE_HIGH,
+                                .alt_function = GPIO_ALTFN_NONE,
+                                .resistor = GPIO_RES_NONE };
   for (size_t i = 0; i < SIZEOF_ARRAY(s_leds); i++) {
     gpio_init_pin(&s_leds[i], &led_settings);
   }
@@ -63,17 +61,14 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   prv_toggle_leds();
   LOG_DEBUG("Received a message!\n");
   char log_message[30];
-  strcpy(log_message, "Data:\n\t");
+  printf("Data:\n\t");
   uint8_t i;
   for (i = 0; i < msg->dlc; i++) {
-      uint8_t byte = 0;
-      byte = msg->data >> (i * 8);
-      char buff[5];
-      sprintf(buff, "%x ", byte);
-      strcat(log_message, buff);
+    uint8_t byte = 0;
+    byte = msg->data >> (i * 8);
+    printf("%x ", byte);
   }
-  strcat(log_message, "\n");
-  LOG_DEBUG("%s", log_message);
+  printf("\n");
   return STATUS_CODE_OK;
 }
 
@@ -82,7 +77,7 @@ int main() {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
-  
+
   prv_init_leds();
 
   init_can();
