@@ -5,7 +5,7 @@
 
 
 
-static Fsm drive_state_buttons_fsm;
+
 
 
 static void prv_drive_registered(const GpioAddress *address, void *context){

@@ -1,4 +1,8 @@
+#include "fsm.h"
+#include "event_queue.h"
 
+
+static Fsm drive_state_buttons_fsm;
 
 FSM_DECLARE_STATE(drive_pressed);
 FSM_DECLARE_STATE(neutral_pressed);
