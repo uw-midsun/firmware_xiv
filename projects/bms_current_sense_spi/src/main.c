@@ -30,22 +30,36 @@ int main() {
   gpio_init();
   interrupt_init();
   soft_timer_init();
-
   GpioAddress cs = { .port = GPIO_PORT_B, .pin = 12 };
-  SpiSettings spi_settings = { .baudrate = 1000000,
+  SpiSettings spi_settings = { .baudrate = 2000000,
                                .mode = SPI_MODE_0,
                                .mosi = { .port = GPIO_PORT_B, .pin = 15 },
                                .miso = { .port = GPIO_PORT_B, .pin = 14 },
                                .sclk = { .port = GPIO_PORT_B, .pin = 13 },
                                .cs = cs };
   spi_init(SPI_PORT_2, &spi_settings);
+  LOG_DEBUG("HELLO\n");
 
   while (true) {
     uint8_t reg_offset = 0;
     uint8_t data[1] = { 0xa };
-    read_reg(0, 1, data);
-    LOG_DEBUG("REG %d: %x\n", reg_offset, data[0]);
-    delay_ms(200);
+
+    uint8_t cmd = WAKEUP;
+
+    //LOG_DEBUG("sending shit\n");
+    //spi_tx(SPI_PORT_2, &cmd, 1);
+    //LOG_DEBUG("sent shit\n");
+
+    uint8_t read_cmd = RDATA;
+    //uint8_t read_cmd = WAKEUP;
+    uint8_t current[2] = { 0 };
+    //spi_exchange(SPI_PORT_2, &read_cmd, 1, NULL, 0);
+    spi_exchange(SPI_PORT_2, &read_cmd, 1, current, 2);
+    uint16_t c = (current[0] << 8) | current[1];
+    //LOG_DEBUG("current %d: %x\n", c, c);
+    //read_reg(0, 1, data);
+    //LOG_DEBUG("REG %d: %x\n", reg_offset, data[0]);
+    //delay_ms(200);
   }
   return 0;
 }
