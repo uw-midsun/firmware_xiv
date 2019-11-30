@@ -26,6 +26,9 @@ StatusCode steering_can_init() {
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = STEERING_DIGITAL_INPUT_CAN_RX,
     .tx_event = STEERING_DIGITAL_INPUT_CAN_TX,
+    .tx = {GPIO_PORT_A, 11},
+    .rx = {GPIO_PORT_A, 12},
+    .loopback=true
   };
   // Initialize CAN
   can_init(&storage, &settings);

@@ -70,7 +70,7 @@ int main() {
   // Initialize the steering_digital_input to register
   // all interrupts and GPIO pins so messages
   // can be sent to CAN
-  steering_digital_input_init(s_steering_lookup_table);
+  steering_digital_input_init(&s_steering_lookup_table);
 
   while (true) {
     // Pops events off of the queue if there is an item in the queue
