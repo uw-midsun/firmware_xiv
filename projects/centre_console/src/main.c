@@ -74,9 +74,7 @@ int main(void) {
   };
 
   initialize_center_console(&cc_storage);
-  
   while (true) {
-
   }
-    return 0;
+  return 0;
 }

@@ -9,13 +9,13 @@
 #include "soft_timer.h"
 #include "status.h"
 
-//implement the fsm led for when the power button is checked???
+// implement the fsm led for when the power button is checked???
 typedef enum {
   EVENT_BTN_IDLE = 0,
   EVENT_BTN_PUSH,
 } BUTTON_EVENT;
 
-//CAN Events
+// CAN Events
 typedef enum {
   EE_CENTER_CONSOLE_DIGITAL_INPUT_POWER = 0,
   EE_CENTER_CONSOLE_DIGITAL_INPUT_DRIVE,
@@ -26,7 +26,7 @@ typedef enum {
   NUM_EE_CENTER_CONSOLE_DIGITAL_INPUTS,
 } EECenterConsoleCanEvents;
 
-typedef struct{
+typedef struct {
   GpioAddress btn_addr;
   EECenterConsoleCanEvents can_event;
 }CenterConsoleInputLink;

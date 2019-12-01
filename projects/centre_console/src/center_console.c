@@ -3,24 +3,21 @@
 
 static CenterConsoleStorage s_cc_storage = { 0 };
 
-//BOOKMARK: this can only take in context,so how can I use can_process_event in this function?
-static void prv_center_console_btn_callback(const GpioAddress *address, void *context){
+static void prv_center_console_btn_callback(const GpioAddress *address, void *context) {
     GpioItCallbackContext *callback_context = (GpioItCallbackContext *) context;
     CenterConsoleInputLink* input_link = callback_context->input_link;
     Event *e = callback_context->e;
 
-    //toggle the led on the button
+    // toggle the led on the button
     gpio_toggle_state(&input_link->btn_addr);
 
-    //process can event
+    // process can event
     while (event_process(e) != STATUS_CODE_OK) {
-
     }
     can_process_event(e);
-};
+}
 
-static StatusCode prv_init_input_btn(CenterConsoleInputLink* input_link){
-
+static StatusCode prv_init_input_btn(CenterConsoleInputLink* input_link) {
     const GpioSettings button_input_settings = {
         .direction = GPIO_DIR_IN,
         .state = GPIO_STATE_LOW,
@@ -43,14 +40,15 @@ static StatusCode prv_init_input_btn(CenterConsoleInputLink* input_link){
         .e = &e,
     };
 
-    status_ok_or_return(gpio_it_register_interrupt(&input_link->btn_addr, &interrupt_settings, INTERRUPT_EDGE_RISING_FALLING, callback, &callback_context));
+    status_ok_or_return(gpio_it_register_interrupt(&input_link->btn_addr, &interrupt_settings,
+                                    INTERRUPT_EDGE_RISING_FALLING, callback, &callback_context));
 
     return STATUS_CODE_OK;
-};
+}
 
 
-StatusCode initialize_center_console(CenterConsoleStorage* cc_storage){
-    //init all the buttons here
+StatusCode initialize_center_console(CenterConsoleStorage* cc_storage) {
+    // init all the buttons here
     status_ok_or_return(prv_init_input_btn(&cc_storage->power_input));
     status_ok_or_return(prv_init_input_btn(&cc_storage->drive_input));
     status_ok_or_return(prv_init_input_btn(&cc_storage->neutral_input));
@@ -59,4 +57,4 @@ StatusCode initialize_center_console(CenterConsoleStorage* cc_storage){
     status_ok_or_return(prv_init_input_btn(&cc_storage->low_beam_input));
 
     return STATUS_CODE_OK;
-};
+}
