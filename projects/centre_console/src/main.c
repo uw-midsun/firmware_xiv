@@ -2,7 +2,6 @@
 
 #include "center_console.h"
 
-
 #define TEST_CAN_DEVICE_ID 0x1
 
 static CanStorage s_can_storage = { 0 };
@@ -47,30 +46,36 @@ int main(void) {
   init_can();
 
   CenterConsoleStorage cc_storage = {
-    .power_input = {
-        .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
-        .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_POWER,
-    },
-    .drive_input = {
-      .btn_addr = { .port = GPIO_PORT_B, .pin = 1 } ,
-      .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_DRIVE,
-    },
-    .neutral_input = {
-      .btn_addr = { .port = GPIO_PORT_B, .pin = 2 },
-      .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_NEUTRAL,
-    },
-    .reverse_input = {
-      .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
-      .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_REVERSE,
-    },
-    .hazards_input = {
-      .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
-      .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_HAZARDS,
-    },
-    .low_beam_input = {
-      .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
-      .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_LOW_BEAM,
-    },
+    .power_input =
+        {
+            .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
+            .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_POWER,
+        },
+    .drive_input =
+        {
+            .btn_addr = { .port = GPIO_PORT_B, .pin = 1 },
+            .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_DRIVE,
+        },
+    .neutral_input =
+        {
+            .btn_addr = { .port = GPIO_PORT_B, .pin = 2 },
+            .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_NEUTRAL,
+        },
+    .reverse_input =
+        {
+            .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
+            .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_REVERSE,
+        },
+    .hazards_input =
+        {
+            .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
+            .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_HAZARDS,
+        },
+    .low_beam_input =
+        {
+            .btn_addr = { .port = GPIO_PORT_B, .pin = 0 },
+            .can_event = EE_CENTER_CONSOLE_DIGITAL_INPUT_LOW_BEAM,
+        },
   };
 
   initialize_center_console(&cc_storage);

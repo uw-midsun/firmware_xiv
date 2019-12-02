@@ -1,10 +1,10 @@
 
 #pragma once
 #include "can.h"
-#include "gpio.h"
-#include "interrupt.h"
-#include "gpio_it.h"
 #include "event_queue.h"
+#include "gpio.h"
+#include "gpio_it.h"
+#include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "status.h"
@@ -29,7 +29,7 @@ typedef enum {
 typedef struct {
   GpioAddress btn_addr;
   EECenterConsoleCanEvents can_event;
-}CenterConsoleInputLink;
+} CenterConsoleInputLink;
 
 typedef struct {
   CenterConsoleInputLink power_input;
@@ -38,7 +38,7 @@ typedef struct {
   CenterConsoleInputLink reverse_input;
   CenterConsoleInputLink hazards_input;
   CenterConsoleInputLink low_beam_input;
-}CenterConsoleStorage;
+} CenterConsoleStorage;
 
 typedef enum {
   TEST_CAN_EVENT_RX = 10,
@@ -47,12 +47,12 @@ typedef enum {
 } TestCanEvent;
 
 typedef struct {
-  CenterConsoleInputLink* input_link;
-  Event* e;
-}GpioItCallbackContext;
+  CenterConsoleInputLink *input_link;
+  Event *e;
+} GpioItCallbackContext;
 
 static CenterConsoleStorage s_cc_storage;
 
-StatusCode initialize_center_console(CenterConsoleStorage* cc_storage);
+StatusCode initialize_center_console(CenterConsoleStorage *cc_storage);
 
 void can_emit_msg();
