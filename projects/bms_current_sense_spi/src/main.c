@@ -46,7 +46,7 @@ void read_reg(uint8_t offset, uint8_t num_regs, uint8_t *data) {
 void read_one_reg(uint8_t reg_offset) {
   uint8_t data = 0;
   read_reg(reg_offset, 1, &data);
-  //LOG_DEBUG("%s: %x\n", s_reg_name_lookup[reg_offset], data);
+  LOG_DEBUG("%s: %x\n", s_reg_name_lookup[reg_offset], data);
 }
 
 void read_all_regs() {
@@ -109,23 +109,24 @@ int main() {
   interrupt_init();
   soft_timer_init();
   GpioAddress cs = { .port = GPIO_PORT_B, .pin = 12 };
-  SpiSettings spi_settings = { .baudrate = 750000,
+  SpiSettings spi_settings = { .baudrate = 1500000,
                                .mode = SPI_MODE_1,
                                .mosi = { .port = GPIO_PORT_B, .pin = 15 },
                                .miso = { .port = GPIO_PORT_B, .pin = 14 },
                                .sclk = { .port = GPIO_PORT_B, .pin = 13 },
                                .cs = cs };
   spi_init(SPI_PORT_2, &spi_settings);
-
   LOG_DEBUG("Hello\n");
 
-  setup();
+  //setup();
   //read_all_regs();
 
   while (true) {
     //wake_up();
     //read_current();
     read_one_reg(REG_CONFIG_0);
+    delay_ms(100);
+
   }
   return 0;
 }
