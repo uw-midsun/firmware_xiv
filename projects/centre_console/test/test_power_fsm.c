@@ -3,11 +3,13 @@
 #include "event_queue.h"
 #include "centre_console_events.h"
 #include "power_fsm.h"
+#include <string.h>
 
 static PowerFsmStorage s_power_fsm_storage;
 
 void setup_test(void) {
   event_queue_init();
+  memset(&s_power_fsm_storage, 0, sizeof(s_power_fsm_storage));
   power_fsm_init(&s_power_fsm_storage);
 }
 
@@ -91,10 +93,27 @@ void test_faults_accumulate(void) {
   // then
   event_process(&e);
   TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_PUBLISH_FAULT, e.id);
-  TEST_ASSERT_EQUAL(fault_bit, 1 | 1 << 2);
+  TEST_ASSERT_EQUAL(1 << 1 | 1 << 2, e.data);
 }
 
+void test_faults_clear(void) {
+  // given
+  s_power_fsm_storage.fault_bitset = 0;
+  uint8_t fault_bit = 1 << 1;
+  Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_FAULT, .data = fault_bit };
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
 
+  e.id = CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT;
+  e.data = fault_bit;
+  
+  // when
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+
+  // then
+  event_process(&e);
+  TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_FAULTS_CLEARED, e.id);
+}
 
 
 
