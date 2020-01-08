@@ -29,6 +29,7 @@ void test_fault_during_turn_on_transitions_to_fault_state(void) {
   // given
   Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_ON, .data = 0 };
   power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
 
   uint8_t fault_bit = 1 << 2;
   e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
@@ -39,9 +40,62 @@ void test_fault_during_turn_on_transitions_to_fault_state(void) {
 
   // then
   event_process(&e);
+  TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_PUBLISH_FAULT, e.id);
+  TEST_ASSERT_EQUAL(fault_bit, e.data);
+}
+
+void test_fault_during_turn_off_transitions_to_fault_state(void) {
+  // given: state_off -> state_turning_on -> state_on -> state_turning_off -> state_fault
+  Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_ON, .data = 0 };
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
+
+  e.id = POWER_ON_SEQUENCE_EVENT_COMPLETE;
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
+
+  e.id = CENTRE_CONSOLE_POWER_EVENT_OFF;
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
+
+  e.id = CENTRE_CONSOLE_POWER_EVENT_OFF;
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
+
+  uint8_t fault_bit = 1 << 2;
+  e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
+  e.data = fault_bit;
+  
+  // when
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+
+  // then
   event_process(&e);
   TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_PUBLISH_FAULT, e.id);
   TEST_ASSERT_EQUAL(fault_bit, e.data);
 }
+
+void test_faults_accumulate(void) {
+  // given
+  Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_FAULT, .data = 1<<1 };
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
+
+  uint8_t fault_bit = 1 << 2;
+  e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
+  e.data = fault_bit;
+  
+  // when
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+
+  // then
+  event_process(&e);
+  TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_PUBLISH_FAULT, e.id);
+  TEST_ASSERT_EQUAL(fault_bit, 1 | 1 << 2);
+}
+
+
+
+
 
 
