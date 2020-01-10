@@ -14,22 +14,7 @@
 // Time period between every throttle pedal reading 
 #define THROTTLE_UPDATE_PERIOD_MS 10 
 
-
-// Throttle Channels: 
-// Two channels are used for redundancy in case throttle reading from the primary channel goes bad. 
-/*typedef enum {
-    THROTTLE_CHANNEL_MAIN = 0, 
-    THROTTLE_CHANNEL_SECONDARY,
-    NUM_THROTTLE_CHANNELS
-} ThrottleChannel; */
-
-// Possible throttle zones 
-/*typedef enum {
-    THROTTLE_ZONE_BRAKE = 0, 
-    THROTTLE_ZONE_COAST,
-    THROTTLE_ZONE_ACCELERATE,
-    NUM_THROTTLE_ZONES
-} ThrottleZone; */ // Might require later 
+SoftTimerId drive_fsm_soft_timer_id = 1; 
 
 // Possible throttle states 
 typedef enum {
