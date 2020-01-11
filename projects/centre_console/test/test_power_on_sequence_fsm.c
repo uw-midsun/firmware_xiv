@@ -1,6 +1,8 @@
 #include "unity.h"
 #include "can.h"
 #include "status.h"
+#include "exported_enums.h"
+#include "can_transmit.h"
 #include "can_msg_defs.h"
 #include "ms_test_helpers.h"
 #include "log.h"
@@ -64,11 +66,12 @@ void test_sequence_starts_by_turning_on_driver_display(void) {
   // given
   Event e = { .id = POWER_ON_SEQUENCE_EVENT_BEGIN, .data = 0 };
   // when
-  //power_on_sequence_fsm_process_event(&s_sequence_storage, &e);
-  CAN_TRANSMIT_FRONT_POWER(0);
-  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  while (!status_ok(event_process(&e))) {}
+  power_on_sequence_fsm_process_event(&s_sequence_storage, &e);
   // then
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_FRONT_POWER, s_can_message_assertion.message_id);
+  TEST_ASSERT_EQUAL(1 << EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY, s_can_message_assertion.data);
 }
+
+
 
