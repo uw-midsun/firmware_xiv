@@ -30,33 +30,8 @@ void setup_test(void) {
   gpio_it_init();
   soft_timer_init();
   event_queue_init();
-
-  static SteeringDigitalInputConfiguration s_steering_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
-    [STEERING_DIGITAL_INPUT_HORN] = { .event = STEERING_DIGITAL_INPUT_EVENT_HORN,
-                                      .address = { .port = GPIO_PORT_B, .pin = 0 } },
-    [STEERING_DIGITAL_INPUT_RADIO_PPT] = { .event = STEERING_DIGITAL_INPUT_EVENT_RADIO_PPT,
-                                           .address = { .port = GPIO_PORT_B, .pin = 1 } },
-    [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] =
-        { .event = STEERING_DIGITAL_INPUT_EVENT_HIGH_BEAM_FORWARD,
-          .address = { .port = GPIO_PORT_B, .pin = 3 } },
-    [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = { .event =
-                                                    STEERING_DIGITAL_INPUT_EVENT_HIGH_BEAM_REAR,
-                                                .address = { .port = GPIO_PORT_B, .pin = 4 } },
-    [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] =
-        { .event = STEERING_DIGITAL_INPUT_EVENT_REGEN_BRAKE_TOGGLE,
-          .address = { .port = GPIO_PORT_B, .pin = 5 } },
-    [STEERING_DIGITAL_INPUT_CC_TOGGLE] = { .event = STEERING_DIGITAL_INPUT_EVENT_CC_TOGGLE,
-                                           .address = { .port = GPIO_PORT_B, .pin = 6 } },
-    [STEERING_DIGITAL_DIGITAL_INPUT_CC_INCREASE_SPEED] =
-        { .event = STEERING_DIGITAL_DIGITAL_INPUT_EVENT_CC_INCREASE_SPEED,
-          .address = { .port = GPIO_PORT_B, .pin = 7 } },
-    [STEERING_DIGITAL_DIGITAL_INPUT_CC_DECREASE_SPEED] =
-        { .event = STEERING_DIGITAL_DIGITAL_INPUT_EVENT_CC_DECREASE_SPEED,
-          .address = { .port = GPIO_PORT_B, .pin = 8 } },
-  };
-
   steering_can_init();
-  steering_digital_input_init(s_steering_lookup_table);
+  steering_digital_input_init();
 }
 
 void teardown_test(void) {}
