@@ -1,4 +1,3 @@
-#pragma once
 
 typedef enum {
   FAULT,
