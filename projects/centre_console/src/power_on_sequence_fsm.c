@@ -97,7 +97,6 @@ static void prv_generate_simple_ack_request(CanAckRequest *request, PowerOnSeque
 static void prv_state_turn_on_driver_display_battery(Fsm *fsm, const Event *e, void *context) {
   PowerOnSequenceFsmStorage *storage = (PowerOnSequenceFsmStorage *) context;
   uint16_t power_bitset = 1 << EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY;
-  LOG_DEBUG("transmiting...\n");
   CAN_TRANSMIT_FRONT_POWER(power_bitset);
 
   power_bitset = EE_REAR_POWER_DISTRIBUTION_OUTPUT_BMS_CARRIER;
