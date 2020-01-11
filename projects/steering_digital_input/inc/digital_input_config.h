@@ -28,6 +28,6 @@ typedef struct {
   EventId event;
   // Pin for the input
   GpioAddress address;
-} SteeringDigitalInputConfiguration;
+} DigitalInputToEventMapping;
 
-StatusCode steering_digital_input_init(SteeringDigitalInputConfiguration *storage);
+StatusCode steering_digital_input_init();
