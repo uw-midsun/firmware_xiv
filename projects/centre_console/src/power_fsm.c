@@ -54,7 +54,7 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
     power_fsm->fault_bitset &= ~(e->data);
   }
   if (power_fsm->fault_bitset == POWER_FSM_NO_FAULT) {
-    event_raise(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, 0);
+    event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULTS_CLEARED, 0);
   } else {
     event_raise(CENTRE_CONSOLE_POWER_EVENT_PUBLISH_FAULT, power_fsm->fault_bitset);
   }

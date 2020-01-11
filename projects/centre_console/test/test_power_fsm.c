@@ -67,7 +67,7 @@ void test_fault_during_turn_off_transitions_to_fault_state(void) {
   uint8_t fault_bit = 1 << 2;
   e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
   e.data = fault_bit;
-  
+
   // when
   power_fsm_process_event(&s_power_fsm_storage, &e);
 
@@ -98,7 +98,6 @@ void test_faults_accumulate(void) {
 
 void test_faults_clear(void) {
   // given
-  s_power_fsm_storage.fault_bitset = 0;
   uint8_t fault_bit = 1 << 1;
   Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_FAULT, .data = fault_bit };
   power_fsm_process_event(&s_power_fsm_storage, &e);
@@ -115,6 +114,21 @@ void test_faults_clear(void) {
   TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_FAULTS_CLEARED, e.id);
 }
 
+void test_only_correct_fault_bit_clears(void) {
+  // given
+  uint8_t fault_bit = 1 << 1 | 1 << 2;
+  Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_FAULT, .data = fault_bit };
+  power_fsm_process_event(&s_power_fsm_storage, &e);
+  event_process(&e);
 
+  e.id = CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT;
+  e.data = 1 << 1;
+  
+  // when
+  power_fsm_process_event(&s_power_fsm_storage, &e);
 
-
+  // then
+  event_process(&e);
+  TEST_ASSERT_EQUAL(CENTRE_CONSOLE_POWER_EVENT_PUBLISH_FAULT, e.id);
+  TEST_ASSERT_EQUAL(1 << 2 , e.data);
+}
