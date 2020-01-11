@@ -16,20 +16,16 @@
 #include "status.h"
 #include "wait.h"
 
- 
-
 StatusCode steering_can_init() {
- // Set up settings for CAN
+  // Set up settings for CAN
   static CanStorage storage = { 0 };
-  const CanSettings settings = {
-    .device_id = SYSTEM_CAN_DEVICE_DRIVER_CONTROLS_STEERING,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = STEERING_DIGITAL_INPUT_CAN_RX,
-    .tx_event = STEERING_DIGITAL_INPUT_CAN_TX,
-    .tx = {GPIO_PORT_A, 11},
-    .rx = {GPIO_PORT_A, 12},
-    .loopback=true
-  };
+  const CanSettings settings = { .device_id = SYSTEM_CAN_DEVICE_DRIVER_CONTROLS_STEERING,
+                                 .bitrate = CAN_HW_BITRATE_500KBPS,
+                                 .rx_event = STEERING_DIGITAL_INPUT_CAN_RX,
+                                 .tx_event = STEERING_DIGITAL_INPUT_CAN_TX,
+                                 .tx = { GPIO_PORT_A, 11 },
+                                 .rx = { GPIO_PORT_A, 12 },
+                                 .loopback = true };
   // Initialize CAN
   can_init(&storage, &settings);
   return STATUS_CODE_OK;
@@ -37,12 +33,7 @@ StatusCode steering_can_init() {
 
 StatusCode steering_can_process_event(Event *e) {
   if (status_ok(event_process(e))) {
-      can_process_event(e);
-    }    
-    return STATUS_CODE_EMPTY;
+    can_process_event(e);
+  }
+  return STATUS_CODE_EMPTY;
 }
-
-
-
-
-
