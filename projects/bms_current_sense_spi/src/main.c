@@ -36,17 +36,34 @@ static char* s_reg_name_lookup[NUM_REG_CONFIGS] = {
   [REG_CONFIG_2] = "Config 2"
 };
 
+void write_reg(uint8_t offset, uint8_t num_regs, uint8_t* data) {
+  uint8_t tx_len = 2 + num_regs;
+  uint8_t write_cmd = WREG_BASE | offset;
+  uint8_t write_data[2 + num_regs];
+  write_data[0] = write_cmd;
+  write_data[1] = num_regs - 1;
+  for (uint8_t i = 0 ; i < num_regs; i++) {
+    write_data[i + 2] = data[i];
+  }
+  spi_exchange(SPI_PORT_2, write_data, tx_len, NULL, 0);
+}
+
+void write_one_reg(uint8_t reg_offset, uint8_t num_regs, uint8_t *data) {
+  write_reg(reg_offset, num_regs, data);
+}
+
 void read_reg(uint8_t offset, uint8_t num_regs, uint8_t *data) {
   uint8_t tx_len = 2;
   uint8_t read_cmd = RREG_BASE | offset;
   uint8_t op_code[2] = { read_cmd, num_regs - 1 };
+  //uint8_t op_code[2] = { num_regs - 1, read_cmd };
   spi_exchange(SPI_PORT_2, op_code, tx_len, data, num_regs);
 }
 
-void read_one_reg(uint8_t reg_offset) {
+uint8_t read_one_reg(uint8_t reg_offset) {
   uint8_t data = 0;
   read_reg(reg_offset, 1, &data);
-  LOG_DEBUG("%s: %x\n", s_reg_name_lookup[reg_offset], data);
+  return data;
 }
 
 void read_all_regs() {
@@ -103,6 +120,17 @@ void read_current() {
     //LOG_DEBUG("current: %lu\n", c);
 }
 
+uint8_t reverse_bits(uint8_t bits) {
+  uint8_t size = 8;
+  uint8_t reversed = 0;
+  for (uint8_t i = 0; i < size; i++) {
+    uint8_t check = (1 << i) & bits;
+    if (check) {
+      reversed |= (1 << (size - i - 1));
+    }
+  }
+  return reversed;
+}
 
 int main() {
   gpio_init();
@@ -120,13 +148,24 @@ int main() {
 
   //setup();
   //read_all_regs();
+  uint8_t data = reverse_bits(2);
+  data = 1;
+  //data = 0xe0;
+  LOG_DEBUG("Writing %x\n", data);
+  write_one_reg(REG_CONFIG_2, 1, &data);
+  uint8_t read_data = read_one_reg(REG_CONFIG_2);
+  //read_data = reverse_bits(read_data);
+  LOG_DEBUG("%s: %x\n", s_reg_name_lookup[REG_CONFIG_2], read_data);
 
   while (true) {
+    uint8_t read_data = read_one_reg(REG_CONFIG_2);
+    LOG_DEBUG("%s: %x\n", s_reg_name_lookup[REG_CONFIG_2], read_data);
     //wake_up();
     //read_current();
-    read_one_reg(REG_CONFIG_0);
-    delay_ms(100);
-
+    delay_s(2);
+    //read_one_reg(REG_CONFIG_0);
+    //read_one_reg(REG_CONFIG_1);
+    //read_one_reg(REG_CONFIG_2);
   }
   return 0;
 }
