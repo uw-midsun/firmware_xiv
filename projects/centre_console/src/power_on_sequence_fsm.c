@@ -7,7 +7,8 @@
 #include "event_queue.h"
 
 FSM_DECLARE_STATE(state_none);
-FSM_DECLARE_STATE(state_turn_on_driver_display_battery);
+FSM_DECLARE_STATE(state_turn_on_driver_display);
+FSM_DECLARE_STATE(state_turn_on_battery);
 FSM_DECLARE_STATE(state_confirm_aux_voltage);
 FSM_DECLARE_STATE(state_confirm_battery_health);
 FSM_DECLARE_STATE(state_turn_on_motor_controller_interface);
@@ -19,12 +20,17 @@ FSM_DECLARE_STATE(state_turn_on_complete);
 FSM_DECLARE_STATE(state_fault);
 
 FSM_STATE_TRANSITION(state_none) {
-  FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_BEGIN, state_turn_on_driver_display_battery);
+  FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_BEGIN, state_turn_on_driver_display);
   FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_FAULT, state_fault);
 }
 
-FSM_STATE_TRANSITION(state_turn_on_driver_display_battery) {
-  FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_BATTERY_DRIVER_DISPLAY_ARE_ON, state_confirm_aux_voltage);
+FSM_STATE_TRANSITION(state_turn_on_driver_display) {
+  FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_DRIVER_DISPLAY_IS_ON, state_turn_on_battery);
+  FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_FAULT, state_fault);
+}
+
+FSM_STATE_TRANSITION(state_turn_on_battery) {
+  FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_BATTERY_IS_ON, state_confirm_aux_voltage);
   FSM_ADD_TRANSITION(POWER_ON_SEQUENCE_EVENT_FAULT, state_fault);
 }
 
@@ -94,20 +100,52 @@ static void prv_generate_simple_ack_request(CanAckRequest *request, PowerOnSeque
   request->expected_bitset = expected_bitset;
 }
 
-static void prv_state_turn_on_driver_display_battery(Fsm *fsm, const Event *e, void *context) {
+static void prv_state_turn_on_driver_display(Fsm *fsm, const Event *e, void *context) {
   PowerOnSequenceFsmStorage *storage = (PowerOnSequenceFsmStorage *) context;
-  uint16_t power_bitset = 1 << EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY;
-  CAN_TRANSMIT_FRONT_POWER(power_bitset);
+  uint16_t output_bitset = 1 << EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY;
+  uint16_t output_state = output_bitset;
+  CAN_TRANSMIT_FRONT_POWER(output_bitset, output_state);
+  event_raise(POWER_ON_SEQUENCE_EVENT_DRIVER_DISPLAY_IS_ON, 0);
+}
 
-  power_bitset = EE_REAR_POWER_DISTRIBUTION_OUTPUT_BMS_CARRIER;
+static void prv_transmit_relay_message(PowerOnSequenceFsmStorage *storage, 
+  SystemCanDevice acking_device,
+  EERelayId relay_id,
+  EventId success_event, EventId fault_event) {
+  uint8_t output_bitset = 1 << relay_id;
+  uint8_t output_state = output_bitset;
+  CanAckRequest ack_req;
+  prv_generate_simple_ack_request(&ack_req, 
+    storage, 
+    CAN_ACK_EXPECTED_DEVICES(acking_device),
+    fault_event,
+    success_event
+  );
+  CAN_TRANSMIT_SET_RELAY_STATES(&ack_req, output_bitset, output_state);
+}
 
+static void prv_transmit_rear_power_dist_turn_on_message(PowerOnSequenceFsmStorage *storage, 
+  EERearPowerDistributionOutput output,
+  EventId success_event, EventId fault_event) {
+  uint16_t output_bitset = 1 << output;
+  uint16_t output_state = output_bitset;
   CanAckRequest ack_req;
   prv_generate_simple_ack_request(&ack_req, storage, 
     CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR),
-    CENTRE_CONSOLE_FAULT_REASON_BMS_CARRIER_FAILED_TO_TURN_ON,
-    POWER_ON_SEQUENCE_EVENT_BATTERY_DRIVER_DISPLAY_ARE_ON
+    fault_event,
+    success_event
   );
-  // TO-DO: add the call to CAN_TRANSMIT_REAR_POWER(&ack_req, power_bitset)
+  CAN_TRANSMIT_REAR_POWER(&ack_req, output_bitset, output_state);
+}
+
+static void prv_state_turn_on_battery(Fsm *fsm, const Event *e, void *context) {
+  PowerOnSequenceFsmStorage *storage = (PowerOnSequenceFsmStorage *) context;
+  prv_transmit_rear_power_dist_turn_on_message(
+    storage,
+    EE_REAR_POWER_DISTRIBUTION_OUTPUT_BMS_CARRIER,
+    POWER_ON_SEQUENCE_EVENT_BATTERY_IS_ON,
+    CENTRE_CONSOLE_FAULT_REASON_BMS_CARRIER_FAILED_TO_TURN_ON
+  );
 }
 
 static void prv_state_confirm_aux_voltage(Fsm *fsm, const Event *e, void *context) {
@@ -118,7 +156,7 @@ static void prv_state_confirm_aux_voltage(Fsm *fsm, const Event *e, void *contex
     CENTRE_CONSOLE_FAULT_REASON_AUX_VOLTAGE_LOW,
     POWER_ON_SEQUENCE_EVENT_AUX_VOLTAGE_OK
   );
-  // CAN_TRANSMIT_GET_AUX_STATUS(&ack_req);
+  CAN_TRANSMIT_GET_AUX_STATUS(&ack_req);
 }
 
 static void prv_state_confirm_battery_health(Fsm *fsm, const Event *e, void *context) {
@@ -127,26 +165,22 @@ static void prv_state_confirm_battery_health(Fsm *fsm, const Event *e, void *con
 
 static void prv_state_turn_on_motor_controller_interface(Fsm *fsm, const Event *e, void *context) {
   PowerOnSequenceFsmStorage *storage = (PowerOnSequenceFsmStorage *) context;
-  uint16_t power_bitset = 1 << EE_REAR_POWER_DISTRIBUTION_OUTPUT_MCI;
-  CanAckRequest ack_req;
-  prv_generate_simple_ack_request(&ack_req, storage, 
-    CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR),
-    CENTRE_CONSOLE_FAULT_REASON_MCI_FAILED_TO_TURN_ON,
-    POWER_ON_SEQUENCE_EVENT_MOTOR_CONTROLLER_INTERFACE_IS_ON
+  prv_transmit_rear_power_dist_turn_on_message(
+    storage,
+    EE_REAR_POWER_DISTRIBUTION_OUTPUT_MCI,
+    POWER_ON_SEQUENCE_EVENT_MOTOR_CONTROLLER_INTERFACE_IS_ON,
+    CENTRE_CONSOLE_FAULT_REASON_MCI_FAILED_TO_TURN_ON
   );
-  // CAN_TRANSMIT_REAR_POWER(&ack_req, power_bitset)
 }
 
 static void prv_state_close_battery_relay(Fsm *fsm, const Event *e, void *context) {
   PowerOnSequenceFsmStorage *storage = (PowerOnSequenceFsmStorage *) context;
-  uint16_t relay_bitset = 1 << EE_RELAY_ID_BATTERY;
-  CanAckRequest ack_req;
-  prv_generate_simple_ack_request(&ack_req, storage, 
-    CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BMS_CARRIER),
-    CENTRE_CONSOLE_FAULT_REASON_BATTERY_RELAY_FAILED_TO_CLOSE,
-    POWER_ON_SEQUENCE_EVENT_BATTERY_RELAY_CLOSED
+  prv_transmit_relay_message(storage, 
+    SYSTEM_CAN_DEVICE_BMS_CARRIER,
+    EE_RELAY_ID_BATTERY,
+    POWER_ON_SEQUENCE_EVENT_BATTERY_RELAY_CLOSED, 
+    CENTRE_CONSOLE_FAULT_REASON_BATTERY_RELAY_FAILED_TO_CLOSE
   );
-  CAN_TRANSMIT_SET_RELAY_STATES(&ack_req, relay_bitset);
 }
 
 static void prv_state_confirm_dcdc(Fsm *fsm, const Event *e, void *context) {
@@ -157,7 +191,7 @@ static void prv_state_confirm_dcdc(Fsm *fsm, const Event *e, void *context) {
     CENTRE_CONSOLE_FAULT_REASON_DCDC_NOT_SWITCHED,
     POWER_ON_SEQUENCE_EVENT_DC_DC_OK
   );
-  // CAN_TRANSMIT_CONFIRM_DCDC(&ack_req);
+  CAN_TRANSMIT_GET_DC_DC_STATUS(&ack_req);
 }
 
 static void prv_state_precharge(Fsm *fsm, const Event *e, void *context) {
@@ -168,19 +202,20 @@ static void prv_state_precharge(Fsm *fsm, const Event *e, void *context) {
     CENTRE_CONSOLE_FAULT_REASON_PRECHARGE_NOT_INITIATED,
     POWER_ON_SEQUENCE_EVENT_NO_OP
   );
-  // CAN_TRANSMIT_CONFIRM_DCDC(&ack_req);
+  CAN_TRANSMIT_START_PRECHARGE(&ack_req);
 }
 
 static void prv_state_close_motor_relay(Fsm *fsm, const Event *e, void *context) {
   PowerOnSequenceFsmStorage *storage = (PowerOnSequenceFsmStorage *) context;
-  uint16_t relay_bitset = 1 << EE_RELAY_ID_MOTOR_CONTROLLER;
+  uint8_t relay_bitset = 1 << EE_RELAY_ID_MOTOR_CONTROLLER;
+  uint8_t relay_state = relay_bitset;
   CanAckRequest ack_req;
   prv_generate_simple_ack_request(&ack_req, storage, 
     CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
     CENTRE_CONSOLE_FAULT_REASON_MOTOR_RELAY_FAILED_TO_CLOSE,
     POWER_ON_SEQUENCE_EVENT_MOTOR_RELAY_CLOSED
   );
-  CAN_TRANSMIT_SET_RELAY_STATES(&ack_req, relay_bitset);
+  CAN_TRANSMIT_SET_RELAY_STATES(&ack_req, relay_bitset, relay_state);
 }
 
 static void prv_state_turn_on_complete(Fsm *fsm, const Event *e, void *context) {
@@ -189,7 +224,8 @@ static void prv_state_turn_on_complete(Fsm *fsm, const Event *e, void *context) 
 }
 
 StatusCode power_on_sequence_fsm_init(PowerOnSequenceFsmStorage *storage) {
-  fsm_state_init(state_turn_on_driver_display_battery, prv_state_turn_on_driver_display_battery);
+  fsm_state_init(state_turn_on_driver_display, prv_state_turn_on_driver_display);
+  fsm_state_init(state_turn_on_battery, prv_state_turn_on_battery);
   fsm_state_init(state_confirm_aux_voltage, prv_state_confirm_aux_voltage);
   fsm_state_init(state_confirm_battery_health, prv_state_confirm_battery_health);
   fsm_state_init(state_turn_on_motor_controller_interface, prv_state_turn_on_motor_controller_interface);

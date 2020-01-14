@@ -1,3 +1,5 @@
+#pragma once
+
 #include "fsm.h"
 #include "status.h"
 #include "centre_console_fault_reason.h"

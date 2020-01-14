@@ -8,17 +8,17 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,         \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_SET_RELAY_STATES(msg_ptr, relay_state_u8_ptr)                          \
-  can_unpack_impl_u8((msg_ptr), 1, (relay_state_u8_ptr), CAN_UNPACK_IMPL_EMPTY,           \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+#define CAN_UNPACK_SET_RELAY_STATES(msg_ptr, relay_id_bitset_u8_ptr, relay_output_bitset_u8_ptr) \
+  can_unpack_impl_u8((msg_ptr), 2, (relay_id_bitset_u8_ptr), (relay_output_bitset_u8_ptr),       \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_POWERTRAIN_HEARTBEAT(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_GET_AUX_STATUS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
-#define CAN_UNPACK_REAR_POWER(msg_ptr, output_state_u16_ptr)                       \
-  can_unpack_impl_u16((msg_ptr), 2, (output_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+#define CAN_UNPACK_REAR_POWER(msg_ptr, output_bitset_u16_ptr, output_state_u16_ptr)  \
+  can_unpack_impl_u16((msg_ptr), 4, (output_bitset_u16_ptr), (output_state_u16_ptr), \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_GET_DC_DC_STATUS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
@@ -50,8 +50,8 @@
   can_unpack_impl_u16((msg_ptr), 2, (brake_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_FRONT_POWER(msg_ptr, output_state_u16_ptr)                      \
-  can_unpack_impl_u16((msg_ptr), 2, (output_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+#define CAN_UNPACK_FRONT_POWER(msg_ptr, output_bitset_u16_ptr, output_state_u16_ptr) \
+  can_unpack_impl_u16((msg_ptr), 4, (output_bitset_u16_ptr), (output_state_u16_ptr), \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_LIGHTS_SYNC(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)

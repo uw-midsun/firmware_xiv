@@ -9,11 +9,11 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
                    CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_SET_RELAY_STATES(msg_ptr, relay_state_u8)                                        \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                   \
-                   SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 1, (relay_state_u8), CAN_PACK_IMPL_EMPTY, \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_SET_RELAY_STATES(msg_ptr, relay_id_bitset_u8, relay_output_bitset_u8)          \
+  can_pack_impl_u8(                                                                             \
+      (msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 2,      \
+      (relay_id_bitset_u8), (relay_output_bitset_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_POWERTRAIN_HEARTBEAT(msg_ptr)                     \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
@@ -23,9 +23,9 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_GET_AUX_STATUS)
 
-#define CAN_PACK_REAR_POWER(msg_ptr, output_state_u16)                                             \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_REAR_POWER, 2, \
-                    (output_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
+#define CAN_PACK_REAR_POWER(msg_ptr, output_bitset_u16, output_state_u16)                          \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_REAR_POWER, 4, \
+                    (output_bitset_u16), (output_state_u16), CAN_PACK_IMPL_EMPTY,                  \
                     CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_GET_DC_DC_STATUS(msg_ptr)                         \
@@ -67,9 +67,9 @@
                     (brake_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,     \
                     CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_FRONT_POWER(msg_ptr, output_state_u16)                                          \
+#define CAN_PACK_FRONT_POWER(msg_ptr, output_bitset_u16, output_state_u16)                       \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_FRONT_POWER, \
-                    2, (output_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
+                    4, (output_bitset_u16), (output_state_u16), CAN_PACK_IMPL_EMPTY,             \
                     CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_LIGHTS_SYNC(msg_ptr)                                       \
