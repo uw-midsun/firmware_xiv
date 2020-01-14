@@ -23,14 +23,6 @@
     status;                                                    \
   })
 
-#define CAN_TRANSMIT_GET_RELAY_STATES(ack_ptr, relay_state_u8) \
-  ({                                                           \
-    CanMessage msg = { 0 };                                    \
-    CAN_PACK_GET_RELAY_STATES(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));         \
-    status;                                                    \
-  })
-
 #define CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(ack_ptr)     \
   ({                                                   \
     CanMessage msg = { 0 };                            \
@@ -39,12 +31,44 @@
     status;                                            \
   })
 
-#define CAN_TRANSMIT_GET_AUX_STATUS(ack_ptr, aux_bat_ov_flag_u8, aux_bat_ut_flag_u8) \
-  ({                                                                                 \
-    CanMessage msg = { 0 };                                                          \
-    CAN_PACK_GET_AUX_STATUS(&msg, (aux_bat_ov_flag_u8), (aux_bat_ut_flag_u8));       \
-    StatusCode status = can_transmit(&msg, (ack_ptr));                               \
-    status;                                                                          \
+#define CAN_TRANSMIT_GET_AUX_STATUS(ack_ptr)           \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_GET_AUX_STATUS(&msg);                     \
+    StatusCode status = can_transmit(&msg, (ack_ptr)); \
+    status;                                            \
+  })
+
+#define CAN_TRANSMIT_REAR_POWER(ack_ptr, output_state_u16) \
+  ({                                                       \
+    CanMessage msg = { 0 };                                \
+    CAN_PACK_REAR_POWER(&msg, (output_state_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));     \
+    status;                                                \
+  })
+
+#define CAN_TRANSMIT_GET_DC_DC_STATUS(ack_ptr)         \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_GET_DC_DC_STATUS(&msg);                   \
+    StatusCode status = can_transmit(&msg, (ack_ptr)); \
+    status;                                            \
+  })
+
+#define CAN_TRANSMIT_START_PRECHARGE(ack_ptr)          \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_START_PRECHARGE(&msg);                    \
+    StatusCode status = can_transmit(&msg, (ack_ptr)); \
+    status;                                            \
+  })
+
+#define CAN_TRANSMIT_PRECHARGE_COMPLETE(ack_ptr)       \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_PRECHARGE_COMPLETE(&msg);                 \
+    StatusCode status = can_transmit(&msg, (ack_ptr)); \
+    status;                                            \
   })
 
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
@@ -89,10 +113,10 @@
     status;                                       \
   })
 
-#define CAN_TRANSMIT_FRONT_POWER(power_bitset_u16)  \
+#define CAN_TRANSMIT_FRONT_POWER(output_state_u16)  \
   ({                                                \
     CanMessage msg = { 0 };                         \
-    CAN_PACK_FRONT_POWER(&msg, (power_bitset_u16)); \
+    CAN_PACK_FRONT_POWER(&msg, (output_state_u16)); \
     StatusCode status = can_transmit(&msg, NULL);   \
     status;                                         \
   })
