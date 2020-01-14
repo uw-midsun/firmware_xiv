@@ -15,60 +15,20 @@
     status;                                            \
   })
 
-#define CAN_TRANSMIT_POWER_DISTRIBUTION_FAULT(ack_ptr, reason_u8) \
-  ({                                                              \
-    CanMessage msg = { 0 };                                       \
-    CAN_PACK_POWER_DISTRIBUTION_FAULT(&msg, (reason_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));            \
-    status;                                                       \
-  })
-
-#define CAN_TRANSMIT_BATTERY_RELAY_MAIN(ack_ptr, relay_state_u8) \
-  ({                                                             \
-    CanMessage msg = { 0 };                                      \
-    CAN_PACK_BATTERY_RELAY_MAIN(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));           \
-    status;                                                      \
-  })
-
-#define CAN_TRANSMIT_BATTERY_RELAY_SLAVE(ack_ptr, relay_state_u8) \
-  ({                                                              \
-    CanMessage msg = { 0 };                                       \
-    CAN_PACK_BATTERY_RELAY_SLAVE(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));            \
-    status;                                                       \
-  })
-
-#define CAN_TRANSMIT_MOTOR_RELAY(ack_ptr, relay_state_u8) \
-  ({                                                      \
-    CanMessage msg = { 0 };                               \
-    CAN_PACK_MOTOR_RELAY(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));    \
-    status;                                               \
-  })
-
-#define CAN_TRANSMIT_SOLAR_RELAY_REAR(ack_ptr, relay_state_u8) \
+#define CAN_TRANSMIT_SET_RELAY_STATES(ack_ptr, relay_state_u8) \
   ({                                                           \
     CanMessage msg = { 0 };                                    \
-    CAN_PACK_SOLAR_RELAY_REAR(&msg, (relay_state_u8));         \
+    CAN_PACK_SET_RELAY_STATES(&msg, (relay_state_u8));         \
     StatusCode status = can_transmit(&msg, (ack_ptr));         \
     status;                                                    \
   })
 
-#define CAN_TRANSMIT_SOLAR_RELAY_FRONT(ack_ptr, relay_state_u8) \
-  ({                                                            \
-    CanMessage msg = { 0 };                                     \
-    CAN_PACK_SOLAR_RELAY_FRONT(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));          \
-    status;                                                     \
-  })
-
-#define CAN_TRANSMIT_POWER_STATE(ack_ptr, power_state_u8) \
-  ({                                                      \
-    CanMessage msg = { 0 };                               \
-    CAN_PACK_POWER_STATE(&msg, (power_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));    \
-    status;                                               \
+#define CAN_TRANSMIT_GET_RELAY_STATES(ack_ptr, relay_state_u8) \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_GET_RELAY_STATES(&msg, (relay_state_u8));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));         \
+    status;                                                    \
   })
 
 #define CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(ack_ptr)     \
@@ -77,6 +37,14 @@
     CAN_PACK_POWERTRAIN_HEARTBEAT(&msg);               \
     StatusCode status = can_transmit(&msg, (ack_ptr)); \
     status;                                            \
+  })
+
+#define CAN_TRANSMIT_GET_AUX_STATUS(ack_ptr, aux_bat_ov_flag_u8, aux_bat_ut_flag_u8) \
+  ({                                                                                 \
+    CanMessage msg = { 0 };                                                          \
+    CAN_PACK_GET_AUX_STATUS(&msg, (aux_bat_ov_flag_u8), (aux_bat_ut_flag_u8));       \
+    StatusCode status = can_transmit(&msg, (ack_ptr));                               \
+    status;                                                                          \
   })
 
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
@@ -97,14 +65,12 @@
     status;                                                       \
   })
 
-#define CAN_TRANSMIT_DRIVE_OUTPUT(throttle_u16, direction_u16, cruise_control_u16,     \
-                                  mechanical_brake_state_u16)                          \
-  ({                                                                                   \
-    CanMessage msg = { 0 };                                                            \
-    CAN_PACK_DRIVE_OUTPUT(&msg, (throttle_u16), (direction_u16), (cruise_control_u16), \
-                          (mechanical_brake_state_u16));                               \
-    StatusCode status = can_transmit(&msg, NULL);                                      \
-    status;                                                                            \
+#define CAN_TRANSMIT_THROTTLE(throttle_u16)       \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_THROTTLE(&msg, (throttle_u16));      \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
   })
 
 #define CAN_TRANSMIT_CRUISE_TARGET(target_speed_u8)  \
@@ -115,28 +81,20 @@
     status;                                          \
   })
 
-#define CAN_TRANSMIT_FAN_CONTROL(state_u8)        \
+#define CAN_TRANSMIT_BRAKE(brake_state_u16)       \
   ({                                              \
     CanMessage msg = { 0 };                       \
-    CAN_PACK_FAN_CONTROL(&msg, (state_u8));       \
+    CAN_PACK_BRAKE(&msg, (brake_state_u16));      \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
 
-#define CAN_TRANSMIT_SET_DISCHARGE_BITSET(discharge_bitset_u64)  \
-  ({                                                             \
-    CanMessage msg = { 0 };                                      \
-    CAN_PACK_SET_DISCHARGE_BITSET(&msg, (discharge_bitset_u64)); \
-    StatusCode status = can_transmit(&msg, NULL);                \
-    status;                                                      \
-  })
-
-#define CAN_TRANSMIT_DISCHARGE_STATE(discharge_bitset_u64)  \
-  ({                                                        \
-    CanMessage msg = { 0 };                                 \
-    CAN_PACK_DISCHARGE_STATE(&msg, (discharge_bitset_u64)); \
-    StatusCode status = can_transmit(&msg, NULL);           \
-    status;                                                 \
+#define CAN_TRANSMIT_FRONT_POWER(power_bitset_u16)  \
+  ({                                                \
+    CanMessage msg = { 0 };                         \
+    CAN_PACK_FRONT_POWER(&msg, (power_bitset_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);   \
+    status;                                         \
   })
 
 #define CAN_TRANSMIT_LIGHTS_SYNC()                \
@@ -147,12 +105,12 @@
     status;                                       \
   })
 
-#define CAN_TRANSMIT_LIGHTS_STATE(light_id_u8, light_state_u8)    \
-  ({                                                              \
-    CanMessage msg = { 0 };                                       \
-    CAN_PACK_LIGHTS_STATE(&msg, (light_id_u8), (light_state_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);                 \
-    status;                                                       \
+#define CAN_TRANSMIT_LIGHTS(lights_id_u8, state_u8)    \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_LIGHTS(&msg, (lights_id_u8), (state_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);      \
+    status;                                            \
   })
 
 #define CAN_TRANSMIT_HORN(state_u8)               \
@@ -163,50 +121,34 @@
     status;                                       \
   })
 
-#define CAN_TRANSMIT_CHARGER_CONN_STATE(is_connected_u8)  \
-  ({                                                      \
-    CanMessage msg = { 0 };                               \
-    CAN_PACK_CHARGER_CONN_STATE(&msg, (is_connected_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);         \
-    status;                                               \
+#define CAN_TRANSMIT_GET_CHARGER_CONNECTION_STATE(is_connected_u8)  \
+  ({                                                                \
+    CanMessage msg = { 0 };                                         \
+    CAN_PACK_GET_CHARGER_CONNECTION_STATE(&msg, (is_connected_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);                   \
+    status;                                                         \
   })
 
-#define CAN_TRANSMIT_CHARGER_SET_RELAY_STATE(state_u8)  \
-  ({                                                    \
-    CanMessage msg = { 0 };                             \
-    CAN_PACK_CHARGER_SET_RELAY_STATE(&msg, (state_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);       \
-    status;                                             \
-  })
-
-#define CAN_TRANSMIT_STEERING_EVENT(event_id_u16, data_u16)    \
-  ({                                                           \
-    CanMessage msg = { 0 };                                    \
-    CAN_PACK_STEERING_EVENT(&msg, (event_id_u16), (data_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);              \
-    status;                                                    \
-  })
-
-#define CAN_TRANSMIT_CENTER_CONSOLE_EVENT(event_id_u16, data_u16)    \
-  ({                                                                 \
-    CanMessage msg = { 0 };                                          \
-    CAN_PACK_CENTER_CONSOLE_EVENT(&msg, (event_id_u16), (data_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);                    \
-    status;                                                          \
-  })
-
-#define CAN_TRANSMIT_MOTOR_CONTROLLER_RESET(motor_controller_index_u8)  \
-  ({                                                                    \
-    CanMessage msg = { 0 };                                             \
-    CAN_PACK_MOTOR_CONTROLLER_RESET(&msg, (motor_controller_index_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);                       \
-    status;                                                             \
-  })
-
-#define CAN_TRANSMIT_BATTERY_SOC()                \
+#define CAN_TRANSMIT_SET_CHARGER_RELAY(state_u8)  \
   ({                                              \
     CanMessage msg = { 0 };                       \
-    CAN_PACK_BATTERY_SOC(&msg);                   \
+    CAN_PACK_SET_CHARGER_RELAY(&msg, (state_u8)); \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_DRIVE_STATE(drive_state_u16)  \
+  ({                                               \
+    CanMessage msg = { 0 };                        \
+    CAN_PACK_DRIVE_STATE(&msg, (drive_state_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);  \
+    status;                                        \
+  })
+
+#define CAN_TRANSMIT_HAZARD(state_u8)             \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_HAZARD(&msg, (state_u8));            \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
@@ -302,15 +244,6 @@
                               (temperature_u16));                                               \
     StatusCode status = can_transmit(&msg, NULL);                                               \
     status;                                                                                     \
-  })
-
-#define CAN_TRANSMIT_SOLAR_DATA_REAR(module_id_u16, voltage_u16, current_u16, temperature_u16) \
-  ({                                                                                           \
-    CanMessage msg = { 0 };                                                                    \
-    CAN_PACK_SOLAR_DATA_REAR(&msg, (module_id_u16), (voltage_u16), (current_u16),              \
-                             (temperature_u16));                                               \
-    StatusCode status = can_transmit(&msg, NULL);                                              \
-    status;                                                                                    \
   })
 
 #define CAN_TRANSMIT_CHARGER_INFO(current_u16, voltage_u16, status_bitset_u16)      \
