@@ -65,4 +65,3 @@ typedef enum EERelayState {
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
-
