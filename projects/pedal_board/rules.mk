@@ -6,8 +6,4 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-<<<<<<< HEAD
 $(T)_DEPS := ms-helper ms-common
-=======
-$(T)_DEPS := ms-common ms-helper
->>>>>>> soft_35_pedal_board

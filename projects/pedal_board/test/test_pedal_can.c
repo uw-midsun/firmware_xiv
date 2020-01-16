@@ -22,6 +22,7 @@ void setup_test(void) {
     .rx = { GPIO_PORT_A, 11 },  // CHANGE
   };
   TEST_ASSERT_OK(pedal_can_init(&can_storage, &can_settings));
+  event_queue_init(); 
 }
 
 void teardown_test(void) {}
