@@ -24,7 +24,7 @@ typedef enum {
 
 // Digital Inputs
 typedef struct {
-  // Event that will be raised
+  // Can event that will be raised
   EventId event;
   // Pin for the input
   GpioAddress address;
