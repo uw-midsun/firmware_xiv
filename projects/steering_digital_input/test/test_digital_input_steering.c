@@ -19,6 +19,33 @@
 #include "test_helpers.h"
 #include "unity.h"
 #include "wait.h"
+/*
+1) Register interrupt for each pin
+2) Poll and wait for item to be pushed on the queue
+3) When the intterupt is triggered, send a CAN message that pushes an event onto the queue
+   that coorelates
+4) The CAN message should coorelate to the values from the exported enum
+   eg EE_STEERING_INPUT_CC_SPEED_PLUS_PRESSED
+  
+  Make a lookup table with where Event is an array
+  with a high and low state, this should coorelate to the EE value
+
+  When the interrupt is registered, it should get the state and send 
+  a message according to the previous state
+  Eg if it was on it should turn off and vice versa
+
+5) Pop event off of queue and read the data
+6) Process the event and send to front power distribution to provide power to that part
+  of the vehicle
+
+
+  CURRENT ERRORS:
+  LOG_DEBUG does not work when place into the beginning of digital_input_init
+  The callback function is not called when an interrupt is triggered
+  What number is being processed in the tests?
+
+*/
+
 
 static CanStorage storage = { 0 };
 const CanSettings settings = {
@@ -28,7 +55,7 @@ const CanSettings settings = {
   .tx_event = STEERING_DIGITAL_INPUT_CAN_TX,
   .tx = { GPIO_PORT_A, 11 },
   .rx = { GPIO_PORT_A, 12 },
-  .loopback = false,
+
 };
 
 void setup_test(void) {
@@ -41,8 +68,6 @@ void setup_test(void) {
   can_init(&storage,&settings);
 }
 
-void teardown_test(void) {}
-
 void test_steering_digital_input_can_horn() {
 
   // Triggers interrupt for the horn
@@ -52,17 +77,12 @@ void test_steering_digital_input_can_horn() {
   Event e = { 0 };
   // Pop item off of queue
   TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(e.id, EE_STEERING_INPUT_HORN_PRESSED);
-
+  TEST_ASSERT_EQUAL(EE_STEERING_INPUT_HORN_PRESSED, e.id);
+  TEST_ASSERT_OK(can_process_event(&e));
   // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
- CanMessage msg = {
-    .msg_id = 0x1,
-    .type = CAN_MSG_TYPE_DATA,
-    .dlc = 1,
-    .data = 1,
-  };
-  can_transmit(&msg, NULL);
+
+ 
 }
 
 void test_steering_digital_input_can_high_beam_forward() {
@@ -73,7 +93,8 @@ void test_steering_digital_input_can_high_beam_forward() {
   Event e = { 0 };
   // Pop item off of queue
   TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(e.id, STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD);
+  TEST_ASSERT_EQUAL(EE_STEERING_HIGH_BEAM_FORWARD_ON, e.id);
+  TEST_ASSERT_OK(can_process_event(&e));
 
   // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
@@ -87,8 +108,12 @@ void test_steering_digital_input_can_cc_incease_speed() {
   Event e = { 0 };
   // Pop item off of queue
   TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(e.id, STEERING_DIGITAL_DIGITAL_INPUT_CC_INCREASE_SPEED);
+  TEST_ASSERT_EQUAL(EE_STEERING_INPUT_CC_SPEED_PLUS_PRESSED,e.id);
+  TEST_ASSERT_OK(can_process_event(&e));
 
   // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
 }
+
+
+void teardown_test(void) {}
