@@ -3,8 +3,7 @@
 #include <stdint.h>
 #include "can_transmit.h"
 #include "delay.h"
-#include "digital_input_config.h"
-#include "digital_input_events.h"
+#include "digital_input.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
@@ -13,8 +12,8 @@
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
-#include "steering_can.h"
 #include "wait.h"
+#include "log.h"
 
 int main() {
   // Initialize all modules
@@ -34,11 +33,9 @@ int main() {
     .tx_event = STEERING_DIGITAL_INPUT_CAN_TX,
     .tx = { GPIO_PORT_A, 11 },
     .rx = { GPIO_PORT_A, 12 },
-    .loopback = true,
   };
-  // Initialize CAN
-  can_init(&storage, &settings);
-  steering_can_init();
+ 
+  can_init(&storage,&settings);
 
   // Initialize an event
   Event e = { .id = 0, .data = 0 };
@@ -47,11 +44,10 @@ int main() {
   // all interrupts and GPIO pins so they can send
   // CAN messages
   steering_digital_input_init();
-
   while (true) {
-    // Pops events off of the queue if there is an item in the queue
-    // and sends a CAN message
-    steering_can_process_event(&e);
+    if (status_ok(event_process(&e))) {
+    can_process_event(&e);
+    }
   }
   return 0;
 }
