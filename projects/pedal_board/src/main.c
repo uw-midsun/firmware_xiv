@@ -69,7 +69,7 @@ int main() {
 
     drive_fsm_process_event(&drive_fsm, &e);
     brake_fsm_process_event(&e);
-    // LOG_DEBUG("working\n");
+    
     // perhaps distinguish which events are actually for can
     can_process_event(&e);
     pedal_can_process_event(&e);

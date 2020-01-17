@@ -16,13 +16,12 @@ FSM_STATE_TRANSITION(state_neutral) {
   FSM_ADD_TRANSITION(PEDAL_THROTTLE_EVENT_FAULT, state_neutral);
 }
 
-
-static void prv_state_drive_output(void *context) {
+static void prv_state_drive_output(Fsm *fsm, const Event *e, void *context) {
   ThrottleStorage *storage = context;
   throttle_enable(storage);
 }
 
-static void prv_state_neutral_output(void *context) {
+static void prv_state_neutral_output(Fsm *fsm, const Event *e, void *context) {
   ThrottleStorage *storage = context;
   throttle_disable(storage);
 }
