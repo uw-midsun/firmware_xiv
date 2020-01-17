@@ -4,4 +4,4 @@
 StatusCode brake_fsm_init(Fsm *brake);
 
 //process the fsm event
-bool brake_fsm_process_event(Event *e);
+bool brake_fsm_process_event(Fsm *brake_fsm, Event *e);

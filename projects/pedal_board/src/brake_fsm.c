@@ -16,7 +16,6 @@ FSM_STATE_TRANSITION(brake_state_released) {
   FSM_ADD_TRANSITION(PEDAL_BRAKE_FSM_EVENT_PRESSED, brake_state_pressed);
 }
 
-
 static void prv_pressed_output(Fsm *fsm, const Event *e, void *context) {
   // raises a can event to main, which sends can message
   event_raise(PEDAL_CAN_EVENT_BRAKE_PRESSED, 1);
@@ -27,7 +26,7 @@ static void prv_released_output(Fsm *fsm, const Event *e, void *context) {
   event_raise(PEDAL_CAN_EVENT_BRAKE_RELEASED, 0);
 }
 
-bool brake_fsm_process_event(Event *e) {
+bool brake_fsm_process_event(Fsm *brake_fsm, Event *e) {
   // transition the state
   return fsm_process_event(brake_fsm, e);
 }

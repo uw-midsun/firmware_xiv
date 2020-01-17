@@ -4,4 +4,4 @@
 
 StatusCode pedal_can_init(CanStorage *can_storage, CanSettings *can_settings);
 
-bool pedal_can_process_event(Event *e);
+bool pedal_can_process_event(Fsm *brake_fsm, Event *e);

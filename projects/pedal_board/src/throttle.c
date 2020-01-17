@@ -10,7 +10,7 @@
 #include "pedal_events.h"
 #include "soft_timer.h"
 
-static SoftTimerId drive_fsm_soft_timer_id = 1; 
+static SoftTimerId drive_fsm_soft_timer_id; 
 
 static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   ThrottleStorage *storage = context;
@@ -23,19 +23,16 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
                           // while event_raise only accepts an unsigned int for the data field
 
   // TO-DO(SOFT-18): map raw readings to a value that represents throttle position before raising
-  LOG_DEBUG("before raising an event\n"); 
   event_raise(PEDAL_EVENT_THROTTLE_READING, u_reading);  //
-  LOG_DEBUG("after raising an event\n"); 
+
   soft_timer_start_millis(THROTTLE_UPDATE_PERIOD_MS, prv_timer_callback, context,
                           &drive_fsm_soft_timer_id); 
-  LOG_DEBUG("Soft timer has been raised\n");
 }
 
 StatusCode throttle_init(ThrottleStorage *storage) {
 
   StatusCode ret = soft_timer_start_millis(THROTTLE_UPDATE_PERIOD_MS, prv_timer_callback, storage,
                                            &drive_fsm_soft_timer_id);
-  LOG_DEBUG("Throttle has been intialized\n"); 
   return ret;
 }
 
