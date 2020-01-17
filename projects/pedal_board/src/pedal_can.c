@@ -27,31 +27,30 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 StatusCode pedal_can_init(CanStorage *can_storage, CanSettings *can_settings) {
   //////////////just for testing
   CanMessage mes = {
-    .msg_id = can_storage->device_id,
+    .source_id = can_storage->device_id,
     .type = CAN_MSG_TYPE_DATA,
-    .dlc = 0,
-    .data = 0,
+    .msg_id = 0,
   };
   messages[PEDAL_CAN_EVENT_BRAKE_PRESSED] = mes;
-  mes.dlc = 1;
+  mes.msg_id = 1;
   messages[PEDAL_CAN_EVENT_BRAKE_RELEASED] = mes;
-  mes.dlc = 3;
+  mes.msg_id = 3;
   messages[PEDAL_EVENT_THROTTLE_READING] = mes;
-  mes.dlc = 4;
+  mes.msg_id = 4;
   messages[PEDAL_THROTTLE_EVENT_DATA] = mes;
-  mes.dlc = 5;
+  mes.msg_id = 5;
   messages[PEDAL_THROTTLE_EVENT_FAULT] = mes;
-  mes.dlc = 6;
+  mes.msg_id = 6;
   messages[PEDAL_EVENT_THROTTLE_ENABLE] = mes;
-  mes.dlc = 7;
+  mes.msg_id = 7;
   messages[PEDAL_EVENT_THROTTLE_DISABLE] = mes;
-  mes.dlc = 8;
+  mes.msg_id = 8;
   messages[PEDAL_BRAKE_MONITOR_EVENT_FAULT] = mes;
-  mes.dlc = 10;
+  mes.msg_id = 10;
   messages[PEDAL_CAN_RX] = mes;
-  mes.dlc = 12;
+  mes.msg_id = 12;
   messages[PEDAL_CAN_TX] = mes;
-  mes.dlc = 13;
+  mes.msg_id = 13;
   messages[PEDAL_CAN_FAULT] = mes;
   //////////////
 
@@ -71,7 +70,6 @@ bool pedal_can_process_event(Event *e) {
     can_transmit(&messages[e->id], NULL);
     LOG_DEBUG("Transmitted can message\n");
     //////
-
     return true;
   }
   return false;

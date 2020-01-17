@@ -3,8 +3,6 @@
 #include "log.h"
 #include "pedal_events.h"
 
-Fsm *brake_fsm;
-
 FSM_DECLARE_STATE(brake_state_released);
 FSM_DECLARE_STATE(brake_state_pressed);
 
@@ -31,11 +29,10 @@ bool brake_fsm_process_event(Fsm *brake_fsm, Event *e) {
   return fsm_process_event(brake_fsm, e);
 }
 
-//main should have a brake fsm, and ads1015storage
+// main should have a brake fsm, and ads1015storage
 StatusCode brake_fsm_init(Fsm *brake) {
   fsm_state_init(brake_state_pressed, prv_pressed_output);
   fsm_state_init(brake_state_released, prv_released_output);
-  brake_fsm = brake;
 
   fsm_init(brake, "Brake_FSM", &brake_state_released, brake);
   return STATUS_CODE_OK;

@@ -10,8 +10,8 @@
 #include "brake_fsm.h"
 #include "brake_monitor.h"
 #include "drive_fsm.h"
-#include "pedal_events.h"
 #include "pedal_can.h"
+#include "pedal_events.h"
 #include "status.h"
 #include "test_helpers.h"
 #include "throttle.h"
@@ -20,7 +20,7 @@
 #define CAN_DEVICE_ID 0x1
 
 static Fsm drive_fsm;
-static Fsm brake_fsm; 
+static Fsm brake_fsm;
 static Ads1015Storage ads1015_storage;
 static CanStorage can_storage;
 static ThrottleStorage throttle_storage;
@@ -46,7 +46,7 @@ int main() {
   };
   pedal_can_init(&can_storage, &can_settings);
 
-  drive_fsm_init(&drive_fsm, &throttle_storage);
+//  drive_fsm_init(&drive_fsm, &throttle_storage);
   brake_fsm_init(&brake_fsm);
 
   // setup ADC readings
@@ -59,7 +59,6 @@ int main() {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  
   brake_monitor_init(&ads1015_storage);
   throttle_init(&throttle_storage);
 
@@ -67,7 +66,7 @@ int main() {
   while (true) {
     event_process(&e);
 
-    drive_fsm_process_event(&drive_fsm, &e);
+ //   drive_fsm_process_event(&drive_fsm, &e);
     brake_fsm_process_event(&brake_fsm, &e);
     // LOG_DEBUG("working\n");
     // perhaps distinguish which events are actually for can

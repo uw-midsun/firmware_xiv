@@ -47,7 +47,7 @@ void setup_test(void) {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  TEST_ASSERT_OK( brake_fsm_init(&brake_fsm));
+  TEST_ASSERT_OK(brake_fsm_init(&brake_fsm));
 }
 
 void teardown_test(void) {}

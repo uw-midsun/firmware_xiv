@@ -1,3 +1,4 @@
+/*
 #include "drive_fsm.h"
 
 #include "pedal_events.h"
@@ -15,7 +16,6 @@ FSM_STATE_TRANSITION(state_neutral) {
   FSM_ADD_TRANSITION(PEDAL_EVENT_THROTTLE_ENABLE, state_drive);
   FSM_ADD_TRANSITION(PEDAL_THROTTLE_EVENT_FAULT, state_neutral);
 }
-
 
 static void prv_state_drive_output(void *context) {
   ThrottleStorage *storage = context;
@@ -37,7 +37,8 @@ StatusCode drive_fsm_init(Fsm *fsm, ThrottleStorage *storage) {
 }
 
 bool drive_fsm_process_event(Fsm *drive_fsm, Event *e) {
-  bool transitioned = fsm_process_event(drive_fsm, e); 
+  bool transitioned = fsm_process_event(drive_fsm, e);
 
-  return transitioned; 
+  return transitioned;
 }
+*/
