@@ -61,67 +61,67 @@ void test_brake_fsm_released_to_pressed(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  TEST_ASSERT_TRUE(brake_fsm_process_event(&e));
+  TEST_ASSERT_TRUE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_released(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_RELEASED,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_can_fault(void) {
   Event e = {
     .id = PEDAL_CAN_FAULT,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_can_rx(void) {
   Event e = {
     .id = PEDAL_CAN_RX,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_can_tx(void) {
   Event e = {
     .id = PEDAL_CAN_TX,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_input_fault(void) {
   Event e = {
     .id = PEDAL_DRIVE_INPUT_EVENT_FAULT,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_input_neutral(void) {
   Event e = {
     .id = PEDAL_DRIVE_INPUT_EVENT_NEUTRAL,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_input_drive(void) {
   Event e = {
     .id = PEDAL_DRIVE_INPUT_EVENT_DRIVE,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_can_pressed(void) {
   Event e = {
     .id = PEDAL_CAN_EVENT_BRAKE_PRESSED,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_can_released(void) {
   Event e = {
     .id = PEDAL_CAN_EVENT_BRAKE_RELEASED,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_released_to_throttle(void) {
   Event e = {
     .id = PEDAL_EVENT_THROTTLE_READING,
   };
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 
 //////////////////////  PRESSED TO  //////////////////////////////////////////
@@ -129,100 +129,100 @@ void test_brake_fsm_pressed_to_released(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_BRAKE_FSM_EVENT_RELEASED;
-  TEST_ASSERT_TRUE(brake_fsm_process_event(&e));
+  TEST_ASSERT_TRUE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_pressed(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_BRAKE_FSM_EVENT_PRESSED;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_can_fault(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_CAN_FAULT;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_can_rx(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_CAN_RX;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_can_tx(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_CAN_TX;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_input_fault(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_DRIVE_INPUT_EVENT_FAULT;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_input_neutral(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_DRIVE_INPUT_EVENT_NEUTRAL;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_input_drive(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_DRIVE_INPUT_EVENT_DRIVE;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_can_pressed(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_CAN_EVENT_BRAKE_PRESSED;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_can_released(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_CAN_EVENT_BRAKE_RELEASED;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 void test_brake_fsm_pressed_to_throttle(void) {
   Event e = {
     .id = PEDAL_BRAKE_FSM_EVENT_PRESSED,
   };
-  brake_fsm_process_event(&e);
+  brake_fsm_process_event(&brake_fsm, &e);
 
   e.id = PEDAL_EVENT_THROTTLE_READING;
-  TEST_ASSERT_FALSE(brake_fsm_process_event(&e));
+  TEST_ASSERT_FALSE(brake_fsm_process_event(&brake_fsm, &e));
 }
 
 // test prv channel
