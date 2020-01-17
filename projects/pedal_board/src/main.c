@@ -8,8 +8,9 @@
 #include "log.h"
 // include all the modules
 #include "brake_fsm.h"
+#include "brake_monitor.h"
 #include "drive_fsm.h"
-#include "events.h"
+#include "pedal_events.h"
 #include "pedal_can.h"
 #include "status.h"
 #include "test_helpers.h"
@@ -36,9 +37,9 @@ int main() {
   const CanSettings can_settings = {
     .device_id = CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = CAN_RX,
-    .tx_event = CAN_TX,
-    .fault_event = CAN_FAULT,
+    .rx_event = PEDAL_CAN_RX,
+    .tx_event = PEDAL_CAN_TX,
+    .fault_event = PEDAL_CAN_FAULT,
     .tx = { GPIO_PORT_A, 12 },  // CHANGE
     .rx = { GPIO_PORT_A, 11 },  // CHANGE
   };
@@ -56,7 +57,8 @@ int main() {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  brake_fsm_init(&fsm, &ads1015_storage);
+  brake_fsm_init(&fsm);
+  brake_monitor_init(&ads1015_storage);
   throttle_init(&throttle_storage);
 
   Event e = { 0 };
