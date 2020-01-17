@@ -36,7 +36,7 @@ StatusCode drive_fsm_init(Fsm *fsm, ThrottleStorage *storage) {
 }
 
 bool drive_fsm_process_event(Fsm *drive_fsm, Event *e) {
-  bool transitioned = fsm_process_event(drive_fsm, e); 
+  bool transitioned = fsm_process_event(drive_fsm, e);
 
-  return transitioned; 
+  return transitioned;
 }

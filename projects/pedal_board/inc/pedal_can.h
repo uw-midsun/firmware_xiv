@@ -1,3 +1,4 @@
+#pragma once
 #include "can.h"
 #include "event_queue.h"
 #include "log.h"

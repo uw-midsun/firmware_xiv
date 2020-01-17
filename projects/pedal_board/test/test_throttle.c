@@ -1,15 +1,14 @@
 #include "throttle.h"
-
 #include "ads1015.h"
+#include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
+#include "pedal_events.h"
 #include "soft_timer.h"
 #include "unity.h"
-#include "event_queue.h"
-#include "pedal_events.h"
 
 static ThrottleStorage throttle_storage;
 static Ads1015Storage ads1015_storage;
@@ -19,8 +18,8 @@ void setup_test(void) {
   interrupt_init();
   soft_timer_init();
   gpio_it_init();
-  event_queue_init(); 
-  
+  event_queue_init();
+
   // I2CSettings i2c_settings = {
   //   .speed = I2C_SPEED_FAST,
   //   .scl = { .port = GPIO_PORT_B, .pin = 5 },
@@ -45,19 +44,15 @@ void teardown_test(void) {}
 // }
 
 void test_private_callback_should_raise_events(void) {
-  throttle_init(&throttle_storage); 
-  Event e = { 0 }; 
-  
-  while(!status_ok(event_process(&e))) {
+  throttle_init(&throttle_storage);
+  Event e = { 0 };
+
+  while (!status_ok(event_process(&e))) {
   }
-  TEST_ASSERT_EQUAL(PEDAL_EVENT_THROTTLE_READING, e.id); 
+  TEST_ASSERT_EQUAL(PEDAL_EVENT_THROTTLE_READING, e.id);
 }
 
 void test_throttle_should_be_disabled(void) {
-  throttle_init(&throttle_storage); 
+  throttle_init(&throttle_storage);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, throttle_disable(&throttle_storage));
 }
-
-#include "soft_timer.h" 
-
-static ThrottleStorage throttle_storage;  

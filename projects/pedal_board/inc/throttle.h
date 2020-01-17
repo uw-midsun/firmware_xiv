@@ -26,4 +26,3 @@ StatusCode throttle_enable(ThrottleStorage *storage);
 
 // Disables the throttle
 StatusCode throttle_disable(ThrottleStorage *storage);
-

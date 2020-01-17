@@ -10,7 +10,7 @@
 #include "pedal_events.h"
 #include "soft_timer.h"
 
-static SoftTimerId drive_fsm_soft_timer_id; 
+static SoftTimerId drive_fsm_soft_timer_id;
 
 static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   ThrottleStorage *storage = context;
@@ -26,18 +26,16 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   event_raise(PEDAL_EVENT_THROTTLE_READING, u_reading);  //
 
   soft_timer_start_millis(THROTTLE_UPDATE_PERIOD_MS, prv_timer_callback, context,
-                          &drive_fsm_soft_timer_id); 
+                          &drive_fsm_soft_timer_id);
 }
 
 StatusCode throttle_init(ThrottleStorage *storage) {
-
   StatusCode ret = soft_timer_start_millis(THROTTLE_UPDATE_PERIOD_MS, prv_timer_callback, storage,
                                            &drive_fsm_soft_timer_id);
   return ret;
 }
 
 StatusCode throttle_enable(ThrottleStorage *storage) {
-
   StatusCode ret = soft_timer_start_millis(THROTTLE_UPDATE_PERIOD_MS, prv_timer_callback, storage,
                                            &drive_fsm_soft_timer_id);
 
@@ -45,9 +43,10 @@ StatusCode throttle_enable(ThrottleStorage *storage) {
 }
 
 StatusCode throttle_disable(ThrottleStorage *storage) {
-
   bool cancel_timer = soft_timer_cancel(drive_fsm_soft_timer_id);
 
-  if (cancel_timer) return STATUS_CODE_OK; 
-  else return STATUS_CODE_UNINITIALIZED; 
+  if (cancel_timer)
+    return STATUS_CODE_OK;
+  else
+    return STATUS_CODE_UNINITIALIZED;
 }
