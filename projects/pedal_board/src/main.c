@@ -59,7 +59,7 @@ int main() {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  //brake_monitor_init(&ads1015_storage);
+  // brake_monitor_init(&ads1015_storage);
   throttle_init(&throttle_storage);
 
   Event e = { 0 };
@@ -71,7 +71,7 @@ int main() {
     // LOG_DEBUG("working\n");
     // perhaps distinguish which events are actually for can
     can_process_event(&e);
-    //pedal_can_process_event(&e);
+    // pedal_can_process_event(&e);
   }
   return 0;
 }

@@ -1,4 +1,3 @@
-#include "throttle.h"
 #include "ads1015.h"
 #include "event_queue.h"
 #include "gpio.h"
@@ -8,6 +7,7 @@
 #include "log.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
+#include "throttle.h"
 #include "unity.h"
 
 static ThrottleStorage throttle_storage;
