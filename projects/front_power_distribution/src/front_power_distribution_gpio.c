@@ -20,7 +20,7 @@ static GpioAddress s_output_gpio_pins[] = {
   [OUTPUT_GPIO_PIN_SIGNAL_RIGHT] = { .port = GPIO_PORT_B, .pin = 12 }, //
 };
 
-void front_power_distribution_init(void) {
+void front_power_distribution_gpio_init(void) {
   // initialize all the output pins
   GpioSettings settings = {
     .direction = GPIO_DIR_OUT,
@@ -33,7 +33,7 @@ void front_power_distribution_init(void) {
   }
 }
 
-void front_power_distribution_process_event(Event *e) {
+void front_power_distribution_gpio_process_event(Event *e) {
   GpioState new_state = e->data;
   
   switch (e->id) {
