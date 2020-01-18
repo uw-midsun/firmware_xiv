@@ -1,3 +1,5 @@
+#pragma once
+
 typedef enum {
   PEDAL_CAN_EVENT_BRAKE_PRESSED = 0,
   PEDAL_CAN_EVENT_BRAKE_RELEASED,

@@ -10,6 +10,8 @@ static void prv_callback_channel1(Ads1015Channel channel, void *context) {
   int16_t position = 0;
   ads1015_read_raw(storage, channel, &position);
 
+  LOG_DEBUG("In callback channel\n");
+
   // math to convert readings to angles
   // position =
 

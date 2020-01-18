@@ -1,3 +1,4 @@
+#pragma once
 #include "ads1015.h"
 
 // initialize the brake fsm

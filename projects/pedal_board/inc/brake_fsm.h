@@ -1,3 +1,4 @@
+#pragma once
 #include "fsm.h"
 
 // initialize the brake fsm

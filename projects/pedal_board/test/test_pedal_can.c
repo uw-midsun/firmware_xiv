@@ -1,5 +1,7 @@
 #include "can.h"
 #include "event_queue.h"
+#include "gpio_it.h"
+#include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
 #include "pedal_can.h"
@@ -19,11 +21,16 @@ void setup_test(void) {
     .rx_event = PEDAL_CAN_RX,
     .tx_event = PEDAL_CAN_TX,
     .fault_event = PEDAL_CAN_FAULT,
+    .loopback = true,
     .tx = { GPIO_PORT_A, 12 },  // CHANGE
     .rx = { GPIO_PORT_A, 11 },  // CHANGE
   };
+  gpio_init();
+  interrupt_init();
+  gpio_it_init();
+  soft_timer_init();
   event_queue_init();
-  TEST_ASSERT_OK(pedal_can_init(&can_storage, &can_settings));
+  pedal_can_init(&can_storage, &can_settings);
 }
 
 void teardown_test(void) {}
@@ -33,28 +40,37 @@ void test_assert_trivial(void) {
 }
 
 // Transmit a pedal can state can message, and expect the correct event to be raised.
-void test_pedal_can_rx_handler(void) {
+void test_pedal_can_rx_handler_brake_pressed(void) {
   // Transmit a pedal pressed state message.
   CanMessage msg = {
     .source_id = 0x1,
     .type = CAN_MSG_TYPE_DATA,
     .msg_id = 0,
+    .data = 0,
+    .dlc = 0,
   };
-  can_transmit(&msg, NULL);
+  TEST_ASSERT_OK(can_transmit(&msg, NULL));
   Event e = { 0 };
 
-  //MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  while (!pedal_can_process_event(&e)) {
-  }
+  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
+  TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(PEDAL_CAN_EVENT_BRAKE_PRESSED, e.id);
+}
 
+void test_pedal_can_rx_handler_brake_released(void) {
   // Transmit a pedal released state message.
-  msg.msg_id = 1;
-  can_transmit(&msg, NULL);
-  
-  // MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  while (!pedal_can_process_event(&e)) {
-  }
+  CanMessage msg = {
+    .source_id = 0x1,
+    .type = CAN_MSG_TYPE_DATA,
+    .msg_id = 1,
+    .data = 0,
+    .dlc = 0,
+  };
+  TEST_ASSERT_OK(can_transmit(&msg, NULL));
+  Event e = { 0 };
+
+  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
+  TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(PEDAL_CAN_EVENT_BRAKE_RELEASED, e.id);
 }
 

@@ -46,7 +46,7 @@ int main() {
   };
   pedal_can_init(&can_storage, &can_settings);
 
-//  drive_fsm_init(&drive_fsm, &throttle_storage);
+  drive_fsm_init(&drive_fsm, &throttle_storage);
   brake_fsm_init(&brake_fsm);
 
   // setup ADC readings
@@ -59,19 +59,19 @@ int main() {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  brake_monitor_init(&ads1015_storage);
+  //brake_monitor_init(&ads1015_storage);
   throttle_init(&throttle_storage);
 
   Event e = { 0 };
   while (true) {
     event_process(&e);
 
- //   drive_fsm_process_event(&drive_fsm, &e);
+    drive_fsm_process_event(&drive_fsm, &e);
     brake_fsm_process_event(&brake_fsm, &e);
     // LOG_DEBUG("working\n");
     // perhaps distinguish which events are actually for can
     can_process_event(&e);
-    pedal_can_process_event(&e);
+    //pedal_can_process_event(&e);
   }
   return 0;
 }

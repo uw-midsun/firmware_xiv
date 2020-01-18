@@ -1,5 +1,4 @@
 #include "throttle.h"
-
 #include "ads1015.h"
 #include "event_queue.h"
 #include "gpio.h"
@@ -57,7 +56,3 @@ void test_throttle_should_be_disabled(void) {
   throttle_init(&throttle_storage);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, throttle_disable(&throttle_storage));
 }
-
-#include "soft_timer.h"
-
-static ThrottleStorage throttle_storage;

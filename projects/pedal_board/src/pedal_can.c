@@ -9,8 +9,8 @@ CanMessage messages[NUM_PEDAL_CAN_EVENTS];
 // just for testing
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   // again purely for testing
-  event_raise(msg->data, 1);
-  ///////////
+  event_raise(msg->msg_id, 1);
+
   LOG_DEBUG("Received a message!\n");
   char log_message[30];
   printf("Data:\n\t");
@@ -25,11 +25,13 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 }
 
 StatusCode pedal_can_init(CanStorage *can_storage, CanSettings *can_settings) {
-  //////////////just for testing
+  // just for testing
   CanMessage mes = {
     .source_id = can_storage->device_id,
     .type = CAN_MSG_TYPE_DATA,
     .msg_id = 0,
+    .dlc = 0,
+    .data = 0,
   };
   messages[PEDAL_CAN_EVENT_BRAKE_PRESSED] = mes;
   mes.msg_id = 1;
@@ -52,21 +54,19 @@ StatusCode pedal_can_init(CanStorage *can_storage, CanSettings *can_settings) {
   messages[PEDAL_CAN_TX] = mes;
   mes.msg_id = 13;
   messages[PEDAL_CAN_FAULT] = mes;
-  //////////////
 
   can_init(can_storage, can_settings);
 
   // doesn't need a receive handler
   // temp purely for testing purposes
   can_register_rx_default_handler(prv_rx_callback, NULL);
-  //////////////
 
   return STATUS_CODE_OK;
 }
 
 bool pedal_can_process_event(Event *e) {
   if (e->id < NUM_PEDAL_CAN_EVENTS) {
-    ///////JUST FOR TESTING
+    // JUST FOR TESTING
     can_transmit(&messages[e->id], NULL);
     LOG_DEBUG("Transmitted can message\n");
     //////
