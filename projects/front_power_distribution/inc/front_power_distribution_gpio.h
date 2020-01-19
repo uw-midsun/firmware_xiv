@@ -9,4 +9,4 @@
 void front_power_distribution_gpio_init(void);
 
 // Call in main event-processing loop.
-void front_power_distribution_gpio_process_event(Event *e);
+StatusCode front_power_distribution_gpio_process_event(Event *e);
