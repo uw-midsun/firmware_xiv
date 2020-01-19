@@ -52,14 +52,15 @@ void front_power_distribution_gpio_init(void) {
 }
 
 StatusCode front_power_distribution_gpio_process_event(Event *e) {
-  GpioState new_state = e->data;
+  GpioState new_state = (e->data == 1) ? GPIO_STATE_HIGH : GPIO_STATE_LOW;
+  FrontPowerDistributionGpioEvent id = e->id;
   
-  if (e->id == FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD) {
+  if (id == FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD) {
     // special case: maps to both left and right signals
     gpio_set_state(&s_output_gpio_pins[OUTPUT_SIGNAL_LEFT], new_state);
     gpio_set_state(&s_output_gpio_pins[OUTPUT_SIGNAL_RIGHT], new_state);
     return STATUS_CODE_OK;
-  } else if (FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY <= e->id && e->id < NUM_FRONT_POWER_DISTRIBUTION_GPIO_EVENTS) {
+  } else if (FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY <= id && id < NUM_FRONT_POWER_DISTRIBUTION_GPIO_EVENTS) {
     gpio_set_state(&s_output_gpio_pins[s_events_to_gpio_outputs[e->id]], new_state);
     return STATUS_CODE_OK;
   } else {
