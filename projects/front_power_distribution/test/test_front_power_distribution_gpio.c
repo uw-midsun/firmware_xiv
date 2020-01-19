@@ -29,8 +29,8 @@ void teardown_test(void) {}
 
 void test_front_power_distribution_gpio_each_pin_on(void) {
   // perform the test for every event except SIGNAL_HAZARD which is handled separately
-  for (FrontPowerDistributionGpioEvent id = FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY; 
-      id < FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD; id++) {
+  for (FrontPowerDistributionGpioEvent id = FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY;
+       id < FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD; id++) {
     prv_test_turn_on(id, &s_pin_addresses[id]);
   }
 }
