@@ -8,5 +8,6 @@
 
 void front_power_distribution_gpio_init(void);
 
-// Call in main event-processing loop.
 StatusCode front_power_distribution_gpio_process_event(Event *e);
+
+GpioAddress *front_power_distribution_gpio_test_provide_gpio_addresses(void);
