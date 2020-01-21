@@ -16,7 +16,10 @@ typedef struct {
   uint16_t reading_high;
   GpioAddress *select_pin;
   AdcChannel sense_channel;
+  SoftTimerId timer_id;
 } Bts7200Storage;
 
 // Sets up a soft timer which periodically updates |storage| with the latest measurements.
 void bts_7200_init(Bts7200Settings *settings, Bts7200Storage *storage);
+
+void bts_7200_cancel(Bts7200Storage *storage);

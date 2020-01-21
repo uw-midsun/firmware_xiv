@@ -2,9 +2,7 @@
 #include "adc.h"
 #include "soft_timer.h"
 
-#define BTS_7200_UPDATE_INTERVAL_US 1000 // ok? 
-
-static const SoftTimerId s_timer_id = 0xABCD; // how to set this?
+#define BTS_7200_UPDATE_INTERVAL_US 1000000
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
@@ -45,5 +43,9 @@ void bts_7200_init(Bts7200Settings *settings, Bts7200Storage *storage) {
   adc_set_channel(storage->sense_channel, true);
   
   // set up a soft timer to update the storage with the measurements
-  soft_timer_start(BTS_7200_UPDATE_INTERVAL_US, &prv_measure_current, storage, &s_timer_id);
+  soft_timer_start(BTS_7200_UPDATE_INTERVAL_US, &prv_measure_current, storage, &storage->timer_id);
+}
+
+void bts_7200_cancel(Bts7200Storage *storage) {
+  soft_timer_cancel(storage->timer_id);
 }
