@@ -19,7 +19,8 @@ typedef struct {
   SoftTimerId timer_id;
 } Bts7200Storage;
 
-// Sets up a soft timer which periodically updates |storage| with the latest measurements.
+// Set up a soft timer which periodically updates |storage| with the latest measurements.
+// |storage| is immediately updated with measurements.
 void bts_7200_init(Bts7200Settings *settings, Bts7200Storage *storage);
 
 void bts_7200_cancel(Bts7200Storage *storage);
