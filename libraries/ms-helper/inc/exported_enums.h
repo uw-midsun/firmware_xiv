@@ -14,30 +14,23 @@
 //   NUM_EE_<MY_CAN_MESSAGE_NAME>_<FIELD_NAME>_<PLURAL>,
 // } EE<MyCanMessageName><FieldName>
 
+// Front Power Distribution Output to be used with a SYSTEM_CAN_MESSAGE_FRONT_POWER message.
 typedef enum {
-  EE_CHARGER_SET_RELAY_STATE_OPEN = 0,
-  EE_CHARGER_SET_RELAY_STATE_CLOSE,
-  NUM_EE_CHARGER_SET_RELAY_STATES,
-} EEChargerSetRelayState;
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY = 0,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_FRONT_HEADLIGHTS_LEFT,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STROBE,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_FANS
+} EEFrontPowerDistributionOutput;
 
+// Front Power Distribution Output State to be used with a SYSTEM_CAN_MESSAGE_FRONT_POWER message.
 typedef enum {
-  EE_CHARGER_CONN_STATE_DISCONNECTED = 0,
-  EE_CHARGER_CONN_STATE_CONNECTED,
-  NUM_EE_CHARGER_CONN_STATES,
-} EEChargerConnState;
-
-// Drive output
-// Mech brake + throttle
-#define EE_DRIVE_OUTPUT_DENOMINATOR (1 << 12)
-// Arbitrary 5% minimum pressure before considering it as engaged
-#define EE_DRIVE_OUTPUT_MECH_THRESHOLD (5 * (EE_DRIVE_OUTPUT_DENOMINATOR) / 100)
-
-typedef enum {
-  EE_DRIVE_OUTPUT_DIRECTION_NEUTRAL = 0,
-  EE_DRIVE_OUTPUT_DIRECTION_FORWARD,
-  EE_DRIVE_OUTPUT_DIRECTION_REVERSE,
-  NUM_EE_DRIVE_OUTPUT_DIRECTIONS,
-} EEDriveOutputDirection;
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_OFF = 0,
+  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_ON,
+  NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATES
+} EEFrontPowerDistributionOutputState;
 
 // Light type to be used with a SYSTEM_CAN_MESSAGE_LIGHTS_STATE message.
 typedef enum EELightType {
@@ -52,7 +45,7 @@ typedef enum EELightType {
   NUM_EE_LIGHT_TYPES,
 } EELightType;
 
-// Light state to be used with a SYSTEM_CAN_MESSAGE_LIGHTS_STATE message.
+// Light state to be used with a SYSTEM_CAN_MESSAGE_LIGHTS message.
 typedef enum EELightState {
   EE_LIGHT_STATE_OFF = 0,  //
   EE_LIGHT_STATE_ON,       //
@@ -72,6 +65,7 @@ typedef enum EERelayState {
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
+<<<<<<< HEAD
 
 // Used with the POWER_STATE message sent from driver controls to power
 // distribution to request a state change.
@@ -142,3 +136,5 @@ typedef enum {
   EE_CENTER_CONSOLE_DIGITAL_INPUT_HAZARDS,
   NUM_EE_CENTER_CONSOLE_DIGITAL_INPUTS,
 } EECenterConsoleDigitalInput;
+=======
+>>>>>>> b18e44975f488806d044489d1e9707cad756c834
