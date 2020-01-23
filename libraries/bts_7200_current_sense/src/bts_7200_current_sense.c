@@ -2,7 +2,15 @@
 #include "adc.h"
 #include "soft_timer.h"
 
-#define BTS_7200_UPDATE_INTERVAL_US 1000000 // 1 second
+typedef struct Bts7200Storage {
+  uint16_t reading_low;
+  uint16_t reading_high;
+  
+  GpioAddress *select_pin;
+  uint32_t interval_us;
+  AdcChannel sense_channel;
+  SoftTimerId timer_id;
+} Bts7200Storage;
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
@@ -13,11 +21,12 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
   gpio_set_state(storage->select_pin, GPIO_STATE_HIGH);
   adc_read_raw(storage->sense_channel, &storage->reading_high);
   
-  soft_timer_start(BTS_7200_UPDATE_INTERVAL_US, &prv_measure_current, storage, &storage->timer_id);
+  soft_timer_start(storage->interval_us, &prv_measure_current, storage, &storage->timer_id);
 }
 
 void bts_7200_init(Bts7200Settings *settings, Bts7200Storage *storage) {
   storage->select_pin = settings->select_pin;
+  storage->interval_us = settings->interval_us;
   
   // initialize the select pin
   GpioSettings select_settings = {
@@ -46,6 +55,14 @@ void bts_7200_init(Bts7200Settings *settings, Bts7200Storage *storage) {
   // this way we have a valid measurement immediately and there's no period with invalid measurements
   // 0 is a placeholder SoftTimerId because prv_measure_current doesn't use it
   prv_measure_current(0, &storage);
+}
+
+uint16_t bts_7200_get_measurement_high(Bts7200Storage *storage) {
+  return storage->reading_high;
+}
+
+uint16_t bts_7200_get_measurement_low(Bts7200Storage *storage) {
+  return storage->reading_low;
 }
 
 void bts_7200_cancel(Bts7200Storage *storage) {

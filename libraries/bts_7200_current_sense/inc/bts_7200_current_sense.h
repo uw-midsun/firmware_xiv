@@ -9,18 +9,19 @@
 typedef struct {
   GpioAddress *select_pin;
   GpioAddress *sense_pin;
+  uint32_t interval_us;
 } Bts7200Settings;
 
-typedef struct {
-  uint16_t reading_low;
-  uint16_t reading_high;
-  GpioAddress *select_pin;
-  AdcChannel sense_channel;
-  SoftTimerId timer_id;
-} Bts7200Storage;
+struct Bts7200Storage;
 
 // Set up a soft timer which periodically updates |storage| with the latest measurements.
-// |storage| is immediately updated with measurements.
+// |bts_7200_get_measurement_high| and |bts_7200_get_measurement_low| can immediately be called.
 void bts_7200_init(Bts7200Settings *settings, Bts7200Storage *storage);
+
+// Get the measurement when the select pin is high.
+uint16_t bts_7200_get_measurement_high(Bts7200Storage *storage);
+
+// Get the measurement when the select pin is low.
+uint16_t bts_7200_get_measurement_low(Bts7200Storage *storage);
 
 void bts_7200_cancel(Bts7200Storage *storage);
