@@ -118,32 +118,17 @@ typedef enum {
   NUM_EE_POWER_DISTRIBUTION_FAULT_REASONS,
 } EEPowerDistributionFaultReason;
 
-// Events raised by Driver Controls: Steering
+// Events raised by Driver Controls: Steering Digital Input
 typedef enum {
   // Digital Events
-
-  // Horn
-  EE_STEERING_INPUT_HORN_PRESSED = 0,
-  EE_STEERING_INPUT_HORN_RELEASED,
-  //Radio PPT
-  EE_STEERING_RADIO_PPT_PRESSED,
-  EE_STEERING_RADIO_PPT_RELEASED,
-  //High Beam Forward
-  EE_STEERING_HIGH_BEAM_FORWARD_ON,
-  EE_STEERING_HIGH_BEAM_FORWARD_OFF,
-  //High Beam Rear
-  EE_STEERING_HIGH_BEAM_REAR_ON,
-  EE_STEERING_HIGH_BEAM_REAR_OFF,
-  //Regen Brake 
-  EE_STEERING_REGEN_BRAKE_ON,
-  EE_STEERING_REGEN_BRAKE_OFF,
-  // CC On/Off
+  EE_STEERING_INPUT_HORN = 0, 
+  EE_STEERING_RADIO_PPT,
+  EE_STEERING_HIGH_BEAM_FORWARD,
+  EE_STEERING_HIGH_BEAM_REAR,
+  EE_STEERING_REGEN_BRAKE,
   EE_STEERING_INPUT_CC_TOGGLE_PRESSED,
-  // CC +/-
-  EE_STEERING_INPUT_CC_SPEED_PLUS_PRESSED,
-  EE_STEERING_INPUT_CC_SPEED_MINUS_PRESSED,
   EE_NUM_STEERING_INPUTS
-} EESteeringInputs;
+} EESteeringDigitalInputs;
 
 // Events raised by Driver Controls: Center Console
 typedef enum {

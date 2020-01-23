@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "can_transmit.h"
 #include "delay.h"
 #include "digital_input.h"
 #include "event_queue.h"
@@ -22,20 +21,6 @@ int main() {
   event_queue_init();
   gpio_it_init();
   soft_timer_init();
-  event_queue_init();
-
-  // Set up settings for CAN
-  static CanStorage storage = { 0 };
-  const CanSettings settings = {
-    .device_id = SYSTEM_CAN_DEVICE_DRIVER_CONTROLS_STEERING,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = STEERING_DIGITAL_INPUT_CAN_RX,
-    .tx_event = STEERING_DIGITAL_INPUT_CAN_TX,
-    .tx = { GPIO_PORT_A, 11 },
-    .rx = { GPIO_PORT_A, 12 },
-  };
- 
-  can_init(&storage,&settings);
 
   // Initialize an event
   Event e = { .id = 0, .data = 0 };
@@ -44,10 +29,11 @@ int main() {
   // all interrupts and GPIO pins so they can send
   // CAN messages
   steering_digital_input_init();
-  while (true) {
-    if (status_ok(event_process(&e))) {
-    can_process_event(&e);
-    }
-  }
+
+  GpioAddress pin_horn = { .port = GPIO_PORT_B, .pin = 1 };
+  gpio_it_trigger_interrupt(&pin_horn);
+  event_process(&e);
+  printf("    %d     ",e.id);
+
   return 0;
 }
