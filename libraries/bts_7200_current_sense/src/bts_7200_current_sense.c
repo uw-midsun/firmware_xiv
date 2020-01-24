@@ -1,6 +1,4 @@
 #include "bts_7200_current_sense.h"
-#include "adc.h"
-#include "soft_timer.h"
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;

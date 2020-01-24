@@ -19,7 +19,6 @@ typedef struct {
 typedef struct Bts7200Storage {
   uint16_t reading_low;
   uint16_t reading_high;
-  
   GpioAddress *select_pin;
   uint32_t interval_us;
   AdcChannel sense_channel;
