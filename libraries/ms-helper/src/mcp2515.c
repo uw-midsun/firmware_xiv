@@ -7,11 +7,16 @@
 #include "mcp2515_defs.h"
 
 #define MCP2515_MAX_WRITE_BUFFER_LEN 10
+#define MCP2515_EXTENDED_ID_LEN 18
+#define MCP2515_CAN_BRP_125KBPS 3
+#define MCP2515_CAN_BRP_250KBPS 1
+#define MCP2515_CAN_BRP_500KBPS 0
 
 typedef struct Mcp2515TxBuffer {
   uint8_t id;
   uint8_t data;
   uint8_t rts;
+  uint8_t tx_ctrl;
 } Mcp2515TxBuffer;
 
 typedef struct Mcp2515RxBuffer {
@@ -21,14 +26,21 @@ typedef struct Mcp2515RxBuffer {
 } Mcp2515RxBuffer;
 
 static const Mcp2515TxBuffer s_tx_buffers[] = {
-  { .id = MCP2515_LOAD_TXB0SIDH, .data = MCP2515_LOAD_TXB0D0, .rts = MCP2515_RTS_TXB0 },
-  { .id = MCP2515_LOAD_TXB1SIDH, .data = MCP2515_LOAD_TXB1D0, .rts = MCP2515_RTS_TXB1 },
-  { .id = MCP2515_LOAD_TXB2SIDH, .data = MCP2515_LOAD_TXB2D0, .rts = MCP2515_RTS_TXB2 },
+  { .id = MCP2515_LOAD_TXB0SIDH, .data = MCP2515_LOAD_TXB0D0, .rts = MCP2515_RTS_TXB0},
+  { .id = MCP2515_LOAD_TXB1SIDH, .data = MCP2515_LOAD_TXB1D0, .rts = MCP2515_RTS_TXB1},
+  { .id = MCP2515_LOAD_TXB2SIDH, .data = MCP2515_LOAD_TXB2D0, .rts = MCP2515_RTS_TXB2},
 };
 
 static const Mcp2515RxBuffer s_rx_buffers[] = {
   { .id = MCP2515_READ_RXB0SIDH, .data = MCP2515_READ_RXB0D0, .int_flag = MCP2515_CANINT_RX0IE },
   { .id = MCP2515_READ_RXB1SIDH, .data = MCP2515_READ_RXB1D0, .int_flag = MCP2515_CANINT_RX1IE },
+};
+
+static const uint8_t s_brp_lookup[NUM_MCP_2515_CAN_BITRATE_KBPS] = {
+  // BRP calculated for different 
+  [MCP_2515_CAN_BITRATE_125KBPS] = MCP2515_CAN_BRP_125KBPS,
+  [MCP_2515_CAN_BITRATE_250KBPS] = MCP2515_CAN_BRP_250KBPS,
+  [MCP_2515_CAN_BITRATE_500KBPS] = MCP2515_CAN_BRP_500KBPS,
 };
 
 // SPI commands - See Table 12-1
@@ -57,11 +69,18 @@ static void prv_bit_modify(Mcp2515Storage *storage, uint8_t addr, uint8_t mask, 
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
 }
 
+// Abort all TX buffers
+void prv_abort_tx(Mcp2515Storage *storage) {
+  prv_bit_modify(storage, 0x0f,  
+    1 << 4,  // mask
+    0x0//data
+  );
+}
+
 static uint8_t prv_read_status(Mcp2515Storage *storage) {
   uint8_t payload[] = { MCP2515_CMD_READ_STATUS };
   uint8_t read_data[1] = { 0 };
   spi_exchange(storage->spi_port, payload, sizeof(payload), read_data, sizeof(read_data));
-
   return read_data[0];
 }
 
@@ -88,8 +107,8 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
 
       if (!extended) {
         // Standard IDs have garbage in the extended fields
-        id.raw &= 0x7FF;
-      }
+        id.raw >>= MCP2515_EXTENDED_ID_LEN;
+      } 
 
       uint8_t data_payload[] = { MCP2515_CMD_READ_RX | rx_buf->data };
       uint64_t read_data = 0;
@@ -137,6 +156,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     .sclk = settings->sclk,
     .cs = settings->cs,
   };
+
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
 
   prv_reset(storage);
@@ -146,17 +166,17 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
                  MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
                  MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
 
-  // Hardcode to 500kbps
+  // 5.7 Timing configurations: 
   // In order:
   // CNF3: PS2 Length = 6
   // CNF2: PS1 Length = 8, PRSEG Length = 1
-  // CNF1: BRP = 1
+  // CNF1: BRP based on speed
   // CANINTE: Enable error and receive interrupts
   // CANINTF: clear all IRQ flags
   // EFLG: clear all error flags
   const uint8_t registers[] = {
     0x05, MCP2515_CNF2_BTLMODE_CNF3 | MCP2515_CNF2_SAMPLE_3X | (0x07 << 3),
-    0x00, MCP2515_CANINT_EFLAG | MCP2515_CANINT_RX1IE | MCP2515_CANINT_RX0IE,
+    s_brp_lookup[settings->can_bit_rate], MCP2515_CANINT_EFLAG | MCP2515_CANINT_RX1IE | MCP2515_CANINT_RX0IE,
     0x00, 0x00,
   };
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));

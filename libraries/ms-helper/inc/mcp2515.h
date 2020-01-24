@@ -16,6 +16,13 @@
 // Called on CAN messsage RX
 typedef void (*Mcp2515RxCb)(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context);
 
+typedef enum  { 
+  MCP_2515_CAN_BITRATE_125KBPS = 0,
+  MCP_2515_CAN_BITRATE_250KBPS,
+  MCP_2515_CAN_BITRATE_500KBPS,
+  NUM_MCP_2515_CAN_BITRATE_KBPS  
+} Mcp2515CanBitrate;
+
 typedef struct Mcp2515Settings {
   SpiPort spi_port;
   uint32_t baudrate;
@@ -25,7 +32,7 @@ typedef struct Mcp2515Settings {
   GpioAddress cs;
 
   GpioAddress int_pin;
-
+  Mcp2515CanBitrate can_bit_rate;
   bool loopback;
 
   Mcp2515RxCb rx_cb;
