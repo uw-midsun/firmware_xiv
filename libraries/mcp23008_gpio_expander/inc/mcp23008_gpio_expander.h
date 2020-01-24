@@ -4,7 +4,7 @@
 
 #include "status.h"
 
-#define NUM_MCP_23008_GPIO_PINS 8
+#define NUM_MCP23008_GPIO_PINS 8
 
 // I2C address of the MCP23008 chip
 typedef uint8_t Mcp23008I2CAddress;
