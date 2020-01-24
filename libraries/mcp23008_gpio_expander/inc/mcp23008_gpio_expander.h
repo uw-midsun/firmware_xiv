@@ -1,8 +1,10 @@
 #pragma once
-// GPIO interface for MCP23008 GPIO expander
+// GPIO HAL interface for MCP23008 GPIO expander
 #include <stdint.h>
 
 #include "status.h"
+
+#define NUM_MCP_23008_GPIO_PINS 8
 
 // I2C address of the MCP23008 chip
 typedef uint8_t Mcp23008I2CAddress;
@@ -27,27 +29,9 @@ typedef enum {
   NUM_MCP23008_GPIO_STATES,
 } Mcp23008GpioState;
 
-// For setting the polarity of the pin. If set to MCP23008_GPIO_POLARITY_INVERTED, the output
-// GPIO value will be the opposite of the set state.
-typedef enum {
-  MCP23008_GPIO_POLARITY_SAME = 0,
-  MCP23008_GPIO_POLARITY_INVERTED,
-  NUM_MCP23008_GPIO_POLARITIES,
-} Mcp23008GpioPolarity;
-
-// For setting whether to use the internal pull-up resistor. MCP23008 appears not to have an
-// internal pull-down resistor.
-typedef enum {
-  MCP23008_GPIO_RESISTOR_NONE = 0,
-  MCP23008_GPIO_RESISTOR_PULLUP,
-  NUM_MCP23008_GPIO_RESISTORS,
-} Mcp23008GpioResistor;
-
 typedef struct {
   Mcp23008GpioDirection direction;
   Mcp23008GpioState initial_state;
-  Mcp23008GpioPolarity polarity;
-  Mcp23008GpioResistor resistor;
 } Mcp23008GpioSettings;
 
 // Initialize MCP23008 GPIO at this I2C address. Set all pins to default values.
