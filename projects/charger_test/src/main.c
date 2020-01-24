@@ -1,5 +1,3 @@
-// Example program for STM32F072 Controller board or Discovery Board.
-// Blinks the LEDs sequentially.
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -11,47 +9,58 @@
 #include "interrupt.h"   // For enabling interrupts.
 #include "misc.h"        // Various helper functions/macros.
 #include "soft_timer.h"  // Software timers for scheduling future events.
+#include "spi.h"
+#include "mcp2515.h"
 
-// Controller board LEDs
 GpioAddress connection_address = { .port = GPIO_PORT_B, .pin = 1 };
 GpioAddress receive_interrupt_address = { .port = GPIO_PORT_A, .pin = 8 };
 
-static void prv_receive_interrupt(const GpioAddress *address, void *context) {
-  LOG_DEBUG("A message is ready!\n");
+static Mcp2515Storage s_mcp_storage = { 0 };
+
+static void rx_message_callback(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  //uint8_t data1, data2, data3, data4, data5, data6, data7, data8;
+  //data1 = data >> 56;
+  //data2 = data >> 48;
+  //data3 = data >> 40;
+  //data4 = data >> 32;
+  //data5 = data >> 24;
+  //data6 = data >> 16;
+  //data7 = data >> 8;
+  //data8 = data && 0xff;
+  LOG_DEBUG("message received:\nid: %lx\textended: %d\tdlc: %d\n", id, extended, dlc);
+  //LOG_DEBUG("data: %x %x %x\n", data1, data2, data3);
+  LOG_DEBUG("msb: %lx\n", (uint32_t) (data >> 32));
+  LOG_DEBUG("lsb: %lx\n", (uint32_t) (data & 0xffffffff));
+  
 }
 
 int main(void) {
-  // Enable various peripherals
   interrupt_init();
   soft_timer_init();
   gpio_init();
   gpio_it_init();
-  LOG_DEBUG("Hello\n");
 
-  GpioSettings connection_settings = {
-    .direction = GPIO_DIR_IN,        // The pin needs to output.
-    .alt_function = GPIO_ALTFN_NONE,  // No connections to peripherals.
-    .resistor = GPIO_RES_NONE,        // No need of a resistor to modify floating logic levels.
+  Mcp2515Settings mcp_2515_spi_settings = {
+    .spi_port = SPI_PORT_2,
+    .baudrate = 6000000,
+    .mosi = { .port = GPIO_PORT_B, .pin = 15},
+    .miso = { .port = GPIO_PORT_B, .pin = 14},
+    .sclk = { .port = GPIO_PORT_B, .pin = 13},
+    .cs = { .port = GPIO_PORT_B, .pin = 12},
+    .int_pin = { .port = GPIO_PORT_A, .pin = 8},
+    .loopback = false,
+    .rx_cb = rx_message_callback
   };
 
-  InterruptSettings interrupt_settings = {
-    .type = INTERRUPT_TYPE_INTERRUPT,       //
-    .priority = INTERRUPT_PRIORITY_NORMAL,  //
-  };
-
-  gpio_init_pin(&connection_address, &connection_settings);
-
-  // Initialize receive interrupt
-  gpio_it_register_interrupt(&receive_interrupt_address, &interrupt_settings,
-                             INTERRUPT_EDGE_RISING_FALLING, prv_receive_interrupt,
-                             NULL);
-
-  // Keep toggling the state of the pins from on to off with a 50 ms delay between.
+  LOG_DEBUG("INITIALIZING_MCP2515\n");
+  StatusCode s = mcp2515_init(&s_mcp_storage, &mcp_2515_spi_settings);
+  if (s) {
+    LOG_DEBUG("ERROR: status code not ok: %d\n", s);
+  }
+  mcp2515_register_rx_cb(&s_mcp_storage, rx_message_callback, NULL);
   while (true) {
-    GpioState state = NUM_GPIO_STATES;
-    gpio_get_state(&connection_address, &state);
-    LOG_DEBUG("GPIO_STATE: %s\n", state? "high": "low");
-    delay_ms(300);
+    mcp2515_tx(&s_mcp_storage, 69, false, 0xDEADBEEF, 4);
+    delay_ms(1000);
   }
 
   return 0;
