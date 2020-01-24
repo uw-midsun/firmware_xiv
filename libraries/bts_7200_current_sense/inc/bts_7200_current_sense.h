@@ -3,8 +3,8 @@
 // Reads current values from 2 ADC pins on the BTS 7200 switched between with a selection pin.
 // Requires GPIO, interrupts, soft timers, and ADC to be initialized in ADC_MODE_SINGLE.
 
-#include "gpio.h"
 #include "adc.h"
+#include "gpio.h"
 #include "soft_timer.h"
 
 typedef void (*Bts7200MeasurementsReadyCallback)(void);
