@@ -8,11 +8,11 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "log.h"
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "wait.h"
-#include "log.h"
 
 int main() {
   // Initialize all modules
@@ -33,7 +33,7 @@ int main() {
   GpioAddress pin_horn = { .port = GPIO_PORT_B, .pin = 1 };
   gpio_it_trigger_interrupt(&pin_horn);
   event_process(&e);
-  printf("    %d     ",e.id);
+  printf("    %d     ", e.id);
 
   return 0;
 }

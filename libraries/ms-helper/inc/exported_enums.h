@@ -115,7 +115,7 @@ typedef enum {
 // Events raised by Driver Controls: Steering Digital Input
 typedef enum {
   // Digital Events
-  EE_STEERING_INPUT_HORN = 0, 
+  EE_STEERING_INPUT_HORN = 0,
   EE_STEERING_RADIO_PPT,
   EE_STEERING_HIGH_BEAM_FORWARD,
   EE_STEERING_HIGH_BEAM_REAR,

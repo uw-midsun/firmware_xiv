@@ -7,9 +7,9 @@
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
-#include "log.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "log.h"
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
@@ -17,30 +17,24 @@
 
 // Set up all GPIO Addresses to each button
 // that recieves digital inputs
-GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = { 
-  [STEERING_DIGITAL_INPUT_HORN] = { 
-          .port = GPIO_PORT_B, .pin = 1  },
-    [STEERING_DIGITAL_INPUT_RADIO_PPT] = { 
-             .port = GPIO_PORT_A, .pin = 6  },
-    [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] ={
-           .port = GPIO_PORT_A, .pin = 7  },
-    [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = { 
-            .port = GPIO_PORT_B, .pin = 0  },
-    [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = { 
-           .port = GPIO_PORT_A, .pin = 4  },
-    [STEERING_DIGITAL_INPUT_CC_TOGGLE] = {
-          .port = GPIO_PORT_A, .pin = 5  },
+GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
+  [STEERING_DIGITAL_INPUT_HORN] = { .port = GPIO_PORT_B, .pin = 1 },
+  [STEERING_DIGITAL_INPUT_RADIO_PPT] = { .port = GPIO_PORT_A, .pin = 6 },
+  [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = { .port = GPIO_PORT_A, .pin = 7 },
+  [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = { .port = GPIO_PORT_B, .pin = 0 },
+  [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = { .port = GPIO_PORT_A, .pin = 4 },
+  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = { .port = GPIO_PORT_A, .pin = 5 },
 
-  };
+};
 
-  EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = { 
-    [STEERING_DIGITAL_INPUT_HORN] = EE_STEERING_INPUT_HORN,
-    [STEERING_DIGITAL_INPUT_RADIO_PPT] = EE_STEERING_RADIO_PPT,
-    [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = EE_STEERING_HIGH_BEAM_FORWARD,
-    [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = EE_STEERING_HIGH_BEAM_REAR,
-    [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] =  EE_STEERING_REGEN_BRAKE,
-    [STEERING_DIGITAL_INPUT_CC_TOGGLE] = EE_STEERING_INPUT_CC_TOGGLE_PRESSED
-  };
+EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
+  [STEERING_DIGITAL_INPUT_HORN] = EE_STEERING_INPUT_HORN,
+  [STEERING_DIGITAL_INPUT_RADIO_PPT] = EE_STEERING_RADIO_PPT,
+  [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = EE_STEERING_HIGH_BEAM_FORWARD,
+  [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = EE_STEERING_HIGH_BEAM_REAR,
+  [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = EE_STEERING_REGEN_BRAKE,
+  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = EE_STEERING_INPUT_CC_TOGGLE_PRESSED
+};
 
 void prv_callback_raise_event(const GpioAddress *address, void *context) {
   GpioState state;
@@ -48,7 +42,6 @@ void prv_callback_raise_event(const GpioAddress *address, void *context) {
   EventId *event = context;
 
   event_raise(*event, state);
-
 }
 
 StatusCode steering_digital_input_init() {

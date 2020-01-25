@@ -3,9 +3,6 @@
 #include <stdint.h>
 #include "can.h"
 #include "can_msg_defs.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "delay.h"
 #include "digital_input.h"
 #include "event_queue.h"
@@ -13,13 +10,13 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "log.h"
 #include "misc.h"
+#include "ms_test_helpers.h"
 #include "soft_timer.h"
 #include "status.h"
-#include "wait.h"
-#include "log.h"
 #include "test_helpers.h"
-#include "ms_test_helpers.h"
+#include "wait.h"
 
 /*
 1) Register interrupt for each pin
@@ -28,11 +25,11 @@
    that coorelates
 4) The CAN message should coorelate to the values from the exported enum
    eg EE_STEERING_INPUT_CC_SPEED_PLUS_PRESSED
-  
+  
   Make a lookup table with where Event is an array
   with a high and low state, this should coorelate to the EE value
 
-  When the interrupt is registered, it should get the state and send 
+  When the interrupt is registered, it should get the state and send
   a message according to the previous state
   Eg if it was on it should turn off and vice versa
 
@@ -58,7 +55,6 @@ void setup_test(void) {
 }
 
 void test_steering_digital_input_can_horn() {
-
   // Triggers interrupt for the horn
   GpioAddress pin_horn = { .port = GPIO_PORT_B, .pin = 1 };
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&pin_horn));
@@ -70,8 +66,6 @@ void test_steering_digital_input_can_horn() {
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
   // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-
- 
 }
 
 void test_steering_digital_input_can_high_beam_forward() {
@@ -100,6 +94,5 @@ void test_steering_digital_input_can_cc_toggle() {
   // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
 }
-
 
 void teardown_test(void) {}

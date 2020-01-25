@@ -18,5 +18,4 @@ typedef enum {
   NUM_STEERING_DIGITAL_INPUTS,
 } SteeringInterfaceDigitalInput;
 
-
 StatusCode steering_digital_input_init();
