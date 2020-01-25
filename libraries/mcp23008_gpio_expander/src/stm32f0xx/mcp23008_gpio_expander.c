@@ -10,31 +10,31 @@
 #define CONFIG_PIN_I2C_SDA \
   { GPIO_PORT_B, 11 }
 
-#define IODIR 0x00 // direction, 1 input 0 output
-#define IPOL 0x01 // polarity, corresponding GPIO bit will show inverted value on the pin
-#define GPINTEN 0x02 // interrupt on change 1 enable 0 disable
-#define DEFVAL 0x03 //  default compare value for interrupt, the opposite value on the pin will cause interrupt to occur
-#define INTCON 0x04 // interrupt controll, interrupt-on-change vs interrupt-on-previous-val
+// Should the unused ones be removed?
+#define IODIR 0x00    // direction, 1 input 0 output
+#define IPOL 0x01     // polarity, corresponding GPIO bit will show inverted value on the pin
+#define GPINTEN 0x02  // interrupt on change 1 enable 0 disable
+#define DEFVAL 0x03   // default compare value for interrupt, opposite value on pin causes interrupt
+#define INTCON 0x04   // interrupt control, interrupt-on-change vs interrupt-on-previous-val
 
 // IO configuration register
-// bit 5 (SEQOP): sequential operation register, 0 if enabled. Address pointer increments. (apparently good for polling)
-// bit 4 (DISSLW): slew rate control 0 enable 1 disable
-// bit 3 (HAEN): HW addr bit enable (always enabled for this model)
-// bit 2 (ODR): INT pin has open drain ouptut
-// bit 1 (INTPOL): polarity for INT ouput pin
-#define IOCON 0x05 
+// bit 5 (SEQOP): sequential operation register, 0 if enabled. Address pointer increments.
+// (apparently good for polling) bit 4 (DISSLW): slew rate control 0 enable 1 disable bit 3 (HAEN):
+// HW addr bit enable (always enabled for this model) bit 2 (ODR): INT pin has open drain ouptut bit
+// 1 (INTPOL): polarity for INT ouput pin
+#define IOCON 0x05
 
-#define GPPU 0x06 // pull-up-resistor 1 pulled up
-#define INTF 0x07 // Interrupt flag, 1 means that pin caused interrupt
-#define INTCAP 0x08 // captures the GPIO PORT value when interrupt occurs
-#define GPIO 0x09 // read GPIO from here, write modifies the Output Latch
-#define OLAT 0x0A // 'read' reads OLAT, write modifies the pins configured as output
+#define GPPU 0x06    // pull-up-resistor 1 pulled up
+#define INTF 0x07    // Interrupt flag, 1 means that pin caused interrupt
+#define INTCAP 0x08  // captures the GPIO PORT value when interrupt occurs
+#define GPIO 0x09    // read GPIO from here, write modifies the Output Latch
+#define OLAT 0x0A    // 'read' reads OLAT, write modifies the pins configured as output
 
 StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress *i2c_address) {
   I2CSettings i2c_settings = {
-    .speed = I2C_SPEED_FAST, //
-    .sda = CONFIG_PIN_I2C_SDA, //
-    .scl = CONFIG_PIN_I2C_SCL, //
+    .speed = I2C_SPEED_FAST,    //
+    .sda = CONFIG_PIN_I2C_SDA,  //
+    .scl = CONFIG_PIN_I2C_SCL,  //
   };
   // is this ok to do here?
   return i2c_init(I2C_PORT, &i2c_settings);
@@ -51,16 +51,18 @@ void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg, uint8_t bit, bool val) {
   i2c_write_reg(I2C_PORT, i2c_address, reg, &data, 1);
 }
 
-StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address, const Mcp23008GpioSettings *settings) {
+StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
+                                  const Mcp23008GpioSettings *settings) {
   if (address->pin >= NUM_MCP23008_GPIO_PINS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  
+
   // Set the IODIR bit
-  prv_set_reg_bit(address->i2c_address, IODIR, address->pin, settings->direction == MCP23008_GPIO_DIR_IN);
-  
-  mcp23008_set_state(address, settings->initial_state);
-  
+  prv_set_reg_bit(address->i2c_address, IODIR, address->pin,
+                  settings->direction == MCP23008_GPIO_DIR_IN);
+
+  mcp23008_set_state(address, settings->state);
+
   return STATUS_CODE_OK;
 }
 
@@ -68,7 +70,7 @@ StatusCode mcp23008_set_state(const Mcp23008GpioAddress *address, const Mcp23008
   if (address->pin >= NUM_MCP23008_GPIO_PINS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  
+
   // Set the GPIO bit
   prv_set_reg_bit(address->i2c_address, GPIO, address->pin, state == MCP23008_GPIO_STATE_HIGH);
   return STATUS_CODE_OK;
@@ -78,13 +80,13 @@ StatusCode mcp23008_gpio_toggle_state(const Mcp23008GpioAddress *address) {
   if (address->pin >= NUM_MCP23008_GPIO_PINS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  
+
   // optimization: instead of using set_state and get_state, we read only once
   uint8_t gpio_data = 0;
   i2c_read_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
-  gpio_data ^= 1 << address->pin; // toggle the relevant bit
+  gpio_data ^= 1 << address->pin;  // toggle the relevant bit
   i2c_write_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
-  
+
   return STATUS_CODE_OK;
 }
 
@@ -92,12 +94,13 @@ StatusCode mcp23008_get_state(const Mcp23008GpioAddress *address, Mcp23008GpioSt
   if (address->pin >= NUM_MCP23008_GPIO_PINS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  
+
   // Read from GPIO
   uint8_t gpio_data = 0;
   i2c_read_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
-  
+
   // Read the |address->pin|th bit
-  input_state = ((gpio_data & (1 << address->pin)) == 0) ? MCP23008_GPIO_STATE_LOW : MCP23008_GPIO_STATE_HIGH;
+  input_state =
+      ((gpio_data & (1 << address->pin)) == 0) ? MCP23008_GPIO_STATE_LOW : MCP23008_GPIO_STATE_HIGH;
   return STATUS_CODE_OK;
 }
