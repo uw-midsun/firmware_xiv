@@ -2,9 +2,6 @@
 
 #include "soft_timer.h"
 #include "generic_can_msg.h"
-
-#include "can_transmit.h"
-#include "critical_section.h"
 #include "wavesculptor.h"
 
 static void prv_enable_drive() {
