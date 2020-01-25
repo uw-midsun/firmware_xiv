@@ -28,7 +28,8 @@ StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
   return STATUS_CODE_OK;
 }
 
-StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address, Mcp23008GpioState state) {
+StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address,
+                                   const Mcp23008GpioState state) {
   if (address->pin >= NUM_MCP23008_GPIO_PINS || state >= NUM_MCP23008_GPIO_STATES) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }

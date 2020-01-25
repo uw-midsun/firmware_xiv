@@ -45,7 +45,8 @@ StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
                                   const Mcp23008GpioSettings *settings);
 
 // Set the state of an MCP23008 GPIO pin by address.
-StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address, Mcp23008GpioState state);
+StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address,
+                                   const Mcp23008GpioState state);
 
 // Toggle the output state of the pin.
 StatusCode mcp23008_gpio_toggle_state(const Mcp23008GpioAddress *address);

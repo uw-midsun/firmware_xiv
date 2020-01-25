@@ -3,8 +3,6 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-// Note: gpio tests have a delay() between writing and reading -> necessary?
-
 // I2C address of MCP23008 + pin # that should be valid on stm32 and x86
 #define VALID_I2C_ADDRESS 0x20
 #define VALID_GPIO_PIN 0

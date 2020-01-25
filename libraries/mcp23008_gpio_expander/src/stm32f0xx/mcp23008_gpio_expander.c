@@ -37,12 +37,13 @@ StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
   prv_set_reg_bit(address->i2c_address, IODIR, address->pin,
                   settings->direction == MCP23008_GPIO_DIR_IN);
 
-  mcp23008_set_state(address, settings->state);
+  mcp23008_gpio_set_state(address, settings->state);
 
   return STATUS_CODE_OK;
 }
 
-StatusCode mcp23008_set_state(const Mcp23008GpioAddress *address, const Mcp23008GpioState state) {
+StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address,
+                                   const Mcp23008GpioState state) {
   if (address->pin >= NUM_MCP23008_GPIO_PINS || state >= NUM_MCP23008_GPIO_STATES) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -66,7 +67,8 @@ StatusCode mcp23008_gpio_toggle_state(const Mcp23008GpioAddress *address) {
   return STATUS_CODE_OK;
 }
 
-StatusCode mcp23008_get_state(const Mcp23008GpioAddress *address, Mcp23008GpioState *input_state) {
+StatusCode mcp23008_gpio_get_state(const Mcp23008GpioAddress *address,
+                                   Mcp23008GpioState *input_state) {
   if (address->pin >= NUM_MCP23008_GPIO_PINS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -76,7 +78,7 @@ StatusCode mcp23008_get_state(const Mcp23008GpioAddress *address, Mcp23008GpioSt
   i2c_read_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
 
   // Read the |address->pin|th bit
-  input_state =
+  *input_state =
       ((gpio_data & (1 << address->pin)) == 0) ? MCP23008_GPIO_STATE_LOW : MCP23008_GPIO_STATE_HIGH;
   return STATUS_CODE_OK;
 }
