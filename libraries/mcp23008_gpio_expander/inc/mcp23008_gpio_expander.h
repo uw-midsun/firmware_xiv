@@ -1,5 +1,6 @@
 #pragma once
 // GPIO HAL interface for MCP23008 GPIO expander
+// Note: we don't check the validity of the I2C address
 #include <stdint.h>
 
 #include "status.h"
@@ -21,7 +22,7 @@ typedef struct {
 typedef enum {
   MCP23008_GPIO_DIR_IN = 0,
   MCP23008_GPIO_DIR_OUT,
-  NUMMCP_23008_GPIO_DIRS,
+  NUM_MCP23008_GPIO_DIRS,
 } Mcp23008GpioDirection;
 
 // For setting the output value of the pin
@@ -37,7 +38,7 @@ typedef struct {
 } Mcp23008GpioSettings;
 
 // Initialize MCP23008 GPIO at this I2C address. Set all pins to default values.
-StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress *i2c_address);
+StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress i2c_address);
 
 // Initialize an MCP23008 GPIO pin by address.
 StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,

@@ -30,7 +30,8 @@
 #define GPIO 0x09    // read GPIO from here, write modifies the Output Latch
 #define OLAT 0x0A    // 'read' reads OLAT, write modifies the pins configured as output
 
-StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress *i2c_address) {
+StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress i2c_address) {
+  // i2c_address only used in x86 - should this even have any implementation?
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,    //
     .sda = CONFIG_PIN_I2C_SDA,  //
@@ -53,7 +54,8 @@ void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg, uint8_t bit, bool val) {
 
 StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
                                   const Mcp23008GpioSettings *settings) {
-  if (address->pin >= NUM_MCP23008_GPIO_PINS) {
+  if (address->pin >= NUM_MCP23008_GPIO_PINS || settings->direction >= NUM_MCP23008_GPIO_DIRS ||
+      settings->state >= NUM_MCP23008_GPIO_STATES) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -67,7 +69,7 @@ StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
 }
 
 StatusCode mcp23008_set_state(const Mcp23008GpioAddress *address, const Mcp23008GpioState state) {
-  if (address->pin >= NUM_MCP23008_GPIO_PINS) {
+  if (address->pin >= NUM_MCP23008_GPIO_PINS || state >= NUM_MCP23008_GPIO_STATES) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
