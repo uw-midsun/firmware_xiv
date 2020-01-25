@@ -28,12 +28,15 @@ typedef struct Bts7200Storage {
   void *callback_context;
 } Bts7200Storage;
 
-// Set up a soft timer which periodically updates |storage| with the latest measurements.
-// |bts_7200_get_measurement_high| and |bts_7200_get_measurement_low| can immediately be called.
+// Initialize the BTS7200 with the given settings.
 StatusCode bts_7200_init(Bts7200Storage *storage, Bts7200Settings *settings);
 
-// Get the latest measurements.
+// Read the latest measurements. This does not get measurements from the storage but instead
+// reads them from the BTS7200 itself.
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
+
+// Set up a soft timer which periodically updates the storage with the latest measurements.
+StatusCode bts_7200_start(Bts7200Storage *storage);
 
 // Stop the timer associated with the storage and return whether it was successful.
 bool bts_7200_stop(Bts7200Storage *storage);

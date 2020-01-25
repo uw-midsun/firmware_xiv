@@ -38,6 +38,13 @@ void test_bts_7200_current_sense_timer_works(void) {
 
   TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
 
+  // make sure we don't start anything in init
+  TEST_ASSERT_EQUAL(times_callback_called, 0);
+  delay_us(2 * interval_us);
+  TEST_ASSERT_EQUAL(times_callback_called, 0);
+
+  TEST_ASSERT_OK(bts_7200_start(&storage));
+
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(times_callback_called, 1);
 
@@ -54,9 +61,9 @@ void test_bts_7200_current_sense_timer_works(void) {
   TEST_ASSERT_EQUAL(times_callback_called, 2);
 }
 
-// Test that we can init, stop, and init again and it works.
+// Test that we can init, start, stop, and start again and it works.
 // Essentially the previous test done twice.
-void test_bts_7200_current_sense_reinit(void) {
+void test_bts_7200_current_sense_restart(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
@@ -70,6 +77,7 @@ void test_bts_7200_current_sense_reinit(void) {
   Bts7200Storage storage = { 0 };
 
   TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_start(&storage));
 
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(times_callback_called, 1);
@@ -86,8 +94,8 @@ void test_bts_7200_current_sense_reinit(void) {
   delay_us(2 * interval_us);
   TEST_ASSERT_EQUAL(times_callback_called, 2);
 
-  // init again
-  TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
+  // start again
+  TEST_ASSERT_OK(bts_7200_start(&storage));
 
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(times_callback_called, 3);
@@ -105,8 +113,8 @@ void test_bts_7200_current_sense_reinit(void) {
   TEST_ASSERT_EQUAL(times_callback_called, 4);
 }
 
-// Test failure when the settings are invalid.
-void test_bts_7200_current_sense_invalid_settings(void) {
+// Test init failure when the settings are invalid.
+void test_bts_7200_current_sense_init_invalid_settings(void) {
   // start with invalid select pin
   GpioAddress select_pin = { .port = NUM_GPIO_PORTS, .pin = 0 };  // invalid
   GpioAddress sense_pin = { .port = 0, .pin = 0 };                // valid
@@ -141,6 +149,7 @@ void test_bts_7200_current_sense_null_callback(void) {
   Bts7200Storage storage = { 0 };
 
   TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_start(&storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
 }
 
@@ -160,10 +169,9 @@ void test_bts_7200_current_sense_get_measurement_valid(void) {
 
   TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
 
-  uint16_t reading0, reading1;
+  uint16_t reading0 = 0, reading1 = 0;
   TEST_ASSERT_OK(bts_7200_get_measurement(&storage, &reading0, &reading1));
-
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
+  LOG_DEBUG("Readings: %d, %d\r\n", reading0, reading1);
 }
 
 // Test that bts_7200_stop returns true only when it stops a timer
@@ -181,6 +189,8 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
   Bts7200Storage storage = { 0 };
 
   TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
+  TEST_ASSERT_EQUAL(false, bts_7200_stop(&storage));
+  TEST_ASSERT_OK(bts_7200_start(&storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
   TEST_ASSERT_EQUAL(false, bts_7200_stop(&storage));
 }
@@ -202,6 +212,7 @@ void test_bts_7200_current_sense_context_passed(void) {
   Bts7200Storage storage = { 0 };
 
   TEST_ASSERT_OK(bts_7200_init(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_start(&storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
   TEST_ASSERT_EQUAL(received_context, context_pointer);
 }
