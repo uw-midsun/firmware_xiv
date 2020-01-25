@@ -65,7 +65,7 @@ typedef enum EERelayState {
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
-<<<<<<< HEAD
+
 
 // Used with the POWER_STATE message sent from driver controls to power
 // distribution to request a state change.
@@ -136,5 +136,3 @@ typedef enum {
   EE_CENTER_CONSOLE_DIGITAL_INPUT_HAZARDS,
   NUM_EE_CENTER_CONSOLE_DIGITAL_INPUTS,
 } EECenterConsoleDigitalInput;
-=======
->>>>>>> b18e44975f488806d044489d1e9707cad756c834

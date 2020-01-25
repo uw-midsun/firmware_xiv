@@ -6,9 +6,9 @@
 #include "delay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "gpio.h"
+#include "gpio_mcu.h"
 #include "gpio_it.h"
-#include "interrupt.h"
+#include "interrupt_def.h"
 #include "log.h"
 #include "misc.h"
 #include "soft_timer.h"
@@ -59,7 +59,7 @@ StatusCode steering_digital_input_init() {
                                              .priority = INTERRUPT_PRIORITY_NORMAL };
 
     // Only the interrupt for the horn and radio should
-    // be triggered by rising and falling and everything else
+    // be triggered by rising and falling and everyathing else
     // is triggered when falling
     if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,

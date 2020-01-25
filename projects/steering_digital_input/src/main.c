@@ -5,7 +5,7 @@
 #include "digital_input.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "gpio.h"
+#include "gpio_mcu.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"

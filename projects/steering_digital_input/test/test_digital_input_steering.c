@@ -9,7 +9,7 @@
 #include "exported_enums.h"
 #include "gpio.h"
 #include "gpio_it.h"
-#include "interrupt.h"
+#include "interrupt_def.h"
 #include "log.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
@@ -25,7 +25,8 @@
    that coorelates
 4) The CAN message should coorelate to the values from the exported enum
    eg EE_STEERING_INPUT_CC_SPEED_PLUS_PRESSED
-  
+  
+
   Make a lookup table with where Event is an array
   with a high and low state, this should coorelate to the EE value
 
