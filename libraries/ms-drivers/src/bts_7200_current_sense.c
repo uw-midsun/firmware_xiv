@@ -1,7 +1,10 @@
 #include "bts_7200_current_sense.h"
+#include <stddef.h>
 
 #define GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
 #define GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
+#define MCP23008_GPIO_STATE_SELECT_OUT_0 MCP23008_GPIO_STATE_LOW
+#define MCP23008_GPIO_STATE_SELECT_OUT_1 MCP23008_GPIO_STATE_HIGH
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
@@ -14,8 +17,25 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
   soft_timer_start(storage->interval_us, &prv_measure_current, storage, &storage->timer_id);
 }
 
-StatusCode bts_7200_init(Bts7200Storage *storage, Bts7200Settings *settings) {
-  storage->select_pin = settings->select_pin;
+static StatusCode init_common(Bts7200Storage *storage) {
+  // initialize the sense pin
+  GpioSettings sense_settings = {
+    .direction = GPIO_DIR_IN,
+    .alt_function = GPIO_ALTFN_ANALOG,
+  };
+  status_ok_or_return(gpio_init_pin(storage->sense_pin, &sense_settings));
+
+  // initialize the sense pin as ADC
+  AdcChannel sense_channel = NUM_ADC_CHANNELS;
+  adc_get_channel(*storage->sense_pin, &sense_channel);
+  adc_set_channel(sense_channel, true);
+  return STATUS_CODE_OK;
+}
+
+StatusCode bts_7200_init_native(Bts7200Storage *storage, Bts7200NativeSettings *settings) {
+  storage->select_pin_native = settings->select_pin;
+  storage->select_pin_mcp23008 = NULL;
+  storage->select_pin_type = BTS7200_SELECT_PIN_NATIVE;
   storage->sense_pin = settings->sense_pin;
   storage->interval_us = settings->interval_us;
   storage->callback = settings->callback;
@@ -28,30 +48,46 @@ StatusCode bts_7200_init(Bts7200Storage *storage, Bts7200Settings *settings) {
     .resistor = GPIO_RES_NONE,
     .alt_function = GPIO_ALTFN_NONE,
   };
-  status_ok_or_return(gpio_init_pin(settings->select_pin, &select_settings));
+  status_ok_or_return(gpio_init_pin(storage->select_pin_native, &select_settings));
 
-  // initialize the sense pin
-  GpioSettings sense_settings = {
-    .direction = GPIO_DIR_IN,
-    .alt_function = GPIO_ALTFN_ANALOG,
+  return init_common(storage);
+}
+
+StatusCode bts_7200_init_mcp23008(Bts7200Storage *storage, Bts7200Mcp23008Settings *settings) {
+  storage->select_pin_mcp23008 = settings->select_pin;
+  storage->select_pin_native = NULL;
+  storage->select_pin_type = BTS7200_SELECT_PIN_MCP23008;
+  storage->sense_pin = settings->sense_pin;
+  storage->interval_us = settings->interval_us;
+  storage->callback = settings->callback;
+  storage->callback_context = settings->callback_context;
+
+  // initialize the select pin
+  Mcp23008GpioSettings select_settings = {
+    .direction = MCP23008_GPIO_DIR_OUT,
+    .state = MCP23008_GPIO_STATE_LOW,
   };
-  status_ok_or_return(gpio_init_pin(settings->sense_pin, &sense_settings));
+  status_ok_or_return(mcp23008_gpio_init_pin(storage->select_pin_mcp23008, &select_settings));
 
-  // initialize the sense pin as ADC
-  AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  adc_get_channel(*settings->sense_pin, &sense_channel);
-  adc_set_channel(sense_channel, true);
-  return STATUS_CODE_OK;
+  return init_common(storage);
 }
 
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
 
-  gpio_set_state(storage->select_pin, GPIO_STATE_SELECT_OUT_0);
+  if (storage->select_pin_type == BTS7200_SELECT_PIN_NATIVE) {
+    gpio_set_state(storage->select_pin_native, GPIO_STATE_SELECT_OUT_0);
+  } else {
+    mcp23008_gpio_set_state(storage->select_pin_mcp23008, MCP23008_GPIO_STATE_SELECT_OUT_0);
+  }
   adc_read_raw(sense_channel, meas0);
 
-  gpio_set_state(storage->select_pin, GPIO_STATE_SELECT_OUT_1);
+  if (storage->select_pin_type == BTS7200_SELECT_PIN_NATIVE) {
+    gpio_set_state(storage->select_pin_native, GPIO_STATE_SELECT_OUT_1);
+  } else {
+    mcp23008_gpio_set_state(storage->select_pin_mcp23008, MCP23008_GPIO_STATE_SELECT_OUT_1);
+  }
   adc_read_raw(sense_channel, meas1);
 
   return STATUS_CODE_OK;
