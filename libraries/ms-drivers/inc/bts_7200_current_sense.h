@@ -7,8 +7,8 @@
 
 #include "adc.h"
 #include "gpio.h"
-#include "soft_timer.h"
 #include "mcp23008_gpio_expander.h"
+#include "soft_timer.h"
 
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
 

@@ -1,7 +1,7 @@
-#include "mcp23008_gpio_expander_defs.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "log.h"
+#include "mcp23008_gpio_expander_defs.h"
 
 #define MCP_I2C_ADDR 0x22
 

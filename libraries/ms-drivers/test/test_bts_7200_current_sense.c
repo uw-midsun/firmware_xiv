@@ -5,8 +5,6 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-// TODO change the sense and select pins (both stm32 and mcp23008)
-
 static volatile uint16_t times_callback_called = 0;
 static void *received_context;
 
@@ -179,7 +177,7 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
 void test_bts_7200_current_sense_mcp23008_init_invalid_settings(void) {
   // start with invalid select pin
   Mcp23008GpioAddress select_pin = { .i2c_address = 0, .pin = NUM_MCP23008_GPIO_PINS };  // invalid
-  GpioAddress sense_pin = { .port = 0, .pin = 0 }; // valid
+  GpioAddress sense_pin = { .port = 0, .pin = 0 };                                       // valid
   Bts7200Mcp23008Settings settings = {
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,

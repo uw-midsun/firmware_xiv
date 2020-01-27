@@ -1,9 +1,9 @@
+#include "i2c.h"
 #include "log.h"
 #include "mcp23008_gpio_expander.h"
 #include "mcp23008_gpio_expander_defs.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "i2c.h"
 
 // I2C address of MCP23008 + pin # that should be valid on stm32 and x86
 #define VALID_I2C_ADDRESS 0x20
