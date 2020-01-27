@@ -18,7 +18,7 @@ void setup_test(void) {
     .sda = CONFIG_PIN_I2C_SDA,  //
     .scl = CONFIG_PIN_I2C_SCL,  //
   };
-  return i2c_init(I2C_PORT, &i2c_settings);
+  i2c_init(I2C_PORT, &i2c_settings);
 }
 void teardown_test(void) {}
 

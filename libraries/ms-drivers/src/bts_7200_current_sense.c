@@ -18,6 +18,9 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
 }
 
 static StatusCode prv_init_common(Bts7200Storage *storage) {
+  // make sure that if the user calls stop() it doesn't cancel some other timer
+  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
+
   // initialize the sense pin
   GpioSettings sense_settings = {
     .direction = GPIO_DIR_IN,
@@ -101,5 +104,8 @@ StatusCode bts_7200_start(Bts7200Storage *storage) {
 }
 
 bool bts_7200_stop(Bts7200Storage *storage) {
-  return soft_timer_cancel(storage->timer_id);
+  bool result = soft_timer_cancel(storage->timer_id);
+  // make sure calling stop twice doesn't cancel an unrelated timer
+  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
+  return result;
 }
