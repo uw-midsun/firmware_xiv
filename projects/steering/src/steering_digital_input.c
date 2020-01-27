@@ -61,9 +61,6 @@ StatusCode steering_digital_input_init() {
     InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                              .priority = INTERRUPT_PRIORITY_NORMAL };
 
-    // Only the interrupt for the horn and radio should
-    // be triggered by rising and falling and everyathing else
-    // is triggered when falling
     if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
                                  INTERRUPT_EDGE_RISING_FALLING, prv_callback_raise_event,
