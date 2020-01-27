@@ -15,18 +15,15 @@
 #include "wait.h"
 
 int main() {
-  // Initialize all modules
   gpio_init();
   interrupt_init();
   event_queue_init();
   gpio_it_init();
   soft_timer_init();
-  // Initialize an event
-  Event e = { .id = 0, .data = 0 };
-  // Initialize the steering_digital_input to register
-  // all interrupts and GPIO pins so they can send
-  // CAN messages
   steering_digital_input_init();
+
+  Event e = { .id = 0, .data = 0 };
+
   while (event_process(&e)) {
     // can_process_steering_event();  TO BE CREATED
   }

@@ -9,7 +9,6 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt_def.h"
-#include "log.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
@@ -28,12 +27,10 @@ void setup_test(void) {
 }
 
 void test_steering_digital_input_horn() {
-  // Triggers interrupt for the horn
   GpioAddress *horn_address = test_get_address(EE_STEERING_INPUT_HORN);
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(horn_address));
 
   Event e = { 0 };
-  // Pop item off of queue
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(EE_STEERING_INPUT_HORN, e.id);
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
@@ -42,29 +39,23 @@ void test_steering_digital_input_horn() {
 }
 
 void test_steering_digital_input_high_beam_forward() {
-  // Triggers interrupt for the high beam in the front
   GpioAddress *high_beam_forward_address = test_get_address(EE_STEERING_HIGH_BEAM_FORWARD);
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(high_beam_forward_address));
 
   Event e = { 0 };
-  // Pop item off of queue
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(EE_STEERING_HIGH_BEAM_FORWARD, e.id);
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
-  // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
 }
 
 void test_steering_digital_input_cc_toggle() {
-  // Triggers interrupt to toggle the cruise control
   GpioAddress *cc_toggle_address = test_get_address(EE_STEERING_INPUT_CC_TOGGLE_PRESSED);
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(cc_toggle_address));
 
   Event e = { 0 };
-  // Pop item off of queue
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(EE_STEERING_INPUT_CC_TOGGLE_PRESSED, e.id);
-  // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
 }
 

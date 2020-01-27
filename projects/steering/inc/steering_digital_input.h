@@ -1,5 +1,6 @@
 #pragma once
-// Module for recieving digital inputs from steering interface (GPIO)
+// Module to sets up all the interrupts for the GPIO pins to raise events
+// in the event queue when triggered
 // Requires GPIO,Interrupts,Event Queue,Soft-timer
 #include "event_queue.h"
 #include "gpio.h"
@@ -7,7 +8,6 @@
 #include "soft_timer.h"
 #include "status.h"
 
-// Digital inputs IDs
 typedef enum {
   STEERING_DIGITAL_INPUT_HORN = 0,
   STEERING_DIGITAL_INPUT_RADIO_PPT,

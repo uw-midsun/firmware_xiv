@@ -1,4 +1,3 @@
-#include "steering_digital_input.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -13,10 +12,9 @@
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
+#include "steering_digital_input.h"
 #include "wait.h"
 
-// Set up all GPIO Addresses to each button
-// that recieves digital inputs
 GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HORN] = { .port = GPIO_PORT_B, .pin = 1 },
   [STEERING_DIGITAL_INPUT_RADIO_PPT] = { .port = GPIO_PORT_A, .pin = 6 },
