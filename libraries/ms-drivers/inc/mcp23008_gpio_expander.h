@@ -1,5 +1,6 @@
 #pragma once
 // GPIO HAL interface for MCP23008 GPIO expander
+// Requires I2C to be initialized on I2C_PORT defined in mcp23008_gpio_expander_defs.h.
 // Note: we don't check the validity of the I2C address
 #include <stdint.h>
 

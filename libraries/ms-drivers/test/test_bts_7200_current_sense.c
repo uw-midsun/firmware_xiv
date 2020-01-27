@@ -5,7 +5,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-// TODO change the sense and select pins (both native and mcp23008)
+// TODO change the sense and select pins (both stm32 and mcp23008)
 
 static volatile uint16_t times_callback_called = 0;
 static void *received_context;
@@ -24,13 +24,13 @@ void setup_test(void) {
 }
 void teardown_test(void) {}
 
-// Comprehensive happy-path test for native initialization.
-void test_bts_7200_current_sense_timer_native_works(void) {
+// Comprehensive happy-path test for STM32 initialization.
+void test_bts_7200_current_sense_timer_stm32_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -38,7 +38,7 @@ void test_bts_7200_current_sense_timer_native_works(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
 
   // make sure we don't start anything in init
   TEST_ASSERT_EQUAL(times_callback_called, 0);
@@ -109,7 +109,7 @@ void test_bts_7200_current_sense_restart(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -117,7 +117,7 @@ void test_bts_7200_current_sense_restart(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
   TEST_ASSERT_OK(bts_7200_start(&storage));
 
   // we call the callback and get good values before setting the timer
@@ -154,12 +154,12 @@ void test_bts_7200_current_sense_restart(void) {
   TEST_ASSERT_EQUAL(times_callback_called, 4);
 }
 
-// Test init failure when the settings are invalid for native.
-void test_bts_7200_current_sense_native_init_invalid_settings(void) {
+// Test init failure when the settings are invalid for stm32.
+void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   // start with invalid select pin
   GpioAddress select_pin = { .port = NUM_GPIO_PORTS, .pin = 0 };  // invalid
   GpioAddress sense_pin = { .port = 0, .pin = 0 };                // valid
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
     .interval_us = 500,  // 0.5 ms
@@ -167,12 +167,12 @@ void test_bts_7200_current_sense_native_init_invalid_settings(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_NOT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&storage, &settings));
 
   // invalid sense pin
   select_pin.port = 0;
   sense_pin.port = NUM_GPIO_PORTS;
-  TEST_ASSERT_NOT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&storage, &settings));
 }
 
 // Same, but for mcp23008.
@@ -196,13 +196,13 @@ void test_bts_7200_current_sense_mcp23008_init_invalid_settings(void) {
   TEST_ASSERT_NOT_OK(bts_7200_init_mcp23008(&storage, &settings));
 }
 
-// Test that having a NULL callback works
+// Test that having a NULL callback works and we don't segfault.
 void test_bts_7200_current_sense_null_callback(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -210,7 +210,7 @@ void test_bts_7200_current_sense_null_callback(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
   TEST_ASSERT_OK(bts_7200_start(&storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
 }
@@ -221,7 +221,7 @@ void test_bts_7200_current_sense_get_measurement_native_valid(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -229,11 +229,11 @@ void test_bts_7200_current_sense_get_measurement_native_valid(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
 
   uint16_t reading0 = 0, reading1 = 0;
   TEST_ASSERT_OK(bts_7200_get_measurement(&storage, &reading0, &reading1));
-  LOG_DEBUG("Native readings: %d, %d\r\n", reading0, reading1);
+  LOG_DEBUG("STM32 readings: %d, %d\r\n", reading0, reading1);
 }
 
 // Same, but with MCP23008 initialization.
@@ -262,7 +262,7 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -270,7 +270,7 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
   TEST_ASSERT_EQUAL(false, bts_7200_stop(&storage));
   TEST_ASSERT_OK(bts_7200_start(&storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
@@ -284,7 +284,7 @@ void test_bts_7200_current_sense_context_passed(void) {
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;            // 0.5 ms
   void *context_pointer = &interval_us;  // arbitrary pointer
-  Bts7200NativeSettings settings = {
+  Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -293,7 +293,7 @@ void test_bts_7200_current_sense_context_passed(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_native(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
   TEST_ASSERT_OK(bts_7200_start(&storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
   TEST_ASSERT_EQUAL(received_context, context_pointer);

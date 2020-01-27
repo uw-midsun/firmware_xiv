@@ -57,7 +57,6 @@ StatusCode mcp23008_gpio_get_state(const Mcp23008GpioAddress *address,
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  // the gpio module does something strange - check w/ Arshan
   *input_state = s_pin_settings[address->i2c_address][address->pin].state;
   return STATUS_CODE_OK;
 }

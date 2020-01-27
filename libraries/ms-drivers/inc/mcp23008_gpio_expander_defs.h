@@ -15,13 +15,7 @@
 #define GPINTEN 0x02  // interrupt on change 1 enable 0 disable
 #define DEFVAL 0x03   // default compare value for interrupt, opposite value on pin causes interrupt
 #define INTCON 0x04   // interrupt control, interrupt-on-change vs interrupt-on-previous-val
-
-// IO configuration register
-// bit 5 (SEQOP): sequential operation register, 0 if enabled. Address pointer increments.
-// (apparently good for polling) bit 4 (DISSLW): slew rate control 0 enable 1 disable bit 3 (HAEN):
-// HW addr bit enable (always enabled for this model) bit 2 (ODR): INT pin has open drain ouptut bit
-// 1 (INTPOL): polarity for INT ouput pin
-#define IOCON 0x05
+#define IOCON 0x05    // IO configuration register
 
 #define GPPU 0x06    // pull-up-resistor 1 pulled up
 #define INTF 0x07    // Interrupt flag, 1 means that pin caused interrupt

@@ -5,14 +5,8 @@
 #include "mcp23008_gpio_expander_defs.h"
 
 StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress i2c_address) {
-  // i2c_address only used in x86 - should this even have any implementation?
-  I2CSettings i2c_settings = {
-    .speed = I2C_SPEED_FAST,    //
-    .sda = CONFIG_PIN_I2C_SDA,  //
-    .scl = CONFIG_PIN_I2C_SCL,  //
-  };
-  // is this ok to do here?
-  return i2c_init(I2C_PORT, &i2c_settings);
+  // this function is implemented only on x86
+  return STATUS_CODE_OK;
 }
 
 void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg, uint8_t bit, bool val) {
@@ -37,7 +31,9 @@ StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
   prv_set_reg_bit(address->i2c_address, IODIR, address->pin,
                   settings->direction == MCP23008_GPIO_DIR_IN);
 
-  mcp23008_gpio_set_state(address, settings->state);
+  if (settings->direction == MCP23008_GPIO_DIR_OUT) {
+    mcp23008_gpio_set_state(address, settings->state);
+  }
 
   return STATUS_CODE_OK;
 }
@@ -48,7 +44,6 @@ StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address,
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  // Set the GPIO bit
   prv_set_reg_bit(address->i2c_address, GPIO, address->pin, state == MCP23008_GPIO_STATE_HIGH);
   return STATUS_CODE_OK;
 }
@@ -73,7 +68,6 @@ StatusCode mcp23008_gpio_get_state(const Mcp23008GpioAddress *address,
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  // Read from GPIO
   uint8_t gpio_data = 0;
   i2c_read_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
 

@@ -1,7 +1,9 @@
 #include "log.h"
 #include "mcp23008_gpio_expander.h"
+#include "mcp23008_gpio_expander_defs.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "i2c.h"
 
 // I2C address of MCP23008 + pin # that should be valid on stm32 and x86
 #define VALID_I2C_ADDRESS 0x20
@@ -10,7 +12,14 @@
 // there's no invalid I2C address enforced in firmware currently
 #define INVALID_GPIO_PIN (NUM_MCP23008_GPIO_PINS)
 
-void setup_test(void) {}
+void setup_test(void) {
+  I2CSettings i2c_settings = {
+    .speed = I2C_SPEED_FAST,    //
+    .sda = CONFIG_PIN_I2C_SDA,  //
+    .scl = CONFIG_PIN_I2C_SCL,  //
+  };
+  return i2c_init(I2C_PORT, &i2c_settings);
+}
 void teardown_test(void) {}
 
 // mcp23008_gpio_init
@@ -200,7 +209,7 @@ void test_mcp23008_gpio_toggle_state(void) {
   TEST_ASSERT_EQUAL(MCP23008_GPIO_STATE_LOW, state);
 }
 
-// Test that an invalid address is caught.
+// Test that an invalid address is caught by toggle_state.
 void test_mcp23008_gpio_toggle_state_invalid_address(void) {
   TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
   // An invalid address
@@ -241,7 +250,7 @@ void test_mcp23008_gpio_get_state_valid(void) {
   TEST_ASSERT_EQUAL(MCP23008_GPIO_STATE_HIGH, state);
 }
 
-// Test that an invalid address is caught.
+// Test that an invalid address is caught by get_state.
 void test_mcp23008_gpio_get_state_invalid_address(void) {
   TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
   // An invalid address
