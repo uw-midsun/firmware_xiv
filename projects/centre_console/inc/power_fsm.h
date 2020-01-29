@@ -1,3 +1,8 @@
+#pragma once
+
+// This is the top level power fsm for the car. Transitions will raise events that will trigger
+// power transition sequences: power_main_sequence, and power_aux_sequence.
+
 #include <stdint.h>
 #include "fsm.h"
 

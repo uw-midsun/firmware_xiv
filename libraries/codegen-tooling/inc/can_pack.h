@@ -28,13 +28,15 @@
                     (output_bitset_u16), (output_state_u16), CAN_PACK_IMPL_EMPTY,                  \
                     CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_GET_DC_DC_STATUS(msg_ptr)                         \
-  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
-                      SYSTEM_CAN_MESSAGE_GET_DC_DC_STATUS)
+#define CAN_PACK_POWER_ON_MAIN_SEQUENCE(msg_ptr, sequence_u16)                    \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_RESERVED,                        \
+                    SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, 2, (sequence_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_START_PRECHARGE(msg_ptr)                          \
-  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
-                      SYSTEM_CAN_MESSAGE_START_PRECHARGE)
+#define CAN_PACK_POWER_ON_AUX_SEQUENCE(msg_ptr, sequence_u16)                    \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_RESERVED,                       \
+                    SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE, 2, (sequence_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_PRECHARGE_COMPLETE(msg_ptr)                       \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
@@ -52,8 +54,8 @@
                     SYSTEM_CAN_MESSAGE_MC_ERROR_LIMITS, 4, (error_id_u16), (limits_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_THROTTLE(msg_ptr, throttle_u16)                                        \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_THROTTLE, 2, \
+#define CAN_PACK_THROTTLE_OUTPUT(msg_ptr, throttle_u16)                                        \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_THROTTLE_OUTPUT, 2, \
                     (throttle_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_CRUISE_TARGET(msg_ptr, target_speed_u8)                                       \
@@ -100,10 +102,11 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,            \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_DRIVE_STATE(msg_ptr, drive_state_u16)                                           \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_DRIVE_STATE, \
-                    2, (drive_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
-                    CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_DRIVE_STATE(msg_ptr, drive_state_u8)                                              \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_DRIVE_STATE, 1, \
+                   (drive_state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                     \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_HAZARD(msg_ptr, state_u8)                                                    \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_HAZARD, 1, \

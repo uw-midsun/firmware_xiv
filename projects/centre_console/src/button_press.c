@@ -1,11 +1,10 @@
-#include "gpio.h"
-#include "log.h"
-#include "gpio_it.h"
-#include "status.h"
-#include "event_queue.h"
 #include "button_press.h"
 #include "centre_console_events.h"
-
+#include "event_queue.h"
+#include "gpio.h"
+#include "gpio_it.h"
+#include "log.h"
+#include "status.h"
 
 static GpioAddress s_button_addresses[NUM_CENTRE_CONSOLE_BUTTONS] = {
   [CENTRE_CONSOLE_BUTTON_DRIVE] = { .port = GPIO_PORT_A, .pin = 1 },
@@ -26,7 +25,7 @@ static CentreConsoleButtonPressEvent s_button_event_lookup[NUM_CENTRE_CONSOLE_BU
 };
 
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
-  CentreConsoleButtonPressEvent *event = (CentreConsoleButtonPressEvent *) context;
+  CentreConsoleButtonPressEvent *event = (CentreConsoleButtonPressEvent *)context;
   event_raise(*event, 0);
 }
 
@@ -36,11 +35,9 @@ StatusCode button_press_init(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
   for (CentreConsoleButton button = 0; button < NUM_CENTRE_CONSOLE_BUTTONS; button++) {
-    gpio_it_register_interrupt(&s_button_addresses[button],
-                                &interrupt_settings,
-                                INTERRUPT_EDGE_RISING, 
-                                prv_button_interrupt_handler,
-                                &s_button_event_lookup[button]);
+    gpio_it_register_interrupt(&s_button_addresses[button], &interrupt_settings,
+                               INTERRUPT_EDGE_RISING, prv_button_interrupt_handler,
+                               &s_button_event_lookup[button]);
   }
   return STATUS_CODE_OK;
 }
@@ -48,4 +45,3 @@ StatusCode button_press_init(void) {
 GpioAddress *test_provide_button_addresses(void) {
   return s_button_addresses;
 }
- 

@@ -47,20 +47,20 @@
     status;                                                                   \
   })
 
-#define CAN_TRANSMIT_GET_DC_DC_STATUS(ack_ptr)         \
-  ({                                                   \
-    CanMessage msg = { 0 };                            \
-    CAN_PACK_GET_DC_DC_STATUS(&msg);                   \
-    StatusCode status = can_transmit(&msg, (ack_ptr)); \
-    status;                                            \
+#define CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                               \
+    CanMessage msg = { 0 };                                        \
+    CAN_PACK_POWER_ON_MAIN_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));             \
+    status;                                                        \
   })
 
-#define CAN_TRANSMIT_START_PRECHARGE(ack_ptr)          \
-  ({                                                   \
-    CanMessage msg = { 0 };                            \
-    CAN_PACK_START_PRECHARGE(&msg);                    \
-    StatusCode status = can_transmit(&msg, (ack_ptr)); \
-    status;                                            \
+#define CAN_TRANSMIT_POWER_ON_AUX_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                              \
+    CanMessage msg = { 0 };                                       \
+    CAN_PACK_POWER_ON_AUX_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));            \
+    status;                                                       \
   })
 
 #define CAN_TRANSMIT_PRECHARGE_COMPLETE(ack_ptr)       \
@@ -89,12 +89,12 @@
     status;                                                       \
   })
 
-#define CAN_TRANSMIT_THROTTLE(throttle_u16)       \
-  ({                                              \
-    CanMessage msg = { 0 };                       \
-    CAN_PACK_THROTTLE(&msg, (throttle_u16));      \
-    StatusCode status = can_transmit(&msg, NULL); \
-    status;                                       \
+#define CAN_TRANSMIT_THROTTLE_OUTPUT(throttle_u16)  \
+  ({                                                \
+    CanMessage msg = { 0 };                         \
+    CAN_PACK_THROTTLE_OUTPUT(&msg, (throttle_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);   \
+    status;                                         \
   })
 
 #define CAN_TRANSMIT_CRUISE_TARGET(target_speed_u8)  \
@@ -161,12 +161,12 @@
     status;                                       \
   })
 
-#define CAN_TRANSMIT_DRIVE_STATE(drive_state_u16)  \
-  ({                                               \
-    CanMessage msg = { 0 };                        \
-    CAN_PACK_DRIVE_STATE(&msg, (drive_state_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);  \
-    status;                                        \
+#define CAN_TRANSMIT_DRIVE_STATE(drive_state_u8)  \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_DRIVE_STATE(&msg, (drive_state_u8)); \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
   })
 
 #define CAN_TRANSMIT_HAZARD(state_u8)             \

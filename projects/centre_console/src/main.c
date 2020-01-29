@@ -1,14 +1,13 @@
-#include "log.h"
+#include "button_press.h"
+#include "delay.h"
+#include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
-#include "delay.h"
 #include "interrupt.h"
-#include "event_queue.h"
+#include "log.h"
 #include "soft_timer.h"
-#include "button_press.h"
 
-
-int main(void)  {
+int main(void) {
   gpio_init();
   interrupt_init();
   gpio_it_init();
