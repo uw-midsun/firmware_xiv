@@ -26,7 +26,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
 
   if (storage->is_drive) {
     return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive,
-                                   controller, NULL);
+                                   storage, NULL);
   }
 
   GenericCanMsg msg_left = {
@@ -84,7 +84,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_broadcast_init(MotorControllerStorage *controller) {
+StatusCode drive_output_init(MotorControllerStorage *controller) {
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive,
-                                 controller, NULL);
+                                 storage, NULL);
 }
