@@ -2,6 +2,7 @@
 
 #include "fsm.h"
 #include "status.h"
+#include "motor_controller.h"
 #include "precharge_control.h"
 
 FSM_DECLARE_STATE(state_neutral);

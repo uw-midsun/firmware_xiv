@@ -4,6 +4,7 @@
 #include "interrupt.h"
 #include "gpio.h"
 #include "gpio_it.h"
+#include "heartbeat_rx.h"
 
 #include "motor_controller.h"
 #include "precharge_control.h"

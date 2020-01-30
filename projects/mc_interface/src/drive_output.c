@@ -1,3 +1,4 @@
+#include "motor_controller.h"
 #include "drive_output.h"
 #include "drive_fsm.h"
 

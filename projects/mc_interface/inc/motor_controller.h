@@ -1,7 +1,10 @@
 #pragma once
+#include <stdbool.h>
+
 #include "precharge_control.h"
 #include "drive_fsm.h"
 #include "wavesculptor.h"
+#include "generic_can.h"
 
 #define MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS 200
 #define MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS 200
