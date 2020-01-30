@@ -45,7 +45,7 @@ void precharge_fsm_process_event(const Event *e) {
     fsm_process_event(&s_precharge_fsm, e);
 }
 
-static StatusCode precharge_init(void *context) {
+StatusCode precharge_init(void *context) {
     prv_init_precharge_fsm(context);
     //TODO: init the gpio pin for sending precharge command and interrupt
         //then either raise events for switching state

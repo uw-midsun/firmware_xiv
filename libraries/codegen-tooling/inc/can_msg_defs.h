@@ -17,7 +17,7 @@ typedef enum {
   SYSTEM_CAN_DEVICE_SOLAR = 8,
   SYSTEM_CAN_DEVICE_CHARGER = 10,
   SYSTEM_CAN_DEVICE_IMU = 11,
-  NUM_SYSTEM_CAN_DEVICES = 11
+  NUM_SYSTEM_CAN_DEVICES = 12
 } SystemCanDevice;
 
 // For setting the CAN message ID

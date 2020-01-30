@@ -3,20 +3,22 @@
 #include "motor_controller.h"
 
 #include "can.h"
-#include "can_transmit.h"
 #include "can_unpack.h"
+#include "can_ack.h"
 #include "exported_enums.h"
 
-static void prv_handle_begin_precharge(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
-    //begin precharge sequence
-}
+// static StatusCode prv_handle_begin_precharge(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
+//     //begin precharge sequence
+//     return STATUS_CODE_OK;
+// }
 
-static void prv_handle_set_relay_states(const CanMessage* msg, void* context) {
-    //go into neutral and open/close relays
-}
+// static StatusCode prv_handle_set_relay_states(const CanMessage* msg, void* context , CanAckStatus *ack_reply) {
+//     //go into neutral and open/close relays
+//     return STATUS_CODE_OK;
+// }
 
 // alters stored drive state
-static void prv_handle_drive_state(const CanMessage* msg, void* context) {
+static StatusCode prv_handle_drive_state(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
     uint8_t drive_state = 0;
     CAN_UNPACK_DRIVE_STATE(msg, &drive_state);
     switch (drive_state) {
@@ -31,20 +33,23 @@ static void prv_handle_drive_state(const CanMessage* msg, void* context) {
             event_raise_priority(EVENT_PRIORITY_NORMAL, DRIVE_FSM_STATE_NEUTRAL, 0);
             break;
     }
+    return STATUS_CODE_OK;
 }
 
 // alters stored throttle value
-static void prv_handle_throttle(const CanMessage* msg, void* context) {
+static StatusCode prv_handle_throttle(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
     MotorControllerStorage* storage = context;
     uint16_t throttle_received = 0;
     CAN_UNPACK_THROTTLE_OUTPUT(msg, &throttle_received);
-    storage->throttle = throttle_received;
+    storage->throttle = (int16_t)throttle_received;
+    return STATUS_CODE_OK;
 }
 
 // cancel cruise
-static void prv_handle_brake(const CanMessage* msg, void* context) {
-    //unimplemented
-}
+// static StatusCode prv_handle_brake(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
+//     //unimplemented
+//     return STATUS_CODE_OK;
+// }
 
 // initializes can rx handlers
 StatusCode drive_rx_init(void* context) {

@@ -1,5 +1,6 @@
 #pragma once
 #include "status.h"
+#include "event_queue.h"
 
 typedef enum {
     DRIVE_FSM_STATE_NEUTRAL = 0,
@@ -8,6 +9,6 @@ typedef enum {
     NUM_DRIVE_FSM_STATES
 } DriveState;
 
-static StatusCode drive_fsm_init(void* context);
+StatusCode drive_fsm_init(void* context);
 
 void drive_fsm_process_event(const Event *e);

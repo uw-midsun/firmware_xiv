@@ -1,6 +1,7 @@
 #pragma once
 // WaveSculptor 20 CAN definitions
 #include <assert.h>
+#include <stdint.h>
 
 #define WAVESCULPTOR_FORWARD_VELOCITY 100.0f
 #define WAVESCULPTOR_REVERSE_VELOCITY -100.0f

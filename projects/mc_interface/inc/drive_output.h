@@ -1,8 +1,14 @@
 #include "motor_controller.h"
 #include "status.h"
+#include "motor_can.h"
 
-static void drive_output_enable(MotorControllerStorage *storage);
+typedef struct MotorDriveCommand {
+    float motor_velocity;
+    float motor_current;
+} MotorDriveCommand;
 
-static void drive_output_disable(MotorControllerStorage *storage);
+void drive_output_enable(MotorControllerStorage *storage);
 
-StatusCode mci_broadcast_init(MotorControllerStorage *controller);
+void drive_output_disable(MotorControllerStorage *storage);
+
+StatusCode drive_output_init(MotorControllerStorage *controller);

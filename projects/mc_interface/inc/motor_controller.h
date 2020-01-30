@@ -15,6 +15,12 @@
 //TODO: add defines for gpio pins
 
 typedef enum {
+  MOTOR_EVENT_SYSTEM_CAN_RX = 0,
+  MOTOR_EVENT_SYSTEM_CAN_TX,
+  MOTOR_EVENT_SYSTEM_CAN_FAULT,
+} MotorEvent;
+
+typedef enum {
   MOTOR_CONTROLLER_LEFT = 0,
   MOTOR_CONTROLLER_RIGHT,
   NUM_MOTOR_CONTROLLERS
@@ -22,13 +28,13 @@ typedef enum {
 
 typedef struct MotorControllerSettings {
     GenericCan *motor_can;
-    uint32_t motor_controller_ids[NUM_MOTOR_CONTROLLERS];
+    uint32_t motor_controller_ids[NUM_MOTOR_CONTROLLERS];   
 } MotorControllerSettings;
 
 typedef struct MotorControllerStorage {
     MotorControllerSettings settings;
 
-    uint16_t throttle;
+    int16_t throttle;
     float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
     WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
         //^ float bus_voltage_v and float bus_current_a
@@ -41,4 +47,4 @@ typedef struct MotorControllerStorage {
     uint8_t bus_rx_bitset;
 
     size_t watchdog_counter;
-}
+} MotorControllerStorage;
