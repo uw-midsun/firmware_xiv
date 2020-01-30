@@ -22,8 +22,6 @@ StatusCode sn74_mux_init_mux(Sn74MuxAddress *address) {
   return STATUS_CODE_OK;
 }
 
-#include "log.h"
-
 StatusCode sn74_mux_set(Sn74MuxAddress *address, uint8_t selected) {
   if (selected >= (1 << SN74_MUX_BIT_WIDTH)) {
     return STATUS_CODE_OUT_OF_RANGE;
