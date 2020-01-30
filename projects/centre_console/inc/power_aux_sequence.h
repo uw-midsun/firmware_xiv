@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fsm.h"
 #include "exported_enums.h"
 #include "status.h"
 
