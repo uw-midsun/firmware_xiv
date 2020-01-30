@@ -54,6 +54,7 @@ StatusCode pedal_can_init(CanStorage *can_storage, CanSettings *can_settings) {
   messages[PEDAL_CAN_TX] = mes;
   mes.msg_id = 13;
   messages[PEDAL_CAN_FAULT] = mes;
+  //////////
 
   can_init(can_storage, can_settings);
 
