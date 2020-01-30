@@ -4,21 +4,24 @@
 #include "delay.h"
 #include "event_queue.h"
 #include "gpio.h"
+#include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
+#include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
-#include "misc.h"
 
 typedef struct {
-    EventId event;
-}AdcPeriodicReaderStorage;
+  GpioAddress address;
+  AdcChannel channel;
+  uint16_t data;
+} AdcPeriodicReaderStorage;
 
-//Initialize the pins to recieve analog signals
-//Initialize pin and settings
-StatusCode adc_periodic_reader_init(AdcPeriodicReaderStorage* storage, GpioSettings* settings);
+// Initialize GPIO pin and settings
+StatusCode adc_periodic_reader_init(AdcPeriodicReaderStorage *storage, GpioSettings *settings);
 
-//Enable ADC Channel
-StatusCode adc_periodic_reader_set_up_channel(AdcPeriodicReaderStorage* storage);
+// Enable ADC Channel
+StatusCode adc_periodic_reader_set_up_channel(AdcPeriodicReaderStorage *storage);
 
-void analog_reader_register_callback(AdcChannel channel);
+// Accepts a callback,repeatedly calls that callback with new data as it gets new data
+StatusCode analog_reader_register_callback(AdcCallback callback, AdcChannel channel);
