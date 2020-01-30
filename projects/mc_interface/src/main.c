@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "gpio_it.h"
 
+#include "motor_controller.h"
 #include "precharge_control.h"
 #include "drive_rx.h"
 #include "drive_output.h"

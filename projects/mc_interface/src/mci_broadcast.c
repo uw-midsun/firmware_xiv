@@ -9,17 +9,17 @@
 static void prv_handle_speed(int16_t speed_cms[], size_t num_speeds, void *context) {
   MotorControllerStorage *storage = context;
   // left motor is motor of truth
-  storage->motor_velocity = speed_cms[WAVESCULPTOR_LEFT_MEASUREMENT_ID];
+  storage->motor_velocity = speed_cms[MOTOR_CONTROLLER_LEFT];
 
-  CAN_TRANSMIT_MOTOR_VELOCITY((uint16_t)speed_cms[WAVESCULPTOR_RIGHT_MEASUREMENT_ID], (uint16_t)speed_cms[1]);
+  CAN_TRANSMIT_MOTOR_VELOCITY((uint16_t)speed_cms[MOTOR_CONTROLLER_LEFT], (uint16_t)speed_cms[MOTOR_CONTROLLER_RIGHT]);
 }
 
 static void prv_handle_bus_measurement(MotorControllerBusMeasurement measurements[],
                                        size_t num_measurements, void *context) {
   // Output system can
   CAN_TRANSMIT_MOTOR_CONTROLLER_VC(
-      (uint16_t)measurements[0].bus_voltage, (uint16_t)measurements[0].bus_current,
-      (uint16_t)measurements[1].bus_voltage, (uint16_t)measurements[1].bus_current);
+      (uint16_t)measurements[MOTOR_CONTROLLER_LEFT].bus_voltage, (uint16_t)measurements[MOTOR_CONTROLLER_LEFT].bus_current,
+      (uint16_t)measurements[MOTOR_CONTROLLER_RIGHT].bus_voltage, (uint16_t)measurements[MOTOR_CONTROLLER_RIGHT].bus_current);
 }
 
 StatusCode mci_broadcast_init(MotorControllerStorage *controller) {
