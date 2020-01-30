@@ -2,6 +2,7 @@
 
 #include "fsm.h"
 #include "status.h"
+#include "precharge_control.h"
 
 FSM_DECLARE_STATE(state_neutral);
 FSM_DECLARE_STATE(state_drive);
@@ -9,14 +10,20 @@ FSM_DECLARE_STATE(state_reverse);
 
 static bool prv_guard_reverse(const Fsm *fsm, const Event *e, void *context) {
     MotorControllerStorage *storage = context;
+    if (storage->precharge_state != PRECHARGE_STATE_COMPLETE) {
+        return false;
+    }
     return storage->motor_velocity < 20.f; //TODO: find a value for this (RPM)
 }
 
 static bool prv_guard_drive(const Fsm *fsm, const Event *e, void *context) {
     MotorControllerStorage *storage = context;
+    if (storage->precharge_state != PRECHARGE_STATE_COMPLETE) {
+        return false;
+    }
     //We don't want to go straight to drive from reverse if the motor
     //is spinning too fast
-    return storage->motor_velocity > -20.f //TODO: check if this is valid
+    return storage->motor_velocity > -20.f; //TODO: check if this is valid
 }
 
 FSM_STATE_TRANSITION(state_neutral) {

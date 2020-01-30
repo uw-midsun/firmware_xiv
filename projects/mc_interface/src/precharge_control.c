@@ -2,6 +2,7 @@
 
 #include "fsm.h"
 #include "gpio.h"
+#include "drive_fsm.h"
 
 FSM_DECLARE_STATE(precharge_incomplete);
 FSM_DECLARE_STATE(precharge_precharging);
@@ -20,6 +21,7 @@ FSM_STATE_TRANSITION(precharge_complete) {
 
 static void prv_state_incomplete_output(Fsm *fsm, const Event *e, void *context) {
     MotorControllerStorage *storage = context;
+    event_raise_priority(EVENT_PRIORITY_HIGHEST, DRIVE_FSM_STATE_NEUTRAL, 0);
     storage->precharge_state = PRECHARGE_STATE_INCOMPLETE;
 }
 static void prv_state_precharging_output(Fsm *fsm, const Event *e, void *context) {

@@ -53,12 +53,15 @@ int main(void) {
     prv_setup_system_can();
     prv_setup_motor_can();
 
+    //TODO: dependent on mcp2515 driver improvements, may need to add
+          //code to add filters for the messages we want
+
     //TODO: write motor_controller.h or similar with definition
           //of MotorControllerStorage object
 
-    //TODO: init periodic tx to motor controller
+    //TODO: init periodic tx to motor controller here
 
-    //TODO: setup periodic can broadcast
+    //TODO: setup periodic can broadcast (write data_broadcast.c)
 
     //TODO: setup heartbeat rx and ack
 
