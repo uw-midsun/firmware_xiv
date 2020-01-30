@@ -1,15 +1,18 @@
 #include "drive_output.h"
+#include "drive_fsm.h"
 
 #include "soft_timer.h"
 #include "generic_can_msg.h"
 #include "wavesculptor.h"
 
-static void prv_enable_drive() {
+static void drive_output_enable(MotorControllerStorage *storage) {
   // alter storage to disable drive-loop
+  storage->is_drive = false;
 }
 
-static void prv_disable_drive() {
-  // alter storage to disable drive-loop
+static void drive_output_disable(MotorControllerStorage *storage) {
+  // ?? alter storage to disable drive-loop
+  storage->is_drive = true;
 }
 
 static void prv_build_wavesculptor_message(MotorDriveCommand* command, target_speed, target_current) {
@@ -19,6 +22,11 @@ static void prv_build_wavesculptor_message(MotorDriveCommand* command, target_sp
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   MotorControllerStorage *storage = context;
+
+  if (storage->is_drive) {
+    return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive,
+                                   controller, NULL);
+  }
 
   GenericCanMsg msg_left = {
     .id = MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID,
@@ -32,8 +40,8 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   };
 
   const float velocity_lookup[] = {
-    [<DRIVE_STATE>] = WAVESCULPTOR_FORWARD_VELOCITY,
-    [<REVERSE_STATE>] = WAVESCULPTOR_REVERSE_VELOCITY,
+    [DRIVE_FSM_STATE_DRIVE] = WAVESCULPTOR_FORWARD_VELOCITY,
+    [DRIVE_FSM_STATE_REVERSE] = WAVESCULPTOR_REVERSE_VELOCITY,
   };
 
   MotorDriveCommand left_cmd;
@@ -42,17 +50,17 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   target_speed = 0.0f;
   target_current = 0.0f;
 
-  if (<state is NEUTRAL>) {
+  if (storage->drive_state == DRIVE_FSM_STATE_NEUTRAL) {
     // Should coast (so no throttle)
   } else {
-    target_current = <throttle>;
+    target_current = storage->throttle;
     if (<throttle> < 0) {
       // Braking
       target_current *= -1;
       // keep target speed at 0
     }
     else {
-      target_speed = speed_lookup[<state>];
+      target_speed = speed_lookup[storage->drive_state];
     }
     target_current /= EE_DRIVE_OUTPUT_DENOMINATOR;
   }
@@ -73,4 +81,9 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   generic_can_tx(storage->settings.motor_can, &msg_right);
 
   soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
+}
+
+StatusCode mci_broadcast_init(MotorControllerStorage *controller) {
+  return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive,
+                                 controller, NULL);
 }
