@@ -1,4 +1,5 @@
 #include "can.h"
+#include "can_transmit.h"
 #include "event_queue.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -42,36 +43,26 @@ void test_assert_trivial(void) {
 // Transmit a pedal can state can message, and expect the correct event to be raised.
 void test_pedal_can_rx_handler_brake_pressed(void) {
   // Transmit a pedal pressed state message.
-  CanMessage msg = {
-    .source_id = 0x1,
-    .type = CAN_MSG_TYPE_DATA,
-    .msg_id = 0,
-    .data = 0,
-    .dlc = 0,
-  };
-  TEST_ASSERT_OK(can_transmit(&msg, NULL));
+  TEST_ASSERT_OK(CAN_TRANSMIT_DRIVE_STATE(PEDAL_BRAKE_FSM_EVENT_PRESSED));
+  // TEST_ASSERT_OK(can_transmit(&msg, NULL));
   Event e = { 0 };
 
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  TEST_ASSERT_OK(event_process(&e));
+  while (!status_ok(event_process(&e))) {
+  }
   TEST_ASSERT_EQUAL(PEDAL_CAN_EVENT_BRAKE_PRESSED, e.id);
 }
 
 void test_pedal_can_rx_handler_brake_released(void) {
   // Transmit a pedal released state message.
-  CanMessage msg = {
-    .source_id = 0x1,
-    .type = CAN_MSG_TYPE_DATA,
-    .msg_id = 1,
-    .data = 0,
-    .dlc = 0,
-  };
-  TEST_ASSERT_OK(can_transmit(&msg, NULL));
+  TEST_ASSERT_OK(CAN_TRANSMIT_DRIVE_STATE(PEDAL_BRAKE_FSM_EVENT_RELEASED));
+  // TEST_ASSERT_OK(can_transmit(&msg, NULL));
   Event e = { 0 };
 
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(PEDAL_CAN_EVENT_BRAKE_RELEASED, e.id);
+  while (!status_ok(event_process(&e))) {
+  }
+  TEST_ASSERT_EQUAL(PEDAL_CAN_EVENT_BRAKE_RELEASED, e.data);
 }
 
 //
