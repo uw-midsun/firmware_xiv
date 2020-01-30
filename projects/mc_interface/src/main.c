@@ -59,11 +59,15 @@ int main(void) {
     soft_timer_init();
     event_queue_init();
     prv_setup_system_can();
+    prv_setup_motor_can();
     prv_setup_controller_storage();
 
     drive_output_init(&s_controller_storage);
 
     mci_broadcast_init(&s_controller_storage);
+
+    //TODO: dependent on mcp2515 driver improvements, may need to add
+          //code to add filters for the messages we want
 
     heartbeat_rx_register_handler(&s_powertrain_heartbeat, SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT,
                                 heartbeat_rx_auto_ack_handler, NULL);
