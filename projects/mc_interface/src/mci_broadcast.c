@@ -7,7 +7,11 @@
 #include "can_unpack.h"
 
 static void prv_handle_speed(int16_t speed_cms[], size_t num_speeds, void *context) {
-  CAN_TRANSMIT_MOTOR_VELOCITY((uint16_t)speed_cms[0], (uint16_t)speed_cms[1]);
+  MotorControllerStorage *storage = context;
+  // left motor is motor of truth
+  storage->motor_velocity = speed_cms[WAVESCULPTOR_LEFT_MEASUREMENT_ID];
+
+  CAN_TRANSMIT_MOTOR_VELOCITY((uint16_t)speed_cms[WAVESCULPTOR_RIGHT_MEASUREMENT_ID], (uint16_t)speed_cms[1]);
 }
 
 static void prv_handle_bus_measurement(MotorControllerBusMeasurement measurements[],
@@ -18,10 +22,7 @@ static void prv_handle_bus_measurement(MotorControllerBusMeasurement measurement
       (uint16_t)measurements[1].bus_voltage, (uint16_t)measurements[1].bus_current);
 }
 
-StatusCode mci_broadcast_init(MotorControllerStorage *controller, const MotorControllerSettings *settings) {
-  memset(controller, 0, sizeof(*controller));
-  controller->settings = *settings;
-
+StatusCode mci_broadcast_init(MotorControllerStorage *controller) {
   // Velocity Measurements
   status_ok_or_return(generic_can_register_rx(
     controller->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,

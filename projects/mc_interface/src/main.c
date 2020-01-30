@@ -10,9 +10,13 @@
 #include "drive_output.h"
 #include "drive_fsm.h"
 
+//TODO: write motor_controller.h or similar with definition
+//          of MotorControllerStorage object
 static MotorControllerStorage s_controller_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static CanStorage s_can_storage;
+
+static HeartbeatRxHandlerStorage s_powertrain_heartbeat;
 
 static void prv_setup_system_can(void) {
     CanSettings can_settings = {
@@ -44,6 +48,10 @@ static void prv_setup_motor_can(void) {
     generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
 }
 
+static void prv_setup_controller_storage(void) {
+    // TODO: implement once storage is done
+}
+
 int main(void) {
     interrupt_init();
     gpio_init();
@@ -51,16 +59,14 @@ int main(void) {
     soft_timer_init();
     event_queue_init();
     prv_setup_system_can();
-    prv_setup_motor_can();
+    prv_setup_controller_storage();
 
-    //TODO: write motor_controller.h or similar with definition
-          //of MotorControllerStorage object
+    drive_output_init(&s_controller_storage);
 
-    //TODO: init periodic tx to motor controller
+    mci_broadcast_init(&s_controller_storage);
 
-    //TODO: setup periodic can broadcast
-
-    //TODO: setup heartbeat rx and ack
+    heartbeat_rx_register_handler(&s_powertrain_heartbeat, SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT,
+                                heartbeat_rx_auto_ack_handler, NULL);
 
     while (true) {
         Event e = { 0 };
