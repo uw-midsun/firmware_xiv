@@ -1,4 +1,5 @@
 #include "precharge_control.h"
+#include "motor_controller.h"
 
 #include "fsm.h"
 #include "gpio.h"
@@ -35,9 +36,9 @@ static void prv_state_complete_output(Fsm *fsm, const Event *e, void *context) {
 
 static Fsm s_precharge_fsm;
 static void prv_init_precharge_fsm(void *context) {
-    fsm_state_init(precharge_incomplete, prv_fsm_precharge_incomplete);
-    fsm_state_init(precharge_precharging, prv_fsm_precharge_precharging);
-    fsm_state_init(precharge_complete, prv_fsm_precharge_complete);
+    fsm_state_init(precharge_incomplete, prv_state_incomplete_output);
+    fsm_state_init(precharge_precharging, prv_state_precharging_output);
+    fsm_state_init(precharge_complete, prv_state_complete_output);
     fsm_init(&s_precharge_fsm, "precharge_fsm", &precharge_incomplete, context);
 }
 

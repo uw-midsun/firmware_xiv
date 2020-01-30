@@ -126,6 +126,10 @@
 #define MCP2515_TXBNDLC_RTR_FRAME 0x40
 #define MCP2515_TXBNDLC_DLC_MASK 0x0F
 
+// RXB0CTRL: Register 4-1
+#define MCP2515_RXB0CTRL_BUKT_MASK 0x4
+#define MCP2515_RXB0CTRL_BUKT_ROLLOVER 0x4
+
 typedef struct Mcp2515LoadTxPayload {
   uint8_t cmd;
   uint64_t data;

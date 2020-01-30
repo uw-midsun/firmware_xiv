@@ -5,6 +5,7 @@
 
 #include "can_transmit.h"
 #include "can_unpack.h"
+#include "critical_section.h"
 
 static void prv_broadcast_speed(MotorControllerStorage *storage) {
   // left motor is motor of truth
@@ -17,10 +18,10 @@ static void prv_broadcast_speed(MotorControllerStorage *storage) {
 static void prv_broadcast_bus_measurement(MotorControllerStorage *storage) {
   // Output system can
   CAN_TRANSMIT_MOTOR_CONTROLLER_VC(
-    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_LEFT].bus_voltage,
-    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_LEFT].bus_current,
-    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_voltage, 
-    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_current
+    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_LEFT].bus_voltage_v,
+    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_LEFT].bus_current_a,
+    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_voltage_v, 
+    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_current_a
   );
 }
 
@@ -45,10 +46,11 @@ static void prv_handle_bus_measurement(const GenericCanMsg *msg, void *context) 
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
 
-  for (size_t i = 0; i < NUM_MOTOR_CONTROLLERS; i++) {can_data
+  for (size_t i = 0; i < NUM_MOTOR_CONTROLLERS; i++) {
     if (can_id.device_id == storage->settings.motor_controller_ids[i]) {
-      storage->bus_measurement[i] = can_data.bus_measurement;
+      storage->bus_measurements[i] = can_data.bus_measurement;
       storage->bus_rx_bitset |= 1 << i;
+    }
   }
   critical_section_end(disabled);
 }
@@ -65,29 +67,27 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
     storage->bus_rx_bitset = 0;
     prv_broadcast_bus_measurement(storage);
   }
-  return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
+  soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                                  storage, NULL);
 }
 
-StatusCode mci_broadcast_init(MotorControllerStorage *controller) {
+StatusCode mci_broadcast_init(MotorControllerStorage *storage) {
   // Velocity Measurements
   status_ok_or_return(generic_can_register_rx(
-    controller->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
-    MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID, false, controller));
+    storage->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
+    MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID, false, storage));
   
   status_ok_or_return(generic_can_register_rx(
-    controller->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
-    MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID, false, controller));
+    storage->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
+    MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID, false, storage));
 
   // Bus Mesurements
   status_ok_or_return(generic_can_register_rx(
-    controller->settings.motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
-    MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID, false, controller));
+    storage->settings.motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
+    MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID, false, storage));
   
   status_ok_or_return(generic_can_register_rx(
-    controller->settings.motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
-    MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID, false, controller));
-
-  return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
-                                 storage, NULL);
+    storage->settings.motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
+    MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID, false, storage));
+  return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx, storage, NULL);
 }
