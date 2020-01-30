@@ -8,11 +8,7 @@
 #include "delay.h"
 #include "debug_led.h"
 #include "soft_timer.h"
-#include "log.h"
 
-#include "delay.h"
-
-#include "critical_section.h"
 
 #define MCP2515_MAX_WRITE_BUFFER_LEN 10
 
@@ -201,7 +197,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   };
 
   for (int i = 0; i < 6; i++) {
-    LOG_DEBUG("Register: %d, %x\n", i, registers[i]); 
+    LOG_DEBUG("Register: %d, %x\n", i, registers[i]);
   }
 
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
@@ -224,7 +220,8 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   return gpio_init_pin(&settings->int_pin, &gpio_settings);
 }
 
-StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, Mcp2515BusErrorCb bus_err_cb, void *context) {
+StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
+                                Mcp2515BusErrorCb bus_err_cb, void *context) {
   bool disabled = critical_section_start();
   storage->rx_cb = rx_cb;
   storage->bus_err_cb = bus_err_cb;
@@ -312,7 +309,7 @@ void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
   if (counter4 == 0) {
     prv_handle_int(&storage->int_pin, storage);
     LOG_DEBUG("Interrupt timeout\n");
-    
+
     // Read the status of the Receive buffer registers
     for (size_t i = 0; i < SIZEOF_ARRAY(registers); i++) {
       uint8_t data = 0;
@@ -321,7 +318,7 @@ void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
     }
   }
 
-  
+
   counter4 = 0;
   if (!status_ok(soft_timer_start_seconds(15, mcp2515_watchdog, storage, NULL))) {
     LOG_DEBUG("Could not start MCP watchdog 2\n");

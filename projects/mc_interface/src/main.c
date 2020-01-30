@@ -17,7 +17,7 @@
 #include "precharge_control.h"
 #include "mci_broadcast.h"
 
-// TODO: write motor_controller.h or similar with definition
+// TODO(SOFT-40): write motor_controller.h or similar with definition
 //          of MotorControllerStorage object
 static MotorControllerStorage s_controller_storage;
 static GenericCanMcp2515 s_can_mcp2515;
@@ -56,10 +56,11 @@ static void prv_setup_motor_can(void) {
 }
 
 static void prv_setup_controller_storage(void) {
-    memset(&s_controller_storage, 0, sizeof(s_controller_storage));
-    s_controller_storage.settings.motor_can =  (GenericCan *)&s_can_mcp2515;
-    s_controller_storage.settings.motor_controller_ids[MOTOR_CONTROLLER_LEFT] = MOTOR_CAN_ID_MC_LEFT;
-    s_controller_storage.settings.motor_controller_ids[MOTOR_CONTROLLER_RIGHT] = MOTOR_CAN_ID_MC_RIGHT;
+  memset(&s_controller_storage, 0, sizeof(s_controller_storage));
+  MotorControllerSettings *controller_settings = &(s_controller_storage.settings);
+  controller_settings->motor_can =  (GenericCan *)&s_can_mcp2515;
+  controller_settings->motor_controller_ids[MOTOR_CONTROLLER_LEFT] = MOTOR_CAN_ID_MC_LEFT;
+  controller_settings->motor_controller_ids[MOTOR_CONTROLLER_RIGHT] = MOTOR_CAN_ID_MC_RIGHT;
 }
 
 int main(void) {
@@ -82,11 +83,11 @@ int main(void) {
 
   mci_broadcast_init(&s_controller_storage);
 
-  // TODO: dependent on mcp2515 driver improvements, may need to add
+  // TODO(SOFT-40): dependent on mcp2515 driver improvements, may need to add
   // code to add filters for the messages we want
 
-  // TODO: implement watchdog counter (increment upon tx, reset upon recieve throttle)
-        //event_raise neutral if over 15 or something
+  // TODO(SOFT-40): implement watchdog counter (increment upon tx, reset upon recieve throttle)
+        // event_raise neutral if over 15 or something
 
   heartbeat_rx_register_handler(&s_powertrain_heartbeat, SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT,
                                 heartbeat_rx_auto_ack_handler, NULL);

@@ -15,7 +15,8 @@ static bool prv_guard_reverse(const Fsm *fsm, const Event *e, void *context) {
     if (storage->precharge_state != PRECHARGE_STATE_COMPLETE) {
         return false;
     }
-    return storage->vehicle_velocity[MOTOR_CONTROLLER_LEFT] < 20.f; //TODO: find a value for this (RPM)
+    // TODO(SOFT-40): find a value for this (RPM)
+    return storage->vehicle_velocity[MOTOR_CONTROLLER_LEFT] < 20.f;
 }
 
 static bool prv_guard_drive(const Fsm *fsm, const Event *e, void *context) {
@@ -23,9 +24,10 @@ static bool prv_guard_drive(const Fsm *fsm, const Event *e, void *context) {
     if (storage->precharge_state != PRECHARGE_STATE_COMPLETE) {
         return false;
     }
-    //We don't want to go straight to drive from reverse if the motor
-    //is spinning too fast
-    return storage->vehicle_velocity[MOTOR_CONTROLLER_LEFT] > -20.f; //TODO: check if this is valid
+    // We don't want to go straight to drive from reverse if the motor
+    // is spinning too fast
+    // TODO(SOFT-40): check if this is valid
+    return storage->vehicle_velocity[MOTOR_CONTROLLER_LEFT] > -20.f;
 }
 
 FSM_STATE_TRANSITION(state_neutral) {
@@ -43,7 +45,7 @@ FSM_STATE_TRANSITION(state_reverse) {
     FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_STATE_DRIVE, prv_guard_drive, state_drive);
 }
 
-//We probable want drive state CAN broadcast here
+// We probable want drive state CAN broadcast here
 static void prv_state_neutral_output(Fsm *fsm, const Event *e, void *context) {
     MotorControllerStorage *storage = context;
     storage->drive_state = DRIVE_FSM_STATE_NEUTRAL;
@@ -54,7 +56,7 @@ static void prv_state_drive_output(Fsm *fsm, const Event *e, void *context) {
 }
 static void prv_state_reverse_output(Fsm *fsm, const Event *e, void *context) {
     MotorControllerStorage *storage = context;
-    //TODO: figure out how to send an ack? or just send a normal CAN message
+    // TODO(SOFT-40): figure out how to send an ack? or just send a normal CAN message
     storage->drive_state = DRIVE_FSM_STATE_REVERSE;
 }
 

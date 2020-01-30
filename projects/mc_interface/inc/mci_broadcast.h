@@ -1,3 +1,5 @@
+#pragma once
+
 #include "status.h"
 #include "motor_controller.h"
 

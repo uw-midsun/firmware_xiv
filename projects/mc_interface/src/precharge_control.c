@@ -48,8 +48,8 @@ void precharge_fsm_process_event(const Event *e) {
 
 StatusCode precharge_init(void *context) {
     prv_init_precharge_fsm(context);
-    //TODO: init the gpio pin for sending precharge command and interrupt
-        //then either raise events for switching state
+    // TODO(SOFT-40): init the gpio pin for sending precharge command and interrupt
+        // then either raise events for switching state
     return STATUS_CODE_OK;
 }
 

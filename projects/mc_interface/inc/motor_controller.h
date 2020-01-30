@@ -12,7 +12,7 @@
 #define MOTOR_CAN_ID_MC_LEFT 0x03
 #define MOTOR_CAN_ID_MC_RIGHT 0x04
 
-//TODO: add defines for gpio pins
+// TODO(SOFT-40): add defines for gpio pins
 
 typedef enum {
   MOTOR_EVENT_SYSTEM_CAN_RX = 0,
@@ -28,7 +28,7 @@ typedef enum {
 
 typedef struct MotorControllerSettings {
     GenericCan *motor_can;
-    uint32_t motor_controller_ids[NUM_MOTOR_CONTROLLERS];   
+    uint32_t motor_controller_ids[NUM_MOTOR_CONTROLLERS];
 } MotorControllerSettings;
 
 typedef struct MotorControllerStorage {

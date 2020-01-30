@@ -7,18 +7,21 @@
 #include "can_ack.h"
 #include "exported_enums.h"
 
-// static StatusCode prv_handle_begin_precharge(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
-//     //begin precharge sequence
+// static StatusCode prv_handle_begin_precharge(const CanMessage* msg, void* context,
+//                                               CanAckStatus *ack_reply) {
+//     // begin precharge sequence
 //     return STATUS_CODE_OK;
 // }
 
-// static StatusCode prv_handle_set_relay_states(const CanMessage* msg, void* context , CanAckStatus *ack_reply) {
-//     //go into neutral and open/close relays
+// static StatusCode prv_handle_set_relay_states(const CanMessage* msg, void* context ,
+//                                                CanAckStatus *ack_reply) {
+//     // go into neutral and open/close relays
 //     return STATUS_CODE_OK;
 // }
 
 // alters stored drive state
-static StatusCode prv_handle_drive_state(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
+static StatusCode prv_handle_drive_state(const CanMessage* msg, void* context,
+                                         CanAckStatus *ack_reply) {
     uint8_t drive_state = 0;
     CAN_UNPACK_DRIVE_STATE(msg, &drive_state);
     switch (drive_state) {
@@ -37,7 +40,8 @@ static StatusCode prv_handle_drive_state(const CanMessage* msg, void* context, C
 }
 
 // alters stored throttle value
-static StatusCode prv_handle_throttle(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
+static StatusCode prv_handle_throttle(const CanMessage* msg, void* context,
+                                      CanAckStatus *ack_reply) {
     MotorControllerStorage* storage = context;
     uint16_t throttle_received = 0;
     CAN_UNPACK_THROTTLE_OUTPUT(msg, &throttle_received);
@@ -46,15 +50,18 @@ static StatusCode prv_handle_throttle(const CanMessage* msg, void* context, CanA
 }
 
 // cancel cruise
-// static StatusCode prv_handle_brake(const CanMessage* msg, void* context, CanAckStatus *ack_reply) {
-//     //unimplemented
+// static StatusCode prv_handle_brake(const CanMessage* msg, void* context,
+//                                     CanAckStatus *ack_reply) {
+//     // unimplemented
 //     return STATUS_CODE_OK;
 // }
 
 // initializes can rx handlers
 StatusCode drive_rx_init(void* context) {
-    // can_register_rx_handler(SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE, prv_handle_begin_precharge, context);
-    // can_register_rx_handler(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, prv_handle_set_relay_states, context);
+    // can_register_rx_handler(SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE,
+    //                         prv_handle_begin_precharge, context);
+    // can_register_rx_handler(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+    //                         prv_handle_set_relay_states, context);
     can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_STATE, prv_handle_drive_state, context);
     can_register_rx_handler(SYSTEM_CAN_MESSAGE_THROTTLE_OUTPUT, prv_handle_throttle, context);
     // can_register_rx_handler(SYSTEM_CAN_MESSAGE_BRAKE_PRESSED, prv_handle_brake, context);

@@ -11,8 +11,7 @@ static void prv_broadcast_speed(MotorControllerStorage *storage) {
   // left motor is motor of truth
   CAN_TRANSMIT_MOTOR_VELOCITY(
     (uint16_t)storage->vehicle_velocity[MOTOR_CONTROLLER_LEFT],
-    (uint16_t)storage->vehicle_velocity[MOTOR_CONTROLLER_RIGHT]
-  );
+    (uint16_t)storage->vehicle_velocity[MOTOR_CONTROLLER_RIGHT]);
 }
 
 static void prv_broadcast_bus_measurement(MotorControllerStorage *storage) {
@@ -20,9 +19,8 @@ static void prv_broadcast_bus_measurement(MotorControllerStorage *storage) {
   CAN_TRANSMIT_MOTOR_CONTROLLER_VC(
     (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_LEFT].bus_voltage_v,
     (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_LEFT].bus_current_a,
-    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_voltage_v, 
-    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_current_a
-  );
+    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_voltage_v,
+    (uint16_t)storage->bus_measurements[MOTOR_CONTROLLER_RIGHT].bus_current_a);
 }
 
 static void prv_handle_speed(const GenericCanMsg *msg, void *context) {
@@ -42,7 +40,7 @@ static void prv_handle_speed(const GenericCanMsg *msg, void *context) {
 static void prv_handle_bus_measurement(const GenericCanMsg *msg, void *context) {
   bool disabled = critical_section_start();
   MotorControllerStorage *storage = context;
-  
+
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
 
@@ -76,7 +74,7 @@ StatusCode mci_broadcast_init(MotorControllerStorage *storage) {
   status_ok_or_return(generic_can_register_rx(
     storage->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
     MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID, false, storage));
-  
+
   status_ok_or_return(generic_can_register_rx(
     storage->settings.motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
     MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID, false, storage));
@@ -85,9 +83,10 @@ StatusCode mci_broadcast_init(MotorControllerStorage *storage) {
   status_ok_or_return(generic_can_register_rx(
     storage->settings.motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
     MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID, false, storage));
-  
+
   status_ok_or_return(generic_can_register_rx(
     storage->settings.motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
     MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID, false, storage));
-  return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx, storage, NULL);
+  return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS,
+                                 prv_periodic_broadcast_tx, storage, NULL);
 }
