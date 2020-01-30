@@ -1,7 +1,7 @@
 #pragma once
 
-#include "fsm.h"
 #include "exported_enums.h"
+#include "fsm.h"
 #include "status.h"
 
 typedef struct PowerAuxSequence {

@@ -3,8 +3,8 @@
 // Receives button presses on GPIO, and raises events.
 // Requires interrupts and gpio to be initialized.
 
-#include "status.h"
 #include "gpio.h"
+#include "status.h"
 
 typedef enum {
   CENTRE_CONSOLE_BUTTON_DRIVE = 0,
