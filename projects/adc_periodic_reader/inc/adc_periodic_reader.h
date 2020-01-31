@@ -18,10 +18,13 @@ typedef struct {
 } AdcPeriodicReaderStorage;
 
 // Initialize GPIO pin and settings
-StatusCode adc_periodic_reader_init(AdcPeriodicReaderStorage *storage, GpioSettings *settings);
+StatusCode adc_periodic_reader_init(AdcPeriodicReaderStorage *storage, GpioSettings *settings,
+                                    size_t storage_size);
 
 // Enable ADC Channel
-StatusCode adc_periodic_reader_set_up_channel(AdcPeriodicReaderStorage *storage);
+StatusCode adc_periodic_reader_set_up_channel(AdcPeriodicReaderStorage *storage,
+                                              size_t storage_size);
 
-// Accepts a callback,repeatedly calls that callback with new data as it gets new data
-StatusCode analog_reader_register_callback(AdcCallback callback, AdcChannel channel);
+// Accepts a callback, periodically calls the function
+StatusCode analog_reader_register_callback(SoftTimerCallback callback,
+                                           AdcPeriodicReaderStorage storage);
