@@ -11,20 +11,37 @@
 #include "soft_timer.h"
 #include "status.h"
 
+typedef void (*AdcPeriodicReaderCallback)(uint16 data, AdcPeriodicReaderId id,
+                                          void *context);
+
+typedef enum {
+  PERIODIC_READER_ID_0 = 0,
+  PERIODIC_READER_ID_1,
+  PERIODIC_READER_ID_2,
+  PERIODIC_READER_ID_3,
+  PERIODIC_READER_ID_4,
+  NUM_PERIODIC_READER_IDS
+} PeriodicReaderId;
+
+// Do I define the array in here?
+// What would I put for the address and callback?
+// Doesen't the user define it?
+
 typedef struct {
   GpioAddress address;
-  AdcChannel channel;
-  uint16_t data;
-} AdcPeriodicReaderStorage;
+  AdcPeriodicReaderCallback callback;
+} AdcPeriodicReaderSettings;
 
-// Initialize GPIO pin and settings
-StatusCode adc_periodic_reader_init(AdcPeriodicReaderStorage *storage, GpioSettings *settings,
-                                    size_t storage_size);
+ static AdcPeriodicReaderSettings s_storage[NUM_PERIODIC_READER_IDS];
+ 
+// Sets up reader and disables all ADCs
+StatusCode adc_periodic_reader_init();
 
-// Enable ADC Channel
-StatusCode adc_periodic_reader_set_up_channel(AdcPeriodicReaderStorage *storage,
-                                              size_t storage_size);
+// Intialize pins and enable ADC reader
+StatusCode adc_periodic_reader_set_up_reader();
 
-// Accepts a callback, periodically calls the function
-StatusCode analog_reader_register_callback(SoftTimerCallback callback,
-                                           AdcPeriodicReaderStorage storage);
+// Enable soft - timer to periodically read voltages
+StatusCode adc_periodic_reader_start(AdcPeriodicReaderSetting *settings);
+
+// Disable soft - timer
+StatusCode adc_periodic_reader_stop(AdcPeriodicReaderSetting *settings);

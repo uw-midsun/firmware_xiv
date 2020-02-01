@@ -27,9 +27,6 @@ const GpioSettings settings = {
   .alt_function = GPIO_ALTFN_ANALOG,  //
 };
 
-const AdcPeriodicReaderStorage storage[3] = { [TEST_1].address = TEST_1_ADDRESS,
-                                              [TEST_2].address = TEST_2_ADDRESS,
-                                              [TEST_3].address = TEST_3_ADDRESS };
 
 void setup_test() {
   gpio_init();
@@ -41,8 +38,7 @@ void setup_test() {
 void teardown_test(void) {}
 
 void test_initialization(void) {
-  ASSERT_OK(adc_periodic_reader_init(&storage, &settings));
-  ASSERT_OK(adc_periodic_reader_set_up_channel(&storage));
+ 
 }
 
 /*

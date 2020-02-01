@@ -9,29 +9,29 @@
 #include "soft_timer.h"
 #include "status.h"
 
-#define TIMER_INTERVAL 50u
+#define TIMER_INTERVAL 50
 
-StatusCode adc_periodic_reader_init(AdcPeriodicReaderStorage *storage, GpioSettings *settings,
-                                    size_t storage_size) {
-  for (size_t i = 0; i < storage_size; i++) {
-    gpio_init_pin(&storage[i].address, settings);
-  }
+StatusCode adc_periodic_reader_init() {
+  gpio_init();
+  interrupt_init();
   adc_init(ADC_MODE_SINGLE);
-
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_periodic_reader_set_up_channel(AdcPeriodicReaderStorage *storage,
-                                              size_t storage_size) {
-  for (size_t i = 0; i < storage_size; i++) {
-    adc_get_channel(storage[i].address, &storage[i].channel);
-    adc_set_channel(storage[i].channel, true);
-  }
+StatusCode adc_periodic_reader_set_up_reader(AdcPeriodicReaderSetting *settings, GpioSettings* gpio_settings) {
+  AdcChannel channel;
+  gpio_init_pin(&settings->address,gpio_settings)
+  adc_get_channel(settings->address,&channel);
+  adc_set_channel(channel,true);
   return STATUS_CODE_OK;
 }
 
-StatusCode analog_reader_register_callback(SoftTimerCallback callback,
-                                           AdcPeriodicReaderStorage storage) {
-  soft_timer_start_millis(TIMER_INTERVAL, callback, &storage, NULL);
-  return STATUS_CODE_OK;
+StatusCode adc_periodic_reader_start(AdcPeriodicReaderSetting *settings) {
+  //For this, create a soft timer callback that take the settings
+  //and call the callback that the user gave us
+  soft_timer_start_millis(TIMER_INTERVAL, settings->callback, settings, NULL);
+}
+StatusCode adc_periodic_reader_stop(AdcPeriodicReaderSetting *settings) {
+  //What should I make the TimerID?
+  //I need TimerId to disable the soft - timer
 }
