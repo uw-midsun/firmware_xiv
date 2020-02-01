@@ -5,6 +5,10 @@
 #include "gpio_it.h"
 #include "log.h"
 #include "mcp2515_defs.h"
+#include "delay.h"
+#include "debug_led.h"
+#include "soft_timer.h"
+
 
 #define MCP2515_MAX_WRITE_BUFFER_LEN 10
 #define MCP2515_EXTENDED_ID_LEN 18
@@ -26,9 +30,9 @@ typedef struct Mcp2515RxBuffer {
 } Mcp2515RxBuffer;
 
 static const Mcp2515TxBuffer s_tx_buffers[] = {
-  { .id = MCP2515_LOAD_TXB0SIDH, .data = MCP2515_LOAD_TXB0D0, .rts = MCP2515_RTS_TXB0},
-  { .id = MCP2515_LOAD_TXB1SIDH, .data = MCP2515_LOAD_TXB1D0, .rts = MCP2515_RTS_TXB1},
-  { .id = MCP2515_LOAD_TXB2SIDH, .data = MCP2515_LOAD_TXB2D0, .rts = MCP2515_RTS_TXB2},
+  { .id = MCP2515_LOAD_TXB0SIDH, .data = MCP2515_LOAD_TXB0D0, .rts = MCP2515_RTS_TXB0 },
+  { .id = MCP2515_LOAD_TXB1SIDH, .data = MCP2515_LOAD_TXB1D0, .rts = MCP2515_RTS_TXB1 },
+  { .id = MCP2515_LOAD_TXB2SIDH, .data = MCP2515_LOAD_TXB2D0, .rts = MCP2515_RTS_TXB2 },
 };
 
 static const Mcp2515RxBuffer s_rx_buffers[] = {
@@ -47,15 +51,19 @@ static const uint8_t s_brp_lookup[NUM_MCP_2515_CAN_BITRATE_KBPS] = {
 static void prv_reset(Mcp2515Storage *storage) {
   uint8_t payload[] = { MCP2515_CMD_RESET };
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
+
+  delay_us(100);
 }
 
 static void prv_read(Mcp2515Storage *storage, uint8_t addr, uint8_t *read_data, size_t read_len) {
+  CRITICAL_SECTION_AUTOEND;
   uint8_t payload[] = { MCP2515_CMD_READ, addr };
   spi_exchange(storage->spi_port, payload, sizeof(payload), read_data, read_len);
 }
 
 static void prv_write(Mcp2515Storage *storage, uint8_t addr, uint8_t *write_data,
                       size_t write_len) {
+  CRITICAL_SECTION_AUTOEND;
   uint8_t payload[MCP2515_MAX_WRITE_BUFFER_LEN];
   payload[0] = MCP2515_CMD_WRITE;
   payload[1] = addr;
@@ -65,14 +73,17 @@ static void prv_write(Mcp2515Storage *storage, uint8_t addr, uint8_t *write_data
 
 // See 12.10: *addr = (data & mask) | (*addr & ~mask)
 static void prv_bit_modify(Mcp2515Storage *storage, uint8_t addr, uint8_t mask, uint8_t data) {
+  CRITICAL_SECTION_AUTOEND;
   uint8_t payload[] = { MCP2515_CMD_BIT_MODIFY, addr, mask, data };
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
 }
 
 // Abort all TX buffers
 void prv_abort_tx(Mcp2515Storage *storage) {
-  prv_bit_modify(storage, 0x0f,  
-    1 << 4,  // mask
+  // terminate request to abort all transmissions
+  // by setting ABAT bit to 0.
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
+    1 << 4,  // ABAT Register mask
     0x0//data
   );
 }
@@ -81,6 +92,7 @@ static uint8_t prv_read_status(Mcp2515Storage *storage) {
   uint8_t payload[] = { MCP2515_CMD_READ_STATUS };
   uint8_t read_data[1] = { 0 };
   spi_exchange(storage->spi_port, payload, sizeof(payload), read_data, sizeof(read_data));
+
   return read_data[0];
 }
 
@@ -108,7 +120,7 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
       if (!extended) {
         // Standard IDs have garbage in the extended fields
         id.raw >>= MCP2515_EXTENDED_ID_LEN;
-      } 
+      }
 
       uint8_t data_payload[] = { MCP2515_CMD_READ_RX | rx_buf->data };
       uint64_t read_data = 0;
@@ -122,41 +134,68 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
   }
 }
 
-static void prv_handle_error(Mcp2515Storage *storage, uint8_t int_flags) {
+static void prv_handle_error(Mcp2515Storage *storage, uint8_t int_flags, uint8_t err_flags) {
+  // Clear flags
   if (int_flags & MCP2515_CANINT_EFLAG) {
-    // Don't bother reporting errors - just clear them
-    uint8_t clear = 0x00;
+    // Clear error flag
+    LOG_DEBUG("MCP2515_CANINT_EFLAG error\n");
+    prv_bit_modify(storage, MCP2515_CTRL_REG_CANINTF, MCP2515_CANINT_EFLAG, 0);
+  }
+
+  if (err_flags & (MCP2515_EFLG_RX0_OVERFLOW | MCP2515_EFLG_RX1_OVERFLOW)) {
+    // RX overflow - clear error flags
+    uint8_t clear = 0;
+    LOG_DEBUG("MCP2515_EFLG_RX0_OVERFLOW | MCP2515_EFLG_RX1_OVERFLOW error\n");
     prv_write(storage, MCP2515_CTRL_REG_EFLG, &clear, 1);
-    prv_write(storage, MCP2515_CTRL_REG_TEC, &clear, 1);
-    prv_write(storage, MCP2515_CTRL_REG_REC, &clear, 1);
+  }
+
+  storage->errors.eflg = err_flags;
+  prv_read(storage, MCP2515_CTRL_REG_TEC, &storage->errors.tec, 1);
+  prv_read(storage, MCP2515_CTRL_REG_REC, &storage->errors.rec, 1);
+
+  if (err_flags & MCP2515_EFLG_TX_BUS_OFF) {
+    // Bus off - attempt to recover by resetting the chip?
+    LOG_DEBUG("MCP2515_EFLG_TX_BUS_OFF error\n");
+    if (storage->bus_err_cb != NULL) {
+      storage->bus_err_cb(&storage->errors, storage->context);
+    }
   }
 }
 
 static void prv_handle_int(const GpioAddress *address, void *context) {
+  bool disabled = critical_section_start();
   Mcp2515Storage *storage = context;
 
-  uint8_t int_flags = 0;
-  prv_read(storage, MCP2515_CTRL_REG_CANINTF, &int_flags, 1);
+  // Read CANINTF and EFLG
+  struct {
+    uint8_t canintf;
+    uint8_t eflg;
+  } regs;
+  prv_read(storage, MCP2515_CTRL_REG_CANINTF, (uint8_t *)&regs, sizeof(regs));
+  // Mask out flags we don't care about
+  regs.canintf &= MCP2515_CANINT_EFLAG | MCP2515_CANINT_RX0IE | MCP2515_CANINT_RX1IE;
 
   // Either RX or error
-  prv_handle_rx(storage, int_flags);
-  prv_handle_error(storage, int_flags);
+  prv_handle_rx(storage, regs.canintf);
+  prv_handle_error(storage, regs.canintf, regs.eflg);
+  critical_section_end(disabled);
 }
 
 StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
   storage->spi_port = settings->spi_port;
   storage->rx_cb = settings->rx_cb;
+  storage->bus_err_cb = settings->bus_err_cb;
   storage->context = settings->context;
+  storage->int_pin = settings->int_pin;
 
   const SpiSettings spi_settings = {
-    .baudrate = settings->baudrate,
+    .baudrate = settings->spi_baudrate,
     .mode = SPI_MODE_0,
     .mosi = settings->mosi,
     .miso = settings->miso,
     .sclk = settings->sclk,
     .cs = settings->cs,
   };
-
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
 
   prv_reset(storage);
@@ -166,11 +205,10 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
                  MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
                  MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
 
-  // 5.7 Timing configurations: 
   // In order:
   // CNF3: PS2 Length = 6
   // CNF2: PS1 Length = 8, PRSEG Length = 1
-  // CNF1: BRP based on speed
+  // CNF1: BRP = 1 (500kbps), 2 (250kbps), 3 (500kbps)
   // CANINTE: Enable error and receive interrupts
   // CANINTF: clear all IRQ flags
   // EFLG: clear all error flags
@@ -190,18 +228,15 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
   };
-  status_ok_or_return(gpio_init_pin(&settings->int_pin, &gpio_settings));
-  const InterruptSettings it_settings = {
-    .type = INTERRUPT_TYPE_INTERRUPT,
-    .priority = INTERRUPT_PRIORITY_NORMAL,
-  };
-  return gpio_it_register_interrupt(&settings->int_pin, &it_settings, INTERRUPT_EDGE_FALLING,
-                                    prv_handle_int, storage);
+  // Switched from interrupts to polling ...
+  return gpio_init_pin(&settings->int_pin, &gpio_settings);
 }
 
-StatusCode mcp2515_register_rx_cb(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, void *context) {
+StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
+                                Mcp2515BusErrorCb bus_err_cb, void *context) {
   bool disabled = critical_section_start();
   storage->rx_cb = rx_cb;
+  storage->bus_err_cb = bus_err_cb;
   storage->context = context;
   critical_section_end(disabled);
 
@@ -210,6 +245,9 @@ StatusCode mcp2515_register_rx_cb(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, vo
 
 StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                       size_t dlc) {
+  CRITICAL_SECTION_AUTOEND;
+
+  printf("%i\n", (int)5);
   // Get free transmit buffer
   uint8_t tx_status =
       __builtin_ffs(~prv_read_status(storage) &
@@ -257,4 +295,59 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   spi_exchange(storage->spi_port, send_payload, sizeof(send_payload), NULL, 0);
 
   return STATUS_CODE_OK;
+}
+
+uint8_t counter3 = 1;
+uint64_t counter4 = 0;
+const uint8_t registers[] = { MCP2515_CTRL_REG_BFPCTRL,    // RX pins disabled by default
+                              MCP2515_CTRL_REG_TXRTSCTRL,  // TX pins input by default
+                              MCP2515_CTRL_REG_CANSTAT,
+                              MCP2515_CTRL_REG_CANCTRL,
+                              MCP2515_CTRL_REG_TEC,
+                              MCP2515_CTRL_REG_REC,
+                              MCP2515_CTRL_REG_CNF3,
+                              MCP2515_CTRL_REG_CNF2,
+                              MCP2515_CTRL_REG_CNF1,
+                              MCP2515_CTRL_REG_CANINTE,
+                              MCP2515_CTRL_REG_CANINTF,
+                              MCP2515_CTRL_REG_EFLG,
+                              MCP2515_CTRL_REG_TXB0CTRL,
+                              MCP2515_CTRL_REG_TXB1CTRL,
+                              MCP2515_CTRL_REG_TXB2CTRL,
+                              MCP2515_CTRL_REG_RXB0CTRL,
+                              MCP2515_CTRL_REG_RXB1CTRL };
+void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
+  Mcp2515Storage *storage = context;
+  if (counter4 == 0) {
+    prv_handle_int(&storage->int_pin, storage);
+    LOG_DEBUG("Interrupt timeout\n");
+
+    // Read the status of the Receive buffer registers
+    for (size_t i = 0; i < SIZEOF_ARRAY(registers); i++) {
+      uint8_t data = 0;
+      prv_read(storage, registers[i], &data, 1);
+      LOG_DEBUG("0x%x: read 0x%x\n", registers[i], data);
+    }
+  }
+
+
+  counter4 = 0;
+  if (!status_ok(soft_timer_start_seconds(15, mcp2515_watchdog, storage, NULL))) {
+    LOG_DEBUG("Could not start MCP watchdog 2\n");
+  }
+}
+
+void mcp2515_poll(Mcp2515Storage *storage) {
+  GpioState state = NUM_GPIO_STATES;
+  gpio_get_state(&storage->int_pin, &state);
+
+  if (state == GPIO_STATE_LOW) {
+    prv_handle_int(&storage->int_pin, storage);
+    counter3++;
+    counter4++;
+  }
+  if (counter3 % 20 == 0) {
+    counter3 = 1;
+    debug_led_toggle_state(DEBUG_LED_RED);
+  }
 }
