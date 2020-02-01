@@ -31,7 +31,7 @@ static StatusCode prv_fault_rx_callback(const CanMessage *msg, void *context,
     event_raise(PEDAL_THROTTLE_EVENT_FAULT, 0);
   }
 
-  //REMOVE THIS LATER
+  // REMOVE THIS LATER
   LOG_DEBUG("Received a message!\n");
   char log_message[30];
   printf("Data:\n\t");

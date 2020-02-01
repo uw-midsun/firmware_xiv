@@ -1,5 +1,6 @@
 #include "can.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "event_queue.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -10,7 +11,6 @@
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "can_unpack.h"
 
 #define CAN_DEVICE_ID 0x1
 
@@ -64,8 +64,8 @@ void test_pedal_can_rx_handler_neutral(void) {
   TEST_ASSERT_EQUAL(PEDAL_DRIVE_INPUT_EVENT_NEUTRAL, e.id);
 }
 
-//just to make sure can messages are correct
-//so need to test pedal_can_process_event
+// just to make sure can messages are correct
+// so need to test pedal_can_process_event
 // void test_pedal_can_rx_handler_brake_pressed(void) {
 //   // raises a pedal pressed state event.
 //   Event e = { 0 };
