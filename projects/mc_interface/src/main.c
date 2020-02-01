@@ -17,8 +17,6 @@
 #include "precharge_control.h"
 #include "mci_broadcast.h"
 
-// TODO(SOFT-40): write motor_controller.h or similar with definition
-//          of MotorControllerStorage object
 static MotorControllerStorage s_controller_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static CanStorage s_can_storage;
