@@ -102,9 +102,14 @@ typedef enum EEHornState {
   NUM_EE_HORN_STATES,     //
 } EEHornState;
 
-// Used with most _RELAY messages to request a relay state change.
 typedef enum EERelayState {
   EE_RELAY_STATE_OPEN = 0,
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
+
+typedef enum EEEbrakeState {
+  EE_EBRAKE_STATE_PRESSED = 0,
+  EE_EBRAKE_STATE_RELEASED,
+  NUM_EE_EBRAKE_STATES,
+} EEEbrakeState;

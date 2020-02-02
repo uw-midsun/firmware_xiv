@@ -11,3 +11,6 @@ $(T)_DEPS := ms-common
 $(T)_test_power_main_sequence_MOCKS := power_main_precharge_monitor_start \
 																			 power_main_precharge_monitor_init \
 																			 power_main_precharge_monitor_cancel
+
+$(T)_test_drive_fsm_MOCKS := relay_tx_relay_state_and_raise_event \
+															ebrake_tx_state_and_raise_event
