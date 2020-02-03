@@ -18,7 +18,13 @@
 #define TEST_3_ADDRESS \
   { GPIO_PORT_B, 3 }
 
-typedef enum { TEST_1 = 0, TEST_2, TEST_3 } test_number;
+AdcPeriodicReaderCallback
+
+    typedef enum {
+      TEST_1 = 0,
+      TEST_2,
+      TEST_3
+    } test_number;
 
 const GpioSettings settings = {
   .direction = GPIO_DIR_IN,           //
@@ -26,7 +32,6 @@ const GpioSettings settings = {
   .resistor = GPIO_RES_NONE,          //
   .alt_function = GPIO_ALTFN_ANALOG,  //
 };
-
 
 void setup_test() {
   gpio_init();
@@ -37,9 +42,7 @@ void setup_test() {
 
 void teardown_test(void) {}
 
-void test_initialization(void) {
- 
-}
+void test_initialization(void) {}
 
 /*
 Other test that will be made
