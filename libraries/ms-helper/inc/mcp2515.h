@@ -52,6 +52,8 @@ typedef struct Mcp2515Settings {
 
   bool loopback;
   Mcp2515Bitrate can_bitrate;
+  //Just set the filters[i].raw, don't set individual parts of the id manually
+  //Otherwise it will be handled incorrectly when setting the filters
   Mcp2515Id filters[NUM_MCP2515_FILTER_IDS];
 
   Mcp2515RxCb rx_cb;

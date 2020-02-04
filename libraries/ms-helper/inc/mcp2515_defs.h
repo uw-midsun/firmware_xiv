@@ -168,9 +168,9 @@ typedef struct Mcp2515IdRegs {
 
 typedef union Mcp2515Id {
   struct {
-    uint32_t eid_16_17 : 2;
-    uint32_t eid8 : 8;
     uint32_t eid0 : 8;
+    uint32_t eid8 : 8;
+    uint32_t eid_16_17 : 2;
     uint32_t sid_0_2 : 3;
     uint32_t sidh : 8;
     uint32_t padding : 3;

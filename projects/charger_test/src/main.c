@@ -54,22 +54,14 @@ int main(void) {
     .cs = { .port = GPIO_PORT_B, 12 },
     .int_pin = { .port = GPIO_PORT_A, 8 },
 
-    .can_bitrate = MCP2515_BITRATE_500KBPS,
-    .loopback = false,
-    .rx_cb = rx_message_callback
-  };
+    .filters = {
+      [MCP2515_FILTER_ID_RXF0] = { .raw = 0x12345678 },
+      [MCP2515_FILTER_ID_RXF1] = { .raw = 0 },
+    },
 
-  // Mcp2515Settings mcp_2515_spi_settings = {
-  //   .spi_port = SPI_PORT_2,
-  //   .spi_baudrate = 6000000,
-  //   .mosi = { .port = GPIO_PORT_B, .pin = 15},
-  //   .miso = { .port = GPIO_PORT_B, .pin = 14},
-  //   .sclk = { .port = GPIO_PORT_B, .pin = 13},
-  //   .cs = { .port = GPIO_PORT_B, .pin = 12},
-  //   .int_pin = { .port = GPIO_PORT_A, .pin = 8},
-  //   .loopback = false,
-  //   .rx_cb = rx_message_callback
-  // };
+    .can_bitrate = MCP2515_BITRATE_125KBPS,
+    .loopback = false,
+  };
 
   LOG_DEBUG("INITIALIZING_MCP2515\n");
   StatusCode s = mcp2515_init(&s_mcp_storage, &mcp_2515_spi_settings);
@@ -77,7 +69,7 @@ int main(void) {
     LOG_DEBUG("ERROR: status code not ok: %d\n", s);
   }
   soft_timer_start_seconds(1, periodic_tx, NULL, NULL);
-  //mcp2515_register_rx_cb(&s_mcp_storage, rx_message_callback, NULL);
+  mcp2515_register_cbs(&s_mcp_storage, rx_message_callback, NULL, NULL);
   while (true) {
     mcp2515_poll(&s_mcp_storage);
     //delay_ms(1000);

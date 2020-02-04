@@ -16,6 +16,9 @@
 #define MCP2515_CAN_BRP_250KBPS 1
 #define MCP2515_CAN_BRP_500KBPS 0
 
+#define MCP2515_NUM_MASK_REGISTERS_STANDARD 2
+#define MCP2515_NUM_MASK_REGISTERS_EXTENDED 4
+
 typedef struct Mcp2515TxBuffer {
   uint8_t id;
   uint8_t data;
@@ -199,37 +202,45 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
 
   // set RXB0 ctrl BUKT bit on to enable rollover to rx1
   prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
-
-  // Set the masks to 0xff so we filter on the whole message
-  // Set regs. 20-27 to 0xff
-  for (size_t i = 0; i < 8; i++) {
-    prv_bit_modify(storage, MCP2515_REG_RXM0SIDH + i, 0xff, 0xff);
-  }
-
+  Mcp2515Id default_filter = settings->filters[MCP2515_FILTER_ID_RXF0];
   for (size_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
     Mcp2515Id filter = settings->filters[i];
-    printf("Filter id being set: 0x%lx\n", filter.raw);
-    if (filter.raw == 0) {
+    // printf("Filter id being set: 0x%lx\n", filter.raw);
+    if (default_filter.raw == 0) {
       continue;
     }
-    //If an eid is set (not an sid), set the enable eid bit
+
+    if (settings->filters[i].raw == 0) {
+      filter = default_filter;
+    }
+    
+    uint8_t maskRegH = MCP2515_REG_RXM0SIDH;
+    if (i == MCP2515_FILTER_ID_RXF1) maskRegH = MCP2515_REG_RXM1SIDH;
+    // Set the masks to 0xff so we filter on the whole message
+    // Set regs. 20-27 to 0xff
+    if (filter.raw >> 11 == 0) {
+      filter.raw <<= MCP2515_EXTENDED_ID_LEN;
+    }
+    bool standard = filter.raw << 14 == 0;
+    size_t numMaskRegisters = standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
+    for (size_t i = 0; i < numMaskRegisters; i++) {
+      prv_bit_modify(storage, maskRegH + i, 0xff, 0xff);
+    }
+    // If it is just a standard id, then shift it up to match the struct
     uint8_t filterRegH = MCP2515_REG_RXF0SIDH;
     if (i == MCP2515_FILTER_ID_RXF1) filterRegH = MCP2515_REG_RXF1SIDH;
     uint8_t filterRegL = filterRegH + 1;
     //Set sidh
     prv_bit_modify(storage, filterRegH, 0xff, filter.sidh);
     //Set sidl and eid16-17
-    prv_bit_modify(storage, filterRegL, 0xff, (filter.sid_0_2 << 5) + filter.eid_16_17);
+    prv_bit_modify(storage, filterRegL, 0xff, (filter.sid_0_2 << 5)  | ((!standard) << 3)  |  filter.eid_16_17);
     //Set eid8-15
     prv_bit_modify(storage, filterRegH + 2, 0xff, filter.eid8);
     //Set eid0-7
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
-    if (filter.raw << 14 != 0) {
-      prv_bit_modify(storage, filterRegL, 1 << 3, 1 << 3);
-    }
-  }
+  }  
   
-    // 5.7 Timing configurations: 
+  // 5.7 Timing configurations: 
   // In order:
   // CNF3: PS2 Length = 6
   // CNF2: PS1 Length = 8, PRSEG Length = 1
