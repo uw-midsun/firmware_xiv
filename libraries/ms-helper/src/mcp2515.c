@@ -20,7 +20,6 @@ typedef struct Mcp2515TxBuffer {
   uint8_t id;
   uint8_t data;
   uint8_t rts;
-  uint8_t tx_ctrl;
 } Mcp2515TxBuffer;
 
 typedef struct Mcp2515RxBuffer {
@@ -40,11 +39,11 @@ static const Mcp2515RxBuffer s_rx_buffers[] = {
   { .id = MCP2515_READ_RXB1SIDH, .data = MCP2515_READ_RXB1D0, .int_flag = MCP2515_CANINT_RX1IE },
 };
 
-static const uint8_t s_brp_lookup[NUM_MCP_2515_CAN_BITRATE_KBPS] = {
+static const uint8_t s_brp_lookup[NUM_MCP2515_BITRATES] = {
   // BRP calculated for different 
-  [MCP_2515_CAN_BITRATE_125KBPS] = MCP2515_CAN_BRP_125KBPS,
-  [MCP_2515_CAN_BITRATE_250KBPS] = MCP2515_CAN_BRP_250KBPS,
-  [MCP_2515_CAN_BITRATE_500KBPS] = MCP2515_CAN_BRP_500KBPS,
+  [MCP2515_BITRATE_125KBPS] = MCP2515_CAN_BRP_125KBPS,
+  [MCP2515_BITRATE_250KBPS] = MCP2515_CAN_BRP_250KBPS,
+  [MCP2515_BITRATE_500KBPS] = MCP2515_CAN_BRP_500KBPS,
 };
 
 // SPI commands - See Table 12-1
@@ -76,16 +75,6 @@ static void prv_bit_modify(Mcp2515Storage *storage, uint8_t addr, uint8_t mask, 
   CRITICAL_SECTION_AUTOEND;
   uint8_t payload[] = { MCP2515_CMD_BIT_MODIFY, addr, mask, data };
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
-}
-
-// Abort all TX buffers
-void prv_abort_tx(Mcp2515Storage *storage) {
-  // terminate request to abort all transmissions
-  // by setting ABAT bit to 0.
-  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
-    1 << 4,  // ABAT Register mask
-    0x0//data
-  );
 }
 
 static uint8_t prv_read_status(Mcp2515Storage *storage) {
@@ -126,7 +115,8 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
       uint64_t read_data = 0;
       spi_exchange(storage->spi_port, data_payload, sizeof(data_payload), (uint8_t *)&read_data,
                    sizeof(read_data));
-
+      //Clear the interrupt flag so a new message can be loaded
+      prv_bit_modify(storage, MCP2515_CTRL_REG_CANINTF, rx_buf->int_flag, 0x0);
       if (storage->rx_cb != NULL) {
         storage->rx_cb(id.raw, extended, read_data, dlc, storage->context);
       }
@@ -200,11 +190,46 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
 
   prv_reset(storage);
 
+
   // Set to Config mode, CLKOUT /4
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
                  MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
                  MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
 
+
+  // set RXB0 ctrl BUKT bit on to enable rollover to rx1
+  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
+
+  // Set the masks to 0xff so we filter on the whole message
+  // Set regs. 20-27 to 0xff
+  for (size_t i = 0; i < 8; i++) {
+    prv_bit_modify(storage, MCP2515_REG_RXM0SIDH + i, 0xff, 0xff);
+  }
+
+  for (size_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
+    Mcp2515Id filter = settings->filters[i];
+    printf("Filter id being set: 0x%lx\n", filter.raw);
+    if (filter.raw == 0) {
+      continue;
+    }
+    //If an eid is set (not an sid), set the enable eid bit
+    uint8_t filterRegH = MCP2515_REG_RXF0SIDH;
+    if (i == MCP2515_FILTER_ID_RXF1) filterRegH = MCP2515_REG_RXF1SIDH;
+    uint8_t filterRegL = filterRegH + 1;
+    //Set sidh
+    prv_bit_modify(storage, filterRegH, 0xff, filter.sidh);
+    //Set sidl and eid16-17
+    prv_bit_modify(storage, filterRegL, 0xff, (filter.sid_0_2 << 5) + filter.eid_16_17);
+    //Set eid8-15
+    prv_bit_modify(storage, filterRegH + 2, 0xff, filter.eid8);
+    //Set eid0-7
+    prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
+    if (filter.raw << 14 != 0) {
+      prv_bit_modify(storage, filterRegL, 1 << 3, 1 << 3);
+    }
+  }
+  
+    // 5.7 Timing configurations: 
   // In order:
   // CNF3: PS2 Length = 6
   // CNF2: PS1 Length = 8, PRSEG Length = 1
@@ -213,10 +238,14 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   // CANINTF: clear all IRQ flags
   // EFLG: clear all error flags
   const uint8_t registers[] = {
-    0x05, MCP2515_CNF2_BTLMODE_CNF3 | MCP2515_CNF2_SAMPLE_3X | (0x07 << 3),
-    s_brp_lookup[settings->can_bit_rate], MCP2515_CANINT_EFLAG | MCP2515_CANINT_RX1IE | MCP2515_CANINT_RX0IE,
-    0x00, 0x00,
+    0x05, 
+    MCP2515_CNF2_BTLMODE_CNF3 | MCP2515_CNF2_SAMPLE_3X | (0x07 << 3),
+    s_brp_lookup[settings->can_bitrate], 
+    MCP2515_CANINT_EFLAG | MCP2515_CANINT_RX1IE | MCP2515_CANINT_RX0IE,
+    0x00, 
+    0x00,
   };
+
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
 
   // Leave config mode
@@ -228,11 +257,12 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
   };
+  
   // Switched from interrupts to polling ...
   return gpio_init_pin(&settings->int_pin, &gpio_settings);
 }
 
-StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
+StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, 
                                 Mcp2515BusErrorCb bus_err_cb, void *context) {
   bool disabled = critical_section_start();
   storage->rx_cb = rx_cb;
@@ -247,7 +277,8 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
                       size_t dlc) {
   CRITICAL_SECTION_AUTOEND;
 
-  printf("%i\n", (int)5);
+  //ensure the canctrl register is set to the correct value
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, 0xff, 0x0f);
   // Get free transmit buffer
   uint8_t tx_status =
       __builtin_ffs(~prv_read_status(storage) &
@@ -321,7 +352,7 @@ void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
   if (counter4 == 0) {
     prv_handle_int(&storage->int_pin, storage);
     LOG_DEBUG("Interrupt timeout\n");
-
+    
     // Read the status of the Receive buffer registers
     for (size_t i = 0; i < SIZEOF_ARRAY(registers); i++) {
       uint8_t data = 0;
@@ -330,7 +361,7 @@ void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
     }
   }
 
-
+  
   counter4 = 0;
   if (!status_ok(soft_timer_start_seconds(15, mcp2515_watchdog, storage, NULL))) {
     LOG_DEBUG("Could not start MCP watchdog 2\n");

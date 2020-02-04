@@ -2,23 +2,20 @@
 // MCP2515 SPI CAN controller
 // Requires SPI, GPIO, GPIO interrupts, interrupts to be initialized
 //
-// We assume that a 16MHz crystal is attached.
+// Note that we aren't bothering to implement filtering on the controller side. We'll just filter
+// in software since these are on isolated networks.
+//
+// Note that this is hardcoded to 500kbps and we assume that a 16MHz crystal is attached.
 #include <stdbool.h>
 #include <stdint.h>
 #include "gpio.h"
 #include "spi.h"
 #include "status.h"
 #include "soft_timer.h"
+#include "mcp2515_defs.h"
 
 // Called on CAN messsage RX
 typedef void (*Mcp2515RxCb)(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context);
-
-typedef enum  { 
-  MCP_2515_CAN_BITRATE_125KBPS = 0,
-  MCP_2515_CAN_BITRATE_250KBPS,
-  MCP_2515_CAN_BITRATE_500KBPS,
-  NUM_MCP_2515_CAN_BITRATE_KBPS  
-} Mcp2515CanBitrate;
 
 // Called on CAN bus error
 struct Mcp2515Errors;
@@ -30,6 +27,19 @@ typedef struct Mcp2515Errors {
   uint8_t rec;
 } Mcp2515Errors;
 
+typedef enum {
+  MCP2515_BITRATE_500KBPS,
+  MCP2515_BITRATE_250KBPS,
+  MCP2515_BITRATE_125KBPS,
+  NUM_MCP2515_BITRATES,
+} Mcp2515Bitrate;
+
+typedef enum {
+  MCP2515_FILTER_ID_RXF0 = 0,
+  MCP2515_FILTER_ID_RXF1,
+  NUM_MCP2515_FILTER_IDS
+} Mcp2515FiltersIds;
+
 typedef struct Mcp2515Settings {
   SpiPort spi_port;
   uint32_t spi_baudrate;
@@ -39,8 +49,10 @@ typedef struct Mcp2515Settings {
   GpioAddress cs;
 
   GpioAddress int_pin;
-  Mcp2515Bitrate can_bitrate;
+
   bool loopback;
+  Mcp2515Bitrate can_bitrate;
+  Mcp2515Id filters[NUM_MCP2515_FILTER_IDS];
 
   Mcp2515RxCb rx_cb;
   Mcp2515BusErrorCb bus_err_cb;
@@ -54,6 +66,7 @@ typedef struct Mcp2515Storage {
   Mcp2515RxCb rx_cb;
   Mcp2515BusErrorCb bus_err_cb;
   void *context;
+
   Mcp2515Errors errors;
 } Mcp2515Storage;
 
@@ -61,8 +74,7 @@ typedef struct Mcp2515Storage {
 StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings);
 
 // Sets the CAN message RX callback.
-StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
-                                Mcp2515BusErrorCb bus_err_cb, void *context);
+StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, Mcp2515BusErrorCb bus_err_cb, void *context);
 
 // Transmits a CAN message.
 StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,

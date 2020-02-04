@@ -34,6 +34,11 @@ static void rx_message_callback(uint32_t id, bool extended, uint64_t data, size_
   
 }
 
+void periodic_tx(SoftTimerId id, void* context) {
+  mcp2515_tx(&s_mcp_storage, 69, false, 0xDEADBEEF, 4);
+  soft_timer_start_seconds(1, periodic_tx, NULL, NULL);
+}
+
 int main(void) {
   interrupt_init();
   soft_timer_init();
@@ -42,25 +47,40 @@ int main(void) {
 
   Mcp2515Settings mcp_2515_spi_settings = {
     .spi_port = SPI_PORT_2,
-    .baudrate = 6000000,
-    .mosi = { .port = GPIO_PORT_B, .pin = 15},
-    .miso = { .port = GPIO_PORT_B, .pin = 14},
-    .sclk = { .port = GPIO_PORT_B, .pin = 13},
-    .cs = { .port = GPIO_PORT_B, .pin = 12},
-    .int_pin = { .port = GPIO_PORT_A, .pin = 8},
+    .spi_baudrate = 6000000,
+    .mosi = { .port = GPIO_PORT_B, 15 },
+    .miso = { .port = GPIO_PORT_B, 14 },
+    .sclk = { .port = GPIO_PORT_B, 13 },
+    .cs = { .port = GPIO_PORT_B, 12 },
+    .int_pin = { .port = GPIO_PORT_A, 8 },
+
+    .can_bitrate = MCP2515_BITRATE_500KBPS,
     .loopback = false,
     .rx_cb = rx_message_callback
   };
+
+  // Mcp2515Settings mcp_2515_spi_settings = {
+  //   .spi_port = SPI_PORT_2,
+  //   .spi_baudrate = 6000000,
+  //   .mosi = { .port = GPIO_PORT_B, .pin = 15},
+  //   .miso = { .port = GPIO_PORT_B, .pin = 14},
+  //   .sclk = { .port = GPIO_PORT_B, .pin = 13},
+  //   .cs = { .port = GPIO_PORT_B, .pin = 12},
+  //   .int_pin = { .port = GPIO_PORT_A, .pin = 8},
+  //   .loopback = false,
+  //   .rx_cb = rx_message_callback
+  // };
 
   LOG_DEBUG("INITIALIZING_MCP2515\n");
   StatusCode s = mcp2515_init(&s_mcp_storage, &mcp_2515_spi_settings);
   if (s) {
     LOG_DEBUG("ERROR: status code not ok: %d\n", s);
   }
-  mcp2515_register_rx_cb(&s_mcp_storage, rx_message_callback, NULL);
+  soft_timer_start_seconds(1, periodic_tx, NULL, NULL);
+  //mcp2515_register_rx_cb(&s_mcp_storage, rx_message_callback, NULL);
   while (true) {
-    mcp2515_tx(&s_mcp_storage, 69, false, 0xDEADBEEF, 4);
-    delay_ms(1000);
+    mcp2515_poll(&s_mcp_storage);
+    //delay_ms(1000);
   }
 
   return 0;
