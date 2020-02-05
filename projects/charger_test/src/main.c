@@ -18,17 +18,7 @@ GpioAddress receive_interrupt_address = { .port = GPIO_PORT_A, .pin = 8 };
 static Mcp2515Storage s_mcp_storage = { 0 };
 
 static void rx_message_callback(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
-  //uint8_t data1, data2, data3, data4, data5, data6, data7, data8;
-  //data1 = data >> 56;
-  //data2 = data >> 48;
-  //data3 = data >> 40;
-  //data4 = data >> 32;
-  //data5 = data >> 24;
-  //data6 = data >> 16;
-  //data7 = data >> 8;
-  //data8 = data && 0xff;
   LOG_DEBUG("message received:\nid: %lx\textended: %d\tdlc: %d\n", id, extended, dlc);
-  //LOG_DEBUG("data: %x %x %x\n", data1, data2, data3);
   LOG_DEBUG("msb: %lx\n", (uint32_t) (data >> 32));
   LOG_DEBUG("lsb: %lx\n", (uint32_t) (data & 0xffffffff));
   
@@ -59,8 +49,8 @@ int main(void) {
       [MCP2515_FILTER_ID_RXF1] = { .raw = 0x0 },
     },
 
-    .can_bitrate = MCP2515_BITRATE_500KBPS,
-    .loopback = true,
+    .can_bitrate = MCP2515_BITRATE_250KBPS,
+    .loopback = false,
   };
 
   LOG_DEBUG("INITIALIZING_MCP2515\n");
@@ -71,7 +61,6 @@ int main(void) {
   soft_timer_start_seconds(1, periodic_tx, NULL, NULL);
   mcp2515_register_cbs(&s_mcp_storage, rx_message_callback, NULL, NULL);
   while (true) {
-    //delay_ms(1000);
   }
 
   return 0;

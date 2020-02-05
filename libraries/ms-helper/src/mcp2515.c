@@ -9,16 +9,6 @@
 #include "debug_led.h"
 #include "soft_timer.h"
 
-
-#define MCP2515_MAX_WRITE_BUFFER_LEN 10
-#define MCP2515_EXTENDED_ID_LEN 18
-#define MCP2515_CAN_BRP_125KBPS 3
-#define MCP2515_CAN_BRP_250KBPS 1
-#define MCP2515_CAN_BRP_500KBPS 0
-
-#define MCP2515_NUM_MASK_REGISTERS_STANDARD 2
-#define MCP2515_NUM_MASK_REGISTERS_EXTENDED 4
-
 typedef struct Mcp2515TxBuffer {
   uint8_t id;
   uint8_t data;
@@ -43,7 +33,7 @@ static const Mcp2515RxBuffer s_rx_buffers[] = {
 };
 
 static const uint8_t s_brp_lookup[NUM_MCP2515_BITRATES] = {
-  // BRP calculated for different 
+  // BRP calculated for different bitrates
   [MCP2515_BITRATE_125KBPS] = MCP2515_CAN_BRP_125KBPS,
   [MCP2515_BITRATE_250KBPS] = MCP2515_CAN_BRP_250KBPS,
   [MCP2515_BITRATE_500KBPS] = MCP2515_CAN_BRP_500KBPS,
@@ -53,7 +43,6 @@ static const uint8_t s_brp_lookup[NUM_MCP2515_BITRATES] = {
 static void prv_reset(Mcp2515Storage *storage) {
   uint8_t payload[] = { MCP2515_CMD_RESET };
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
-
   delay_us(100);
 }
 
@@ -88,11 +77,11 @@ static uint8_t prv_read_status(Mcp2515Storage *storage) {
   return read_data[0];
 }
 
+// Message RX
 static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
   for (size_t i = 0; i < SIZEOF_ARRAY(s_rx_buffers); i++) {
     Mcp2515RxBuffer *rx_buf = &s_rx_buffers[i];
     if (int_flags & rx_buf->int_flag) {
-      // Message RX
 
       // Read ID
       uint8_t id_payload[] = { MCP2515_CMD_READ_RX | rx_buf->id };
@@ -107,7 +96,7 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
         .eid8 = read_id_regs.eid8,
         .eid_16_17 = read_id_regs.sidl.eid_16_17,
       };
-      
+
       bool extended = read_id_regs.sidl.ide;
       size_t dlc = read_id_regs.dlc.dlc;
 
@@ -195,36 +184,34 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
 
   prv_reset(storage);
 
-
   // Set to Config mode, CLKOUT /4
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
                  MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
                  MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
-
 
   // set RXB0 ctrl BUKT bit on to enable rollover to rx1
   prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
   Mcp2515Id default_filter = settings->filters[MCP2515_FILTER_ID_RXF0];
   for (size_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
     Mcp2515Id filter = settings->filters[i];
-    // printf("Filter id being set: 0x%lx\n", filter.raw);
     if (default_filter.raw == 0) {
       continue;
     }
 
+    //prevents us from filtering for id 0x0
     if (settings->filters[i].raw == 0) {
       filter = default_filter;
     }
     
     uint8_t maskRegH = MCP2515_REG_RXM0SIDH;
     if (i == MCP2515_FILTER_ID_RXF1) maskRegH = MCP2515_REG_RXM1SIDH;
-    // Set the masks to 0xff so we filter on the whole message
-    // Set regs. 20-27 to 0xff
-    if (filter.raw >> 11 == 0) {
+    //if it's a standard id, ensure it's placed in the right bits
+    if (filter.raw >> MCP2515_STANDARD_ID_LEN == 0) {
       filter.raw <<= MCP2515_EXTENDED_ID_LEN;
     }
-    bool standard = filter.raw << 14 == 0;
+    bool standard = filter.raw << (32 - MCP2515_EXTENDED_ID_LEN) == 0;
     size_t numMaskRegisters = standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
+    // Set the filter masks to 0xff so we filter on the whole message
     for (size_t i = 0; i < numMaskRegisters; i++) {
       prv_bit_modify(storage, maskRegH + i, 0xff, 0xff);
     }
@@ -295,7 +282,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
                       size_t dlc) {
   CRITICAL_SECTION_AUTOEND;
 
-  //ensure the canctrl register is set to the correct value
+  //ensure the CANCTRL register is set to the correct value
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, 0x1f, 0x0f);
   // Get free transmit buffer
   uint8_t tx_status =
@@ -311,7 +298,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
 
   Mcp2515Id tx_id = { .raw = id };
   //if it's a standard id, make sure it lines up in the right bits
-  if (tx_id.raw >> 11 == 0) {
+  if (tx_id.raw >> MCP2515_STANDARD_ID_LEN == 0) {
     tx_id.raw <<= MCP2515_EXTENDED_ID_LEN;
   }
 
@@ -349,44 +336,4 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   spi_exchange(storage->spi_port, send_payload, sizeof(send_payload), NULL, 0);
 
   return STATUS_CODE_OK;
-}
-
-uint8_t counter3 = 1;
-uint64_t counter4 = 0;
-const uint8_t registers[] = { MCP2515_CTRL_REG_BFPCTRL,    // RX pins disabled by default
-                              MCP2515_CTRL_REG_TXRTSCTRL,  // TX pins input by default
-                              MCP2515_CTRL_REG_CANSTAT,
-                              MCP2515_CTRL_REG_CANCTRL,
-                              MCP2515_CTRL_REG_TEC,
-                              MCP2515_CTRL_REG_REC,
-                              MCP2515_CTRL_REG_CNF3,
-                              MCP2515_CTRL_REG_CNF2,
-                              MCP2515_CTRL_REG_CNF1,
-                              MCP2515_CTRL_REG_CANINTE,
-                              MCP2515_CTRL_REG_CANINTF,
-                              MCP2515_CTRL_REG_EFLG,
-                              MCP2515_CTRL_REG_TXB0CTRL,
-                              MCP2515_CTRL_REG_TXB1CTRL,
-                              MCP2515_CTRL_REG_TXB2CTRL,
-                              MCP2515_CTRL_REG_RXB0CTRL,
-                              MCP2515_CTRL_REG_RXB1CTRL };
-void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
-  Mcp2515Storage *storage = context;
-  if (counter4 == 0) {
-    prv_handle_int(&storage->int_pin, storage);
-    LOG_DEBUG("Interrupt timeout\n");
-    
-    // Read the status of the Receive buffer registers
-    for (size_t i = 0; i < SIZEOF_ARRAY(registers); i++) {
-      uint8_t data = 0;
-      prv_read(storage, registers[i], &data, 1);
-      LOG_DEBUG("0x%x: read 0x%x\n", registers[i], data);
-    }
-  }
-
-  
-  counter4 = 0;
-  if (!status_ok(soft_timer_start_seconds(15, mcp2515_watchdog, storage, NULL))) {
-    LOG_DEBUG("Could not start MCP watchdog 2\n");
-  }
 }
