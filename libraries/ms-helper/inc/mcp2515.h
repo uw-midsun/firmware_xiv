@@ -82,8 +82,3 @@ StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
 // Transmits a CAN message.
 StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                       size_t dlc);
-
-// Poll interrupt pin for updates
-void mcp2515_poll(Mcp2515Storage *storage);
-
-void mcp2515_watchdog(SoftTimerId timer_id, void *context);

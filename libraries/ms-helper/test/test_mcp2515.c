@@ -68,7 +68,7 @@ void test_mcp2515_standard(void) {
   // shows that a filtered-out message does not update the static vars
   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x321, false, 0xDEADBEEFDEADBEEF, 8));
   delay_ms(50);
-  TEST_ASSERT_NOT_EQUAL(0x246, s_id);
+  TEST_ASSERT_NOT_EQUAL(0x321, s_id);
   TEST_ASSERT_NOT_EQUAL(0xDEADBEEFDEADBEEF, s_data);
 
   // shows that a filtered-in message updates static vars

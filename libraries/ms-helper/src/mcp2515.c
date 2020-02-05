@@ -47,14 +47,12 @@ static void prv_reset(Mcp2515Storage *storage) {
 }
 
 static void prv_read(Mcp2515Storage *storage, uint8_t addr, uint8_t *read_data, size_t read_len) {
-  CRITICAL_SECTION_AUTOEND;
   uint8_t payload[] = { MCP2515_CMD_READ, addr };
   spi_exchange(storage->spi_port, payload, sizeof(payload), read_data, read_len);
 }
 
 static void prv_write(Mcp2515Storage *storage, uint8_t addr, uint8_t *write_data,
                       size_t write_len) {
-  CRITICAL_SECTION_AUTOEND;
   uint8_t payload[MCP2515_MAX_WRITE_BUFFER_LEN];
   payload[0] = MCP2515_CMD_WRITE;
   payload[1] = addr;
@@ -64,7 +62,6 @@ static void prv_write(Mcp2515Storage *storage, uint8_t addr, uint8_t *write_data
 
 // See 12.10: *addr = (data & mask) | (*addr & ~mask)
 static void prv_bit_modify(Mcp2515Storage *storage, uint8_t addr, uint8_t mask, uint8_t data) {
-  CRITICAL_SECTION_AUTOEND;
   uint8_t payload[] = { MCP2515_CMD_BIT_MODIFY, addr, mask, data };
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
 }
@@ -77,7 +74,6 @@ static uint8_t prv_read_status(Mcp2515Storage *storage) {
   return read_data[0];
 }
 
-// Message RX
 static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
   for (size_t i = 0; i < SIZEOF_ARRAY(s_rx_buffers); i++) {
     Mcp2515RxBuffer *rx_buf = &s_rx_buffers[i];
@@ -121,14 +117,12 @@ static void prv_handle_error(Mcp2515Storage *storage, uint8_t int_flags, uint8_t
   // Clear flags
   if (int_flags & MCP2515_CANINT_EFLAG) {
     // Clear error flag
-    LOG_DEBUG("MCP2515_CANINT_EFLAG error\n");
     prv_bit_modify(storage, MCP2515_CTRL_REG_CANINTF, MCP2515_CANINT_EFLAG, 0);
   }
 
   if (err_flags & (MCP2515_EFLG_RX0_OVERFLOW | MCP2515_EFLG_RX1_OVERFLOW)) {
     // RX overflow - clear error flags
     uint8_t clear = 0;
-    LOG_DEBUG("MCP2515_EFLG_RX0_OVERFLOW | MCP2515_EFLG_RX1_OVERFLOW error\n");
     prv_write(storage, MCP2515_CTRL_REG_EFLG, &clear, 1);
   }
 
@@ -136,9 +130,7 @@ static void prv_handle_error(Mcp2515Storage *storage, uint8_t int_flags, uint8_t
   prv_read(storage, MCP2515_CTRL_REG_TEC, &storage->errors.tec, 1);
   prv_read(storage, MCP2515_CTRL_REG_REC, &storage->errors.rec, 1);
 
-  if (err_flags & MCP2515_EFLG_TX_BUS_OFF) {
-    // Bus off - attempt to recover by resetting the chip?
-    LOG_DEBUG("MCP2515_EFLG_TX_BUS_OFF error\n");
+  if (err_flags) {
     if (storage->bus_err_cb != NULL) {
       storage->bus_err_cb(&storage->errors, storage->context);
     }
