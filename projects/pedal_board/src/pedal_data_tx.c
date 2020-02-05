@@ -26,6 +26,7 @@ static void prv_blink_timeout(SoftTimerId timer_id, void *context) {
 
   brake_position = *getBrakeData(data->storage, brake_channel);
   throttle_position = *getBrakeData(data->storage, throttle_channel);
+  soft_timer_start_millis(100, prv_blink_timeout, context, NULL);
 }
 
 // main should have a brake fsm, and ads1015storage
@@ -33,6 +34,9 @@ StatusCode pedal_data_tx_init(Ads1015Storage *storage) {
   ads1015_configure_channel(storage, ADS1015_CHANNEL_0, true, NULL, NULL);
   ads1015_configure_channel(storage, ADS1015_CHANNEL_1, true, NULL, NULL);
   ads1015_configure_channel(storage, ADS1015_CHANNEL_2, true, NULL, NULL);
+  PedalData data = {
+    .storage = storage, .brake_channel = ADS1015_CHANNEL_2, .throttle_channel = ADS1015_CHANNEL_0
+  };
 
-  soft_timer_start_millis(100, prv_blink_timeout, NULL, NULL);
+  soft_timer_start_millis(100, prv_blink_timeout, &data, NULL);
 }

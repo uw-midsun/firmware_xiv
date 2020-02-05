@@ -3,10 +3,8 @@
 
 typedef struct PedalData {
     Ads1015Storage *storage;
-    Ads1015Channel *brake_channel;
-    uint16_t *brake_position;
-    Ads1015Channel *throttle_channel;
-    uint16_t *throttle_position;
+    Ads1015Channel brake_channel;
+    Ads1015Channel throttle_channel;
 } PedalData;
 
 uint16_t getBrakePosition();
