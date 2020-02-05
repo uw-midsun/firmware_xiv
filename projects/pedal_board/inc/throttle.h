@@ -19,7 +19,8 @@ typedef struct ThrottleStorage {
   Ads1015Storage ads_storage;
 } ThrottleStorage;
 
-StatusCode throttle_init(ThrottleStorage *throttle_storage);
+StatusCode throttle_init(ThrottleStorage *storage,
+                         Ads1015Storage *pedal_ads1015_storage);
 
 // Enables the throttle
 StatusCode throttle_enable(ThrottleStorage *storage);

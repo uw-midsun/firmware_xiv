@@ -19,11 +19,11 @@
 
 #define CAN_DEVICE_ID 0x1
 
-static Fsm drive_fsm;
-static Fsm brake_fsm;
-static Ads1015Storage ads1015_storage;
-static CanStorage can_storage;
-static ThrottleStorage throttle_storage;
+static Fsm drive_fsm = { 0 };
+static Fsm brake_fsm = { 0 };
+static Ads1015Storage ads1015_storage = { 0 };
+static CanStorage can_storage = { 0 };
+static ThrottleStorage throttle_storage = {0};
 
 int main() {
   LOG_DEBUG("WORKING\n");
@@ -35,42 +35,43 @@ int main() {
   event_queue_init();
   LOG_DEBUG("Initialized modules\n");
 
-  const CanSettings can_settings = {
-    .device_id = CAN_DEVICE_ID,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = PEDAL_CAN_RX,
-    .tx_event = PEDAL_CAN_TX,
-    .fault_event = PEDAL_CAN_FAULT,
-    .tx = { GPIO_PORT_A, 12 },  // CHANGE
-    .rx = { GPIO_PORT_A, 11 },  // CHANGE
-  };
-  pedal_can_init(&can_storage, &can_settings);
+  // const CanSettings can_settings = {
+  //   .device_id = CAN_DEVICE_ID,
+  //   .bitrate = CAN_HW_BITRATE_500KBPS,
+  //   .rx_event = PEDAL_CAN_RX,
+  //   .tx_event = PEDAL_CAN_TX,
+  //   .fault_event = PEDAL_CAN_FAULT,
+  //   .tx = { GPIO_PORT_A, 12 },  // CHANGE
+  //   .rx = { GPIO_PORT_A, 11 },  // CHANGE
+  // };
+  // pedal_can_init(&can_storage, &can_settings);
 
-  drive_fsm_init(&drive_fsm, &throttle_storage);
-  brake_fsm_init(&brake_fsm);
+  // drive_fsm_init(&drive_fsm, &throttle_storage);
+  // brake_fsm_init(&brake_fsm);
 
   // setup ADC readings
   I2CSettings i2c_settings = {
-    .speed = I2C_SPEED_FAST,                   //
-    .scl = { .port = GPIO_PORT_B, .pin = 5 },  // figure out later
-    .sda = { .port = GPIO_PORT_B, .pin = 5 },  // figure out later
+    .speed = I2C_SPEED_FAST,                    //
+    .scl = { .port = GPIO_PORT_B, .pin = 10 },  // figure out later
+    .sda = { .port = GPIO_PORT_B, .pin = 11 },  // figure out later
   };
   i2c_init(I2C_PORT_2, &i2c_settings);
-  GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
+  GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 2 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
+  
   // brake_monitor_init(&ads1015_storage);
-  throttle_init(&throttle_storage);
+  //throttle_init(&throttle_storage, &ads1015_storage);
 
   Event e = { 0 };
   while (true) {
-    event_process(&e);
+    // event_process(&e);
 
-    drive_fsm_process_event(&drive_fsm, &e);
-    brake_fsm_process_event(&brake_fsm, &e);
-    // LOG_DEBUG("working\n");
-    // perhaps distinguish which events are actually for can
-    can_process_event(&e);
+    // drive_fsm_process_event(&drive_fsm, &e);
+    // brake_fsm_process_event(&brake_fsm, &e);
+    // // LOG_DEBUG("working\n");
+    // // perhaps distinguish which events are actually for can
+    // can_process_event(&e);
     // pedal_can_process_event(&e);
   }
   return 0;
