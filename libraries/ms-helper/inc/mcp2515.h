@@ -52,8 +52,8 @@ typedef struct Mcp2515Settings {
 
   bool loopback;
   Mcp2515Bitrate can_bitrate;
-  //Just set the filters[i].raw, don't set individual parts of the id manually
-  //Otherwise it will be handled incorrectly when setting the filters
+  // Just set the filters[i].raw, don't set individual parts of the id manually
+  // Otherwise it will be handled incorrectly when setting the filters
   Mcp2515Id filters[NUM_MCP2515_FILTER_IDS];
 
   Mcp2515RxCb rx_cb;
@@ -76,7 +76,8 @@ typedef struct Mcp2515Storage {
 StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings);
 
 // Sets the CAN message RX callback.
-StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, Mcp2515BusErrorCb bus_err_cb, void *context);
+StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
+                                Mcp2515BusErrorCb bus_err_cb, void *context);
 
 // Transmits a CAN message.
 StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,

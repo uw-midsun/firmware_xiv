@@ -82,7 +82,6 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
   for (size_t i = 0; i < SIZEOF_ARRAY(s_rx_buffers); i++) {
     Mcp2515RxBuffer *rx_buf = &s_rx_buffers[i];
     if (int_flags & rx_buf->int_flag) {
-
       // Read ID
       uint8_t id_payload[] = { MCP2515_CMD_READ_RX | rx_buf->id };
       Mcp2515IdRegs read_id_regs = { 0 };
@@ -109,7 +108,7 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
       uint64_t read_data = 0;
       spi_exchange(storage->spi_port, data_payload, sizeof(data_payload), (uint8_t *)&read_data,
                    sizeof(read_data));
-      //Clear the interrupt flag so a new message can be loaded
+      // Clear the interrupt flag so a new message can be loaded
       prv_bit_modify(storage, MCP2515_CTRL_REG_CANINTF, rx_buf->int_flag, 0x0);
       if (storage->rx_cb != NULL) {
         storage->rx_cb(id.raw, extended, read_data, dlc, storage->context);
@@ -198,19 +197,20 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
       continue;
     }
 
-    //prevents us from filtering for id 0x0
+    // Prevents us from filtering for id 0x0
     if (settings->filters[i].raw == 0) {
       filter = default_filter;
     }
-    
+
     uint8_t maskRegH = MCP2515_REG_RXM0SIDH;
     if (i == MCP2515_FILTER_ID_RXF1) maskRegH = MCP2515_REG_RXM1SIDH;
-    //if it's a standard id, ensure it's placed in the right bits
+    // If it's a standard id, ensure it's placed in the right bits
     if (filter.raw >> MCP2515_STANDARD_ID_LEN == 0) {
       filter.raw <<= MCP2515_EXTENDED_ID_LEN;
     }
     bool standard = filter.raw << (32 - MCP2515_EXTENDED_ID_LEN) == 0;
-    size_t numMaskRegisters = standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
+    size_t numMaskRegisters = standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD
+                                       : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
     // Set the filter masks to 0xff so we filter on the whole message
     for (size_t i = 0; i < numMaskRegisters; i++) {
       prv_bit_modify(storage, maskRegH + i, 0xff, 0xff);
@@ -219,17 +219,18 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     uint8_t filterRegH = MCP2515_REG_RXF0SIDH;
     if (i == MCP2515_FILTER_ID_RXF1) filterRegH = MCP2515_REG_RXF1SIDH;
     uint8_t filterRegL = filterRegH + 1;
-    //Set sidh
+    // Set sidh
     prv_bit_modify(storage, filterRegH, 0xff, filter.sidh);
-    //Set sidl and eid16-17
-    prv_bit_modify(storage, filterRegL, 0xff, (filter.sid_0_2 << 5)  | ((!standard) << 3)  |  filter.eid_16_17);
-    //Set eid8-15
+    // Set sidl and eid16-17
+    prv_bit_modify(storage, filterRegL, 0xff, (filter.sid_0_2 << 5)
+                                              | ((!standard) << 3)  |  filter.eid_16_17);
+    // Set eid8-15
     prv_bit_modify(storage, filterRegH + 2, 0xff, filter.eid8);
-    //Set eid0-7
+    // Set eid0-7
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
-  }  
-  
-  // 5.7 Timing configurations: 
+  }
+
+  // 5.7 Timing configurations:
   // In order:
   // CNF3: PS2 Length = 6
   // CNF2: PS1 Length = 8, PRSEG Length = 1
@@ -238,11 +239,11 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   // CANINTF: clear all IRQ flags
   // EFLG: clear all error flags
   const uint8_t registers[] = {
-    0x05, 
+    0x05,
     MCP2515_CNF2_BTLMODE_CNF3 | MCP2515_CNF2_SAMPLE_3X | (0x07 << 3),
-    s_brp_lookup[settings->can_bitrate], 
+    s_brp_lookup[settings->can_bitrate],
     MCP2515_CANINT_EFLAG | MCP2515_CANINT_RX1IE | MCP2515_CANINT_RX0IE,
-    0x00, 
+    0x00,
     0x00,
   };
 
@@ -267,7 +268,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
                                     prv_handle_int, storage);
 }
 
-StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, 
+StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
                                 Mcp2515BusErrorCb bus_err_cb, void *context) {
   bool disabled = critical_section_start();
   storage->rx_cb = rx_cb;
@@ -282,7 +283,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
                       size_t dlc) {
   CRITICAL_SECTION_AUTOEND;
 
-  //ensure the CANCTRL register is set to the correct value
+  // Ensure the CANCTRL register is set to the correct value
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, 0x1f, 0x0f);
   // Get free transmit buffer
   uint8_t tx_status =
@@ -297,7 +298,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   Mcp2515TxBuffer *tx_buf = &s_tx_buffers[(tx_status - 3) / 2];
 
   Mcp2515Id tx_id = { .raw = id };
-  //if it's a standard id, make sure it lines up in the right bits
+  // If it's a standard id, make sure it lines up in the right bits
   if (tx_id.raw >> MCP2515_STANDARD_ID_LEN == 0) {
     tx_id.raw <<= MCP2515_EXTENDED_ID_LEN;
   }

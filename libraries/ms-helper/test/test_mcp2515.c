@@ -18,9 +18,6 @@ static uint64_t s_data = 0;
 static size_t s_dlc = 0;
 
 static void prv_handle_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
-  // LOG_DEBUG("\nRX id 0x%lx (extended %d) dlc %d data 0x%lx%lx\n", id, extended, dlc,
-  //           (uint32_t)(data >> 32), (uint32_t)data);
-
   s_id = id;
   s_extended = extended;
   s_data = data;
@@ -67,13 +64,13 @@ void teardown_test(void) {}
 
 void test_mcp2515_standard(void) {
   LOG_DEBUG("Testing send standard id\n");
-  //shows that a filtered-out message does not update the static vars
+  // shows that a filtered-out message does not update the static vars
   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x321, false, 0xDEADBEEFDEADBEEF, 8));
   delay_ms(50);
   TEST_ASSERT_NOT_EQUAL(0x246, s_id);
   TEST_ASSERT_NOT_EQUAL(0xDEADBEEFDEADBEEF, s_data);
 
-  //shows that a filtered-in message updates static vars
+  // shows that a filtered-in message updates static vars
   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x246, false, 0x1122334455667788, 8));
   delay_ms(50);
   TEST_ASSERT_EQUAL(0x246, s_id);
@@ -84,13 +81,13 @@ void test_mcp2515_standard(void) {
 
 void test_mcp2515_extended(void) {
   LOG_DEBUG("Testing send extended id\n");
-  //shows that a filtered-out message does not update the static vars
+  // shows that a filtered-out message does not update the static vars
   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x19999999, true, 0xBEEFDEADBEEFDEAD, 8));
   delay_ms(50);
   TEST_ASSERT_NOT_EQUAL(0x19999999, s_id);
   TEST_ASSERT_NOT_EQUAL(0xBEEFDEADBEEFDEAD, s_data);
 
-  //shows that a filtered-in message updates static vars
+  // shows that a filtered-in message updates static vars
   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x1EADBEEF, true, 0x8877665544332211, 8));
   delay_ms(50);
   TEST_ASSERT_EQUAL(0x1EADBEEF, s_id);

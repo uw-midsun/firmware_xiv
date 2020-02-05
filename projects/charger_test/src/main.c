@@ -17,11 +17,11 @@ GpioAddress receive_interrupt_address = { .port = GPIO_PORT_A, .pin = 8 };
 
 static Mcp2515Storage s_mcp_storage = { 0 };
 
-static void rx_message_callback(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+static void rx_message_callback(uint32_t id, bool extended,
+                                uint64_t data, size_t dlc, void *context) {
   LOG_DEBUG("message received:\nid: %lx\textended: %d\tdlc: %d\n", id, extended, dlc);
   LOG_DEBUG("msb: %lx\n", (uint32_t) (data >> 32));
   LOG_DEBUG("lsb: %lx\n", (uint32_t) (data & 0xffffffff));
-  
 }
 
 void periodic_tx(SoftTimerId id, void* context) {
