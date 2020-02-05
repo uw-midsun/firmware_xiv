@@ -7,7 +7,7 @@
 #include "soft_timer.h"
 
 // Timeout callback
-uint16_t *getBrakeData(Ads1015Storage *storage, Ads1015Channel *channel) {
+uint16_t *getThrottleData(Ads1015Storage *storage, Ads1015Channel *channel) {
   uint16_t position = INT16_MAX;
   ads1015_read_raw(storage, *channel, &position);
 

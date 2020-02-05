@@ -16,6 +16,7 @@
 #include "test_helpers.h"
 #include "throttle.h"
 #include "unity.h"
+#include "pedal_data_tx.h"
 
 #define CAN_DEVICE_ID 0x1
 
@@ -59,7 +60,7 @@ int main() {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 2 };  // CHANGE
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  
+  pedal_data_tx_init(&ads1015_storage);
   // brake_monitor_init(&ads1015_storage);
   //throttle_init(&throttle_storage, &ads1015_storage);
 
