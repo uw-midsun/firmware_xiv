@@ -35,7 +35,7 @@ static void rx_message_callback(uint32_t id, bool extended, uint64_t data, size_
 }
 
 void periodic_tx(SoftTimerId id, void* context) {
-  mcp2515_tx(&s_mcp_storage, 69, false, 0xDEADBEEF, 4);
+  mcp2515_tx(&s_mcp_storage, 0x246, false, 0xDEADBEEF, 4);
   soft_timer_start_seconds(1, periodic_tx, NULL, NULL);
 }
 
@@ -55,12 +55,12 @@ int main(void) {
     .int_pin = { .port = GPIO_PORT_A, 8 },
 
     .filters = {
-      [MCP2515_FILTER_ID_RXF0] = { .raw = 0x12345678 },
-      [MCP2515_FILTER_ID_RXF1] = { .raw = 0 },
+      [MCP2515_FILTER_ID_RXF0] = { .raw = 0x246 },
+      [MCP2515_FILTER_ID_RXF1] = { .raw = 0x0 },
     },
 
-    .can_bitrate = MCP2515_BITRATE_125KBPS,
-    .loopback = false,
+    .can_bitrate = MCP2515_BITRATE_500KBPS,
+    .loopback = true,
   };
 
   LOG_DEBUG("INITIALIZING_MCP2515\n");
@@ -71,7 +71,6 @@ int main(void) {
   soft_timer_start_seconds(1, periodic_tx, NULL, NULL);
   mcp2515_register_cbs(&s_mcp_storage, rx_message_callback, NULL, NULL);
   while (true) {
-    mcp2515_poll(&s_mcp_storage);
     //delay_ms(1000);
   }
 

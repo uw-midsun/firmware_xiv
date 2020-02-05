@@ -99,6 +99,7 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
       Mcp2515IdRegs read_id_regs = { 0 };
       spi_exchange(storage->spi_port, id_payload, sizeof(id_payload), (uint8_t *)&read_id_regs,
                    sizeof(read_id_regs));
+
       Mcp2515Id id = {
         .sid_0_2 = read_id_regs.sidl.sid_0_2,
         .sidh = read_id_regs.sidh,
@@ -106,6 +107,7 @@ static void prv_handle_rx(Mcp2515Storage *storage, uint8_t int_flags) {
         .eid8 = read_id_regs.eid8,
         .eid_16_17 = read_id_regs.sidl.eid_16_17,
       };
+      
       bool extended = read_id_regs.sidl.ide;
       size_t dlc = read_id_regs.dlc.dlc;
 
@@ -268,9 +270,14 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
   };
-  
-  // Switched from interrupts to polling ...
-  return gpio_init_pin(&settings->int_pin, &gpio_settings);
+
+  status_ok_or_return(gpio_init_pin(&settings->int_pin, &gpio_settings));
+  const InterruptSettings it_settings = {
+    .type = INTERRUPT_TYPE_INTERRUPT,
+    .priority = INTERRUPT_PRIORITY_NORMAL,
+  };
+  return gpio_it_register_interrupt(&settings->int_pin, &it_settings, INTERRUPT_EDGE_FALLING,
+                                    prv_handle_int, storage);
 }
 
 StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb, 
@@ -289,7 +296,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   CRITICAL_SECTION_AUTOEND;
 
   //ensure the canctrl register is set to the correct value
-  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, 0xff, 0x0f);
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, 0x1f, 0x0f);
   // Get free transmit buffer
   uint8_t tx_status =
       __builtin_ffs(~prv_read_status(storage) &
@@ -303,6 +310,11 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   Mcp2515TxBuffer *tx_buf = &s_tx_buffers[(tx_status - 3) / 2];
 
   Mcp2515Id tx_id = { .raw = id };
+  //if it's a standard id, make sure it lines up in the right bits
+  if (tx_id.raw >> 11 == 0) {
+    tx_id.raw <<= MCP2515_EXTENDED_ID_LEN;
+  }
+
   Mcp2515IdRegs tx_id_regs = {
     .sidh = tx_id.sidh,
     .sidl = { .eid_16_17 = tx_id.eid_16_17,
@@ -319,8 +331,8 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
     MCP2515_CMD_LOAD_TX | tx_buf->id,
     tx_id_regs.sidh,
     tx_id_regs.sidl.raw,
-    tx_id_regs.eid0,
     tx_id_regs.eid8,
+    tx_id_regs.eid0,
     tx_id_regs.dlc.raw,
   };
   spi_exchange(storage->spi_port, id_payload, sizeof(id_payload), NULL, 0);
@@ -376,20 +388,5 @@ void mcp2515_watchdog(SoftTimerId timer_id, void *context) {
   counter4 = 0;
   if (!status_ok(soft_timer_start_seconds(15, mcp2515_watchdog, storage, NULL))) {
     LOG_DEBUG("Could not start MCP watchdog 2\n");
-  }
-}
-
-void mcp2515_poll(Mcp2515Storage *storage) {
-  GpioState state = NUM_GPIO_STATES;
-  gpio_get_state(&storage->int_pin, &state);
-
-  if (state == GPIO_STATE_LOW) {
-    prv_handle_int(&storage->int_pin, storage);
-    counter3++;
-    counter4++;
-  }
-  if (counter3 % 20 == 0) {
-    counter3 = 1;
-    debug_led_toggle_state(DEBUG_LED_RED);
   }
 }
