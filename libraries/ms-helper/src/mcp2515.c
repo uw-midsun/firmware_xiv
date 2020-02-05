@@ -2,11 +2,11 @@
 #include <stddef.h>
 #include <string.h>
 #include "critical_section.h"
+#include "debug_led.h"
+#include "delay.h"
 #include "gpio_it.h"
 #include "log.h"
 #include "mcp2515_defs.h"
-#include "delay.h"
-#include "debug_led.h"
 #include "soft_timer.h"
 
 typedef struct Mcp2515TxBuffer {
@@ -209,8 +209,8 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
       filter.raw <<= MCP2515_EXTENDED_ID_LEN;
     }
     bool standard = filter.raw << (32 - MCP2515_EXTENDED_ID_LEN) == 0;
-    size_t numMaskRegisters = standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD
-                                       : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
+    size_t numMaskRegisters =
+        standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
     // Set the filter masks to 0xff so we filter on the whole message
     for (size_t i = 0; i < numMaskRegisters; i++) {
       prv_bit_modify(storage, maskRegH + i, 0xff, 0xff);
@@ -222,8 +222,8 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     // Set sidh
     prv_bit_modify(storage, filterRegH, 0xff, filter.sidh);
     // Set sidl and eid16-17
-    prv_bit_modify(storage, filterRegL, 0xff, (filter.sid_0_2 << 5)
-                                              | ((!standard) << 3)  |  filter.eid_16_17);
+    prv_bit_modify(storage, filterRegL, 0xff,
+                   (filter.sid_0_2 << 5) | ((!standard) << 3) | filter.eid_16_17);
     // Set eid8-15
     prv_bit_modify(storage, filterRegH + 2, 0xff, filter.eid8);
     // Set eid0-7

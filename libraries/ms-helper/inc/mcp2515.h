@@ -9,10 +9,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "gpio.h"
+#include "mcp2515_defs.h"
+#include "soft_timer.h"
 #include "spi.h"
 #include "status.h"
-#include "soft_timer.h"
-#include "mcp2515_defs.h"
 
 // Called on CAN messsage RX
 typedef void (*Mcp2515RxCb)(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context);

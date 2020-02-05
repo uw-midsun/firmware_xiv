@@ -47,10 +47,11 @@ void setup_test(void) {
     .cs = { .port = GPIO_PORT_B, 12 },
     .int_pin = { .port = GPIO_PORT_A, 8 },
 
-    .filters = {
-      [MCP2515_FILTER_ID_RXF0] = { .raw = 0x246 },
-      [MCP2515_FILTER_ID_RXF1] = { .raw = 0x1EADBEEF },
-    },
+    .filters =
+        {
+            [MCP2515_FILTER_ID_RXF0] = { .raw = 0x246 },
+            [MCP2515_FILTER_ID_RXF1] = { .raw = 0x1EADBEEF },
+        },
 
     .loopback = true,
     .can_bitrate = MCP2515_BITRATE_250KBPS,

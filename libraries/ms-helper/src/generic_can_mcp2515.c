@@ -1,7 +1,7 @@
 #include "generic_can_mcp2515.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "generic_can_helpers.h"
 
