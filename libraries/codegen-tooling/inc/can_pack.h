@@ -25,7 +25,6 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT)
 
-<<<<<<< HEAD
 #define CAN_PACK_GET_AUX_STATUS(msg_ptr)                           \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_GET_AUX_STATUS)
@@ -48,13 +47,6 @@
 #define CAN_PACK_PRECHARGE_COMPLETE(msg_ptr)                       \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_PRECHARGE_COMPLETE)
-=======
-#define CAN_PACK_GET_AUX_STATUS(msg_ptr, aux_bat_ov_flag_u8, aux_bat_ut_flag_u8)                   \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_GET_AUX_STATUS, \
-                   2, (aux_bat_ov_flag_u8), (aux_bat_ut_flag_u8), CAN_PACK_IMPL_EMPTY,             \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
->>>>>>> master
 
 #define CAN_PACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8, \
                                aux_bat_uv_flag_u8)                                            \

@@ -13,7 +13,6 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-<<<<<<< HEAD
 #define CAN_UNPACK_POWERTRAIN_HEARTBEAT(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_GET_AUX_STATUS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
@@ -29,14 +28,6 @@
 #define CAN_UNPACK_POWER_ON_AUX_SEQUENCE(msg_ptr, sequence_u16_ptr)            \
   can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-=======
-#define CAN_UNPACK_GET_RELAY_STATES(msg_ptr, relay_state_u8_ptr)                          \
-  can_unpack_impl_u8((msg_ptr), 1, (relay_state_u8_ptr), CAN_UNPACK_IMPL_EMPTY,           \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_POWERTRAIN_HEARTBEAT(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
->>>>>>> master
 
 #define CAN_UNPACK_GET_AUX_STATUS(msg_ptr, aux_bat_ov_flag_u8_ptr, aux_bat_ut_flag_u8_ptr) \
   can_unpack_impl_u8((msg_ptr), 2, (aux_bat_ov_flag_u8_ptr), (aux_bat_ut_flag_u8_ptr),     \
