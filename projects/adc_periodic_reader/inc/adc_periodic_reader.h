@@ -2,7 +2,6 @@
 
 #include "adc.h"
 #include "delay.h"
-#include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -10,7 +9,13 @@
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
-
+/*
+Requires
+-Soft Timers
+-Interrupts
+-GPIO
+-ADC (ADC Mode Single)
+*/
 typedef enum {
   PERIODIC_READER_ID_0 = 0,
   PERIODIC_READER_ID_1,
@@ -25,22 +30,23 @@ typedef void (*AdcPeriodicReaderCallback)(uint16_t data, PeriodicReaderId id, vo
 typedef struct {
   GpioAddress address;
   AdcPeriodicReaderCallback callback;
-  bool activated;
 } AdcPeriodicReaderSettings;
 
 typedef struct {
+  GpioAddress address;
+  AdcPeriodicReaderCallback callback;
   uint16_t data;
+  bool activated;
 } AdcPeriodicReaderStorage;
 
-static AdcPeriodicReaderSettings s_settings[NUM_PERIODIC_READER_IDS];
 static AdcPeriodicReaderStorage s_storage[NUM_PERIODIC_READER_IDS];
 
-// Sets up reader, soft-timer, and disables all ADCs
+// Sets soft-timer and disables all ADCs
 StatusCode adc_periodic_reader_init();
 
 // Intialize pins and enable ADC reader
 StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
-                                             GpioSettings *gpio_settings);
+                                             AdcPeriodicReaderSettings *adc_settings);
 // Enables a specific ADC
 StatusCode adc_periodic_reader_start(PeriodicReaderId reader_id);
 

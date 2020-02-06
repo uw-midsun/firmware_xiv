@@ -13,41 +13,48 @@
 
 void prv_callback(SoftTimerId timer_id, void *context) {
   for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
-    if (s_settings[i].activated) {
-      s_settings[i].callback(s_storage[i].data, i, NULL);
+    if (s_storage[i].activated) {
+      s_storage[i].callback(s_storage[i].data, i, NULL);
     }
   }
 }
 
 StatusCode adc_periodic_reader_init() {
-  gpio_init();
-  interrupt_init();
-  adc_init(ADC_MODE_SINGLE);
   soft_timer_start_millis(TIMER_INTERVAL, prv_callback, NULL, NULL);
 
   // Disable all ADCs
   for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
-    s_settings[i].activated = false;
+    s_storage[i].activated = false;
   }
 
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
-                                             GpioSettings *gpio_settings) {
+                                             AdcPeriodicReaderSettings *adc_settings) {
+  GpioSettings gpio_settings = {
+    GPIO_DIR_IN,
+    GPIO_STATE_LOW,
+    GPIO_RES_NONE,
+    GPIO_ALTFN_ANALOG,
+  };
+
+  s_storage[reader_id].address = adc_settings->address;
+  s_storage[reader_id].callback = adc_settings->callback;
+
   AdcChannel channel;
-  gpio_init_pin(&s_settings[reader_id].address, gpio_settings);
-  adc_get_channel(s_settings[reader_id].address, &channel);
+  gpio_init_pin(&s_storage[reader_id].address, &gpio_settings);
+  adc_get_channel(s_storage[reader_id].address, &channel);
   adc_set_channel(channel, true);
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_periodic_reader_start(PeriodicReaderId reader_id) {
-  s_settings[reader_id].activated = true;
+  s_storage[reader_id].activated = true;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_periodic_reader_stop(PeriodicReaderId reader_id) {
-  s_settings[reader_id].activated = false;
+  s_storage[reader_id].activated = false;
   return STATUS_CODE_OK;
 }
