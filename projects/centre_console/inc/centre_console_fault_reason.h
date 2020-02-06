@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stdint.h"
+
 typedef enum {
   POWER_MAIN_FAULT_REASON_ACK_FAIL = 0,
   NUM_POWER_MAIN_FAULT_REASONS
@@ -15,3 +17,17 @@ typedef enum {
   CENTRE_CONSOLE_FAULT_REASON_MOTOR_RELAY_FAILED_TO_CLOSE,
   NUM_CENTRE_CONSOLE_FAULT_REASONS
 } CentreConsoleFaultReason;
+
+typedef enum {
+  DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE = 0,
+  DRIVE_FSM_FAULT_REASON_EBRAKE_STATE,
+  NUM_DRIVE_FSM_FAULT_REASONS,
+} DriveFsmFaultReason;
+
+typedef union {
+  struct {
+    uint8_t fault_reason: 4;
+    uint8_t fault_state: 4;
+  };
+  uint8_t raw;
+} DriveFsmFault;
