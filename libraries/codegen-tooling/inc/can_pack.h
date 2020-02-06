@@ -28,13 +28,15 @@
                     (output_bitset_u16), (output_state_u16), CAN_PACK_IMPL_EMPTY,                  \
                     CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_GET_DC_DC_STATUS(msg_ptr)                         \
-  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
-                      SYSTEM_CAN_MESSAGE_GET_DC_DC_STATUS)
+#define CAN_PACK_POWER_ON_MAIN_SEQUENCE(msg_ptr, sequence_u16)                    \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_RESERVED,                        \
+                    SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, 2, (sequence_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_START_PRECHARGE(msg_ptr)                          \
-  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
-                      SYSTEM_CAN_MESSAGE_START_PRECHARGE)
+#define CAN_PACK_POWER_ON_AUX_SEQUENCE(msg_ptr, sequence_u16)                    \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_RESERVED,                       \
+                    SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE, 2, (sequence_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_PRECHARGE_COMPLETE(msg_ptr)                       \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
