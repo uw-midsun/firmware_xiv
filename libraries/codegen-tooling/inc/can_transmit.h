@@ -31,14 +31,6 @@
     status;                                            \
   })
 
-#define CAN_TRANSMIT_GET_AUX_STATUS(ack_ptr)           \
-  ({                                                   \
-    CanMessage msg = { 0 };                            \
-    CAN_PACK_GET_AUX_STATUS(&msg);                     \
-    StatusCode status = can_transmit(&msg, (ack_ptr)); \
-    status;                                            \
-  })
-
 #define CAN_TRANSMIT_REAR_POWER(ack_ptr, output_bitset_u16, output_state_u16) \
   ({                                                                          \
     CanMessage msg = { 0 };                                                   \
