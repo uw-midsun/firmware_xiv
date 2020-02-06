@@ -7,9 +7,9 @@
 #include "soft_timer.h"
 
 // Timeout callback
-void getBrakeData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
-  ads1015_read_raw(storage, channel, position);
-
+StatusCode getBrakeData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
+  status_ok_or_return(ads1015_read_raw(storage, channel, position));
+//need to figure out the actual values
   int16_t percent = 1688;
   *position -= 148;
   *position /= percent;
@@ -22,4 +22,5 @@ void getBrakeData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *posi
   // } else {
   //   event_raise(PEDAL_BRAKE_FSM_EVENT_RELEASED, 0);
   // }
+  return STATUS_CODE_OK;
 }

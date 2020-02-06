@@ -8,7 +8,7 @@
 #include "pedal_events.h"
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  u_int8_t drive_state = 0;
+  u_int16_t drive_state = 0;
   CAN_UNPACK_DRIVE_STATE(msg, &drive_state);
   event_raise(drive_state, 0);
 
@@ -57,7 +57,7 @@ StatusCode pedal_can_init(CanStorage *can_storage, CanSettings *can_settings) {
 StatusCode pedal_can_process_event(Event *e) {
   if ((e->id == PEDAL_THROTTLE_EVENT_DATA) || (e->id == PEDAL_THROTTLE_EVENT_FAULT) ||
       (e->id == PEDAL_BRAKE_MONITOR_EVENT_FAULT)) {
-    return CAN_TRANSMIT_THROTTLE_OUTPUT(e->id);
+    //return CAN_TRANSMIT_THROTTLE_OUTPUT(e->id);
   } else if ((e->id == PEDAL_BRAKE_FSM_EVENT_PRESSED) ||
              (e->id == PEDAL_BRAKE_FSM_EVENT_RELEASED)) {
     return CAN_TRANSMIT_BRAKE(e->id);

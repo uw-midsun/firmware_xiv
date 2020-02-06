@@ -7,16 +7,14 @@
 #include "soft_timer.h"
 
 // Timeout callback
-void getThrottleData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
-  if (ads1015_read_raw(storage, channel, position) == STATUS_CODE_INVALID_ARGS) {
-    LOG_DEBUG("CHANNEL HAS NOT BEEN CONFIGURED CORRECTLY \n");
-  }
+StatusCode getThrottleData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
+  status_ok_or_return(ads1015_read_raw(storage, channel, position));
   float percent = 1273 - 297;
   float temp = *position;
   temp -= 295;
   temp *= 100 / percent;
   *position = (int16_t)temp;
-  LOG_DEBUG("Throttle: %d \n", *position);
+  //LOG_DEBUG("Throttle: %d \n", *position);
   //*position *= 4096;
 
   // math to convert readings to angles
@@ -26,4 +24,5 @@ void getThrottleData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *p
   // } else {
   //   event_raise(PEDAL_BRAKE_FSM_EVENT_RELEASED, 0);
   // }
+  return STATUS_CODE_OK;
 }
