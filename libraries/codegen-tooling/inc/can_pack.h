@@ -25,10 +25,6 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT)
 
-#define CAN_PACK_GET_AUX_STATUS(msg_ptr)                           \
-  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
-                      SYSTEM_CAN_MESSAGE_GET_AUX_STATUS)
-
 #define CAN_PACK_REAR_POWER(msg_ptr, output_bitset_u16, output_state_u16)                          \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_REAR_POWER, 4, \
                     (output_bitset_u16), (output_state_u16), CAN_PACK_IMPL_EMPTY,                  \

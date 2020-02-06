@@ -55,14 +55,6 @@
     status;                                                       \
   })
 
-#define CAN_TRANSMIT_GET_AUX_STATUS(ack_ptr, aux_bat_ov_flag_u8, aux_bat_ut_flag_u8) \
-  ({                                                                                 \
-    CanMessage msg = { 0 };                                                          \
-    CAN_PACK_GET_AUX_STATUS(&msg, (aux_bat_ov_flag_u8), (aux_bat_ut_flag_u8));       \
-    StatusCode status = can_transmit(&msg, (ack_ptr));                               \
-    status;                                                                          \
-  })
-
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
                                    aux_bat_uv_flag_u8)                                       \
   ({                                                                                         \
