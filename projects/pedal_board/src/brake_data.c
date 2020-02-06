@@ -7,15 +7,16 @@
 #include "soft_timer.h"
 
 // Timeout callback
-uint16_t *getBrakeData(Ads1015Storage *storage, Ads1015Channel *channel) {
-  uint16_t position = INT16_MAX;
-  ads1015_read_raw(storage, *channel, &position);
+void getBrakeData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
+  ads1015_read_raw(storage, channel, position);
 
-  LOG_DEBUG("Brake: %d", position);
-
+  int16_t percent = 1688;
+  *position -= 148;
+  *position /= percent;
+  *position *= 4096;
+  LOG_DEBUG("Brake: %d \n", *position);
   // math to convert readings to angles
   // position =
-  return &position;
   // if (position > (3.14 / 4)) {
   //   event_raise(PEDAL_BRAKE_FSM_EVENT_PRESSED, 1);
   // } else {
