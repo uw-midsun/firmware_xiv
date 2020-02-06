@@ -8,9 +8,13 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
   }
 
   storage->interval_us = settings->interval_us;
-  storage->event_id = settings->event_id;
-  storage->next_value = settings->first_value;
+  storage->next_value = storage->first_value = settings->first_value;
+  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
   return STATUS_CODE_OK;
+}
+
+static bool prv_is_active(BlinkEventGeneratorStorage *storage) {
+  return storage->timer_id != SOFT_TIMER_INVALID_TIMER;
 }
 
 static void prv_raise_blink_event(SoftTimerId timer_id, void *context) {
@@ -21,11 +25,19 @@ static void prv_raise_blink_event(SoftTimerId timer_id, void *context) {
   soft_timer_start(storage->interval_us, &prv_raise_blink_event, storage, &storage->timer_id);
 }
 
-StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage) {
+StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id) {
+  if (prv_is_active(storage)) {
+    // don't have two blink generators going at the same time
+    blink_event_generator_stop(storage);
+  }
+  storage->event_id = event_id;
   return soft_timer_start(storage->interval_us, &prv_raise_blink_event, storage,
                           &storage->timer_id);
 }
 
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage) {
-  return soft_timer_cancel(storage->timer_id);
+  bool result = soft_timer_cancel(storage->timer_id);
+  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->next_value = storage->first_value;
+  return result;
 }

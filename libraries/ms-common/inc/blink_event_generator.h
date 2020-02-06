@@ -8,13 +8,13 @@
 
 typedef struct {
   uint32_t interval_us;
-  EventId event_id;
   uint16_t first_value;  // value of the first event; must be 1 or 0, default is 0 if not specified
 } BlinkEventGeneratorSettings;
 
 typedef struct {
   uint32_t interval_us;
   EventId event_id;
+  uint16_t first_value;
   uint16_t next_value;
   SoftTimerId timer_id;
 } BlinkEventGeneratorStorage;
@@ -23,8 +23,10 @@ typedef struct {
 StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
                                       const BlinkEventGeneratorSettings *settings);
 
-// Start generating blink events. The first event is raised |storage->interval_us| after this call.
-StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage);
+// Start generating blink events with the corresponding event ID.
+// The first event is raised |storage->interval_us| after this call.
+// If the generator is currently blinking, it will stop before blinking with this event ID.
+StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id);
 
 // Stop generating blink events and return whether it was stopped.
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage);
