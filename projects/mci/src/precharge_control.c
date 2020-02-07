@@ -11,8 +11,8 @@
  * and falling)
  */
 
-// Pin A9 is the pin to start precharge.
-// Pin A10 is the pin to monitor precharge state.
+// Pin A9 and B1 is the pin to start precharge.
+// Pin B0 is the pin to monitor precharge state.
 
 /* Questions
  * - Are my pins right?
@@ -29,13 +29,16 @@
 
 #include "can.h"
 #include "can_ack.h"
+#include "can_transmit.h"
+#include "can_unpack.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "status.h"
 
+#include "exported_enums.h"
+
 #include "motor_controller.h"
 
-// THESE PINS ARE GOING TO BE CHANGED ONCE MCI REV5 IS OUTs
 static const GpioSettings s_control_settings = {
   .direction = GPIO_DIR_OUT,
   .state = GPIO_STATE_LOW,
@@ -62,22 +65,27 @@ void prv_monitor_int(void *context) {
     storage->precharge_state = MCI_PRECHARGE_DISCHARGED;
   } else if (monitor_state == GPIO_STATE_HIGH) {
     storage->precharge_state = MCI_PRECHARGE_CHARGED;
+    CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_PRECHARGE_COMPLETE);
   }
 }
 
 StatusCode prv_precharge(void *context) {
-  // make sure A10 is off
+  MotorControllerStorage *storage = context;
+  // make sure monitor is off
   GpioState monitor_state = GPIO_STATE_LOW;
-  gpio_get_state(&precharge_monitor, &monitor_state);
+  gpio_get_state(&storage->settings.precharge_monitor, &monitor_state);
   if (monitor_state != GPIO_STATE_LOW) {
     return STATUS_CODE_INTERNAL_ERROR;
   }
-  // set A9 to on
-  gpio_set_state(&precharge_control, GPIO_STATE_HIGH);
-  // check A9 to make sure it's on
+  // set control to on
+  gpio_set_state(&storage->settings.precharge_control, GPIO_STATE_HIGH);
+  gpio_set_state(&storage->settings.precharge_control2, GPIO_STATE_HIGH);
+  // check control to make sure it's on
   GpioState control_state = GPIO_STATE_LOW;
-  gpio_get_state(&precharge_control, &control_state);
-  if (control_state != GPIO_STATE_HIGH) {
+  GpioState control2_state = GPIO_STATE_LOW;
+  gpio_get_state(&storage->settings.precharge_control, &control_state);
+  gpio_get_state(&storage->settings.precharge_control2, &control2_state);
+  if (control_state != GPIO_STATE_HIGH || control2_state != GPIO_STATE_HIGH) {
     return STATUS_CODE_INTERNAL_ERROR;
   }
   return STATUS_CODE_OK;
@@ -87,40 +95,55 @@ StatusCode prv_discharge(void *context) {
   // set precharge_control to off
   MotorControllerStorage *storage = context;
   gpio_set_state(&storage->settings.precharge_control, GPIO_STATE_LOW);
+  gpio_set_state(&storage->settings.precharge_control2, GPIO_STATE_LOW);
   // check precharge_control to make sure it's discharged
   GpioState control_state = GPIO_STATE_LOW;
-  gpio_get_state(&storage->settings.precharge_monitor, &control_state);
-  if (control_state != GPIO_STATE_LOW) {
+  GpioState control2_state = GPIO_STATE_LOW;
+  gpio_get_state(&storage->settings.precharge_control, &control_state);
+  gpio_get_state(&storage->settings.precharge_control2, &control2_state);
+  if (control_state != GPIO_STATE_LOW || control2_state != GPIO_STATE_LOW) {
     return STATUS_CODE_INTERNAL_ERROR;
   }
   return STATUS_CODE_OK;
 }
 
-void begin_precharge_rx(void *context) {
-  // prv_precharge
-  // ACK message
-}
-
-void discharge_rx(void *context) {
-  // prv_discharge
-  // ACK message
+void prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  MotorControllerStorage *storage = context;
+  uint16_t power_sequence = 0;
+  CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &power_sequence);
+  StatusCode ret = STATUS_CODE_INTERNAL_ERROR;
+  // if it's power on, then prv_precharge
+  if (power_sequence == EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE) {
+    ret = prv_precharge(context);
+  }
+  // if it's power off, then prv_discharge (unimplemented)
+  // if (power_sequence == EE_POWER_MAIN_SEQUENCE_DISCHARGE) {
+  //   ret = prv_discharge(context);
+  // }
+  // reply ack
+  if (ret == STATUS_CODE_OK) {
+    *ack_reply = CAN_ACK_STATUS_OK;
+  } else {
+    *ack_reply = CAN_ACK_STATUS_INVALID;
+  }
+  return ret;
 }
 
 // gpio_init() and gpio_it_init() is required before this is called
-void precharge_control_init(void *context) {
+StatusCode precharge_control_init(void *context) {
   MotorControllerStorage *storage = context;
   // setup gpio pin A9 for starting precharge
-  gpio_init_pin(&storage->settings.precharge_control, &s_control_settings);
+  status_ok_or_return(gpio_init_pin(&storage->settings.precharge_control, &s_control_settings));
 
   // setup gpio pin A10 for monitoring precharge state via interrupt (INTERRUPT_EDGE_RISING_FALLING)
-  gpio_init_pin(&storage->settings.precharge_monitor, &s_monitor_settings);
-  gpio_it_register_interrupt(&storage->settings.precharge_monitor, 
+  status_ok_or_return(gpio_init_pin(&storage->settings.precharge_monitor, &s_monitor_settings));
+  status_ok_or_return(gpio_it_register_interrupt(&storage->settings.precharge_monitor, 
                              &s_monitor_it_settings, 
-                             INTERRUPT_EDGE_RISING_FALLING, prv_monitor_int, context);
+                             INTERRUPT_EDGE_RISING_FALLING, prv_monitor_int, context));
 
   // setup handler for CAN begin precharge (with ack)
-  // can_register_rx_handler(SYSTEM_CAN_MESSAGE_)
+  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_precharge_rx, context));
   
-  // setup handler for CAN discharge (with ack)
-  // setup handler for faults
+  // setup handler for faults (unimplemented)
+  return STATUS_CODE_OK;
 }
