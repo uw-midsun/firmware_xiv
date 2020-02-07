@@ -38,8 +38,10 @@ StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, Even
     blink_event_generator_stop(storage);
   }
   storage->event_id = event_id;
-  return soft_timer_start(storage->interval_us, &prv_raise_blink_event, storage,
-                          &storage->timer_id);
+
+  // raise an event immediately and start the soft timer
+  prv_raise_blink_event(SOFT_TIMER_INVALID_TIMER, storage);
+  return STATUS_CODE_OK;
 }
 
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage) {

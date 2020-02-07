@@ -41,31 +41,31 @@ void test_blink_event_generator_valid(void) {
 
   TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
 
-  // make sure it doesn't raise an event immediately
-  TEST_ASSERT_NOT_OK(event_process(&e));
+  // make sure it raises an event immediately + respects the custom first value
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
 
   // make sure it respects the interval
   delay_us(interval_us / 2);
   TEST_ASSERT_NOT_OK(event_process(&e));
   delay_us(interval_us / 2);
   TEST_ASSERT_OK(event_process(&e));
-
-  // make sure it respects the custom first value and the event ID is valid
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
-  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_EQUAL(1, e.data);  // make sure it actually toggles
 
   // make sure it only raises one event
   TEST_ASSERT_NOT_OK(event_process(&e));
 
-  // make sure it raises more events and actually toggles
-  delay_us(interval_us);
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
-  TEST_ASSERT_EQUAL(1, e.data);
+  // make sure it raises more events
   delay_us(interval_us);
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(0, e.data);
+  delay_us(interval_us);
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
 
   // make sure stop works
   blink_event_generator_stop(&storage);
@@ -74,19 +74,25 @@ void test_blink_event_generator_valid(void) {
 
   // make sure we can restart correctly
   blink_event_generator_start(&storage, TEST_EVENT_ID);
-  TEST_ASSERT_NOT_OK(event_process(&e));  // don't raise immediately
+  TEST_ASSERT_OK(event_process(&e));  // don't raise immediately
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);  // resets to first_value
   delay_us(interval_us);
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
-  TEST_ASSERT_EQUAL(0, e.data);  // resets to first_value
+  TEST_ASSERT_EQUAL(1, e.data);
 
   // make sure we can restart without stopping first correctly
   blink_event_generator_start(&storage, TEST_EVENT_ID_2);
-  TEST_ASSERT_NOT_OK(event_process(&e));
-  delay_us(interval_us);
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
   TEST_ASSERT_EQUAL(0, e.data);  // resets to first_value
+  delay_us(interval_us);
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
+
+  blink_event_generator_stop(&storage);
 }
 
 // Test that blink_event_generator_init has the correct default first value of 0.
@@ -100,10 +106,9 @@ void test_blink_event_generator_init_default_first_value_is_0(void) {
 
   TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
   TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
-  delay_us(interval_us);
 
   Event e;
-  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_OK(event_process(&e));  // get the event raised immediately
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(1, e.data);  // first value must default to 1
 
@@ -121,11 +126,12 @@ void test_blink_event_generator_init_invalid_first_value(void) {
 }
 
 // Test that we can manipulate multiple instances correctly.
+// The times are real finicky in this test: interval_us1:interval_us2 = 5:8 works
 void test_multiple_blink_event_generators(void) {
   Event e;
 
   // initialize the first
-  const uint32_t interval_us1 = 5000;
+  const uint32_t interval_us1 = 11500;
   BlinkEventGeneratorSettings settings1 = {
     .interval_us = interval_us1,
     .default_state = BLINKER_STATE_OFF,
@@ -134,7 +140,7 @@ void test_multiple_blink_event_generators(void) {
   TEST_ASSERT_OK(blink_event_generator_init(&storage1, &settings1));
 
   // initialize the second
-  const uint32_t interval_us2 = 7000;  // must be greater than interval_us1
+  const uint32_t interval_us2 = 20000;  // must be greater than interval_us1
   BlinkEventGeneratorSettings settings2 = {
     .interval_us = interval_us2,
     .default_state = BLINKER_STATE_ON,
@@ -142,23 +148,28 @@ void test_multiple_blink_event_generators(void) {
   BlinkEventGeneratorStorage storage2;
   TEST_ASSERT_OK(blink_event_generator_init(&storage2, &settings2));
 
-  // start both at the same time, make sure no event is raised immediately
+  // start both at the same time, make sure events are raised immediately (and in order)
   TEST_ASSERT_OK(blink_event_generator_start(&storage1, TEST_EVENT_ID));
   TEST_ASSERT_OK(blink_event_generator_start(&storage2, TEST_EVENT_ID_2));
-  TEST_ASSERT_NOT_OK(event_process(&e));
-
-  // receive first event from the first one
-  delay_us(interval_us1);  // time: interval_us1
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(0, e.data);
-  TEST_ASSERT_NOT_OK(event_process(&e));  // only one event on the queue
-
-  // receive first event from the second one
-  delay_us(interval_us2 - interval_us1);  // time: interval_us2
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
   TEST_ASSERT_EQUAL(1, e.data);
+
+  // receive second event from the first one
+  delay_us(interval_us1);  // time: interval_us1
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
+  TEST_ASSERT_NOT_OK(event_process(&e));  // only one event on the queue
+
+  // receive second event from the second one
+  delay_us(interval_us2 - interval_us1);  // time: interval_us2
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
   TEST_ASSERT_NOT_OK(event_process(&e));
 
   // cancel the first one, make sure we still get events from the second one
@@ -168,15 +179,18 @@ void test_multiple_blink_event_generators(void) {
   delay_us(interval_us2 - interval_us1);  // time: 2*interval_us2
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
-  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_EQUAL(1, e.data);
 
   // cancel the second one, restart the first one with a new event ID, make sure everything's valid
   blink_event_generator_stop(&storage2);
   blink_event_generator_start(&storage1, TEST_EVENT_ID_3);
-  delay_us(interval_us1);             // time: 2*interval_us2 + interval_u1
   TEST_ASSERT_OK(event_process(&e));  // event from the first one
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_3, e.id);
   TEST_ASSERT_EQUAL(0, e.data);  // defaults back to first_value
+  delay_us(interval_us1);        // time: 2*interval_us2 + interval_u1
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID_3, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
 
   delay_us(interval_us2 - interval_us1);  // time: 3*interval_us2
   TEST_ASSERT_NOT_OK(event_process(&e));  // second one is cancelled

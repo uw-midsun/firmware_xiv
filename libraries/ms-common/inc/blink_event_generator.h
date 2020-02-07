@@ -30,7 +30,7 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
                                       const BlinkEventGeneratorSettings *settings);
 
 // Start generating blink events with the corresponding event ID.
-// The first event is raised |storage->interval_us| after this call.
+// The first event is raised immediately after this call.
 // If the generator is currently blinking, it will stop before blinking with this event ID.
 StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id);
 
