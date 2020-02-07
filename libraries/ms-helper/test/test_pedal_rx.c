@@ -60,20 +60,16 @@ static uint32_t prv_pedal_value_to_can_msg(float pedal_value) {
   return (uint32_t)(pedal_value * PEDAL_RX_MSG_DENOMINATOR);
 }
 
-static float prv_can_msg_to_pedal_value(uint32_t can_msg) {
-  return (float)(can_msg) / PEDAL_RX_MSG_DENOMINATOR;
-}
-
 static void prv_test_pedal_rx_process_event(TestPedalRxStorage* storage, Event* event) {
   TestPedalValues* expected_value = storage->expected_value;
   PedalRxStorage* pr_storage = storage->pr_storage;
   if (event->id == TEST_PEDAL_RX_RX_EVENT) {
     TEST_ASSERT_FLOAT_WITHIN(
-      prv_can_msg_to_pedal_value(pr_storage->throttle),
+      pedal_rx_get_throttle_output(pr_storage),
       expected_value->throttle,
       TEST_PEDAL_RX_VALUE_THRESHOLD);
     TEST_ASSERT_FLOAT_WITHIN(
-      prv_can_msg_to_pedal_value(pr_storage->brake),
+      pedal_rx_get_brake_output(pr_storage),
       expected_value->brake,
       TEST_PEDAL_RX_VALUE_THRESHOLD);
     storage->handled_last = true;

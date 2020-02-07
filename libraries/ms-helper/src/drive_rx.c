@@ -1,5 +1,6 @@
 #include "drive_rx.h"
 
+#include "log.h"
 #include "can.h"
 #include "can_unpack.h"
 #include "can_ack.h"
@@ -18,7 +19,6 @@ static StatusCode prv_handle_drive_state(const CanMessage* msg, void* context,
   event_raise_priority(EVENT_PRIORITY_NORMAL, drive_event_lookup[storage->drive_state], 0);
   // TODO(SOFT-116): Could also use a callback here instead of storing it?
   //       that'd enable correct ack if we want to ack this message ...
-  *ack_reply = CAN_ACK_STATUS_OK;
   return STATUS_CODE_OK;
 }
 
@@ -26,4 +26,8 @@ StatusCode drive_rx_init(DriveRxStorage* storage, DriveRxSettings* settings) {
   storage->settings = *settings;
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_STATE, prv_handle_drive_state, storage);
   return STATUS_CODE_OK;
+}
+
+EEDriveState drive_rx_get_state(DriveRxStorage* storage) {
+  return storage->drive_state;
 }

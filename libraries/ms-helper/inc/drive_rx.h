@@ -18,3 +18,5 @@ typedef struct DriveRxStorage {
 } DriveRxStorage;
 
 StatusCode drive_rx_init(DriveRxStorage* storage, DriveRxSettings* settings);
+
+EEDriveState drive_rx_get_state(DriveRxStorage* storage);

@@ -23,7 +23,7 @@
 #define TEST_DRIVE_RX_TX_PERIOD_MS 100
 
 typedef enum {
-  TEST_DRIVE_RX_CAN_RX = 0,
+  TEST_DRIVE_RX_CAN_RX = 10,
   TEST_DRIVE_RX_CAN_TX,
   TEST_DRIVE_RX_CAN_FAULT,
 } TestDriveCanEvent;
@@ -63,9 +63,10 @@ static TestDriveRxEvent s_drive_state_lookup[NUM_TEST_DRIVE_RX_EVENT] = {
 };
 
 static void prv_test_drive_rx_process_event(TestDriveRxStorage* storage, Event* event) {
-  DriveRxStorage* dr_storage = storage->dr_storage;
-  TEST_ASSERT_EQUAL(storage->expected, dr_storage->drive_state);
+  EEDriveState drive_state = drive_rx_get_state(storage->dr_storage);
+  if (event->id > NUM_TEST_DRIVE_RX_EVENT) return;
   TEST_ASSERT_EQUAL(storage->expected, s_drive_state_lookup[event->id]);
+  TEST_ASSERT_EQUAL(storage->expected, drive_state);
   storage->handled_last = true;
   storage->completed_all = storage->handled_last && storage->completed_tx;
 }
@@ -75,7 +76,8 @@ static void prv_transmit_test_pedal_values(SoftTimerId timer_id, void *context) 
   TEST_ASSERT_TRUE(storage->handled_last);
   size_t i = storage->curr_tx_test++;
   storage->handled_last = false;
-  CAN_TRANSMIT_DRIVE_STATE(s_test_drive_values[i]);
+  LOG_DEBUG("TRANSMITTING: %d\n", s_test_drive_values[i]);
+  storage->expected = s_test_drive_values[i];
   if (storage->curr_tx_test == SIZEOF_ARRAY(s_test_drive_values)) {
     storage->completed_tx = true;
   } else {

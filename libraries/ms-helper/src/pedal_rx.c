@@ -47,3 +47,11 @@ StatusCode pedal_rx_init(PedalRxStorage* storage, PedalRxSettings* settings) {
                           storage, NULL);
   return STATUS_CODE_OK;
 }
+
+float pedal_rx_get_throttle_output(PedalRxStorage* storage) {
+  return storage->throttle;
+}
+
+float pedal_rx_get_brake_output(PedalRxStorage* storage) {
+  return storage->brake;
+}
