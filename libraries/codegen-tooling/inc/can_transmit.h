@@ -47,6 +47,38 @@
     status;                                                                          \
   })
 
+#define CAN_TRANSMIT_FAULT_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                       \
+    CanMessage msg = { 0 };                                \
+    CAN_PACK_FAULT_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));     \
+    status;                                                \
+  })
+
+#define CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                               \
+    CanMessage msg = { 0 };                                        \
+    CAN_PACK_POWER_ON_MAIN_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));             \
+    status;                                                        \
+  })
+
+#define CAN_TRANSMIT_POWER_OFF_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_POWER_OFF_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));         \
+    status;                                                    \
+  })
+
+#define CAN_TRANSMIT_POWER_ON_AUX_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                              \
+    CanMessage msg = { 0 };                                       \
+    CAN_PACK_POWER_ON_AUX_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));            \
+    status;                                                       \
+  })
+
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
                                    aux_bat_uv_flag_u8)                                       \
   ({                                                                                         \

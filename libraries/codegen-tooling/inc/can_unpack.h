@@ -25,6 +25,22 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,  \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_FAULT_SEQUENCE(msg_ptr, sequence_u16_ptr)                   \
+  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg_ptr, sequence_u16_ptr)           \
+  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_POWER_OFF_SEQUENCE(msg_ptr, sequence_u16_ptr)               \
+  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_POWER_ON_AUX_SEQUENCE(msg_ptr, sequence_u16_ptr)            \
+  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8_ptr, dcdc_uv_flag_u8_ptr,             \
                                  aux_bat_ov_flag_u8_ptr, aux_bat_uv_flag_u8_ptr)                \
   can_unpack_impl_u8((msg_ptr), 4, (dcdc_ov_flag_u8_ptr), (dcdc_uv_flag_u8_ptr),                \
