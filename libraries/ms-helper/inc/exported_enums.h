@@ -65,3 +65,10 @@ typedef enum EERelayState {
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
+
+typedef enum EEDriveState {
+  EE_DRIVE_STATE_NEUTRAL = 0,
+  EE_DRIVE_STATE_DRIVE,
+  EE_DRIVE_STATE_REVERSE,
+  NUM_EE_DRIVE_STATES
+} EEDriveState;
