@@ -29,6 +29,7 @@
 
 #include "can.h"
 #include "can_ack.h"
+#include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "gpio.h"
@@ -39,25 +40,19 @@
 
 #include "motor_controller.h"
 
-static const GpioSettings s_control_settings = {
-  .direction = GPIO_DIR_OUT,
-  .state = GPIO_STATE_LOW,
-  .alt_function = GPIO_ALTFN_NONE,
-  .resistor = GPIO_RES_NONE
-};
+static const GpioSettings s_control_settings = { .direction = GPIO_DIR_OUT,
+                                                 .state = GPIO_STATE_LOW,
+                                                 .alt_function = GPIO_ALTFN_NONE,
+                                                 .resistor = GPIO_RES_NONE };
 
-static const GpioSettings s_monitor_settings = {
-  .direction = GPIO_DIR_IN,
-  .state = GPIO_STATE_LOW,
-  .alt_function = GPIO_ALTFN_NONE,
-  .resistor = GPIO_RES_NONE
-};
-static const InterruptSettings s_monitor_it_settings = {
-  .type = INTERRUPT_TYPE_INTERRUPT,
-  .priority = INTERRUPT_PRIORITY_NORMAL
-};
+static const GpioSettings s_monitor_settings = { .direction = GPIO_DIR_IN,
+                                                 .state = GPIO_STATE_LOW,
+                                                 .alt_function = GPIO_ALTFN_NONE,
+                                                 .resistor = GPIO_RES_NONE };
+static const InterruptSettings s_monitor_it_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
+                                                         .priority = INTERRUPT_PRIORITY_NORMAL };
 
-void prv_monitor_int(void *context) {
+void prv_monitor_int(const GpioAddress *address, void *context) {
   MotorControllerStorage *storage = context;
   GpioState monitor_state = GPIO_STATE_LOW;
   gpio_get_state(&storage->settings.precharge_monitor, &monitor_state);
@@ -65,7 +60,7 @@ void prv_monitor_int(void *context) {
     storage->precharge_state = MCI_PRECHARGE_DISCHARGED;
   } else if (monitor_state == GPIO_STATE_HIGH) {
     storage->precharge_state = MCI_PRECHARGE_CHARGED;
-    CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_PRECHARGE_COMPLETE);
+    CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_PRECHARGE_COMPLETED);
   }
 }
 
@@ -107,7 +102,7 @@ StatusCode prv_discharge(void *context) {
   return STATUS_CODE_OK;
 }
 
-void prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   MotorControllerStorage *storage = context;
   uint16_t power_sequence = 0;
   CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &power_sequence);
@@ -137,13 +132,14 @@ StatusCode precharge_control_init(void *context) {
 
   // setup gpio pin A10 for monitoring precharge state via interrupt (INTERRUPT_EDGE_RISING_FALLING)
   status_ok_or_return(gpio_init_pin(&storage->settings.precharge_monitor, &s_monitor_settings));
-  status_ok_or_return(gpio_it_register_interrupt(&storage->settings.precharge_monitor, 
-                             &s_monitor_it_settings, 
-                             INTERRUPT_EDGE_RISING_FALLING, prv_monitor_int, context));
+  status_ok_or_return(
+      gpio_it_register_interrupt(&storage->settings.precharge_monitor, &s_monitor_it_settings,
+                                 INTERRUPT_EDGE_RISING_FALLING, prv_monitor_int, context));
 
   // setup handler for CAN begin precharge (with ack)
-  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_precharge_rx, context));
-  
+  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE,
+                                              prv_precharge_rx, context));
+
   // setup handler for faults (unimplemented)
   return STATUS_CODE_OK;
 }
