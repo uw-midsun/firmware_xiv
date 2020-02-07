@@ -69,7 +69,6 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
     printf("%x ", byte);
   }
   printf("\n");
-  can_transmit(&msg, NULL);
   return STATUS_CODE_OK;
 }
 
