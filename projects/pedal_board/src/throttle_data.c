@@ -14,8 +14,8 @@ StatusCode getThrottleData(Ads1015Storage *storage, Ads1015Channel channel, int1
   temp -= 295;
   temp *= 100 / percent;
   *position = (int16_t)temp;
-  //LOG_DEBUG("Throttle: %d \n", *position);
-  //*position *= 4096;
+  // LOG_DEBUG("Throttle: %d \n", *position);
+  // *position *= 4096;
 
   // math to convert readings to angles
   // position =

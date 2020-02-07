@@ -1,15 +1,18 @@
-#include "pedal_data_tx.h"
 #include "ads1015.h"
 #include "brake_data.h"
-#include "throttle_data.h"
+#include "can_transmit.h"
 #include "event_queue.h"
 #include "fsm.h"
+#include "gpio.h"
+#include "gpio_it.h"
+#include "interrupt.h"
 #include "log.h"
+#include "pedal_data_tx.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
-#include "can_transmit.h"
+#include "test_helpers.h"
+#include "throttle_data.h"
 
-PedalData data = {0};
 static Ads1015Storage ads1015_storage;
 static CanStorage can_storage = { 0 };
 
@@ -21,8 +24,9 @@ void setup_test(void) {
   interrupt_init();
   gpio_it_init();
   soft_timer_init();
+  event_queue_init();
 
-    const CanSettings can_settings = {
+  const CanSettings can_settings = {
     .device_id = 0x1,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = PEDAL_CAN_RX,

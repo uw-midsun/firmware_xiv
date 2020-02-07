@@ -42,14 +42,13 @@ static void prv_blink_timeout(SoftTimerId timer_id, void *context) {
 // main should have a brake fsm, and ads1015storage
 StatusCode pedal_data_tx_init(Ads1015Storage *storage, CanStorage *can_storage,
                               CanSettings *can_settings) {
-
   status_ok_or_return(can_init(can_storage, can_settings));
-  //don't need to register a rx handler
+  // don't need to register a rx handler
 
-    //Throttle Channels, we only use 1 right now
+  // Throttle Channels, we only use 1 right now
   status_ok_or_return(ads1015_configure_channel(storage, ADS1015_CHANNEL_0, true, NULL, NULL));
   status_ok_or_return(ads1015_configure_channel(storage, ADS1015_CHANNEL_1, true, NULL, NULL));
-  //brake channel
+  // brake channel
   status_ok_or_return(ads1015_configure_channel(storage, ADS1015_CHANNEL_2, true, NULL, NULL));
   data.storage = storage;
   data.brake_channel = ADS1015_CHANNEL_2;

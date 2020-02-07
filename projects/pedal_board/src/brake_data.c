@@ -3,13 +3,12 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
-#include "pedal_events.h"
 #include "soft_timer.h"
 
 // Timeout callback
 StatusCode getBrakeData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
   status_ok_or_return(ads1015_read_raw(storage, channel, position));
-//need to figure out the actual values
+  // need to figure out the actual values
   int16_t percent = 1688;
   *position -= 148;
   *position /= percent;
