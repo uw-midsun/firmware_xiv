@@ -120,4 +120,3 @@ typedef enum EEEbrakeState {
   EE_EBRAKE_STATE_RELEASED,
   NUM_EE_EBRAKE_STATES,
 } EEEbrakeState;
-

@@ -22,8 +22,8 @@ typedef struct PedalRxStorage {
   void *context;
 } PedalRxStorage;
 
-StatusCode pedal_rx_init(PedalRxStorage* storage, PedalRxSettings* settings);
+StatusCode pedal_rx_init(PedalRxStorage *storage, PedalRxSettings *settings);
 
-float pedal_rx_get_throttle_output(PedalRxStorage* storage);
+float pedal_rx_get_throttle_output(PedalRxStorage *storage);
 
-float pedal_rx_get_brake_output(PedalRxStorage* storage);
+float pedal_rx_get_brake_output(PedalRxStorage *storage);

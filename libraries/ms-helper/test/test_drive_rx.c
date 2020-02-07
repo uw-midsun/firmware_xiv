@@ -7,8 +7,8 @@
 #include "can_ack.h"
 #include "can_msg_defs.h"
 #include "can_transmit.h"
-#include "exported_enums.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "gpio.h"
 #include "gpio_mcu.h"
 #include "interrupt.h"
@@ -35,9 +35,8 @@ typedef enum {
   NUM_TEST_DRIVE_RX_EVENT
 } TestDriveRxEvent;
 
-
 typedef struct {
-  DriveRxStorage* dr_storage;
+  DriveRxStorage *dr_storage;
   EEDriveState expected;
   uint8_t curr_tx_test;
   bool handled_last;
@@ -45,15 +44,10 @@ typedef struct {
   bool completed_all;
 } TestDriveRxStorage;
 
-
 static CanStorage s_can_storage;
 static EEDriveState s_test_drive_values[] = {
-  [0] = EE_DRIVE_STATE_NEUTRAL,
-  [1] = EE_DRIVE_STATE_DRIVE,
-  [2] = EE_DRIVE_STATE_NEUTRAL,
-  [3] = EE_DRIVE_STATE_REVERSE,
-  [4] = EE_DRIVE_STATE_NEUTRAL,
-  [5] = EE_DRIVE_STATE_DRIVE,
+  [0] = EE_DRIVE_STATE_NEUTRAL, [1] = EE_DRIVE_STATE_DRIVE,   [2] = EE_DRIVE_STATE_NEUTRAL,
+  [3] = EE_DRIVE_STATE_REVERSE, [4] = EE_DRIVE_STATE_NEUTRAL, [5] = EE_DRIVE_STATE_DRIVE,
   [6] = EE_DRIVE_STATE_NEUTRAL,
 };
 static EEDriveState s_drive_state_lookup[NUM_TEST_DRIVE_RX_EVENT] = {
@@ -62,7 +56,7 @@ static EEDriveState s_drive_state_lookup[NUM_TEST_DRIVE_RX_EVENT] = {
   [TEST_DRIVE_RX_REVERSE_EVENT] = EE_DRIVE_STATE_REVERSE,
 };
 
-static void prv_test_drive_rx_process_event(TestDriveRxStorage* storage, Event* event) {
+static void prv_test_drive_rx_process_event(TestDriveRxStorage *storage, Event *event) {
   EEDriveState drive_state = drive_rx_get_state(storage->dr_storage);
   if (event->id > NUM_TEST_DRIVE_RX_EVENT) return;
   TEST_ASSERT_EQUAL(storage->expected, s_drive_state_lookup[event->id]);
@@ -72,7 +66,7 @@ static void prv_test_drive_rx_process_event(TestDriveRxStorage* storage, Event* 
 }
 
 static void prv_transmit_test_pedal_values(SoftTimerId timer_id, void *context) {
-  TestDriveRxStorage* storage = context;
+  TestDriveRxStorage *storage = context;
   TEST_ASSERT_TRUE(storage->handled_last);
   size_t i = storage->curr_tx_test++;
   storage->handled_last = false;
@@ -81,8 +75,8 @@ static void prv_transmit_test_pedal_values(SoftTimerId timer_id, void *context) 
   if (storage->curr_tx_test == SIZEOF_ARRAY(s_test_drive_values)) {
     storage->completed_tx = true;
   } else {
-    soft_timer_start_millis(TEST_DRIVE_RX_TX_PERIOD_MS, prv_transmit_test_pedal_values,
-                            storage, NULL);
+    soft_timer_start_millis(TEST_DRIVE_RX_TX_PERIOD_MS, prv_transmit_test_pedal_values, storage,
+                            NULL);
   }
 }
 
@@ -103,7 +97,6 @@ void setup_test(void) {
   };
   TEST_ASSERT_OK(can_init(&s_can_storage, &can_settings));
 }
-
 
 void teardown_test(void) {}
 
@@ -127,8 +120,8 @@ void test_drive_rx(void) {
 
   TEST_ASSERT_OK(drive_rx_init(&dr_storage, &settings));
 
-  soft_timer_start_millis(TEST_DRIVE_RX_TX_PERIOD_MS, prv_transmit_test_pedal_values,
-                          &storage, NULL);
+  soft_timer_start_millis(TEST_DRIVE_RX_TX_PERIOD_MS, prv_transmit_test_pedal_values, &storage,
+                          NULL);
   while (!storage.completed_all) {
     Event e = { 0 };
     while (status_ok(event_process(&e))) {

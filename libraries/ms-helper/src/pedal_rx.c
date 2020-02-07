@@ -1,13 +1,13 @@
 #include "pedal_rx.h"
 
 #include "can.h"
-#include "can_unpack.h"
 #include "can_ack.h"
+#include "can_unpack.h"
 #include "exported_enums.h"
 
-static StatusCode prv_handle_pedal_output(const CanMessage* msg, void* context,
-                                         CanAckStatus *ack_reply) {
-  PedalRxStorage* storage = context;
+static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
+                                          CanAckStatus *ack_reply) {
+  PedalRxStorage *storage = context;
 
   uint32_t throttle_msg;
   uint32_t brake_msg;
@@ -24,7 +24,7 @@ static StatusCode prv_handle_pedal_output(const CanMessage* msg, void* context,
 }
 
 static void prv_pedal_watchdog(SoftTimerId timer_id, void *context) {
-  PedalRxStorage* storage = context;
+  PedalRxStorage *storage = context;
   if (storage->watchdog_timer == 0) {
     storage->throttle = 0.0f;
     storage->brake = 0.0f;
@@ -35,23 +35,21 @@ static void prv_pedal_watchdog(SoftTimerId timer_id, void *context) {
     // next recieve of data before restarting watchdog
     storage->watchdog_timer--;
   }
-  soft_timer_start_millis(PEDAL_OUTPUT_WATCHDOG_PERIOD_MS, prv_pedal_watchdog,
-                          storage, NULL);
+  soft_timer_start_millis(PEDAL_OUTPUT_WATCHDOG_PERIOD_MS, prv_pedal_watchdog, storage, NULL);
 }
 
-StatusCode pedal_rx_init(PedalRxStorage* storage, PedalRxSettings* settings) {
+StatusCode pedal_rx_init(PedalRxStorage *storage, PedalRxSettings *settings) {
   storage->settings = *settings;
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, prv_handle_pedal_output, storage);
   storage->watchdog_timer = PEDAL_RX_WATCHDOG_TIMEOUT_COUNTER_MAX;
-  soft_timer_start_millis(PEDAL_OUTPUT_WATCHDOG_PERIOD_MS, prv_pedal_watchdog,
-                          storage, NULL);
+  soft_timer_start_millis(PEDAL_OUTPUT_WATCHDOG_PERIOD_MS, prv_pedal_watchdog, storage, NULL);
   return STATUS_CODE_OK;
 }
 
-float pedal_rx_get_throttle_output(PedalRxStorage* storage) {
+float pedal_rx_get_throttle_output(PedalRxStorage *storage) {
   return storage->throttle;
 }
 
-float pedal_rx_get_brake_output(PedalRxStorage* storage) {
+float pedal_rx_get_brake_output(PedalRxStorage *storage) {
   return storage->brake;
 }
