@@ -67,7 +67,7 @@ int main() {
 
   Event e = { 0 };
   while (true) {
-    // event_process(&e);
+    event_process(&e);
 
     // drive_fsm_process_event(&drive_fsm, &e);
     // brake_fsm_process_event(&brake_fsm, &e);
