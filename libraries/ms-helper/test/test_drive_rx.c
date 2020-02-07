@@ -56,7 +56,7 @@ static EEDriveState s_test_drive_values[] = {
   [5] = EE_DRIVE_STATE_DRIVE,
   [6] = EE_DRIVE_STATE_NEUTRAL,
 };
-static TestDriveRxEvent s_drive_state_lookup[NUM_TEST_DRIVE_RX_EVENT] = {
+static EEDriveState s_drive_state_lookup[NUM_TEST_DRIVE_RX_EVENT] = {
   [TEST_DRIVE_RX_NEUTRAL_EVENT] = EE_DRIVE_STATE_NEUTRAL,
   [TEST_DRIVE_RX_DRIVE_EVENT] = EE_DRIVE_STATE_DRIVE,
   [TEST_DRIVE_RX_REVERSE_EVENT] = EE_DRIVE_STATE_REVERSE,
