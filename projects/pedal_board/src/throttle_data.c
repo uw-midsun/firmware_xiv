@@ -7,7 +7,7 @@
 #include "soft_timer.h"
 
 StatusCode getThrottleData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
-  //throttle actually uses 2 channels. may configure later
+  // throttle actually uses 2 channels. may configure later
   status_ok_or_return(ads1015_read_raw(storage, channel, position));
   float percent = 1273 - 297;
   float temp = *position;
