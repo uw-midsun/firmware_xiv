@@ -25,11 +25,24 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT)
 
-#define CAN_PACK_GET_AUX_STATUS(msg_ptr, aux_bat_ov_flag_u8, aux_bat_ut_flag_u8)                   \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_GET_AUX_STATUS, \
-                   2, (aux_bat_ov_flag_u8), (aux_bat_ut_flag_u8), CAN_PACK_IMPL_EMPTY,             \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_REAR_POWER(msg_ptr, output_bitset_u16, output_state_u16)                          \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_REAR_POWER, 4, \
+                    (output_bitset_u16), (output_state_u16), CAN_PACK_IMPL_EMPTY,                  \
+                    CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_POWER_ON_MAIN_SEQUENCE(msg_ptr, sequence_u16)                    \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_RESERVED,                        \
+                    SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, 2, (sequence_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_POWER_ON_AUX_SEQUENCE(msg_ptr, sequence_u16)                    \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_RESERVED,                       \
+                    SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE, 2, (sequence_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_PRECHARGE_COMPLETE(msg_ptr)                       \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_PRECHARGE_COMPLETE)
 
 #define CAN_PACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8, \
                                aux_bat_uv_flag_u8)                                            \
