@@ -8,6 +8,7 @@
 // Note that this is hardcoded to 500kbps and we assume that a 16MHz crystal is attached.
 #include <stdbool.h>
 #include <stdint.h>
+
 #include "gpio.h"
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
