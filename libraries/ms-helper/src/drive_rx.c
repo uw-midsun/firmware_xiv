@@ -1,6 +1,5 @@
 #include "drive_rx.h"
 
-#include "log.h"
 #include "can.h"
 #include "can_unpack.h"
 #include "can_ack.h"

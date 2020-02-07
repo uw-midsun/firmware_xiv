@@ -76,7 +76,7 @@ static void prv_transmit_test_pedal_values(SoftTimerId timer_id, void *context) 
   TEST_ASSERT_TRUE(storage->handled_last);
   size_t i = storage->curr_tx_test++;
   storage->handled_last = false;
-  LOG_DEBUG("TRANSMITTING: %d\n", s_test_drive_values[i]);
+  CAN_TRANSMIT_DRIVE_STATE(s_test_drive_values[i]);
   storage->expected = s_test_drive_values[i];
   if (storage->curr_tx_test == SIZEOF_ARRAY(s_test_drive_values)) {
     storage->completed_tx = true;

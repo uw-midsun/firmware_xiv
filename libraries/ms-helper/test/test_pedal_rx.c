@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "can.h"
 #include "can_msg_defs.h"
@@ -12,6 +13,7 @@
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
 #include "status.h"
+#include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -19,7 +21,7 @@
 #define TEST_PEDAL_RX_TX_PERIOD_MS 100
 
 typedef enum {
-  TEST_PEDAL_RX_CAN_RX = 0,
+  TEST_PEDAL_RX_CAN_RX = 10,
   TEST_PEDAL_RX_CAN_TX,
   TEST_PEDAL_RX_CAN_FAULT,
 } TestPedalCanEvent;
@@ -64,14 +66,10 @@ static void prv_test_pedal_rx_process_event(TestPedalRxStorage* storage, Event* 
   TestPedalValues* expected_value = storage->expected_value;
   PedalRxStorage* pr_storage = storage->pr_storage;
   if (event->id == TEST_PEDAL_RX_RX_EVENT) {
-    TEST_ASSERT_FLOAT_WITHIN(
-      pedal_rx_get_throttle_output(pr_storage),
-      expected_value->throttle,
-      TEST_PEDAL_RX_VALUE_THRESHOLD);
-    TEST_ASSERT_FLOAT_WITHIN(
-      pedal_rx_get_brake_output(pr_storage),
-      expected_value->brake,
-      TEST_PEDAL_RX_VALUE_THRESHOLD);
+    TEST_ASSERT_TRUE(
+      fabs(pedal_rx_get_throttle_output(pr_storage)-expected_value->throttle) < TEST_PEDAL_RX_VALUE_THRESHOLD);
+    TEST_ASSERT_TRUE(
+      fabs(pedal_rx_get_brake_output(pr_storage)-expected_value->brake) < TEST_PEDAL_RX_VALUE_THRESHOLD);
     storage->handled_last = true;
     if (storage->completed_tx && storage->completed_watchdog_test) {
       storage->completed_all = true;
@@ -80,20 +78,23 @@ static void prv_test_pedal_rx_process_event(TestPedalRxStorage* storage, Event* 
     TEST_ASSERT_TRUE(storage->completed_tx && !storage->completed_watchdog_test);
     storage->completed_watchdog_test = true;
     storage->curr_tx_test = 0;
+    storage->completed_tx = false;
   }
 }
 
 static void prv_transmit_test_pedal_values(SoftTimerId timer_id, void *context) {
   TestPedalRxStorage* storage = context;
   TEST_ASSERT_TRUE(storage->handled_last);
-  if (storage->curr_tx_test == SIZEOF_ARRAY(s_test_pedal_values)) return;
-  size_t i = storage->curr_tx_test++;
-  storage->handled_last = false;
-  TestPedalValues* expected_value = &s_test_pedal_values[i];
-  storage->expected_value = expected_value;
-  CAN_TRANSMIT_PEDAL_OUTPUT(
-      prv_pedal_value_to_can_msg(expected_value->throttle),
-      prv_pedal_value_to_can_msg(expected_value->brake));
+  if (storage->curr_tx_test < SIZEOF_ARRAY(s_test_pedal_values)) {
+    size_t i = storage->curr_tx_test++;
+    storage->handled_last = false;
+    TestPedalValues* expected_value = &s_test_pedal_values[i];
+    storage->expected_value = expected_value;
+    CAN_TRANSMIT_PEDAL_OUTPUT(
+        prv_pedal_value_to_can_msg(expected_value->throttle),
+        prv_pedal_value_to_can_msg(expected_value->brake));
+   storage->completed_tx = storage->curr_tx_test == SIZEOF_ARRAY(s_test_pedal_values);
+  }
   if (!storage->completed_all) {
     soft_timer_start_millis(TEST_PEDAL_RX_TX_PERIOD_MS, prv_transmit_test_pedal_values,
                             storage, NULL);
@@ -138,10 +139,10 @@ void test_pedal_rx(void) {
     .completed_watchdog_test = false,
     .completed_all = false,
   };
-  TEST_ASSERT_OK(pedal_rx_init(&pr_storage, &settings));
 
   soft_timer_start_millis(TEST_PEDAL_RX_TX_PERIOD_MS, prv_transmit_test_pedal_values,
                           &storage, NULL);
+  TEST_ASSERT_OK(pedal_rx_init(&pr_storage, &settings));
   while (!storage.completed_all) {
     Event e = { 0 };
     while (status_ok(event_process(&e))) {
