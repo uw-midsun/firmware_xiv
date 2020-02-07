@@ -14,8 +14,8 @@
 
 PedalData data = { 0 };
 
-static int16_t brake_position = 0;
-static int16_t throttle_position = 0;
+int16_t brake_position = INT16_MAX;
+int16_t throttle_position = INT16_MAX;
 
 int16_t getBrakePosition() {
   return brake_position;

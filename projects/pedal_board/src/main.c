@@ -40,12 +40,12 @@ int main() {
 
   // setup ADC readings
   I2CSettings i2c_settings = {
-    .speed = I2C_SPEED_FAST,                    //
-    .scl = { .port = GPIO_PORT_B, .pin = 10 },  // figure out later
-    .sda = { .port = GPIO_PORT_B, .pin = 11 },  // figure out later
+    .speed = I2C_SPEED_FAST,
+    .scl = { .port = GPIO_PORT_B, .pin = 10 },
+    .sda = { .port = GPIO_PORT_B, .pin = 11 },
   };
   i2c_init(I2C_PORT_2, &i2c_settings);
-  GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 2 };  // CHANGE
+  GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 2 };
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
   pedal_data_tx_init(&ads1015_storage, &can_storage, &can_settings);
@@ -53,8 +53,6 @@ int main() {
   Event e = { 0 };
   while (true) {
     event_process(&e);
-    // // LOG_DEBUG("working\n");
-    // // perhaps distinguish which events are actually for can
     can_process_event(&e);
   }
   return 0;

@@ -32,18 +32,18 @@ void setup_test(void) {
     .rx_event = PEDAL_CAN_RX,
     .tx_event = PEDAL_CAN_TX,
     .fault_event = PEDAL_CAN_FAULT,
-    .tx = { GPIO_PORT_A, 12 },  // CHANGE
-    .rx = { GPIO_PORT_A, 11 },  // CHANGE
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
   };
 
   // setup ADC readings
   I2CSettings i2c_settings = {
-    .speed = I2C_SPEED_FAST,                   //
-    .scl = { .port = GPIO_PORT_B, .pin = 5 },  // figure out later
-    .sda = { .port = GPIO_PORT_B, .pin = 5 },  // figure out later
+    .speed = I2C_SPEED_FAST,
+    .scl = { .port = GPIO_PORT_B, .pin = 5 },
+    .sda = { .port = GPIO_PORT_B, .pin = 5 },
   };
   i2c_init(I2C_PORT_2, &i2c_settings);
-  GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };  // CHANGE
+  GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
   TEST_ASSERT_OK(pedal_data_tx_init(&ads1015_storage, &can_storage, &can_settings));
