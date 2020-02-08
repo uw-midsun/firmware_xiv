@@ -16,7 +16,7 @@
 #include "throttle_data.h"
 
 static Ads1015Storage ads1015_storage = { 0 };
-const PedalDataStorage pedal_data_storage = {
+static PedalDataStorage pedal_data_storage = {
   .storage = &ads1015_storage,
   .throttle_channel1 = ADS1015_CHANNEL_0,
   .throttle_channel2 = ADS1015_CHANNEL_1,
@@ -24,7 +24,7 @@ const PedalDataStorage pedal_data_storage = {
 };
 
 static CanStorage can_storage = { 0 };
-const CanSettings can_settings = {
+static CanSettings can_settings = {
   .device_id = 0x1,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = PEDAL_CAN_RX,
@@ -75,15 +75,37 @@ void test_assert_trivial(void) {
 
 void test_pedal_rx_handler(void) {
   // should transmit immediately
+  
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
+  int16_t throttle_data = INT16_MAX;
+  int16_t brake_data = INT16_MAX;
+  int16_t throttle_position = get_throttle_position();
+  int16_t brake_position = get_brake_position();
+  
   TEST_ASSERT_EQUAL(counter, 1);
+  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, throttle_position);
+  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
+  TEST_ASSERT_EQUAL(brake_data, brake_position);
 
   delay_ms(100);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 2);
+  throttle_position = get_throttle_position();
+  brake_position = get_brake_position();
+  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, throttle_position);
+  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
+  TEST_ASSERT_EQUAL(brake_data, brake_position);
 
   delay_ms(95);
   TEST_ASSERT_EQUAL(counter, 2);
+  throttle_position = get_throttle_position();
+  brake_position = get_brake_position();
+  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, throttle_position);
+  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
+  TEST_ASSERT_EQUAL(brake_data, brake_position);
   delay_ms(5);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
 
@@ -94,10 +116,22 @@ void test_pedal_rx_handler(void) {
   delay_ms(100);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 6);
+  throttle_position = get_throttle_position();
+  brake_position = get_brake_position();
+  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, throttle_position);
+  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
+  TEST_ASSERT_EQUAL(brake_data, brake_position);
 
   delay_ms(75);
   TEST_ASSERT_EQUAL(counter, 6);
   delay_ms(25);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 7);
+  throttle_position = get_throttle_position();
+  brake_position = get_brake_position();
+  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, throttle_position);
+  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
+  TEST_ASSERT_EQUAL(brake_data, brake_position);
 }
