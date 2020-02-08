@@ -11,6 +11,7 @@ static StatusCode prv_handle_drive_state(const CanMessage *msg, void *context,
     [EE_DRIVE_STATE_DRIVE] = storage->settings.drive_event,
     [EE_DRIVE_STATE_NEUTRAL] = storage->settings.neutral_event,
     [EE_DRIVE_STATE_REVERSE] = storage->settings.reverse_event,
+    [EE_DRIVE_STATE_PARKING] = storage->settings.parking_event,
   };
 
   CAN_UNPACK_DRIVE_STATE(msg, (uint16_t *)&storage->drive_state);

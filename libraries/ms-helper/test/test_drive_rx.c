@@ -32,6 +32,7 @@ typedef enum {
   TEST_DRIVE_RX_DRIVE_EVENT = 0,
   TEST_DRIVE_RX_NEUTRAL_EVENT,
   TEST_DRIVE_RX_REVERSE_EVENT,
+  TEST_DRIVE_RX_PARKING_EVENT,
   NUM_TEST_DRIVE_RX_EVENT
 } TestDriveRxEvent;
 
@@ -48,12 +49,14 @@ static CanStorage s_can_storage;
 static EEDriveState s_test_drive_values[] = {
   [0] = EE_DRIVE_STATE_NEUTRAL, [1] = EE_DRIVE_STATE_DRIVE,   [2] = EE_DRIVE_STATE_NEUTRAL,
   [3] = EE_DRIVE_STATE_REVERSE, [4] = EE_DRIVE_STATE_NEUTRAL, [5] = EE_DRIVE_STATE_DRIVE,
-  [6] = EE_DRIVE_STATE_NEUTRAL,
+  [6] = EE_DRIVE_STATE_NEUTRAL, [7] = EE_DRIVE_STATE_PARKING, [8] = EE_DRIVE_STATE_DRIVE,
+  [9] = EE_DRIVE_STATE_NEUTRAL,
 };
 static EEDriveState s_drive_state_lookup[NUM_TEST_DRIVE_RX_EVENT] = {
   [TEST_DRIVE_RX_NEUTRAL_EVENT] = EE_DRIVE_STATE_NEUTRAL,
   [TEST_DRIVE_RX_DRIVE_EVENT] = EE_DRIVE_STATE_DRIVE,
   [TEST_DRIVE_RX_REVERSE_EVENT] = EE_DRIVE_STATE_REVERSE,
+  [TEST_DRIVE_RX_PARKING_EVENT] = EE_DRIVE_STATE_PARKING,
 };
 
 static void prv_test_drive_rx_process_event(TestDriveRxStorage *storage, Event *event) {
@@ -105,6 +108,7 @@ void test_drive_rx(void) {
     .drive_event = TEST_DRIVE_RX_DRIVE_EVENT,
     .neutral_event = TEST_DRIVE_RX_NEUTRAL_EVENT,
     .reverse_event = TEST_DRIVE_RX_REVERSE_EVENT,
+    .parking_event = TEST_DRIVE_RX_PARKING_EVENT,
   };
 
   DriveRxStorage dr_storage = { 0 };

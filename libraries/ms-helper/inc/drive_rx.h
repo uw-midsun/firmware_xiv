@@ -8,6 +8,7 @@ typedef struct DriveRxSettings {
   EventId drive_event;
   EventId reverse_event;
   EventId neutral_event;
+  EventId parking_event;
 } DriveRxSettings;
 
 typedef struct DriveRxStorage {
