@@ -128,4 +128,3 @@ typedef enum {
   EE_DRIVE_STATE_PARKING,
   NUM_EE_DRIVE_STATES
 } EEDriveState;
-
