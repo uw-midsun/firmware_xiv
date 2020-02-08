@@ -6,6 +6,7 @@
 #include "can_hw.h"
 #include "can_rx.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "fsm.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -26,19 +27,26 @@ StatusCode steering_can_init() {
     .fault_event =  STEERING_CAN_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
-    .loopback = false
   };
 
   can_init(&s_can_storage,&can_settings);
 }
 
 StatusCode steering_can_process_event(Event e) {
-
   CanMessage msg = {
     .msg_id = e.id,              //
     .type = CAN_MSG_TYPE_DATA,  //
     .data = e.data,                //
     .dlc = 1,                   //
   };
-  can_transmit(&msg, NULL);
+
+  if(e.id==EE_STEERING_INPUT_HORN) {
+  CAN_TRANSMIT_HORN(e.data);
+  }
+
+  else if(e.id == EE_STEERING_HIGH_BEAM_FORWARD || EE_STEERING_HIGH_BEAM_REAR) {
+  CAN_TRANSMIT_LIGHTS(e.id,e.data);
+  }
+  
+
 }
