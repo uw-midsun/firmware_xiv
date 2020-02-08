@@ -14,6 +14,7 @@ FSM_DECLARE_STATE(state_reverse);
 FSM_DECLARE_STATE(state_parking);
 FSM_DECLARE_STATE(state_neutral);
 FSM_DECLARE_STATE(state_set_relays);
+FSM_DECLARE_STATE(state_set_motorcontroller_output);
 FSM_DECLARE_STATE(state_set_ebrake);
 
 FSM_STATE_TRANSITION(state_neutral) {
@@ -23,9 +24,9 @@ FSM_STATE_TRANSITION(state_neutral) {
 }
 
 FSM_STATE_TRANSITION(state_drive) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_PARKING, state_set_relays);
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_REVERSE, state_reverse);
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_NEUTRAL, state_set_relays);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_PARKING, state_set_motorcontroller_output);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_REVERSE, state_set_motorcontroller_output);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_NEUTRAL, state_set_motorcontroller_output);
 }
 
 FSM_STATE_TRANSITION(state_parking) {
@@ -35,13 +36,13 @@ FSM_STATE_TRANSITION(state_parking) {
 }
 
 FSM_STATE_TRANSITION(state_reverse) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_PARKING, state_set_relays);
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_NEUTRAL, state_set_relays);
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_DRIVE, state_drive);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_PARKING, state_set_motorcontroller_output);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_DRIVE, state_set_motorcontroller_output);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_NEUTRAL, state_set_motorcontroller_output);
 }
 
 FSM_STATE_TRANSITION(state_fault) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL, state_neutral);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL_PARKING, state_neutral);
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
 }
 
@@ -50,17 +51,23 @@ static bool prv_destination_guard(const Fsm *fsm, const Event *e, void *context)
   return e->data == storage->destination;
 }
 
+FSM_STATE_TRANSITION(state_set_motorcontroller_output) {
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_OUTPUT_SET_DESTINATION_DRIVE, prv_destination_guard, state_drive);
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_OUTPUT_SET_DESTINATION_REVERSE, prv_destination_guard, state_reverse);
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_OUTPUT_SET_DESTINATION_NEUTRAL_PARKING, prv_destination_guard, state_set_relays);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
+}
+
 FSM_STATE_TRANSITION(state_set_relays) {
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_DRIVE, prv_destination_guard, state_drive);
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE, prv_destination_guard, state_reverse);
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL, prv_destination_guard, state_neutral);
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_PARKING, prv_destination_guard, state_set_ebrake);
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_DRIVE, prv_destination_guard, state_set_motorcontroller_output);
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE, prv_destination_guard, state_set_motorcontroller_output);
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL_PARKING, prv_destination_guard, state_neutral);
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
 }
 
 FSM_STATE_TRANSITION(state_set_ebrake) {
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_PRESSED, state_parking);
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_RELEASED_DESTINATION_DRIVE_REVERSE, prv_destination_guard, state_set_relays); // destination: drive, reverse
+  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_RELEASED_DESTINATION_DRIVE_REVERSE, prv_destination_guard, state_neutral);
   FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_RELEASED_DESTINATION_NEUTRAL, prv_destination_guard, state_neutral);
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
 }
@@ -77,7 +84,7 @@ typedef struct DestinationTransitionInfo {
 
 static DestinationTransitionInfo s_destination_transition_lookup[NUM_DRIVE_STATES] = {
   [DRIVE_STATE_NEUTRAL] = {
-    .relay_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL,
+    .relay_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL_PARKING,
     .ebrake_event_id = DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_RELEASED_DESTINATION_NEUTRAL,
     .data = DRIVE_STATE_NEUTRAL,
     .relay_state = EE_RELAY_STATE_OPEN,
@@ -144,6 +151,13 @@ static void prv_set_relays_output(Fsm *fsm, const Event *e, void *context) {
     .retry_indefinitely = false
   };
   relay_tx_relay_state_and_raise_event(&storage->relay_storage, &tx_req);
+}
+
+static void prv_set_motorcontroller_output(Fsm *fsm, const Event *e, void *context) {
+  DriveFsmStorage *storage = (DriveFsmStorage *)context;
+
+
+
 }
 
 static void prv_set_ebrake_output(Fsm *fsm, const Event *e, void *context) {
