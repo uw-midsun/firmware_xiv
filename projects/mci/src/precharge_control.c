@@ -1,32 +1,3 @@
-/* PRECHARGE CONTROL
- * - receives can message for precharge
- * - begins precharge (sets gpio pin)
- *      - acks the precharge message (checks the gpio state after setting it, if it’s the same, ack
- * status OK)
- * - receives can message for discharge (power-off sequence, bms faults)
- *      - acks the message
- * - receives fault events for discharge(internally generated if the mci’s fault)
- * - sends precharge complete message when precharge is complete (interrupt)
- * - keeps a global state of the precharge status (the interrupt should be triggered on both rising
- * and falling)
- */
-
-// Pin A9 and B1 is the pin to start precharge.
-// Pin B0 is the pin to monitor precharge state.
-
-/* Questions
- * - Are my pins right?
- * - What exactly is the expected pin behaviour?
- * - What is the begin precharge message?
- *    - A: POWER_ON_MAIN_SEQUENCE, data: uint8_t begin precharge in EE
- * - What is the discharge message?
- *    - A: power off sequence, not implemented yet
- * - Can I keep the precharge state in the motor controller storage, or should I use
- *       a static variable with a getter method?
- * - What is the precharge complete message?
- *    - A: POWER_MAIN_SEQUENCE_PRECHARGE_COMPLETED in EE
- */
-
 #include "can.h"
 #include "can_ack.h"
 #include "can_msg_defs.h"
@@ -106,7 +77,7 @@ StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *
   MotorControllerStorage *storage = context;
   uint16_t power_sequence = 0;
   CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &power_sequence);
-  StatusCode ret = STATUS_CODE_INTERNAL_ERROR;
+  StatusCode ret = STATUS_CODE_OK;
   // if it's power on, then prv_precharge
   if (power_sequence == EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE) {
     ret = prv_precharge(context);
@@ -124,7 +95,6 @@ StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *
   return ret;
 }
 
-// gpio_init() and gpio_it_init() is required before this is called
 StatusCode precharge_control_init(void *context) {
   MotorControllerStorage *storage = context;
   // setup gpio pin A9 for starting precharge

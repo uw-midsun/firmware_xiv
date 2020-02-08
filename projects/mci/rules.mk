@@ -7,3 +7,7 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common ms-helper
+
+ifeq (x86,$(PLATFORM))
+$(T)_EXCLUDE_TESTS := precharge
+endif

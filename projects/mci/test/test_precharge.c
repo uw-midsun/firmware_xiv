@@ -5,6 +5,7 @@
 #include "exported_enums.h"
 #include "test_helpers.h"
 
+#include "mci_events.h"
 #include "motor_controller.h"
 #include "precharge_control.h"
 
@@ -46,9 +47,16 @@ void teardown_test(void) {}
 void test_run(void) {
   MotorControllerStorage *storage = &s_mci_storage;
   TEST_ASSERT_TRUE(storage->precharge_state == MCI_PRECHARGE_DISCHARGED);
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE);
+  
+  // Test that a non precharge power main sequence message does nothing
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   // TODO(SOFT-113): Check if this is valid amount of time to wait,
   // i.e. how long does precharge take
+  delay_ms(500);
+  TEST_ASSERT_TRUE(storage->precharge_state != MCI_PRECHARGE_CHARGED);
+
+  // Test that a precharge message precharges
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE);
   delay_ms(500);
   TEST_ASSERT_TRUE(storage->precharge_state == MCI_PRECHARGE_CHARGED);
   // TODO(SOFT-113): add a check to ensure proper discharge
