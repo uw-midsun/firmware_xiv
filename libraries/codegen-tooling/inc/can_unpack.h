@@ -71,6 +71,10 @@
   can_unpack_impl_u16((msg_ptr), 2, (power_bitset_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_DRIVE_STATE(msg_ptr, drive_state_u16_ptr)                      \
+  can_unpack_impl_u16((msg_ptr), 2, (drive_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_LIGHTS_SYNC(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_LIGHTS(msg_ptr, lights_id_u8_ptr, state_u8_ptr)                            \
