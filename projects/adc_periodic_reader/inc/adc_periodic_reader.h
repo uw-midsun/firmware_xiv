@@ -30,6 +30,7 @@ typedef void (*AdcPeriodicReaderCallback)(uint16_t data, PeriodicReaderId id, vo
 typedef struct {
   GpioAddress address;
   AdcPeriodicReaderCallback callback;
+  void *context;
 } AdcPeriodicReaderSettings;
 
 typedef struct {
@@ -37,9 +38,8 @@ typedef struct {
   AdcPeriodicReaderCallback callback;
   uint16_t data;
   bool activated;
+  void *context;
 } AdcPeriodicReaderStorage;
-
-static AdcPeriodicReaderStorage s_storage[NUM_PERIODIC_READER_IDS];
 
 // Sets soft-timer and disables all ADCs
 StatusCode adc_periodic_reader_init();

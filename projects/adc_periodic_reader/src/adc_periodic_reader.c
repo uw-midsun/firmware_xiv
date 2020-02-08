@@ -11,12 +11,15 @@
 
 #define TIMER_INTERVAL 50
 
+static AdcPeriodicReaderStorage s_storage[NUM_PERIODIC_READER_IDS];
+
 void prv_callback(SoftTimerId timer_id, void *context) {
   for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
     if (s_storage[i].activated) {
-      s_storage[i].callback(s_storage[i].data, i, NULL);
+      s_storage[i].callback(s_storage[i].data, i, s_storage[i].context);
     }
   }
+  soft_timer_start_millis(TIMER_INTERVAL, prv_callback, NULL, NULL);
 }
 
 StatusCode adc_periodic_reader_init() {
@@ -39,8 +42,10 @@ StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
     GPIO_ALTFN_ANALOG,
   };
 
-  s_storage[reader_id].address = adc_settings->address;
+  s_storage[reader_id].address.pin = adc_settings->address.pin;
+  s_storage[reader_id].address.port = adc_settings->address.port;
   s_storage[reader_id].callback = adc_settings->callback;
+  s_storage[reader_id].context = adc_settings->context;
 
   AdcChannel channel;
   gpio_init_pin(&s_storage[reader_id].address, &gpio_settings);
@@ -57,4 +62,8 @@ StatusCode adc_periodic_reader_start(PeriodicReaderId reader_id) {
 StatusCode adc_periodic_reader_stop(PeriodicReaderId reader_id) {
   s_storage[reader_id].activated = false;
   return STATUS_CODE_OK;
+}
+
+GpioAddress getAddress(PeriodicReaderId reader_id) {
+  return s_storage[PERIODIC_READER_ID_0].address;
 }
