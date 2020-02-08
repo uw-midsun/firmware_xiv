@@ -46,6 +46,13 @@ typedef enum {
 } EEChargerConnState;
 
 typedef enum {
+  EE_DRIVE_OUTPUT_OFF = 0,
+  EE_DRIVE_OUTPUT_DRIVE,
+  EE_DRIVE_OUTPUT_REVERSE,
+  NUM_EE_DRIVE_OUTPUTS,
+} EEDriveOutput;
+
+typedef enum {
   EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY = 0,
   EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING,
   EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE,
@@ -102,14 +109,22 @@ typedef enum EEHornState {
   NUM_EE_HORN_STATES,     //
 } EEHornState;
 
-typedef enum EERelayState {
+typedef enum {
   EE_RELAY_STATE_OPEN = 0,
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
 
-typedef enum EEEbrakeState {
+typedef enum {
   EE_EBRAKE_STATE_PRESSED = 0,
   EE_EBRAKE_STATE_RELEASED,
   NUM_EE_EBRAKE_STATES,
 } EEEbrakeState;
+
+typedef enum {
+  EE_DRIVE_STATE_DRIVE = 0,
+  EE_DRIVE_STATE_NEUTRAL,
+  EE_DRIVE_STATE_REVERSE,
+  EE_DRIVE_STATE_PARKING,
+  NUM_EE_DRIVE_STATES
+} EEDriveState;
