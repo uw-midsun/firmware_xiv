@@ -29,11 +29,11 @@ void prv_setup_system_can() {
 
 void prv_mci_storage_init(void *context) {
   MotorControllerStorage *storage = context;
-  MotorControllerSettings settings = { .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
+  PrechargeStorage precharge_storage = { .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
                                        .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
-                                       .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 } };
-  storage->settings = settings;
-  storage->precharge_state = MCI_PRECHARGE_DISCHARGED;
+                                       .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
+                                       .state = MCI_PRECHARGE_DISCHARGED };
+  storage->precharge_storage = precharge_storage;
 }
 
 void setup_test(void) {
@@ -53,11 +53,11 @@ void test_run(void) {
   // TODO(SOFT-113): Check if this is valid amount of time to wait,
   // i.e. how long does precharge take
   delay_ms(500);
-  TEST_ASSERT_TRUE(storage->precharge_state != MCI_PRECHARGE_CHARGED);
+  TEST_ASSERT_TRUE(storage->precharge_storage.state != MCI_PRECHARGE_CHARGED);
 
   // Test that a precharge message precharges
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE);
   delay_ms(500);
-  TEST_ASSERT_TRUE(storage->precharge_state == MCI_PRECHARGE_CHARGED);
+  TEST_ASSERT_TRUE(storage->precharge_storage.state == MCI_PRECHARGE_CHARGED);
   // TODO(SOFT-113): add a check to ensure proper discharge
 }
