@@ -23,6 +23,14 @@
     status;                                                    \
   })
 
+#define CAN_TRANSMIT_GET_RELAY_STATES(ack_ptr, relay_state_u8) \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_GET_RELAY_STATES(&msg, (relay_state_u8));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));         \
+    status;                                                    \
+  })
+
 #define CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(ack_ptr)     \
   ({                                                   \
     CanMessage msg = { 0 };                            \
@@ -31,12 +39,20 @@
     status;                                            \
   })
 
-#define CAN_TRANSMIT_REAR_POWER(ack_ptr, output_bitset_u16, output_state_u16) \
-  ({                                                                          \
-    CanMessage msg = { 0 };                                                   \
-    CAN_PACK_REAR_POWER(&msg, (output_bitset_u16), (output_state_u16));       \
-    StatusCode status = can_transmit(&msg, (ack_ptr));                        \
-    status;                                                                   \
+#define CAN_TRANSMIT_GET_AUX_STATUS(ack_ptr, aux_bat_ov_flag_u8, aux_bat_ut_flag_u8) \
+  ({                                                                                 \
+    CanMessage msg = { 0 };                                                          \
+    CAN_PACK_GET_AUX_STATUS(&msg, (aux_bat_ov_flag_u8), (aux_bat_ut_flag_u8));       \
+    StatusCode status = can_transmit(&msg, (ack_ptr));                               \
+    status;                                                                          \
+  })
+
+#define CAN_TRANSMIT_FAULT_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                       \
+    CanMessage msg = { 0 };                                \
+    CAN_PACK_FAULT_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));     \
+    status;                                                \
   })
 
 #define CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(ack_ptr, sequence_u16) \
@@ -45,6 +61,14 @@
     CAN_PACK_POWER_ON_MAIN_SEQUENCE(&msg, (sequence_u16));         \
     StatusCode status = can_transmit(&msg, (ack_ptr));             \
     status;                                                        \
+  })
+
+#define CAN_TRANSMIT_POWER_OFF_SEQUENCE(ack_ptr, sequence_u16) \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_POWER_OFF_SEQUENCE(&msg, (sequence_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));         \
+    status;                                                    \
   })
 
 #define CAN_TRANSMIT_POWER_ON_AUX_SEQUENCE(ack_ptr, sequence_u16) \
