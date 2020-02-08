@@ -78,7 +78,7 @@ void test_rear_power_distribution_current_measurement_get_measurement_valid(void
       rear_power_distribution_current_measurement_get_storage();
 
   // print out the storage for debugging
-  for (uint8_t i = 0; i < REAR_POWER_DISTRIBUTION_HW_CONFIG.num_bts7200_channels; i++) {
+  for (uint8_t i = 0; i < 2 * REAR_POWER_DISTRIBUTION_HW_CONFIG.num_bts7200_channels; i++) {
     LOG_DEBUG("measurement %d is %d\r\n", i, storage->measurements[i]);
   }
 
@@ -87,15 +87,16 @@ void test_rear_power_distribution_current_measurement_get_measurement_valid(void
 
 // Test that init errors with invalid hardware config.
 void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
+  const Mcp23008I2CAddress test_i2c_address = 0x20;  // resolve valid
   RearPowerDistributionCurrentHardwareConfig hw_config = {
     .num_bts7200_channels = 4,
-    .dsel_i2c_address = 1,
+    .dsel_i2c_address = test_i2c_address,
     .bts7200_to_dsel_address =
         (Mcp23008GpioAddress[]){
-            { .i2c_address = 1, .pin = 0 },
-            { .i2c_address = 1, .pin = 1 },
-            { .i2c_address = 1, .pin = 2 },
-            { .i2c_address = 1, .pin = 3 },
+            { .i2c_address = test_i2c_address, .pin = 0 },
+            { .i2c_address = test_i2c_address, .pin = 1 },
+            { .i2c_address = test_i2c_address, .pin = 2 },
+            { .i2c_address = test_i2c_address, .pin = 3 },
         },
     .mux_address =
         {
@@ -131,4 +132,5 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
 
   // otherwise valid
   TEST_ASSERT_OK(rear_power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_OK(rear_power_distribution_stop());
 }

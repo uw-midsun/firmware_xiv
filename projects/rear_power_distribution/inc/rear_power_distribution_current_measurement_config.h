@@ -1,10 +1,11 @@
 #pragma once
 
 // Standard hardware configurations for rear_power_distribution_current_measurement.
+// NOTE: CAM_CHARGER doesn't use the sn74 mux for output, so ?????
+// Also, it's entirely possible that we're reading from the wrong mux outputs.
+// (the mux selects in rpdcm_config.c are from the top, who knows if this is right)
 
 #include "rear_power_distribution_current_measurement.h"
-
-#define REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS 0x20
 
 typedef enum {
   REAR_POWER_DISTRIBUTION_CURRENT_CTR_BRK_LIGHT = 0,
@@ -15,6 +16,12 @@ typedef enum {
   REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_TURN,
   REAR_POWER_DISTRIBUTION_CURRENT_SOLAR,
   REAR_POWER_DISTRIBUTION_CURRENT_TELEMETRY,
+  // REAR_POWER_DISTRIBUTION_CURRENT_CAMERA,
+  // REAR_POWER_DISTRIBUTION_CURRENT_CHARGER,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPARE_1,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPARE_2,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPARE_3,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPARE_4,
   NUM_REAR_POWER_DISTRIBUTION_CURRENTS,
 } RearPowerDistributionCurrent;
 
@@ -24,7 +31,9 @@ typedef enum {
   REAR_POWER_DISTRIBUTION_BTS7200_LEFT_RIGHT_BRK_LIGHT,
   REAR_POWER_DISTRIBUTION_BTS7200_LEFT_RIGHT_TURN,
   REAR_POWER_DISTRIBUTION_BTS7200_SOLAR_TELEMETRY,
-  // there's also a CAM_CHARGER bts7200 on the rear board (?)
+  // REAR_POWER_DISTRIBUTION_BTS7200_CAM_CHARGER,
+  REAR_POWER_DISTRIBUTION_BTS7200_SPARE_1_2,
+  REAR_POWER_DISTRIBUTION_BTS7200_SPARE_3_4,
   NUM_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS,
 } RearPowerDistributionBts7200;
 

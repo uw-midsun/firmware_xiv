@@ -2,8 +2,10 @@
 
 // Definitions of the hardware configs declared in the header
 
+#define REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS 0x20
+
 const RearPowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG = {
-  .num_bts7200_channels = 4,
+  .num_bts7200_channels = 6,
   .dsel_i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS,
   .bts7200_to_dsel_address =
       (Mcp23008GpioAddress[]){
@@ -15,6 +17,12 @@ const RearPowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONF
               { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS, .pin = 3 },
           [REAR_POWER_DISTRIBUTION_BTS7200_SOLAR_TELEMETRY] =
               { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS, .pin = 7 },
+          // [REAR_POWER_DISTRIBUTION_BTS7200_CAM_CHARGER] =
+          // { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS, .pin = 6 },
+          [REAR_POWER_DISTRIBUTION_BTS7200_SPARE_1_2] =
+              { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS, .pin = 5 },
+          [REAR_POWER_DISTRIBUTION_BTS7200_SPARE_3_4] =
+              { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS, .pin = 4 },
       },
   .mux_address =
       {
@@ -32,5 +40,8 @@ const RearPowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONF
           [REAR_POWER_DISTRIBUTION_BTS7200_LEFT_RIGHT_BRK_LIGHT] = 3,
           [REAR_POWER_DISTRIBUTION_BTS7200_LEFT_RIGHT_TURN] = 0,
           [REAR_POWER_DISTRIBUTION_BTS7200_SOLAR_TELEMETRY] = 7,
+          // [REAR_POWER_DISTRIBUTION_BTS7200_CAM_CHARGER] =
+          [REAR_POWER_DISTRIBUTION_BTS7200_SPARE_1_2] = 6,
+          [REAR_POWER_DISTRIBUTION_BTS7200_SPARE_3_4] = 4,
       }
 };
