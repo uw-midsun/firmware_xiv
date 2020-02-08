@@ -1,4 +1,4 @@
-s  // Timers are implemented as a doubly linked list, sorted in order of remaining
+// Timers are implemented as a doubly linked list, sorted in order of remaining
 // time until expiry. Thus, the head of the list is always defined as the next
 // timer to expire, so we set the timer peripheral's compare register to the
 // head's expiry time. This gives us O(1) deletion, but we do have O(n)
@@ -20,7 +20,7 @@ s  // Timers are implemented as a doubly linked list, sorted in order of remaini
     ((a)->expiry_rollover_count == (b)->expiry_rollover_count && \
      (a)->expiry_us < (b)->expiry_us)))
 
-    typedef struct SoftTimer {
+typedef struct SoftTimer {
   uint32_t expiry_us;
   uint32_t expiry_rollover_count;
   SoftTimerCallback callback;
