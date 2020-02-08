@@ -137,6 +137,14 @@
     status;                                         \
   })
 
+#define CAN_TRANSMIT_DRIVE_STATE(drive_state_u16)  \
+  ({                                               \
+    CanMessage msg = { 0 };                        \
+    CAN_PACK_DRIVE_STATE(&msg, (drive_state_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);  \
+    status;                                        \
+  })
+
 #define CAN_TRANSMIT_LIGHTS_SYNC()                \
   ({                                              \
     CanMessage msg = { 0 };                       \
