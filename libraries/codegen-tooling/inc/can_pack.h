@@ -51,6 +51,11 @@
                     SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE, 2, (sequence_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_DRIVE_OUTPUT(msg_ptr, drive_output_u16)                                          \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, \
+                    2, (drive_output_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
+                    CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8, \
                                aux_bat_uv_flag_u8)                                            \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,                      \
@@ -110,11 +115,6 @@
                    SYSTEM_CAN_MESSAGE_SET_CHARGER_RELAY, 1, (state_u8), CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,            \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
-
-#define CAN_PACK_DRIVE_STATE(msg_ptr, drive_state_u16)                                           \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_DRIVE_STATE, \
-                    2, (drive_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
-                    CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_HAZARD(msg_ptr, state_u8)                                                    \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_HAZARD, 1, \

@@ -79,6 +79,14 @@
     status;                                                       \
   })
 
+#define CAN_TRANSMIT_DRIVE_OUTPUT(ack_ptr, drive_output_u16) \
+  ({                                                         \
+    CanMessage msg = { 0 };                                  \
+    CAN_PACK_DRIVE_OUTPUT(&msg, (drive_output_u16));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));       \
+    status;                                                  \
+  })
+
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
                                    aux_bat_uv_flag_u8)                                       \
   ({                                                                                         \
@@ -167,14 +175,6 @@
     CAN_PACK_SET_CHARGER_RELAY(&msg, (state_u8)); \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
-  })
-
-#define CAN_TRANSMIT_DRIVE_STATE(drive_state_u16)  \
-  ({                                               \
-    CanMessage msg = { 0 };                        \
-    CAN_PACK_DRIVE_STATE(&msg, (drive_state_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);  \
-    status;                                        \
   })
 
 #define CAN_TRANSMIT_HAZARD(state_u8)             \
