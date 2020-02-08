@@ -30,9 +30,9 @@ void prv_setup_system_can() {
 void prv_mci_storage_init(void *context) {
   MotorControllerStorage *storage = context;
   PrechargeStorage precharge_storage = { .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
-                                       .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
-                                       .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
-                                       .state = MCI_PRECHARGE_DISCHARGED };
+                                         .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
+                                         .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
+                                         .state = MCI_PRECHARGE_DISCHARGED };
   storage->precharge_storage = precharge_storage;
 }
 
