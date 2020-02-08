@@ -75,13 +75,13 @@ void test_assert_trivial(void) {
 
 void test_pedal_rx_handler(void) {
   // should transmit immediately
-  
+
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   int16_t throttle_data = INT16_MAX;
   int16_t brake_data = INT16_MAX;
   int16_t throttle_position = get_throttle_position();
   int16_t brake_position = get_brake_position();
-  
+
   TEST_ASSERT_EQUAL(counter, 1);
   TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
   TEST_ASSERT_EQUAL(throttle_data, throttle_position);
