@@ -23,6 +23,22 @@ static const GpioSettings s_monitor_settings = { .direction = GPIO_DIR_IN,
 static const InterruptSettings s_monitor_it_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                                          .priority = INTERRUPT_PRIORITY_NORMAL };
 
+StatusCode prv_set_precharge_control(GpioState state, void* context) {
+  MotorControllerStorage *storage = context;
+  // set control to on
+  gpio_set_state(&storage->settings.precharge_control, state);
+  gpio_set_state(&storage->settings.precharge_control2, state);
+  // check control to make sure it's on
+  GpioState control_state = GPIO_STATE_LOW;
+  GpioState control2_state = GPIO_STATE_LOW;
+  gpio_get_state(&storage->settings.precharge_control, &control_state);
+  gpio_get_state(&storage->settings.precharge_control2, &control2_state);
+  if (control_state != state || control2_state != state) {
+    return STATUS_CODE_INTERNAL_ERROR;
+  }
+  return STATUS_CODE_OK;
+}
+
 void prv_monitor_int(const GpioAddress *address, void *context) {
   MotorControllerStorage *storage = context;
   GpioState monitor_state = GPIO_STATE_LOW;
@@ -43,34 +59,12 @@ StatusCode prv_precharge(void *context) {
   if (monitor_state != GPIO_STATE_LOW) {
     return STATUS_CODE_INTERNAL_ERROR;
   }
-  // set control to on
-  gpio_set_state(&storage->settings.precharge_control, GPIO_STATE_HIGH);
-  gpio_set_state(&storage->settings.precharge_control2, GPIO_STATE_HIGH);
-  // check control to make sure it's on
-  GpioState control_state = GPIO_STATE_LOW;
-  GpioState control2_state = GPIO_STATE_LOW;
-  gpio_get_state(&storage->settings.precharge_control, &control_state);
-  gpio_get_state(&storage->settings.precharge_control2, &control2_state);
-  if (control_state != GPIO_STATE_HIGH || control2_state != GPIO_STATE_HIGH) {
-    return STATUS_CODE_INTERNAL_ERROR;
-  }
-  return STATUS_CODE_OK;
+  //set the state
+  return prv_set_precharge_control(GPIO_STATE_HIGH, context);
 }
 
 StatusCode prv_discharge(void *context) {
-  // set precharge_control to off
-  MotorControllerStorage *storage = context;
-  gpio_set_state(&storage->settings.precharge_control, GPIO_STATE_LOW);
-  gpio_set_state(&storage->settings.precharge_control2, GPIO_STATE_LOW);
-  // check precharge_control to make sure it's discharged
-  GpioState control_state = GPIO_STATE_LOW;
-  GpioState control2_state = GPIO_STATE_LOW;
-  gpio_get_state(&storage->settings.precharge_control, &control_state);
-  gpio_get_state(&storage->settings.precharge_control2, &control2_state);
-  if (control_state != GPIO_STATE_LOW || control2_state != GPIO_STATE_LOW) {
-    return STATUS_CODE_INTERNAL_ERROR;
-  }
-  return STATUS_CODE_OK;
+  return prv_set_precharge_control(GPIO_STATE_LOW, context);
 }
 
 StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
