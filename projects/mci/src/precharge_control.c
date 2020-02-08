@@ -95,8 +95,9 @@ StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *
   return ret;
 }
 
-StatusCode precharge_control_init(MotorControllerStorage *context) {
-  PrechargeStorage *storage = &context->precharge_storage;
+StatusCode precharge_control_init(void *context) {
+  MotorControllerStorage *mci_storage = context;
+  PrechargeStorage *storage = &mci_storage->precharge_storage;
   // setup gpio pin A9 for starting precharge
   status_ok_or_return(gpio_init_pin(&storage->precharge_control, &s_control_settings));
 

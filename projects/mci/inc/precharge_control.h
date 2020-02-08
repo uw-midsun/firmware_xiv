@@ -21,4 +21,4 @@ typedef struct PrechargeStorage {
 
 GpioState get_precharge_state(void *context);
 
-StatusCode precharge_control_init(MotorControllerStorage *context);
+StatusCode precharge_control_init(void *context);
