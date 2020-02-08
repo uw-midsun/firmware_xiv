@@ -1,7 +1,6 @@
 #include "ads1015.h"
 #include "brake_data.h"
 #include "can_transmit.h"
-#include "delay.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "gpio.h"
@@ -35,12 +34,10 @@ const CanSettings can_settings = {
   .loopback = true,
 };
 
-int counter = 0;
-
 StatusCode prv_test_pedal_data_tx_callback_handler(const CanMessage *msg, void *context,
                                                    CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, msg->msg_id);
-  counter++;
+  LOG_DEBUG("IS CALLED\n");
   return STATUS_CODE_OK;
 }
 
@@ -73,31 +70,10 @@ void test_assert_trivial(void) {
   TEST_ASSERT_TRUE(true);
 }
 
-void test_pedal_rx_handler(void) {
-  // should transmit immediately
+void test_throttle_data(void) {
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  TEST_ASSERT_EQUAL(counter, 1);
-
-  delay_ms(100);
-  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  TEST_ASSERT_EQUAL(counter, 2);
-
-  delay_ms(95);
-  TEST_ASSERT_EQUAL(counter, 2);
-  delay_ms(5);
-  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-
-  delay_ms(100);
-  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  delay_ms(100);
-  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  delay_ms(100);
-  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  TEST_ASSERT_EQUAL(counter, 6);
-
-  delay_ms(75);
-  TEST_ASSERT_EQUAL(counter, 6);
-  delay_ms(25);
-  MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
-  TEST_ASSERT_EQUAL(counter, 7);
+  int16_t throttle_data = INT16_MAX;
+  int16_t throttle_position = get_throttle_position();
+  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, throttle_position);
 }

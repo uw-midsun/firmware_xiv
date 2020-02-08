@@ -16,8 +16,14 @@
 #define CAN_DEVICE_ID 0x1
 
 static Ads1015Storage ads1015_storage = { 0 };
-static CanStorage can_storage;
+static PedalDataStorage pedal_data_storage = {
+  .storage = &ads1015_storage,
+  .throttle_channel1 = ADS1015_CHANNEL_0,
+  .throttle_channel2 = ADS1015_CHANNEL_1,
+  .brake_channel = ADS1015_CHANNEL_2,
+};
 
+static CanStorage can_storage;
 const CanSettings can_settings = {
   .device_id = CAN_DEVICE_ID,
   .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -36,6 +42,7 @@ int main() {
   gpio_it_init();
   soft_timer_init();
   event_queue_init();
+  can_init(&can_storage, &can_settings);
   LOG_DEBUG("Initialized modules\n");
 
   // setup ADC readings
@@ -48,7 +55,7 @@ int main() {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 2 };
   ads1015_init(&ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  pedal_data_tx_init(&ads1015_storage, &can_storage, &can_settings);
+  pedal_data_tx_init(&pedal_data_storage);
 
   Event e = { 0 };
   while (true) {

@@ -3,17 +3,23 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
+#include "pedal_data_tx.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
 
-StatusCode getThrottleData(Ads1015Storage *storage, Ads1015Channel channel, int16_t *position) {
+#define UPPER_THROTTLE_VALUE 1273
+#define LOWER_THROTTLE_VALUE 295
+#define MULTIPLYER 4096
+
+StatusCode get_throttle_data(PedalDataStorage *storage, int16_t *position) {
   // throttle actually uses 2 channels. may configure later
-  status_ok_or_return(ads1015_read_raw(storage, channel, position));
-  float percent = 1273 - 297;
+  status_ok_or_return(ads1015_read_raw(storage->storage, storage->throttle_channel2, position));
+  float percent = UPPER_THROTTLE_VALUE - LOWER_THROTTLE_VALUE;
   float temp = *position;
-  temp -= 295;
-  temp *= 100 / percent;
+  temp -= LOWER_THROTTLE_VALUE;
+  temp *= 100;
+  temp /= percent;
   *position = (int16_t)temp;
-  *position *= 4096;
+  *position *= MULTIPLYER;
   return STATUS_CODE_OK;
 }
