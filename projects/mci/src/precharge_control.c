@@ -23,7 +23,7 @@ static const GpioSettings s_monitor_settings = { .direction = GPIO_DIR_IN,
 static const InterruptSettings s_monitor_it_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                                          .priority = INTERRUPT_PRIORITY_NORMAL };
 
-StatusCode prv_set_precharge_control(GpioState state, void* context) {
+StatusCode prv_set_precharge_control(GpioState state, void *context) {
   MotorControllerStorage *storage = context;
   // set control to on
   gpio_set_state(&storage->settings.precharge_control, state);
@@ -39,7 +39,7 @@ StatusCode prv_set_precharge_control(GpioState state, void* context) {
   return STATUS_CODE_OK;
 }
 
-GpioState get_precharge_state(void* context) {
+GpioState get_precharge_state(void *context) {
   MotorControllerStorage *storage = context;
   GpioState gotten_state = GPIO_STATE_LOW;
   gpio_get_state(&storage->settings.precharge_monitor, &gotten_state);
