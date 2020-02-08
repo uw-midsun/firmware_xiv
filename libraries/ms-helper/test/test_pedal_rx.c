@@ -32,12 +32,7 @@ typedef enum {
 } TestPedalEvent;
 
 typedef struct {
-  float throttle;
-  float brake;
-} TestPedalValues;
-
-typedef struct {
-  TestPedalValues *expected_value;
+  PedalValues *expected_value;
   PedalRxStorage *pr_storage;
   uint8_t curr_tx_test;
   bool handled_last;
@@ -49,7 +44,7 @@ typedef struct {
 #define TEST_PEDAL_RX_VALUE_THRESHOLD 0.01f
 
 static CanStorage s_can_storage;
-static TestPedalValues s_test_pedal_values[] = {
+static PedalValues s_test_pedal_values[] = {
   [0] = { .throttle = 0.0f, .brake = 0.0f },   [1] = { .throttle = 10.0f, .brake = 0.0f },
   [2] = { .throttle = 35.6f, .brake = 1.1f },  [3] = { .throttle = 100.0f, .brake = 100.0f },
   [4] = { .throttle = 0.0f, .brake = 100.0f }, [5] = { .throttle = 0.0f, .brake = 35.6f },
@@ -60,12 +55,14 @@ static uint32_t prv_pedal_value_to_can_msg(float pedal_value) {
 }
 
 static void prv_test_pedal_rx_process_event(TestPedalRxStorage *storage, Event *event) {
-  TestPedalValues *expected_value = storage->expected_value;
+  PedalValues *expected_value = storage->expected_value;
   PedalRxStorage *pr_storage = storage->pr_storage;
+  PedalValues actual_value = pedal_rx_get_pedal_values(pr_storage);
+
   if (event->id == TEST_PEDAL_RX_RX_EVENT) {
-    TEST_ASSERT_TRUE(fabs(pedal_rx_get_throttle_output(pr_storage) - expected_value->throttle) <
+    TEST_ASSERT_TRUE(fabs(actual_value.throttle - expected_value->throttle) <
                      TEST_PEDAL_RX_VALUE_THRESHOLD);
-    TEST_ASSERT_TRUE(fabs(pedal_rx_get_brake_output(pr_storage) - expected_value->brake) <
+    TEST_ASSERT_TRUE(fabs(actual_value.brake - expected_value->brake) <
                      TEST_PEDAL_RX_VALUE_THRESHOLD);
     storage->handled_last = true;
     if (storage->completed_tx && storage->completed_watchdog_test) {
@@ -85,7 +82,7 @@ static void prv_transmit_test_pedal_values(SoftTimerId timer_id, void *context) 
   if (storage->curr_tx_test < SIZEOF_ARRAY(s_test_pedal_values)) {
     size_t i = storage->curr_tx_test++;
     storage->handled_last = false;
-    TestPedalValues *expected_value = &s_test_pedal_values[i];
+    PedalValues *expected_value = &s_test_pedal_values[i];
     storage->expected_value = expected_value;
     CAN_TRANSMIT_PEDAL_OUTPUT(prv_pedal_value_to_can_msg(expected_value->throttle),
                               prv_pedal_value_to_can_msg(expected_value->brake));
