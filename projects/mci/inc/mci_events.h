@@ -1,3 +1,5 @@
+#pragma once
+
 typedef enum {
   MCI_CAN_EVENT_RX = 0,
   MCI_CAN_EVENT_TX,
