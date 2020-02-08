@@ -39,10 +39,16 @@ StatusCode prv_set_precharge_control(GpioState state, void* context) {
   return STATUS_CODE_OK;
 }
 
+GpioState get_precharge_state(void* context) {
+  MotorControllerStorage *storage = context;
+  GpioState gotten_state = GPIO_STATE_LOW;
+  gpio_get_state(&storage->settings.precharge_monitor, &gotten_state);
+  return gotten_state;
+}
+
 void prv_monitor_int(const GpioAddress *address, void *context) {
   MotorControllerStorage *storage = context;
-  GpioState monitor_state = GPIO_STATE_LOW;
-  gpio_get_state(&storage->settings.precharge_monitor, &monitor_state);
+  GpioState monitor_state = get_precharge_state(context);
   if (monitor_state == GPIO_STATE_LOW) {
     storage->precharge_state = MCI_PRECHARGE_DISCHARGED;
   } else if (monitor_state == GPIO_STATE_HIGH) {
@@ -54,8 +60,7 @@ void prv_monitor_int(const GpioAddress *address, void *context) {
 StatusCode prv_precharge(void *context) {
   MotorControllerStorage *storage = context;
   // make sure monitor is off
-  GpioState monitor_state = GPIO_STATE_LOW;
-  gpio_get_state(&storage->settings.precharge_monitor, &monitor_state);
+  GpioState monitor_state = get_precharge_state(context);
   if (monitor_state != GPIO_STATE_LOW) {
     return STATUS_CODE_INTERNAL_ERROR;
   }

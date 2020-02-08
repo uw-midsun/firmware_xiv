@@ -46,7 +46,7 @@ void teardown_test(void) {}
 
 void test_run(void) {
   MotorControllerStorage *storage = &s_mci_storage;
-  TEST_ASSERT_TRUE(storage->precharge_state == MCI_PRECHARGE_DISCHARGED);
+  TEST_ASSERT_TRUE(get_precharge_state(storage) == MCI_PRECHARGE_DISCHARGED);
 
   // Test that a non precharge power main sequence message does nothing
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
