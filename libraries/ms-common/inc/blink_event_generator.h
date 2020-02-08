@@ -7,14 +7,14 @@
 #include "soft_timer.h"
 
 typedef enum {
-  BLINKER_STATE_ON = 0,
-  BLINKER_STATE_OFF,
+  BLINKER_STATE_OFF = 0,
+  BLINKER_STATE_ON,
   NUM_BLINKER_STATES,
 } BlinkerState;
 
 typedef struct {
   uint32_t interval_us;
-  BlinkerState default_state;  // if not specified, the default state is BLINKER_STATE_ON
+  BlinkerState default_state;  // if not specified, the default state is BLINKER_STATE_OFF
 } BlinkEventGeneratorSettings;
 
 typedef struct {
@@ -30,9 +30,13 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
                                       const BlinkEventGeneratorSettings *settings);
 
 // Start generating blink events with the corresponding event ID.
-// The first event is raised immediately after this call.
+// The first event is raised immediately after this call; it will be away from the default state.
 // If the generator is currently blinking, it will stop before blinking with this event ID.
+// If we're currently blinking with the same event as |event_id|, do nothing so as to avoid an
+// abnormal delay.
 StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id);
 
 // Stop generating blink events and return whether it was stopped.
+// If the timer is running and we aren't currently in the default state, raise a final event
+// immediately to move back to the default state.
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage);

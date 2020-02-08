@@ -27,7 +27,7 @@ void test_blink_event_generator_valid(void) {
   const uint32_t interval_us = 5000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
-    .default_state = BLINKER_STATE_OFF,  // custom
+    .default_state = BLINKER_STATE_ON,  // custom
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -41,10 +41,10 @@ void test_blink_event_generator_valid(void) {
 
   TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
 
-  // make sure it raises an event immediately + respects the custom first value
+  // make sure it raises an event immediately + respects the custom default state
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
-  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_EQUAL(0, e.data);  // opposite of default state
 
   // make sure it respects the interval
   delay_us(interval_us / 2);
@@ -83,7 +83,7 @@ void test_blink_event_generator_valid(void) {
   TEST_ASSERT_EQUAL(1, e.data);
 
   // make sure we can restart without stopping first correctly
-  blink_event_generator_start(&storage, TEST_EVENT_ID_2);
+  blink_event_generator_start(&storage, TEST_EVENT_ID_2);  // different event_id to actually restart
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
   TEST_ASSERT_EQUAL(0, e.data);  // resets to first_value
@@ -95,12 +95,42 @@ void test_blink_event_generator_valid(void) {
   blink_event_generator_stop(&storage);
 }
 
-// Test that blink_event_generator_init has the correct default first value of 0.
+// Test that restarting with the same event ID does nothing
+void test_blink_event_generator_start_same_event_id(void) {
+  const uint32_t interval_us = 10000;
+  BlinkEventGeneratorSettings settings = {
+    .interval_us = interval_us,
+    .default_state = BLINKER_STATE_OFF,
+  };
+  BlinkEventGeneratorStorage storage;
+  Event e;
+
+  TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+
+  // Eat the first event
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // Restart after 1/2 interval and make sure there's no initial event
+  delay_us(interval_us / 2);
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // Make sure the event is on time
+  delay_us(interval_us / 2);
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  blink_event_generator_stop(&storage);
+}
+
+// Test that blink_event_generator_init has the correct default default state of 0.
 void test_blink_event_generator_init_default_first_value_is_0(void) {
   const uint32_t interval_us = 5000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
-    // first_value not specified
+    // default_state not specified
   };
   BlinkEventGeneratorStorage storage;
 
@@ -110,12 +140,12 @@ void test_blink_event_generator_init_default_first_value_is_0(void) {
   Event e;
   TEST_ASSERT_OK(event_process(&e));  // get the event raised immediately
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
-  TEST_ASSERT_EQUAL(1, e.data);  // first value must default to 1
+  TEST_ASSERT_EQUAL(1, e.data);  // default state must default to 0, so transition to 1
 
   blink_event_generator_stop(&storage);
 }
 
-// Test that blink_event_generator_init errors with an invalid first value.
+// Test that blink_event_generator_init errors with an invalid default state.
 void test_blink_event_generator_init_invalid_first_value(void) {
   BlinkEventGeneratorSettings invalid_settings = {
     .interval_us = 1000,
@@ -134,7 +164,7 @@ void test_multiple_blink_event_generators(void) {
   const uint32_t interval_us1 = 11500;
   BlinkEventGeneratorSettings settings1 = {
     .interval_us = interval_us1,
-    .default_state = BLINKER_STATE_OFF,
+    .default_state = BLINKER_STATE_ON,
   };
   BlinkEventGeneratorStorage storage1;
   TEST_ASSERT_OK(blink_event_generator_init(&storage1, &settings1));
@@ -143,7 +173,7 @@ void test_multiple_blink_event_generators(void) {
   const uint32_t interval_us2 = 20000;  // must be greater than interval_us1
   BlinkEventGeneratorSettings settings2 = {
     .interval_us = interval_us2,
-    .default_state = BLINKER_STATE_ON,
+    .default_state = BLINKER_STATE_OFF,
   };
   BlinkEventGeneratorStorage storage2;
   TEST_ASSERT_OK(blink_event_generator_init(&storage2, &settings2));
@@ -183,6 +213,9 @@ void test_multiple_blink_event_generators(void) {
 
   // cancel the second one, restart the first one with a new event ID, make sure everything's valid
   blink_event_generator_stop(&storage2);
+  TEST_ASSERT_OK(event_process(&e));  // eat the event from stop transitioning back to default
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
   blink_event_generator_start(&storage1, TEST_EVENT_ID_3);
   TEST_ASSERT_OK(event_process(&e));  // event from the first one
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_3, e.id);
@@ -219,4 +252,31 @@ void test_blink_event_generator_stop_return_value(void) {
 
   // already stopped - false
   TEST_ASSERT_EQUAL(false, blink_event_generator_stop(&storage));
+}
+
+// Test that if not in the default state, blink_event_generator_stop raises an event to transition
+// back to the default state.
+void test_blink_event_generator_stop_raises_last_event(void) {
+  const uint32_t interval_us = 5000;
+  BlinkEventGeneratorSettings settings = {
+    .interval_us = interval_us,
+    .default_state = BLINKER_STATE_ON,
+  };
+  BlinkEventGeneratorStorage storage;
+  Event e;
+  TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
+
+  // start: transition to off
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // stop: make sure we transition back to on
+  TEST_ASSERT_EQUAL(true, blink_event_generator_stop(&storage));
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
+  TEST_ASSERT_NOT_OK(event_process(&e));
 }
