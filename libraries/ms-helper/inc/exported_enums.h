@@ -109,14 +109,23 @@ typedef enum EEHornState {
   NUM_EE_HORN_STATES,     //
 } EEHornState;
 
-typedef enum EERelayState {
+typedef enum {
   EE_RELAY_STATE_OPEN = 0,
   EE_RELAY_STATE_CLOSE,
   NUM_EE_RELAY_STATES,
 } EERelayState;
 
-typedef enum EEEbrakeState {
+typedef enum {
   EE_EBRAKE_STATE_PRESSED = 0,
   EE_EBRAKE_STATE_RELEASED,
   NUM_EE_EBRAKE_STATES,
 } EEEbrakeState;
+
+typedef enum {
+  EE_DRIVE_STATE_DRIVE = 0,
+  EE_DRIVE_STATE_NEUTRAL,
+  EE_DRIVE_STATE_REVERSE,
+  EE_DRIVE_STATE_PARKING,
+  NUM_EE_DRIVE_STATES
+} EEDriveState;
+
