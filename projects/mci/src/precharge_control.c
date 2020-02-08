@@ -64,7 +64,7 @@ StatusCode prv_precharge(void *context) {
   if (monitor_state != GPIO_STATE_LOW) {
     return STATUS_CODE_INTERNAL_ERROR;
   }
-  //set the state
+  // set the state
   return prv_set_precharge_control(GPIO_STATE_HIGH, context);
 }
 
