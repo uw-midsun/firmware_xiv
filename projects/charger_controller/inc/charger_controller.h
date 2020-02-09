@@ -8,4 +8,6 @@ typedef struct ChargerData {
   size_t dlc;
 } ChargerData;
 
-
+StatusCode charger_controller_init(ChargerData *data);
+StatusCode charger_controller_activate(ChargerData *data);
+StatusCode charger_controller_deactivate();

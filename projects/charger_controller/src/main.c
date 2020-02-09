@@ -20,7 +20,8 @@ const Mcp2515Settings mcp2515_settings = {
   .loopback = false,
   .context = NULL,
 };
-ChargerData data = {
+//change these values as well for ongoing message
+const ChargerData data = {
   .storage = &mcp2515,
   .id = 0,
   .extended = false,

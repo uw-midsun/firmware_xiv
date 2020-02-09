@@ -17,6 +17,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
 
 static void prv_rx_cb(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
   // should deactivate timer???
+  // need to check these values
   if ((id == 0) && (!extended) && (data == 0) && (dlc == 0)) {
     charger_controller_deactivate();
   }
