@@ -6,6 +6,7 @@
 
 // Max value is 100 = 7 bits. which leaves 25 bits of precision
 #define PEDAL_RX_MSG_DENOMINATOR (1 << 25)
+#define PEDAL_RX_MAX_PEDAL_VALUE 100.0f
 
 #define PEDAL_OUTPUT_WATCHDOG_PERIOD_MS 400
 

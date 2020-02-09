@@ -1,16 +1,22 @@
 #include "can.h"
 #include "can_msg_defs.h"
+#include "generic_can_mcp2515.h"
+
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "pedal_rx.h"
 #include "soft_timer.h"
 
 #include "drive_fsm.h"
 #include "mci_events.h"
+#include "mci_output.h"
 #include "motor_controller.h"
 
 static CanStorage s_can_storage;
+static GenericCanMcp2515 s_can_mcp2515;
+static PedalRxStorage s_pedal_storage;
 static MotorControllerStorage s_mci_storage;
 
 void prv_setup_system_can() {
@@ -28,6 +34,23 @@ void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
 }
 
+static void prv_setup_motor_can(void) {
+  Mcp2515Settings mcp2515_settings = {
+    .spi_port = SPI_PORT_2,
+    .spi_baudrate = 6000000,
+    .mosi = { .port = GPIO_PORT_B, 15 },
+    .miso = { .port = GPIO_PORT_B, 14 },
+    .sclk = { .port = GPIO_PORT_B, 13 },
+    .cs = { .port = GPIO_PORT_B, 12 },
+    .int_pin = { .port = GPIO_PORT_A, 8 },
+
+    .can_bitrate = MCP2515_BITRATE_500KBPS,
+    .loopback = false,
+  };
+
+  generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
+}
+
 void prv_mci_storage_init(void *context) {
   PrechargeControlSettings precharge_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
@@ -43,6 +66,8 @@ int main(void) {
   soft_timer_init();
 
   prv_setup_system_can();
+  prv_setup_motor_can();
+
   prv_mci_storage_init(&s_mci_storage);
 
   Event e = { 0 };

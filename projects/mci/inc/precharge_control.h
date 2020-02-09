@@ -1,4 +1,6 @@
 #pragma once
+
+#include "gpio.h"
 #include "status.h"
 
 #include "motor_controller.h"
