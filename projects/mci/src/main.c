@@ -63,6 +63,7 @@ int main(void) {
   event_queue_init();
   gpio_init();
   gpio_it_init();
+  interrupt_init();
   soft_timer_init();
 
   prv_setup_system_can();
