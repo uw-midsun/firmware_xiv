@@ -53,6 +53,24 @@ void setup_test(void) {
   can_tx_retry_wrapper_init(&s_storage, &settings);
 }
 
+static void prv_ack_handle(SystemCanDevice acking_device, CanAckStatus status) {
+  CanMessage msg = { 
+    .type = CAN_MSG_TYPE_ACK, 
+    .msg_id = SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 
+    .source_id = acking_device,
+    .data = status 
+  };
+  TEST_ASSERT_OK(can_ack_handle_msg(&s_can_storage.ack_requests, &msg));
+}
+
+static void prv_ack_pass(SystemCanDevice acking_device) {
+  prv_ack_handle(acking_device, CAN_ACK_STATUS_OK);
+}
+
+static void prv_ack_fail(SystemCanDevice acking_device) {
+  prv_ack_handle(acking_device, CAN_ACK_STATUS_UNKNOWN);
+}
+
 void teardown_test(void) {}
 
 static void prv_can_tx(CanAckRequest *ack_ptr, void *context) {
@@ -83,30 +101,14 @@ void test_can_retry_emits_success_event(void) {
 
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-    
-  CanMessage msg = { 
-    .type = CAN_MSG_TYPE_ACK, 
-    .msg_id = SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 
-    .source_id = acking_device
-  };
 
-  TEST_ASSERT_OK(can_ack_handle_msg(&s_can_storage.ack_requests, &msg));
+  prv_ack_pass(acking_device);
 
   Event e = { 0 };
 
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, 
   DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE, 
   DRIVE_STATE_REVERSE);
-}
-
-static void prv_ack_fail(SystemCanDevice acking_device) {
-  CanMessage msg = { 
-    .type = CAN_MSG_TYPE_ACK, 
-    .msg_id = SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 
-    .source_id = acking_device,
-    .data = CAN_ACK_STATUS_UNKNOWN
-  };
-  TEST_ASSERT_OK(can_ack_handle_msg(&s_can_storage.ack_requests, &msg));
 }
 
 void test_can_retry_emits_failure_event(void) {
@@ -131,16 +133,74 @@ void test_can_retry_emits_failure_event(void) {
   };
 
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
-  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  prv_ack_fail(acking_device);
-  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  prv_ack_fail(acking_device);
-  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  prv_ack_fail(acking_device);
+  for (uint8_t i = 0; i < NUM_RETRIES; i++) {
+    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+    prv_ack_fail(acking_device);
+  }
 
   Event e = { 0 };
 
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
 }
 
+void test_can_retry_retries_indefinitely(void) {
+  s_ack_status = CAN_ACK_STATUS_UNKNOWN;
+  s_ack_cb_status = STATUS_CODE_INTERNAL_ERROR;
 
+  DriveFsmFault fault = {
+    .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
+    .fault_state = EE_RELAY_STATE_CLOSE
+  };
+
+  SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
+
+  CanTxRetryWrapperRequest retry_request = {
+    .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
+    .completion_event_data = DRIVE_STATE_REVERSE,
+    .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
+    .fault_event_data = fault.raw,
+    .retry_indefinitely = true,
+    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
+    .tx_callback = prv_can_tx,
+    .tx_callback_context = &s_storage
+  };
+
+  TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
+
+  for (uint8_t i = 0; i < NUM_RETRIES; i++) {
+    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+    prv_ack_fail(acking_device);
+  }
+
+  Event e = { 0 };
+
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+
+  for (uint8_t i = 0; i < NUM_RETRIES; i++) {
+    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+    prv_ack_fail(acking_device);
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+  } 
+  // eventually fault clears
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+
+  prv_ack_pass(acking_device);
+
+  // success event gets raised
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, 
+  DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE, 
+  DRIVE_STATE_REVERSE);
+
+  // no further tx is attempted
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  // counter is set back to zero
+
+  // starting again
+  TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
+
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  prv_ack_fail(acking_device);
+
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+}

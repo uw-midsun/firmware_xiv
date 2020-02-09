@@ -17,11 +17,11 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
   if (num_remaining || status) {
     storage->retry_count++;
     LOG_DEBUG("retry_count: %d\n", storage->retry_count);
-    if (storage->retry_count < storage->retries || storage->retry_indefinitely) {
-      prv_try_tx(storage);
-    }
     if (storage->retry_count >= storage->retries) {
       event_raise(storage->fault_event_id, storage->fault_event_data);
+    }
+    if (storage->retry_count < storage->retries || storage->retry_indefinitely) {
+      prv_try_tx(storage);
     }
     return STATUS_CODE_OK;
   }
@@ -52,6 +52,7 @@ StatusCode can_tx_retry_send(CanTxRetryWrapperStorage *storage, CanTxRetryWrappe
   storage->tx_callback = request->tx_callback;
   storage->tx_callback_context = request->tx_callback_context;
   storage->ack_bitset = request->ack_bitset;
+  storage->retry_indefinitely = request->retry_indefinitely;
   prv_try_tx(storage);
   return STATUS_CODE_OK;
 }

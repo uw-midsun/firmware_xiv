@@ -2,9 +2,10 @@
 
 #include "fsm.h"
 #include "stdbool.h"
-#include "status.h"
+#include "status.h" 
 #include "relay_tx.h"
 #include "ebrake_tx.h"
+#include "mci_output_tx.h"
 
 typedef enum  {
   DRIVE_STATE_NEUTRAL = 0,
@@ -19,6 +20,7 @@ typedef struct DriveFsmStorage {
   DriveState destination;
   RelayTxStorage relay_storage;
   EbrakeTxStorage ebrake_storage;
+  MciOutputTxStorage mci_output_storage;
 } DriveFsmStorage;
 
 StatusCode drive_fsm_init(DriveFsmStorage *storage);

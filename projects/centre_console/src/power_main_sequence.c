@@ -152,8 +152,8 @@ static void prv_state_close_main_battery_relays_output(Fsm *fsm, const Event *e,
   PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
   CanAckRequest ack_req = { 0 };
   prv_populate_ack(storage, &ack_req);
-  uint8_t relay_state = EE_CHARGER_SET_RELAY_STATE_CLOSE << EE_RELAY_ID_BATTERY;
-  uint8_t relay_mask = 1 << EE_RELAY_ID_BATTERY;
+  uint16_t relay_state = EE_CHARGER_SET_RELAY_STATE_CLOSE << EE_RELAY_ID_BATTERY;
+  uint16_t relay_mask = 1 << EE_RELAY_ID_BATTERY;
   CAN_TRANSMIT_SET_RELAY_STATES(&ack_req, relay_mask, relay_state);
 }
 

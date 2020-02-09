@@ -4,28 +4,13 @@
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "can_tx_retry_wrapper.h"
+#include "retry_tx_request.h"
 
 typedef struct EbrakeTxStorage {
-  uint8_t retries;
-  EventId fault_event_id;
-  uint16_t fault_event_data;
-  EventId completion_event_id;
-  uint16_t completion_event_data;
-  bool retry_indefinitely;
-  EERelayState state;
+  CanTxRetryWrapperStorage can_retry_wrapper_storage;
+  EEEbrakeState state;
 } EbrakeTxStorage;
 
-typedef struct EbrakeTxRequest {
-  EventId fault_event_id;
-  uint16_t fault_event_data;
-  EventId completion_event_id;
-  uint16_t completion_event_data;
-  bool retry_indefinitely;
-  EEEbrakeState  state;
-} EbrakeTxRequest;
+StatusCode ebrake_tx_init(EbrakeTxStorage *storage);
 
-StatusCode ebrake_tx_init();
-
-StatusCode ebrake_tx_state(EEEbrakeState state);
-
-StatusCode ebrake_tx_state_and_raise_event(EbrakeTxStorage *storage, EbrakeTxRequest *request);
+StatusCode ebrake_tx_brake_state(EbrakeTxStorage *storage, RetryTxRequest *request, EEEbrakeState state);

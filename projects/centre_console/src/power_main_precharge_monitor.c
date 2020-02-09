@@ -38,7 +38,7 @@ StatusCode power_main_precharge_monitor_start(PowerMainPrechargeMonitor *storage
 
 StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage) {
   prv_timer_cleanup(storage);
-  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_PRECHARGE_COMPLETE,
+  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE,
                                               prv_precharge_completed_callback, storage));
   return STATUS_CODE_OK;
 }
