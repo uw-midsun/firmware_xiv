@@ -25,7 +25,7 @@ static CentreConsoleButtonPressEvent s_button_event_lookup[NUM_CENTRE_CONSOLE_BU
 };
 
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
-  CentreConsoleButtonPressEvent *event_id = (CentreConsoleButtonPressEvent *) context;
+  CentreConsoleButtonPressEvent *event_id = (CentreConsoleButtonPressEvent *)context;
   event_raise(*event_id, 0);
 }
 

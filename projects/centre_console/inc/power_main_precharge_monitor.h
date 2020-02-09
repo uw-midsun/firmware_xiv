@@ -6,13 +6,14 @@
 #include "soft_timer.h"
 #include "status.h"
 
-#define PRECHARGE_TIMEOUT_S 5
+typedef uint32_t PrechargeTimeoutMs;
 
 typedef struct PowerMainPrechargeMonitor {
   SoftTimerId timer_id;
+  PrechargeTimeoutMs timeout_ms;
 } PowerMainPrechargeMonitor;
 
-StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage);
+StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage, PrechargeTimeoutMs timeout_ms);
 
 StatusCode power_main_precharge_monitor_start(PowerMainPrechargeMonitor *storage);
 

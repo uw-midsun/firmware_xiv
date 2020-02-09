@@ -1,13 +1,13 @@
-# pragma once
+#pragma once
 
-#include "fsm.h"
-#include "stdbool.h"
-#include "status.h" 
-#include "relay_tx.h"
 #include "ebrake_tx.h"
+#include "fsm.h"
 #include "mci_output_tx.h"
+#include "relay_tx.h"
+#include "status.h"
+#include "stdbool.h"
 
-typedef enum  {
+typedef enum {
   DRIVE_STATE_NEUTRAL = 0,
   DRIVE_STATE_PARKING,
   DRIVE_STATE_DRIVE,

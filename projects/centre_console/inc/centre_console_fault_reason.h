@@ -27,8 +27,8 @@ typedef enum {
 
 typedef union {
   struct {
-    uint8_t fault_reason: 4;
-    uint8_t fault_state: 4;
+    uint8_t fault_reason : 4;
+    uint8_t fault_state : 4;
   };
   uint8_t raw;
 } DriveFsmFault;

@@ -1,11 +1,12 @@
-#include "can_transmit.h"
 #include "can_tx_retry_wrapper.h"
+#include "can_transmit.h"
 #include "log.h"
 
 // forward declaring
 static void prv_try_tx(CanTxRetryWrapperStorage *storage);
 
-StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage, CanTxRetryWrapperSettings *settings) {
+StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage,
+                                     CanTxRetryWrapperSettings *settings) {
   storage->retries = settings->retries;
   storage->retry_count = 0;
   return STATUS_CODE_OK;
@@ -13,7 +14,7 @@ StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage, CanTxRet
 
 static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                                      uint16_t num_remaining, void *context) {
-  CanTxRetryWrapperStorage *storage = (CanTxRetryWrapperStorage *) context;
+  CanTxRetryWrapperStorage *storage = (CanTxRetryWrapperStorage *)context;
   if (num_remaining || status) {
     storage->retry_count++;
     LOG_DEBUG("retry_count: %d\n", storage->retry_count);

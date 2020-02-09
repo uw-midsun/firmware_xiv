@@ -69,7 +69,7 @@
 
 // assert no events
 #define MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED() \
-  ({                                                          \
-    Event e = { 0, 0 };                                   \
-    TEST_ASSERT_NOT_OK(event_process(&(e)));        \
+  ({                                            \
+    Event e = { 0, 0 };                         \
+    TEST_ASSERT_NOT_OK(event_process(&(e)));    \
   })

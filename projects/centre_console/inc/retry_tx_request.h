@@ -1,8 +1,8 @@
 #pragma once
 
-#include "status.h"
-#include "event_queue.h"
 #include "can_tx_retry_wrapper.h"
+#include "event_queue.h"
+#include "status.h"
 
 typedef struct RetryTxRequest {
   EventId completion_event_id;

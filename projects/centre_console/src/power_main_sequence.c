@@ -8,6 +8,8 @@
 #include "fsm.h"
 #include "log.h"
 
+#define PRECHARGE_TIMEOUT_MS 5000
+
 FSM_DECLARE_STATE(state_none);
 FSM_DECLARE_STATE(state_fault);
 FSM_DECLARE_STATE(state_confirm_aux_status);
@@ -175,7 +177,7 @@ static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
 StatusCode power_main_sequence_init(PowerMainSequenceFsmStorage *storage) {
   prv_init_ack_count();
   prv_init_ack_lookup();
-  power_main_precharge_monitor_init(&storage->precharge_monitor_storage);
+  power_main_precharge_monitor_init(&storage->precharge_monitor_storage, PRECHARGE_TIMEOUT_MS);
   fsm_state_init(state_none, prv_state_none);
   fsm_state_init(state_fault, prv_state_fault);
   fsm_state_init(state_confirm_aux_status, prv_state_power_main_sequence_output);

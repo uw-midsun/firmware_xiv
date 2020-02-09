@@ -1,11 +1,12 @@
 #include <string.h>
 #include "can.h"
-#include "drive_fsm.h"
-#include "centre_console_fault_reason.h"
-#include "delay.h"
 #include "can_msg_defs.h"
 #include "can_transmit.h"
+#include "can_tx_retry_wrapper.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
+#include "delay.h"
+#include "drive_fsm.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
@@ -15,8 +16,6 @@
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "can_tx_retry_wrapper.h"
-#include "can_transmit.h"
 
 #define NUM_RETRIES 3
 
@@ -36,9 +35,7 @@ void setup_test(void) {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
-  CanTxRetryWrapperSettings settings = {
-    .retries = NUM_RETRIES
-  };
+  CanTxRetryWrapperSettings settings = { .retries = NUM_RETRIES };
   const CanSettings s_can_settings = { .device_id = SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
                                        .loopback = true,
                                        .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -54,12 +51,10 @@ void setup_test(void) {
 }
 
 static void prv_ack_handle(SystemCanDevice acking_device, CanAckStatus status) {
-  CanMessage msg = { 
-    .type = CAN_MSG_TYPE_ACK, 
-    .msg_id = SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 
-    .source_id = acking_device,
-    .data = status 
-  };
+  CanMessage msg = { .type = CAN_MSG_TYPE_ACK,
+                     .msg_id = SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                     .source_id = acking_device,
+                     .data = status };
   TEST_ASSERT_OK(can_ack_handle_msg(&s_can_storage.ack_requests, &msg));
 }
 
@@ -74,7 +69,7 @@ static void prv_ack_fail(SystemCanDevice acking_device) {
 void teardown_test(void) {}
 
 static void prv_can_tx(CanAckRequest *ack_ptr, void *context) {
-  TEST_ASSERT_EQUAL(&s_storage, (CanTxRetryWrapperStorage *) context);
+  TEST_ASSERT_EQUAL(&s_storage, (CanTxRetryWrapperStorage *)context);
   uint8_t relay_mask = 1 << EE_RELAY_ID_MOTOR_CONTROLLER;
   uint8_t relay_state = relay_mask;
   CAN_TRANSMIT_SET_RELAY_STATES(ack_ptr, relay_state, relay_state);
@@ -83,10 +78,8 @@ static void prv_can_tx(CanAckRequest *ack_ptr, void *context) {
 void test_can_retry_emits_success_event(void) {
   s_ack_status = CAN_ACK_STATUS_OK;
   s_ack_cb_status = STATUS_CODE_OK;
-  DriveFsmFault fault = {
-    .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
-    .fault_state = EE_RELAY_STATE_CLOSE
-  };
+  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
+                          .fault_state = EE_RELAY_STATE_CLOSE };
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
   CanTxRetryWrapperRequest retry_request = {
@@ -106,19 +99,16 @@ void test_can_retry_emits_success_event(void) {
 
   Event e = { 0 };
 
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, 
-  DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE, 
-  DRIVE_STATE_REVERSE);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
+                                   DRIVE_STATE_REVERSE);
 }
 
 void test_can_retry_emits_failure_event(void) {
   s_ack_status = CAN_ACK_STATUS_UNKNOWN;
   s_ack_cb_status = STATUS_CODE_INTERNAL_ERROR;
 
-  DriveFsmFault fault = {
-    .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
-    .fault_state = EE_RELAY_STATE_CLOSE
-  };
+  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
+                          .fault_state = EE_RELAY_STATE_CLOSE };
 
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
@@ -147,10 +137,8 @@ void test_can_retry_retries_indefinitely(void) {
   s_ack_status = CAN_ACK_STATUS_UNKNOWN;
   s_ack_cb_status = STATUS_CODE_INTERNAL_ERROR;
 
-  DriveFsmFault fault = {
-    .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
-    .fault_state = EE_RELAY_STATE_CLOSE
-  };
+  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
+                          .fault_state = EE_RELAY_STATE_CLOSE };
 
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
@@ -180,16 +168,15 @@ void test_can_retry_retries_indefinitely(void) {
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
     prv_ack_fail(acking_device);
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
-  } 
+  }
   // eventually fault clears
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
 
   prv_ack_pass(acking_device);
 
   // success event gets raised
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, 
-  DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE, 
-  DRIVE_STATE_REVERSE);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
+                                   DRIVE_STATE_REVERSE);
 
   // no further tx is attempted
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();

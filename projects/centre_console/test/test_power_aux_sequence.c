@@ -107,16 +107,14 @@ void test_sequence_happy_path(void) {
   power_aux_sequence_process_event(&s_sequence_storage, &e);
 
   EEPowerAuxSequence seq;
-  for (seq = EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS;
-       seq < NUM_EE_POWER_AUX_SEQUENCES; seq++) {
-          LOG_DEBUG("seq: %d\n", seq);
+  for (seq = EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS; seq < NUM_EE_POWER_AUX_SEQUENCES; seq++) {
+    LOG_DEBUG("seq: %d\n", seq);
     prv_assert_sequence_advance(seq);
   }
 
   // go back to state_none
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, POWER_AUX_SEQUENCE_EVENT_COMPLETE, 0);
   TEST_ASSERT_TRUE(power_aux_sequence_process_event(&s_sequence_storage, &e));
-
 }
 
 void test_sequence_fault_cancels_monitor(void) {

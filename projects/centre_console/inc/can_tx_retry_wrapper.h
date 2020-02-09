@@ -1,8 +1,8 @@
 #pragma once
 
 #include "can_ack.h"
-#include "event_queue.h"
 #include "can_msg_defs.h"
+#include "event_queue.h"
 #include "exported_enums.h"
 
 typedef void (*CanTxCallback)(CanAckRequest *ack_ptr, void *context);
@@ -35,7 +35,7 @@ typedef struct CanTxRetryWrapperRequest {
   void *tx_callback_context;
 } CanTxRetryWrapperRequest;
 
-
-StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage, CanTxRetryWrapperSettings *settings);
+StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage,
+                                     CanTxRetryWrapperSettings *settings);
 
 StatusCode can_tx_retry_send(CanTxRetryWrapperStorage *storage, CanTxRetryWrapperRequest *request);
