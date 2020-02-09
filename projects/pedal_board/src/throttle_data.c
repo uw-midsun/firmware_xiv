@@ -16,9 +16,9 @@ StatusCode get_throttle_data(PedalDataStorage *storage, int16_t *position) {
   status_ok_or_return(ads1015_read_raw(storage->storage, storage->throttle_channel2, position));
   int32_t percent = UPPER_THROTTLE_VALUE - LOWER_THROTTLE_VALUE;
   int32_t temp = (int32_t)*position * MULTIPLYER;
-  temp -= LOWER_THROTTLE_VALUE * MULTIPLYER;;
+  temp -= LOWER_THROTTLE_VALUE * MULTIPLYER;
   temp *= 100;
-  temp /= percent * MULTIPLYER;;
+  temp /= percent * MULTIPLYER;
   *position = (int16_t)temp;
   return STATUS_CODE_OK;
 }
