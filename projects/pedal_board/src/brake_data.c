@@ -10,12 +10,11 @@
 
 StatusCode get_brake_data(PedalDataStorage *storage, int16_t *position) {
   status_ok_or_return(ads1015_read_raw(storage->storage, storage->brake_channel, position));
-  float percent = UPPER_BRAKE_VALUE - LOWER_BRAKE_VALUE;
-  float temp = *position;
-  temp -= LOWER_BRAKE_VALUE;
+  int32_t percent = UPPER_BRAKE_VALUE - LOWER_BRAKE_VALUE;
+  int32_t temp = (int32_t)*position * MULTIPLYER;
+  temp -= LOWER_BRAKE_VALUE * MULTIPLYER;;
   temp *= 100;
-  temp /= percent;
+  temp /= percent * MULTIPLYER;;
   *position = (int16_t)temp;
-  *position *= MULTIPLYER;
   return STATUS_CODE_OK;
 }

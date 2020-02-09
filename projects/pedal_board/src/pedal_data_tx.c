@@ -23,7 +23,6 @@ static void prv_pedal_timeout(SoftTimerId timer_id, void *context) {
 
   get_brake_data(pedal_storage, &brake_position);
   get_throttle_data(pedal_storage, &throttle_position);
-
   // SENDING POSITIONS THROUGH CAN MESSAGES
   CAN_TRANSMIT_PEDAL_OUTPUT((uint32_t)throttle_position, (uint32_t)brake_position);
 
