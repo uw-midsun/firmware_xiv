@@ -28,7 +28,7 @@ static StatusCode prv_handle_heartbeat_ack(CanMessageId msg_id, uint16_t device,
 }
 
 //Handles faults
-static StatusCode prv_handle_state(BatteryHeartbeatStorage *storage) {
+static StatusCode prv_transmit_battery_status(BatteryHeartbeatStorage *storage) {
   CanAckRequest ack_req = {
     .callback = prv_handle_heartbeat_ack, 
     .context = storage, 
@@ -49,7 +49,7 @@ static StatusCode prv_handle_state(BatteryHeartbeatStorage *storage) {
 static void prv_periodic_heartbeat(SoftTimerId timer_id, void *context) {
   BatteryHeartbeatStorage *storage = context; 
 
-  prv_handle_state(storage); 
+  prv_transmit_battery_status(storage); 
 
   soft_timer_start_millis(storage->period_ms, prv_periodic_heartbeat, storage, NULL);
 }
@@ -63,7 +63,7 @@ StatusCode battery_heartbeat_raise_fault(BatteryHeartbeatStorage *storage,
   }
 
   else { 
-    return prv_handle_state(storage); 
+    return prv_transmit_battery_status(storage); 
   }
 }
 

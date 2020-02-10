@@ -3,12 +3,8 @@
 #include "can_ack.h" 
 #include "exported_enums.h" 
 
-//from ms12 code, not sure if these are still current
 #define BATTERY_HEARTBEAT_PERIOD_MS 1000
 #define BATTERY_HEARTBEAT_MAX_ACK_FAILS 3
-
-//#define BATTERY_HEARTBEAT_EXPECTED_DEVICES
-  //CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_DRIVER_CONTROLS_PEDAL)
 
 typedef struct BatteryHeartbeatStorage {
   uint32_t period_ms;
