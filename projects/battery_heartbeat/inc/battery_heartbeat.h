@@ -1,34 +1,32 @@
-#pragma once 
+#pragma once
 
 #include "can_ack.h" 
-//from ms12 code 
+#include "exported_enums.h" 
+
+//from ms12 code, not sure if these are still current
 #define BATTERY_HEARTBEAT_PERIOD_MS 1000
 #define BATTERY_HEARTBEAT_MAX_ACK_FAILS 3
-//update with actual pedal name when found (?)
-#define BATTERY_HEARTBEAT_EXPECTED_DEVICES
-  CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_DRIVER_CONTROLS_PEDAL)
+
+//#define BATTERY_HEARTBEAT_EXPECTED_DEVICES
+  //CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_DRIVER_CONTROLS_PEDAL)
 
 typedef struct BatteryHeartbeatStorage {
-  unit32_t period_ms;
-  unit32_t expected_bitset; 
-  uni8_t fault_bitset; 
-  uni8_t ack_fail_counter; 
-} BatteryHeartbeatStorage; 
+  uint32_t period_ms;
+  uint32_t expected_bitset;
+  uint8_t fault_bitset;
+  uint8_t ack_fail_counter;
+} BatteryHeartbeatStorage;
 
-//stole this from previous exported_enums file, should add to current one 
+//Initializes heartbeat
+//initialize with: battery_heartbeat_init(BatteryHeartbeatStorage, BATTERY_HEARTBEAT_PERIOD_MS, BATTERY_HEARTBEAT_EXPECTED_DEVICES)
+//Sets up period_ms, expected_bitset in storage; resets fault bitset and counter; starts soft timer
+StatusCode battery_heartbeat_init(BatteryHeartbeatStorage *storage, 
+                                  uint32_t period_ms, uint32_t expected_bitset);
 
-typedef enum {
-  EE_BATTERY_HEARTBEAT_FAULT_SOURCE_KILLSWITCH = 0,
-  EE_BATTERY_HEARTBEAT_FAULT_SOURCE_LTC_AFE_CELL,
-  EE_BATTERY_HEARTBEAT_FAULT_SOURCE_LTC_AFE_TEMP,
-  EE_BATTERY_HEARTBEAT_FAULT_SOURCE_LTC_AFE_FSM,
-  EE_BATTERY_HEARTBEAT_FAULT_SOURCE_LTC_ADC,
-  EE_BATTERY_HEARTBEAT_FAULT_SOURCE_ACK_TIMEOUT,
-  NUM_EE_BATTERY_HEARTBEAT_FAULT_SOURCES,
-} EEBatteryHeartbeatFaultSource;
+//Handles faults, sends to prv_handle_state if not due to ACK timeout
+StatusCode battery_heartbeat_raise_fault(BatteryHeartbeatStorage *storage,
+                                          EEBatteryHeartbeatFaultSource source);
 
-StatusCode battery_heartbeat_init(); //update 
-
-StatusCode battery_heartbeat_raise_fault(); //update 
-
-StatusCode battery_heartbeat_clear_fault(); //update
+//Clears faults
+StatusCode battery_heartbeat_clear_fault(BatteryHeartbeatStorage *storage,
+                                          EEBatteryHeartbeatFaultSource source); 
