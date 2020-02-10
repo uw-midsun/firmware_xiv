@@ -16,7 +16,6 @@
 
 static CanStorage s_can_storage;
 static GenericCanMcp2515 s_can_mcp2515;
-static PedalRxStorage s_pedal_storage;
 static MotorControllerStorage s_mci_storage;
 
 void prv_setup_system_can() {
