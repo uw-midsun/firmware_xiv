@@ -1,5 +1,4 @@
 #include "lights_signal_fsm.h"
-#include "front_power_distribution_events.h"
 
 FSM_DECLARE_STATE(state_none);                 // no lights active
 FSM_DECLARE_STATE(state_left_signal);          // left signal active
@@ -18,41 +17,47 @@ static bool prv_guard_off(const Fsm *fsm, const Event *e, void *context) {
 
 FSM_STATE_TRANSITION(state_none) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_on, state_left_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_on, state_right_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_on, state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_on, state_left_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_on, state_right_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_on,
+                             state_hazard_signal);
 }
 
 FSM_STATE_TRANSITION(state_left_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_off, state_none);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_on, state_hazard_left_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_off, state_none);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_on,
+                             state_hazard_left_signal);
 }
 
 FSM_STATE_TRANSITION(state_right_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_off, state_none);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_on,
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_off, state_none);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_on,
                              state_hazard_right_signal);
 }
 
 FSM_STATE_TRANSITION(state_hazard_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_on, state_hazard_left_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_on, state_hazard_right_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_off, state_none);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_on,
+                             state_hazard_left_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_on,
+                             state_hazard_right_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_off, state_none);
 }
 
 FSM_STATE_TRANSITION(state_hazard_left_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_off, state_hazard_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_off, state_left_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_off, state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_off, state_left_signal);
 }
 
 FSM_STATE_TRANSITION(state_hazard_right_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_off, state_hazard_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_off, state_right_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_off,
+                             state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_off,
+                             state_right_signal);
 }
 
 static void prv_state_none_output(Fsm *fsm, const Event *e, void *context) {
@@ -62,26 +67,26 @@ static void prv_state_none_output(Fsm *fsm, const Event *e, void *context) {
 
 static void prv_state_left_signal_output(Fsm *fsm, const Event *e, void *context) {
   SignalFsmStorage *storage = context;
-  blink_event_generator_start(&storage->blink_event_generator,
-                              FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT);
+  blink_event_generator_start(&storage->blink_event_generator, storage->signal_left_output_event);
 }
 
 static void prv_state_right_signal_output(Fsm *fsm, const Event *e, void *context) {
   SignalFsmStorage *storage = context;
-  blink_event_generator_start(&storage->blink_event_generator,
-                              FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT);
+  blink_event_generator_start(&storage->blink_event_generator, storage->signal_right_output_event);
 }
 
 static void prv_state_hazard_signal_output(Fsm *fsm, const Event *e, void *context) {
   SignalFsmStorage *storage = context;
-  blink_event_generator_start(&storage->blink_event_generator,
-                              FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD);
+  blink_event_generator_start(&storage->blink_event_generator, storage->signal_hazard_output_event);
 }
 
 StatusCode lights_signal_fsm_init(SignalFsmStorage *storage, const SignalFsmSettings *settings) {
-  storage->signal_left_event = settings->signal_left_event;
-  storage->signal_right_event = settings->signal_right_event;
-  storage->signal_hazard_event = settings->signal_hazard_event;
+  storage->signal_left_input_event = settings->signal_left_input_event;
+  storage->signal_right_input_event = settings->signal_right_input_event;
+  storage->signal_hazard_input_event = settings->signal_hazard_input_event;
+  storage->signal_left_output_event = settings->signal_left_output_event;
+  storage->signal_right_output_event = settings->signal_right_output_event;
+  storage->signal_hazard_output_event = settings->signal_hazard_output_event;
 
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->blink_interval_us,
