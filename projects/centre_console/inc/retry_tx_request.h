@@ -10,5 +10,4 @@ typedef struct RetryTxRequest {
   EventId fault_event_id;
   uint16_t fault_event_data;
   bool retry_indefinitely;
-  uint64_t data;
 } RetryTxRequest;

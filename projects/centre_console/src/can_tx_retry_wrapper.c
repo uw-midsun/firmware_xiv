@@ -19,14 +19,14 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
     storage->retry_count++;
     LOG_DEBUG("retry_count: %d\n", storage->retry_count);
     if (storage->retry_count >= storage->retries) {
-      event_raise(storage->fault_event_id, storage->fault_event_data);
+      event_raise(storage->retry_request.fault_event_id, storage->retry_request.fault_event_data);
     }
-    if (storage->retry_count < storage->retries || storage->retry_indefinitely) {
+    if (storage->retry_count < storage->retries || storage->retry_request.retry_indefinitely) {
       prv_try_tx(storage);
     }
     return STATUS_CODE_OK;
   }
-  event_raise(storage->completion_event_id, storage->completion_event_data);
+  event_raise(storage->retry_request.completion_event_id, storage->retry_request.completion_event_data);
   storage->retry_count = 0;
   return STATUS_CODE_OK;
 }
@@ -46,14 +46,10 @@ StatusCode can_tx_retry_send(CanTxRetryWrapperStorage *storage, CanTxRetryWrappe
   if (!request->tx_callback) {
     return STATUS_CODE_INVALID_ARGS;
   }
-  storage->completion_event_id = request->completion_event_id;
-  storage->completion_event_data = request->completion_event_data;
-  storage->fault_event_id = request->fault_event_id;
-  storage->fault_event_data = request->fault_event_data;
+  storage->retry_request = request->retry_request;
   storage->tx_callback = request->tx_callback;
   storage->tx_callback_context = request->tx_callback_context;
   storage->ack_bitset = request->ack_bitset;
-  storage->retry_indefinitely = request->retry_indefinitely;
   prv_try_tx(storage);
   return STATUS_CODE_OK;
 }

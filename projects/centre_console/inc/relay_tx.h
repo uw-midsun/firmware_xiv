@@ -8,10 +8,11 @@
 
 typedef struct RelayTxStorage {
   CanTxRetryWrapperStorage can_retry_wrapper_storage;
-  EERelayState state;
+  EERelayId relay_id;
+  EERelayState relay_state;
 } RelayTxStorage;
 
 StatusCode relay_tx_init(RelayTxStorage *storage);
 
 StatusCode relay_tx_relay_state(RelayTxStorage *storage, RetryTxRequest *request,
-                                EERelayState state);
+                                EERelayId id, EERelayState state);

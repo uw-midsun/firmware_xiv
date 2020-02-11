@@ -4,17 +4,14 @@
 #include "can_msg_defs.h"
 #include "event_queue.h"
 #include "exported_enums.h"
+#include "retry_tx_request.h"
 
 typedef void (*CanTxCallback)(CanAckRequest *ack_ptr, void *context);
 
 typedef struct CanTxRetryWrapperStorage {
   uint8_t retries;
   uint8_t retry_count;
-  EventId fault_event_id;
-  uint16_t fault_event_data;
-  EventId completion_event_id;
-  uint16_t completion_event_data;
-  bool retry_indefinitely;
+  RetryTxRequest retry_request;
   uint16_t ack_bitset;
   CanTxCallback tx_callback;
   void *tx_callback_context;
@@ -25,12 +22,8 @@ typedef struct CanTxRetryWrapperSettings {
 } CanTxRetryWrapperSettings;
 
 typedef struct CanTxRetryWrapperRequest {
-  EventId completion_event_id;
-  uint16_t completion_event_data;
-  EventId fault_event_id;
-  uint16_t fault_event_data;
+  RetryTxRequest retry_request;
   uint16_t ack_bitset;
-  bool retry_indefinitely;
   CanTxCallback tx_callback;
   void *tx_callback_context;
 } CanTxRetryWrapperRequest;
