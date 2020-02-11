@@ -26,13 +26,11 @@ FSM_STATE_TRANSITION(state_none) {
 FSM_STATE_TRANSITION(state_left_signal) {
   SignalFsmStorage *storage = fsm->context;
   FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_off, state_none);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_on, state_right_signal);
   FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_on, state_hazard_left_signal);
 }
 
 FSM_STATE_TRANSITION(state_right_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_on, state_left_signal);
   FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_off, state_none);
   FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_on,
                              state_hazard_right_signal);
@@ -48,13 +46,11 @@ FSM_STATE_TRANSITION(state_hazard_signal) {
 FSM_STATE_TRANSITION(state_hazard_left_signal) {
   SignalFsmStorage *storage = fsm->context;
   FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_off, state_hazard_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_on, state_hazard_right_signal);
   FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_off, state_left_signal);
 }
 
 FSM_STATE_TRANSITION(state_hazard_right_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_event, &prv_guard_on, state_hazard_left_signal);
   FSM_ADD_GUARDED_TRANSITION(storage->signal_right_event, &prv_guard_off, state_hazard_signal);
   FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_event, &prv_guard_off, state_right_signal);
 }
