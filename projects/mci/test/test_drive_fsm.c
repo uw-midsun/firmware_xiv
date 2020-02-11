@@ -8,12 +8,13 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
+#include "ms_test_helpers.h"
 #include "soft_timer.h"
 #include "test_helpers.h"
 
+#include "drive_fsm.h"
 #include "mci_events.h"
 #include "motor_controller.h"
-#include "drive_fsm.h"
 
 static CanStorage s_can_storage;
 static MotorControllerStorage s_mci_storage;
@@ -43,100 +44,108 @@ void prv_mci_storage_init(void *context) {
 }
 
 void setup_test(void) {
-    event_queue_init();
-    interrupt_init();
-    soft_timer_init();
-    prv_setup_system_can();
-    prv_mci_storage_init(&s_mci_storage);
-    precharge_control_init(&s_mci_storage);
-    TEST_ASSERT_TRUE(drive_fsm_init(&s_mci_storage) == STATUS_CODE_OK);
+  event_queue_init();
+  interrupt_init();
+  soft_timer_init();
+  prv_setup_system_can();
+  prv_mci_storage_init(&s_mci_storage);
+  precharge_control_init(&s_mci_storage);
+  TEST_ASSERT_TRUE(drive_fsm_init(&s_mci_storage) == STATUS_CODE_OK);
 }
 
 void teardown_test(void) {}
 
 static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
-                            uint16_t num_remaining, void *context) {
-    (void)num_remaining;
-    CanAckStatus *expected_status = context;
-    LOG_DEBUG("estatus: %i, status: %i\n", *expected_status, status);
-    TEST_ASSERT_TRUE(*expected_status == status);  
-    return STATUS_CODE_OK;  
+                                   uint16_t num_remaining, void *context) {
+  CanAckStatus *expected_status = context;
+  TEST_ASSERT_TRUE(*expected_status == status);
+  return STATUS_CODE_OK;
 }
 
 void test_neutral(void) {
-    MotorControllerStorage *storage = &s_mci_storage;
-    storage->drive_state = EE_DRIVE_OUTPUT_OFF;
-    storage->precharge_storage.state = MCI_PRECHARGE_DISCHARGED;
-    CanAckStatus expected_status = CAN_ACK_STATUS_INVALID;
-    CanAckRequest req = {
-        .callback = prv_ack_callback,
-        .context = &expected_status,
-        .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER)
-    };
-    // Test that if discharged, doesn't transition to drive
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
-    
-    // Test that if discharged, doesn't transition to reverse
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  MotorControllerStorage *storage = &s_mci_storage;
+  storage->drive_state = EE_DRIVE_OUTPUT_OFF;
+  storage->precharge_storage.state = MCI_PRECHARGE_DISCHARGED;
+  CanAckStatus expected_status = CAN_ACK_STATUS_INVALID;
+  CanAckRequest req = { .callback = prv_ack_callback,
+                        .context = &expected_status,
+                        .expected_bitset =
+                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+  // Test that if discharged, doesn't transition to drive
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
 
-    // Test that if charged, will transition to drive
-    expected_status = CAN_ACK_STATUS_OK;
-    storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_DRIVE);
+  // Test that if discharged, doesn't transition to reverse
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
 
-    // Test that if charged, will transition to reverse
-    storage->drive_state = EE_DRIVE_OUTPUT_OFF;
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_REVERSE);
+  // Test that if charged, will transition to drive
+  expected_status = CAN_ACK_STATUS_OK;
+  storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_DRIVE);
+
+  // Test that if charged, will transition to reverse
+  storage->drive_state = EE_DRIVE_OUTPUT_OFF;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_REVERSE);
 }
 
 void test_drive(void) {
-    MotorControllerStorage *storage = &s_mci_storage;
-    storage->drive_state = EE_DRIVE_OUTPUT_DRIVE;
-    storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
-    // Test that if in drive, can transition to neutral
-    CanAckStatus expected_status = CAN_ACK_STATUS_OK;
-    CanAckRequest req = {
-        .callback = prv_ack_callback,
-        .context = &expected_status,
-        .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER)
-    };
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  MotorControllerStorage *storage = &s_mci_storage;
+  storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
+  Event e = { .id = DRIVE_FSM_STATE_DRIVE };
+  drive_fsm_process_event(&e);
+  // Test that if in drive, can transition to neutral
+  CanAckStatus expected_status = CAN_ACK_STATUS_OK;
+  CanAckRequest req = { .callback = prv_ack_callback,
+                        .context = &expected_status,
+                        .expected_bitset =
+                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  drive_fsm_process_event(&e);
 
-    // Test that if in drive, can transition to reverse
-    storage->drive_state = EE_DRIVE_OUTPUT_DRIVE;
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_REVERSE);
+  // Test that if in drive, can transition to reverse
+  storage->drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_REVERSE);
 }
 
 void test_reverse(void) {
-    MotorControllerStorage *storage = &s_mci_storage;
-    storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
-    storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
-    // Test that if in reverse, can transition to neutral
-    CanAckStatus expected_status = CAN_ACK_STATUS_OK;
-    CanAckRequest req = {
-        .callback = prv_ack_callback,
-        .context = &expected_status,
-        .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER)
-    };
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  MotorControllerStorage *storage = &s_mci_storage;
+  storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
+  Event e = { .id = DRIVE_FSM_STATE_REVERSE };
+  // Test that if in reverse, can transition to neutral
+  CanAckStatus expected_status = CAN_ACK_STATUS_OK;
+  CanAckRequest req = { .callback = prv_ack_callback,
+                        .context = &expected_status,
+                        .expected_bitset =
+                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+  drive_fsm_process_event(&e);
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
 
-    // Test that if in reverse, can transition to drive
-    storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
-    CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
-    delay_ms(200);
-    TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_DRIVE);
+  drive_fsm_process_event(&e);
+  // Test that if in reverse, can transition to drive
+  storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_DRIVE);
 }

@@ -4,17 +4,17 @@
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "fsm.h"
+#include "log.h"
 #include "motor_controller.h"
 #include "precharge_control.h"
 #include "status.h"
 
 #include "drive_fsm.h"
 
-static DriveFsmState s_drive_output_fsm_map[] = {
-    [EE_DRIVE_OUTPUT_OFF] = DRIVE_FSM_STATE_NEUTRAL,
-    [EE_DRIVE_OUTPUT_DRIVE] = DRIVE_FSM_STATE_DRIVE,
-    [EE_DRIVE_OUTPUT_REVERSE] = DRIVE_FSM_STATE_REVERSE
-};
+static DriveFsmState s_drive_output_fsm_map[] = { [EE_DRIVE_OUTPUT_OFF] = DRIVE_FSM_STATE_NEUTRAL,
+                                                  [EE_DRIVE_OUTPUT_DRIVE] = DRIVE_FSM_STATE_DRIVE,
+                                                  [EE_DRIVE_OUTPUT_REVERSE] =
+                                                      DRIVE_FSM_STATE_REVERSE };
 
 FSM_DECLARE_STATE(state_neutral);
 FSM_DECLARE_STATE(state_drive);
@@ -69,18 +69,22 @@ bool drive_fsm_process_event(const Event *e) {
 }
 
 StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  MotorControllerStorage *storage = context;
   uint16_t drive_output = 0;
   CAN_UNPACK_DRIVE_OUTPUT(msg, &drive_output);
   Event e = { 0 };
   e.id = s_drive_output_fsm_map[drive_output];
-
+  LOG_DEBUG("cur state: %i\n", storage->drive_state);
+  LOG_DEBUG("e.id: %i\n", e.id);
   bool transitioned = drive_fsm_process_event(&e);
+  LOG_DEBUG("post transition: %i\n", storage->drive_state);
   bool ret = STATUS_CODE_OK;
   if (transitioned != true) {
     *ack_reply = CAN_ACK_STATUS_INVALID;
     ret = STATUS_CODE_INTERNAL_ERROR;
+  } else {
+    *ack_reply = CAN_ACK_STATUS_OK;
   }
-  *ack_reply = CAN_ACK_STATUS_OK;
   return ret;
 }
 
