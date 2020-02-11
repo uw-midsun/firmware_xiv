@@ -114,7 +114,7 @@ typedef enum EEEbrakeState {
   NUM_EE_EBRAKE_STATES,
 } EEEbrakeState;
 
-// For heartbeat
+// For battery heartbeat
 typedef enum EEBatteryHeartbeatFaultSource {
   EE_BATTERY_HEARTBEAT_FAULT_SOURCE_KILLSWITCH = 0,
   EE_BATTERY_HEARTBEAT_FAULT_SOURCE_CURRENT_SENSE_AFE_CELL,
