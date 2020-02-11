@@ -20,7 +20,7 @@ typedef struct BatteryHeartbeatStorage {
 StatusCode battery_heartbeat_init(BatteryHeartbeatStorage *storage, uint32_t period_ms,
                                   uint32_t expected_bitset);
 
-// Handles faults, sends to prv_handle_state if not due to ACK timeout
+// Handles faults, sends to prv_transmit_battery_status if not due to ACK timeout
 StatusCode battery_heartbeat_raise_fault(BatteryHeartbeatStorage *storage,
                                          EEBatteryHeartbeatFaultSource source);
 
