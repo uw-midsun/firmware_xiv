@@ -2,10 +2,10 @@
 #include "can.h"
 #include "can_ack.h"
 #include "can_msg_defs.h"
+#include "can_unpack.h"
 #include "centre_console_events.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "can_unpack.h"
 
 void prv_timer_cleanup(PowerMainPrechargeMonitor *storage) {
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
@@ -41,7 +41,8 @@ StatusCode power_main_precharge_monitor_start(PowerMainPrechargeMonitor *storage
   return soft_timer_start_millis(storage->timeout_ms, prv_timeout_cb, storage, &storage->timer_id);
 }
 
-StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage, PrechargeTimeoutMs timeout_ms) {
+StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage,
+                                             PrechargeTimeoutMs timeout_ms) {
   storage->timeout_ms = timeout_ms;
   prv_timer_cleanup(storage);
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE,

@@ -18,7 +18,6 @@ static CanAckStatus s_can_ack_status;
 
 #define TEST_PRECHARGE_TIMEOUT_MS 100
 
-
 void setup_test(void) {
   gpio_init();
   event_queue_init();
@@ -46,7 +45,8 @@ static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckS
 void teardown_test(void) {}
 
 void test_precharge_monitor_init_will_raise_event_if_precharge_completes(void) {
-  TEST_ASSERT_OK(power_main_precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS));
+  TEST_ASSERT_OK(
+      power_main_precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS));
   TEST_ASSERT_EQUAL(s_precharge_monitor.timer_id, SOFT_TIMER_INVALID_TIMER);
   TEST_ASSERT_OK(power_main_precharge_monitor_start(&s_precharge_monitor));
   TEST_ASSERT_NOT_EQUAL(s_precharge_monitor.timer_id, SOFT_TIMER_INVALID_TIMER);
@@ -75,7 +75,8 @@ void test_precharge_monitor_init_will_raise_event_if_precharge_completes(void) {
 }
 
 void test_precharge_monitor_times_out_after_some_time_and_raises_event(void) {
-  TEST_ASSERT_OK(power_main_precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS));
+  TEST_ASSERT_OK(
+      power_main_precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS));
   TEST_ASSERT_OK(power_main_precharge_monitor_start(&s_precharge_monitor));
 
   delay_ms(TEST_PRECHARGE_TIMEOUT_MS - 10);
@@ -87,7 +88,8 @@ void test_precharge_monitor_times_out_after_some_time_and_raises_event(void) {
 }
 
 void test_precharge_monitor_time_out_doesnt_try(void) {
-  TEST_ASSERT_OK(power_main_precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS));
+  TEST_ASSERT_OK(
+      power_main_precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS));
   TEST_ASSERT_OK(power_main_precharge_monitor_start(&s_precharge_monitor));
 
   delay_ms(TEST_PRECHARGE_TIMEOUT_MS - 10);

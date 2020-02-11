@@ -13,7 +13,8 @@ typedef struct PowerMainPrechargeMonitor {
   PrechargeTimeoutMs timeout_ms;
 } PowerMainPrechargeMonitor;
 
-StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage, PrechargeTimeoutMs timeout_ms);
+StatusCode power_main_precharge_monitor_init(PowerMainPrechargeMonitor *storage,
+                                             PrechargeTimeoutMs timeout_ms);
 
 StatusCode power_main_precharge_monitor_start(PowerMainPrechargeMonitor *storage);
 
