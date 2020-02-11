@@ -137,9 +137,11 @@ static EventId s_next_event_lookup[NUM_EE_POWER_MAIN_SEQUENCES] = {
 };
 
 void prv_assert_acked_relay_message(EERelayId relay_id, uint8_t sequence) {
-  uint64_t relay_output = ((uint64_t)1) << (uint64_t)relay_id;
-  uint64_t message_data = relay_output << 8 | relay_output;
-  prv_assert_acked_message(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, message_data,
+  uint16_t relay_output = ((uint64_t)1) << (uint64_t)relay_id;
+  uint16_t relay_mask = relay_output;
+  CanMessage message = { 0 };
+  CAN_PACK_SET_RELAY_STATES(&message, relay_output, relay_mask);
+  prv_assert_acked_message(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, message.data,
                            s_ack_devices_lookup[sequence]);
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(
