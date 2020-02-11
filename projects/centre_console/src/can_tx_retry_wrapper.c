@@ -26,7 +26,8 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
     }
     return STATUS_CODE_OK;
   }
-  event_raise(storage->retry_request.completion_event_id, storage->retry_request.completion_event_data);
+  event_raise(storage->retry_request.completion_event_id,
+              storage->retry_request.completion_event_data);
   storage->retry_count = 0;
   return STATUS_CODE_OK;
 }

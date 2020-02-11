@@ -83,12 +83,13 @@ void test_can_retry_emits_success_event(void) {
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
   CanTxRetryWrapperRequest retry_request = {
-    .retry_request = {
-      .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
-      .completion_event_data = DRIVE_STATE_REVERSE,
-      .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
-      .fault_event_data = fault.raw,
-    },
+    .retry_request =
+        {
+            .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
+            .completion_event_data = DRIVE_STATE_REVERSE,
+            .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
+            .fault_event_data = fault.raw,
+        },
     .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
     .tx_callback = prv_can_tx,
     .tx_callback_context = &s_storage
@@ -115,12 +116,13 @@ void test_can_retry_emits_failure_event(void) {
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
   CanTxRetryWrapperRequest retry_request = {
-    .retry_request = {
-      .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
-      .completion_event_data = DRIVE_STATE_REVERSE,
-      .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
-      .fault_event_data = fault.raw,
-    },
+    .retry_request =
+        {
+            .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
+            .completion_event_data = DRIVE_STATE_REVERSE,
+            .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
+            .fault_event_data = fault.raw,
+        },
     .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
     .tx_callback = prv_can_tx,
     .tx_callback_context = &s_storage
@@ -147,13 +149,14 @@ void test_can_retry_retries_indefinitely(void) {
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
   CanTxRetryWrapperRequest retry_request = {
-    .retry_request = {
-      .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
-      .completion_event_data = DRIVE_STATE_REVERSE,
-      .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
-      .fault_event_data = fault.raw,
-      .retry_indefinitely = true,
-    },
+    .retry_request =
+        {
+            .completion_event_id = DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE,
+            .completion_event_data = DRIVE_STATE_REVERSE,
+            .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
+            .fault_event_data = fault.raw,
+            .retry_indefinitely = true,
+        },
     .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
     .tx_callback = prv_can_tx,
     .tx_callback_context = &s_storage

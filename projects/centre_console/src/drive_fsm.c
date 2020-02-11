@@ -102,7 +102,7 @@ typedef struct DestinationTransitionInfo {
   EventPair ebrake_event_pair;
   EventPair motor_controller_output_event_pair;
   uint16_t data;
-  EEChargerSetRelayState relay_state;
+  EERelayState relay_state;
   EEEbrakeState ebrake_state;
   EventId fsm_output_event_id;
   EEDriveOutput mci_drive_output;
@@ -191,7 +191,8 @@ static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
                             .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
                             .fault_event_data = fault.raw,
                             .retry_indefinitely = true };
-  relay_tx_relay_state(&storage->relay_storage, &tx_req, EE_RELAY_STATE_OPEN);
+  relay_tx_relay_state(&storage->relay_storage, &tx_req, EE_RELAY_ID_MOTOR_CONTROLLER,
+                       EE_RELAY_STATE_OPEN);
 }
 
 static void prv_set_relays_output(Fsm *fsm, const Event *e, void *context) {
@@ -204,7 +205,8 @@ static void prv_set_relays_output(Fsm *fsm, const Event *e, void *context) {
                             .fault_event_id = info.relay_event_pair.fault_event,
                             .fault_event_data = fault.raw,
                             .retry_indefinitely = false };
-  relay_tx_relay_state(&storage->relay_storage, &tx_req, info.relay_state);
+  relay_tx_relay_state(&storage->relay_storage, &tx_req, EE_RELAY_ID_MOTOR_CONTROLLER,
+                       info.relay_state);
 }
 
 static void prv_set_motorcontroller_output(Fsm *fsm, const Event *e, void *context) {

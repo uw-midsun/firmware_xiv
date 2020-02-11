@@ -14,5 +14,5 @@ typedef struct RelayTxStorage {
 
 StatusCode relay_tx_init(RelayTxStorage *storage);
 
-StatusCode relay_tx_relay_state(RelayTxStorage *storage, RetryTxRequest *request,
-                                EERelayId id, EERelayState state);
+StatusCode relay_tx_relay_state(RelayTxStorage *storage, RetryTxRequest *request, EERelayId id,
+                                EERelayState state);
