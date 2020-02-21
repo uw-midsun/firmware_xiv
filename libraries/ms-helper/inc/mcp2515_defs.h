@@ -61,6 +61,11 @@
 #define MCP2515_CTRL_REG_RXB0CTRL 0x60
 #define MCP2515_CTRL_REG_RXB1CTRL 0x70
 
+// TX Ctrl bits: Register 3-1
+#define MCP2515_TX_CTRL_BIT_ABTF (1 << 6)
+#define MCP2515_TX_CTRL_BIT_MLOA (1 << 5)
+#define MCP2515_TX_CTRL_BIT_TXERR (1 << 4)
+
 // Filter/Mask Registers: Table 11-1
 #define MCP2515_REG_RXF0SIDH 0x00
 #define MCP2515_REG_RXF1SIDH 0x04
@@ -126,6 +131,21 @@
 #define MCP2515_TXBNDLC_RTR_FRAME 0x40
 #define MCP2515_TXBNDLC_DLC_MASK 0x0F
 
+// RXB0CTRL: Register 4-1
+#define MCP2515_RXB0CTRL_BUKT_MASK 0x4
+#define MCP2515_RXB0CTRL_BUKT_ROLLOVER 0x4
+
+#define MCP2515_MAX_WRITE_BUFFER_LEN 10
+#define MCP2515_STANDARD_ID_LEN 11
+#define MCP2515_EXTENDED_ID_LEN 18
+
+#define MCP2515_CAN_BRP_125KBPS 3
+#define MCP2515_CAN_BRP_250KBPS 1
+#define MCP2515_CAN_BRP_500KBPS 0
+
+#define MCP2515_NUM_MASK_REGISTERS_STANDARD 2
+#define MCP2515_NUM_MASK_REGISTERS_EXTENDED 4
+
 typedef struct Mcp2515LoadTxPayload {
   uint8_t cmd;
   uint64_t data;
@@ -159,11 +179,11 @@ typedef struct Mcp2515IdRegs {
 
 typedef union Mcp2515Id {
   struct {
-    uint32_t sid_0_2 : 3;
-    uint32_t sidh : 8;
     uint32_t eid0 : 8;
     uint32_t eid8 : 8;
     uint32_t eid_16_17 : 2;
+    uint32_t sid_0_2 : 3;
+    uint32_t sidh : 8;
     uint32_t padding : 3;
   };
   uint32_t raw;
