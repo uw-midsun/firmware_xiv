@@ -3,6 +3,7 @@
 #include "delay.h"
 #include "gpio.h"
 #include "gpio_it.h"
+#include "gpio_mcu.h"
 #include "interrupt.h"
 #include "log.h"
 #include "misc.h"
@@ -42,15 +43,19 @@ StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
     GPIO_ALTFN_ANALOG,
   };
 
+  if(adc_settings->address.pin >= GPIO_PINS_PER_PORT || adc_settings->address.port >= NUM_GPIO_PORTS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+
   s_storage[reader_id].address.pin = adc_settings->address.pin;
   s_storage[reader_id].address.port = adc_settings->address.port;
   s_storage[reader_id].callback = adc_settings->callback;
   s_storage[reader_id].context = adc_settings->context;
 
   AdcChannel channel;
-  gpio_init_pin(&s_storage[reader_id].address, &gpio_settings);
-  adc_get_channel(s_storage[reader_id].address, &channel);
-  adc_set_channel(channel, true);
+  status_ok_or_return(gpio_init_pin(&s_storage[reader_id].address, &gpio_settings));
+  status_ok_or_return(adc_get_channel(s_storage[reader_id].address, &channel));
+  status_ok_or_return(adc_set_channel(channel, true));
   return STATUS_CODE_OK;
 }
 
@@ -62,8 +67,4 @@ StatusCode adc_periodic_reader_start(PeriodicReaderId reader_id) {
 StatusCode adc_periodic_reader_stop(PeriodicReaderId reader_id) {
   s_storage[reader_id].activated = false;
   return STATUS_CODE_OK;
-}
-
-GpioAddress getAddress(PeriodicReaderId reader_id) {
-  return s_storage[PERIODIC_READER_ID_0].address;
 }

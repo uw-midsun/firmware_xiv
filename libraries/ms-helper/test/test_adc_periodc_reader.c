@@ -13,21 +13,24 @@
 #include "wait.h"
 
 static int count = 0;
+static bool callback_called = false;
 
+//Function prototypes 
 void callback_test_1(uint16_t data, PeriodicReaderId id, void *context);
 void callback_test_2(uint16_t data, PeriodicReaderId id, void *context);
 
-AdcPeriodicReaderSettings adc_settings1 = { .address = { .port = GPIO_PORT_A, .pin = 3 },
+AdcPeriodicReaderSettings reader_settings1 = { .address = { .port = GPIO_PORT_A, .pin = 3 },
                                             .callback = callback_test_1 };
 
-AdcPeriodicReaderSettings adc_settings2 = { .address = { .port = GPIO_PORT_A, .pin = 3 },
+AdcPeriodicReaderSettings reader_settings2 = { .address = { .port = GPIO_PORT_A, .pin = 3 },
                                             .callback = callback_test_2 };
 
 void callback_test_1(uint16_t data, PeriodicReaderId id, void *context) {
   count++;
+  callback_called=true;
   GpioAddress *address = (GpioAddress *)context;
-  TEST_ASSERT_EQUAL(address->pin, adc_settings1.address.pin);
-  TEST_ASSERT_EQUAL(address->port, adc_settings1.address.port);
+  TEST_ASSERT_EQUAL(address->pin, reader_settings1.address.pin);
+  TEST_ASSERT_EQUAL(address->port, reader_settings1.address.port);
 }
 
 void callback_test_2(uint16_t data, PeriodicReaderId id, void *context) {
@@ -44,14 +47,19 @@ void setup_test(void) {
 }
 
 void test_adc_periodic_reader_test_callback() {
-  adc_settings1.context = &adc_settings1.address;
-  TEST_ASSERT_OK(adc_periodic_reader_set_up_reader(PERIODIC_READER_ID_0, &adc_settings1));
+  reader_settings1.context = &reader_settings1.address;
+  TEST_ASSERT_OK(adc_periodic_reader_set_up_reader(PERIODIC_READER_ID_0, &reader_settings1));
   TEST_ASSERT_OK(adc_periodic_reader_start(PERIODIC_READER_ID_0));
+  TEST_ASSERT_TRUE(callback_called);
   delay_ms(100);
 }
 
+void test_invalid_ports_and_pins() {
+  
+}
+
 void test_count_time_callback_runs() {
-  TEST_ASSERT_OK(adc_periodic_reader_set_up_reader(PERIODIC_READER_ID_3, &adc_settings2));
+  TEST_ASSERT_OK(adc_periodic_reader_set_up_reader(PERIODIC_READER_ID_3, &reader_settings2));
   TEST_ASSERT_OK(adc_periodic_reader_start(PERIODIC_READER_ID_3));
   count = 0;
   // Callback should go off approximately every 50 ms
