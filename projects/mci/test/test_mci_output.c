@@ -11,19 +11,18 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "delay.h"
-#include "exported_enums.h"
 #include "event_queue.h"
-#include "generic_can_mcp2515.h"
+#include "exported_enums.h"
 #include "generic_can.h"
+#include "generic_can_mcp2515.h"
 #include "interrupt.h"
 #include "log.h"
 #include "mcp2515.h"
-#include "status.h"
 #include "soft_timer.h"
+#include "status.h"
 
-#include "wavesculptor.h"
 #include "motor_can.h"
-
+#include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
 #define TEST_MCI_OUTPUT_THRESHOLD 0.01f
@@ -43,51 +42,39 @@ static MotorControllerStorage s_mci_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static TestMciOutputStorage s_test_mci_output_storage;
 
-
-static inline uint32_t unpack_left_shift_u32(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
-    return (uint32_t)((uint32_t)(value & mask) << shift);
+static inline uint32_t unpack_left_shift_u32(uint8_t value, uint8_t shift, uint8_t mask) {
+  return (uint32_t)((uint32_t)(value & mask) << shift);
 }
 
-static inline uint32_t unpack_right_shift_u32(
-    uint8_t value,
-    uint8_t shift,
-    uint8_t mask)
-{
-    return (uint32_t)((uint32_t)(value & mask) >> shift);
+static inline uint32_t unpack_right_shift_u32(uint8_t value, uint8_t shift, uint8_t mask) {
+  return (uint32_t)((uint32_t)(value & mask) >> shift);
 }
 
-int motor_can_drive_command_unpack(
-    struct MotorCanDriveCommand *dst_p,
-    const uint8_t *src_p,
-    size_t size)
-{
-    uint32_t motor_current;
-    uint32_t motor_velocity;
+int motor_can_drive_command_unpack(struct MotorCanDriveCommand *dst_p, const uint8_t *src_p,
+                                   size_t size) {
+  uint32_t motor_current;
+  uint32_t motor_velocity;
 
-    if (size < 8u) {
-        return (-EINVAL);
-    }
+  if (size < 8u) {
+    return (-EINVAL);
+  }
 
-    memset(dst_p, 0, sizeof(*dst_p));
+  memset(dst_p, 0, sizeof(*dst_p));
 
-    motor_velocity = 0u;
-    motor_velocity |= unpack_right_shift_u32(src_p[0], 0u, 0xffu);
-    motor_velocity |= unpack_left_shift_u32(src_p[1], 8u, 0xffu);
-    motor_velocity |= unpack_left_shift_u32(src_p[2], 16u, 0xffu);
-    motor_velocity |= unpack_left_shift_u32(src_p[3], 24u, 0xffu);
-    memcpy(&dst_p->motor_velocity, &motor_velocity, sizeof(dst_p->motor_velocity));
-    motor_current = 0u;
-    motor_current |= unpack_right_shift_u32(src_p[4], 0u, 0xffu);
-    motor_current |= unpack_left_shift_u32(src_p[5], 8u, 0xffu);
-    motor_current |= unpack_left_shift_u32(src_p[6], 16u, 0xffu);
-    motor_current |= unpack_left_shift_u32(src_p[7], 24u, 0xffu);
-    memcpy(&dst_p->motor_current, &motor_current, sizeof(dst_p->motor_current));
+  motor_velocity = 0u;
+  motor_velocity |= unpack_right_shift_u32(src_p[0], 0u, 0xffu);
+  motor_velocity |= unpack_left_shift_u32(src_p[1], 8u, 0xffu);
+  motor_velocity |= unpack_left_shift_u32(src_p[2], 16u, 0xffu);
+  motor_velocity |= unpack_left_shift_u32(src_p[3], 24u, 0xffu);
+  memcpy(&dst_p->motor_velocity, &motor_velocity, sizeof(dst_p->motor_velocity));
+  motor_current = 0u;
+  motor_current |= unpack_right_shift_u32(src_p[4], 0u, 0xffu);
+  motor_current |= unpack_left_shift_u32(src_p[5], 8u, 0xffu);
+  motor_current |= unpack_left_shift_u32(src_p[6], 16u, 0xffu);
+  motor_current |= unpack_left_shift_u32(src_p[7], 24u, 0xffu);
+  memcpy(&dst_p->motor_current, &motor_current, sizeof(dst_p->motor_current));
 
-    return (0);
+  return (0);
 }
 
 static void prv_setup_motor_can(void) {
@@ -107,25 +94,28 @@ static void prv_setup_motor_can(void) {
   generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
 }
 
-StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended,
-                                 uint64_t data, size_t dlc) {
+StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
+                                 size_t dlc) {
   // unpack data
-  if(!s_test_mci_output_storage.pedal_sent) {
+  if (!s_test_mci_output_storage.pedal_sent) {
     return STATUS_CODE_OK;
   }
   LOG_DEBUG("DID TX\n");
   MotorCanDriveCommand *expected_value = &s_test_mci_output_storage.expected_value;
   MotorCanDriveCommand actual_value;
   motor_can_drive_command_unpack(&actual_value, (uint8_t *)&data, dlc);
-  LOG_DEBUG("CURRENT(AvE): %.4f vs %.4f\n", actual_value.motor_current, expected_value->motor_current);
-  LOG_DEBUG("VELOCITY(AvE): %.4f vs %.4f %.4f %.4f\n", actual_value.motor_velocity, expected_value->motor_velocity, fabs(actual_value.motor_velocity - expected_value->motor_velocity), TEST_MCI_OUTPUT_THRESHOLD);
-  TEST_ASSERT_TRUE(
-    id == MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID ||
-    id == MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID);
+  LOG_DEBUG("CURRENT(AvE): %.4f vs %.4f\n", actual_value.motor_current,
+            expected_value->motor_current);
+  LOG_DEBUG("VELOCITY(AvE): %.4f vs %.4f %.4f %.4f\n", actual_value.motor_velocity,
+            expected_value->motor_velocity,
+            fabs(actual_value.motor_velocity - expected_value->motor_velocity),
+            TEST_MCI_OUTPUT_THRESHOLD);
+  TEST_ASSERT_TRUE(id == MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID ||
+                   id == MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID);
   TEST_ASSERT_TRUE(fabs(actual_value.motor_velocity - expected_value->motor_velocity) <
-                     TEST_MCI_OUTPUT_THRESHOLD);
+                   TEST_MCI_OUTPUT_THRESHOLD);
   TEST_ASSERT_TRUE(fabs(actual_value.motor_current - expected_value->motor_current) <
-                     TEST_MCI_OUTPUT_THRESHOLD);
+                   TEST_MCI_OUTPUT_THRESHOLD);
   s_test_mci_output_storage.pedal_sent = false;
   // verify id and dlc are as expected
   return STATUS_CODE_OK;
@@ -156,7 +146,6 @@ void setup_test(void) {
 }
 
 void teardown_test(void) {}
-
 
 void test_mci_output_off_no_pedals(void) {
   LOG_DEBUG("DOING %s\n", __func__);
