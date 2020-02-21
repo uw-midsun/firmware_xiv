@@ -4,6 +4,7 @@
 #include "delay.h"
 #include "gpio.h"
 #include "gpio_it.h"
+#include "gpio_mcu.h"
 #include "interrupt.h"
 #include "log.h"
 #include "misc.h"

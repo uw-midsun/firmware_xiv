@@ -43,7 +43,8 @@ StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
     GPIO_ALTFN_ANALOG,
   };
 
-  if(adc_settings->address.pin >= GPIO_PINS_PER_PORT || adc_settings->address.port >= NUM_GPIO_PORTS) {
+  if (adc_settings->address.pin >= GPIO_PINS_PER_PORT ||
+      adc_settings->address.port >= NUM_GPIO_PORTS || reader_id >= NUM_PERIODIC_READER_IDS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -60,11 +61,17 @@ StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
 }
 
 StatusCode adc_periodic_reader_start(PeriodicReaderId reader_id) {
+  if (reader_id >= NUM_PERIODIC_READER_IDS) {
+    return STATUS_CODE_INVALID_ARGS;
+  }
   s_storage[reader_id].activated = true;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_periodic_reader_stop(PeriodicReaderId reader_id) {
+  if (reader_id >= NUM_PERIODIC_READER_IDS) {
+    return STATUS_CODE_INVALID_ARGS;
+  }
   s_storage[reader_id].activated = false;
   return STATUS_CODE_OK;
 }

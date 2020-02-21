@@ -41,9 +41,7 @@ StatusCode steering_can_process_event(Event e) {
 
   if (e.id == EE_STEERING_INPUT_HORN) {
     CAN_TRANSMIT_HORN(e.data);
-  }
-
-  else if (e.id == EE_STEERING_HIGH_BEAM_FORWARD || EE_STEERING_HIGH_BEAM_REAR) {
+  } else if (e.id == EE_STEERING_HIGH_BEAM_FORWARD || EE_STEERING_HIGH_BEAM_REAR) {
     CAN_TRANSMIT_LIGHTS(e.id, e.data);
   }
 }
