@@ -1,7 +1,7 @@
 #pragma once
 
-// Relay TX module. Retries sending the relay message NUM_RELAY_TX_RETRIES times, in case of 
-// a fail, raises a fault event passed via the RelayTxRequest. When successful, raises a 
+// Relay TX module. Retries sending the relay message NUM_RELAY_TX_RETRIES times, in case of
+// a fail, raises a fault event passed via the RelayTxRequest. When successful, raises a
 // completion event.
 
 #include "can_tx_retry_wrapper.h"

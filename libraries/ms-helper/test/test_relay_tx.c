@@ -4,17 +4,16 @@
 #include "can_transmit.h"
 #include "can_tx_retry_wrapper.h"
 #include "delay.h"
-#include "relay_tx.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
+#include "relay_tx.h"
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "delay.h"
 
 static RelayTxStorage s_storage = { 0 };
 static CanStorage s_can_storage;
@@ -46,7 +45,7 @@ void setup_test(void) {
                                        .tx = { .port = GPIO_PORT_A, .pin = 12 },
                                        .rx_event = TEST_RELAY_TX_EVENT_CAN_RX,
                                        .tx_event = TEST_RELAY_TX_EVENT_CAN_TX,
-                                       .fault_event = TEST_RELAY_TX_EVENT_CAN_FAULT};
+                                       .fault_event = TEST_RELAY_TX_EVENT_CAN_FAULT };
   TEST_ASSERT_OK(can_init(&s_can_storage, &s_can_settings));
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, prv_rx_callback, NULL));
@@ -61,16 +60,17 @@ void test_relay_tx_retries_then_raises_fail_event(void) {
     uint16_t fault_event_data = relay << 8 | state;
     uint16_t success_event_darta = ~fault_event_data;
     RetryTxRequest req = {
-        .completion_event_id = TEST_RELAY_TX_EVENT_SUCCESS,
-        .completion_event_data = success_event_darta,
-        .fault_event_id = TEST_RELAY_TX_EVENT_FAIL,
-        .fault_event_data = fault_event_data,
+      .completion_event_id = TEST_RELAY_TX_EVENT_SUCCESS,
+      .completion_event_data = success_event_darta,
+      .fault_event_id = TEST_RELAY_TX_EVENT_FAIL,
+      .fault_event_data = fault_event_data,
     };
     SystemCanDevice *device_lookup = test_get_acking_device_lookup();
     TEST_ASSERT_OK(relay_tx_relay_state(&s_storage, &req, relay, EE_RELAY_STATE_OPEN));
     for (uint8_t i = 0; i < NUM_RELAY_TX_RETRIES; i++) {
       MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_RELAY_TX_EVENT_CAN_TX, TEST_RELAY_TX_EVENT_CAN_RX);
-      MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, device_lookup[relay], CAN_ACK_STATUS_INVALID);
+      MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                             device_lookup[relay], CAN_ACK_STATUS_INVALID);
     }
     Event e = { 0 };
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_RELAY_TX_EVENT_FAIL, fault_event_data);
@@ -85,20 +85,22 @@ void test_relay_tx_retries_then_success_event(void) {
     uint16_t fault_event_data = relay << 8 | state;
     uint16_t success_event_data = ~fault_event_data;
     RetryTxRequest req = {
-        .completion_event_id = TEST_RELAY_TX_EVENT_SUCCESS,
-        .completion_event_data = success_event_data,
-        .fault_event_id = TEST_RELAY_TX_EVENT_FAIL,
-        .fault_event_data = fault_event_data,
+      .completion_event_id = TEST_RELAY_TX_EVENT_SUCCESS,
+      .completion_event_data = success_event_data,
+      .fault_event_id = TEST_RELAY_TX_EVENT_FAIL,
+      .fault_event_data = fault_event_data,
     };
     SystemCanDevice *device_lookup = test_get_acking_device_lookup();
     TEST_ASSERT_OK(relay_tx_relay_state(&s_storage, &req, relay, EE_RELAY_STATE_OPEN));
     for (uint8_t i = 0; i < NUM_RELAY_TX_RETRIES - 1; i++) {
       MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_RELAY_TX_EVENT_CAN_TX, TEST_RELAY_TX_EVENT_CAN_RX);
-      MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, device_lookup[relay], CAN_ACK_STATUS_INVALID);
+      MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                             device_lookup[relay], CAN_ACK_STATUS_INVALID);
     }
 
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_RELAY_TX_EVENT_CAN_TX, TEST_RELAY_TX_EVENT_CAN_RX);
-    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, device_lookup[relay], CAN_ACK_STATUS_OK);
+    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                           device_lookup[relay], CAN_ACK_STATUS_OK);
 
     Event e = { 0 };
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_RELAY_TX_EVENT_SUCCESS, success_event_data);

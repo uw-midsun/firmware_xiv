@@ -90,12 +90,13 @@ void test_can_retry_emits_success_event(void) {
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
 
-  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_OK);
+  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                         acking_device, CAN_ACK_STATUS_OK);
 
   Event e = { 0 };
 
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, RETRY_WRAPPER_EVENT_SUCCESS, success_data);
-  
+
   // no events should be remaining
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
@@ -108,23 +109,23 @@ void test_can_retry_emits_failure_event(void) {
   uint16_t fault_reason = 0x1234;
   uint16_t success_data = 0x5678;
 
-  CanTxRetryWrapperRequest retry_request = {
-    .retry_request =
-        {
-            .completion_event_id = RETRY_WRAPPER_EVENT_SUCCESS,
-            .completion_event_data = success_data,
-            .fault_event_id = RETRY_WRAPPER_EVENT_FAIL,
-            .fault_event_data = fault_reason,
-        },
-    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
-    .tx_callback = prv_can_tx,
-    .tx_callback_context = &s_storage
-  };
+  CanTxRetryWrapperRequest retry_request = { .retry_request =
+                                                 {
+                                                     .completion_event_id =
+                                                         RETRY_WRAPPER_EVENT_SUCCESS,
+                                                     .completion_event_data = success_data,
+                                                     .fault_event_id = RETRY_WRAPPER_EVENT_FAIL,
+                                                     .fault_event_data = fault_reason,
+                                                 },
+                                             .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
+                                             .tx_callback = prv_can_tx,
+                                             .tx_callback_context = &s_storage };
 
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
   for (uint8_t i = 0; i < NUM_RETRIES; i++) {
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
-    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_INVALID);
+    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                           acking_device, CAN_ACK_STATUS_INVALID);
   }
 
   Event e = { 0 };
@@ -136,7 +137,8 @@ void test_can_retry_emits_failure_event(void) {
   // Retry counter should be reset to 0
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
-  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_INVALID);
+  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                         acking_device, CAN_ACK_STATUS_INVALID);
 
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_NOT_EQUAL(e.id, RETRY_WRAPPER_EVENT_FAIL);
@@ -150,25 +152,25 @@ void test_can_retry_retries_indefinitely(void) {
   uint16_t success_data = 0x4569;
   SystemCanDevice acking_device = SYSTEM_CAN_DEVICE_BMS_CARRIER;
 
-  CanTxRetryWrapperRequest retry_request = {
-    .retry_request =
-        {
-            .completion_event_id = RETRY_WRAPPER_EVENT_SUCCESS,
-            .completion_event_data = success_data,
-            .fault_event_id = RETRY_WRAPPER_EVENT_FAIL,
-            .fault_event_data = fault_data,
-            .retry_indefinitely = true,
-        },
-    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
-    .tx_callback = prv_can_tx,
-    .tx_callback_context = &s_storage
-  };
+  CanTxRetryWrapperRequest retry_request = { .retry_request =
+                                                 {
+                                                     .completion_event_id =
+                                                         RETRY_WRAPPER_EVENT_SUCCESS,
+                                                     .completion_event_data = success_data,
+                                                     .fault_event_id = RETRY_WRAPPER_EVENT_FAIL,
+                                                     .fault_event_data = fault_data,
+                                                     .retry_indefinitely = true,
+                                                 },
+                                             .ack_bitset = CAN_ACK_EXPECTED_DEVICES(acking_device),
+                                             .tx_callback = prv_can_tx,
+                                             .tx_callback_context = &s_storage };
 
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
 
   for (uint8_t i = 0; i < NUM_RETRIES; i++) {
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
-    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_INVALID);
+    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                           acking_device, CAN_ACK_STATUS_INVALID);
   }
 
   Event e = { 0 };
@@ -177,13 +179,15 @@ void test_can_retry_retries_indefinitely(void) {
 
   for (uint8_t i = 0; i < NUM_RETRIES; i++) {
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
-    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_INVALID);
+    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                           acking_device, CAN_ACK_STATUS_INVALID);
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, RETRY_WRAPPER_EVENT_FAIL, fault_data);
   }
   // eventually fault clears
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
 
-  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_OK);
+  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                         acking_device, CAN_ACK_STATUS_OK);
 
   // success event gets raised
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, RETRY_WRAPPER_EVENT_SUCCESS, success_data);
@@ -197,9 +201,9 @@ void test_can_retry_retries_indefinitely(void) {
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
 
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(RETRY_WRAPPER_EVENT_CAN_TX, RETRY_WRAPPER_EVENT_CAN_RX);
-  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, acking_device, CAN_ACK_STATUS_INVALID);
+  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,
+                                         acking_device, CAN_ACK_STATUS_INVALID);
 
   event_process(&e);
   TEST_ASSERT_NOT_EQUAL(e.id, RETRY_WRAPPER_EVENT_FAIL);
-
 }
