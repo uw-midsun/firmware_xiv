@@ -3,6 +3,8 @@
 #include "log.h"
 
 // forward declaring
+static CanAckRequest s_ack_req = { 0 };
+
 static void prv_try_tx(CanTxRetryWrapperStorage *storage);
 
 StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage,
@@ -17,9 +19,12 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
   CanTxRetryWrapperStorage *storage = (CanTxRetryWrapperStorage *)context;
   if (num_remaining || status) {
     storage->retry_count++;
-    LOG_DEBUG("retry_count: %d\n", storage->retry_count);
     if (storage->retry_count >= storage->retries) {
       event_raise(storage->retry_request.fault_event_id, storage->retry_request.fault_event_data);
+      if (!storage->retry_request.retry_indefinitely) {
+        storage->retry_count = 0;
+        return STATUS_CODE_RESOURCE_EXHAUSTED;
+      }
     }
     if (storage->retry_count < storage->retries || storage->retry_request.retry_indefinitely) {
       prv_try_tx(storage);
@@ -33,13 +38,11 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
 }
 
 static void prv_try_tx(CanTxRetryWrapperStorage *storage) {
-  CanAckRequest ack_req = {
-    .callback = prv_can_simple_ack,
-    .context = storage,
-    .expected_bitset = storage->ack_bitset,
-  };
+  s_ack_req.callback = prv_can_simple_ack;
+  s_ack_req.context = storage;
+  s_ack_req.expected_bitset = storage->ack_bitset;
   if (storage->tx_callback) {
-    storage->tx_callback(&ack_req, storage->tx_callback_context);
+    storage->tx_callback(&s_ack_req, storage->tx_callback_context);
   }
 }
 
