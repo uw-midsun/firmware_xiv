@@ -8,6 +8,6 @@ typedef struct ChargerData {
   size_t dlc;
 } ChargerData;
 
-StatusCode charger_controller_init(ChargerData *data);
-StatusCode charger_controller_activate(ChargerData *data);
+StatusCode charger_controller_init(Mcp2515Storage *storage);
+StatusCode charger_controller_activate();
 StatusCode charger_controller_deactivate();

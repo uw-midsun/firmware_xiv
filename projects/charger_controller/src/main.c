@@ -10,23 +10,16 @@
 static Mcp2515Storage mcp2515;
 const Mcp2515Settings mcp2515_settings = {
   .spi_port = SPI_PORT_1,
-  .spi_baudrate = 750000,
+  .spi_baudrate = MCP2515_BITRATE_250KBPS,
   .mosi = { .port = GPIO_PORT_A, 7 },
   .miso = { .port = GPIO_PORT_A, 6 },
   .sclk = { .port = GPIO_PORT_A, 5 },
   .cs = { .port = GPIO_PORT_A, 4 },
   .int_pin = { .port = GPIO_PORT_A, 3 },
 
+  .can_bitrate = MCP2515_BITRATE_250KBPS,
   .loopback = false,
   .context = NULL,
-};
-//change these values as well for ongoing message
-const ChargerData data = {
-  .storage = &mcp2515,
-  .id = 0,
-  .extended = false,
-  .data = 0,
-  .dlc = 0,
 };
 
 int main() {
@@ -41,7 +34,7 @@ int main() {
 
   // setup mcp2515 settings
   mcp2515_init(&mcp2515, &mcp2515_settings);
-  charger_controller_init(&data);
+  charger_controller_init(&mcp2515);
 
   Event e = { 0 };
   while (true) {
