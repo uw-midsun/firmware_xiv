@@ -6,7 +6,7 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common
+$(T)_DEPS := ms-common ms-helper
 
 $(T)_test_power_main_sequence_MOCKS := power_main_precharge_monitor_start \
 																			 power_main_precharge_monitor_init \
