@@ -1,5 +1,7 @@
 #pragma once
 
+// All the enums and definitions for fault reasons in centre console.
+
 #include "stdint.h"
 
 typedef enum {

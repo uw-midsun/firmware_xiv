@@ -55,6 +55,12 @@
                     2, (drive_output_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
                     CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_SET_EBRAKE_STATE(msg_ptr, ebrake_state_u8)                                        \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                    \
+                   SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE, 1, (ebrake_state_u8), CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8, \
                                aux_bat_uv_flag_u8)                                            \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,                      \

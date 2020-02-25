@@ -66,7 +66,7 @@ void test_relay_tx_retries_then_raises_fail_event(void) {
       .fault_event_data = fault_event_data,
     };
     SystemCanDevice *device_lookup = test_get_acking_device_lookup();
-    TEST_ASSERT_OK(relay_tx_relay_state(&s_storage, &req, relay, EE_RELAY_STATE_OPEN));
+    TEST_ASSERT_OK(relay_tx_relay_state(&s_storage, &req, relay, state));
     for (uint8_t i = 0; i < NUM_RELAY_TX_RETRIES; i++) {
       MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_RELAY_TX_EVENT_CAN_TX, TEST_RELAY_TX_EVENT_CAN_RX);
       MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_RELAY_STATES,

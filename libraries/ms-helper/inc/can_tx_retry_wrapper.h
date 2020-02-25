@@ -1,12 +1,27 @@
 #pragma once
 
+// This module retries a can message a number of times (provided in settings)
+// and attempts to get a successful acknowledgement of that message. Message
+// should be sent inside the tx_callback. The module provides the pointer to
+// the acknowledgement request. If retry_indefinitely is set, the module keeps
+// retrying that message.
+
+// Requires CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
+
 #include "can_ack.h"
 #include "can_msg_defs.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "retry_tx_request.h"
 
 typedef void (*CanTxCallback)(CanAckRequest *ack_ptr, void *context);
+
+typedef struct RetryTxRequest {
+  EventId completion_event_id;
+  uint16_t completion_event_data;
+  EventId fault_event_id;
+  uint16_t fault_event_data;
+  bool retry_indefinitely;
+} RetryTxRequest;
 
 typedef struct CanTxRetryWrapperStorage {
   uint8_t retries;

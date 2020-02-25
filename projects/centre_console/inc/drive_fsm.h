@@ -1,5 +1,13 @@
 #pragma once
 
+// This FSM is for handling the drive states of the car, in summary, to enter the
+// drive state we need to close the motor controller relays, and also tell motor
+// controller interface that we're entering the drive state. To enter parking
+// we need to make sure that the ebrake is applied. This module uses relay_tx,
+// and also ebrake_tx to ensure these transitions happen.
+
+// Requires CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
+
 #include "ebrake_tx.h"
 #include "fsm.h"
 #include "mci_output_tx.h"

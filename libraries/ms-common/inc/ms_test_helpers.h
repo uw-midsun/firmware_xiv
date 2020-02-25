@@ -73,3 +73,12 @@
     Event e = { 0, 0 };                         \
     TEST_ASSERT_NOT_OK(event_process(&(e)));    \
   })
+
+#define MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(can_storage, message_id, acking_device, ack_status) \
+  ({                                                                                               \
+    CanMessage msg = { .type = CAN_MSG_TYPE_ACK,                                                   \
+                       .msg_id = message_id,                                                       \
+                       .source_id = acking_device,                                                 \
+                       .data = ack_status };                                                       \
+    TEST_ASSERT_OK(can_ack_handle_msg(&can_storage.ack_requests, &msg));                           \
+  })

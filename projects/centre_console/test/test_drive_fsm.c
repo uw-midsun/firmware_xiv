@@ -14,7 +14,6 @@
 #include "mci_output_tx.h"
 #include "ms_test_helpers.h"
 #include "relay_tx.h"
-#include "retry_tx_request.h"
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"

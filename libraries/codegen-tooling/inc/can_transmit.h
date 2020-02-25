@@ -87,6 +87,14 @@
     status;                                                  \
   })
 
+#define CAN_TRANSMIT_SET_EBRAKE_STATE(ack_ptr, ebrake_state_u8) \
+  ({                                                            \
+    CanMessage msg = { 0 };                                     \
+    CAN_PACK_SET_EBRAKE_STATE(&msg, (ebrake_state_u8));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));          \
+    status;                                                     \
+  })
+
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
                                    aux_bat_uv_flag_u8)                                       \
   ({                                                                                         \
