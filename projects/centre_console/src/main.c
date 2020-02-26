@@ -19,7 +19,6 @@ int main(void) {
   LOG_DEBUG("Hello from Centre Console!\n");
 
   while (true) {
-
   }
 
   return 0;
