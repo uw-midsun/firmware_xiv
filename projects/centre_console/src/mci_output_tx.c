@@ -19,12 +19,11 @@ StatusCode mci_output_tx_drive_output(MciOutputTxStorage *storage, RetryTxReques
     return STATUS_CODE_INVALID_ARGS;
   }
   storage->drive_output = drive_output;
-  CanTxRetryWrapperRequest retry_wrapper_request = {
-    .retry_request = *request,
-    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
-    .tx_callback = prv_tx_mci_output,
-    .tx_callback_context = storage
-  };
+  CanTxRetryWrapperRequest retry_wrapper_request = { .retry_request = *request,
+                                                     .ack_bitset = CAN_ACK_EXPECTED_DEVICES(
+                                                         SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
+                                                     .tx_callback = prv_tx_mci_output,
+                                                     .tx_callback_context = storage };
   can_tx_retry_send(&storage->can_retry_wrapper_storage, &retry_wrapper_request);
   return STATUS_CODE_OK;
 }

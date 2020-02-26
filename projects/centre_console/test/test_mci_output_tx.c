@@ -4,12 +4,12 @@
 #include "can_transmit.h"
 #include "can_tx_retry_wrapper.h"
 #include "delay.h"
-#include "mci_output_tx.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
+#include "mci_output_tx.h"
 #include "ms_test_helpers.h"
 #include "status.h"
 #include "test_helpers.h"
@@ -47,15 +47,15 @@ void setup_test(void) {
                                        .tx_event = TEST_MCI_OUTPUT_TX_EVENT_CAN_TX,
                                        .fault_event = TEST_MCI_OUTPUT_TX_EVENT_CAN_FAULT };
   TEST_ASSERT_OK(can_init(&s_can_storage, &s_can_settings));
-  TEST_ASSERT_OK(
-      can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, prv_rx_callback, NULL));
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, prv_rx_callback, NULL));
   TEST_ASSERT_OK(mci_output_init(&s_storage));
 }
 
 void teardown_test(void) {}
 
 void test_mci_output_retries_then_raises_fail_event(void) {
-  for (EEDriveOutput drive_output = EE_DRIVE_OUTPUT_OFF; drive_output < NUM_EE_DRIVE_OUTPUTS; drive_output++) {
+  for (EEDriveOutput drive_output = EE_DRIVE_OUTPUT_OFF; drive_output < NUM_EE_DRIVE_OUTPUTS;
+       drive_output++) {
     uint16_t fault_event_data = 0x1234;
     uint16_t success_event_data = 0x5678;
     RetryTxRequest req = {
@@ -66,7 +66,8 @@ void test_mci_output_retries_then_raises_fail_event(void) {
     };
     TEST_ASSERT_OK(mci_output_tx_drive_output(&s_storage, &req, drive_output));
     for (uint8_t i = 0; i < NUM_MCI_OUTPUT_TX_RETRIES; i++) {
-      MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
+      MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX,
+                                        TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
       MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
                                              SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
                                              CAN_ACK_STATUS_INVALID);
@@ -79,7 +80,8 @@ void test_mci_output_retries_then_raises_fail_event(void) {
 }
 
 void test_mci_output_retries_then_success_event(void) {
-  for (EEDriveOutput drive_output = EE_DRIVE_OUTPUT_OFF; drive_output < NUM_EE_DRIVE_OUTPUTS; drive_output++) {
+  for (EEDriveOutput drive_output = EE_DRIVE_OUTPUT_OFF; drive_output < NUM_EE_DRIVE_OUTPUTS;
+       drive_output++) {
     uint16_t fault_event_data = 0x1234;
     uint16_t success_event_data = 0x5678;
     RetryTxRequest req = {
@@ -90,18 +92,17 @@ void test_mci_output_retries_then_success_event(void) {
     };
     TEST_ASSERT_OK(mci_output_tx_drive_output(&s_storage, &req, drive_output));
     for (uint8_t i = 0; i < NUM_MCI_OUTPUT_TX_RETRIES - 1; i++) {
-      MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
+      MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX,
+                                        TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
       MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
                                              SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
                                              CAN_ACK_STATUS_INVALID);
     }
 
-
-    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
+    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX,
+                                      TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
     MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
-                                             SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
-                                             CAN_ACK_STATUS_OK);
-
+                                           SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, CAN_ACK_STATUS_OK);
 
     Event e = { 0 };
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_MCI_OUTPUT_TX_EVENT_SUCCESS, success_event_data);
