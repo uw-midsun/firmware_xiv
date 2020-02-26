@@ -8,7 +8,7 @@
 static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
   ThrottleCalibrationStorage *storage = context;
   int16_t reading = 0;
-  ads1015_read_raw(get_ads1015_storage(), get_pedal_data_storage()->brake_channel, &reading);
+  ads1015_read_raw(get_ads1015_storage(), get_pedal_data_storage()->throttle_channel2, &reading);
 
   if (storage->sample_counter < NUM_SAMPLES) {
     storage->sample_counter++;
@@ -37,6 +37,8 @@ StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCa
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();
   }
+  //perhaps not the best way to do this
+  //what if i get 1 extremely low or high value
   if (state == PEDAL_PRESSED) {
     data->lower_value = (storage->min_reading + storage->max_reading) / 2;
   } else {

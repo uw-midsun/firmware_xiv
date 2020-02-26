@@ -36,6 +36,8 @@ StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibration
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();
   }
+  //perhaps not the best way to do this
+  //what if i get 1 extremely low or high value
   if (state == PEDAL_PRESSED) {
     data->lower_value = (storage->min_reading + storage->max_reading) / 2;
   } else {

@@ -1,6 +1,6 @@
 
 // Note : Although this is structured as a test, it is the actual calibration sequence for the
-// mechanical brake. It is meant to be used only once to retreive the values when the brake is
+// throttle. It is meant to be used only once to retreive the values when the throttle is
 // pressed and unpressed.
 
 #include "ads1015.h"
@@ -13,8 +13,8 @@
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
-#include "brake_data.h"
-#include "brake_calib.h"
+#include "throttle_data.h"
+#include "throttle_calib.h"
 #include "pedal_calib.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
@@ -23,7 +23,7 @@
 
 static Ads1015Storage s_ads1015_storage;
 static PedalCalibBlob s_calib_blob;
-static BrakeCalibrationStorage s_calibration_storage;
+static ThrottleCalibrationStorage s_calibration_storage;
 
 void setup_test(void) {
   gpio_init();
@@ -44,21 +44,21 @@ void setup_test(void) {
   ads1015_init(&s_ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
   TEST_ASSERT_OK(calib_init(&s_calib_blob, sizeof(s_calib_blob), true));
-  brake_calibration_init(&s_calibration_storage);
+  throttle_calibration_init(&s_calibration_storage, &s_calib_blob.throttle_calib);
 }
 
 void teardown_test(void) {}
 
-void test_mech_brake_calibration_run(void) {
-  LOG_DEBUG("Please ensure the brake is not being pressed.\n");
+void test_mech_throttle_calibration_run(void) {
+  LOG_DEBUG("Please ensure the throttle is not being pressed.\n");
   delay_s(7);
   LOG_DEBUG("Beginning sampling\n");
-  brake_calib_sample(&s_calibration_storage, &s_calib_blob.brake_calib, PEDAL_UNPRESSED);
+  throttle_calib_sample(&s_calibration_storage, &s_calib_blob.throttle_calib, PEDAL_UNPRESSED);
   LOG_DEBUG("Completed sampling\n");
-  LOG_DEBUG("Please press and hold the brake\n");
+  LOG_DEBUG("Please press and hold the throttle\n");
   delay_s(7);
   LOG_DEBUG("Beginning sampling\n");
-  brake_calib_sample(&s_calibration_storage, &s_calib_blob.brake_calib, PEDAL_PRESSED);
+  throttle_calib_sample(&s_calibration_storage, &s_calib_blob.throttle_calib, PEDAL_PRESSED);
   LOG_DEBUG("Completed sampling\n");
 
   calib_commit();
