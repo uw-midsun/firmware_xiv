@@ -7,7 +7,7 @@
 #include "event_queue.h"
 #include "exported_enums.h"
 
-void prv_timer_cleanup(PowerMainPrechargeMonitor *storage) {
+static void prv_timer_cleanup(PowerMainPrechargeMonitor *storage) {
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
 }
 

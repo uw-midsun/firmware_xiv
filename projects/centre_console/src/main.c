@@ -15,13 +15,11 @@ int main(void) {
   event_queue_init();
 
   button_press_init();
+
   LOG_DEBUG("Hello from Centre Console!\n");
 
-  GpioAddress *addresses = test_provide_button_addresses();
-  GpioAddress power_button = addresses[CENTRE_CONSOLE_BUTTON_POWER];
   while (true) {
-    gpio_it_trigger_interrupt(&power_button);
-    delay_ms(400);
+
   }
 
   return 0;
