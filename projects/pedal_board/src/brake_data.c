@@ -1,9 +1,9 @@
+#include "exported_enums.h"
 #include "log.h"
+#include "pedal_calib.h"
 #include "pedal_data.h"
 #include "pedal_events.h"
-#include "pedal_calib.h"
 #include "soft_timer.h"
-#include "exported_enums.h"
 
 StatusCode get_brake_data(PedalDataStorage *storage, int16_t *position) {
   status_ok_or_return(ads1015_read_raw(get_ads1015_storage(), storage->brake_channel, position));

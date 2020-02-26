@@ -7,14 +7,14 @@
 #include "interrupt.h"
 #include "log.h"
 // include all the modules
-#include "pedal_data_tx.h"
+#include "calib.h"
+#include "pedal_calib.h"
 #include "pedal_data.h"
+#include "pedal_data_tx.h"
 #include "pedal_events.h"
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "calib.h"
-#include "pedal_calib.h"
 
 #define CAN_DEVICE_ID 0x1
 

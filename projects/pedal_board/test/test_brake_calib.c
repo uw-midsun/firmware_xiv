@@ -4,6 +4,8 @@
 // pressed and unpressed.
 
 #include "ads1015.h"
+#include "brake_calib.h"
+#include "brake_data.h"
 #include "calib.h"
 #include "crc32.h"
 #include "delay.h"
@@ -13,8 +15,6 @@
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
-#include "brake_data.h"
-#include "brake_calib.h"
 #include "pedal_calib.h"
 #include "pedal_events.h"
 #include "soft_timer.h"

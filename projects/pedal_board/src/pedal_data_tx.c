@@ -8,10 +8,10 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
+#include "pedal_data.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
 #include "throttle_data.h"
-#include "pedal_data.h"
 
 #define TIMER_TIMEOUT_IN_MILLIS 100
 
@@ -40,7 +40,7 @@ int16_t get_throttle_position() {
 
 // main should have a brake fsm, and ads1015storage
 StatusCode pedal_data_tx_init() {
-  status_ok_or_return(
-      soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout, get_pedal_data_storage(), NULL));
+  status_ok_or_return(soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout,
+                                              get_pedal_data_storage(), NULL));
   return STATUS_CODE_OK;
 }

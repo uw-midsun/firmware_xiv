@@ -5,13 +5,13 @@
 
 static Ads1015Storage *s_ads1015_storage;
 static PedalCalibBlob *s_pedal_calib_blob;
-static PedalDataStorage s_pedal_data_storage = { 
+static PedalDataStorage s_pedal_data_storage = {
   .throttle_channel1 = ADS1015_CHANNEL_0,
   .throttle_channel2 = ADS1015_CHANNEL_1,
   .brake_channel = ADS1015_CHANNEL_2,
 };
 
-//perhaps also set the #define upper and lower here for calib
+// perhaps also set the #define upper and lower here for calib
 StatusCode pedal_data_init(Ads1015Storage *storage, PedalCalibBlob *calib_blob) {
   s_ads1015_storage = storage;
   s_pedal_calib_blob = calib_blob;

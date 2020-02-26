@@ -1,6 +1,6 @@
 #include "brake_calib.h"
-#include "brake_data.h"
 #include "ads1015.h"
+#include "brake_data.h"
 #include "pedal_calib.h"
 #include "pedal_data.h"
 #include "pedal_events.h"
@@ -23,7 +23,8 @@ StatusCode brake_calib_init(BrakeCalibrationStorage *storage) {
   return STATUS_CODE_OK;
 }
 
-StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibrationData *data, PedalState state) {
+StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibrationData *data,
+                              PedalState state) {
   // Disables channel
   ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->brake_channel, false,
                             NULL, NULL);
@@ -36,8 +37,8 @@ StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibration
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();
   }
-  //perhaps not the best way to do this
-  //what if i get 1 extremely low or high value
+  // perhaps not the best way to do this
+  // what if i get 1 extremely low or high value
   if (state == PEDAL_PRESSED) {
     data->lower_value = (storage->min_reading + storage->max_reading) / 2;
   } else {

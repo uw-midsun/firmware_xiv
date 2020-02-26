@@ -13,12 +13,12 @@
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
-#include "throttle_data.h"
-#include "throttle_calib.h"
 #include "pedal_calib.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
 #include "test_helpers.h"
+#include "throttle_calib.h"
+#include "throttle_data.h"
 #include "unity.h"
 
 static Ads1015Storage s_ads1015_storage;

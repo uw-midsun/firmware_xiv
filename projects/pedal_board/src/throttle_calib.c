@@ -1,9 +1,9 @@
 #include "throttle_calib.h"
-#include "throttle_data.h"
 #include "ads1015.h"
 #include "pedal_calib.h"
 #include "pedal_data.h"
 #include "pedal_events.h"
+#include "throttle_data.h"
 
 static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
   ThrottleCalibrationStorage *storage = context;
@@ -24,21 +24,22 @@ StatusCode throttle_calib_init(ThrottleCalibrationStorage *storage) {
 }
 
 // remember that throttle has 2 channels but we currently just use 1
-StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCalibrationData *data, PedalState state) {
+StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCalibrationData *data,
+                                 PedalState state) {
   // Disables channel
-  ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->throttle_channel1, false,
-                            NULL, NULL);
+  ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->throttle_channel1,
+                            false, NULL, NULL);
   storage->sample_counter = 0;
   storage->min_reading = INT16_MAX;
   storage->max_reading = INT16_MIN;
 
-  ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->throttle_channel1, true,
-                            prv_callback_channel, data);
+  ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->throttle_channel1,
+                            true, prv_callback_channel, data);
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();
   }
-  //perhaps not the best way to do this
-  //what if i get 1 extremely low or high value
+  // perhaps not the best way to do this
+  // what if i get 1 extremely low or high value
   if (state == PEDAL_PRESSED) {
     data->lower_value = (storage->min_reading + storage->max_reading) / 2;
   } else {

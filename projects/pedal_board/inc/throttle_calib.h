@@ -1,3 +1,4 @@
+#pragma once
 #include "ads1015.h"
 #include "pedal_calib.h"
 #include "pedal_events.h"
@@ -10,4 +11,5 @@ typedef struct ThrottleCalibrationStorage {
 
 StatusCode throttle_calib_init(ThrottleCalibrationStorage *storage);
 
-StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCalibrationData *data, PedalState state);
+StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCalibrationData *data,
+                                 PedalState state);
