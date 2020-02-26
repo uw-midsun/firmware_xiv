@@ -1,5 +1,5 @@
 #include "log.h"
-#include "pedal_data_tx.h"
+#include "pedal_data.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
 
@@ -9,12 +9,12 @@
 #define MULTIPLYER 4096
 
 StatusCode get_brake_data(PedalDataStorage *storage, int16_t *position) {
-  status_ok_or_return(ads1015_read_raw(storage->storage, storage->brake_channel, position));
-  int32_t percent = UPPER_BRAKE_VALUE - LOWER_BRAKE_VALUE;
-  int32_t temp = (int32_t)*position * MULTIPLYER;
-  temp -= LOWER_BRAKE_VALUE * MULTIPLYER;
-  temp *= 100;
-  temp /= percent * MULTIPLYER;
-  *position = (int16_t)temp;
+  status_ok_or_return(ads1015_read_raw(get_ads1015_storage(), storage->brake_channel, position));
+  int32_t range = UPPER_BRAKE_VALUE - LOWER_BRAKE_VALUE;
+  int32_t position_upscaled = (int32_t)*position * MULTIPLYER;
+  position_upscaled -= LOWER_BRAKE_VALUE * MULTIPLYER;
+  position_upscaled *= 100;
+  position_upscaled /= range * MULTIPLYER;
+  *position = (int16_t)position_upscaled;
   return STATUS_CODE_OK;
 }

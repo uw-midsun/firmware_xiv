@@ -11,6 +11,7 @@
 #include "pedal_events.h"
 #include "soft_timer.h"
 #include "throttle_data.h"
+#include "pedal_data.h"
 
 #define TIMER_TIMEOUT_IN_MILLIS 100
 
@@ -38,17 +39,8 @@ int16_t get_throttle_position() {
 }
 
 // main should have a brake fsm, and ads1015storage
-StatusCode pedal_data_tx_init(PedalDataStorage *storage) {
-  // Throttle Channels, we only use 1 right now
+StatusCode pedal_data_tx_init() {
   status_ok_or_return(
-      ads1015_configure_channel(storage->storage, storage->throttle_channel1, true, NULL, NULL));
-  status_ok_or_return(
-      ads1015_configure_channel(storage->storage, storage->throttle_channel2, true, NULL, NULL));
-  // brake channel
-  status_ok_or_return(
-      ads1015_configure_channel(storage->storage, storage->brake_channel, true, NULL, NULL));
-
-  status_ok_or_return(
-      soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout, storage, NULL));
+      soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout, get_pedal_data_storage(), NULL));
   return STATUS_CODE_OK;
 }

@@ -1,38 +1,10 @@
 #include "ads1015.h"
-#include "can.h"
-#include "event_queue.h"
-#include "fsm.h"
-#include "gpio.h"
-#include "gpio_it.h"
-#include "interrupt.h"
-#include "log.h"
-// include all the modules
-#include "pedal_data_tx.h"
-#include "pedal_data.h"
-#include "pedal_events.h"
-#include "status.h"
-#include "test_helpers.h"
-#include "unity.h"
-#include "calib.h"
 #include "pedal_calib.h"
-
-#define CAN_DEVICE_ID 0x1
 
 static Ads1015Storage s_ads1015_storage = { 0 };
 static PedalCalibBlob s_pedal_calib_blob = { 0 };
 
-static CanStorage can_storage = { 0 };
-const CanSettings can_settings = {
-  .device_id = CAN_DEVICE_ID,
-  .bitrate = CAN_HW_BITRATE_500KBPS,
-  .rx_event = PEDAL_CAN_RX,
-  .tx_event = PEDAL_CAN_TX,
-  .fault_event = PEDAL_CAN_FAULT,
-  .tx = { GPIO_PORT_A, 12 },
-  .rx = { GPIO_PORT_A, 11 },
-};
-
-int main() {
+StatusCode brake_calib_init() {
   LOG_DEBUG("WORKING\n");
   // initialize all the modules
   gpio_init();
@@ -40,7 +12,6 @@ int main() {
   gpio_it_init();
   soft_timer_init();
   event_queue_init();
-  can_init(&can_storage, &can_settings);
   LOG_DEBUG("Initialized modules\n");
 
   // setup ADC readings
@@ -58,12 +29,5 @@ int main() {
   PedalCalibBlob *pedal_calib_blob = calib_blob();
   // this should also take in the calib blob
   pedal_data_init(&s_ads1015_storage);
-  pedal_data_tx_init();
-
-  Event e = { 0 };
-  while (true) {
-    event_process(&e);
-    can_process_event(&e);
-  }
-  return 0;
+  return STATUS_CODE_OK;
 }
