@@ -55,7 +55,7 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_mci_output_retries_then_raises_fail_event(void) {
-  for (EEEbrakeState state = EE_DRIVE_OUTPUT_OFF; state < NUM_EE_DRIVE_OUTPUTS; state ++) {
+  for (EEDriveOutput drive_output = EE_DRIVE_OUTPUT_OFF; drive_output < NUM_EE_DRIVE_OUTPUTS; drive_output++) {
     uint16_t fault_event_data = 0x1234;
     uint16_t success_event_data = 0x5678;
     RetryTxRequest req = {
@@ -64,7 +64,7 @@ void test_mci_output_retries_then_raises_fail_event(void) {
       .fault_event_id = TEST_MCI_OUTPUT_TX_EVENT_FAIL,
       .fault_event_data = fault_event_data,
     };
-    TEST_ASSERT_OK(mci_output_tx_drive_output(&s_storage, &req, state));
+    TEST_ASSERT_OK(mci_output_tx_drive_output(&s_storage, &req, drive_output));
     for (uint8_t i = 0; i < NUM_MCI_OUTPUT_TX_RETRIES; i++) {
       MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
       MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
@@ -78,29 +78,34 @@ void test_mci_output_retries_then_raises_fail_event(void) {
   }
 }
 
-//void test_mci_output_retries_then_success_event(void) {
-//  EEEbrakeState state = EE_DRIVE_OUTPUT_STATE_PRESSED;
-//  uint16_t fault_event_data = 0x1234;
-//  uint16_t success_event_data = 0x5678;
-//  RetryTxRequest req = {
-//    .completion_event_id = TEST_MCI_OUTPUT_TX_EVENT_SUCCESS,
-//    .completion_event_data = success_event_data,
-//    .fault_event_id = TEST_MCI_OUTPUT_TX_EVENT_FAIL,
-//    .fault_event_data = fault_event_data,
-//  };
-//  TEST_ASSERT_OK(mci_output_brake_state(&s_storage, &req, state));
-//  for (uint8_t i = 0; i < NUM_MCI_OUTPUT_TX_RETRIES - 1; i++) {
-//    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
-//    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_MCI_OUTPUT_STATE,
-//                                           SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
-//                                           CAN_ACK_STATUS_INVALID);
-//  }
-//  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
-//  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_MCI_OUTPUT_STATE,
-//                                         SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
-//                                         CAN_ACK_STATUS_OK);
-//  Event e = { 0 };
-//  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_MCI_OUTPUT_TX_EVENT_SUCCESS, success_event_data);
-//  // no further events must be raised
-//  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-//}
+void test_mci_output_retries_then_success_event(void) {
+  for (EEDriveOutput drive_output = EE_DRIVE_OUTPUT_OFF; drive_output < NUM_EE_DRIVE_OUTPUTS; drive_output++) {
+    uint16_t fault_event_data = 0x1234;
+    uint16_t success_event_data = 0x5678;
+    RetryTxRequest req = {
+      .completion_event_id = TEST_MCI_OUTPUT_TX_EVENT_SUCCESS,
+      .completion_event_data = success_event_data,
+      .fault_event_id = TEST_MCI_OUTPUT_TX_EVENT_FAIL,
+      .fault_event_data = fault_event_data,
+    };
+    TEST_ASSERT_OK(mci_output_tx_drive_output(&s_storage, &req, drive_output));
+    for (uint8_t i = 0; i < NUM_MCI_OUTPUT_TX_RETRIES - 1; i++) {
+      MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
+      MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
+                                             SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
+                                             CAN_ACK_STATUS_INVALID);
+    }
+
+
+    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_MCI_OUTPUT_TX_EVENT_CAN_TX, TEST_MCI_OUTPUT_TX_EVENT_CAN_RX);
+    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
+                                             SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
+                                             CAN_ACK_STATUS_OK);
+
+
+    Event e = { 0 };
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_MCI_OUTPUT_TX_EVENT_SUCCESS, success_event_data);
+    // no further events must be raised
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  }
+}

@@ -1,4 +1,5 @@
 #include "mci_output_tx.h"
+#include "can_transmit.h"
 
 static void prv_tx_mci_output(CanAckRequest *ack_ptr, void *context) {
   MciOutputTxStorage *storage = (MciOutputTxStorage *)context;
