@@ -11,6 +11,8 @@
 #include "exported_enums.h"
 #include "status.h"
 
+#define NUM_MCI_OUTPUT_TX_RETRIES 5
+
 typedef struct MciOutputTxStorage {
   CanTxRetryWrapperStorage can_retry_wrapper_storage;
   EEDriveOutput drive_output;
