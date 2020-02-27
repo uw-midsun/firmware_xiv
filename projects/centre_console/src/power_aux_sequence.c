@@ -49,11 +49,6 @@ void prv_init_ack_lookup(void) {
       SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR, SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
 }
 
-static void prv_state_none(Fsm *fsm, const Event *e, void *context) {
-  PowerAuxSequenceFsmStorage *storage = (PowerAuxSequenceFsmStorage *)context;
-  storage->current_sequence = EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS;
-}
-
 static uint8_t s_ack_count[NUM_EE_POWER_AUX_SEQUENCES] = { 0 };
 
 static void prv_init_ack_count(void) {
@@ -61,6 +56,12 @@ static void prv_init_ack_count(void) {
     s_ack_count[i] = 1;
   }
   s_ack_count[EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] = 2;
+}
+
+static void prv_state_none(Fsm *fsm, const Event *e, void *context) {
+  PowerAuxSequenceFsmStorage *storage = (PowerAuxSequenceFsmStorage *)context;
+  prv_init_ack_count();
+  storage->current_sequence = EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS;
 }
 
 static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
