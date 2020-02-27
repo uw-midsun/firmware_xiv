@@ -3,7 +3,9 @@
 #include "pedal_calib.h"
 #include "pedal_data.h"
 #include "pedal_events.h"
+#include "string.h"
 #include "throttle_data.h"
+#include "wait.h"
 
 static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
   ThrottleCalibrationStorage *storage = context;

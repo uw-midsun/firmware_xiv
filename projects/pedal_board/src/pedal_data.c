@@ -36,5 +36,5 @@ PedalDataStorage *get_pedal_data_storage() {
 }
 
 PedalCalibBlob *get_pedal_calib_blob() {
-  return &s_pedal_calib_blob;
+  return s_pedal_calib_blob;
 }

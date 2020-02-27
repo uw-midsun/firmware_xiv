@@ -56,7 +56,6 @@ int main() {
   // we expect calibration blog to be there already
   status_ok_or_return(calib_init(&s_pedal_calib_blob, sizeof(s_pedal_calib_blob), false));
   PedalCalibBlob *pedal_calib_blob = calib_blob();
-  // this should also take in the calib blob
   pedal_data_init(&s_ads1015_storage, pedal_calib_blob);
   pedal_data_tx_init();
 
