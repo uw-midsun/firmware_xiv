@@ -8,8 +8,6 @@
 #include "fsm.h"
 #include "log.h"
 
-#define PRECHARGE_TIMEOUT_MS 5000
-
 FSM_DECLARE_STATE(state_none);
 FSM_DECLARE_STATE(state_fault);
 FSM_DECLARE_STATE(state_confirm_aux_status);
@@ -18,8 +16,6 @@ FSM_DECLARE_STATE(state_confirm_battery_status);
 FSM_DECLARE_STATE(state_close_battery_relays);
 FSM_DECLARE_STATE(state_confirm_dcdc);
 FSM_DECLARE_STATE(state_turn_on_everything);
-FSM_DECLARE_STATE(state_begin_precharge);
-FSM_DECLARE_STATE(state_precharge_wait_till_complete);
 FSM_DECLARE_STATE(state_power_main_complete);
 
 FSM_STATE_TRANSITION(state_none) {
@@ -53,17 +49,7 @@ FSM_STATE_TRANSITION(state_confirm_dcdc) {
 }
 
 FSM_STATE_TRANSITION(state_turn_on_everything) {
-  FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_TURNED_ON_EVERYTHING, state_begin_precharge);
-  FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_FAULT, state_fault);
-}
-
-FSM_STATE_TRANSITION(state_begin_precharge) {
-  FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_PRECHARGE_BEGAN, state_precharge_wait_till_complete);
-  FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_FAULT, state_fault);
-}
-
-FSM_STATE_TRANSITION(state_precharge_wait_till_complete) {
-  FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_PRECHARGE_COMPLETE, state_power_main_complete);
+  FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_TURNED_ON_EVERYTHING, state_power_main_complete);
   FSM_ADD_TRANSITION(POWER_MAIN_SEQUENCE_EVENT_FAULT, state_fault);
 }
 
@@ -83,15 +69,17 @@ static void prv_init_ack_lookup(void) {
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS] =
       CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS] =
-      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
+      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BMS_CARRIER);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS] =
       CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BMS_CARRIER);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC] =
       CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] = CAN_ACK_EXPECTED_DEVICES(
       SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR, SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
-  s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE] =
-      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER);
+}
+
+uint32_t *test_get_ack_devices_lookup(void) {
+  return s_ack_devices_lookup;
 }
 
 static EventId s_next_event_lookup[NUM_EE_POWER_MAIN_SEQUENCES] = {
@@ -101,7 +89,6 @@ static EventId s_next_event_lookup[NUM_EE_POWER_MAIN_SEQUENCES] = {
   [EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS] = POWER_MAIN_SEQUENCE_EVENT_BATTERY_RELAYS_CLOSED,
   [EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC] = POWER_MAIN_SEQUENCE_EVENT_DC_DC_OK,
   [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] = POWER_MAIN_SEQUENCE_EVENT_TURNED_ON_EVERYTHING,
-  [EE_POWER_MAIN_SEQUENCE_BEGIN_PRECHARGE] = POWER_MAIN_SEQUENCE_EVENT_PRECHARGE_BEGAN,
 };
 
 static void prv_advance_sequence(PowerMainSequenceFsmStorage *storage) {
@@ -109,7 +96,7 @@ static void prv_advance_sequence(PowerMainSequenceFsmStorage *storage) {
 }
 static uint8_t s_ack_count[NUM_EE_POWER_MAIN_SEQUENCES] = { 0 };
 
-static void prv_init_ack_count(void) {
+static void prv_reset_ack_count(void) {
   for (uint8_t i = 0; i < NUM_EE_POWER_MAIN_SEQUENCES; i++) {
     s_ack_count[i] = 1;
   }
@@ -144,12 +131,6 @@ static void prv_state_power_main_sequence_output(Fsm *fsm, const Event *e, void 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, storage->current_sequence);
 }
 
-static void prv_state_precharge_begin(Fsm *fsm, const Event *e, void *context) {
-  PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
-  prv_state_power_main_sequence_output(fsm, e, context);
-  power_main_precharge_monitor_start(&storage->precharge_monitor_storage);
-}
-
 static void prv_state_close_main_battery_relays_output(Fsm *fsm, const Event *e, void *context) {
   PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
   CanAckRequest ack_req = { 0 };
@@ -161,6 +142,7 @@ static void prv_state_close_main_battery_relays_output(Fsm *fsm, const Event *e,
 
 static void prv_state_none(Fsm *fsm, const Event *e, void *context) {
   PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
+  prv_reset_ack_count();
   storage->current_sequence = EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS;
 }
 
@@ -170,14 +152,12 @@ static void prv_state_power_main_complete(Fsm *fsm, const Event *e, void *contex
 
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
   PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
-  power_main_precharge_monitor_cancel(&storage->precharge_monitor_storage);
   event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_MAIN_SEQUENCE, e->data);
 }
 
 StatusCode power_main_sequence_init(PowerMainSequenceFsmStorage *storage) {
-  prv_init_ack_count();
+  prv_reset_ack_count();
   prv_init_ack_lookup();
-  power_main_precharge_monitor_init(&storage->precharge_monitor_storage, PRECHARGE_TIMEOUT_MS);
   fsm_state_init(state_none, prv_state_none);
   fsm_state_init(state_fault, prv_state_fault);
   fsm_state_init(state_confirm_aux_status, prv_state_power_main_sequence_output);
@@ -186,7 +166,6 @@ StatusCode power_main_sequence_init(PowerMainSequenceFsmStorage *storage) {
   fsm_state_init(state_close_battery_relays, prv_state_close_main_battery_relays_output);
   fsm_state_init(state_confirm_dcdc, prv_state_power_main_sequence_output);
   fsm_state_init(state_turn_on_everything, prv_state_power_main_sequence_output);
-  fsm_state_init(state_begin_precharge, prv_state_precharge_begin);
   fsm_state_init(state_power_main_complete, prv_state_power_main_complete);
   storage->current_sequence = EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS;
   fsm_init(&storage->sequence_fsm, "power_main_sequence_fsm", &state_none, storage);

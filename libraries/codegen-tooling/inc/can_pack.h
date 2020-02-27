@@ -126,6 +126,14 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,            \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_BEGIN_PRECHARGE(msg_ptr)                          \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE)
+
+#define CAN_PACK_PRECHARGE_COMPLETED(msg_ptr)                        \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, \
+                      SYSTEM_CAN_MESSAGE_PRECHARGE_COMPLETED)
+
 #define CAN_PACK_HAZARD(msg_ptr, state_u8)                                                    \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_HAZARD, 1, \
                    (state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \

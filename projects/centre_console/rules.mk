@@ -8,9 +8,9 @@
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common ms-helper
 
-$(T)_test_power_main_sequence_MOCKS := power_main_precharge_monitor_start \
-																			 power_main_precharge_monitor_init \
-																			 power_main_precharge_monitor_cancel
+$(T)_test_power_main_sequence_MOCKS := precharge_monitor_start \
+																			 precharge_monitor_init \
+																			 precharge_monitor_cancel
 
 $(T)_test_drive_fsm_MOCKS := relay_tx_relay_state \
 														 ebrake_tx_brake_state \

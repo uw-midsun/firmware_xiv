@@ -193,6 +193,22 @@
     status;                                       \
   })
 
+#define CAN_TRANSMIT_BEGIN_PRECHARGE()            \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_BEGIN_PRECHARGE(&msg);               \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_PRECHARGE_COMPLETED()        \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_PRECHARGE_COMPLETED(&msg);           \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_HAZARD(state_u8)             \
   ({                                              \
     CanMessage msg = { 0 };                       \
