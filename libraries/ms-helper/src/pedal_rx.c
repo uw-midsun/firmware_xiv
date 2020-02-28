@@ -20,7 +20,7 @@ static StatusCode prv_kick_watchdog(PedalRxStorage *storage) {
     soft_timer_cancel(storage->watchdog_id);
     storage->watchdog_id = SOFT_TIMER_INVALID_TIMER;
   }
-  status_ok_or_return(soft_timer_start_millis(PEDAL_OUTPUT_WATCHDOG_PERIOD_MS, prv_pedal_watchdog,
+  status_ok_or_return(soft_timer_start_millis(PEDAL_RX_WATCHDOG_PERIOD_MS, prv_pedal_watchdog,
                                               storage, &storage->watchdog_id));
   return STATUS_CODE_OK;
 }
@@ -36,8 +36,6 @@ static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
 
   pedal_values->throttle = (float)(throttle_msg) / PEDAL_RX_MSG_DENOMINATOR;
   pedal_values->brake = (float)(brake_msg) / PEDAL_RX_MSG_DENOMINATOR;
-
-  event_raise_priority(EVENT_PRIORITY_NORMAL, storage->settings.rx_event, 0);
   prv_kick_watchdog(storage);
   return STATUS_CODE_OK;
 }
@@ -45,8 +43,8 @@ static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
 StatusCode pedal_rx_init(PedalRxStorage *storage, PedalRxSettings *settings) {
   storage->settings = *settings;
   storage->watchdog_id = SOFT_TIMER_INVALID_TIMER;
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, prv_handle_pedal_output, storage);
-  prv_kick_watchdog(storage);
+  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, prv_handle_pedal_output, storage));
+  status_ok_or_return(prv_kick_watchdog(storage));
   return STATUS_CODE_OK;
 }
 

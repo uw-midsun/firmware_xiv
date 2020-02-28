@@ -7,10 +7,9 @@
 // Max value is 100 = 7 bits. which leaves 25 bits of precision
 #define PEDAL_RX_MSG_DENOMINATOR (1 << 25)
 
-#define PEDAL_OUTPUT_WATCHDOG_PERIOD_MS 400
+#define PEDAL_RX_WATCHDOG_PERIOD_MS 400
 
 typedef struct PedalRxSettings {
-  EventId rx_event;
   EventId timeout_event;
 } PedalRxSettings;
 
