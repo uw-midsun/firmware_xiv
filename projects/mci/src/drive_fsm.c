@@ -5,20 +5,18 @@
 #include "exported_enums.h"
 #include "fsm.h"
 #include "log.h"
-#include "motor_controller.h"
 #include "mci_events.h"
+#include "motor_controller.h"
 #include "precharge_control.h"
 #include "status.h"
 
 #include "drive_fsm.h"
 
-
-static MciDriveFsmEvent s_drive_output_fsm_map[] = { [EE_DRIVE_OUTPUT_OFF] = 
-                                                      MCI_DRIVE_FSM_STATE_NEUTRAL_STATE,
-                                                  [EE_DRIVE_OUTPUT_DRIVE] = 
-                                                      MCI_DRIVE_FSM_STATE_DRIVE_STATE,
-                                                  [EE_DRIVE_OUTPUT_REVERSE] =
-                                                      MCI_DRIVE_FSM_STATE_REVERSE_STATE };
+static MciDriveFsmEvent s_drive_output_fsm_map[] = {
+  [EE_DRIVE_OUTPUT_OFF] = MCI_DRIVE_FSM_STATE_NEUTRAL_STATE,
+  [EE_DRIVE_OUTPUT_DRIVE] = MCI_DRIVE_FSM_STATE_DRIVE_STATE,
+  [EE_DRIVE_OUTPUT_REVERSE] = MCI_DRIVE_FSM_STATE_REVERSE_STATE
+};
 
 FSM_DECLARE_STATE(state_neutral);
 FSM_DECLARE_STATE(state_drive);
@@ -26,7 +24,7 @@ FSM_DECLARE_STATE(state_reverse);
 
 static bool prv_guard_throttle(const Fsm *fsm, const Event *e, void *context) {
   MotorControllerStorage *storage = context;
-  //TODO(SOFT-121): Merge precharge update with get_precharge_state()
+  // TODO(SOFT-121): Merge precharge update with get_precharge_state()
   if (get_precharge_state() != MCI_PRECHARGE_CHARGED) {
     return false;
   }

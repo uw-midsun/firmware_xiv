@@ -46,7 +46,7 @@ void prv_mci_storage_init(void *context) {
 
 PrechargeState TEST_MOCK(get_precharge_state)() {
   // unpack data
-  return s_precharge_state; 
+  return s_precharge_state;
 }
 
 void setup_test(void) {
@@ -139,7 +139,7 @@ void test_drive(void) {
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
   TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
-  
+
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
@@ -159,7 +159,7 @@ void test_reverse(void) {
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
   TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
-  
+
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
