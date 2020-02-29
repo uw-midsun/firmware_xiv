@@ -2,6 +2,7 @@
 #include "brake_data.h"
 #include "can_transmit.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "fsm.h"
 #include "gpio.h"
 #include "gpio_it.h"
@@ -15,7 +16,6 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "throttle_data.h"
-#include "exported_enums.h"
 
 int16_t changeable_value = 0;
 
@@ -79,14 +79,14 @@ void teardown_test(void) {}
 void test_brake_data(void) {
   int16_t brake_data = INT16_MAX;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t) (changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
   changeable_value = 15;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t) (changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
   changeable_value = 25;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t) (changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
   changeable_value = 0;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t) (changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
 }
