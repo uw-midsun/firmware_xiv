@@ -11,7 +11,7 @@ typedef enum {
   NUM_DRIVE_FSM_STATES
 } DriveFsmState;
 
-StatusCode drive_fsm_init(void *context);
+StatusCode drive_fsm_init();
 
 StatusCode fault_rx(const CanMessage *msg, void *context, CanAckStatus *ack_status);
 

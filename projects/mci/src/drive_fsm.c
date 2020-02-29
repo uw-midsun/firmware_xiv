@@ -22,7 +22,8 @@ FSM_DECLARE_STATE(state_reverse);
 
 static bool prv_guard_throttle(const Fsm *fsm, const Event *e, void *context) {
   MotorControllerStorage *storage = context;
-  if (storage->precharge_storage.state != MCI_PRECHARGE_CHARGED) {
+  //TODO(SOFT-121): Merge precharge update with get_precharge_state()
+  if (get_precharge_state() != MCI_PRECHARGE_CHARGED) {
     return false;
   }
   return true;
@@ -44,24 +45,22 @@ FSM_STATE_TRANSITION(state_reverse) {
 }
 
 static void prv_state_neutral_output(Fsm *fsm, const Event *e, void *context) {
-  MotorControllerStorage *storage = context;
-  storage->drive_state = EE_DRIVE_OUTPUT_OFF;
+  s_current_drive_state = EE_DRIVE_OUTPUT_OFF;
 }
 static void prv_state_drive_output(Fsm *fsm, const Event *e, void *context) {
-  MotorControllerStorage *storage = context;
-  storage->drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_current_drive_state = EE_DRIVE_OUTPUT_DRIVE;
 }
 static void prv_state_reverse_output(Fsm *fsm, const Event *e, void *context) {
-  MotorControllerStorage *storage = context;
-  storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  s_current_drive_state = EE_DRIVE_OUTPUT_REVERSE;
 }
 
 static Fsm s_drive_fsm;
-static void prv_init_drive_fsm(void *context) {
+static EEDriveOutput s_current_drive_state;
+static void prv_init_drive_fsm() {
   fsm_state_init(state_neutral, prv_state_neutral_output);
   fsm_state_init(state_drive, prv_state_drive_output);
   fsm_state_init(state_reverse, prv_state_reverse_output);
-  fsm_init(&s_drive_fsm, "drive_fsm", &state_neutral, context);
+  fsm_init(&s_drive_fsm, "drive_fsm", &state_neutral, NULL);
 }
 
 bool drive_fsm_process_event(const Event *e) {
@@ -69,15 +68,15 @@ bool drive_fsm_process_event(const Event *e) {
 }
 
 StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  MotorControllerStorage *storage = context;
+  (void)context;
   uint16_t drive_output = 0;
   CAN_UNPACK_DRIVE_OUTPUT(msg, &drive_output);
   Event e = { 0 };
   e.id = s_drive_output_fsm_map[drive_output];
-  LOG_DEBUG("cur state: %i\n", storage->drive_state);
+  LOG_DEBUG("cur state: %i\n", s_current_drive_state);
   LOG_DEBUG("e.id: %i\n", e.id);
   bool transitioned = drive_fsm_process_event(&e);
-  LOG_DEBUG("post transition: %i\n", storage->drive_state);
+  LOG_DEBUG("post transition: %i\n", s_current_drive_state);
   bool ret = STATUS_CODE_OK;
   if (transitioned != true) {
     *ack_reply = CAN_ACK_STATUS_INVALID;
@@ -88,6 +87,10 @@ StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *a
   return ret;
 }
 
+EEDriveOutput drive_fsm_get_drive_state() {
+  return s_current_drive_state;
+}
+
 // StatusCode fault_rx(const CanMessage *msg, void *context, CanAckStatus *ack_status) {
 //   Event e = {.id = DRIVE_FSM_STATE_NEUTRAL };
 //   drive_fsm_process_event(&e);
@@ -95,9 +98,9 @@ StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *a
 //   return STATUS_CODE_OK;
 // }
 
-StatusCode drive_fsm_init(void *context) {
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, drive_output_rx, context);
+StatusCode drive_fsm_init() {
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, drive_output_rx, NULL);
   // TODO(SOFT-70): add rx handlers for all potential faults using fault_rx()
-  prv_init_drive_fsm(context);
+  prv_init_drive_fsm();
   return STATUS_CODE_OK;
 }
