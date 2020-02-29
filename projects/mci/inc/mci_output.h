@@ -12,4 +12,4 @@ typedef struct {
   PedalRxStorage pedal_storage;
 } MotorControllerOutputStorage;
 
-StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan* motor_can_settings);
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan *motor_can_settings);

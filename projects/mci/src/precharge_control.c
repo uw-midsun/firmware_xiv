@@ -42,14 +42,6 @@ PrechargeState get_precharge_state() {
   return s_precharge_storage.state;
 }
 
-void prv_populate_storage(PrechargeControlStorage *storage,
-                          const PrechargeControlSettings *settings) {
-  storage->precharge_control = settings->precharge_control;
-  storage->precharge_control2 = settings->precharge_control2;
-  storage->precharge_monitor = settings->precharge_monitor;
-  storage->initialized = true;
-}
-
 StatusCode precharge_control_init(const PrechargeControlSettings *settings) {
   if (s_precharge_storage.initialized) {
     return STATUS_CODE_INTERNAL_ERROR;

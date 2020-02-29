@@ -2,10 +2,10 @@
 
 #include <string.h>
 
-#include "motor_can.h"
-#include "mci_events.h"
-#include "wavesculptor.h"
 #include "drive_fsm.h"
+#include "mci_events.h"
+#include "motor_can.h"
+#include "wavesculptor.h"
 
 #include "exported_enums.h"
 #include "generic_can.h"
@@ -77,7 +77,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan* motor_can_settings) {
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan *motor_can_settings) {
   PedalRxSettings pedal_settings = {
     .rx_event = MCI_PEDAL_RX_EVENT_RX,
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
