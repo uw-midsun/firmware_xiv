@@ -23,7 +23,7 @@ FSM_DECLARE_STATE(state_drive);
 FSM_DECLARE_STATE(state_reverse);
 
 static bool prv_guard_throttle(const Fsm *fsm, const Event *e, void *context) {
-  return get_precharge_state() == MCI_PRECHARGE_DISCHARGED;
+  return get_precharge_state() == MCI_PRECHARGE_CHARGED;
 }
 
 FSM_STATE_TRANSITION(state_neutral) {
@@ -68,15 +68,19 @@ bool drive_fsm_process_event(const Event *e) {
 StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   (void)context;
   uint16_t drive_output = 0;
+  bool expect_transition = true;
   CAN_UNPACK_DRIVE_OUTPUT(msg, &drive_output);
   Event e = { 0 };
   e.id = s_drive_output_fsm_map[drive_output];
-  LOG_DEBUG("curent state: %i\n", s_current_drive_state);
+  expect_transition = drive_output != s_current_drive_state;
+  LOG_DEBUG("curent state: %i (target state: %i)\n", s_current_drive_state, drive_output);
   LOG_DEBUG("e.id: %i\n", e.id);
   bool transitioned = drive_fsm_process_event(&e);
   LOG_DEBUG("post transition: %i\n", s_current_drive_state);
   bool ret = STATUS_CODE_OK;
-  if (transitioned != true) {
+  LOG_DEBUG("expected_transition=%s transitioned=%s\n", (expect_transition ? "true" : "false"),
+            (transitioned ? "true" : "false"));
+  if (expect_transition != transitioned) {
     *ack_reply = CAN_ACK_STATUS_INVALID;
     ret = STATUS_CODE_INTERNAL_ERROR;
   } else {
