@@ -28,7 +28,7 @@ void prv_setup_system_can() {
 }
 
 void prv_precharge_control_init(void) {
-  PrechargeControlSettings precharge_control_settings = { 
+  PrechargeControlSettings precharge_control_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
     .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },

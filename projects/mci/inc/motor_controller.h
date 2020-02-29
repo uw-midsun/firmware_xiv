@@ -3,6 +3,5 @@
 
 #include "precharge_control.h"
 
-
 typedef struct MotorControllerStorage {
 } MotorControllerStorage;
