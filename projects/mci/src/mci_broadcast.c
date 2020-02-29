@@ -79,6 +79,7 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   }
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
+
   // Velocity Measurements
   status_ok_or_return(generic_can_register_rx(
     settings->motor_can, prv_handle_speed, GENERIC_CAN_EMPTY_MASK,
@@ -96,6 +97,7 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   status_ok_or_return(generic_can_register_rx(
     settings->motor_can, prv_handle_bus_measurement, GENERIC_CAN_EMPTY_MASK,
     MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID, false, storage));
+
   return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS,
                                  prv_periodic_broadcast_tx, storage, NULL);
 }

@@ -4,9 +4,6 @@
 
 #define MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS 400
 
-
-// TODO(SOFT-124): This would be better to have in motor_controller.h maybe
-//                 but doesn't turn out to be clean ...
 typedef enum {
   LEFT_MOTOR_CONTROLLER = 0,
   RIGHT_MOTOR_CONTROLLER,
