@@ -91,7 +91,7 @@ EEDriveOutput drive_fsm_get_drive_state() {
 
 StatusCode drive_fsm_init() {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, drive_output_rx, NULL);
-  // TODO(SOFT-70): add rx handlers for all potential faults using fault_rx()
+
   prv_init_drive_fsm();
   return STATUS_CODE_OK;
 }
