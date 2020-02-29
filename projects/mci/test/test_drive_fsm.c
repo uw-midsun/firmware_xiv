@@ -64,24 +64,29 @@ static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckS
 
 void test_neutral(void) {
   MotorControllerStorage *storage = &s_mci_storage;
-  storage->drive_state = EE_DRIVE_OUTPUT_OFF;
   storage->precharge_storage.state = MCI_PRECHARGE_DISCHARGED;
   CanAckStatus expected_status = CAN_ACK_STATUS_INVALID;
   CanAckRequest req = { .callback = prv_ack_callback,
                         .context = &expected_status,
                         .expected_bitset =
                             CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+
   // Test that if discharged, doesn't transition to drive
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
 
   // Test that if discharged, doesn't transition to reverse
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
 
   // Test that if charged, will transition to drive
   expected_status = CAN_ACK_STATUS_OK;
@@ -89,63 +94,80 @@ void test_neutral(void) {
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_DRIVE);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
 
   // Test that if charged, will transition to reverse
-  storage->drive_state = EE_DRIVE_OUTPUT_OFF;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_REVERSE);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
 }
 
 void test_drive(void) {
   MotorControllerStorage *storage = &s_mci_storage;
   storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
-  Event e = { .id = DRIVE_FSM_STATE_DRIVE };
-  drive_fsm_process_event(&e);
+
   // Test that if in drive, can transition to neutral
   CanAckStatus expected_status = CAN_ACK_STATUS_OK;
   CanAckRequest req = { .callback = prv_ack_callback,
                         .context = &expected_status,
                         .expected_bitset =
                             CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
+
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
   drive_fsm_process_event(&e);
 
   // Test that if in drive, can transition to reverse
-  storage->drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
+  
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_REVERSE);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
 }
 
 void test_reverse(void) {
   MotorControllerStorage *storage = &s_mci_storage;
-  storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
-  storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
-  Event e = { .id = DRIVE_FSM_STATE_REVERSE };
   // Test that if in reverse, can transition to neutral
   CanAckStatus expected_status = CAN_ACK_STATUS_OK;
   CanAckRequest req = { .callback = prv_ack_callback,
                         .context = &expected_status,
                         .expected_bitset =
                             CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
-  drive_fsm_process_event(&e);
+
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
+  
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
 
-  drive_fsm_process_event(&e);
-  // Test that if in reverse, can transition to drive
-  storage->drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  delay_ms(10);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
+
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(storage->drive_state == EE_DRIVE_OUTPUT_DRIVE);
+  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
 }
