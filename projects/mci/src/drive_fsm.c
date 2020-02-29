@@ -6,15 +6,19 @@
 #include "fsm.h"
 #include "log.h"
 #include "motor_controller.h"
+#include "mci_events.h"
 #include "precharge_control.h"
 #include "status.h"
 
 #include "drive_fsm.h"
 
-static DriveFsmState s_drive_output_fsm_map[] = { [EE_DRIVE_OUTPUT_OFF] = DRIVE_FSM_STATE_NEUTRAL,
-                                                  [EE_DRIVE_OUTPUT_DRIVE] = DRIVE_FSM_STATE_DRIVE,
+
+static DriveFsmState s_drive_output_fsm_map[] = { [EE_DRIVE_OUTPUT_OFF] = 
+                                                      MCI_DRIVE_FSM_STATE_NEUTRAL_STATE,
+                                                  [EE_DRIVE_OUTPUT_DRIVE] = 
+                                                      MCI_DRIVE_FSM_STATE_DRIVE_STATE,
                                                   [EE_DRIVE_OUTPUT_REVERSE] =
-                                                      DRIVE_FSM_STATE_REVERSE };
+                                                      MCI_DRIVE_FSM_STATE_REVERSE_STATE };
 
 FSM_DECLARE_STATE(state_neutral);
 FSM_DECLARE_STATE(state_drive);
@@ -30,18 +34,18 @@ static bool prv_guard_throttle(const Fsm *fsm, const Event *e, void *context) {
 }
 
 FSM_STATE_TRANSITION(state_neutral) {
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_STATE_DRIVE, prv_guard_throttle, state_drive);
-  FSM_ADD_GUARDED_TRANSITION(DRIVE_FSM_STATE_REVERSE, prv_guard_throttle, state_reverse);
+  FSM_ADD_GUARDED_TRANSITION(MCI_DRIVE_FSM_STATE_DRIVE_STATE, prv_guard_throttle, state_drive);
+  FSM_ADD_GUARDED_TRANSITION(MCI_DRIVE_FSM_STATE_REVERSE_STATE, prv_guard_throttle, state_reverse);
 }
 
 FSM_STATE_TRANSITION(state_drive) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_STATE_NEUTRAL, state_neutral);
-  FSM_ADD_TRANSITION(DRIVE_FSM_STATE_REVERSE, state_reverse);
+  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_NEUTRAL_STATE, state_neutral);
+  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_REVERSE_STATE, state_reverse);
 }
 
 FSM_STATE_TRANSITION(state_reverse) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_STATE_NEUTRAL, state_neutral);
-  FSM_ADD_TRANSITION(DRIVE_FSM_STATE_DRIVE, state_drive);
+  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_NEUTRAL_STATE, state_neutral);
+  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_DRIVE_STATE, state_drive);
 }
 
 static void prv_state_neutral_output(Fsm *fsm, const Event *e, void *context) {
