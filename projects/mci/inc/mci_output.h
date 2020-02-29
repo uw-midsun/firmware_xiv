@@ -1,6 +1,7 @@
 #pragma once
 
 #include "generic_can.h"
+#include "pedal_rx.h"
 
 #define MOTOR_CONTROLLER_BRAKE_THRESHOLD 0.0f
 
