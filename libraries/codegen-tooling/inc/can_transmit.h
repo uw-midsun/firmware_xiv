@@ -15,12 +15,12 @@
     status;                                            \
   })
 
-#define CAN_TRANSMIT_SET_RELAY_STATES(ack_ptr, relay_state_u8) \
-  ({                                                           \
-    CanMessage msg = { 0 };                                    \
-    CAN_PACK_SET_RELAY_STATES(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));         \
-    status;                                                    \
+#define CAN_TRANSMIT_SET_RELAY_STATES(ack_ptr, relay_mask_u16, relay_state_u16) \
+  ({                                                                            \
+    CanMessage msg = { 0 };                                                     \
+    CAN_PACK_SET_RELAY_STATES(&msg, (relay_mask_u16), (relay_state_u16));       \
+    StatusCode status = can_transmit(&msg, (ack_ptr));                          \
+    status;                                                                     \
   })
 
 #define CAN_TRANSMIT_GET_RELAY_STATES(ack_ptr, relay_state_u8) \
@@ -85,6 +85,14 @@
     CAN_PACK_DRIVE_OUTPUT(&msg, (drive_output_u16));         \
     StatusCode status = can_transmit(&msg, (ack_ptr));       \
     status;                                                  \
+  })
+
+#define CAN_TRANSMIT_SET_EBRAKE_STATE(ack_ptr, ebrake_state_u8) \
+  ({                                                            \
+    CanMessage msg = { 0 };                                     \
+    CAN_PACK_SET_EBRAKE_STATE(&msg, (ebrake_state_u8));         \
+    StatusCode status = can_transmit(&msg, (ack_ptr));          \
+    status;                                                     \
   })
 
 #define CAN_TRANSMIT_OVUV_DCDC_AUX(dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8,     \
@@ -185,10 +193,34 @@
     status;                                       \
   })
 
+#define CAN_TRANSMIT_BEGIN_PRECHARGE()            \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_BEGIN_PRECHARGE(&msg);               \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_PRECHARGE_COMPLETED()        \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_PRECHARGE_COMPLETED(&msg);           \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_HAZARD(state_u8)             \
   ({                                              \
     CanMessage msg = { 0 };                       \
     CAN_PACK_HAZARD(&msg, (state_u8));            \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_DISCHARGE_PRECHARGE()        \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_DISCHARGE_PRECHARGE(&msg);           \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
