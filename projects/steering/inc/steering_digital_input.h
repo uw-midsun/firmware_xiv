@@ -18,6 +18,16 @@ typedef enum {
   NUM_STEERING_DIGITAL_INPUTS,
 } SteeringInterfaceDigitalInput;
 
+typedef enum {
+  STEERING_INPUT_HORN_EVENT = 0,
+  STEERING_RADIO_PPT_EVENT,
+  STEERING_HIGH_BEAM_FORWARD_EVENT,
+  STEERING_HIGH_BEAM_REAR_EVENT,
+  STEERING_REGEN_BRAKE_EVENT,
+  STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT,
+  NUM_STEERING_EVENTS,
+} SteeringEvent;
+
 StatusCode steering_digital_input_init();
 
 GpioAddress *test_get_address(int digital_input_id);
