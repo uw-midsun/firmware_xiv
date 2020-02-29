@@ -3,8 +3,9 @@
 #include <string.h>
 
 #include "motor_can.h"
-#include "motor_controller.h"
+#include "mci_events.h"
 #include "wavesculptor.h"
+#include "drive_fsm.h"
 
 #include "exported_enums.h"
 #include "generic_can.h"
@@ -34,7 +35,7 @@ static float prv_throttle_to_accel_map(float throttle_value) {
   return throttle_value / PEDAL_RX_MAX_PEDAL_VALUE;
 }
 
-static void prv_send_wavesculptor_message(MotorControllerStorage *storage,
+static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
                                           MotorControllerId motor_controlller_id,
                                           MotorCanDriveCommand command) {
   GenericCanMsg msg = {
@@ -50,11 +51,12 @@ static void prv_send_wavesculptor_message(MotorControllerStorage *storage,
 }
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {
-  MotorControllerStorage *storage = context;
+  MotorControllerOutputStorage *storage = context;
   PedalValues pedal_values = pedal_rx_get_pedal_values(&storage->pedal_storage);
   MotorCanDriveCommand drive_command = { 0 };
+  EEDriveOutput drive_state = drive_fsm_get_drive_state();
   // TODO(SOFT-122): Make sure test ensures that maps are continues
-  if (storage->drive_state == EE_DRIVE_OUTPUT_OFF) {
+  if (drive_state == EE_DRIVE_OUTPUT_OFF) {
     drive_command.motor_current = 0.0f;
     drive_command.motor_velocity = 0.0f;
   } else if (pedal_values.brake > MOTOR_CONTROLLER_BRAKE_THRESHOLD) {
@@ -67,7 +69,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
     drive_command.motor_velocity = 0.0f;
   } else {
     drive_command.motor_current = prv_throttle_to_accel_map(pedal_values.throttle);
-    drive_command.motor_velocity = s_velocity_lookup[storage->drive_state];
+    drive_command.motor_velocity = s_velocity_lookup[drive_state];
   }
   /** Handling message **/
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
@@ -75,7 +77,13 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_output_init(MotorControllerStorage *storage) {
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan* motor_can_settings) {
+  PedalRxSettings pedal_settings = {
+    .rx_event = MCI_PEDAL_RX_EVENT_RX,
+    .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
+  };
+  pedal_rx_init(&storage->motor_can, &motor_can_settings);
+  pedal_rx_init(&storage->pedal_storage, &pedal_settings);
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
                                  NULL);
 }

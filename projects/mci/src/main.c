@@ -56,6 +56,8 @@ void prv_mci_storage_init(void *context) {
     .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 }
   };
+  precharge_control_init();
+  mci_output_init(&s_mci_storage.mci_output_storage, (GenericCan *)&s_can_mcp2515);
 }
 
 int main(void) {
@@ -69,6 +71,7 @@ int main(void) {
   prv_setup_motor_can();
 
   prv_mci_storage_init(&s_mci_storage);
+
 
   Event e = { 0 };
   while (true) {

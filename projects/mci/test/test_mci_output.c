@@ -11,6 +11,7 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "delay.h"
+#include "drive_fsm.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "generic_can.h"
@@ -38,9 +39,10 @@ typedef struct TestMciOutputStorage {
   bool pedal_sent;
 } TestMciOutputStorage;
 
-static MotorControllerStorage s_mci_storage;
+static MotorControllerOutputStorage s_mci_output_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static TestMciOutputStorage s_test_mci_output_storage;
+static EEDriveOutput s_drive_state;
 
 static inline uint32_t unpack_left_shift_u32(uint8_t value, uint8_t shift, uint8_t mask) {
   return (uint32_t)((uint32_t)(value & mask) << shift);
@@ -121,9 +123,13 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
   return STATUS_CODE_OK;
 }
 
+EEDriveOutput TEST_MOCK(drive_fsm_get_drive_state)() {
+  return s_drive_state;
+}
+
 static void prv_do_tx_rx_pedal_values(TestMciOutputStorage *storage, PedalValues *pedal_values) {
   // Send pedal value
-  s_mci_storage.pedal_storage.pedal_values = *pedal_values;
+  s_mci_output_storage.pedal_storage.pedal_values = *pedal_values;
   storage->pedal_sent = true;
   LOG_DEBUG("START DELAY\n");
   delay_ms(300);
@@ -136,13 +142,7 @@ void setup_test(void) {
   soft_timer_init();
 
   prv_setup_motor_can();
-  PedalRxSettings pedal_settings = {
-    .rx_event = TEST_MCI_OUTPUT_PEDAL_EVENT_RX,
-    .timeout_event = TEST_MCI_OUTPUT_PEDAL_EVENT_TIMEOUT,
-  };
-  pedal_rx_init(&s_mci_storage.pedal_storage, &pedal_settings);
-  s_mci_storage.motor_can = (GenericCan *)&s_can_mcp2515;
-  mci_output_init(&s_mci_storage);
+  mci_output_init(&s_mci_output_storage, (GenericCan *)&s_can_mcp2515);
 }
 
 void teardown_test(void) {}
@@ -158,7 +158,7 @@ void test_mci_output_off_no_pedals(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_OFF;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -174,7 +174,7 @@ void test_mci_output_off_only_throttle(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_OFF;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -190,7 +190,7 @@ void test_mci_output_off_only_brake(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_OFF;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -206,7 +206,7 @@ void test_mci_output_off_both_pedals(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_OFF;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -222,7 +222,7 @@ void test_mci_output_drive_no_pedals(void) {
     .motor_velocity = 100.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -238,7 +238,7 @@ void test_mci_output_drive_only_throttle(void) {
     .motor_velocity = 100.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -254,7 +254,7 @@ void test_mci_output_drive_only_brake(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -270,7 +270,7 @@ void test_mci_output_drive_both_pedals(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -286,7 +286,7 @@ void test_mci_output_reverse_no_pedals(void) {
     .motor_velocity = -100.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -302,7 +302,7 @@ void test_mci_output_reverse_only_throttle(void) {
     .motor_velocity = -100.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -318,7 +318,7 @@ void test_mci_output_reverse_only_brake(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
@@ -334,7 +334,7 @@ void test_mci_output_reverse_both_pedals(void) {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_mci_storage.drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
