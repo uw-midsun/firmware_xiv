@@ -54,13 +54,11 @@ void teardown_test(void) {}
 //   LOG_DEBUG("Please ensure the throttle is not being pressed.\n");
 //   delay_s(7);
 //   LOG_DEBUG("Beginning sampling\n");
-//   throttle_calib_sample(&s_calibration_storage, &s_calib_blob.throttle_calib, PEDAL_UNPRESSED);
-//   LOG_DEBUG("Completed sampling\n");
-//   LOG_DEBUG("Please press and hold the throttle\n");
-//   delay_s(7);
-//   LOG_DEBUG("Beginning sampling\n");
-//   throttle_calib_sample(&s_calibration_storage, &s_calib_blob.throttle_calib, PEDAL_PRESSED);
-//   LOG_DEBUG("Completed sampling\n");
+//   throttle_calib_sample(&s_ads1015_storage, &s_calibration_storage, &s_calib_blob.throttle_calib,
+//   PEDAL_UNPRESSED); LOG_DEBUG("Completed sampling\n"); LOG_DEBUG("Please press and hold the
+//   throttle\n"); delay_s(7); LOG_DEBUG("Beginning sampling\n");
+//   throttle_calib_sample(&s_ads1015_storage, &s_calibration_storage, &s_calib_blob.throttle_calib,
+//   PEDAL_PRESSED); LOG_DEBUG("Completed sampling\n");
 
 //   calib_commit();
 // }

@@ -1,6 +1,7 @@
 #include "brake_calib.h"
 #include "ads1015.h"
 #include "brake_data.h"
+#include "log.h"
 #include "pedal_calib.h"
 #include "pedal_data.h"
 #include "pedal_events.h"
@@ -8,6 +9,7 @@
 #include "wait.h"
 
 int32_t average_value;
+static Ads1015Storage *s_ads1015_storage;
 
 static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
   BrakeCalibrationStorage *storage = context;
@@ -28,22 +30,23 @@ StatusCode brake_calib_init(BrakeCalibrationStorage *storage) {
   return STATUS_CODE_OK;
 }
 
-StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibrationData *data,
-                              PedalState state) {
+StatusCode brake_calib_sample(Ads1015Storage *ads1015_storage, BrakeCalibrationStorage *storage,
+                              BrakeCalibrationData *data, PedalState state) {
+  s_ads1015_storage = ads1015_storage;
   average_value = 0;
   // Disables channel
-  ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->brake_channel, false,
-                            NULL, NULL);
+  ads1015_configure_channel(s_ads1015_storage, ADS1015_CHANNEL_2, false, NULL, NULL);
   storage->sample_counter = 0;
   storage->min_reading = INT16_MAX;
   storage->max_reading = INT16_MIN;
 
-  ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->brake_channel, true,
-                            prv_callback_channel, data);
+  ads1015_configure_channel(s_ads1015_storage, ADS1015_CHANNEL_2, true, prv_callback_channel,
+                            storage);
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();
   }
 
+  LOG_DEBUG("WHE %d\n", (int16_t)(average_value / 1000));
   if (state == PEDAL_PRESSED) {
     data->lower_value = average_value / 1000;
   } else {

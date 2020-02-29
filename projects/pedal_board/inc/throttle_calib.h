@@ -11,5 +11,6 @@ typedef struct ThrottleCalibrationStorage {
 
 StatusCode throttle_calib_init(ThrottleCalibrationStorage *storage);
 
-StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCalibrationData *data,
+StatusCode throttle_calib_sample(Ads1015Storage *ads1015_storage,
+                                 ThrottleCalibrationStorage *storage, ThrottleCalibrationData *data,
                                  PedalState state);

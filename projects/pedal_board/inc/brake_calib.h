@@ -11,5 +11,5 @@ typedef struct BrakeCalibrationStorage {
 
 StatusCode brake_calib_init(BrakeCalibrationStorage *storage);
 
-StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibrationData *data,
-                              PedalState state);
+StatusCode brake_calib_sample(Ads1015Storage *ads1015_storage, BrakeCalibrationStorage *storage,
+                              BrakeCalibrationData *data, PedalState state);
