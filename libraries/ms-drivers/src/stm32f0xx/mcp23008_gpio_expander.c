@@ -1,15 +1,15 @@
 #include "mcp23008_gpio_expander.h"
 
 #include <stdbool.h>
-#include "i2c.h"
+#include "i2c_driver_defs.h"
 #include "mcp23008_gpio_expander_defs.h"
 
-StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress i2c_address) {
+StatusCode mcp23008_gpio_init(const I2CAddress i2c_address) {
   // this function is implemented only on x86
   return STATUS_CODE_OK;
 }
 
-void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg, uint8_t bit, bool val) {
+static void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg, uint8_t bit, bool val) {
   uint8_t data = 0;
   i2c_read_reg(I2C_PORT, i2c_address, reg, &data, 1);
   if (val) {

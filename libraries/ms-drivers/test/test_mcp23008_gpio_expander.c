@@ -1,7 +1,7 @@
 #include "i2c.h"
+#include "i2c_driver_defs.h"
 #include "log.h"
 #include "mcp23008_gpio_expander.h"
-#include "mcp23008_gpio_expander_defs.h"
 #include "test_helpers.h"
 #include "unity.h"
 
