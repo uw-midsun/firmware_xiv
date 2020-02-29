@@ -18,6 +18,7 @@
 
 static CanStorage s_can_storage;
 static MotorControllerStorage s_mci_storage;
+static PrechargeState s_precharge_state;
 
 void prv_setup_system_can() {
   CanSettings can_settings = {
@@ -35,12 +36,17 @@ void prv_setup_system_can() {
 }
 
 void prv_mci_storage_init(void *context) {
-  MotorControllerStorage *storage = context;
-  PrechargeStorage precharge_storage = { .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
-                                         .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
-                                         .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
-                                         .state = MCI_PRECHARGE_DISCHARGED };
-  storage->precharge_storage = precharge_storage;
+  PrechargeControlSettings precharge_settings = {
+    .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
+    .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
+    .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 }
+  };
+  precharge_control_init(&precharge_settings);
+}
+
+PrechargeState TEST_MOCK(get_precharge_state)() {
+  // unpack data
+  return s_precharge_state; 
 }
 
 void setup_test(void) {
@@ -49,8 +55,7 @@ void setup_test(void) {
   soft_timer_init();
   prv_setup_system_can();
   prv_mci_storage_init(&s_mci_storage);
-  precharge_control_init(&s_mci_storage);
-  TEST_ASSERT_TRUE(drive_fsm_init(&s_mci_storage) == STATUS_CODE_OK);
+  TEST_ASSERT_OK(drive_fsm_init(&s_mci_storage));
 }
 
 void teardown_test(void) {}
@@ -64,7 +69,7 @@ static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckS
 
 void test_neutral(void) {
   MotorControllerStorage *storage = &s_mci_storage;
-  storage->precharge_storage.state = MCI_PRECHARGE_DISCHARGED;
+  s_precharge_state = MCI_PRECHARGE_DISCHARGED;
   CanAckStatus expected_status = CAN_ACK_STATUS_INVALID;
   CanAckRequest req = { .callback = prv_ack_callback,
                         .context = &expected_status,
@@ -90,7 +95,7 @@ void test_neutral(void) {
 
   // Test that if charged, will transition to drive
   expected_status = CAN_ACK_STATUS_OK;
-  storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
+  s_precharge_state = MCI_PRECHARGE_CHARGED;
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
@@ -110,7 +115,7 @@ void test_neutral(void) {
 
 void test_drive(void) {
   MotorControllerStorage *storage = &s_mci_storage;
-  storage->precharge_storage.state = MCI_PRECHARGE_CHARGED;
+  s_precharge_state = MCI_PRECHARGE_CHARGED;
 
   // Test that if in drive, can transition to neutral
   CanAckStatus expected_status = CAN_ACK_STATUS_OK;
@@ -128,7 +133,6 @@ void test_drive(void) {
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
   TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
-  drive_fsm_process_event(&e);
 
   // Test that if in drive, can transition to reverse
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);

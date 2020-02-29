@@ -2,6 +2,7 @@
 
 #include "can.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "status.h"
 
 StatusCode drive_fsm_init();

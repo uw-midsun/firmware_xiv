@@ -13,7 +13,7 @@
 #include "drive_fsm.h"
 
 
-static DriveFsmState s_drive_output_fsm_map[] = { [EE_DRIVE_OUTPUT_OFF] = 
+static MciDriveFsmEvent s_drive_output_fsm_map[] = { [EE_DRIVE_OUTPUT_OFF] = 
                                                       MCI_DRIVE_FSM_STATE_NEUTRAL_STATE,
                                                   [EE_DRIVE_OUTPUT_DRIVE] = 
                                                       MCI_DRIVE_FSM_STATE_DRIVE_STATE,
@@ -48,6 +48,9 @@ FSM_STATE_TRANSITION(state_reverse) {
   FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_DRIVE_STATE, state_drive);
 }
 
+static Fsm s_drive_fsm;
+static EEDriveOutput s_current_drive_state;
+
 static void prv_state_neutral_output(Fsm *fsm, const Event *e, void *context) {
   s_current_drive_state = EE_DRIVE_OUTPUT_OFF;
 }
@@ -58,8 +61,6 @@ static void prv_state_reverse_output(Fsm *fsm, const Event *e, void *context) {
   s_current_drive_state = EE_DRIVE_OUTPUT_REVERSE;
 }
 
-static Fsm s_drive_fsm;
-static EEDriveOutput s_current_drive_state;
 static void prv_init_drive_fsm() {
   fsm_state_init(state_neutral, prv_state_neutral_output);
   fsm_state_init(state_drive, prv_state_drive_output);
