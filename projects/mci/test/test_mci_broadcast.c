@@ -33,10 +33,16 @@ typedef struct TestMciOutputStorage {
   bool pedal_sent;
 } TestMciOutputStorage;
 
-static MotorControllerStorage s_mci_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static CanStorage s_can_storage;
 static TestMciOutputStorage s_test_mci_output_storage;
+static MotorControllerBroadcastSettings s_broadcast_settings = {
+  .motor_can = &s_can_mcp2515,
+  .device_ids = {
+    [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
+    [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
+  }
+};
 
 static void prv_setup_motor_can(void) {
   Mcp2515Settings mcp2515_settings = {
@@ -81,8 +87,7 @@ void setup_test(void) {
 
   prv_setup_motor_can();
   prv_setup_system_can();
-  s_mci_storage.motor_can = (GenericCan *)&s_can_mcp2515;
-  mci_output_init(&s_mci_storage);
+
 }
 
 void teardown_test(void) {}
@@ -110,13 +115,6 @@ void teardown_test(void) {}
 
 // Can RX handler (knows which output to expect using counter and global storage)
 // spoof Generic CAN TX (pass in message id and values)
-MotorControllerBroadcastSettings broadcast_settings = {
-  .motor_can = s_mci_storage.motor_can,
-  .device_ids = {
-    [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
-    [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
-  }
-};
 MotorControllerBroadcastStorage broadcast_storage;
-mci_broadcast_init(&broadcast_storage, &broadcast_settings);
+mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
