@@ -13,12 +13,12 @@
 #include "drive_fsm.h"
 
 static MciDriveFsmEvent s_drive_output_fsm_map[] = {
-  [EE_DRIVE_OUTPUT_OFF] = MCI_DRIVE_FSM_STATE_NEUTRAL_STATE,
+  [EE_DRIVE_OUTPUT_OFF] = MCI_DRIVE_FSM_STATE_OFF_STATE,
   [EE_DRIVE_OUTPUT_DRIVE] = MCI_DRIVE_FSM_STATE_DRIVE_STATE,
   [EE_DRIVE_OUTPUT_REVERSE] = MCI_DRIVE_FSM_STATE_REVERSE_STATE
 };
 
-FSM_DECLARE_STATE(state_neutral);
+FSM_DECLARE_STATE(state_off);
 FSM_DECLARE_STATE(state_drive);
 FSM_DECLARE_STATE(state_reverse);
 
@@ -26,25 +26,25 @@ static bool prv_guard_throttle(const Fsm *fsm, const Event *e, void *context) {
   return get_precharge_state() == MCI_PRECHARGE_CHARGED;
 }
 
-FSM_STATE_TRANSITION(state_neutral) {
+FSM_STATE_TRANSITION(state_off) {
   FSM_ADD_GUARDED_TRANSITION(MCI_DRIVE_FSM_STATE_DRIVE_STATE, prv_guard_throttle, state_drive);
   FSM_ADD_GUARDED_TRANSITION(MCI_DRIVE_FSM_STATE_REVERSE_STATE, prv_guard_throttle, state_reverse);
 }
 
 FSM_STATE_TRANSITION(state_drive) {
-  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_NEUTRAL_STATE, state_neutral);
+  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_OFF_STATE, state_off);
   FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_REVERSE_STATE, state_reverse);
 }
 
 FSM_STATE_TRANSITION(state_reverse) {
-  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_NEUTRAL_STATE, state_neutral);
+  FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_OFF_STATE, state_off);
   FSM_ADD_TRANSITION(MCI_DRIVE_FSM_STATE_DRIVE_STATE, state_drive);
 }
 
 static Fsm s_drive_fsm;
 static EEDriveOutput s_current_drive_state;
 
-static void prv_state_neutral_output(Fsm *fsm, const Event *e, void *context) {
+static void prv_state_off_output(Fsm *fsm, const Event *e, void *context) {
   s_current_drive_state = EE_DRIVE_OUTPUT_OFF;
 }
 static void prv_state_drive_output(Fsm *fsm, const Event *e, void *context) {
@@ -55,10 +55,10 @@ static void prv_state_reverse_output(Fsm *fsm, const Event *e, void *context) {
 }
 
 static void prv_init_drive_fsm() {
-  fsm_state_init(state_neutral, prv_state_neutral_output);
+  fsm_state_init(state_off, prv_state_off_output);
   fsm_state_init(state_drive, prv_state_drive_output);
   fsm_state_init(state_reverse, prv_state_reverse_output);
-  fsm_init(&s_drive_fsm, "drive_fsm", &state_neutral, NULL);
+  fsm_init(&s_drive_fsm, "drive_fsm", &state_off, NULL);
 }
 
 bool drive_fsm_process_event(const Event *e) {
