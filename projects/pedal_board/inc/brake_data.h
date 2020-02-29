@@ -2,4 +2,4 @@
 #include "ads1015.h"
 #include "pedal_data.h"
 
-StatusCode get_brake_data(PedalDataStorage *storage, int16_t *position);
+StatusCode get_brake_data(PedalDataTxStorage *storage, int16_t *position);

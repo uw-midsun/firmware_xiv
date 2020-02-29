@@ -7,3 +7,9 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-helper ms-common codegen-tooling
+
+$(T)_test_brake_data_MOCKS := ads1015_read_raw
+
+$(T)_test_throttle_data_MOCKS := ads1015_read_raw
+
+$(T)_test_pedal_data_tx_MOCKS := ads1015_read_raw

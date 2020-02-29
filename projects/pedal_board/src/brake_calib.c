@@ -7,6 +7,8 @@
 #include "string.h"
 #include "wait.h"
 
+int32_t average_value;
+
 static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
   BrakeCalibrationStorage *storage = context;
   int16_t reading = 0;
@@ -14,6 +16,7 @@ static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
 
   if (storage->sample_counter < NUM_SAMPLES) {
     storage->sample_counter++;
+    average_value += (int32_t) reading;
     storage->min_reading = MIN(storage->min_reading, reading);
     storage->max_reading = MAX(storage->min_reading, reading);
   }
@@ -27,6 +30,7 @@ StatusCode brake_calib_init(BrakeCalibrationStorage *storage) {
 
 StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibrationData *data,
                               PedalState state) {
+  average_value = 0;
   // Disables channel
   ads1015_configure_channel(get_ads1015_storage(), get_pedal_data_storage()->brake_channel, false,
                             NULL, NULL);
@@ -42,9 +46,9 @@ StatusCode brake_calib_sample(BrakeCalibrationStorage *storage, BrakeCalibration
   // perhaps not the best way to do this
   // what if i get 1 extremely low or high value
   if (state == PEDAL_PRESSED) {
-    data->lower_value = (storage->min_reading + storage->max_reading) / 2;
+    data->lower_value = average_value / 1000;
   } else {
-    data->upper_value = (storage->min_reading + storage->max_reading) / 2;
+    data->upper_value = average_value / 1000;
   }
   return STATUS_CODE_OK;
 }

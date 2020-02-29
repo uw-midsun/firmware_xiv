@@ -7,6 +7,7 @@
 #include "calib.h"
 #include "crc32.h"
 #include "delay.h"
+#include "event_queue.h"
 #include "flash.h"
 #include "gpio.h"
 #include "gpio_it.h"
@@ -44,7 +45,7 @@ void setup_test(void) {
   ads1015_init(&s_ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
   TEST_ASSERT_OK(calib_init(&s_calib_blob, sizeof(s_calib_blob), true));
-  throttle_calibration_init(&s_calibration_storage, &s_calib_blob.throttle_calib);
+  throttle_calib_init(&s_calibration_storage);
 }
 
 void teardown_test(void) {}

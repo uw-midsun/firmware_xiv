@@ -19,9 +19,9 @@
 #define CAN_DEVICE_ID 0x1
 
 static Ads1015Storage s_ads1015_storage = { 0 };
-static PedalCalibBlob s_pedal_calib_blob = { 0 };
+static PedalCalibBlob s_calib_blob = { 0 };
 
-static CanStorage can_storage = { 0 };
+static CanStorage s_can_storage = { 0 };
 const CanSettings can_settings = {
   .device_id = CAN_DEVICE_ID,
   .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -40,7 +40,9 @@ int main() {
   gpio_it_init();
   soft_timer_init();
   event_queue_init();
-  can_init(&can_storage, &can_settings);
+  can_init(&s_can_storage, &can_settings);
+  // this is need for x86 but not for the stm32s
+  flash_init();
   LOG_DEBUG("Initialized modules\n");
 
   // setup ADC readings
@@ -54,11 +56,12 @@ int main() {
   ads1015_init(&s_ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
   // we expect calibration blog to be there already
-  status_ok_or_return(calib_init(&s_pedal_calib_blob, sizeof(s_pedal_calib_blob), false));
+  status_ok_or_return(calib_init(&s_calib_blob, sizeof(s_calib_blob), false));
   PedalCalibBlob *pedal_calib_blob = calib_blob();
   pedal_data_init(&s_ads1015_storage, pedal_calib_blob);
   pedal_data_tx_init();
 
+  LOG_DEBUG("Starting...\n");
   Event e = { 0 };
   while (true) {
     event_process(&e);
