@@ -97,9 +97,8 @@ void test_precharge_sends_can_message_when_precharge_has_completed(void) {
   TEST_ASSERT_TRUE(s_precharge_completed);
 }
 
-void test_precharge_sends_can_message_when_precharge_has_completed(void) {
-
-
+void test_precharge_clears_precharge_whe(void) {
+  return;
 }
 
 
