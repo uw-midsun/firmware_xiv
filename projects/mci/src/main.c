@@ -27,11 +27,11 @@ void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
 }
 
-void prv_precharge_control_init(void) {
-  PrechargeControlSettings precharge_control_settings = {
+void prv_mci_storage_init(void *context) {
+  PrechargeControlSettings precharge_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
     .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
-    .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
+    .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 }
   };
 }
 
@@ -42,8 +42,6 @@ int main(void) {
   soft_timer_init();
 
   prv_setup_system_can();
-
-  prv_precharge_control_init();
 
   Event e = { 0 };
   while (true) {
