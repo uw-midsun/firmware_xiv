@@ -77,14 +77,12 @@ StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *a
   LOG_DEBUG("drive_fsm_state: %i\n", e.id);
   bool transitioned = drive_fsm_process_event(&e);
   LOG_DEBUG("post transition: %i\n", s_current_drive_state);
-  bool ret = STATUS_CODE_OK;
   if (expect_transition != transitioned) {
     *ack_reply = CAN_ACK_STATUS_INVALID;
-    ret = STATUS_CODE_INTERNAL_ERROR;
-  } else {
-    *ack_reply = CAN_ACK_STATUS_OK;
+    return STATUS_CODE_INTERNAL_ERROR;
   }
-  return ret;
+  *ack_reply = CAN_ACK_STATUS_OK;
+  return STATUS_CODE_OK;
 }
 
 EEDriveOutput drive_fsm_get_drive_state() {
