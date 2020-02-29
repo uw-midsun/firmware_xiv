@@ -7,8 +7,6 @@
 
 StatusCode drive_fsm_init();
 
-StatusCode fault_rx(const CanMessage *msg, void *context, CanAckStatus *ack_status);
-
 bool drive_fsm_process_event(const Event *e);
 
 EEDriveOutput drive_fsm_get_drive_state();

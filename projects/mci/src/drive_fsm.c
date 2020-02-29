@@ -23,12 +23,7 @@ FSM_DECLARE_STATE(state_drive);
 FSM_DECLARE_STATE(state_reverse);
 
 static bool prv_guard_throttle(const Fsm *fsm, const Event *e, void *context) {
-  MotorControllerStorage *storage = context;
-  // TODO(SOFT-121): Merge precharge update with get_precharge_state()
-  if (get_precharge_state() != MCI_PRECHARGE_CHARGED) {
-    return false;
-  }
-  return true;
+  return get_precharge_state() == MCI_PRECHARGE_DISCHARGED;
 }
 
 FSM_STATE_TRANSITION(state_neutral) {
@@ -76,7 +71,7 @@ StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *a
   CAN_UNPACK_DRIVE_OUTPUT(msg, &drive_output);
   Event e = { 0 };
   e.id = s_drive_output_fsm_map[drive_output];
-  LOG_DEBUG("cur state: %i\n", s_current_drive_state);
+  LOG_DEBUG("curent state: %i\n", s_current_drive_state);
   LOG_DEBUG("e.id: %i\n", e.id);
   bool transitioned = drive_fsm_process_event(&e);
   LOG_DEBUG("post transition: %i\n", s_current_drive_state);
@@ -93,13 +88,6 @@ StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *a
 EEDriveOutput drive_fsm_get_drive_state() {
   return s_current_drive_state;
 }
-
-// StatusCode fault_rx(const CanMessage *msg, void *context, CanAckStatus *ack_status) {
-//   Event e = {.id = DRIVE_FSM_STATE_NEUTRAL };
-//   drive_fsm_process_event(&e);
-//   *ack_status = CAN_ACK_STATUS_OK;
-//   return STATUS_CODE_OK;
-// }
 
 StatusCode drive_fsm_init() {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, drive_output_rx, NULL);

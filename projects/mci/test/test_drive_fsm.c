@@ -79,19 +79,19 @@ void test_neutral(void) {
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_OFF);
 
   // Test that if discharged, doesn't transition to drive
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_OFF);
 
   // Test that if discharged, doesn't transition to reverse
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_OFF);
 
   // Test that if charged, will transition to drive
   expected_status = CAN_ACK_STATUS_OK;
@@ -99,18 +99,18 @@ void test_neutral(void) {
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_DRIVE);
 
   // Test that if charged, will transition to reverse
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_OFF);
 
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_REVERSE);
 }
 
 void test_drive(void) {
@@ -127,23 +127,23 @@ void test_drive(void) {
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_DRIVE);
 
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_OFF);
 
   // Test that if in drive, can transition to reverse
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_DRIVE);
 
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_REVERSE);
 }
 
 void test_reverse(void) {
@@ -158,20 +158,20 @@ void test_reverse(void) {
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_REVERSE);
 
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_OFF);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_OFF);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_OFF);
 
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_REVERSE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_REVERSE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_REVERSE);
 
   CAN_TRANSMIT_DRIVE_OUTPUT(&req, EE_DRIVE_OUTPUT_DRIVE);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   delay_ms(10);
-  TEST_ASSERT_TRUE(drive_fsm_get_drive_state() == EE_DRIVE_OUTPUT_DRIVE);
+  TEST_ASSERT_EQUAL(drive_fsm_get_drive_state(), EE_DRIVE_OUTPUT_DRIVE);
 }
