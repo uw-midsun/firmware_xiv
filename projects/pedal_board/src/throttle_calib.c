@@ -16,7 +16,7 @@ static void prv_callback_channel(Ads1015Channel ads1015, void *context) {
 
   if (storage->sample_counter < NUM_SAMPLES) {
     storage->sample_counter++;
-    average_value += (int32_t) reading;
+    average_value += (int32_t)reading;
     storage->min_reading = MIN(storage->min_reading, reading);
     storage->max_reading = MAX(storage->min_reading, reading);
   }
@@ -43,8 +43,7 @@ StatusCode throttle_calib_sample(ThrottleCalibrationStorage *storage, ThrottleCa
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();
   }
-  // perhaps not the best way to do this
-  // what if i get 1 extremely low or high value
+
   if (state == PEDAL_PRESSED) {
     data->lower_value = average_value / 1000;
   } else {

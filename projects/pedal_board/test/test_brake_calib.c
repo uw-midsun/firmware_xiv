@@ -50,17 +50,17 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-void test_mech_brake_calibration_run(void) {
-  LOG_DEBUG("Please ensure the brake is not being pressed.\n");
-  delay_s(7);
-  LOG_DEBUG("Beginning sampling\n");
-  brake_calib_sample(&s_calibration_storage, &s_calib_blob.brake_calib, PEDAL_UNPRESSED);
-  LOG_DEBUG("Completed sampling\n");
-  LOG_DEBUG("Please press and hold the brake\n");
-  delay_s(7);
-  LOG_DEBUG("Beginning sampling\n");
-  brake_calib_sample(&s_calibration_storage, &s_calib_blob.brake_calib, PEDAL_PRESSED);
-  LOG_DEBUG("Completed sampling\n");
+// void test_mech_brake_calibration_run(void) {
+//   LOG_DEBUG("Please ensure the brake is not being pressed.\n");
+//   delay_s(7);
+//   LOG_DEBUG("Beginning sampling\n");
+//   brake_calib_sample(&s_calibration_storage, &s_calib_blob.brake_calib, PEDAL_UNPRESSED);
+//   LOG_DEBUG("Completed sampling\n");
+//   LOG_DEBUG("Please press and hold the brake\n");
+//   delay_s(7);
+//   LOG_DEBUG("Beginning sampling\n");
+//   brake_calib_sample(&s_calibration_storage, &s_calib_blob.brake_calib, PEDAL_PRESSED);
+//   LOG_DEBUG("Completed sampling\n");
 
-  calib_commit();
-}
+//   calib_commit();
+// }

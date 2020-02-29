@@ -16,9 +16,9 @@ static PedalDataTxStorage s_pedal_data_storage = {
 StatusCode pedal_data_init(Ads1015Storage *storage, PedalCalibBlob *calib_blob) {
   s_ads1015_storage = storage;
   // not too sure what this does
-  memset(calib_blob, 0, sizeof(*calib_blob));
+  //memset(calib_blob, 0, sizeof(*calib_blob));
   s_pedal_calib_blob = calib_blob;
-
+  
   // Throttle Channels, we only use 1 right now
   status_ok_or_return(ads1015_configure_channel(
       s_ads1015_storage, s_pedal_data_storage.throttle_channel1, true, NULL, NULL));

@@ -14,7 +14,7 @@ StatusCode get_brake_data(PedalDataTxStorage *storage, int16_t *position) {
   position_upscaled *= 100;
   // just to check
   if (range != 0) {
-    position_upscaled /= range * EE_PEDAL_MULTIPLYER;
+    position_upscaled /= range;
     *position = (int16_t)position_upscaled;
   }
   return STATUS_CODE_OK;
