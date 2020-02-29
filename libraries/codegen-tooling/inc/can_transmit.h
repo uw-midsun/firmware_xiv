@@ -217,6 +217,14 @@
     status;                                       \
   })
 
+#define CAN_TRANSMIT_DISCHARGE_PRECHARGE()        \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_DISCHARGE_PRECHARGE(&msg);           \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_BATTERY_VT(module_id_u16, voltage_u16, temperature_u16)      \
   ({                                                                              \
     CanMessage msg = { 0 };                                                       \

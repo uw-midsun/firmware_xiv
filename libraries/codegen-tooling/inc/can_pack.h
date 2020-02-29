@@ -140,6 +140,10 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
                    CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_DISCHARGE_PRECHARGE(msg_ptr)                      \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_DISCHARGE_PRECHARGE)
+
 #define CAN_PACK_BATTERY_VT(msg_ptr, module_id_u16, voltage_u16, temperature_u16)               \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER, SYSTEM_CAN_MESSAGE_BATTERY_VT, 6, \
                     (module_id_u16), (voltage_u16), (temperature_u16), CAN_PACK_IMPL_EMPTY)

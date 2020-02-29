@@ -110,6 +110,8 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_DISCHARGE_PRECHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+
 #define CAN_UNPACK_BATTERY_VT(msg_ptr, module_id_u16_ptr, voltage_u16_ptr, temperature_u16_ptr)    \
   can_unpack_impl_u16((msg_ptr), 6, (module_id_u16_ptr), (voltage_u16_ptr), (temperature_u16_ptr), \
                       CAN_UNPACK_IMPL_EMPTY)
