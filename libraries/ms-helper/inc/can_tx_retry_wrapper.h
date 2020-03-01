@@ -14,6 +14,7 @@
 #include "exported_enums.h"
 
 typedef void (*CanTxCallback)(CanAckRequest *ack_ptr, void *context);
+typedef void (*CanTxRetrySuccessCallback)(void *context);
 
 typedef struct RetryTxRequest {
   EventId completion_event_id;
@@ -30,6 +31,8 @@ typedef struct CanTxRetryWrapperStorage {
   uint16_t ack_bitset;
   CanTxCallback tx_callback;
   void *tx_callback_context;
+  CanTxRetrySuccessCallback success_callback;
+  void *success_callback_context;
 } CanTxRetryWrapperStorage;
 
 typedef struct CanTxRetryWrapperSettings {
@@ -47,3 +50,7 @@ StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage,
                                      CanTxRetryWrapperSettings *settings);
 
 StatusCode can_tx_retry_send(CanTxRetryWrapperStorage *storage, CanTxRetryWrapperRequest *request);
+
+StatusCode can_tx_retry_wrapper_register_success_callback(CanTxRetryWrapperStorage *storage,
+                                                          CanTxRetrySuccessCallback callback,
+                                                          void *context);

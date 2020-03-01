@@ -11,6 +11,7 @@ StatusCode can_tx_retry_wrapper_init(CanTxRetryWrapperStorage *storage,
                                      CanTxRetryWrapperSettings *settings) {
   storage->retries = settings->retries;
   storage->retry_count = 0;
+  storage->success_callback = NULL;
   return STATUS_CODE_OK;
 }
 
@@ -33,6 +34,9 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
   }
   event_raise(storage->retry_request.completion_event_id,
               storage->retry_request.completion_event_data);
+  if (storage->success_callback) {
+    storage->success_callback(storage->success_callback_context);
+  }
   storage->retry_count = 0;
   return STATUS_CODE_OK;
 }
@@ -55,5 +59,13 @@ StatusCode can_tx_retry_send(CanTxRetryWrapperStorage *storage, CanTxRetryWrappe
   storage->tx_callback_context = request->tx_callback_context;
   storage->ack_bitset = request->ack_bitset;
   prv_try_tx(storage);
+  return STATUS_CODE_OK;
+}
+
+StatusCode can_tx_retry_wrapper_register_success_callback(CanTxRetryWrapperStorage *storage,
+                                                          CanTxRetrySuccessCallback callback,
+                                                          void *context) {
+  storage->success_callback = callback;
+  storage->success_callback_context = context;
   return STATUS_CODE_OK;
 }

@@ -2,7 +2,6 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "can_transmit.h"
-#include "can_tx_retry_wrapper.h"
 #include "delay.h"
 #include "ebrake_tx.h"
 #include "event_queue.h"
@@ -78,28 +77,31 @@ void test_ebrake_tx_retries_then_raises_fail_event(void) {
 }
 
 void test_ebrake_tx_retries_then_success_event(void) {
-  EEEbrakeState state = EE_EBRAKE_STATE_PRESSED;
-  uint16_t fault_event_data = 0x1234;
-  uint16_t success_event_data = 0x5678;
-  RetryTxRequest req = {
-    .completion_event_id = TEST_EBRAKE_TX_EVENT_SUCCESS,
-    .completion_event_data = success_event_data,
-    .fault_event_id = TEST_EBRAKE_TX_EVENT_FAIL,
-    .fault_event_data = fault_event_data,
-  };
-  TEST_ASSERT_OK(ebrake_tx_brake_state(&s_storage, &req, state));
-  for (uint8_t i = 0; i < NUM_EBRAKE_TX_RETRIES - 1; i++) {
+  for (EEEbrakeState state = EE_EBRAKE_STATE_PRESSED; state < NUM_EE_EBRAKE_STATES; state++) {
+    uint16_t fault_event_data = 0x1234;
+    uint16_t success_event_data = 0x5678;
+    RetryTxRequest req = {
+      .completion_event_id = TEST_EBRAKE_TX_EVENT_SUCCESS,
+      .completion_event_data = success_event_data,
+      .fault_event_id = TEST_EBRAKE_TX_EVENT_FAIL,
+      .fault_event_data = fault_event_data,
+    };
+    TEST_ASSERT_OK(ebrake_tx_brake_state(&s_storage, &req, state));
+    for (uint8_t i = 0; i < NUM_EBRAKE_TX_RETRIES - 1; i++) {
+      MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_EBRAKE_TX_EVENT_CAN_TX, TEST_EBRAKE_TX_EVENT_CAN_RX);
+      MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE,
+                                             SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
+                                             CAN_ACK_STATUS_INVALID);
+    }
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_EBRAKE_TX_EVENT_CAN_TX, TEST_EBRAKE_TX_EVENT_CAN_RX);
     MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE,
                                            SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
-                                           CAN_ACK_STATUS_INVALID);
+                                           CAN_ACK_STATUS_OK);
+    Event e = { 0 };
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_EBRAKE_TX_EVENT_SUCCESS, success_event_data);
+
+    TEST_ASSERT_EQUAL(get_current_state(&s_storage), state);
+    // no further events must be raised
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   }
-  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_EBRAKE_TX_EVENT_CAN_TX, TEST_EBRAKE_TX_EVENT_CAN_RX);
-  MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE,
-                                         SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
-                                         CAN_ACK_STATUS_OK);
-  Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, TEST_EBRAKE_TX_EVENT_SUCCESS, success_event_data);
-  // no further events must be raised
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }

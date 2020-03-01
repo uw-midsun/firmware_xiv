@@ -27,6 +27,15 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   return s_ack_cb_status;
 }
 
+static bool s_callback_called = false;
+static uint32_t s_captured_callback_data = 0;
+static uint32_t s_callback_data = 0x12345;
+
+static void prv_success_callback(void *context) {
+  s_callback_called = true;
+  s_captured_callback_data = *((uint32_t *)context);
+}
+
 typedef enum {
   RETRY_WRAPPER_EVENT_CAN_TX = 0,
   RETRY_WRAPPER_EVENT_CAN_RX,
@@ -53,6 +62,8 @@ void setup_test(void) {
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, prv_rx_callback, NULL));
   can_tx_retry_wrapper_init(&s_storage, &settings);
+  s_callback_called = false;
+  s_captured_callback_data = 0;
 }
 
 void teardown_test(void) {}
@@ -165,6 +176,9 @@ void test_can_retry_retries_indefinitely(void) {
                                              .tx_callback = prv_can_tx,
                                              .tx_callback_context = &s_storage };
 
+  TEST_ASSERT_OK(can_tx_retry_wrapper_register_success_callback(&s_storage, prv_success_callback,
+                                                                &s_callback_data));
+
   TEST_ASSERT_OK(can_tx_retry_send(&s_storage, &retry_request));
 
   for (uint8_t i = 0; i < NUM_RETRIES; i++) {
@@ -191,6 +205,10 @@ void test_can_retry_retries_indefinitely(void) {
 
   // success event gets raised
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, RETRY_WRAPPER_EVENT_SUCCESS, success_data);
+
+  // callback also gets called
+  TEST_ASSERT_EQUAL(s_captured_callback_data, s_callback_data);
+  TEST_ASSERT_TRUE(s_callback_called);
 
   // no further tx is attempted
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();

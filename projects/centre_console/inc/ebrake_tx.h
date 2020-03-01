@@ -16,9 +16,12 @@
 typedef struct EbrakeTxStorage {
   CanTxRetryWrapperStorage can_retry_wrapper_storage;
   EEEbrakeState state;
+  EEEbrakeState current_state;
 } EbrakeTxStorage;
 
 StatusCode ebrake_tx_init(EbrakeTxStorage *storage);
 
 StatusCode ebrake_tx_brake_state(EbrakeTxStorage *storage, RetryTxRequest *request,
                                  EEEbrakeState state);
+
+EEEbrakeState get_current_state(EbrakeTxStorage *storage);

@@ -11,9 +11,12 @@
 #include "ebrake_tx.h"
 #include "fsm.h"
 #include "mci_output_tx.h"
+#include "precharge_monitor.h"
 #include "relay_tx.h"
 #include "status.h"
 #include "stdbool.h"
+
+#define PRECHARGE_TIMEOUT_S 4
 
 typedef enum {
   DRIVE_STATE_NEUTRAL = 0,
@@ -26,7 +29,7 @@ typedef enum {
 typedef struct DriveFsmStorage {
   Fsm drive_fsm;
   DriveState destination;
-  RelayTxStorage relay_storage;
+  PrechargeMonitor precharge_monitor_storage;
   EbrakeTxStorage ebrake_storage;
   MciOutputTxStorage mci_output_storage;
 } DriveFsmStorage;

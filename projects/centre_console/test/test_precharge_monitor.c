@@ -45,6 +45,8 @@ void test_precharge_monitor_init_will_raise_event_if_precharge_completes(void) {
                                         &s_success_event, &s_fault_event));
   TEST_ASSERT_EQUAL(s_precharge_monitor.timer_id, SOFT_TIMER_INVALID_TIMER);
   TEST_ASSERT_OK(precharge_monitor_start(&s_precharge_monitor));
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+
   TEST_ASSERT_NOT_EQUAL(s_precharge_monitor.timer_id, SOFT_TIMER_INVALID_TIMER);
 
   delay_ms(10);
@@ -67,6 +69,7 @@ void test_precharge_monitor_times_out_after_some_time_and_raises_event(void) {
   TEST_ASSERT_OK(precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS,
                                         &s_success_event, &s_fault_event));
   TEST_ASSERT_OK(precharge_monitor_start(&s_precharge_monitor));
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
 
   delay_ms(TEST_PRECHARGE_TIMEOUT_MS - 10);
   Event e = { 0 };
@@ -83,6 +86,8 @@ void test_precharge_monitor_cancel_should_cancel_before_it_faults(void) {
   TEST_ASSERT_OK(precharge_monitor_init(&s_precharge_monitor, TEST_PRECHARGE_TIMEOUT_MS,
                                         &s_success_event, &s_fault_event));
   TEST_ASSERT_OK(precharge_monitor_start(&s_precharge_monitor));
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   delay_ms(TEST_PRECHARGE_TIMEOUT_MS - 10);

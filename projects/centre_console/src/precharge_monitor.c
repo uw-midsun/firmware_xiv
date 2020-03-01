@@ -2,10 +2,12 @@
 #include "can.h"
 #include "can_ack.h"
 #include "can_msg_defs.h"
+#include "can_transmit.h"
 #include "can_unpack.h"
 #include "centre_console_events.h"
 #include "event_queue.h"
 #include "exported_enums.h"
+#include "log.h"
 
 static void prv_timer_cleanup(PrechargeMonitor *storage) {
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
@@ -33,6 +35,7 @@ bool precharge_monitor_cancel(PrechargeMonitor *storage) {
 
 StatusCode precharge_monitor_start(PrechargeMonitor *storage) {
   soft_timer_cancel(storage->timer_id);
+  CAN_TRANSMIT_BEGIN_PRECHARGE();
   return soft_timer_start_millis(storage->timeout_ms, prv_timeout_cb, storage, &storage->timer_id);
 }
 

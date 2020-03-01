@@ -8,9 +8,19 @@ static void prv_tx_ebrake_state(CanAckRequest *ack_ptr, void *context) {
 
 StatusCode ebrake_tx_init(EbrakeTxStorage *storage) {
   CanTxRetryWrapperSettings retry_settings = { .retries = NUM_EBRAKE_TX_RETRIES };
+  storage->current_state = EE_EBRAKE_STATE_RELEASED;
   status_ok_or_return(
       can_tx_retry_wrapper_init(&storage->can_retry_wrapper_storage, &retry_settings));
   return STATUS_CODE_OK;
+}
+
+EEEbrakeState get_current_state(EbrakeTxStorage *storage) {
+  return storage->current_state;
+}
+
+void prv_success_ebrake_tx_callback(void *context) {
+  EbrakeTxStorage *storage = (EbrakeTxStorage *)context;
+  storage->current_state = storage->state;
 }
 
 StatusCode ebrake_tx_brake_state(EbrakeTxStorage *storage, RetryTxRequest *request,
@@ -25,6 +35,8 @@ StatusCode ebrake_tx_brake_state(EbrakeTxStorage *storage, RetryTxRequest *reque
     .tx_callback = prv_tx_ebrake_state,
     .tx_callback_context = storage
   };
+  status_ok_or_return(can_tx_retry_wrapper_register_success_callback(
+      &storage->can_retry_wrapper_storage, prv_success_ebrake_tx_callback, storage));
   can_tx_retry_send(&storage->can_retry_wrapper_storage, &retry_wrapper_request);
   return STATUS_CODE_OK;
 }
