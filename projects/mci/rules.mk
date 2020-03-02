@@ -11,4 +11,5 @@ $(T)_DEPS := ms-common ms-helper
 ifeq (x86,$(PLATFORM))
 $(T)_EXCLUDE_TESTS := precharge
 $(T)_test_drive_fsm_MOCKS := get_precharge_state
+$(T)_test_mci_broadcast_MOCKS := mcp2515_tx
 endif

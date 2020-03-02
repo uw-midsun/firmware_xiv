@@ -1,5 +1,8 @@
 #pragma once
 
+#include "generic_can.h"
+
+#include "motor_can.h"
 #include "wavesculptor.h"
 
 #define MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS 400

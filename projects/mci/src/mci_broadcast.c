@@ -9,14 +9,14 @@
 #include "critical_section.h"
 
 static void prv_broadcast_speed(MotorControllerBroadcastStorage *storage) {
-  float *measurements = &storage->measurements.vehicle_velocity;
+  float *measurements = storage->measurements.vehicle_velocity;
   CAN_TRANSMIT_MOTOR_VELOCITY(
     (uint16_t)measurements[LEFT_MOTOR_CONTROLLER],
-    (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER]);
+    (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER]);  
 }
 
 static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *storage) {
-  WaveSculptorBusMeasurement *measurements = &storage->measurements.bus_measurements;
+  WaveSculptorBusMeasurement *measurements = storage->measurements.bus_measurements;
   CAN_TRANSMIT_MOTOR_CONTROLLER_VC(
     (uint16_t)measurements[LEFT_MOTOR_CONTROLLER].bus_voltage_v,
     (uint16_t)measurements[LEFT_MOTOR_CONTROLLER].bus_current_a,
@@ -26,7 +26,7 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 
 static void prv_handle_speed(const GenericCanMsg *msg, void *context) {
   MotorControllerBroadcastStorage *storage = context;
-  float *measurements = &storage->measurements.vehicle_velocity;
+  float *measurements = storage->measurements.vehicle_velocity;
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
 
@@ -42,7 +42,7 @@ static void prv_handle_speed(const GenericCanMsg *msg, void *context) {
 static void prv_handle_bus_measurement(const GenericCanMsg *msg, void *context) {
   bool disabled = critical_section_start();
   MotorControllerBroadcastStorage *storage = context;
-  WaveSculptorBusMeasurement *measurements = &storage->measurements.bus_measurements;
+  WaveSculptorBusMeasurement *measurements = storage->measurements.bus_measurements;
 
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
