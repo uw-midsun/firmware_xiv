@@ -98,6 +98,20 @@ void prv_recover_from_fault(Event *event, EEEbrakeState state) {
   *event = e;
 }
 
+void prv_fail_ebrake_state(Event *event, EEEbrakeState state) {
+  for (uint8_t i = 0; i < NUM_EBRAKE_TX_RETRIES; i++) {
+    MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+    MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE,
+                                           SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
+                                           CAN_ACK_STATUS_INVALID);
+  }
+  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_EBRAKE_STATE,
+                          .fault_state = state };
+  Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+  *event = e;
+}
+
 void prv_fail_mci_output(Event *event, EEDriveOutput output) {
   for (uint8_t i = 0; i < NUM_MCI_OUTPUT_TX_RETRIES; i++) {
     MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
@@ -299,8 +313,8 @@ void test_transition_to_parking_drive_reverse_neutral_parking(void) {
 }
 
 void test_transition_to_fault_from_mci_output_and_recover_to_neutral(void) {
-  // neutral discharged-> neutral precharged -> set mci output -> fault -> neutral -> set ebrake
-  // state -> fault -> neutral
+  // neutral discharged-> neutral precharged -> set mci output -> fault -> neutral -> parking ->
+  // -> set ebrake -> fault -> parking
   TEST_ASSERT_OK(drive_fsm_init(&s_drive_fsm));
 
   Event e = { .id = DRIVE_FSM_INPUT_EVENT_NEUTRAL, .data = NUM_DRIVE_STATES };
@@ -325,22 +339,40 @@ void test_transition_to_fault_from_mci_output_and_recover_to_neutral(void) {
   // set mci output -> fault
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
   prv_recover_from_fault(&e, EE_EBRAKE_STATE_RELEASED);
-  return;
 
-  // fault should attempt transitioning to neutral
-  // fault.fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE;
-  // fault.fault_state = EE_RELAY_STATE_OPEN;
-  // MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
-
-  s_fault = false;
-
+  // fault -> neutral discharged
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
-      e, DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL_PARKING, DRIVE_STATE_NEUTRAL);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  // fault -> neutral
+  // neutral discharged -> set ebrake
+  e.id = DRIVE_FSM_INPUT_EVENT_PARKING;
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_OUTPUT_EVENT_NEUTRAL, 0);
+  prv_assert_ebrake_state(&e, EE_EBRAKE_STATE_PRESSED);
+
+  // set ebrake -> set precharge
+  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  prv_assert_set_discharge(&e);
+
+  // set precharge -> parking
+  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  prv_assert_output_event(DRIVE_FSM_OUTPUT_EVENT_PARKING);
+
+  e.id = DRIVE_FSM_INPUT_EVENT_REVERSE;
+  // parking -> set precharge
+  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  prv_assert_set_precharge(&e);
+
+  // set precharge -> set ebrake
+  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  prv_fail_ebrake_state(&e, EE_EBRAKE_STATE_RELEASED);
+
+  // set ebrake -> fault
+  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  prv_recover_from_fault(&e, EE_EBRAKE_STATE_PRESSED);
+
+  // fault -> parking
+  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 // void test_transition_to_fault_from_set_relay_states_and_recover_to_neutral(void) {

@@ -131,7 +131,7 @@ static DestinationTransitionInfo s_destination_transition_lookup[NUM_DRIVE_STATE
                             .data = DRIVE_STATE_REVERSE,
                             .ebrake_state = EE_EBRAKE_STATE_RELEASED,
                             .mci_drive_output = EE_DRIVE_OUTPUT_REVERSE,
-                            .fsm_output_event_id = DRIVE_FSM_OUTPUT_EVENT_REVERSE }
+                            .fsm_output_event_id = DRIVE_FSM_OUTPUT_EVENT_REVERSE },
 };
 
 static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
@@ -140,6 +140,7 @@ static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
   EventId id = (storage->ebrake_storage.current_state == EE_EBRAKE_STATE_PRESSED)
                    ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_EBRAKE_PRESSED
                    : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;
+  storage->destination = NUM_DRIVE_STATES;
   event_raise(id, 0);
 }
 
@@ -174,6 +175,9 @@ static void prv_set_ebrake_output(Fsm *fsm, const Event *e, void *context) {
 
 static void prv_drive_fsm_destination_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
+  if (storage->destination >= NUM_DRIVE_STATES) {
+    return;
+  }
   s_drive_state = storage->destination;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
   event_raise(info.fsm_output_event_id, 0);
