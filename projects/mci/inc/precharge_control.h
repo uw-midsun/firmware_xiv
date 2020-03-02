@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#include "status.h"
 #include "gpio.h"
+#include "status.h"
 
 // Requires GPIO to be initialized
 // Requires GPIO interrupts to be initialized

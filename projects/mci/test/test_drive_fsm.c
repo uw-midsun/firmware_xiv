@@ -14,8 +14,8 @@
 
 #include "drive_fsm.h"
 #include "mci_events.h"
-#include "precharge_control.h"
 #include "motor_controller.h"
+#include "precharge_control.h"
 
 static CanStorage s_can_storage;
 static MotorControllerStorage s_mci_storage;
