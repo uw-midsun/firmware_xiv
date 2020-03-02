@@ -29,7 +29,7 @@ static StatusCode prv_rx_ebrake_callback(const CanMessage *msg, void *context,
   uint8_t ebrake_state;
   CAN_UNPACK_SET_EBRAKE_STATE(msg, &ebrake_state);
   s_ebrake_state = ebrake_state;
-  return CAN_ACK_STATUS_OK;
+  return STATUS_CODE_OK;
 }
 
 static StatusCode prv_rx_drive_output_callback(const CanMessage *msg, void *context,
@@ -37,7 +37,7 @@ static StatusCode prv_rx_drive_output_callback(const CanMessage *msg, void *cont
   uint16_t drive_output;
   CAN_UNPACK_DRIVE_OUTPUT(msg, &drive_output);
   s_drive_output = drive_output;
-  return CAN_ACK_STATUS_OK;
+  return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
