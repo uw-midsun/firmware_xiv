@@ -8,17 +8,22 @@
 
 typedef enum { MCI_PRECHARGE_DISCHARGED = 0, MCI_PRECHARGE_CHARGED } PrechargeState;
 
-typedef struct PrechargeStorage {
-  PrechargeState state;
-  // MCI Rev5: precharge_control = Pin A9
+typedef struct PrechargeControlSettings {
   GpioAddress precharge_control;
-  // Thanks Hardware :angry:
-  // MCI Rev5: precharge_control2 = Pin B1
   GpioAddress precharge_control2;
-  // MCI Rev5: precharge_monitor = Pin B0
   GpioAddress precharge_monitor;
-} PrechargeStorage;
+} PrechargeControlSettings;
 
-GpioState get_precharge_state(void *context);
+typedef struct PrechargeControlStorage {
+  PrechargeState state;
+  GpioAddress precharge_control;
+  GpioAddress precharge_control2;
+  GpioAddress precharge_monitor;
+  bool initialized;
+} PrechargeControlStorage;
 
-StatusCode precharge_control_init(void *context);
+PrechargeState get_precharge_state();
+
+StatusCode precharge_control_init(const PrechargeControlSettings *settings);
+
+PrechargeControlStorage *test_get_storage(void);
