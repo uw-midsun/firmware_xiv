@@ -1,8 +1,8 @@
 #pragma once
-#include "status.h"
 
 #include <stdbool.h>
 
+#include "status.h"
 #include "gpio.h"
 
 // Requires GPIO to be initialized

@@ -86,7 +86,6 @@ static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
 
   uint16_t left_velocity, right_velocity;
   CAN_UNPACK_MOTOR_VELOCITY(msg, &left_velocity, &right_velocity);
-  // TODO: Shouldn't be checking float equality
   TEST_ASSERT_EQUAL((uint16_t)(s_test_measurements.vehicle_velocity[LEFT_MOTOR_CONTROLLER] * 100),
                     left_velocity);
   TEST_ASSERT_EQUAL((uint16_t)(s_test_measurements.vehicle_velocity[RIGHT_MOTOR_CONTROLLER] * 100),
