@@ -20,7 +20,6 @@
 #include "unity.h"
 
 static DriveFsmStorage s_drive_fsm = { 0 };
-static bool s_fault = false;
 static CanStorage s_can_storage;
 static EEEbrakeState s_ebrake_state;
 static EEDriveOutput s_drive_output;
@@ -42,7 +41,6 @@ static StatusCode prv_rx_drive_output_callback(const CanMessage *msg, void *cont
 }
 
 void setup_test(void) {
-  static bool s_fault = false;
   gpio_init();
   event_queue_init();
   interrupt_init();
@@ -373,45 +371,6 @@ void test_transition_to_fault_from_mci_output_and_recover_to_neutral(void) {
   // fault -> parking
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-}
-
-void test_transition_to_fault_from_set_relay_states_and_recover_to_neutral(void) {
-  // neutral -> set mci output -> set relay states -> fault -> set relay state -> neutral
-  TEST_ASSERT_OK(drive_fsm_init(&s_drive_fsm));
-
-  Event e = { .id = DRIVE_FSM_INPUT_EVENT_DRIVE, .data = NUM_DRIVE_STATES };
-
-  // neutral -> set mci output
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_DRIVE,
-                                   DRIVE_STATE_DRIVE);
-
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE,
-                          .fault_state = EE_RELAY_STATE_CLOSE };
-
-  s_fault = true;
-
-  // set mci output -> set relay states
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
-
-  // set mci output -> fault
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-
-  // fault should attempt transitioning to neutral
-  fault.fault_reason = DRIVE_FSM_FAULT_REASON_MCI_RELAY_STATE;
-  fault.fault_state = EE_RELAY_STATE_OPEN;
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
-
-  s_fault = false;
-
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
-      e, DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL_PARKING, DRIVE_STATE_NEUTRAL);
-
-  // fault -> neutral
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_OUTPUT_EVENT_NEUTRAL, 0);
 }
 
 void test_transition_to_ebrake_fault_from_parking_and_recover_to_neutral(void) {
