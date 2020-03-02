@@ -26,7 +26,7 @@ typedef struct MotorControllerBroadcastSettings {
 typedef struct MotorControllerBroadcastStorage {
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
-  MotorControllerMeasurements measurements; 
+  MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
 } MotorControllerBroadcastStorage;
 
