@@ -18,7 +18,6 @@ FSM_DECLARE_STATE(state_drive);
 FSM_DECLARE_STATE(state_reverse);
 FSM_DECLARE_STATE(state_parking);
 FSM_DECLARE_STATE(state_set_motorcontroller_output);
-FSM_DECLARE_STATE(state_switch_direction);
 FSM_DECLARE_STATE(state_set_ebrake);
 
 FSM_STATE_TRANSITION(state_neutral_discharged) {
@@ -55,15 +54,9 @@ FSM_STATE_TRANSITION(state_set_precharge) {
 }
 
 FSM_STATE_TRANSITION(state_reverse) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_DRIVE, state_switch_direction);
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_PARKING, state_set_motorcontroller_output);
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_NEUTRAL, state_set_motorcontroller_output);
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
-}
-
-FSM_STATE_TRANSITION(state_switch_direction) {
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_REVERSE, state_reverse);
-  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_DRIVE, state_drive);
+  FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_DRIVE, state_set_motorcontroller_output);
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
 }
 
@@ -86,49 +79,31 @@ FSM_STATE_TRANSITION(state_set_ebrake) {
   FSM_ADD_TRANSITION(DRIVE_FSM_INPUT_EVENT_FAULT, state_fault);
 }
 
-typedef struct EventPair {
-  EventId success_event;
-  EventId fault_event;
-} EventPair;
-
 typedef struct DestinationTransitionInfo {
-  EventPair motor_controller_output_event_pair;
-  uint16_t data;
+  EventId mci_output_success_event;
   EEEbrakeState ebrake_state;
   EventId fsm_output_event_id;
   EEDriveOutput mci_drive_output;
 } DestinationTransitionInfo;
 
 static DestinationTransitionInfo s_destination_transition_lookup[NUM_DRIVE_STATES] = {
-  [DRIVE_STATE_NEUTRAL] = { .motor_controller_output_event_pair =
-                                { .success_event =
-                                      DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_OFF,
-                                  .fault_event = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT },
-                            .data = DRIVE_STATE_NEUTRAL,
+  [DRIVE_STATE_NEUTRAL] = { .mci_output_success_event =
+                                DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_OFF,
                             .ebrake_state = EE_EBRAKE_STATE_RELEASED,
                             .mci_drive_output = EE_DRIVE_OUTPUT_OFF,
                             .fsm_output_event_id = DRIVE_FSM_OUTPUT_EVENT_NEUTRAL },
-  [DRIVE_STATE_PARKING] = { .motor_controller_output_event_pair =
-                                { .success_event =
-                                      DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_OFF,
-                                  .fault_event = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT },
-                            .data = DRIVE_STATE_PARKING,
+  [DRIVE_STATE_PARKING] = { .mci_output_success_event =
+                                DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_OFF,
                             .ebrake_state = EE_EBRAKE_STATE_PRESSED,
                             .mci_drive_output = EE_DRIVE_OUTPUT_OFF,
                             .fsm_output_event_id = DRIVE_FSM_OUTPUT_EVENT_PARKING },
-  [DRIVE_STATE_DRIVE] = { .motor_controller_output_event_pair =
-                              { .success_event =
-                                    DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_DRIVE,
-                                .fault_event = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT },
-                          .data = DRIVE_STATE_DRIVE,
+  [DRIVE_STATE_DRIVE] = { .mci_output_success_event =
+                              DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_DRIVE,
                           .ebrake_state = EE_EBRAKE_STATE_RELEASED,
                           .mci_drive_output = EE_DRIVE_OUTPUT_DRIVE,
                           .fsm_output_event_id = DRIVE_FSM_OUTPUT_EVENT_DRIVE },
-  [DRIVE_STATE_REVERSE] = { .motor_controller_output_event_pair =
-                                { .success_event =
-                                      DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_REVERSE,
-                                  .fault_event = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT },
-                            .data = DRIVE_STATE_REVERSE,
+  [DRIVE_STATE_REVERSE] = { .mci_output_success_event =
+                                DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_REVERSE,
                             .ebrake_state = EE_EBRAKE_STATE_RELEASED,
                             .mci_drive_output = EE_DRIVE_OUTPUT_REVERSE,
                             .fsm_output_event_id = DRIVE_FSM_OUTPUT_EVENT_REVERSE },
@@ -149,8 +124,7 @@ static void prv_set_motorcontroller_output(Fsm *fsm, const Event *e, void *conte
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
   DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT,
                           .fault_state = info.mci_drive_output };
-  RetryTxRequest tx_req = { .completion_event_id =
-                                info.motor_controller_output_event_pair.success_event,
+  RetryTxRequest tx_req = { .completion_event_id = info.mci_output_success_event,
                             .completion_event_data = 0,
                             .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
                             .fault_event_data = fault.raw,
@@ -215,17 +189,16 @@ StatusCode drive_fsm_init(DriveFsmStorage *storage) {
   fsm_state_init(state_set_precharge, prv_drive_fsm_set_precharge_output);
   fsm_state_init(state_neutral_precharged, prv_drive_fsm_neutral_precharged_output);
   fsm_state_init(state_set_motorcontroller_output, prv_set_motorcontroller_output);
-  fsm_state_init(state_switch_direction, prv_set_motorcontroller_output);
   fsm_state_init(state_set_ebrake, prv_set_ebrake_output);
   fsm_state_init(state_fault, prv_fault_output);
   status_ok_or_return(ebrake_tx_init(&storage->ebrake_storage));
   status_ok_or_return(mci_output_init(&storage->mci_output_storage));
-  Event success_event = { .id = DRIVE_FSM_INPUT_EVENT_PRECHARGE_COMPLETED, .data = 0 };
-  Event fault_event = { .id = DRIVE_FSM_INPUT_EVENT_FAULT,
-                        .data = DRIVE_FSM_FAULT_REASON_PRECHARGE_TIMEOUT };
+  Event precharge_success_event = { .id = DRIVE_FSM_INPUT_EVENT_PRECHARGE_COMPLETED, .data = 0 };
+  Event precharge_fault_event = { .id = DRIVE_FSM_INPUT_EVENT_FAULT,
+                                  .data = DRIVE_FSM_FAULT_REASON_PRECHARGE_TIMEOUT };
   status_ok_or_return(precharge_monitor_init(&storage->precharge_monitor_storage,
-                                             PRECHARGE_TIMEOUT_S * 1000, &success_event,
-                                             &fault_event));
+                                             PRECHARGE_TIMEOUT_S * 1000, &precharge_success_event,
+                                             &precharge_fault_event));
   fsm_init(&(storage->drive_fsm), "Drive FSM", &state_neutral_discharged, storage);
   return STATUS_CODE_OK;
 }
