@@ -1,7 +1,9 @@
 #pragma once
 #include "status.h"
 
-#include "motor_controller.h"
+#include <stdbool.h>
+
+#include "gpio.h"
 
 // Requires GPIO to be initialized
 // Requires GPIO interrupts to be initialized

@@ -9,6 +9,8 @@
 
 #include "drive_fsm.h"
 #include "mci_events.h"
+#include "precharge_control.h"
+#include "mci_broadcast.h"
 #include "motor_controller.h"
 #include "motor_can.h"
 
@@ -40,7 +42,7 @@ void prv_mci_storage_init(void *context) {
   precharge_control_init(&precharge_settings);
     
   MotorControllerBroadcastSettings broadcast_settings = {
-    .motor_can = &s_can_mcp2515,
+    .motor_can = (GenericCan *)&s_can_mcp2515,
     .device_ids = {
       [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
       [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
