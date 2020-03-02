@@ -6,6 +6,7 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 
+#include "drive_fsm.h"
 #include "mci_events.h"
 #include "motor_controller.h"
 
