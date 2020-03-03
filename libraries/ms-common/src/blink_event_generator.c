@@ -38,6 +38,11 @@ static void prv_raise_blink_event_callback(SoftTimerId timer_id, void *context) 
 
 StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id) {
   if (prv_is_active(storage)) {
+    if (event_id == storage->event_id) {
+      // restarting with the same event: do nothing to avoid a strange delay
+      return STATUS_CODE_OK;
+    }
+
     // don't have two blink generators going at the same time
     blink_event_generator_stop(storage);
   }
