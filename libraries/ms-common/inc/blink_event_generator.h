@@ -14,7 +14,7 @@ typedef enum {
 
 typedef struct {
   uint32_t interval_us;
-  BlinkerState default_state;  // if not specified, the default state is BLINKER_STATE_OFF
+  BlinkerState default_state;  // defaults to BLINKER_STATE_OFF
 } BlinkEventGeneratorSettings;
 
 typedef struct {
@@ -34,6 +34,8 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
 // If the generator is currently blinking, it will stop before blinking with this event ID.
 // If we're currently blinking with the same event as |event_id|, do nothing so as to avoid an
 // abnormal delay.
+// If you want to make sure that the blink event generator restarts and raises an event immediately,
+// call blink_event_generator_stop before calling this function.
 StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id);
 
 // Stop generating blink events and return whether it was stopped.

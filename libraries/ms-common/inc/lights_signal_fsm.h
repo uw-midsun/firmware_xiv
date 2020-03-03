@@ -18,7 +18,7 @@ typedef struct {
   EventId signal_left_output_event;
   EventId signal_right_output_event;
   EventId signal_hazard_output_event;
-  uint32_t blink_interval_us;  // should this be input or #defined?
+  uint32_t blink_interval_us;
 } SignalFsmSettings;
 
 typedef struct {
