@@ -8,7 +8,6 @@
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common ms-helper
 
-ifeq (x86,$(PLATFORM))
-$(T)_EXCLUDE_TESTS := precharge
-$(T)_test_drive_fsm_MOCKS := get_precharge_state
-endif
+$(T)_test_power_main_sequence_MOCKS := precharge_monitor_start \
+																			 precharge_monitor_init \
+																			 precharge_monitor_cancel

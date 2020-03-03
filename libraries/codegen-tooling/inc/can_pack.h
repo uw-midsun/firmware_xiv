@@ -9,11 +9,10 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
                    CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_SET_RELAY_STATES(msg_ptr, relay_state_u8)                                        \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                   \
-                   SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 1, (relay_state_u8), CAN_PACK_IMPL_EMPTY, \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_SET_RELAY_STATES(msg_ptr, relay_mask_u16, relay_state_u16)                      \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                 \
+                    SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 4, (relay_mask_u16), (relay_state_u16), \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_GET_RELAY_STATES(msg_ptr, relay_state_u8)                                        \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                   \
@@ -55,6 +54,12 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, \
                     2, (drive_output_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
                     CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_SET_EBRAKE_STATE(msg_ptr, ebrake_state_u8)                                        \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                    \
+                   SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE, 1, (ebrake_state_u8), CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8, dcdc_uv_flag_u8, aux_bat_ov_flag_u8, \
                                aux_bat_uv_flag_u8)                                            \
@@ -121,11 +126,23 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,            \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_BEGIN_PRECHARGE(msg_ptr)                          \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE)
+
+#define CAN_PACK_PRECHARGE_COMPLETED(msg_ptr)                        \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, \
+                      SYSTEM_CAN_MESSAGE_PRECHARGE_COMPLETED)
+
 #define CAN_PACK_HAZARD(msg_ptr, state_u8)                                                    \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_HAZARD, 1, \
                    (state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
                    CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_DISCHARGE_PRECHARGE(msg_ptr)                      \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_DISCHARGE_PRECHARGE)
 
 #define CAN_PACK_BATTERY_VT(msg_ptr, module_id_u16, voltage_u16, temperature_u16)               \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER, SYSTEM_CAN_MESSAGE_BATTERY_VT, 6, \
