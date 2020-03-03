@@ -1,6 +1,6 @@
 #pragma once
 // GPIO HAL interface for the PCA9539RPW/Q900J GPIO expander.
-// Requires I2C to be initialized as defined in i2c_driver_defs.h
+// Requires I2C to be initialized.
 // Note: we don't check the validity of the I2C address.
 #include "i2c.h"
 
@@ -27,6 +27,7 @@ typedef enum {
 
 // GPIO address used to access the pin.
 typedef struct {
+  I2CPort i2c_port;
   I2CAddress i2c_address;
   Pca9539rPinAddress pin;
 } Pca9539rGpioAddress;

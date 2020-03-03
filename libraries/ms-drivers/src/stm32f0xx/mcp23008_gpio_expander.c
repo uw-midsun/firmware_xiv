@@ -1,7 +1,6 @@
 #include "mcp23008_gpio_expander.h"
 
 #include <stdbool.h>
-#include "i2c_driver_defs.h"
 #include "mcp23008_gpio_expander_defs.h"
 
 StatusCode mcp23008_gpio_init(const I2CAddress i2c_address) {
@@ -9,15 +8,15 @@ StatusCode mcp23008_gpio_init(const I2CAddress i2c_address) {
   return STATUS_CODE_OK;
 }
 
-static void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg, uint8_t bit, bool val) {
+static void prv_set_reg_bit(const Mcp23008GpioAddress *address, uint8_t reg, bool val) {
   uint8_t data = 0;
-  i2c_read_reg(I2C_PORT, i2c_address, reg, &data, 1);
+  i2c_read_reg(address->i2c_port, address->i2c_address, reg, &data, 1);
   if (val) {
-    data |= 1 << bit;
+    data |= 1 << address->pin;
   } else {
-    data &= ~(1 << bit);
+    data &= ~(1 << address->pin);
   }
-  i2c_write_reg(I2C_PORT, i2c_address, reg, &data, 1);
+  i2c_write_reg(address->i2c_port, address->i2c_address, reg, &data, 1);
 }
 
 StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
@@ -28,8 +27,7 @@ StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,
   }
 
   // Set the IODIR bit
-  prv_set_reg_bit(address->i2c_address, IODIR, address->pin,
-                  settings->direction == MCP23008_GPIO_DIR_IN);
+  prv_set_reg_bit(address, IODIR, settings->direction == MCP23008_GPIO_DIR_IN);
 
   if (settings->direction == MCP23008_GPIO_DIR_OUT) {
     mcp23008_gpio_set_state(address, settings->state);
@@ -44,7 +42,7 @@ StatusCode mcp23008_gpio_set_state(const Mcp23008GpioAddress *address,
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  prv_set_reg_bit(address->i2c_address, GPIO, address->pin, state == MCP23008_GPIO_STATE_HIGH);
+  prv_set_reg_bit(address, GPIO, state == MCP23008_GPIO_STATE_HIGH);
   return STATUS_CODE_OK;
 }
 
@@ -55,9 +53,9 @@ StatusCode mcp23008_gpio_toggle_state(const Mcp23008GpioAddress *address) {
 
   // optimization: instead of using set_state and get_state, we read only once
   uint8_t gpio_data = 0;
-  i2c_read_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
+  i2c_read_reg(address->i2c_port, address->i2c_address, GPIO, &gpio_data, 1);
   gpio_data ^= 1 << address->pin;  // toggle the relevant bit
-  i2c_write_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
+  i2c_write_reg(address->i2c_port, address->i2c_address, GPIO, &gpio_data, 1);
 
   return STATUS_CODE_OK;
 }
@@ -69,7 +67,7 @@ StatusCode mcp23008_gpio_get_state(const Mcp23008GpioAddress *address,
   }
 
   uint8_t gpio_data = 0;
-  i2c_read_reg(I2C_PORT, address->i2c_address, GPIO, &gpio_data, 1);
+  i2c_read_reg(address->i2c_port, address->i2c_address, GPIO, &gpio_data, 1);
 
   // Read the |address->pin|th bit
   *input_state =

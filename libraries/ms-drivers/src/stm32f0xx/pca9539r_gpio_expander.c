@@ -1,7 +1,6 @@
 #include "pca9539r_gpio_expander.h"
 
 #include <stdbool.h>
-#include "i2c_driver_defs.h"
 #include "pca9539r_gpio_expander_defs.h"
 
 static bool prv_is_port_0(const Pca9539rPinAddress pin) {
@@ -22,19 +21,19 @@ StatusCode pca9539r_gpio_init(const I2CAddress i2c_address) {
   return STATUS_CODE_OK;
 }
 
-static void prv_set_reg_bit(uint8_t i2c_address, uint8_t reg0, uint8_t reg1,
-                            const Pca9539rPinAddress pin, bool val) {
-  uint8_t reg = prv_select_reg(pin, reg0, reg1);
-  uint8_t bit = prv_pin_bit(pin);
+static void prv_set_reg_bit(const Pca9539rGpioAddress *address, uint8_t reg0, uint8_t reg1,
+                            bool val) {
+  uint8_t reg = prv_select_reg(address->pin, reg0, reg1);
+  uint8_t bit = prv_pin_bit(address->pin);
 
   uint8_t data = 0;
-  i2c_read_reg(I2C_PORT, i2c_address, reg, &data, 1);
+  i2c_read_reg(address->i2c_port, address->i2c_address, reg, &data, 1);
   if (val) {
     data |= 1 << bit;
   } else {
     data &= ~(1 << bit);
   }
-  i2c_write_reg(I2C_PORT, i2c_address, reg, &data, 1);
+  i2c_write_reg(address->i2c_port, address->i2c_address, reg, &data, 1);
 }
 
 StatusCode pca9539r_gpio_init_pin(const Pca9539rGpioAddress *address,
@@ -45,11 +44,10 @@ StatusCode pca9539r_gpio_init_pin(const Pca9539rGpioAddress *address,
   }
 
   // Set the IODIR bit; 0 = output, 1 = input
-  prv_set_reg_bit(address->i2c_address, IODIR0, IODIR1, address->pin,
-                  settings->direction == PCA9539R_GPIO_DIR_IN);
+  prv_set_reg_bit(address, IODIR0, IODIR1, settings->direction == PCA9539R_GPIO_DIR_IN);
 
   if (settings->direction == PCA9539R_GPIO_DIR_OUT) {
-    prv_set_reg_bit(address->i2c_address, OUTPUT0, OUTPUT1, address->pin, settings->state);
+    prv_set_reg_bit(address, OUTPUT0, OUTPUT1, settings->state);
   }
 
   return STATUS_CODE_OK;
@@ -61,8 +59,7 @@ StatusCode pca9539r_gpio_set_state(const Pca9539rGpioAddress *address,
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  prv_set_reg_bit(address->i2c_address, OUTPUT0, OUTPUT1, address->pin,
-                  state == PCA9539R_GPIO_STATE_HIGH);
+  prv_set_reg_bit(address, OUTPUT0, OUTPUT1, state == PCA9539R_GPIO_STATE_HIGH);
   return STATUS_CODE_OK;
 }
 
@@ -73,11 +70,11 @@ StatusCode pca9539r_gpio_toggle_state(const Pca9539rGpioAddress *address) {
 
   // optimization: instead of using set_state and get_state, we read only once
   uint8_t gpio_data = 0;
-  i2c_read_reg(I2C_PORT, address->i2c_address, prv_select_reg(address->pin, INPUT0, INPUT1),
-               &gpio_data, 1);
+  i2c_read_reg(address->i2c_port, address->i2c_address,
+               prv_select_reg(address->pin, INPUT0, INPUT1), &gpio_data, 1);
   gpio_data ^= 1 << prv_pin_bit(address->pin);
-  i2c_write_reg(I2C_PORT, address->i2c_address, prv_select_reg(address->pin, OUTPUT0, OUTPUT1),
-                &gpio_data, 1);
+  i2c_write_reg(address->i2c_port, address->i2c_address,
+                prv_select_reg(address->pin, OUTPUT0, OUTPUT1), &gpio_data, 1);
 
   return STATUS_CODE_OK;
 }
@@ -89,8 +86,8 @@ StatusCode pca9539r_gpio_get_state(const Pca9539rGpioAddress *address,
   }
 
   uint8_t gpio_data = 0;
-  i2c_read_reg(I2C_PORT, address->i2c_address, prv_select_reg(address->pin, INPUT0, INPUT1),
-               &gpio_data, 1);
+  i2c_read_reg(address->i2c_port, address->i2c_address,
+               prv_select_reg(address->pin, INPUT0, INPUT1), &gpio_data, 1);
 
   // Read the |bit|th bit
   uint8_t bit = prv_pin_bit(address->pin);

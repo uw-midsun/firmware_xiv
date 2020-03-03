@@ -1,6 +1,6 @@
 #pragma once
 // GPIO HAL interface for MCP23008 GPIO expander
-// Requires I2C to be initialized on I2C_PORT defined in i2c_driver_defs.h.
+// Requires I2C to be initialized.
 // Note: we don't check the validity of the I2C address.
 #include "i2c.h"
 
@@ -10,6 +10,7 @@ typedef uint8_t Mcp23008PinAddress;
 
 // GPIO address used to access the pin.
 typedef struct {
+  I2CPort i2c_port;
   I2CAddress i2c_address;
   Mcp23008PinAddress pin;
 } Mcp23008GpioAddress;
