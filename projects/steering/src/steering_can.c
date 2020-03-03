@@ -13,6 +13,7 @@
 #include "fsm.h"
 #include "gpio.h"
 #include "interrupt.h"
+#include "log.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_digital_input.h"
