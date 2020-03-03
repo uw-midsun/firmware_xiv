@@ -43,7 +43,6 @@ int main(void) {
   soft_timer_init();
 
   prv_setup_system_can();
-  prv_mci_storage_init(&s_mci_storage);
 
   Event e = { 0 };
   while (true) {
