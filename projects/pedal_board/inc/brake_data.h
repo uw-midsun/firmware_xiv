@@ -1,5 +1,5 @@
 #pragma once
 #include "ads1015.h"
-#include "pedal_data.h"
+#include "pedal_shared_resources_provider.h"
 
-StatusCode get_brake_data(PedalDataTxStorage *storage, int16_t *position);
+StatusCode get_brake_data(int16_t *position);

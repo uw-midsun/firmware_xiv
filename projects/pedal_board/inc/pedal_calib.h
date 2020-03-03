@@ -1,24 +1,35 @@
 #pragma once
-// Calibration blob for driver controls
+#include "ads1015.h"
 #include "calib.h"
+#include "pedal_calib.h"
+#include "pedal_events.h"
 
 #define NUM_SAMPLES 1000
 
-typedef struct ThrottleCalibrationData {
-  // When the brake is considered fully unpressed
-  int16_t lower_value;
-  // When the brake is considered fully pressed
-  int16_t upper_value;
-} ThrottleCalibrationData;
+typedef enum {
+  PEDAL_PRESSED = 0,
+  PEDAL_UNPRESSED,
+  NUM_PEDAL_STATES,
+} PedalState;
 
-typedef struct BrakeCalibrationData {
-  // When the brake is considered fully unpressed
+typedef struct PedalCalibrationData {
+  // When the pedal is considered fully unpressed
   int16_t lower_value;
-  // When the brake is considered fully pressed
+  // When the pedal is considered fully pressed
   int16_t upper_value;
-} BrakeCalibrationData;
+} PedalCalibrationData;
 
 typedef struct PedalCalibBlob {
-  ThrottleCalibrationData throttle_calib;
-  BrakeCalibrationData brake_calib;
+  PedalCalibrationData throttle_calib;
+  PedalCalibrationData brake_calib;
 } PedalCalibBlob;
+
+typedef struct PedalCalibrationStorage {
+  int16_t min_reading;
+  int16_t max_reading;
+  volatile uint32_t sample_counter;
+} PedalCalibrationStorage;
+
+StatusCode pedal_calib_init(PedalCalibrationStorage *storage);
+
+StatusCode pedal_calib_sample(Ads1015Storage *ads1015_storage, PedalCalibrationStorage *storage, PedalCalibrationData *data, Ads1015Channel channel, PedalState state);

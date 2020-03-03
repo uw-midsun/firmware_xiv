@@ -68,7 +68,7 @@ void setup_test(void) {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };
   ads1015_init(&s_ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  TEST_ASSERT_OK(pedal_data_init(&s_ads1015_storage, &s_calib_blob));
+  TEST_ASSERT_OK(pedal_resources_init(&s_ads1015_storage, &s_calib_blob));
 }
 
 void teardown_test(void) {}
@@ -76,14 +76,14 @@ void teardown_test(void) {}
 void test_throttle_data(void) {
   int16_t throttle_data = INT16_MAX;
   TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 15;
   TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 25;
   TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 0;
   TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 }

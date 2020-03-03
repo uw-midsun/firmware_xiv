@@ -10,7 +10,7 @@
 #include "log.h"
 #include "ms_test_helpers.h"
 #include "pedal_calib.h"
-#include "pedal_data.h"
+#include "pedal_shared_resources_provider.h"
 #include "pedal_data_tx.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
@@ -71,7 +71,7 @@ void setup_test(void) {
   GpioAddress ready_pin = { .port = GPIO_PORT_B, .pin = 5 };
   ads1015_init(&s_ads1015_storage, I2C_PORT_2, ADS1015_ADDRESS_GND, &ready_pin);
 
-  TEST_ASSERT_OK(pedal_data_init(&s_ads1015_storage, &s_calib_blob));
+  TEST_ASSERT_OK(pedal_resources_init(&s_ads1015_storage, &s_calib_blob));
 }
 
 void teardown_test(void) {}
@@ -79,14 +79,14 @@ void teardown_test(void) {}
 void test_brake_data(void) {
   int16_t brake_data = INT16_MAX;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 15;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 25;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 0;
   TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 }

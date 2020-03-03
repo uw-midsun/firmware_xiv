@@ -9,7 +9,7 @@
 // include all the modules
 #include "calib.h"
 #include "pedal_calib.h"
-#include "pedal_data.h"
+#include "pedal_shared_resources_provider.h"
 #include "pedal_data_tx.h"
 #include "pedal_events.h"
 #include "status.h"
@@ -58,7 +58,7 @@ int main() {
   // we expect calibration blog to be there already
   status_ok_or_return(calib_init(&s_calib_blob, sizeof(s_calib_blob), false));
   PedalCalibBlob *pedal_calib_blob = calib_blob();
-  pedal_data_init(&s_ads1015_storage, pedal_calib_blob);
+  pedal_resources_init(&s_ads1015_storage, pedal_calib_blob);
   pedal_data_tx_init();
 
   LOG_DEBUG("Starting...\n");

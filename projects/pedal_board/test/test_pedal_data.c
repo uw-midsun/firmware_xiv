@@ -24,11 +24,6 @@ StatusCode TEST_MOCK(ads1015_read_raw)(Ads1015Storage *storage, Ads1015Channel c
 }
 
 static Ads1015Storage s_ads1015_storage = { 0 };
-static PedalDataTxStorage pedal_data_storage = {
-  .throttle_channel1 = ADS1015_CHANNEL_0,
-  .throttle_channel2 = ADS1015_CHANNEL_1,
-  .brake_channel = ADS1015_CHANNEL_2,
-};
 
 static PedalCalibBlob s_calib_blob = {
   .throttle_calib.upper_value = 100,
@@ -79,19 +74,13 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, prv_test_pedal_data_tx_callback_handler,
                           NULL);
 
-  TEST_ASSERT_OK(pedal_data_init(&s_ads1015_storage, &s_calib_blob));
+  TEST_ASSERT_OK(pedal_resources_init(&s_ads1015_storage, &s_calib_blob));
 }
 
 void teardown_test(void) {}
 
 void test_get_ads1015_storage(void) {
   TEST_ASSERT_EQUAL(&s_ads1015_storage, get_ads1015_storage());
-}
-
-void test_get_pedal_data_storage(void) {
-  TEST_ASSERT_EQUAL(ADS1015_CHANNEL_0, get_pedal_data_storage()->throttle_channel1);
-  TEST_ASSERT_EQUAL(ADS1015_CHANNEL_1, get_pedal_data_storage()->throttle_channel2);
-  TEST_ASSERT_EQUAL(ADS1015_CHANNEL_2, get_pedal_data_storage()->brake_channel);
 }
 
 void test_get_pedal_calib_blob(void) {

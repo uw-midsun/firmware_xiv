@@ -25,11 +25,6 @@ StatusCode TEST_MOCK(ads1015_read_raw)(Ads1015Storage *storage, Ads1015Channel c
 }
 
 static Ads1015Storage s_ads1015_storage = { 0 };
-static PedalDataTxStorage pedal_data_storage = {
-  .throttle_channel1 = ADS1015_CHANNEL_0,
-  .throttle_channel2 = ADS1015_CHANNEL_1,
-  .brake_channel = ADS1015_CHANNEL_2,
-};
 
 static PedalCalibBlob s_calib_blob = {
   .throttle_calib.upper_value = 100,
@@ -80,7 +75,7 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, prv_test_pedal_data_tx_callback_handler,
                           NULL);
 
-  TEST_ASSERT_OK(pedal_data_init(&s_ads1015_storage, &s_calib_blob));
+  TEST_ASSERT_OK(pedal_resources_init(&s_ads1015_storage, &s_calib_blob));
   TEST_ASSERT_OK(pedal_data_tx_init());
 }
 
@@ -95,30 +90,30 @@ void test_pedal_rx_handler(void) {
 
   changeable_value = 32;
   TEST_ASSERT_EQUAL(counter, 1);
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 15;
-  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_brake_data(&brake_data));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 
   delay_ms(100);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 2);
   changeable_value = 2;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 34;
-  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_brake_data(&brake_data));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 
   delay_ms(95);
   TEST_ASSERT_EQUAL(counter, 2);
   changeable_value = 0;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 3;
-  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_brake_data(&brake_data));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   delay_ms(5);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
 
@@ -130,10 +125,10 @@ void test_pedal_rx_handler(void) {
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 6);
   changeable_value = 33;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
-  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_OK(get_brake_data(&brake_data));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 
   delay_ms(75);
   TEST_ASSERT_EQUAL(counter, 6);
@@ -141,9 +136,9 @@ void test_pedal_rx_handler(void) {
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 7);
   changeable_value = 23;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
+  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 21;
-  TEST_ASSERT_OK(get_brake_data(&pedal_data_storage, &brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_MULTIPLYER));
+  TEST_ASSERT_OK(get_brake_data(&brake_data));
+  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 }

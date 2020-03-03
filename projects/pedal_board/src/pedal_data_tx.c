@@ -8,7 +8,7 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
-#include "pedal_data.h"
+#include "pedal_shared_resources_provider.h"
 #include "pedal_events.h"
 #include "soft_timer.h"
 #include "throttle_data.h"
@@ -20,10 +20,8 @@ int16_t throttle_position = INT16_MAX;
 
 // pedal callback
 static void prv_pedal_timeout(SoftTimerId timer_id, void *context) {
-  PedalDataTxStorage *pedal_storage = context;
-
-  get_brake_data(pedal_storage, &brake_position);
-  get_throttle_data(pedal_storage, &throttle_position);
+  get_brake_data(&brake_position);
+  get_throttle_data(&throttle_position);
   // SENDING POSITIONS THROUGH CAN MESSAGES
   CAN_TRANSMIT_PEDAL_OUTPUT((uint32_t)throttle_position, (uint32_t)brake_position);
   soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout, context, NULL);
@@ -32,6 +30,6 @@ static void prv_pedal_timeout(SoftTimerId timer_id, void *context) {
 // main should have a brake fsm, and ads1015storage
 StatusCode pedal_data_tx_init() {
   status_ok_or_return(soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout,
-                                              get_pedal_data_storage(), NULL));
+                                              NULL, NULL));
   return STATUS_CODE_OK;
 }
