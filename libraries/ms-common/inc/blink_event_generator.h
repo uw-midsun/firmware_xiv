@@ -14,7 +14,7 @@ typedef enum {
 
 typedef struct {
   uint32_t interval_us;
-  BlinkerState default_state;  // if not specified, the default state is BLINKER_STATE_OFF
+  BlinkerState default_state;  // defaults to BLINKER_STATE_OFF
 } BlinkEventGeneratorSettings;
 
 typedef struct {

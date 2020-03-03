@@ -24,7 +24,7 @@ void teardown_test(void) {
 
 // Test that we can initialize, receive events at the proper times, stop, restart, and stop.
 void test_blink_event_generator_valid(void) {
-  const uint32_t interval_us = 5000;
+  const uint32_t interval_us = 10000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_ON,  // custom
@@ -95,36 +95,6 @@ void test_blink_event_generator_valid(void) {
   blink_event_generator_stop(&storage);
 }
 
-// Test that restarting with the same event ID does nothing
-void test_blink_event_generator_start_same_event_id(void) {
-  const uint32_t interval_us = 10000;
-  BlinkEventGeneratorSettings settings = {
-    .interval_us = interval_us,
-    .default_state = BLINKER_STATE_OFF,
-  };
-  BlinkEventGeneratorStorage storage;
-  Event e;
-
-  TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
-  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
-
-  // Eat the first event
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_NOT_OK(event_process(&e));
-
-  // Restart after 1/2 interval and make sure there's no initial event
-  delay_us(interval_us / 2);
-  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
-  TEST_ASSERT_NOT_OK(event_process(&e));
-
-  // Make sure the event is on time
-  delay_us(interval_us / 2);
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_NOT_OK(event_process(&e));
-
-  blink_event_generator_stop(&storage);
-}
-
 // Test that blink_event_generator_init has the correct default default state of 0.
 void test_blink_event_generator_init_default_first_value_is_0(void) {
   const uint32_t interval_us = 5000;
@@ -161,7 +131,7 @@ void test_multiple_blink_event_generators(void) {
   Event e;
 
   // initialize the first
-  const uint32_t interval_us1 = 11500;
+  const uint32_t interval_us1 = 23000;
   BlinkEventGeneratorSettings settings1 = {
     .interval_us = interval_us1,
     .default_state = BLINKER_STATE_ON,
@@ -170,7 +140,7 @@ void test_multiple_blink_event_generators(void) {
   TEST_ASSERT_OK(blink_event_generator_init(&storage1, &settings1));
 
   // initialize the second
-  const uint32_t interval_us2 = 20000;  // must be greater than interval_us1
+  const uint32_t interval_us2 = 40000;  // must be greater than interval_us1
   BlinkEventGeneratorSettings settings2 = {
     .interval_us = interval_us2,
     .default_state = BLINKER_STATE_OFF,
