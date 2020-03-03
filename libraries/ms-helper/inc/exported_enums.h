@@ -128,3 +128,5 @@ typedef enum {
   EE_DRIVE_STATE_PARKING,
   NUM_EE_DRIVE_STATES
 } EEDriveState;
+
+#define EE_PEDAL_VALUE_DENOMINATOR ((1 << 12))
