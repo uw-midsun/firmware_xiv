@@ -32,7 +32,7 @@ int main() {
   soft_timer_init();
   steering_digital_input_init();
 
-CanSettings can_settings = {
+  CanSettings can_settings = {
     .device_id = STEERING_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_125KBPS,
     .rx_event = STEERING_CAN_EVENT_RX,
