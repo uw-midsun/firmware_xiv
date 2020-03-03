@@ -7,6 +7,7 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 #include "status.h"
+#include "steering_can.h"
 
 typedef enum {
   STEERING_DIGITAL_INPUT_HORN = 0,

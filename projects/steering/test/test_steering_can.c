@@ -17,6 +17,14 @@
 #include "test_helpers.h"
 #include "wait.h"
 
+#define STEERING_CAN_DEVICE_ID 0x1
+
+typedef enum {
+  STEERING_CAN_EVENT_RX = 10,
+  STEERING_CAN_EVENT_TX,
+  STEERING_CAN_FAULT,
+} SteeringCanEvent;
+
 static CanStorage s_can_storage;
 
 void setup_test(void) {

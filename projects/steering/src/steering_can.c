@@ -21,8 +21,9 @@ StatusCode steering_can_process_event(Event e) {
     CAN_TRANSMIT_HORN(e.data);
   }
 
-  else if (e.id == STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD || 
-  STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR) {
+  else if (e.id == STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD ||
+           STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR) {
     CAN_TRANSMIT_LIGHTS(e.id, e.data);
   }
+  return STATUS_CODE_OK;
 }

@@ -1,4 +1,5 @@
 #include "steering_digital_input.h"
+#include "steering_can.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
