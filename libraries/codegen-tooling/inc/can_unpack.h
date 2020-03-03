@@ -8,24 +8,46 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,         \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_SET_RELAY_STATES(msg_ptr, relay_state_u8_ptr)                          \
+#define CAN_UNPACK_SET_RELAY_STATES(msg_ptr, relay_mask_u16_ptr, relay_state_u16_ptr) \
+  can_unpack_impl_u16((msg_ptr), 4, (relay_mask_u16_ptr), (relay_state_u16_ptr),      \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_GET_RELAY_STATES(msg_ptr, relay_state_u8_ptr)                          \
   can_unpack_impl_u8((msg_ptr), 1, (relay_state_u8_ptr), CAN_UNPACK_IMPL_EMPTY,           \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_POWERTRAIN_HEARTBEAT(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
-#define CAN_UNPACK_REAR_POWER(msg_ptr, output_bitset_u16_ptr, output_state_u16_ptr)  \
-  can_unpack_impl_u16((msg_ptr), 4, (output_bitset_u16_ptr), (output_state_u16_ptr), \
+#define CAN_UNPACK_GET_AUX_STATUS(msg_ptr, aux_bat_ov_flag_u8_ptr, aux_bat_ut_flag_u8_ptr) \
+  can_unpack_impl_u8((msg_ptr), 2, (aux_bat_ov_flag_u8_ptr), (aux_bat_ut_flag_u8_ptr),     \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,  \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_FAULT_SEQUENCE(msg_ptr, sequence_u16_ptr)                   \
+  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg_ptr, sequence_u16_ptr)           \
   can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_POWER_OFF_SEQUENCE(msg_ptr, sequence_u16_ptr)               \
+  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_POWER_ON_AUX_SEQUENCE(msg_ptr, sequence_u16_ptr)            \
   can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_DRIVE_OUTPUT(msg_ptr, drive_output_u16_ptr)                     \
+  can_unpack_impl_u16((msg_ptr), 2, (drive_output_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_SET_EBRAKE_STATE(msg_ptr, ebrake_state_u8_ptr)                         \
+  can_unpack_impl_u8((msg_ptr), 1, (ebrake_state_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8_ptr, dcdc_uv_flag_u8_ptr,             \
                                  aux_bat_ov_flag_u8_ptr, aux_bat_uv_flag_u8_ptr)                \
@@ -53,6 +75,10 @@
   can_unpack_impl_u16((msg_ptr), 2, (power_bitset_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_DRIVE_STATE(msg_ptr, drive_state_u16_ptr)                      \
+  can_unpack_impl_u16((msg_ptr), 2, (drive_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_LIGHTS_SYNC(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_LIGHTS(msg_ptr, lights_id_u8_ptr, state_u8_ptr)                            \
@@ -75,14 +101,16 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_DRIVE_STATE(msg_ptr, drive_state_u16_ptr)                      \
-  can_unpack_impl_u16((msg_ptr), 2, (drive_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+#define CAN_UNPACK_BEGIN_PRECHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+
+#define CAN_UNPACK_PRECHARGE_COMPLETED(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_HAZARD(msg_ptr, state_u8_ptr)                                                 \
   can_unpack_impl_u8((msg_ptr), 1, (state_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_DISCHARGE_PRECHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_BATTERY_VT(msg_ptr, module_id_u16_ptr, voltage_u16_ptr, temperature_u16_ptr)    \
   can_unpack_impl_u16((msg_ptr), 6, (module_id_u16_ptr), (voltage_u16_ptr), (temperature_u16_ptr), \
