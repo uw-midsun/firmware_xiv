@@ -58,7 +58,6 @@ typedef struct TestMotorControllerMeasurements {
   uint16_t vehicle_velocity[NUM_MOTOR_CONTROLLERS];
 } TestMotorControllerMeasurements;
 
-
 static TestMotorControllerMeasurements s_test_measurements = { 0 };
 
 static MotorCanFrameId s_frame_id_map[] = {
@@ -99,10 +98,12 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
   WaveSculptorCanData can_data = { 0 };
   if (message_type == TEST_MCI_VELOCITY_MESSAGE) {
     can_data.velocity_measurement.motor_velocity_rpm = 0;
-    can_data.velocity_measurement.vehicle_velocity_ms =  measurements->vehicle_velocity[controller];
+    can_data.velocity_measurement.vehicle_velocity_ms = measurements->vehicle_velocity[controller];
   } else if (message_type == TEST_MCI_BUS_MEASUREMENT_MESSAGE) {
-    can_data.bus_measurement.bus_voltage_v = measurements->bus_measurements[controller].bus_voltage_v;
-    can_data.bus_measurement.bus_current_a = measurements->bus_measurements[controller].bus_current_a;
+    can_data.bus_measurement.bus_voltage_v =
+        measurements->bus_measurements[controller].bus_voltage_v;
+    can_data.bus_measurement.bus_current_a =
+        measurements->bus_measurements[controller].bus_current_a;
   }
 
   GenericCanMsg msg = {
@@ -205,26 +206,32 @@ void test_all_measurements_lb_rv_lv_rb() {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 12.345,
-            .bus_current_a = 5.9876,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 1.0101,
-      [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 12.345,
+                    .bus_current_a = 5.9876,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
+        },
   };
 
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
   MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
@@ -236,18 +243,12 @@ void test_all_measurements_lb_rv_lv_rb() {
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -257,24 +258,30 @@ void test_all_measurements_lb_rb_lv_rv() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 12.345,
-            .bus_current_a = 5.9876,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 1.0101,
-      [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 12.345,
+                    .bus_current_a = 5.9876,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
+        },
   };
 
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
@@ -288,18 +295,12 @@ void test_all_measurements_lb_rb_lv_rv() {
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -309,24 +310,30 @@ void test_all_measurements_rb_lb_lv_rv() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 12.345,
-            .bus_current_a = 5.9876,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 1.0101,
-      [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 12.345,
+                    .bus_current_a = 5.9876,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
+        },
   };
 
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
@@ -340,18 +347,12 @@ void test_all_measurements_rb_lb_lv_rv() {
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -363,23 +364,28 @@ void test_no_measurements_rb() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 0,
-            .bus_current_a = 0,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 0,
-      [RIGHT_MOTOR_CONTROLLER] = 0,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 0,
+                    .bus_current_a = 0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 0,
+            [RIGHT_MOTOR_CONTROLLER] = 0,
+        },
   };
 
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -390,18 +396,12 @@ void test_no_measurements_rb() {
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_voltage_v = 0;
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a = 0;
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -413,24 +413,30 @@ void test_bus_measurements_rb_lb() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 12.345,
-            .bus_current_a = 5.9876,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 0,
-      [RIGHT_MOTOR_CONTROLLER] = 0,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 12.345,
+                    .bus_current_a = 5.9876,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 0,
+            [RIGHT_MOTOR_CONTROLLER] = 0,
+        },
   };
 
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
@@ -439,18 +445,12 @@ void test_bus_measurements_rb_lb() {
   TEST_ASSERT_FALSE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -462,20 +462,24 @@ void test_velocity_measurements_rv_lv() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 0,
-            .bus_current_a = 0,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 0,
-            .bus_current_a = 0,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 1.0101,
-      [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 0,
+                    .bus_current_a = 0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 0,
+                    .bus_current_a = 0,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
+        },
   };
 
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
@@ -488,18 +492,12 @@ void test_velocity_measurements_rv_lv() {
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_FALSE(s_recieved_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -511,23 +509,28 @@ void test_no_measurements_rb_lv() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 0,
-            .bus_current_a = 0,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 1.0101,
-      [RIGHT_MOTOR_CONTROLLER] = 0,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 0,
+                    .bus_current_a = 0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 0,
+        },
   };
 
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
@@ -540,18 +543,12 @@ void test_no_measurements_rb_lv() {
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a = 0;
   expected_measurements.vehicle_velocity[LEFT_MOTOR_CONTROLLER] = 0;
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
+                      s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
+    TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
+                      s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
 
@@ -563,24 +560,30 @@ void test_all_measurements_rv_lv_then_rb_lb() {
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_first_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 0,
-            .bus_current_a = 0,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 0,
-            .bus_current_a = 0,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 1.0101,
-      [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 0,
+                    .bus_current_a = 0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 0,
+                    .bus_current_a = 0,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
+        },
   };
 
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_first_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_first_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE,
+                        &expected_first_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE,
+                        &expected_first_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
@@ -591,17 +594,13 @@ void test_all_measurements_rv_lv_then_rb_lb() {
 
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL(
-      (uint16_t)expected_first_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
+        (uint16_t)expected_first_measurements.bus_measurements[motor_id].bus_voltage_v,
+        s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
     TEST_ASSERT_EQUAL(
-      (uint16_t)expected_first_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_first_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+        (uint16_t)expected_first_measurements.bus_measurements[motor_id].bus_current_a,
+        s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_first_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 
   s_recieved_velocity = false;
@@ -609,24 +608,30 @@ void test_all_measurements_rv_lv_then_rb_lb() {
   memset(&s_test_measurements, 0, sizeof(s_test_measurements));
 
   MotorControllerMeasurements expected_second_measurements = {
-    .bus_measurements = {
-          [LEFT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 12.345,
-            .bus_current_a = 5.9876,
-          },
-          [RIGHT_MOTOR_CONTROLLER] = {
-            .bus_voltage_v = 4.8602,
-            .bus_current_a = 1.3975,
-          },
-    },
-    .vehicle_velocity = {
-      [LEFT_MOTOR_CONTROLLER] = 0,
-      [RIGHT_MOTOR_CONTROLLER] = 0,
-    },
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 12.345,
+                    .bus_current_a = 5.9876,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 0,
+            [RIGHT_MOTOR_CONTROLLER] = 0,
+        },
   };
 
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_second_measurements);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &expected_second_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_second_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_second_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
@@ -637,16 +642,12 @@ void test_all_measurements_rv_lv_then_rb_lb() {
 
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL(
-      (uint16_t)expected_second_measurements.bus_measurements[motor_id].bus_voltage_v,
-      s_test_measurements.bus_measurements[motor_id].bus_voltage_v
-    );
+        (uint16_t)expected_second_measurements.bus_measurements[motor_id].bus_voltage_v,
+        s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
     TEST_ASSERT_EQUAL(
-      (uint16_t)expected_second_measurements.bus_measurements[motor_id].bus_current_a,
-      s_test_measurements.bus_measurements[motor_id].bus_current_a
-    );
-    TEST_ASSERT_EQUAL(
-      (uint16_t)(expected_second_measurements.vehicle_velocity[motor_id] * 100),
-      s_test_measurements.vehicle_velocity[motor_id]
-    );
+        (uint16_t)expected_second_measurements.bus_measurements[motor_id].bus_current_a,
+        s_test_measurements.bus_measurements[motor_id].bus_current_a);
+    TEST_ASSERT_EQUAL((uint16_t)(expected_second_measurements.vehicle_velocity[motor_id] * 100),
+                      s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
