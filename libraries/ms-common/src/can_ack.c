@@ -3,7 +3,6 @@
 // ACK requests currently ordered as they were created
 #include "can_ack.h"
 #include <string.h>
-#include "log.h"
 
 static StatusCode prv_update_req(CanAckRequests *requests, CanMessageId msg_id,
                                  SoftTimerId timer_id, CanAckStatus status, uint16_t device);
