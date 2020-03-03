@@ -1,6 +1,5 @@
 #include "front_power_distribution_gpio.h"
 #include "front_power_distribution_events.h"
-#include "pca9539r_gpio_expander.h"
 
 // make (most of?) this configurable
 
@@ -50,14 +49,12 @@ static Pca9539rGpioAddress s_output_gpio_pins[] = {
 
 void front_power_distribution_gpio_init(void) {
   // initialize all the output pins
-  GpioSettings settings = {
+  Pca9539rGpioSettings settings = {
     .direction = GPIO_DIR_OUT,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_NONE,
   };
   for (FrontPowerDistributionGpioOutput i = 0; i < NUM_FRONT_POWER_DISTRIBUTION_GPIO_OUTPUTS; i++) {
     settings.state = s_default_gpio_states[i];
-    gpio_init_pin(&s_output_gpio_pins[i], &settings);
+    pca9539r_gpio_init_pin(&s_output_gpio_pins[i], &settings);
   }
 }
 
@@ -70,20 +67,22 @@ StatusCode front_power_distribution_gpio_process_event(Event *e) {
     return STATUS_CODE_OUT_OF_RANGE;
   }
 
-  GpioState new_state = (e->data == 1) ? GPIO_STATE_HIGH : GPIO_STATE_LOW;
+  Pca9539rGpioState new_state = (e->data == 1) ? PCA9539R_GPIO_STATE_HIGH : PCA9539R_GPIO_STATE_LOW;
 
   if (id == FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD) {
     // special case: maps to both left and right signals
-    gpio_set_state(&s_output_gpio_pins[FRONT_POWER_DISTRIBUTION_OUTPUT_SIGNAL_LEFT], new_state);
-    gpio_set_state(&s_output_gpio_pins[FRONT_POWER_DISTRIBUTION_OUTPUT_SIGNAL_RIGHT], new_state);
+    pca9539r_gpio_set_state(&s_output_gpio_pins[FRONT_POWER_DISTRIBUTION_OUTPUT_SIGNAL_LEFT],
+                            new_state);
+    pca9539r_gpio_set_state(&s_output_gpio_pins[FRONT_POWER_DISTRIBUTION_OUTPUT_SIGNAL_RIGHT],
+                            new_state);
   } else {
-    gpio_set_state(&s_output_gpio_pins[s_events_to_gpio_outputs[id]], new_state);
+    pca9539r_gpio_set_state(&s_output_gpio_pins[s_events_to_gpio_outputs[id]], new_state);
   }
 
   return STATUS_CODE_OK;
 }
 
-GpioAddress *front_power_distribution_gpio_test_provide_gpio_addresses(void) {
+Pca9539rGpioAddress *front_power_distribution_gpio_test_provide_gpio_addresses(void) {
   return s_output_gpio_pins;
 }
 

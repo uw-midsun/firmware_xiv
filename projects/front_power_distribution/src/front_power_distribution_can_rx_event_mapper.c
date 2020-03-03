@@ -58,7 +58,7 @@ static StatusCode prv_handle_front_power_rx(const CanMessage *msg, void *context
   EEFrontPowerDistributionOutput output = msg->data_u16[0];
   EEFrontPowerDistributionOutputState output_state = msg->data_u16[1];
 
-  if (output >= NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATES) {
+  if (output >= NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUTS) {
     LOG_WARN("Unknown front power distribution output received: %d\r\n", output);
     return STATUS_CODE_OUT_OF_RANGE;
   }
@@ -88,6 +88,7 @@ StatusCode front_power_distribution_can_rx_event_mapper_init(void) {
   status_ok_or_return(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, &prv_handle_lights_rx, NULL));
   status_ok_or_return(
-      can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, &prv_handle_front_power_rx, NULL));
+      can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_POWER, &prv_handle_front_power_rx, NULL));
+  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, &prv_handle_horn_rx, NULL));
   return STATUS_CODE_OK;
 }

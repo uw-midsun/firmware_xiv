@@ -4,7 +4,7 @@
 // Requires GPIO to be initialized.
 
 #include "event_queue.h"
-#include "gpio.h"
+#include "pca9539r_gpio_expander.h"
 
 // Outputs represent the distinct pins that can be set. They do not form an exact 1-to-1 mapping to
 // events; namely, the FRONT_POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD event corresponds to both
@@ -26,7 +26,7 @@ void front_power_distribution_gpio_init(void);
 
 StatusCode front_power_distribution_gpio_process_event(Event *e);
 
-GpioAddress *front_power_distribution_gpio_test_provide_gpio_addresses(void);
+Pca9539rGpioAddress *front_power_distribution_gpio_test_provide_gpio_addresses(void);
 
 FrontPowerDistributionGpioOutput *front_power_distribution_gpio_test_provide_events_to_outputs(
     void);

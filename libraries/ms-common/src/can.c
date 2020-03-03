@@ -111,6 +111,8 @@ StatusCode can_register_rx_handler(CanMessageId msg_id, CanRxHandlerCb handler, 
   return can_rx_register_handler(&s_can_storage->rx_handlers, msg_id, handler, context);
 }
 
+#include "log.h"
+
 StatusCode can_transmit(const CanMessage *msg, const CanAckRequest *ack_request) {
   if (s_can_storage == NULL) {
     return status_code(STATUS_CODE_UNINITIALIZED);
