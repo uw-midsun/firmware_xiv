@@ -3,6 +3,7 @@
 #include "centre_console_events.h"
 #include "exported_enums.h"
 #include "fsm.h"
+#include "log.h"
 #include "relay_tx.h"
 
 FSM_DECLARE_STATE(state_none);
@@ -92,4 +93,8 @@ StatusCode power_off_sequence_init(PowerOffSequenceStorage *storage) {
   status_ok_or_return(relay_tx_init(&storage->relay_tx_storage));
   fsm_init(&storage->sequence_fsm, "Power Off Sequence", &state_none, storage);
   return STATUS_CODE_OK;
+}
+
+bool power_off_sequence_process_event(PowerOffSequenceStorage *storage, const Event *event) {
+  return fsm_process_event(&storage->sequence_fsm, event);
 }
