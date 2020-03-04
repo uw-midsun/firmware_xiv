@@ -50,7 +50,7 @@ static Pca9539rGpioAddress s_output_gpio_pins[] = {
 void front_power_distribution_gpio_init(void) {
   // initialize all the output pins
   Pca9539rGpioSettings settings = {
-    .direction = GPIO_DIR_OUT,
+    .direction = PCA9539R_GPIO_DIR_OUT,
   };
   for (FrontPowerDistributionGpioOutput i = 0; i < NUM_FRONT_POWER_DISTRIBUTION_GPIO_OUTPUTS; i++) {
     settings.state = s_default_gpio_states[i];
