@@ -55,12 +55,14 @@ void test_throttle_calibration_run(void) {
   LOG_DEBUG("Please ensure the throttle is not being pressed.\n");
   delay_s(7);
   LOG_DEBUG("Beginning sampling\n");
-  pedal_calib_sample(&s_ads1015_storage, &s_throttle_calibration_storage, &s_calib_blob.throttle_calib, THROTTLE_CHANNEL, PEDAL_UNPRESSED);
+  pedal_calib_sample(&s_ads1015_storage, &s_throttle_calibration_storage,
+                     &s_calib_blob.throttle_calib, THROTTLE_CHANNEL, PEDAL_UNPRESSED);
   LOG_DEBUG("Completed sampling\n");
   LOG_DEBUG("Please press and hold the throttle\n");
-  delay_s(7); 
+  delay_s(7);
   LOG_DEBUG("Beginning sampling\n");
-  pedal_calib_sample(&s_ads1015_storage, &s_throttle_calibration_storage, &s_calib_blob.throttle_calib, THROTTLE_CHANNEL, PEDAL_PRESSED);
+  pedal_calib_sample(&s_ads1015_storage, &s_throttle_calibration_storage,
+                     &s_calib_blob.throttle_calib, THROTTLE_CHANNEL, PEDAL_PRESSED);
   LOG_DEBUG("Completed sampling\n");
 
   calib_commit();
@@ -70,12 +72,14 @@ void test_brake_calibration_run(void) {
   LOG_DEBUG("Please ensure the brake is not being pressed.\n");
   delay_s(7);
   LOG_DEBUG("Beginning sampling\n");
-  pedal_calib_sample(&s_ads1015_storage, &s_brake_calibration_storage, &s_calib_blob.brake_calib, BRAKE_CHANNEL, PEDAL_UNPRESSED);
+  pedal_calib_sample(&s_ads1015_storage, &s_brake_calibration_storage, &s_calib_blob.brake_calib,
+                     BRAKE_CHANNEL, PEDAL_UNPRESSED);
   LOG_DEBUG("Completed sampling\n");
   LOG_DEBUG("Please press and hold the brake\n");
   delay_s(7);
   LOG_DEBUG("Beginning sampling\n");
-  pedal_calib_sample(&s_ads1015_storage, &s_brake_calibration_storage, &s_calib_blob.brake_calib, BRAKE_CHANNEL, PEDAL_PRESSED);
+  pedal_calib_sample(&s_ads1015_storage, &s_brake_calibration_storage, &s_calib_blob.brake_calib,
+                     BRAKE_CHANNEL, PEDAL_PRESSED);
   LOG_DEBUG("Completed sampling\n");
 
   calib_commit();

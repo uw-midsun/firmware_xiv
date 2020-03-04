@@ -9,9 +9,9 @@
 // include all the modules
 #include "calib.h"
 #include "pedal_calib.h"
-#include "pedal_shared_resources_provider.h"
 #include "pedal_data_tx.h"
 #include "pedal_events.h"
+#include "pedal_shared_resources_provider.h"
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"

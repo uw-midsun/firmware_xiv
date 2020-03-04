@@ -20,11 +20,11 @@ StatusCode pedal_resources_init(Ads1015Storage *storage, PedalCalibBlob *calib_b
   LOG_DEBUG("BRAKE UPPER: %d \n", s_pedal_calib_blob->brake_calib.lower_value);
 
   // Throttle Channel, there's 2 but we only use 1 right now
-  status_ok_or_return(ads1015_configure_channel(
-      s_ads1015_storage, THROTTLE_CHANNEL, true, NULL, NULL));
+  status_ok_or_return(
+      ads1015_configure_channel(s_ads1015_storage, THROTTLE_CHANNEL, true, NULL, NULL));
   // brake channel
-  status_ok_or_return(ads1015_configure_channel(
-      s_ads1015_storage, BRAKE_CHANNEL, true, NULL, NULL));
+  status_ok_or_return(
+      ads1015_configure_channel(s_ads1015_storage, BRAKE_CHANNEL, true, NULL, NULL));
   return STATUS_CODE_OK;
 }
 

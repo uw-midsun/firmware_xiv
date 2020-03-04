@@ -1,9 +1,8 @@
 #include "pedal_calib.h"
 #include "ads1015.h"
 #include "log.h"
-#include "pedal_calib.h"
-#include "pedal_shared_resources_provider.h"
 #include "pedal_events.h"
+#include "pedal_shared_resources_provider.h"
 #include "string.h"
 #include "throttle_data.h"
 #include "wait.h"
@@ -31,9 +30,9 @@ StatusCode pedal_calib_init(PedalCalibrationStorage *storage) {
 }
 
 // remember that throttle has 2 channels but we currently just use 1
-StatusCode pedal_calib_sample(Ads1015Storage *ads1015_storage,
-                                 PedalCalibrationStorage *storage, PedalCalibrationData *data, Ads1015Channel channel,
-                                 PedalState state) {
+StatusCode pedal_calib_sample(Ads1015Storage *ads1015_storage, PedalCalibrationStorage *storage,
+                              PedalCalibrationData *data, Ads1015Channel channel,
+                              PedalState state) {
   s_ads1015_storage = ads1015_storage;
   average_value = 0;
   // Disables channel
@@ -42,8 +41,7 @@ StatusCode pedal_calib_sample(Ads1015Storage *ads1015_storage,
   storage->min_reading = INT16_MAX;
   storage->max_reading = INT16_MIN;
 
-  ads1015_configure_channel(s_ads1015_storage, channel, true, prv_callback_channel,
-                            storage);
+  ads1015_configure_channel(s_ads1015_storage, channel, true, prv_callback_channel, storage);
 
   while (storage->sample_counter < NUM_SAMPLES) {
     wait();

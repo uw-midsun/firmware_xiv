@@ -1,8 +1,8 @@
 #include "exported_enums.h"
 #include "log.h"
 #include "pedal_calib.h"
-#include "pedal_shared_resources_provider.h"
 #include "pedal_events.h"
+#include "pedal_shared_resources_provider.h"
 #include "soft_timer.h"
 
 StatusCode get_brake_data(int16_t *position) {

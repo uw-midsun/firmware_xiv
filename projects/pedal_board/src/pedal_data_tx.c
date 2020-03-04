@@ -8,8 +8,8 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
-#include "pedal_shared_resources_provider.h"
 #include "pedal_events.h"
+#include "pedal_shared_resources_provider.h"
 #include "soft_timer.h"
 #include "throttle_data.h"
 
@@ -29,7 +29,7 @@ static void prv_pedal_timeout(SoftTimerId timer_id, void *context) {
 
 // main should have a brake fsm, and ads1015storage
 StatusCode pedal_data_tx_init() {
-  status_ok_or_return(soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout,
-                                              NULL, NULL));
+  status_ok_or_return(
+      soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout, NULL, NULL));
   return STATUS_CODE_OK;
 }

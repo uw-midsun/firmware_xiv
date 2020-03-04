@@ -32,4 +32,5 @@ typedef struct PedalCalibrationStorage {
 
 StatusCode pedal_calib_init(PedalCalibrationStorage *storage);
 
-StatusCode pedal_calib_sample(Ads1015Storage *ads1015_storage, PedalCalibrationStorage *storage, PedalCalibrationData *data, Ads1015Channel channel, PedalState state);
+StatusCode pedal_calib_sample(Ads1015Storage *ads1015_storage, PedalCalibrationStorage *storage,
+                              PedalCalibrationData *data, Ads1015Channel channel, PedalState state);
