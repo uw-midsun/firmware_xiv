@@ -176,6 +176,19 @@ static void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
 }
 
+static void prv_assert_double_broadcast() {
+  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
+  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
+  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+static void prv_assert_single_broadcast() {
+  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
 void setup_test(void) {
   event_queue_init();
   interrupt_init();
@@ -234,11 +247,7 @@ void test_all_measurements_lb_rv_lv_rb() {
                         &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_double_broadcast();
 
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
@@ -286,11 +295,7 @@ void test_all_measurements_lb_rb_lv_rv() {
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_double_broadcast();
 
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
@@ -338,11 +343,7 @@ void test_all_measurements_rb_lb_lv_rv() {
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_double_broadcast();
 
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
@@ -439,8 +440,7 @@ void test_bus_measurements_rb_lb() {
                         &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_single_broadcast();
 
   TEST_ASSERT_FALSE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
@@ -486,8 +486,7 @@ void test_velocity_measurements_rv_lv() {
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_single_broadcast();
 
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_FALSE(s_recieved_bus_measurement);
@@ -586,8 +585,7 @@ void test_all_measurements_rv_lv_then_rb_lb() {
                         &expected_first_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_single_broadcast();
 
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_FALSE(s_recieved_bus_measurement);
@@ -634,8 +632,7 @@ void test_all_measurements_rv_lv_then_rb_lb() {
                         &expected_second_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  prv_assert_single_broadcast();
 
   TEST_ASSERT_FALSE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
