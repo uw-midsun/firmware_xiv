@@ -32,11 +32,6 @@ static PedalCalibBlob s_calib_blob = {
 };
 
 static Ads1015Storage s_ads1015_storage = { 0 };
-const PedalDataTxStorage pedal_data_storage = {
-  .throttle_channel1 = ADS1015_CHANNEL_0,
-  .throttle_channel2 = ADS1015_CHANNEL_1,
-  .brake_channel = ADS1015_CHANNEL_2,
-};
 
 static CanStorage s_can_storage = { 0 };
 const CanSettings can_settings = {
@@ -75,15 +70,15 @@ void teardown_test(void) {}
 
 void test_throttle_data(void) {
   int16_t throttle_data = INT16_MAX;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
   TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 15;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
   TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 25;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
   TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
   changeable_value = 0;
-  TEST_ASSERT_OK(get_throttle_data(&pedal_data_storage, &throttle_data));
+  TEST_ASSERT_OK(get_throttle_data(&throttle_data));
   TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
 }
