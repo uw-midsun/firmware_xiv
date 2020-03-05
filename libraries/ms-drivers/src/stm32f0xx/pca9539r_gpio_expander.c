@@ -26,10 +26,6 @@ StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
 
 static void prv_set_reg_bit(const Pca9539rGpioAddress *address, uint8_t reg0, uint8_t reg1,
                             bool val) {
-  if (s_i2c_port >= NUM_I2C_PORTS) {
-    return status_code(STATUS_CODE_UNINITIALIZED);
-  }
-
   uint8_t reg = prv_select_reg(address->pin, reg0, reg1);
   uint8_t bit = prv_pin_bit(address->pin);
 
