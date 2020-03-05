@@ -1,0 +1,20 @@
+#pragma once
+
+typedef enum {
+  CHARGER_CAN_EVENT_RX = 0,
+  CHARGER_CAN_EVENT_TX,
+  CHARGER_CAN_EVENT_FAULT,
+  NUM_CHARGER_CAN_EVENTS
+} ChargerCanEvent;
+
+typedef enum {
+    PWM_READING_REQUEST = NUM_CHARGER_CAN_EVENTS + 1,
+    PWM_READING_VALUE,
+    NUM_PWM_EVENTS
+} ChargerPwmEvent;
+
+typedef enum {
+    CHARGER_CONNECTED_EVENT = NUM_PWM_EVENTS + 1,
+    CHARGER_DISCONNECTED_EVENT,
+    NUM_CHARGER_CONNECTION_EVENTS
+} ChargerConnectionEvent;

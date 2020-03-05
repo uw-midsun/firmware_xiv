@@ -1,0 +1,17 @@
+#pragma once
+
+#include "status.h"
+
+#define CHARGER_CONNECTION_SENSE_POLL_RATE_MS 500
+
+#define CHARGER_CONNECTION_SENSE_PORT GPIO_PORT_A
+#define CHARGER_CONNECTION_SENSE_PIN 7
+
+typedef enum {
+    CHARGER_STATE_UNPLUGGED = 0,
+    CHARGER_STATE_PLUGGED_PRESSED,
+    CHARGER_STATE_PLUGGED_RELEASED,
+    NUM_CHARGER_CONNECTION_STATES
+} ChargerConnectionState;
+
+StatusCode connection_sense_init();
