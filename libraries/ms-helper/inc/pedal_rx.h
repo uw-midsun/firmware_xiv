@@ -8,11 +8,11 @@
 #define PEDAL_RX_MSG_DENOMINATOR (1 << 12)
 #define PEDAL_RX_MAX_PEDAL_VALUE 100.0f
 
-#define PEDAL_OUTPUT_WATCHDOG_PERIOD_MS 400
+typedef uint32_t PedalTimeoutMs;
 
 typedef struct PedalRxSettings {
-  EventId rx_event;
   EventId timeout_event;
+  PedalTimeoutMs timeout_ms;
 } PedalRxSettings;
 
 typedef struct PedalValues {
@@ -23,8 +23,8 @@ typedef struct PedalValues {
 typedef struct PedalRxStorage {
   SoftTimerId watchdog_id;
   PedalValues pedal_values;
-  PedalRxSettings settings;
-  void *context;
+  EventId timeout_event;
+  PedalTimeoutMs timeout_ms;
 } PedalRxStorage;
 
 StatusCode pedal_rx_init(PedalRxStorage *storage, PedalRxSettings *settings);

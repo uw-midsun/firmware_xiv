@@ -41,13 +41,18 @@
 #endif
 
 /* CAN ids. */
+typedef uint32_t MotorCanDeviceId;
 #define MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER 0x03
 #define MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER 0x04
 
 /* Frame ids. */
+typedef uint32_t MotorCanFrameId;
 #define MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID (0x21u)
 #define MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID (0x41u)
-typedef uint32_t MotorControllerId;
+#define MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID (0x62u)
+#define MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID (0x63u)
+#define MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID (0x82u)
+#define MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID (0x83u)
 
 /* Frame lengths in bytes. */
 #define MOTOR_CAN_DRIVE_COMMAND_LENGTH (8u)
