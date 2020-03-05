@@ -5,7 +5,7 @@
 
 static Mcp23008GpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_MCP23008_GPIO_PINS];
 
-StatusCode mcp23008_gpio_init(const Mcp23008I2CAddress i2c_address) {
+StatusCode mcp23008_gpio_init(const I2CAddress i2c_address) {
   // Set each pin to the default settings
   Mcp23008GpioSettings default_settings = {
     .direction = MCP23008_GPIO_DIR_IN,
