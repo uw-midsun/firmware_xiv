@@ -7,11 +7,11 @@
 // Max value is 100 = 7 bits. which leaves 25 bits of precision
 #define PEDAL_RX_MSG_DENOMINATOR (1 << 25)
 
-#define PEDAL_OUTPUT_WATCHDOG_PERIOD_MS 400
+typedef uint32_t PedalTimeoutMs;
 
 typedef struct PedalRxSettings {
-  EventId rx_event;
   EventId timeout_event;
+  PedalTimeoutMs timeout_ms;
 } PedalRxSettings;
 
 typedef struct PedalValues {
@@ -22,8 +22,8 @@ typedef struct PedalValues {
 typedef struct PedalRxStorage {
   SoftTimerId watchdog_id;
   PedalValues pedal_values;
-  PedalRxSettings settings;
-  void *context;
+  EventId timeout_event;
+  PedalTimeoutMs timeout_ms;
 } PedalRxStorage;
 
 StatusCode pedal_rx_init(PedalRxStorage *storage, PedalRxSettings *settings);
