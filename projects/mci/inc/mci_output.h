@@ -8,6 +8,8 @@
 
 #define MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS 200
 
+#define MCI_PEDAL_RX_TIMEOUT_MS 250
+
 typedef struct {
   GenericCan *motor_can;
   PedalRxStorage pedal_storage;

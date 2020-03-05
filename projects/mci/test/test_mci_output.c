@@ -23,6 +23,7 @@
 #include "status.h"
 
 #include "motor_can.h"
+#include "mci_events.h"
 #include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
@@ -39,6 +40,7 @@ typedef struct TestMciOutputStorage {
   bool pedal_sent;
 } TestMciOutputStorage;
 
+static CanStorage s_can_storage;
 static MotorControllerOutputStorage s_mci_output_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static TestMciOutputStorage s_test_mci_output_storage;
@@ -77,6 +79,22 @@ int motor_can_drive_command_unpack(struct MotorCanDriveCommand *dst_p, const uin
   memcpy(&dst_p->motor_current, &motor_current, sizeof(dst_p->motor_current));
 
   return (0);
+}
+
+
+void prv_setup_system_can() {
+  CanSettings can_settings = {
+    .device_id = SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
+    .bitrate = CAN_HW_BITRATE_500KBPS,
+    .rx_event = MCI_CAN_EVENT_RX,
+    .tx_event = MCI_CAN_EVENT_TX,
+    .fault_event = MCI_CAN_EVENT_FAULT,
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
+    .loopback = true,
+  };
+
+  can_init(&s_can_storage, &can_settings);
 }
 
 static void prv_setup_motor_can(void) {
@@ -141,8 +159,9 @@ void setup_test(void) {
   interrupt_init();
   soft_timer_init();
 
+  prv_setup_system_can();
   prv_setup_motor_can();
-  mci_output_init(&s_mci_output_storage, (GenericCan *)&s_can_mcp2515);
+  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, (GenericCan *)&s_can_mcp2515));
 }
 
 void teardown_test(void) {}
