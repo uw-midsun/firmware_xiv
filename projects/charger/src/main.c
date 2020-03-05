@@ -19,11 +19,11 @@
 */
 #include "charger_connection_sense.h"
 
-#include "status.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "soft_timer.h"
+#include "status.h"
 
 int main(void) {
   event_queue_init();
@@ -36,7 +36,7 @@ int main(void) {
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
-      //process events
+      // process events
     }
   }
   return 0;
