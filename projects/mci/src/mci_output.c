@@ -24,7 +24,7 @@ static float s_regen_threshold = 0.0f;
 
 // Basic implementation of throttle/brake maps
 static float prv_brake_to_regen_map(float brake_value) {
-  return brake_value / PEDAL_RX_MAX_PEDAL_VALUE;
+  return brake_value / MOTOR_CONTROLLER_PEDAL_MAX;
 }
 
 static float prv_throttle_to_regen_map(float throttle_value) {
@@ -32,7 +32,7 @@ static float prv_throttle_to_regen_map(float throttle_value) {
 }
 
 static float prv_throttle_to_accel_map(float throttle_value) {
-  return throttle_value / PEDAL_RX_MAX_PEDAL_VALUE;
+  return throttle_value / MOTOR_CONTROLLER_PEDAL_MAX;
 }
 
 static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
