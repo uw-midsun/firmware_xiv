@@ -22,8 +22,8 @@
 #include "soft_timer.h"
 #include "status.h"
 
-#include "motor_can.h"
 #include "mci_events.h"
+#include "motor_can.h"
 #include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
@@ -80,7 +80,6 @@ int motor_can_drive_command_unpack(struct MotorCanDriveCommand *dst_p, const uin
 
   return (0);
 }
-
 
 void prv_setup_system_can() {
   CanSettings can_settings = {
