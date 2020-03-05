@@ -3,12 +3,13 @@
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
+#include "can.h"
 #include "mcp2515.h"
 // include all the modules
 #include "charger_controller.h"
 
 static Mcp2515Storage mcp2515;
-const Mcp2515Settings mcp2515_settings = {
+static Mcp2515Settings mcp2515_settings = {
   .spi_port = SPI_PORT_1,
   .spi_baudrate = MCP2515_BITRATE_250KBPS,
   .mosi = { .port = GPIO_PORT_A, 7 },
