@@ -1,14 +1,7 @@
 #pragma once
 
-// Internal MCP23008 register definitions and defines for accessing it
+// Internal MCP23008 register definitions
 // Datasheet: https://ww1.microchip.com/downloads/en/DeviceDoc/21919e.pdf
-
-#define I2C_PORT I2C_PORT_2
-
-#define CONFIG_PIN_I2C_SCL \
-  { GPIO_PORT_B, 10 }
-#define CONFIG_PIN_I2C_SDA \
-  { GPIO_PORT_B, 11 }
 
 #define IODIR 0x00    // direction, 1 input 0 output
 #define IPOL 0x01     // polarity, corresponding GPIO bit will show inverted value on the pin
