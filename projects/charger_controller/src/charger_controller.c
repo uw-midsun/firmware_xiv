@@ -6,7 +6,7 @@
 
 #define CHARGER_PERIOD 1000
 #define CCS_BMS_ID 0x1806E5F4
-uint64_t max_allowable_vc = 0xffffffff00000000;
+uint64_t max_allowable_vc = 0x00000000ffffffff;
 // try and get the max allowable data
 #define BCA_CCS_ID 0x18FF50E5
 
@@ -28,16 +28,6 @@ static void prv_rx_cb(uint32_t id, bool extended, uint64_t data, size_t dlc, voi
     charger_data.extended = extended;
     charger_data.data = data;
     charger_data.dlc = dlc;
-    // check each byte of the data
-    for (size_t i = 0; i < 7; i++) {
-      if ((data << (i * 8)) > (max_allowable_vc << (i * 8))) {
-        // transmit max vc and not to charge
-        // maybe raise event
-        // cus vc extended max vc
-        // mcp2515_tx(charger_data.storage, charger_data.id, charger_data.extended,
-        // charger_data.data | (1 << 24), charger_data.dlc);
-      }
-    }
 
     if (data & (uint64_t)(255 << 24)) {  // looking at fifth byte
       charger_controller_deactivate();
@@ -57,6 +47,20 @@ static void prv_rx_cb(uint32_t id, bool extended, uint64_t data, size_t dlc, voi
         // communication failure
       }
     }
+    // check each byte of the data
+    // Byte 1 is at the end
+    for (size_t i = 0; i < 7; i++) {
+      if ((data << (i * 8)) > (max_allowable_vc << (i * 8))) {
+        charger_controller_deactivate();
+        // transmit max vc and not to charge
+        // maybe raise event
+        // cus vc extended max vc
+        // mcp2515_tx(charger_data.storage, charger_data.id, charger_data.extended,
+        // charger_data.data | (1 << 24), charger_data.dlc);
+      }
+    }
+
+    
   }
 }
 

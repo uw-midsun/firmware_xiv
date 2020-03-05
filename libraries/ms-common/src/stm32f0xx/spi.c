@@ -2,6 +2,7 @@
 #include "gpio.h"
 #include "spi_mcu.h"
 #include "stm32f0xx.h"
+#include "log.h"
 
 typedef struct {
   void (*rcc_cmd)(uint32_t periph, FunctionalState state);
@@ -77,7 +78,8 @@ StatusCode spi_tx(SpiPort spi, uint8_t *tx_data, size_t tx_len) {
     while (SPI_I2S_GetFlagStatus(s_port[spi].base, SPI_I2S_FLAG_TXE) == RESET) {
     }
     SPI_SendData8(s_port[spi].base, tx_data[i]);
-
+//gets stuck in this loop
+  LOG_DEBUG("Spi %d\n", s_port[spi].base->SR);
     while (SPI_I2S_GetFlagStatus(s_port[spi].base, SPI_I2S_FLAG_RXNE) == RESET) {
     }
     SPI_ReceiveData8(s_port[spi].base);
@@ -114,12 +116,12 @@ StatusCode spi_exchange(SpiPort spi, uint8_t *tx_data, size_t tx_len, uint8_t *r
     return status_msg(STATUS_CODE_INVALID_ARGS, "Invalid SPI port.");
   }
   spi_cs_set_state(spi, GPIO_STATE_LOW);
-
+LOG_DEBUG("STARTING...\n");
   spi_tx(spi, tx_data, tx_len);
-
+LOG_DEBUG("STARTING...\n");
   spi_rx(spi, rx_data, rx_len, 0x00);
-
+LOG_DEBUG("STARTING...\n");
   spi_cs_set_state(spi, GPIO_STATE_HIGH);
-
+LOG_DEBUG("STARTING...\n");
   return STATUS_CODE_OK;
 }
