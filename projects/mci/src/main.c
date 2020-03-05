@@ -1,7 +1,5 @@
 #include "can.h"
 #include "can_msg_defs.h"
-#include "generic_can_mcp2515.h"
-
 #include "event_queue.h"
 #include "generic_can_mcp2515.h"
 #include "gpio.h"
@@ -69,7 +67,7 @@ void prv_mci_storage_init(void *context) {
             [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
         } };
   mci_broadcast_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
-  
+
   mci_output_init(&s_mci_storage.mci_output_storage, (GenericCan *)&s_can_mcp2515);
 }
 

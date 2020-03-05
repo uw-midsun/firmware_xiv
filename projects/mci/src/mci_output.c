@@ -36,7 +36,7 @@ static float prv_throttle_to_accel_map(float throttle_value) {
 }
 
 static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
-                                          MotorControllerId motor_controlller_id,
+                                          MotorCanFrameId motor_controlller_id,
                                           MotorCanDriveCommand command) {
   GenericCanMsg msg = {
     .id = motor_controlller_id,
@@ -79,7 +79,6 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
 
 StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan *motor_can_settings) {
   PedalRxSettings pedal_settings = {
-    .rx_event = MCI_PEDAL_RX_EVENT_RX,
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
   };
   storage->motor_can = motor_can_settings;
