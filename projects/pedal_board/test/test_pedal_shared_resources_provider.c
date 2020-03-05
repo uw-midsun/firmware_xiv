@@ -80,9 +80,9 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_get_ads1015_storage(void) {
-  TEST_ASSERT_EQUAL(&s_ads1015_storage, get_ads1015_storage());
+  TEST_ASSERT_EQUAL(&s_ads1015_storage, get_shared_ads1015_storage());
 }
 
 void test_get_pedal_calib_blob(void) {
-  TEST_ASSERT_EQUAL(&s_calib_blob, get_pedal_calib_blob());
+  TEST_ASSERT_EQUAL(&s_calib_blob, get_shared_pedal_calib_blob());
 }

@@ -7,6 +7,6 @@
 
 StatusCode pedal_resources_init(Ads1015Storage *storage, PedalCalibBlob *calib_blob);
 
-Ads1015Storage *get_ads1015_storage();
+Ads1015Storage *get_shared_ads1015_storage();
 
-PedalCalibBlob *get_pedal_calib_blob();
+PedalCalibBlob *get_shared_pedal_calib_blob();
