@@ -1,16 +1,21 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "event_queue.h"
+#include "generic_can_mcp2515.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "soft_timer.h"
 
 #include "drive_fsm.h"
+#include "mci_broadcast.h"
 #include "mci_events.h"
+#include "motor_can.h"
 #include "motor_controller.h"
+#include "precharge_control.h"
 
 static CanStorage s_can_storage;
+static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
 
 void prv_setup_system_can() {
@@ -34,6 +39,15 @@ void prv_mci_storage_init(void *context) {
     .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 }
   };
+  precharge_control_init(&precharge_settings);
+
+  MotorControllerBroadcastSettings broadcast_settings =
+      { .motor_can = (GenericCan *)&s_can_mcp2515,
+        .device_ids = {
+            [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
+            [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
+        } };
+  mci_broadcast_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
 }
 
 int main(void) {
