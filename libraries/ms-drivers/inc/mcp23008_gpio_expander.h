@@ -10,7 +10,6 @@ typedef uint8_t Mcp23008PinAddress;
 
 // GPIO address used to access the pin.
 typedef struct {
-  I2CPort i2c_port;
   I2CAddress i2c_address;
   Mcp23008PinAddress pin;
 } Mcp23008GpioAddress;
@@ -34,8 +33,8 @@ typedef struct {
   Mcp23008GpioState state;
 } Mcp23008GpioSettings;
 
-// Initialize MCP23008 GPIO at this I2C address. Set all pins to default values.
-StatusCode mcp23008_gpio_init(const I2CAddress i2c_address);
+// Initialize MCP23008 GPIO at this I2C port and address. Set all pins to default values.
+StatusCode mcp23008_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address);
 
 // Initialize an MCP23008 GPIO pin by address.
 StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,

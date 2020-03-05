@@ -32,7 +32,7 @@ void teardown_test(void) {}
 
 // Just test that init works
 void test_mcp23008_gpio_init_valid(void) {
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 }
 
 // mcp23008_gpio_init_pin
@@ -46,11 +46,10 @@ void test_mcp23008_gpio_init_pin_valid(void) {
   };
   // A pin that should be valid
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_GPIO_PIN,             //
   };
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   TEST_ASSERT_OK(mcp23008_gpio_init_pin(&address, &settings));
 }
@@ -65,11 +64,10 @@ void test_mcp23008_gpio_init_pin_invalid_pin_address(void) {
   };
   // An invalid pin
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, mcp23008_gpio_init_pin(&address, &settings));
 }
@@ -83,11 +81,10 @@ void test_mcp23008_gpio_init_pin_invalid_settings(void) {
   };
   // A valid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_GPIO_PIN,             //
   };
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, mcp23008_gpio_init_pin(&address, &settings));
 
@@ -107,12 +104,11 @@ void test_mcp23008_gpio_init_pin_sets_output(void) {
   };
   // A valid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_GPIO_PIN,             //
   };
 
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   TEST_ASSERT_OK(mcp23008_gpio_init_pin(&address, &settings));
   Mcp23008GpioState state = MCP23008_GPIO_STATE_LOW;
 
@@ -132,12 +128,11 @@ void test_mcp23008_gpio_set_state_valid(void) {
   };
   // A valid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_GPIO_PIN,             //
   };
 
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   TEST_ASSERT_OK(mcp23008_gpio_init_pin(&address, &settings));
 
   // test initializing to high
@@ -168,10 +163,9 @@ void test_mcp23008_gpio_set_state_valid(void) {
 
 // Test that an invalid address is caught.
 void test_mcp23008_gpio_set_state_invalid_address(void) {
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   // An invalid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
@@ -181,7 +175,7 @@ void test_mcp23008_gpio_set_state_invalid_address(void) {
 
 // Test that an invalid state is caught.
 void test_mcp23008_gpio_set_state_invalid_state(void) {
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   Mcp23008GpioAddress address = { .i2c_address = VALID_I2C_ADDRESS, .pin = VALID_GPIO_PIN };
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
                     mcp23008_gpio_set_state(&address, NUM_MCP23008_GPIO_STATES));
@@ -198,12 +192,11 @@ void test_mcp23008_gpio_toggle_state(void) {
   };
   // A valid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_GPIO_PIN,             //
   };
 
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   TEST_ASSERT_OK(mcp23008_gpio_init_pin(&address, &settings));
 
   // test initializing to low
@@ -224,10 +217,9 @@ void test_mcp23008_gpio_toggle_state(void) {
 
 // Test that an invalid address is caught by toggle_state.
 void test_mcp23008_gpio_toggle_state_invalid_address(void) {
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   // An invalid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
@@ -245,12 +237,11 @@ void test_mcp23008_gpio_get_state_valid(void) {
   };
   // A valid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_GPIO_PIN,             //
   };
 
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   // test initializing to low
   Mcp23008GpioState state = MCP23008_GPIO_STATE_HIGH;
@@ -267,10 +258,9 @@ void test_mcp23008_gpio_get_state_valid(void) {
 
 // Test that an invalid address is caught by get_state.
 void test_mcp23008_gpio_get_state_invalid_address(void) {
-  TEST_ASSERT_OK(mcp23008_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(mcp23008_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   // An invalid address
   Mcp23008GpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };

@@ -33,7 +33,7 @@ void teardown_test(void) {}
 
 // Just test that init works
 void test_pca9539r_gpio_init_valid(void) {
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 }
 
 // pca9539r_gpio_init_pin
@@ -47,11 +47,10 @@ void test_pca9539r_gpio_init_pin_valid(void) {
   };
   // A pin that should be valid
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_0_PIN,           //
   };
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   TEST_ASSERT_OK(pca9539r_gpio_init_pin(&address, &settings));
 }
@@ -66,11 +65,10 @@ void test_pca9539r_gpio_init_pin_invalid_pin_address(void) {
   };
   // An invalid pin
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, pca9539r_gpio_init_pin(&address, &settings));
 }
@@ -84,11 +82,10 @@ void test_pca9539r_gpio_init_pin_invalid_settings(void) {
   };
   // A valid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_0_PIN,           //
   };
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, pca9539r_gpio_init_pin(&address, &settings));
 
@@ -108,12 +105,11 @@ void test_pca9539r_gpio_init_pin_sets_output(void) {
   };
   // A valid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_0_PIN,           //
   };
 
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   TEST_ASSERT_OK(pca9539r_gpio_init_pin(&address, &settings));
   Pca9539rGpioState state = PCA9539R_GPIO_STATE_LOW;
 
@@ -133,12 +129,11 @@ void test_pca9539r_gpio_set_state_valid(void) {
   };
   // A valid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_0_PIN,           //
   };
 
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   TEST_ASSERT_OK(pca9539r_gpio_init_pin(&address, &settings));
 
   // test initializing to high
@@ -169,7 +164,6 @@ void test_pca9539r_gpio_set_state_valid(void) {
   // test that a port 1 address also works
   // A valid port-1 address
   Pca9539rGpioAddress address_port_1 = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_1_PIN,           //
   };
@@ -183,10 +177,9 @@ void test_pca9539r_gpio_set_state_valid(void) {
 
 // Test that an invalid address is caught.
 void test_pca9539r_gpio_set_state_invalid_address(void) {
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   // An invalid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
@@ -196,9 +189,8 @@ void test_pca9539r_gpio_set_state_invalid_address(void) {
 
 // Test that an invalid state is caught.
 void test_pca9539r_gpio_set_state_invalid_state(void) {
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_0_PIN,           //
   };
@@ -217,12 +209,11 @@ void test_pca9539r_gpio_toggle_state(void) {
   };
   // A valid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_1_PIN,           //
   };
 
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   TEST_ASSERT_OK(pca9539r_gpio_init_pin(&address, &settings));
 
   // test initializing to low
@@ -243,7 +234,6 @@ void test_pca9539r_gpio_toggle_state(void) {
   // test that a port 1 address also works
   // A valid port 1 address
   Pca9539rGpioAddress address_port_1 = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_1_PIN,           //
   };
@@ -257,10 +247,9 @@ void test_pca9539r_gpio_toggle_state(void) {
 
 // Test that an invalid address is caught by toggle_state.
 void test_pca9539r_gpio_toggle_state_invalid_address(void) {
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   // An invalid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
@@ -278,12 +267,11 @@ void test_pca9539r_gpio_get_state_valid(void) {
   };
   // A valid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_0_PIN,           //
   };
 
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
 
   // test initializing to low
   Pca9539rGpioState state = PCA9539R_GPIO_STATE_HIGH;
@@ -300,7 +288,6 @@ void test_pca9539r_gpio_get_state_valid(void) {
   // test that a port 1 address also works
   // A valid port 1 address
   Pca9539rGpioAddress address_port_1 = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = VALID_PORT_1_PIN,           //
   };
@@ -312,10 +299,9 @@ void test_pca9539r_gpio_get_state_valid(void) {
 
 // Test that an invalid address is caught by get_state.
 void test_pca9539r_gpio_get_state_invalid_address(void) {
-  TEST_ASSERT_OK(pca9539r_gpio_init(VALID_I2C_ADDRESS));
+  TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, VALID_I2C_ADDRESS));
   // An invalid address
   Pca9539rGpioAddress address = {
-    .i2c_port = TEST_I2C_PORT,         //
     .i2c_address = VALID_I2C_ADDRESS,  //
     .pin = INVALID_GPIO_PIN,           //
   };
