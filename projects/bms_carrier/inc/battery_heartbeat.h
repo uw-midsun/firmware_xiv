@@ -15,7 +15,7 @@ typedef struct BatteryHeartbeatStorage {
 
 // Initializes heartbeat
 // initialize with: battery_heartbeat_init(BatteryHeartbeatStorage, BATTERY_HEARTBEAT_PERIOD_MS,
-// BATTERY_HEARTBEAT_EXPECTED_DEVICES) 
+// BATTERY_HEARTBEAT_EXPECTED_DEVICES)
 // Sets up period_ms, expected_bitset in storage; resets fault bitset and counter; starts soft timer
 StatusCode battery_heartbeat_init(BatteryHeartbeatStorage *storage, uint32_t period_ms,
                                   uint32_t expected_bitset);
