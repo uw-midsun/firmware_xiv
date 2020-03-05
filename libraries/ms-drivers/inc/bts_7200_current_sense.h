@@ -60,6 +60,7 @@ StatusCode bts_7200_init_mcp23008(Bts7200Storage *storage, Bts7200Mcp23008Settin
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
 
 // Set up a soft timer which periodically updates the storage with the latest measurements.
+// DO NOT USE if you are reading with bts_7200_get_measurement.
 StatusCode bts_7200_start(Bts7200Storage *storage);
 
 // Stop the timer associated with the storage and return whether it was successful.
