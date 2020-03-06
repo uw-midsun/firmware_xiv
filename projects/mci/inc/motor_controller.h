@@ -1,8 +1,10 @@
 #pragma once
-#include "gpio.h"
 
+#include "mci_broadcast.h"
+#include "mci_output.h"
 #include "precharge_control.h"
 
 typedef struct MotorControllerStorage {
-  PrechargeStorage precharge_storage;
+  MotorControllerOutputStorage mci_output_storage;
+  MotorControllerBroadcastStorage broadcast_storage;
 } MotorControllerStorage;
