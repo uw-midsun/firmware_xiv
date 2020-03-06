@@ -5,6 +5,7 @@
 #define REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS 0x20
 
 const RearPowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG = {
+  .i2c_port = I2C_PORT_2,
   .num_bts7200_channels = 6,
   .dsel_i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS,
   .bts7200_to_dsel_address =
@@ -26,6 +27,7 @@ const RearPowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONF
       },
   .mux_address =
       {
+          .bit_width = 3,
           .sel_pins =
               {
                   { .port = GPIO_PORT_A, .pin = 6 },  //
@@ -33,6 +35,7 @@ const RearPowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONF
                   { .port = GPIO_PORT_A, .pin = 4 },  //
               },
           .mux_output_pin = { .port = GPIO_PORT_B, .pin = 0 },  //
+          .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
       },
   .bts7200_to_mux_select =
       (uint8_t[]){

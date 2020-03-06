@@ -1,9 +1,6 @@
 #pragma once
 
 // Standard hardware configurations for rear_power_distribution_current_measurement.
-// NOTE: CAM_CHARGER doesn't use the sn74 mux for output, so ?????
-// Also, it's entirely possible that we're reading from the wrong mux outputs.
-// (the mux selects in rpdcm_config.c are from the top, who knows if this is right)
 
 #include "rear_power_distribution_current_measurement.h"
 

@@ -2,26 +2,23 @@
 
 // Periodically reads current from load switches and exposes global storage.
 // Requires GPIO, interrupts, soft timers, ADC (in ADC_MODE_SINGLE), and I2C to be initalized.
-// I2C must be initialized on I2C_PORT_2 with the SDA and SCL addresses below.
 
 #include <stdint.h>
 #include "gpio.h"
 #include "mcp23008_gpio_expander.h"
-#include "sn74_mux.h"
+#include "mux.h"
 #include "status.h"
 
 #define MAX_REAR_POWER_DISTRIBUTION_CURRENTS 32
 
-extern const GpioAddress REAR_POWER_DISTRIBUTION_CURRENT_I2C_SDA_ADDRESS;
-extern const GpioAddress REAR_POWER_DISTRIBUTION_CURRENT_I2C_SCL_ADDRESS;
-
 typedef void (*RearPowerDistributionCurrentMeasurementCallback)(void *context);
 
 typedef struct {
+  I2CPort i2c_port;
   uint8_t num_bts7200_channels;
-  Mcp23008I2CAddress dsel_i2c_address;           // I2C address that all the select pins are on
+  I2CAddress dsel_i2c_address;                   // I2C address that all the select pins are on
   Mcp23008GpioAddress *bts7200_to_dsel_address;  // map BTS7200 id to select pin address
-  Sn74MuxAddress mux_address;
+  MuxAddress mux_address;
   uint8_t *bts7200_to_mux_select;  // map BTS7200 id to SN74 mux select for input
 } RearPowerDistributionCurrentHardwareConfig;
 

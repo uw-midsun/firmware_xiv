@@ -20,8 +20,8 @@ void setup_test(void) {
 
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
-    .sda = REAR_POWER_DISTRIBUTION_CURRENT_I2C_SDA_ADDRESS,
-    .scl = REAR_POWER_DISTRIBUTION_CURRENT_I2C_SCL_ADDRESS,
+    .sda = { .port = GPIO_PORT_B, .pin = 11 },
+    .scl = { .port = GPIO_PORT_B, .pin = 10 },
   };
   i2c_init(I2C_PORT_2, &i2c_settings);
 
@@ -87,7 +87,7 @@ void test_rear_power_distribution_current_measurement_get_measurement_valid(void
 
 // Test that init errors with invalid hardware config.
 void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
-  const Mcp23008I2CAddress test_i2c_address = 0x20;  // resolve valid
+  const I2CAddress test_i2c_address = 0x20;  // resolve valid
   RearPowerDistributionCurrentHardwareConfig hw_config = {
     .num_bts7200_channels = 4,
     .dsel_i2c_address = test_i2c_address,
@@ -100,6 +100,7 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
         },
     .mux_address =
         {
+            .bit_width = 3,
             .sel_pins =
                 {
                     { .port = GPIO_PORT_A, .pin = 0 },  //
@@ -107,6 +108,7 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
                     { .port = GPIO_PORT_A, .pin = 2 },  //
                 },
             .mux_output_pin = { .port = GPIO_PORT_A, .pin = 0 },  //
+            .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 1 },  //
         },
     .bts7200_to_mux_select = (uint8_t[]){ 0, 1, 2, 3 }
   };
@@ -129,6 +131,11 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
   settings.hw_config.mux_address.mux_output_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
   settings.hw_config.mux_address.mux_output_pin.port = GPIO_PORT_A;
+
+  // invalid mux enable pin
+  settings.hw_config.mux_address.mux_enable_pin.port = NUM_GPIO_PORTS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  settings.hw_config.mux_address.mux_enable_pin.port = GPIO_PORT_A;
 
   // otherwise valid
   TEST_ASSERT_OK(rear_power_distribution_current_measurement_init(&settings));
