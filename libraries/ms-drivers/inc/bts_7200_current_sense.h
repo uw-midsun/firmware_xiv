@@ -6,7 +6,7 @@
 
 #include "adc.h"
 #include "gpio.h"
-#include "mcp23008_gpio_expander.h"
+#include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
 
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
@@ -20,19 +20,19 @@ typedef struct {
   void *callback_context;
 } Bts7200Stm32Settings;
 
-// Use when the select pin is through an MCP23008 GPIO expander
+// Use when the select pin is through a PCA9539R GPIO expander
 typedef struct {
   I2CPort i2c_port;
-  Mcp23008GpioAddress *select_pin;
+  Pca9539rGpioAddress *select_pin;
   GpioAddress *sense_pin;
   uint32_t interval_us;
   Bts7200DataCallback callback;  // set to NULL for no callback
   void *callback_context;
-} Bts7200Mcp23008Settings;
+} Bts7200Pca9539rSettings;
 
 typedef enum {
   BTS7200_SELECT_PIN_STM32 = 0,
-  BTS7200_SELECT_PIN_MCP23008,
+  BTS7200_SELECT_PIN_PCA9539R,
   NUM_BTS7200_SELECT_PINS,
 } Bts7200SelectPinType;
 
@@ -40,7 +40,7 @@ typedef struct {
   uint16_t reading_out_0;
   uint16_t reading_out_1;
   GpioAddress *select_pin_stm32;
-  Mcp23008GpioAddress *select_pin_mcp23008;
+  Pca9539rGpioAddress *select_pin_pca9539r;
   Bts7200SelectPinType select_pin_type;
   GpioAddress *sense_pin;
   uint32_t interval_us;
@@ -49,11 +49,11 @@ typedef struct {
   void *callback_context;
 } Bts7200Storage;
 
-// Initialize the BTS7200 with the given settings; the select pin is an stm32 GPIO pin.
+// Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
 StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);
 
-// Initialize the BTS7200 with the given settings; the select pin is through an MCP23008.
-StatusCode bts_7200_init_mcp23008(Bts7200Storage *storage, Bts7200Mcp23008Settings *settings);
+// Initialize the BTS7200 with the given settings; the select pin is through a PCA9539R.
+StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings);
 
 // Read the latest measurements. This does not get measurements from the storage but instead
 // reads them from the BTS7200 itself.

@@ -29,25 +29,33 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
 
 StatusCode rear_power_distribution_current_measurement_init(
     RearPowerDistributionCurrentSettings *settings) {
+  if (settings->hw_config.num_dsel_i2c_addresses > MAX_I2C_DSEL_ADDRESSES) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+
   s_hw_config = settings->hw_config;
   s_interval_us = settings->interval_us;
   s_callback = settings->callback;
   s_callback_context = settings->callback_context;
 
-  status_ok_or_return(mcp23008_gpio_init(s_hw_config.i2c_port, s_hw_config.dsel_i2c_address));
+  // initialize the PCA9539R on every I2C address specified
+  for (uint8_t i = 0; i < s_hw_config.num_dsel_i2c_addresses; i++) {
+    status_ok_or_return(
+        pca9539r_gpio_init(s_hw_config.i2c_port, s_hw_config.dsel_i2c_addresses[i]));
+  }
   status_ok_or_return(mux_init(&s_hw_config.mux_address));
 
   // note: we don't have to initialize the mux_output_pin as ADC because
-  // bts_7200_init_mcp23008 does it for us
+  // bts_7200_init_pca9539r does it for us
 
   // initialize and start the BTS7200s
-  Bts7200Mcp23008Settings bts_7200_settings = {
+  Bts7200Pca9539rSettings bts_7200_settings = {
     .sense_pin = &s_hw_config.mux_address.mux_output_pin,
     .interval_us = s_interval_us,
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
     bts_7200_settings.select_pin = &s_hw_config.bts7200_to_dsel_address[i];
-    status_ok_or_return(bts_7200_init_mcp23008(&s_bts7200_storages[i], &bts_7200_settings));
+    status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 
   // measure the currents immediately; the callback doesn't use the timer it's passed
