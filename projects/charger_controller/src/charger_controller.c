@@ -18,7 +18,6 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   // send max allowable vc
   mcp2515_tx(charger_data.storage, charger_data.id, charger_data.extended, charger_data.data,
              charger_data.dlc);
-  LOG_DEBUG("RUNNING\n");
 
   soft_timer_start_millis(CHARGER_PERIOD, prv_timer_callback, context, &charger_controller_timer_id);
 }
