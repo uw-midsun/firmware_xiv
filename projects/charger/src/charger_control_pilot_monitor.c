@@ -6,11 +6,11 @@
 #include "pwm_input.h"
 #include "status.h"
 
-void handle_pwm_event(Event e) {
-  if (e.id == PWM_READING_REQUEST) {
+void control_pilot_monitor_process_event(Event e) {
+  if (e.id == CHARGER_PWM_EVENT_REQUEST_READING) {
     PwmInputReading reading = { 0 };
     pwm_input_get_reading(PWM_TIMER_3, &reading);
-    event_raise(PWM_READING_VALUE, reading.dc_percent);
+    event_raise(CHARGER_PWM_EVENT_VALUE_AVAILABLE, reading.dc_percent);
   }
 }
 

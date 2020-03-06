@@ -17,17 +17,17 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void prv_event_handle(Event e) {
-  TEST_ASSERT_EQUAL(e.id, PWM_READING_VALUE);
+  TEST_ASSERT_EQUAL(e.id, CHARGER_PWM_EVENT_VALUE_AVAILABLE);
 }
 
 // Tests that raising a reading request will cause an event to be raised
 // with the read value
 void test_control_pilot_event_handle() {
-  event_raise(PWM_READING_REQUEST, 0);
+  event_raise(CHARGER_PWM_EVENT_REQUEST_READING, 0);
   Event e = { 0 };
   // Process event raised here
   event_process(&e);
-  handle_pwm_event(e);
+  control_pilot_monitor_process_event(e);
 
   // Process event raised by module
   event_process(&e);

@@ -1,22 +1,22 @@
-/*
-    Charger Modules
-    - charger_controller
-        - implements api for init, activate, and deactivate using mcp215
-    - charger_controller_fault_monitor
-        - register can rx callbacks to find faults, then broadcasts them. implements init
-    - [DONE] charger_control_pilot_monitor
-        - handles pwm reading requests, then raises an event with the result
-        - implements event_handler to be called from main
-    - [DONE] charger_connection_sense
-        - handles polling connection sense pin, raises events to indicate state changes
-        - implements init
-    - permission_resolver
-        - handles connection events
-    - begin_charge_fsm
-    - stop_charge_fsm
-    - battery_voltage_monitor
-        - handles overvoltage faults from BMS
-*/
+
+// Charger Modules
+// - charger_controller
+//     - implements api for init, activate, and deactivate using mcp215
+// - charger_controller_fault_monitor
+//     - register can rx callbacks to find faults, then broadcasts them. implements init
+// - [DONE] charger_control_pilot_monitor
+//     - handles pwm reading requests, then raises an event with the result
+//     - implements event_handler to be called from main
+// - [DONE] charger_connection_sense
+//     - handles polling connection sense pin, raises events to indicate state changes
+//     - implements init
+// - permission_resolver
+//     - handles connection events
+// - begin_charge_fsm
+// - stop_charge_fsm
+// - battery_voltage_monitor
+//     - handles overvoltage faults from BMS
+
 #include "charger_connection_sense.h"
 
 #include "event_queue.h"
