@@ -5,6 +5,13 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+#define TEST_I2C_PORT I2C_PORT_2
+
+#define TEST_CONFIG_PIN_I2C_SCL \
+  { GPIO_PORT_B, 10 }
+#define TEST_CONFIG_PIN_I2C_SDA \
+  { GPIO_PORT_B, 11 }
+
 static volatile uint16_t times_callback_called = 0;
 static void *received_context;
 
@@ -18,6 +25,14 @@ void setup_test(void) {
   interrupt_init();
   soft_timer_init();
   adc_init(ADC_MODE_SINGLE);
+
+  I2CSettings i2c_settings = {
+    .speed = I2C_SPEED_FAST,         //
+    .sda = TEST_CONFIG_PIN_I2C_SDA,  //
+    .scl = TEST_CONFIG_PIN_I2C_SCL,  //
+  };
+  i2c_init(TEST_I2C_PORT, &i2c_settings);
+
   times_callback_called = 0;
 }
 void teardown_test(void) {}
@@ -68,6 +83,7 @@ void test_bts_7200_current_sense_timer_mcp23008_works(void) {
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Mcp23008Settings settings = {
+    .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,
@@ -176,9 +192,14 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
 // Same, but for mcp23008.
 void test_bts_7200_current_sense_mcp23008_init_invalid_settings(void) {
   // start with invalid select pin
-  Mcp23008GpioAddress select_pin = { .i2c_address = 0, .pin = NUM_MCP23008_GPIO_PINS };  // invalid
-  GpioAddress sense_pin = { .port = 0, .pin = 0 };                                       // valid
+  Mcp23008GpioAddress select_pin = {
+    // valid
+    .i2c_address = 0,
+    .pin = NUM_MCP23008_GPIO_PINS,
+  };
+  GpioAddress sense_pin = { .port = 0, .pin = 0 };  // invalid
   Bts7200Mcp23008Settings settings = {
+    .i2c_port = TEST_I2C_PORT,
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
     .interval_us = 500,  // 0.5 ms
@@ -240,6 +261,7 @@ void test_bts_7200_current_sense_get_measurement_mcp23008_valid(void) {
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Mcp23008Settings settings = {
+    .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .interval_us = interval_us,

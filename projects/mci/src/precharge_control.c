@@ -1,3 +1,5 @@
+#include "precharge_control.h"
+
 #include "can.h"
 #include "can_ack.h"
 #include "can_msg_defs.h"
