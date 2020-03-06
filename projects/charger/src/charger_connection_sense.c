@@ -15,7 +15,8 @@ static AdcChannel s_conn_sense_adc_channel = NUM_ADC_CHANNELS;
 static ChargerConnectionState prv_get_charger_state() {
   uint16_t adc_read = 0;
   adc_read_converted(s_conn_sense_adc_channel, &adc_read);
-  if (CHARGER_CONN_SENSE_UNPLUGGED_LOWER < adc_read && adc_read < CHARGER_CONN_SENSE_UNPLUGGED_UPPER)
+  if (CHARGER_CONN_SENSE_UNPLUGGED_LOWER < adc_read &&
+      adc_read < CHARGER_CONN_SENSE_UNPLUGGED_UPPER)
     return CHARGER_STATE_UNPLUGGED;
   else if (CHARGER_CONN_SENSE_PLUGGED_RELEASED_LOWER < adc_read &&
            adc_read < CHARGER_CONN_SENSE_PLUGGED_RELEASED_UPPER)
@@ -52,11 +53,11 @@ static void prv_poll_connection_sense(SoftTimerId timer_id, void *context) {
 StatusCode connection_sense_init() {
   // Setup the ADC to read
   GpioAddress conn_sense_addr = { .port = CHARGER_CONNECTION_SENSE_PORT,
-                          .pin = CHARGER_CONNECTION_SENSE_PIN };
+                                  .pin = CHARGER_CONNECTION_SENSE_PIN };
   GpioSettings conn_sense_settings = { .direction = GPIO_DIR_IN,
-                               .state = GPIO_STATE_LOW,
-                               .resistor = GPIO_RES_NONE,
-                               .alt_function = GPIO_ALTFN_ANALOG };
+                                       .state = GPIO_STATE_LOW,
+                                       .resistor = GPIO_RES_NONE,
+                                       .alt_function = GPIO_ALTFN_ANALOG };
   gpio_init_pin(&conn_sense_addr, &conn_sense_settings);
   adc_init(ADC_MODE_SINGLE);
   adc_get_channel(conn_sense_addr, &s_conn_sense_adc_channel);
