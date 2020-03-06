@@ -7,21 +7,26 @@
 #include "mcp2515.h"
 // include all the modules
 #include "charger_controller.h"
+#include "charger_events.h"
 
-// CanSettings can_settings = {
-//     .device_id = TEST_CAN_DEVICE_ID,
-//     .bitrate = CAN_HW_BITRATE_500KBPS,
-//     .rx_event = TEST_CAN_EVENT_RX,
-//     .tx_event = TEST_CAN_EVENT_TX,
-//     .fault_event = TEST_CAN_EVENT_FAULT,
-//     .tx = { GPIO_PORT_A, 12 },
-//     .rx = { GPIO_PORT_A, 11 },
-//     .loopback = false,
-//   };
+#define TEST_CAN_DEVICE_ID 0x1
+
+static CanStorage s_can_storage;
+
+static CanSettings s_can_settings = {
+  .device_id = TEST_CAN_DEVICE_ID,
+  .bitrate = CAN_HW_BITRATE_250KBPS,
+  .tx = { GPIO_PORT_A, 12 },
+  .rx = { GPIO_PORT_A, 11 },
+  .rx_event = CHARGER_CAN_RX,
+  .tx_event = CHARGER_CAN_TX,
+  .fault_event = CHARGER_CAN_FAULT,
+  .loopback = false,
+};
 
 static Mcp2515Storage mcp2515;
 static Mcp2515Settings mcp2515_settings = {
-  .spi_port = SPI_PORT_2,
+  .spi_port = SPI_PORT_1,
   .spi_baudrate = MCP2515_BITRATE_250KBPS,
   .mosi = { .port = GPIO_PORT_A, 7 },
   .miso = { .port = GPIO_PORT_A, 6 },
@@ -35,27 +40,25 @@ static Mcp2515Settings mcp2515_settings = {
 };
 
 int main() {
-  LOG_DEBUG("WORKING\n");
+  LOG_DEBUG("Welcome to Charger!\n");
   // initialize all the modules
   gpio_init();
   interrupt_init();
   gpio_it_init();
   soft_timer_init();
   event_queue_init();
+  can_init(&s_can_storage, &s_can_settings);
   LOG_DEBUG("Initialized modules\n");
 
-  const GpioSettings settings = {
-    .state = GPIO_STATE_HIGH,
-    .direction = GPIO_DIR_IN,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_NONE,
-  };
-  GpioAddress address = {
-    .port = GPIO_PORT_A,
-    .pin = 2
-  };
-  
-  status_ok_or_return(gpio_init_pin(&address, &settings));
+  // const GpioSettings settings = {
+  //   .state = GPIO_STATE_HIGH,
+  //   .direction = GPIO_DIR_IN,
+  //   .resistor = GPIO_RES_NONE,
+  //   .alt_function = GPIO_ALTFN_NONE,
+  // };
+  // GpioAddress address = { .port = GPIO_PORT_A, .pin = 2 };
+
+  // status_ok_or_return(gpio_init_pin(&address, &settings));
 
   // setup mcp2515 settings
   mcp2515_init(&mcp2515, &mcp2515_settings);

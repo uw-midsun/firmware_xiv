@@ -24,6 +24,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
 }
 
 static void prv_rx_cb(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  LOG_DEBUG("RUNNING\n");
   if ((id == BCA_CCS_ID)) {
     charger_data.extended = extended;
     charger_data.data = data;

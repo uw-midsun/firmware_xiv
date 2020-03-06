@@ -75,6 +75,7 @@ StatusCode spi_init(SpiPort spi, const SpiSettings *settings) {
 
 StatusCode spi_tx(SpiPort spi, uint8_t *tx_data, size_t tx_len) {
   for (size_t i = 0; i < tx_len; i++) {
+    LOG_DEBUG("Spi %d\n", s_port[spi].base->SR);
     while (SPI_I2S_GetFlagStatus(s_port[spi].base, SPI_I2S_FLAG_TXE) == RESET) {
     }
     SPI_SendData8(s_port[spi].base, tx_data[i]);
