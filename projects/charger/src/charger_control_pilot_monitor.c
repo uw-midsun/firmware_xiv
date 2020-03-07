@@ -6,11 +6,33 @@
 #include "pwm_input.h"
 #include "status.h"
 
+// page 17 of the SAE J1772 standard OCT2017
+// DC <= 8%: no charging allowed
+// 9.5% <= DC < 10%: max = 6A
+// 10% <= DC <= 85%: max = DC% * 0.6
+// 85% < DC <= 96%: max = (DC% - 64) * 2.5
+// 96% < DC <= 96.5%: max = 80A
+// 96.5 < DC: no charging allowed
+float prv_dc_to_current(uint32_t dc) {
+  // based on a dc representation of ddd.d%
+  if (95 <= dc < 100) {
+    return 6.0f;
+  } else if (100 <= dc && dc <= 850) {
+    return (float)dc * 0.6f;  
+  } else if (850 < dc && dc <= 960) {
+    return (float)(dc - 640) * 2.5f;
+  } else if (960 < dc && dc <= 965) {
+    return 80.0f;
+  } else {
+    return 0.0f;
+  }
+}
+
 void control_pilot_monitor_process_event(Event e) {
   if (e.id == CHARGER_PWM_EVENT_REQUEST_READING) {
     PwmInputReading reading = { 0 };
     pwm_input_get_reading(PWM_TIMER_3, &reading);
-    event_raise(CHARGER_PWM_EVENT_VALUE_AVAILABLE, reading.dc_percent);
+    event_raise(CHARGER_PWM_EVENT_VALUE_AVAILABLE, prv_dc_to_current(reading.dc_percent));
   }
 }
 
