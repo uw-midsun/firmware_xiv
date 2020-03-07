@@ -25,12 +25,14 @@ typedef enum {
 } SteeringCanEvent;
 
 int main() {
+  adc_init(ADC_MODE_SINGLE);
   gpio_init();
   interrupt_init();
   event_queue_init();
   gpio_it_init();
   soft_timer_init();
   steering_digital_input_init();
+  adc_periodic_reader_init();
 
   CanSettings can_settings = {
     .device_id = STEERING_CAN_DEVICE_ID,

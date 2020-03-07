@@ -17,6 +17,7 @@
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_digital_input.h"
+#include "steering_events.h"
 
 StatusCode steering_can_process_event(Event *e) {
   if (e->id >= NUM_STEERING_EVENTS) {
@@ -26,9 +27,9 @@ StatusCode steering_can_process_event(Event *e) {
   } else if (e->id == STEERING_HIGH_BEAM_FORWARD_EVENT) {
     CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_HIGH_BEAMS, (EELightState)e->data);
   } else if (e->id == STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT) {
-  // WILL BE COMPLETED ONCE CAN_TRANSMIT FUNCTIONS ARE CREATED
   LOG_DEBUG("CALLBACK RUN \n");
-  // will be added
   }
+   // WILL BE COMPLETED ONCE CAN_TRANSMIT FUNCTIONS ARE CREATED
+   // WHAT FUNCTIONS WILL THERE BE FOR THE ANALOG SIGNALS????
 return STATUS_CODE_OK;
 }
