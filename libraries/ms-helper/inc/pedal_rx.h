@@ -4,9 +4,6 @@
 #include "exported_enums.h"
 #include "soft_timer.h"
 
-// Max value is 100 = 7 bits. which leaves 25 bits of precision
-#define PEDAL_RX_MSG_DENOMINATOR (1 << 25)
-
 typedef uint32_t PedalTimeoutMs;
 
 typedef struct PedalRxSettings {

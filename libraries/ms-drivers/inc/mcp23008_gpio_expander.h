@@ -1,6 +1,6 @@
 #pragma once
 // GPIO HAL interface for MCP23008 GPIO expander
-// Requires I2C to be initialized on I2C_PORT defined in i2c_driver_defs.h.
+// Requires I2C to be initialized.
 // Note: we don't check the validity of the I2C address.
 #include "i2c.h"
 
@@ -33,8 +33,8 @@ typedef struct {
   Mcp23008GpioState state;
 } Mcp23008GpioSettings;
 
-// Initialize MCP23008 GPIO at this I2C address. Set all pins to default values.
-StatusCode mcp23008_gpio_init(const I2CAddress i2c_address);
+// Initialize MCP23008 GPIO at this I2C port and address. Set all pins to default values.
+StatusCode mcp23008_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address);
 
 // Initialize an MCP23008 GPIO pin by address.
 StatusCode mcp23008_gpio_init_pin(const Mcp23008GpioAddress *address,

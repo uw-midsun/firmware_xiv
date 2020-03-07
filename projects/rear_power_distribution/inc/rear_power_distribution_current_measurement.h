@@ -2,27 +2,73 @@
 
 // Periodically reads current from load switches and exposes global storage.
 // Requires GPIO, interrupts, soft timers, ADC (in ADC_MODE_SINGLE), and I2C to be initalized.
-// I2C must be initialized on I2C_PORT_2 with the SDA and SCL addresses below.
 
 #include <stdint.h>
 #include "gpio.h"
-#include "mcp23008_gpio_expander.h"
-#include "sn74_mux.h"
+#include "mux.h"
+#include "pca9539r_gpio_expander.h"
 #include "status.h"
 
-#define MAX_REAR_POWER_DISTRIBUTION_CURRENTS 32
-
-extern const GpioAddress REAR_POWER_DISTRIBUTION_CURRENT_I2C_SDA_ADDRESS;
-extern const GpioAddress REAR_POWER_DISTRIBUTION_CURRENT_I2C_SCL_ADDRESS;
+#define MAX_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS 16  // max BTS7200s per board
+#define MAX_REAR_POWER_DISTRIBUTION_BTS7040_CHANNELS 16  // max BTS7040s per board
 
 typedef void (*RearPowerDistributionCurrentMeasurementCallback)(void *context);
 
+typedef enum {
+  REAR_POWER_DISTRIBUTION_CURRENT_LEFT_CAMERA = 0,
+  REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_CAMERA,
+  REAR_POWER_DISTRIBUTION_CURRENT_MAIN_DISPLAY,
+  REAR_POWER_DISTRIBUTION_CURRENT_REAR_DISPLAY,
+  REAR_POWER_DISTRIBUTION_CURRENT_DRIVER_DISPLAY,
+  REAR_POWER_DISTRIBUTION_CURRENT_LEFT_DRIVER_DISPLAY,
+  REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_DRIVER_DISPLAY,
+  REAR_POWER_DISTRIBUTION_CURRENT_MAIN_PI,
+  REAR_POWER_DISTRIBUTION_CURRENT_REAR_PI,
+  REAR_POWER_DISTRIBUTION_CURRENT_LEFT_FRONT_TURN_LIGHT,
+  REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_FRONT_TURN_LIGHT,
+  REAR_POWER_DISTRIBUTION_CURRENT_DAYTIME_RUNNING_LIGHTS,
+  REAR_POWER_DISTRIBUTION_CURRENT_CENTRE_CONSOLE,
+  REAR_POWER_DISTRIBUTION_CURRENT_PEDAL,
+  REAR_POWER_DISTRIBUTION_CURRENT_STEERING,
+  REAR_POWER_DISTRIBUTION_CURRENT_PARKING_BRAKE,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPEAKER,
+  REAR_POWER_DISTRIBUTION_CURRENT_HORN,
+  REAR_POWER_DISTRIBUTION_CURRENT_5V_SPARE_1,
+  REAR_POWER_DISTRIBUTION_CURRENT_5V_SPARE_2,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPARE_1,
+  REAR_POWER_DISTRIBUTION_CURRENT_SPARE_2,
+  NUM_REAR_POWER_DISTRIBUTION_CURRENTS,
+} RearPowerDistributionCurrent;
+
 typedef struct {
-  uint8_t num_bts7200_channels;
-  Mcp23008I2CAddress dsel_i2c_address;           // I2C address that all the select pins are on
-  Mcp23008GpioAddress *bts7200_to_dsel_address;  // map BTS7200 id to select pin address
-  Sn74MuxAddress mux_address;
-  uint8_t *bts7200_to_mux_select;  // map BTS7200 id to SN74 mux select for input
+  Pca9539rGpioAddress dsel_gpio_address;
+  RearPowerDistributionCurrent current_0;
+  RearPowerDistributionCurrent current_1;
+  uint8_t mux_selection;
+} RearPowerDistributionBts7200Data;
+
+typedef struct {
+  Pca9539rGpioAddress enable_gpio_address;
+  RearPowerDistributionCurrent current;
+  uint8_t mux_selection;
+} RearPowerDistributionBts7040Data;
+
+typedef struct {
+  I2CPort i2c_port;
+
+  // All distinct I2C addresses on which there are BTS7200 DSEL pins
+  I2CAddress *dsel_i2c_addresses;
+  uint8_t num_dsel_i2c_addresses;  // length of preceding array
+
+  // Data of all BTS7200s from which to read
+  RearPowerDistributionBts7200Data *bts7200s;
+  uint8_t num_bts7200_channels;  // length of preceding array
+
+  // Data of all BTS7040/7008s from which to read
+  RearPowerDistributionBts7040Data *bts7040s;
+  uint8_t num_bts7040_channels;  // length of preceding array
+
+  MuxAddress mux_address;
 } RearPowerDistributionCurrentHardwareConfig;
 
 typedef struct {
@@ -34,8 +80,8 @@ typedef struct {
 } RearPowerDistributionCurrentSettings;
 
 typedef struct {
-  // Only the first |hw_config->num_bts7200_channels| values will be filled, rest are zeros.
-  uint16_t measurements[MAX_REAR_POWER_DISTRIBUTION_CURRENTS];
+  // Only the currents specified in the hardware config will be populated.
+  uint16_t measurements[NUM_REAR_POWER_DISTRIBUTION_CURRENTS];
 } RearPowerDistributionCurrentStorage;
 
 // Initialize the module with the settings in the object and set up a soft timer to read currents.
