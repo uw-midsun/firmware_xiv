@@ -3,6 +3,8 @@
 #include "log.h" 
 
 void setup_test(void) {
-    
+
 
 }
+
+void teardown_test(void) { }
