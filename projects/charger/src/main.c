@@ -17,7 +17,10 @@
 // - battery_voltage_monitor
 //     - handles overvoltage faults from BMS
 
+#include "begin_charge_fsm.h"
 #include "charger_connection_sense.h"
+#include "charger_control_pilot_monitor.h"
+#include "stop_charger.h"
 
 #include "event_queue.h"
 #include "gpio.h"
@@ -32,11 +35,15 @@ int main(void) {
   soft_timer_init();
 
   connection_sense_init();
+  control_pilot_monitor_init();
+  begin_charge_fsm_init();
 
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
-      // process events
+      control_pilot_monitor_process_event(&e);
+      begin_fsm_process_event(&e);
+      stop_charger_process_event(&e);
     }
   }
   return 0;

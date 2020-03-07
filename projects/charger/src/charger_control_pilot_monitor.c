@@ -31,8 +31,8 @@ uint16_t prv_dc_to_current(uint32_t dc) {
   return (uint16_t)(ret * 10);
 }
 
-void control_pilot_monitor_process_event(Event e) {
-  if (e.id == CHARGER_PWM_EVENT_REQUEST_READING) {
+void control_pilot_monitor_process_event(Event *e) {
+  if (e->id == CHARGER_PWM_EVENT_REQUEST_READING) {
     PwmInputReading reading = { 0 };
     pwm_input_get_reading(PWM_TIMER_3, &reading);
     event_raise(CHARGER_PWM_EVENT_VALUE_AVAILABLE, prv_dc_to_current(reading.dc_percent));
