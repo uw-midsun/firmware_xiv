@@ -12,7 +12,7 @@
 const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG = {
   .i2c_port = I2C_PORT_2,
   .dsel_i2c_addresses =
-      {
+      (I2CAddress[]){
           REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,  //
           REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,  //
       },

@@ -65,8 +65,8 @@ StatusCode rear_power_distribution_current_measurement_init(
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
     // check that the currents are valid
-    if (s_hw_config.bts7200s[i].current_0 > NUM_REAR_POWER_DISTRIBUTION_CURRENTS ||
-        s_hw_config.bts7200s[i].current_1 > NUM_REAR_POWER_DISTRIBUTION_CURRENTS) {
+    if (s_hw_config.bts7200s[i].current_0 >= NUM_REAR_POWER_DISTRIBUTION_CURRENTS ||
+        s_hw_config.bts7200s[i].current_1 >= NUM_REAR_POWER_DISTRIBUTION_CURRENTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 
@@ -80,7 +80,7 @@ StatusCode rear_power_distribution_current_measurement_init(
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     // check that the current is valid
-    if (s_hw_config.bts7040s[i].current > NUM_REAR_POWER_DISTRIBUTION_CURRENTS) {
+    if (s_hw_config.bts7040s[i].current >= NUM_REAR_POWER_DISTRIBUTION_CURRENTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 

@@ -97,7 +97,7 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
   const I2CAddress test_i2c_address = 0x74;  // resolve valid
   RearPowerDistributionCurrentHardwareConfig hw_config = {
     .i2c_port = TEST_I2C_PORT,
-    .dsel_i2c_addresses = { test_i2c_address },
+    .dsel_i2c_addresses = (I2CAddress[]){ test_i2c_address },
     .num_dsel_i2c_addresses = 1,
     .bts7200s = (RearPowerDistributionBts7200Data[]){ {
         .dsel_gpio_address = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_0 },
@@ -132,37 +132,37 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
   };
 
   // invalid number of BTS7200 channels
-  hw_config.num_bts7200_channels = MAX_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS;
+  settings.hw_config.num_bts7200_channels = MAX_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS + 1;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.num_bts7200_channels = 1;
+  settings.hw_config.num_bts7200_channels = 1;
 
   // invalid number of BTS7040 channels
-  hw_config.num_bts7040_channels = MAX_REAR_POWER_DISTRIBUTION_BTS7040_CHANNELS;
+  settings.hw_config.num_bts7040_channels = MAX_REAR_POWER_DISTRIBUTION_BTS7040_CHANNELS + 1;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.num_bts7040_channels = 1;
+  settings.hw_config.num_bts7040_channels = 1;
 
   // invalid BTS7200 DSEL address
-  hw_config.bts7200s[0].dsel_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
+  settings.hw_config.bts7200s[0].dsel_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.bts7200s[0].dsel_gpio_address.pin = PCA9539R_PIN_IO0_0;
+  settings.hw_config.bts7200s[0].dsel_gpio_address.pin = PCA9539R_PIN_IO0_0;
 
   // invalid BTS7200 currents
-  hw_config.bts7200s[0].current_0 = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
+  settings.hw_config.bts7200s[0].current_0 = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.bts7200s[0].current_0 = 0;
-  hw_config.bts7200s[0].current_1 = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
+  settings.hw_config.bts7200s[0].current_0 = 0;
+  settings.hw_config.bts7200s[0].current_1 = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.bts7200s[0].current_1 = 1;
+  settings.hw_config.bts7200s[0].current_1 = 1;
 
   // invalid BTS7040 enable address
-  hw_config.bts7040s[0].enable_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
+  settings.hw_config.bts7040s[0].enable_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.bts7040s[0].enable_gpio_address.pin = PCA9539R_PIN_IO0_1;
+  settings.hw_config.bts7040s[0].enable_gpio_address.pin = PCA9539R_PIN_IO0_1;
 
   // invalid BTS7040 current
-  hw_config.bts7040s[0].current = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
+  settings.hw_config.bts7040s[0].current = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  hw_config.bts7040s[0].current = 2;
+  settings.hw_config.bts7040s[0].current = 2;
 
   // invalid mux sel address
   settings.hw_config.mux_address.sel_pins[0].port = NUM_GPIO_PORTS;
