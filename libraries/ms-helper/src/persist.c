@@ -3,25 +3,21 @@
 #include "crc32.h"
 #include "log.h"
 #include "soft_timer.h"
-// The persistance layer allocates one page of flash so we can erase the entire
-// page when full. To reduce the number of erases, we partition the page into a
-// number of sections. Each section is the size of the specified blob plus a
-// header. The header is used to mark the section as valid and record the blob's
-// size.
+// The persistance layer allocates one page of flash so we can erase the entire page when full.
+// To reduce the number of erases, we partition the page into a number of sections. Each section
+// is the size of the specified blob plus a header. The header is used to mark the section as valid
+// and record the blob's size.
 //
-// By default, all sections are invalid. Only one section should be valid at a
-// time. At each write, all previous sections are marked as invalid and the new
-// section is considered valid.
+// By default, all sections are invalid. Only one section should be valid at a time. At each write,
+// all previous sections are marked as invalid and the new section is considered valid.
 //
 // Section format: [ marker (u32) | size (u32) | blob (u32 * n) ]
-// We initially write to the size field and blob data, skipping the marker. We
-// then consider the default unwritten value of marker as "valid" (0xFFFFFFFF).
-// To invalidate the section, we write 0x0 to the marker field. Because we
-// skipped it earlier, this write succeeds and does not require erasing the
-// page. If all sections are invalid, we erase the entire page.
+// We initially write to the size field and blob data, skipping the marker. We then consider the
+// default unwritten value of marker as "valid" (0xFFFFFFFF). To invalidate the section, we write
+// 0x0 to the marker field. Because we skipped it earlier, this write succeeds and does not require
+// erasing the page. If all sections are invalid, we erase the entire page.
 //
-// At init, the persistance layer attempts to load the blob with the data stored
-// in flash.
+// At init, the persistance layer attempts to load the blob with the data stored in flash.
 
 // Erased flash defaults to all 1's
 #define PERSIST_VALID_MARKER 0xFFFFFFFF
@@ -76,8 +72,7 @@ StatusCode persist_init(PersistStorage *persist, FlashPage page, void *blob, siz
   persist->flash_addr = PERSIST_BASE_ADDR;
 
   // Essentially, we want to exit in three scenarios:
-  // * The page has been erased and there are no valid sections. Use the base
-  // address.
+  // * The page has been erased and there are no valid sections. Use the base address.
   //   Marker == 0xFFFFFFFF, Size == 0xFFFFFFFF
   // * This is an invalid section. Increment the address by (header + blob).
   //   Marker != 0xFFFFFFFF, Size != 0xFFFFFFFF
