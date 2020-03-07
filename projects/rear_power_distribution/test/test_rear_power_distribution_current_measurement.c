@@ -10,6 +10,13 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+#define TEST_I2C_PORT I2C_PORT_2
+
+#define TEST_CONFIG_PIN_I2C_SCL \
+  { GPIO_PORT_B, 10 }
+#define TEST_CONFIG_PIN_I2C_SDA \
+  { GPIO_PORT_B, 11 }
+
 static int s_times_callback_called = 0;
 
 void setup_test(void) {
@@ -20,10 +27,10 @@ void setup_test(void) {
 
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
-    .sda = { .port = GPIO_PORT_B, .pin = 11 },
-    .scl = { .port = GPIO_PORT_B, .pin = 10 },
+    .scl = TEST_CONFIG_PIN_I2C_SCL,
+    .sda = TEST_CONFIG_PIN_I2C_SDA,
   };
-  i2c_init(I2C_PORT_2, &i2c_settings);
+  i2c_init(TEST_I2C_PORT, &i2c_settings);
 
   s_times_callback_called = 0;
 }
@@ -78,8 +85,8 @@ void test_rear_power_distribution_current_measurement_get_measurement_valid(void
       rear_power_distribution_current_measurement_get_storage();
 
   // print out the storage for debugging
-  for (uint8_t i = 0; i < 2 * FRONT_POWER_DISTRIBUTION_HW_CONFIG.num_bts7200_channels; i++) {
-    LOG_DEBUG("measurement %d is %d\r\n", i, storage->measurements[i]);
+  for (RearPowerDistributionCurrent i = 0; i < NUM_REAR_POWER_DISTRIBUTION_CURRENTS; i++) {
+    LOG_DEBUG("current %d is %d\r\n", i, storage->measurements[i]);
   }
 
   TEST_ASSERT_OK(rear_power_distribution_stop());
@@ -87,18 +94,24 @@ void test_rear_power_distribution_current_measurement_get_measurement_valid(void
 
 // Test that init errors with invalid hardware config.
 void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
-  const I2CAddress test_i2c_address = 0x20;  // resolve valid
+  const I2CAddress test_i2c_address = 0x74;  // resolve valid
   RearPowerDistributionCurrentHardwareConfig hw_config = {
-    .num_bts7200_channels = 4,
-    .num_dsel_i2c_addresses = 1,
+    .i2c_port = TEST_I2C_PORT,
     .dsel_i2c_addresses = { test_i2c_address },
-    .bts7200_to_dsel_address =
-        (Pca9539rGpioAddress[]){
-            { .i2c_address = test_i2c_address, .pin = 0 },
-            { .i2c_address = test_i2c_address, .pin = 1 },
-            { .i2c_address = test_i2c_address, .pin = 2 },
-            { .i2c_address = test_i2c_address, .pin = 3 },
-        },
+    .num_dsel_i2c_addresses = 1,
+    .bts7200s = (RearPowerDistributionBts7200Data[]){ {
+        .dsel_gpio_address = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_0 },
+        .current_0 = 0,
+        .current_1 = 1,
+        .mux_selection = 0,
+    } },
+    .num_bts7200_channels = 1,
+    .bts7040s = (RearPowerDistributionBts7040Data[]){ {
+        .enable_gpio_address = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_1 },
+        .current = 2,
+        .mux_selection = 1,
+    } },
+    .num_bts7040_channels = 1,
     .mux_address =
         {
             .bit_width = 4,
@@ -112,17 +125,44 @@ void test_rear_power_distribution_current_measurement_invalid_hw_config(void) {
             .mux_output_pin = { .port = GPIO_PORT_A, .pin = 0 },  //
             .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 1 },  //
         },
-    .bts7200_to_mux_select = (uint8_t[]){ 0, 1, 2, 3 }
   };
   RearPowerDistributionCurrentSettings settings = {
     .interval_us = 2000,
     .hw_config = hw_config,
   };
 
-  // invalid DSEL pin address
-  settings.hw_config.bts7200_to_dsel_address[0].pin = NUM_PCA9539R_GPIO_PINS;
+  // invalid number of BTS7200 channels
+  hw_config.num_bts7200_channels = MAX_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS;
   TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
-  settings.hw_config.bts7200_to_dsel_address[0].pin = 0;
+  hw_config.num_bts7200_channels = 1;
+
+  // invalid number of BTS7040 channels
+  hw_config.num_bts7040_channels = MAX_REAR_POWER_DISTRIBUTION_BTS7040_CHANNELS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  hw_config.num_bts7040_channels = 1;
+
+  // invalid BTS7200 DSEL address
+  hw_config.bts7200s[0].dsel_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  hw_config.bts7200s[0].dsel_gpio_address.pin = PCA9539R_PIN_IO0_0;
+
+  // invalid BTS7200 currents
+  hw_config.bts7200s[0].current_0 = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  hw_config.bts7200s[0].current_0 = 0;
+  hw_config.bts7200s[0].current_1 = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  hw_config.bts7200s[0].current_1 = 1;
+
+  // invalid BTS7040 enable address
+  hw_config.bts7040s[0].enable_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  hw_config.bts7040s[0].enable_gpio_address.pin = PCA9539R_PIN_IO0_1;
+
+  // invalid BTS7040 current
+  hw_config.bts7040s[0].current = NUM_REAR_POWER_DISTRIBUTION_CURRENTS;
+  TEST_ASSERT_NOT_OK(rear_power_distribution_current_measurement_init(&settings));
+  hw_config.bts7040s[0].current = 2;
 
   // invalid mux sel address
   settings.hw_config.mux_address.sel_pins[0].port = NUM_GPIO_PORTS;
