@@ -40,13 +40,13 @@ static void prv_increment_callback(void *context) {
   s_times_callback_called++;
 }
 
-// Test that we can initialize, read a value, and stop.
-void test_power_distribution_current_measurement_init_valid(void) {
+// Test that we can initialize, read a value, and stop with the front hardware configuration.
+void test_power_distribution_current_measurement_front_hw_config_init_valid(void) {
   uint32_t interval_us = 2000;
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = FRONT_POWER_DISTRIBUTION_HW_CONFIG,  // generic HW config
+    .hw_config = FRONT_POWER_DISTRIBUTION_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -63,8 +63,31 @@ void test_power_distribution_current_measurement_init_valid(void) {
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
 
-// Test that we can successfully get measurements.
-void test_power_distribution_current_measurement_get_measurement_valid(void) {
+// Test that we can initialize, read a value, and stop with the rear hardware configuration.
+void test_power_distribution_current_measurement_rear_hw_config_init_valid(void) {
+  uint32_t interval_us = 2000;
+  PowerDistributionCurrentSettings settings = {
+    .interval_us = interval_us,
+    .callback = &prv_increment_callback,
+    .hw_config = REAR_POWER_DISTRIBUTION_HW_CONFIG,
+  };
+  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+
+  // init should read values immediately
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+
+  // wait for the callback to be called
+  delay_us(interval_us);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+
+  // stop it and make sure the callback is no longer called
+  TEST_ASSERT_OK(power_distribution_stop());
+  delay_us(interval_us * 2);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+}
+
+// Test that we can successfully get measurements with the front hardware config.
+void test_power_distribution_current_measurement_front_hw_config_get_measurement_valid(void) {
   uint32_t interval_us = 2000;
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
@@ -85,7 +108,35 @@ void test_power_distribution_current_measurement_get_measurement_valid(void) {
 
   // print out the storage for debugging
   for (PowerDistributionCurrent i = 0; i < NUM_POWER_DISTRIBUTION_CURRENTS; i++) {
-    LOG_DEBUG("current %d is %d\r\n", i, storage->measurements[i]);
+    LOG_DEBUG("front hw config: current %d is %d\r\n", i, storage->measurements[i]);
+  }
+
+  TEST_ASSERT_OK(power_distribution_stop());
+}
+
+// Test that we can successfully get measurements with the rear hardware config.
+void test_power_distribution_current_measurement_rear_hw_config_get_measurement_valid(void) {
+  uint32_t interval_us = 2000;
+  PowerDistributionCurrentSettings settings = {
+    .interval_us = interval_us,
+    .callback = &prv_increment_callback,
+    .hw_config = REAR_POWER_DISTRIBUTION_HW_CONFIG,
+  };
+  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+
+  // init should read values immediately
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+
+  // wait for the callback to be called
+  delay_us(interval_us);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+
+  // make sure we can get the storage
+  PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
+
+  // print out the storage for debugging
+  for (PowerDistributionCurrent i = 0; i < NUM_POWER_DISTRIBUTION_CURRENTS; i++) {
+    LOG_DEBUG("rear hw config: current %d is %d\r\n", i, storage->measurements[i]);
   }
 
   TEST_ASSERT_OK(power_distribution_stop());

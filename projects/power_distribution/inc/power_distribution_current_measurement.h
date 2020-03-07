@@ -15,6 +15,7 @@
 typedef void (*PowerDistributionCurrentMeasurementCallback)(void *context);
 
 typedef enum {
+  // Currents for front power distribution
   POWER_DISTRIBUTION_CURRENT_LEFT_CAMERA = 0,
   POWER_DISTRIBUTION_CURRENT_RIGHT_CAMERA,
   POWER_DISTRIBUTION_CURRENT_MAIN_DISPLAY,
@@ -37,6 +38,20 @@ typedef enum {
   POWER_DISTRIBUTION_CURRENT_5V_SPARE_2,
   POWER_DISTRIBUTION_CURRENT_SPARE_1,
   POWER_DISTRIBUTION_CURRENT_SPARE_2,
+
+  // Currents for rear power distribution
+  // are these accurate?
+  POWER_DISTRIBUTION_CURRENT_REAR_BRAKE_LIGHT,
+  POWER_DISTRIBUTION_CURRENT_LEFT_REAR_TURN_LIGHT,
+  POWER_DISTRIBUTION_CURRENT_RIGHT_REAR_TURN_LIGHT,
+  POWER_DISTRIBUTION_CURRENT_REAR_CAMERA,
+  POWER_DISTRIBUTION_CURRENT_PLACEHOLDER_REAR_CAM,  // rear cam's BTS7200 partner, unconnected (??)
+  POWER_DISTRIBUTION_CURRENT_CHARGER_INTERFACE,
+  POWER_DISTRIBUTION_CURRENT_LIGHTS_BPS_STROBE,
+  POWER_DISTRIBUTION_CURRENT_BMS_CARRIER,
+  POWER_DISTRIBUTION_CURRENT_MCI,
+  POWER_DISTRIBUTION_CURRENT_SOLAR_SENSE,
+
   NUM_POWER_DISTRIBUTION_CURRENTS,
 } PowerDistributionCurrent;
 
@@ -86,7 +101,7 @@ typedef struct {
   uint16_t measurements[NUM_POWER_DISTRIBUTION_CURRENTS];
 } PowerDistributionCurrentStorage;
 
-// Initialize the module with the settings in the object and set up a soft timer to read currents.
+// Initialize the module with the given settings and set up a soft timer to read currents.
 StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentSettings *settings);
 
 // Return a storage struct containing the latest measurements.

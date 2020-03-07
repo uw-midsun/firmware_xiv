@@ -2,13 +2,13 @@
 
 // Definitions of the hardware configs declared in the header
 
+#define POWER_DISTRIBUTION_I2C_PORT I2C_PORT_2
+
 #define POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0 0x74
 #define POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1 0x76
 
-// Note: this is actually entirely for front power distribution
-// This will be changed when this module is generified
 const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG = {
-  .i2c_port = I2C_PORT_2,
+  .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
   .dsel_i2c_addresses =
       (I2CAddress[]){
           POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,  //
@@ -159,6 +159,101 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               .mux_selection = 5,
           } },
   .num_bts7040_channels = 6,
+  .mux_address =
+      {
+          .bit_width = 4,
+          .sel_pins =
+              {
+                  { .port = GPIO_PORT_A, .pin = 6 },  //
+                  { .port = GPIO_PORT_A, .pin = 5 },  //
+                  { .port = GPIO_PORT_A, .pin = 4 },  //
+                  { .port = GPIO_PORT_A, .pin = 3 },  //
+              },
+          .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
+          .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
+      },
+};
+
+// This is based on https://uwmidsun.atlassian.net/wiki/x/GgODP, assuming that the currents in
+// each row are connected to the same BTS7200s/BTS7040s (on the same pins with same mux selections).
+const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG = {
+  .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+  .dsel_i2c_addresses =
+      (I2CAddress[]){
+          POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,  //
+          POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,  //
+      },
+  .num_dsel_i2c_addresses = 2,
+  .bts7200s =
+      (PowerDistributionBts7200Data[]){
+          {
+              // Rear camera and placeholder (there's nothing on the second port?)
+              .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                            .pin = PCA9539R_PIN_IO0_0 },
+              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                                .pin = PCA9539R_PIN_IO0_1 },
+              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                                .pin = PCA9539R_PIN_IO1_3 },
+              .current_0 = POWER_DISTRIBUTION_CURRENT_REAR_CAMERA,
+              .current_1 = POWER_DISTRIBUTION_CURRENT_PLACEHOLDER_REAR_CAM,
+              .mux_selection = 12,
+          },
+          {
+              // Charger interface and lights BPS strobe - assuming on same BTS7200 as L_R_DVR_DISP
+              .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                            .pin = PCA9539R_PIN_IO1_5 },
+              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                                .pin = PCA9539R_PIN_IO1_4 },
+              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                                .pin = PCA9539R_PIN_IO1_6 },
+              .current_0 = POWER_DISTRIBUTION_CURRENT_CHARGER_INTERFACE,
+              .current_1 = POWER_DISTRIBUTION_CURRENT_LIGHTS_BPS_STROBE,
+              .mux_selection = 4,
+          },
+          {
+              // Left and right rear turn lights
+              .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                            .pin = PCA9539R_PIN_IO0_3 },
+              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                                .pin = PCA9539R_PIN_IO0_4 },
+              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                                .pin = PCA9539R_PIN_IO0_2 },
+              .current_0 = POWER_DISTRIBUTION_CURRENT_LEFT_REAR_TURN_LIGHT,
+              .current_1 = POWER_DISTRIBUTION_CURRENT_RIGHT_REAR_TURN_LIGHT,
+              .mux_selection = 9,
+          } },
+  .num_bts7200_channels = 3,
+  .bts7040s =
+      (PowerDistributionBts7040Data[]){
+          {
+              // BMS carrier - assuming "infotainment monitor" is MAIN_DISP
+              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                                       .pin = PCA9539R_PIN_IO1_4 },
+              .current = POWER_DISTRIBUTION_CURRENT_BMS_CARRIER,
+              .mux_selection = 13,
+          },
+          {
+              // Rear brake light
+              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                                       .pin = PCA9539R_PIN_IO0_5 },
+              .current = POWER_DISTRIBUTION_CURRENT_REAR_BRAKE_LIGHT,
+              .mux_selection = 8,
+          },
+          {
+              // Solar sense
+              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                                       .pin = PCA9539R_PIN_IO0_7 },
+              .current = POWER_DISTRIBUTION_CURRENT_SOLAR_SENSE,
+              .mux_selection = 10,
+          },
+          {
+              // MCI
+              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                                       .pin = PCA9539R_PIN_IO1_7 },
+              .current = POWER_DISTRIBUTION_CURRENT_MCI,
+              .mux_selection = 3,
+          } },
+  .num_bts7040_channels = 4,
   .mux_address =
       {
           .bit_width = 4,
