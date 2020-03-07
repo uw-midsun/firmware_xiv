@@ -57,7 +57,7 @@ void test_steering_digital_input_horn() {
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
   // Should be empty after the event is popped off
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-  TEST_ASSERT_OK(steering_can_process_event(e));
+  TEST_ASSERT_OK(steering_can_process_event(&e));
 }
 void test_steering_digital_input_high_beam_forward() {
   GpioAddress *high_beam_forward_address = test_get_address(STEERING_HIGH_BEAM_FORWARD_EVENT);
@@ -68,7 +68,7 @@ void test_steering_digital_input_high_beam_forward() {
   TEST_ASSERT_EQUAL(STEERING_HIGH_BEAM_FORWARD_EVENT, e.id);
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-  TEST_ASSERT_OK(steering_can_process_event(e));
+  TEST_ASSERT_OK(steering_can_process_event(&e));
 }
 
 void test_steering_digital_input_cc_toggle() {
@@ -79,13 +79,13 @@ void test_steering_digital_input_cc_toggle() {
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT, e.id);
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-  TEST_ASSERT_OK(steering_can_process_event(e));
+  TEST_ASSERT_OK(steering_can_process_event(&e));
 }
 
 void test_invalid_can_message() {
   // provide an invalid id
   Event e = { .id = 9, .data = 0 };
-  TEST_ASSERT_NOT_OK(steering_can_process_event(e));
+  TEST_ASSERT_NOT_OK(steering_can_process_event(&e));
 }
 
 void teardown_test(void) {}

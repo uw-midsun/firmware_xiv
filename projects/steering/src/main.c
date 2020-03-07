@@ -47,7 +47,7 @@ int main() {
   Event e = { .id = 0, .data = 0 };
   while (true) {
     while (event_process(&e)) {
-      steering_can_process_event(e);
+      steering_can_process_event(&e);
     }
   }
   return 0;

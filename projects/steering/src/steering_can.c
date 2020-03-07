@@ -18,23 +18,17 @@
 #include "status.h"
 #include "steering_digital_input.h"
 
-StatusCode steering_can_process_event(Event e) {
-  if (e.id >= NUM_STEERING_EVENTS) {
+StatusCode steering_can_process_event(Event *e) {
+  if (e->id >= NUM_STEERING_EVENTS) {
     return STATUS_CODE_INVALID_ARGS;
+  } else if (e->id == STEERING_INPUT_HORN_EVENT) {
+    CAN_TRANSMIT_HORN((EEHornState)e->data);
+  } else if (e->id == STEERING_HIGH_BEAM_FORWARD_EVENT) {
+    CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_HIGH_BEAMS, (EELightState)e->data);
+  } else if (e->id == STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT) {
+  // WILL BE COMPLETED ONCE CAN_TRANSMIT FUNCTIONS ARE CREATED
+  LOG_DEBUG("CALLBACK RUN \n");
+  // will be added
   }
-
-  if (e.id == STEERING_INPUT_HORN_EVENT) {
-    CAN_TRANSMIT_HORN((EEHornState)e.data);
-  } else if (e.id == STEERING_RADIO_PPT_EVENT) {
-    // will be added
-  } else if (e.id == STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD ||
-             STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR) {
-    CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_HIGH_BEAMS, e.data);
-  } else if (e.id == STEERING_REGEN_BRAKE_EVENT) {
-    // will be added
-  } else if (e.id == STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT) {
-    // will be added
-  }
-
-  return STATUS_CODE_OK;
+return STATUS_CODE_OK;
 }

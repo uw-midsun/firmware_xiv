@@ -16,4 +16,4 @@
 #include "status.h"
 
 // Receives an event and sends a CAN message
-StatusCode steering_can_process_event(Event e);
+StatusCode steering_can_process_event(Event *e);
