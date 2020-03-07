@@ -1,5 +1,6 @@
 #include "main_event_generator.h"
 #include "centre_console_events.h"
+
 // button input events: drive, reverse, parking, neutral, power
 // states: 
 //  drive state
@@ -33,14 +34,24 @@
 //     speed: low
 // 
 
-StatusCode main_event_generator_init() {
-  
+StatusCode main_event_generator_init(void) {
+  return STATUS_CODE_OK;  
 }
 
+#define prv_false_or_return(transitioned) \
+  if (transitioned) return true
 
+#define prv_check_event(event_id, expected_event_id) \
+  if ((event_id)!=(expected_event_id)) return false
 
+bool prv_process_power_event(const Event* e) {
+  prv_check_event(e->id, CENTRE_CONSOLE_BUTTON_PRESS_EVENT_POWER);
 
+  return false;
+}
 
+bool main_event_generator_process_event(const Event *event) {
+  prv_false_or_return(prv_process_power_event(event));
 
-
-
+  return false;
+}
