@@ -13,19 +13,22 @@
 // 85% < DC <= 96%: max = (DC% - 64) * 2.5
 // 96% < DC <= 96.5%: max = 80A
 // 96.5 < DC: no charging allowed
-float prv_dc_to_current(uint32_t dc) {
+uint16_t prv_dc_to_current(uint32_t dc) {
   // based on a dc representation of ddd.d%
+  float ret = 0;
   if (95 <= dc < 100) {
-    return 6.0f;
+    ret = 6.0f;
   } else if (100 <= dc && dc <= 850) {
-    return (float)dc * 0.6f;  
+    ret = (float)dc * 0.6f;  
   } else if (850 < dc && dc <= 960) {
-    return (float)(dc - 640) * 2.5f;
+    ret = (float)(dc - 640) * 2.5f;
   } else if (960 < dc && dc <= 965) {
-    return 80.0f;
+    ret = 80.0f;
   } else {
-    return 0.0f;
+    ret = 0.0f;
   }
+  // return with same representation rrr.r A
+  return (uint16_t)(ret * 10);
 }
 
 void control_pilot_monitor_process_event(Event e) {
