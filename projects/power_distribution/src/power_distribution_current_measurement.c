@@ -1,17 +1,17 @@
-#include "rear_power_distribution_current_measurement.h"
+#include "power_distribution_current_measurement.h"
 
 #include <stddef.h>
 #include "bts_7040_7008_current_sense.h"
 #include "bts_7200_current_sense.h"
 
-static RearPowerDistributionCurrentHardwareConfig s_hw_config;
-static RearPowerDistributionCurrentStorage s_storage = { 0 };
-static Bts7200Storage s_bts7200_storages[MAX_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS];
-static Bts7040Storage s_bts7040_storages[MAX_REAR_POWER_DISTRIBUTION_BTS7040_CHANNELS];
+static PowerDistributionCurrentHardwareConfig s_hw_config;
+static PowerDistributionCurrentStorage s_storage = { 0 };
+static Bts7200Storage s_bts7200_storages[MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS];
+static Bts7040Storage s_bts7040_storages[MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS];
 static SoftTimerId s_timer_id;
 
 static uint32_t s_interval_us;
-static RearPowerDistributionCurrentMeasurementCallback s_callback;
+static PowerDistributionCurrentMeasurementCallback s_callback;
 static void *s_callback_context;
 
 static void prv_measure_currents(SoftTimerId timer_id, void *context) {
@@ -37,10 +37,9 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   soft_timer_start(s_interval_us, &prv_measure_currents, NULL, &s_timer_id);
 }
 
-StatusCode rear_power_distribution_current_measurement_init(
-    RearPowerDistributionCurrentSettings *settings) {
-  if (settings->hw_config.num_bts7200_channels > MAX_REAR_POWER_DISTRIBUTION_BTS7200_CHANNELS ||
-      settings->hw_config.num_bts7040_channels > MAX_REAR_POWER_DISTRIBUTION_BTS7040_CHANNELS) {
+StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentSettings *settings) {
+  if (settings->hw_config.num_bts7200_channels > MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS ||
+      settings->hw_config.num_bts7040_channels > MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -65,8 +64,8 @@ StatusCode rear_power_distribution_current_measurement_init(
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
     // check that the currents are valid
-    if (s_hw_config.bts7200s[i].current_0 >= NUM_REAR_POWER_DISTRIBUTION_CURRENTS ||
-        s_hw_config.bts7200s[i].current_1 >= NUM_REAR_POWER_DISTRIBUTION_CURRENTS) {
+    if (s_hw_config.bts7200s[i].current_0 >= NUM_POWER_DISTRIBUTION_CURRENTS ||
+        s_hw_config.bts7200s[i].current_1 >= NUM_POWER_DISTRIBUTION_CURRENTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 
@@ -82,7 +81,7 @@ StatusCode rear_power_distribution_current_measurement_init(
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     // check that the current is valid
-    if (s_hw_config.bts7040s[i].current >= NUM_REAR_POWER_DISTRIBUTION_CURRENTS) {
+    if (s_hw_config.bts7040s[i].current >= NUM_POWER_DISTRIBUTION_CURRENTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 
@@ -96,11 +95,11 @@ StatusCode rear_power_distribution_current_measurement_init(
   return STATUS_CODE_OK;
 }
 
-RearPowerDistributionCurrentStorage *rear_power_distribution_current_measurement_get_storage(void) {
+PowerDistributionCurrentStorage *power_distribution_current_measurement_get_storage(void) {
   return &s_storage;
 }
 
-StatusCode rear_power_distribution_stop(void) {
+StatusCode power_distribution_stop(void) {
   soft_timer_cancel(s_timer_id);
   s_timer_id = SOFT_TIMER_INVALID_TIMER;
   return STATUS_CODE_OK;
