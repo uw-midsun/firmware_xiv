@@ -1,25 +1,27 @@
-#include "front_power_distribution_can_rx_event_mapper.h"
+#include "power_distribution_can_rx_event_mapper.h"
 #include "can.h"
 #include "can_msg_defs.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "front_power_distribution_events.h"
 #include "log.h"
+#include "power_distribution_events.h"
 
-static const FrontPowerDistributionSignalEvent s_light_type_to_signal_event[] = {
-  [EE_LIGHT_TYPE_SIGNAL_LEFT] = FRONT_POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
-  [EE_LIGHT_TYPE_SIGNAL_RIGHT] = FRONT_POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
-  [EE_LIGHT_TYPE_SIGNAL_HAZARD] = FRONT_POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
+// NOT YET GENERIC
+
+static const PowerDistributionSignalEvent s_light_type_to_signal_event[] = {
+  [EE_LIGHT_TYPE_SIGNAL_LEFT] = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
+  [EE_LIGHT_TYPE_SIGNAL_RIGHT] = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
+  [EE_LIGHT_TYPE_SIGNAL_HAZARD] = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
 };
 
-static const FrontPowerDistributionGpioEvent s_output_to_gpio_event[] = {
+static const PowerDistributionGpioEvent s_output_to_gpio_event[] = {
   [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY] =
-      FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING] = FRONT_POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
+      POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY,
+  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING] = POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
   [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE] =
-      FRONT_POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL] = FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRL,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL] = FRONT_POWER_DISTRIBUTION_GPIO_EVENT_PEDAL,
+      POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE,
+  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL] = POWER_DISTRIBUTION_GPIO_EVENT_DRL,
+  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL] = POWER_DISTRIBUTION_GPIO_EVENT_PEDAL,
 };
 
 static StatusCode prv_handle_lights_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
@@ -46,8 +48,7 @@ static StatusCode prv_handle_lights_rx(const CanMessage *msg, void *context, Can
   }
 
   if (light_type == EE_LIGHT_TYPE_DRL) {
-    return event_raise_priority(EVENT_PRIORITY_NORMAL, FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRL,
-                                data);
+    return event_raise_priority(EVENT_PRIORITY_NORMAL, POWER_DISTRIBUTION_GPIO_EVENT_DRL, data);
   }
 
   return STATUS_CODE_OK;  // not meant for us?
@@ -80,11 +81,10 @@ static StatusCode prv_handle_horn_rx(const CanMessage *msg, void *context, CanAc
   }
 
   uint16_t data = (state == EE_HORN_STATE_ON) ? 1 : 0;
-  return event_raise_priority(EVENT_PRIORITY_NORMAL, FRONT_POWER_DISTRIBUTION_GPIO_EVENT_HORN,
-                              data);
+  return event_raise_priority(EVENT_PRIORITY_NORMAL, POWER_DISTRIBUTION_GPIO_EVENT_HORN, data);
 }
 
-StatusCode front_power_distribution_can_rx_event_mapper_init(void) {
+StatusCode power_distribution_can_rx_event_mapper_init(void) {
   status_ok_or_return(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, &prv_handle_lights_rx, NULL));
   status_ok_or_return(

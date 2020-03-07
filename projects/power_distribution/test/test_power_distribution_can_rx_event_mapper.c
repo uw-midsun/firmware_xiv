@@ -2,13 +2,15 @@
 #include "delay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "front_power_distribution_can_rx_event_mapper.h"
-#include "front_power_distribution_events.h"
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
+#include "power_distribution_can_rx_event_mapper.h"
+#include "power_distribution_events.h"
 #include "test_helpers.h"
 #include "unity.h"
+
+// NOT YET GENERIC
 
 #define TEST_CAN_DEVICE_ID 0x1
 
@@ -78,7 +80,7 @@ void teardown_test(void) {}
 
 // Comprehensive happy-path test: receiving each type of CAN message gives each event ID
 void test_can_rx_event_mapper_raises_each_event_type(void) {
-  TEST_ASSERT_OK(front_power_distribution_can_rx_event_mapper_init());
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init());
 
   CanMessage msg = {
     .source_id = TEST_CAN_DEVICE_ID,
@@ -86,37 +88,37 @@ void test_can_rx_event_mapper_raises_each_event_type(void) {
     .dlc = 8,
   };
 
-  TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_DRL, FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRL);
+  TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_DRL, POWER_DISTRIBUTION_GPIO_EVENT_DRL);
   TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_SIGNAL_LEFT,
-                                 FRONT_POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT);
+                                 POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT);
   TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_SIGNAL_RIGHT,
-                                 FRONT_POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT);
+                                 POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT);
   TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_SIGNAL_HAZARD,
-                                 FRONT_POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD);
+                                 POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD);
 
   TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY,
-                                FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY);
+                                POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY);
   TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING,
-                                FRONT_POWER_DISTRIBUTION_GPIO_EVENT_STEERING);
+                                POWER_DISTRIBUTION_GPIO_EVENT_STEERING);
   TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE,
-                                FRONT_POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE);
+                                POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE);
   TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL,
-                                FRONT_POWER_DISTRIBUTION_GPIO_EVENT_PEDAL);
+                                POWER_DISTRIBUTION_GPIO_EVENT_PEDAL);
   TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL,
-                                FRONT_POWER_DISTRIBUTION_GPIO_EVENT_DRL);
+                                POWER_DISTRIBUTION_GPIO_EVENT_DRL);
   // STROBE and DRIVER_FANS not implemented because what is their port?
 
   // horn is a one-off so there's no point having a macro to make it nice
   TEST_RX_TO_EVENT(msg, SYSTEM_CAN_MESSAGE_HORN, EE_HORN_STATE_OFF, 0,
-                   FRONT_POWER_DISTRIBUTION_GPIO_EVENT_HORN, 0);
+                   POWER_DISTRIBUTION_GPIO_EVENT_HORN, 0);
   TEST_RX_TO_EVENT(msg, SYSTEM_CAN_MESSAGE_HORN, EE_HORN_STATE_ON, 0,
-                   FRONT_POWER_DISTRIBUTION_GPIO_EVENT_HORN, 1);
+                   POWER_DISTRIBUTION_GPIO_EVENT_HORN, 1);
 }
 
 // Test that the module ignores messages with different IDs/type fields which presumably aren't
 // meant for it.
 void test_can_rx_event_mapper_ignores_other_messages(void) {
-  TEST_ASSERT_OK(front_power_distribution_can_rx_event_mapper_init());
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init());
 
   // First, an message id not used by anything
   CanMessage msg = {
