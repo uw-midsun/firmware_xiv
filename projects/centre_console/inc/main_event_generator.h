@@ -1,10 +1,22 @@
 #pragma once
 
+#include "drive_fsm.h"
+#include "event_queue.h"
+#include "power_fsm.h"
 #include "status.h"
 #include "stdbool.h"
-#include "event_queue.h"
 
-StatusCode main_event_generator_init(void);
+typedef struct MainEventGeneratorResources {
+  PowerFsmStorage *power_fsm;
+  DriveFsmStorage *drive_fsm;
+} MainEventGeneratorResources;
 
-bool main_event_generator_process_event(const Event *event);
+typedef struct MainEventGeneratorStorage {
+  PowerFsmStorage *power_fsm;
+  DriveFsmStorage *drive_fsm;
+} MainEventGeneratorStorage;
 
+StatusCode main_event_generator_init(MainEventGeneratorStorage *storage,
+                                     MainEventGeneratorResources *resources);
+
+bool main_event_generator_process_event(MainEventGeneratorStorage *storage, const Event *event);

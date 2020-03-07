@@ -102,7 +102,8 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
 }
 
 bool power_fsm_process_event(PowerFsmStorage *power_fsm, const Event *event) {
-  if (CENTRE_CONSOLE_POWER_EVENT_OFF <= event->id && event->id <=CENTRE_CONSOLE_POWER_EVENT_ON_AUX) {
+  if (CENTRE_CONSOLE_POWER_EVENT_OFF <= event->id &&
+      event->id <= CENTRE_CONSOLE_POWER_EVENT_ON_AUX) {
     power_fsm->destination_state = s_destination_lookup[event->id];
   }
   return fsm_process_event(&power_fsm->power_fsm, event);

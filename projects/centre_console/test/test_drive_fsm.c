@@ -40,6 +40,10 @@ static StatusCode prv_rx_drive_output_callback(const CanMessage *msg, void *cont
   return STATUS_CODE_OK;
 }
 
+void prv_assert_current_drive_state(DriveState state) {
+  TEST_ASSERT_EQUAL(state, drive_fsm_get_global_state(&s_drive_fsm));
+}
+
 void setup_test(void) {
   gpio_init();
   event_queue_init();
@@ -67,6 +71,7 @@ static DriveFsmInputEvent s_mci_output_lookup[] = {
 };
 
 void prv_assert_ebrake_state(Event *event, EEEbrakeState state) {
+  prv_assert_current_drive_state(DRIVE_STATE_TRANSITIONING);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_SET_EBRAKE_STATE,
                                          SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
@@ -125,6 +130,7 @@ void prv_fail_mci_output(Event *event, EEDriveOutput output) {
 }
 
 void prv_assert_mci_output(Event *event, EEDriveOutput output) {
+  prv_assert_current_drive_state(DRIVE_STATE_TRANSITIONING);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(s_can_storage, SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT,
                                          SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, CAN_ACK_STATUS_OK);
@@ -134,7 +140,15 @@ void prv_assert_mci_output(Event *event, EEDriveOutput output) {
   *event = e;
 }
 
+DriveState s_drive_state_lookup[] = {
+  [DRIVE_FSM_OUTPUT_EVENT_DRIVE] = DRIVE_STATE_DRIVE,
+  [DRIVE_FSM_OUTPUT_EVENT_REVERSE] = DRIVE_STATE_REVERSE,
+  [DRIVE_FSM_OUTPUT_EVENT_PARKING] = DRIVE_STATE_PARKING,
+  [DRIVE_FSM_OUTPUT_EVENT_NEUTRAL] = DRIVE_STATE_NEUTRAL,
+};
+
 void prv_assert_output_event(DriveFsmOutputEvent event) {
+  prv_assert_current_drive_state(s_drive_state_lookup[event]);
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, event, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -150,6 +164,7 @@ void prv_assert_set_discharge(Event *e) {
 }
 
 void prv_assert_set_precharge(Event *e) {
+  prv_assert_current_drive_state(DRIVE_STATE_TRANSITIONING);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   // precharge completed
@@ -165,6 +180,7 @@ void teardown_test(void) {}
 void test_transition_to_drive_then_parking_then_reverse(void) {
   // neutral -> drive -> parking -> reverse -> drive -> reverse
   TEST_ASSERT_OK(drive_fsm_init(&s_drive_fsm));
+  prv_assert_current_drive_state(DRIVE_STATE_NEUTRAL);
 
   Event e = { .id = DRIVE_FSM_INPUT_EVENT_DRIVE, .data = NUM_DRIVE_STATES };
   // neutral -> set precharge
@@ -179,6 +195,7 @@ void test_transition_to_drive_then_parking_then_reverse(void) {
 
   // set ebrake state -> neutral precharged
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
+  prv_assert_current_drive_state(DRIVE_STATE_TRANSITIONING);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_DRIVE, 0);
 
   // neutral precharged -> set mci state
