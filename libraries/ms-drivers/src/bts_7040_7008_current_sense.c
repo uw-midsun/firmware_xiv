@@ -1,7 +1,7 @@
 #include "bts_7040_7008_current_sense.h"
 #include "adc.h"
 
-StatusCode bts_7040_init(Bts7040Settings *settings, Bts7040Storage *storage) {
+StatusCode bts_7040_init(Bts7040Storage *storage, Bts7040Settings *settings) {
   storage->sense_pin = settings->sense_pin;
 
   // enable the enable pin

@@ -39,7 +39,7 @@ void test_bts_7040_init_works(void) {
     .sense_pin = &test_output_pin,
   };
   Bts7040Storage storage;
-  TEST_ASSERT_OK(bts_7040_init(&valid_settings, &storage));
+  TEST_ASSERT_OK(bts_7040_init(&storage, &valid_settings));
 }
 
 // Test that it fails with an invalid configuration.
@@ -53,10 +53,10 @@ void test_bts_7040_init_invalid_config(void) {
   };
   Bts7040Storage storage;
 
-  TEST_ASSERT_NOT_OK(bts_7040_init(&invalid_settings, &storage));
+  TEST_ASSERT_NOT_OK(bts_7040_init(&storage, &invalid_settings));
   test_enable_pin.pin = PCA9539R_PIN_IO0_0;
   test_output_pin.port = NUM_GPIO_PORTS;
-  TEST_ASSERT_NOT_OK(bts_7040_init(&invalid_settings, &storage));
+  TEST_ASSERT_NOT_OK(bts_7040_init(&storage, &invalid_settings));
 }
 
 // Test that we can successfully get a value.
@@ -69,7 +69,7 @@ void test_bts_7040_get_measurement(void) {
     .sense_pin = &test_output_pin,
   };
   Bts7040Storage storage;
-  TEST_ASSERT_OK(bts_7040_init(&settings, &storage));
+  TEST_ASSERT_OK(bts_7040_init(&storage, &settings));
 
   uint16_t measured = 0;
   TEST_ASSERT_OK(bts_7040_get_measurement(&storage, &measured));

@@ -15,6 +15,6 @@ typedef struct {
   GpioAddress *sense_pin;
 } Bts7040Storage;
 
-StatusCode bts_7040_init(Bts7040Settings *settings, Bts7040Storage *storage);
+StatusCode bts_7040_init(Bts7040Storage *storage, Bts7040Settings *settings);
 
 StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *measured);
