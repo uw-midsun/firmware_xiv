@@ -22,7 +22,6 @@ typedef enum {
   // NUM_EE_BPS_HEARTBEAT_FAULT_SOURCES,
 } EEBatteryHeartbeatFaultSource;
 
-
 // Set the killswitch up to fault if hit. Assumes the killswitch is active-low.
 StatusCode killswitch_init(KillswitchStorage *storage, const GpioAddress *killswitch,
                            BatteryHeartbeatStorage *battery_heartbeat);
