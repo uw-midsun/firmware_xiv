@@ -42,10 +42,14 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_0 = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_1 = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -81,11 +85,15 @@ void test_bts_7200_current_sense_timer_pca9539r_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  Pca9539rGpioAddress test_enable_pin_0 = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
+  Pca9539rGpioAddress test_enable_pin_1 = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -122,10 +130,14 @@ void test_bts_7200_current_sense_restart(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_0 = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_1 = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -173,9 +185,13 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   // start with invalid select pin
   GpioAddress select_pin = { .port = NUM_GPIO_PORTS, .pin = 0 };  // invalid
   GpioAddress sense_pin = { .port = 0, .pin = 0 };                // valid
+  GpioAddress enable_pin_0 = { .port = 0, .pin = 0 };             // valid
+  GpioAddress enable_pin_1 = { .port = 0, .pin = 0 };             // valid
   Bts7200Stm32Settings settings = {
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
+    .enable_pin_0 = &enable_pin_0,
+    .enable_pin_1 = &enable_pin_1,
     .interval_us = 500,  // 0.5 ms
     .callback = &prv_callback_increment,
   };
@@ -187,21 +203,35 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   select_pin.port = 0;
   sense_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&storage, &settings));
+
+  // invalid enable pin 0
+  sense_pin.port = 0;
+  enable_pin_0.port = NUM_GPIO_PORTS;
+  TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&storage, &settings));
+
+  // invalid enable pin 1
+  enable_pin_0.port = 0;
+  enable_pin_1.port = NUM_GPIO_PORTS;
+  TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&storage, &settings));
+
+  // otherwise valid
+  enable_pin_1.port = 0;
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
 }
 
 // Same, but for pca9539r.
 void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
   // start with invalid select pin
-  Pca9539rGpioAddress select_pin = {
-    // valid
-    .i2c_address = 0,
-    .pin = NUM_PCA9539R_GPIO_PINS,
-  };
-  GpioAddress sense_pin = { .port = 0, .pin = 0 };  // invalid
+  Pca9539rGpioAddress select_pin = { .i2c_address = 0, .pin = NUM_PCA9539R_GPIO_PINS };  // invalid
+  GpioAddress sense_pin = { .port = 0, .pin = 0 };                                       // invalid
+  Pca9539rGpioAddress enable_pin_0 = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };    // valid
+  Pca9539rGpioAddress enable_pin_1 = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };    // valid
   Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
+    .enable_pin_0 = &enable_pin_0,
+    .enable_pin_1 = &enable_pin_1,
     .interval_us = 500,  // 0.5 ms
     .callback = &prv_callback_increment,
   };
@@ -213,6 +243,20 @@ void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
   select_pin.pin = 0;
   sense_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(bts_7200_init_pca9539r(&storage, &settings));
+
+  // invalid enable pin 0
+  sense_pin.port = 0;
+  enable_pin_0.pin = NUM_PCA9539R_GPIO_PINS;
+  TEST_ASSERT_NOT_OK(bts_7200_init_pca9539r(&storage, &settings));
+
+  // invalid enable pin 1
+  enable_pin_0.pin = 0;
+  enable_pin_1.pin = NUM_PCA9539R_GPIO_PINS;
+  TEST_ASSERT_NOT_OK(bts_7200_init_pca9539r(&storage, &settings));
+
+  // otherwise valid
+  enable_pin_1.pin = 0;
+  TEST_ASSERT_OK(bts_7200_init_pca9539r(&storage, &settings));
 }
 
 // Test that having a NULL callback works and we don't segfault.
@@ -220,10 +264,14 @@ void test_bts_7200_current_sense_null_callback(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_0 = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_1 = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = NULL,
   };
@@ -235,14 +283,18 @@ void test_bts_7200_current_sense_null_callback(void) {
 }
 
 // Test that bts_7200_get_measurement returns ok.
-void test_bts_7200_current_sense_get_measurement_native_valid(void) {
+void test_bts_7200_current_sense_get_measurement_stm32_valid(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_0 = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_1 = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -259,11 +311,15 @@ void test_bts_7200_current_sense_get_measurement_native_valid(void) {
 void test_bts_7200_current_sense_get_measurement_pca9539r_valid(void) {
   Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  Pca9539rGpioAddress test_enable_pin_0 = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
+  Pca9539rGpioAddress test_enable_pin_1 = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -281,10 +337,14 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_0 = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_1 = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -302,11 +362,15 @@ void test_bts_7200_current_sense_context_passed(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_0 = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin_1 = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;            // 0.5 ms
   void *context_pointer = &interval_us;  // arbitrary pointer
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
+    .enable_pin_0 = &test_enable_pin_0,
+    .enable_pin_1 = &test_enable_pin_1,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .callback_context = context_pointer,

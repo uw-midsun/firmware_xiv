@@ -42,6 +42,8 @@ typedef enum {
 
 typedef struct {
   Pca9539rGpioAddress dsel_gpio_address;
+  Pca9539rGpioAddress enable_pin_0;
+  Pca9539rGpioAddress enable_pin_1;
   RearPowerDistributionCurrent current_0;
   RearPowerDistributionCurrent current_1;
   uint8_t mux_selection;

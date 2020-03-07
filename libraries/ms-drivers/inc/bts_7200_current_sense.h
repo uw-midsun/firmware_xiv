@@ -15,6 +15,8 @@ typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out
 typedef struct {
   GpioAddress *select_pin;
   GpioAddress *sense_pin;
+  GpioAddress *enable_pin_0;
+  GpioAddress *enable_pin_1;
   uint32_t interval_us;
   Bts7200DataCallback callback;  // set to NULL for no callback
   void *callback_context;
@@ -25,6 +27,8 @@ typedef struct {
   I2CPort i2c_port;
   Pca9539rGpioAddress *select_pin;
   GpioAddress *sense_pin;
+  Pca9539rGpioAddress *enable_pin_0;
+  Pca9539rGpioAddress *enable_pin_1;
   uint32_t interval_us;
   Bts7200DataCallback callback;  // set to NULL for no callback
   void *callback_context;

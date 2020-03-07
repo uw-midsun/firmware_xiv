@@ -5,8 +5,6 @@
 #define REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0 0x74
 #define REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1 0x76
 
-// TO-DO ADD ENABLE PINS TO BTS7200 - won't work without
-
 // Note: this is actually entirely for front power distribution
 // This will be changed when this module is generified
 const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG = {
@@ -23,6 +21,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // LEFT_RIGHT_CAM
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                                      .pin = PCA9539R_PIN_IO0_0 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO0_1 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO1_3 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_LEFT_CAMERA,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_CAMERA,
               .mux_selection = 12,
@@ -31,6 +33,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // DVR_REAR_DISP
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                                      .pin = PCA9539R_PIN_IO0_6 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO0_7 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO0_6 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_DRIVER_DISPLAY,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_REAR_DISPLAY,
               .mux_selection = 0,
@@ -39,6 +45,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // L_R_DVR_DISP
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                                      .pin = PCA9539R_PIN_IO1_5 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO1_4 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO1_6 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_LEFT_DRIVER_DISPLAY,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_DRIVER_DISPLAY,
               .mux_selection = 4,
@@ -47,6 +57,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // FRONT_TURN_LIGHT
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                                      .pin = PCA9539R_PIN_IO0_3 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                .pin = PCA9539R_PIN_IO0_4 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                .pin = PCA9539R_PIN_IO0_2 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_LEFT_FRONT_TURN_LIGHT,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_FRONT_TURN_LIGHT,
               .mux_selection = 9,
@@ -55,6 +69,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // MAIN_REAR_PI
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                                      .pin = PCA9539R_PIN_IO1_1 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO1_0 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO1_2 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_MAIN_PI,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_REAR_PI,
               .mux_selection = 1,
@@ -63,6 +81,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // 5V_SPARE
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                                      .pin = PCA9539R_PIN_IO0_3 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO0_4 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
+                .pin = PCA9539R_PIN_IO0_2 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_5V_SPARE_1,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_5V_SPARE_2,
               .mux_selection = 2,
@@ -71,6 +93,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // SPARE_2_CTR_CONSL
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                                      .pin = PCA9539R_PIN_IO0_0 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                .pin = PCA9539R_PIN_IO0_1 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                .pin = PCA9539R_PIN_IO1_5 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_2,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_CENTRE_CONSOLE,
               .mux_selection = 7,
@@ -79,6 +105,10 @@ const RearPowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CON
               // STR_PDL
               .dsel_gpio_address = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                                      .pin = PCA9539R_PIN_IO1_2 },
+              .enable_pin_0 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                .pin = PCA9539R_PIN_IO1_3 },
+              .enable_pin_1 = { .i2c_address = REAR_POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
+                .pin = PCA9539R_PIN_IO1_1 },
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_STEERING,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_PEDAL,
               .mux_selection = 6,
