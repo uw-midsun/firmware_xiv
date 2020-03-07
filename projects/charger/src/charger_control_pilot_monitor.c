@@ -16,10 +16,10 @@
 uint16_t prv_dc_to_current(uint32_t dc) {
   // based on a dc representation of ddd.d%
   float ret = 0;
-  if (95 <= dc < 100) {
+  if (95 <= dc && dc < 100) {
     ret = 6.0f;
   } else if (100 <= dc && dc <= 850) {
-    ret = (float)dc * 0.6f;  
+    ret = (float)dc * 0.6f;
   } else if (850 < dc && dc <= 960) {
     ret = (float)(dc - 640) * 2.5f;
   } else if (960 < dc && dc <= 965) {

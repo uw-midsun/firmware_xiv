@@ -12,8 +12,8 @@
 //     - implements init
 // - permission_resolver
 //     - handles connection events
-// - begin_charge_fsm
-// - stop_charge_fsm
+// - [TODOS] begin_charge_fsm
+// - [TODOS] stop_charge_fsm
 // - battery_voltage_monitor
 //     - handles overvoltage faults from BMS
 
