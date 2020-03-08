@@ -11,17 +11,14 @@
 #include "mcp2515.h"
 #include "soft_timer.h"
 
+#define TEST_DLC 8
+#define TEST_EXTENDED false
+
+static SystemCanDevice s_id = 123;
+
 static GenericCanMcp2515 s_can_mcp2515;
 
-static CanStorage s_can_storage;
-
-typedef enum {
-  TEST_CAN_EVENT_RX = 10,
-  TEST_CAN_EVENT_TX,
-  TEST_CAN_EVENT_FAULT,
-} TestCanEvent;
-
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static void prv_rx_callback(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("Received a message!\n");
   char log_message[30];
   printf("Data:\n\t");
@@ -32,23 +29,6 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
     printf("%x ", byte);
   }
   printf("\n");
-  return STATUS_CODE_OK;
-}
-
-void init_can(void) {
-  CanSettings can_settings = {
-    .device_id = 4,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = TEST_CAN_EVENT_RX,
-    .tx_event = TEST_CAN_EVENT_TX,
-    .fault_event = TEST_CAN_EVENT_FAULT,
-    .tx = { GPIO_PORT_A, 12 },
-    .rx = { GPIO_PORT_A, 11 },
-    .loopback = false,
-  };
-
-  StatusCode ret = can_init(&s_can_storage, &can_settings);
-  can_register_rx_default_handler(prv_rx_callback, NULL);
 }
 
 static void prv_setup_mcp2515(void) {
@@ -66,22 +46,12 @@ static void prv_setup_mcp2515(void) {
   };
 
   generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
+  generic_can_register_rx(&s_can_mcp2515.base, prv_rx_callback, 0x0, 0x0, false, NULL);
 }
 
-static SystemCanDevice s_id = 123;
-#define TEST_DLC 8
-#define TEST_EXTENDED false
-
 void ps(SoftTimerId timer_id, void *context) {
-
-  GenericCanMsg msg = {
-    .id = 0x41u,
-    .dlc = 4,
-    .extended = false,
-    .data = 0x12345678
-  };
-
   uint64_t data = 0x1234567890abcdef;
+  GenericCanMsg msg = { .id = s_id, .data = data, .dlc = TEST_DLC, .extended = TEST_EXTENDED };
   LOG_DEBUG("Sending: id: %x, data: %x%x!\n", s_id, (unsigned)((data >> 32) & 0xffffffff),
             (unsigned)(data & 0xffffffff));
   generic_can_tx(&s_can_mcp2515.base, &msg);
@@ -95,16 +65,10 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   prv_setup_mcp2515();
-  init_can();
-  LOG_DEBUG("Hello, world!\n");
-
-  uint64_t data = 0x1234567890abcdef;
-  GenericCanMsg msg = { .id = s_id, .dlc = TEST_DLC, .extended = TEST_EXTENDED, .data = data };
+  LOG_DEBUG("Initializing mcp2515 can smoke test\n");
 
   Event e = { 0 };
-
   soft_timer_start_millis(500, ps, NULL, NULL);
-
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
     }
