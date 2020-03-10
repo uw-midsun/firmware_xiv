@@ -1,6 +1,6 @@
 #pragma once
 #include <assert.h>
-#include "plutus_cfg.h"
+#include "bms_cfg.h"
 
 // used internally by the LTC AFE driver
 // in-progress, porting over from MSXII
@@ -9,6 +9,7 @@
 #define LTC6811_CELLS_IN_REG 3 
 #define LTC6811_GPIOS_IN_REG 3
 
+//up-to-date
 typedef enum {
   LTC_AFE_REGISTER_CONFIG = 0,
   LTC_AFE_REGISTER_CELL_VOLTAGE_A,
@@ -20,19 +21,21 @@ typedef enum {
   LTC_AFE_REGISTER_STATUS_A,
   LTC_AFE_REGISTER_STATUS_B,
   LTC_AFE_REGISTER_COMM,
+  LTC_AFE_REGISTER_S_CONTROL, 
+  LTC_AFE_REGISTER_PWM,
   NUM_LTC_AFE_REGISTERS
 } LtcAfeRegister;
 
+//up-to-date
 typedef enum {
   LTC_AFE_VOLTAGE_REGISTER_A = 0,
   LTC_AFE_VOLTAGE_REGISTER_B,
   LTC_AFE_VOLTAGE_REGISTER_C,
   LTC_AFE_VOLTAGE_REGISTER_D,
-  LTC_AFE_VOLTAGE_REGISTER_E,
-  LTC_AFE_VOLTAGE_REGISTER_F,
   NUM_LTC_AFE_VOLTAGE_REGISTERS
 } LtcAfeVoltageRegister;
 
+//up-to-date
 typedef enum {
   LTC_AFE_DISCHARGE_TIMEOUT_DISABLED = 0,
   LTC_AFE_DISCHARGE_TIMEOUT_30_S,
@@ -67,6 +70,7 @@ typedef struct {
   uint16_t discharge_bitset : 12;
   uint8_t discharge_timeout : 4;
 } _PACKED LtcAfeConfigRegisterData;
+
 static_assert(sizeof(LtcAfeConfigRegisterData) == 6, "LtcAfeConfigRegisterData must be 6 bytes");
 
 // CFGR packet
@@ -110,13 +114,13 @@ static_assert(sizeof(LTCAFEAuxRegisterGroupPacket) == 8,
               "LTCAFEAuxRegisterGroupPacket must be 8 bytes");
 
 // command codes
-// see Table 34 (p.49)
-//note: table 34 actually on 
+// see Table 38 (p.60)
+// up-to-date with LTC6811 
 #define LTC6811_WRCFGA_RESERVED (1 << 0)
 
 #define LTC6811_WRCFGB_RESERVED ((1 << 5) | (1 << 2))
 
-#define LTC6811_RDCFGA_RESERVED (1 << 0)
+#define LTC6811_RDCFGA_RESERVED (1 << 1)
 
 #define LTC6811_RDCFGB_RESERVED ((1 << 5) | (1 << 2) | (1 << 1))
 
@@ -162,15 +166,25 @@ static_assert(sizeof(LTCAFEAuxRegisterGroupPacket) == 8,
 
 #define LTC6811_ADCV_RESERVED ((1 << 9) | (1 << 6) | (1 << 5))
 
-#define LTC6811_ADCOW_RESERVED ((1 << 3) | (1 << 5) | (1 << 9))
+#define LTC6811_ADOW_RESERVED ((1 << 3) | (1 << 5) | (1 << 9))
 
 #define LTC6811_CVST_RESERVED ((1 << 0) | (1 << 1) | (1 << 2) | (1 << 9))
 
-//up to here is up-to-date with 68111
-
-#define LTC6811_ADOL_RESERVED ((1 << 9))
+#define LTC6811_ADOL_RESERVED ((1 << 9) | (1 << 0))
 
 #define LTC6811_ADAX_RESERVED (1 << 10) | (1 << 6) | (1 << 5)
+
+#define LTC6811_ADAXD_RESERVED (1 << 10)
+
+#define LTC6811_AXST_RESERVED ((1 << 10) | (1 << 2) | (1 << 1) | (1 << 0))
+
+#define LTC6811_ADSTAT_RESERVED ((1 << 3) | (1 << 5) | (1 << 6) | (1 << 10))
+
+#define LTC6811_STATST_RESERVED ((1 << 10) | (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0))
+
+#define LTC6811_ADCVAX_RESERVED ((1 << 10) | (1 << 6) | (1 << 5) | (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0))
+
+#define LTC6811_ADCVSC_RESERVED ((1 << 10) | (1 << 6) | (1 << 5) | (1 << 2) | (1 << 1) | (1 << 0))
 
 #define LTC6811_CLRCELL_RESERVED (1 << 0) | (1 << 4) | (1 << 8) | (1 << 9) | (1 << 10)
 
@@ -180,7 +194,7 @@ static_assert(sizeof(LTCAFEAuxRegisterGroupPacket) == 8,
 
 #define LTC6811_PLADC_RESERVED (1 << 2) | (1 << 4) | (1 << 8) | (1 << 9) | (1 << 10)
 
-#define LTC6811_DIAGNC_RESERVED (1 << 0) | (1 << 2) | (1 << 4) | (1 << 8) | (1 << 9) | (1 << 10)
+#define LTC6811_DIAGN_RESERVED (1 << 0) | (1 << 2) | (1 << 4) | (1 << 8) | (1 << 9) | (1 << 10)
 
 #define LTC6811_WRCOMM_RESERVED (1 << 0) | (1 << 5) | (1 << 8) | (1 << 9) | (1 << 10)
 
@@ -189,7 +203,8 @@ static_assert(sizeof(LTCAFEAuxRegisterGroupPacket) == 8,
 #define LTC6811_STCOMM_RESERVED (1 << 0) | (1 << 1) | (1 << 5) | (1 << 8) | (1 << 9) | (1 << 10)
 
 // command bits
-// see Table 35 (p. 50)
+// see Table 39 (p. 61)
+// partially up-to-date
 #define LTC6811_GPIO1_PD_ON (0 << 3)
 #define LTC6811_GPIO1_PD_OFF (1 << 3)
 #define LTC6811_GPIO2_PD_ON (0 << 4)
