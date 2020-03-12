@@ -5,6 +5,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "mcp2515.h"
+#include "generic_can_mcp2515.h"
 // include all the modules
 #include "charger_controller.h"
 #include "charger_events.h"
@@ -12,6 +13,7 @@
 #define TEST_CAN_DEVICE_ID 0x1
 
 static CanStorage s_can_storage;
+static GenericCanMcp2515 s_generic_can = { 0 };
 
 static CanSettings s_can_settings = {
   .device_id = TEST_CAN_DEVICE_ID,
@@ -71,8 +73,8 @@ int main() {
   // status_ok_or_return(gpio_init_pin(&address, &settings));
 
   // setup mcp2515 settings
-  mcp2515_init(&mcp2515, &mcp2515_settings);
-  charger_controller_init(&mcp2515);
+  generic_can_mcp2515_init(&s_generic_can, &mcp2515_settings);
+  charger_controller_init(&s_generic_can.base);
 
   LOG_DEBUG("STARTING...\n");
   Event e = { 0 };
