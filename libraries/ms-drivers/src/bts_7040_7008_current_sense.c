@@ -4,13 +4,6 @@
 StatusCode bts_7040_init(Bts7040Storage *storage, Bts7040Settings *settings) {
   storage->sense_pin = settings->sense_pin;
 
-  // enable the enable pin
-  Pca9539rGpioSettings enable_settings = {
-    .direction = PCA9539R_GPIO_DIR_OUT,
-    .state = PCA9539R_GPIO_STATE_HIGH,
-  };
-  status_ok_or_return(pca9539r_gpio_init_pin(settings->enable_pin, &enable_settings));
-
   // initialize the sense pin as ADC
   GpioSettings sense_settings = {
     .direction = GPIO_DIR_IN,

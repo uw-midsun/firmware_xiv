@@ -151,15 +151,12 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
     .num_dsel_i2c_addresses = 1,
     .bts7200s = (PowerDistributionBts7200Data[]){ {
         .dsel_pin = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_0 },
-        .enable_pin_0 = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_0 },
-        .enable_pin_1 = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_0 },
         .current_0 = 0,
         .current_1 = 1,
         .mux_selection = 0,
     } },
     .num_bts7200_channels = 1,
     .bts7040s = (PowerDistributionBts7040Data[]){ {
-        .enable_gpio_address = { .i2c_address = test_i2c_address, .pin = PCA9539R_PIN_IO0_1 },
         .current = 2,
         .mux_selection = 1,
     } },
@@ -198,16 +195,6 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
   settings.hw_config.bts7200s[0].dsel_pin.pin = PCA9539R_PIN_IO0_0;
 
-  // invalid BTS7200 enable pin 0
-  settings.hw_config.bts7200s[0].enable_pin_0.pin = NUM_PCA9539R_GPIO_PINS;
-  TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
-  settings.hw_config.bts7200s[0].enable_pin_0.pin = PCA9539R_PIN_IO0_0;
-
-  // invalid BTS7200 enable pin 1
-  settings.hw_config.bts7200s[0].enable_pin_1.pin = NUM_PCA9539R_GPIO_PINS;
-  TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
-  settings.hw_config.bts7200s[0].enable_pin_1.pin = PCA9539R_PIN_IO0_0;
-
   // invalid BTS7200 currents
   settings.hw_config.bts7200s[0].current_0 = NUM_POWER_DISTRIBUTION_CURRENTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
@@ -215,11 +202,6 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
   settings.hw_config.bts7200s[0].current_1 = NUM_POWER_DISTRIBUTION_CURRENTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
   settings.hw_config.bts7200s[0].current_1 = 1;
-
-  // invalid BTS7040 enable address
-  settings.hw_config.bts7040s[0].enable_gpio_address.pin = NUM_PCA9539R_GPIO_PINS;
-  TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
-  settings.hw_config.bts7040s[0].enable_gpio_address.pin = PCA9539R_PIN_IO0_1;
 
   // invalid BTS7040 current
   settings.hw_config.bts7040s[0].current = NUM_POWER_DISTRIBUTION_CURRENTS;

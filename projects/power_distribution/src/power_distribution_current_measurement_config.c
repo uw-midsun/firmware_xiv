@@ -21,10 +21,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // LEFT_RIGHT_CAM
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO0_0 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO0_1 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_3 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_LEFT_CAMERA,
               .current_1 = POWER_DISTRIBUTION_CURRENT_RIGHT_CAMERA,
               .mux_selection = 12,
@@ -33,10 +29,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // DVR_REAR_DISP
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO0_6 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO0_7 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO0_6 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_DRIVER_DISPLAY,
               .current_1 = POWER_DISTRIBUTION_CURRENT_REAR_DISPLAY,
               .mux_selection = 0,
@@ -45,10 +37,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // L_R_DVR_DISP
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO1_5 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_4 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_6 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_LEFT_DRIVER_DISPLAY,
               .current_1 = POWER_DISTRIBUTION_CURRENT_RIGHT_DRIVER_DISPLAY,
               .mux_selection = 4,
@@ -57,10 +45,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // FRONT_TURN_LIGHT
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                             .pin = PCA9539R_PIN_IO0_3 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO0_4 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO0_2 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_LEFT_FRONT_TURN_LIGHT,
               .current_1 = POWER_DISTRIBUTION_CURRENT_RIGHT_FRONT_TURN_LIGHT,
               .mux_selection = 9,
@@ -69,10 +53,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // MAIN_REAR_PI
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO1_1 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_0 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_2 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_MAIN_PI,
               .current_1 = POWER_DISTRIBUTION_CURRENT_REAR_PI,
               .mux_selection = 1,
@@ -81,10 +61,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // 5V_SPARE
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO0_3 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO0_4 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO0_2 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_5V_SPARE_1,
               .current_1 = POWER_DISTRIBUTION_CURRENT_5V_SPARE_2,
               .mux_selection = 2,
@@ -93,10 +69,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // SPARE_2_CTR_CONSL
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                             .pin = PCA9539R_PIN_IO0_0 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO0_1 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO1_5 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_SPARE_2,
               .current_1 = POWER_DISTRIBUTION_CURRENT_CENTRE_CONSOLE,
               .mux_selection = 7,
@@ -105,10 +77,6 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
               // STR_PDL
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                             .pin = PCA9539R_PIN_IO1_2 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO1_3 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO1_1 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_STEERING,
               .current_1 = POWER_DISTRIBUTION_CURRENT_PEDAL,
               .mux_selection = 6,
@@ -118,43 +86,31 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
       (PowerDistributionBts7040Data[]){
           {
               // MAIN_DISP
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO1_4 },
               .current = POWER_DISTRIBUTION_CURRENT_MAIN_DISPLAY,
               .mux_selection = 13,
           },
           {
               // DAYTIME
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO0_5 },
               .current = POWER_DISTRIBUTION_CURRENT_DAYTIME_RUNNING_LIGHTS,
               .mux_selection = 8,
           },
           {
               // PARKING_BRAKE
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO0_7 },
               .current = POWER_DISTRIBUTION_CURRENT_PARKING_BRAKE,
               .mux_selection = 10,
           },
           {
               // SPARE_1
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO0_6 },
               .current = POWER_DISTRIBUTION_CURRENT_SPARE_1,
               .mux_selection = 11,
           },
           {
               // HORN - actually a BTS7008 but it's the same
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                       .pin = PCA9539R_PIN_IO1_7 },
               .current = POWER_DISTRIBUTION_CURRENT_HORN,
               .mux_selection = 3,
           },
           {
               // SPEAKER
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO1_0 },
               .current = POWER_DISTRIBUTION_CURRENT_SPEAKER,
               .mux_selection = 5,
           } },
@@ -190,10 +146,6 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG =
               // Rear camera and placeholder (there's nothing on the second port?)
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO0_0 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO0_1 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_3 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_REAR_CAMERA,
               .current_1 = POWER_DISTRIBUTION_CURRENT_PLACEHOLDER_REAR_CAM,
               .mux_selection = 12,
@@ -202,10 +154,6 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG =
               // Charger interface and lights BPS strobe - assuming on same BTS7200 as L_R_DVR_DISP
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
                             .pin = PCA9539R_PIN_IO1_5 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_4 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                .pin = PCA9539R_PIN_IO1_6 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_CHARGER_INTERFACE,
               .current_1 = POWER_DISTRIBUTION_CURRENT_LIGHTS_BPS_STROBE,
               .mux_selection = 4,
@@ -214,10 +162,6 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG =
               // Left and right rear turn lights
               .dsel_pin = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
                             .pin = PCA9539R_PIN_IO0_3 },
-              .enable_pin_0 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO0_4 },
-              .enable_pin_1 = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                .pin = PCA9539R_PIN_IO0_2 },
               .current_0 = POWER_DISTRIBUTION_CURRENT_LEFT_REAR_TURN_LIGHT,
               .current_1 = POWER_DISTRIBUTION_CURRENT_RIGHT_REAR_TURN_LIGHT,
               .mux_selection = 9,
@@ -227,29 +171,21 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG =
       (PowerDistributionBts7040Data[]){
           {
               // BMS carrier - assuming "infotainment monitor" is MAIN_DISP
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO1_4 },
               .current = POWER_DISTRIBUTION_CURRENT_BMS_CARRIER,
               .mux_selection = 13,
           },
           {
               // Rear brake light
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO0_5 },
               .current = POWER_DISTRIBUTION_CURRENT_REAR_BRAKE_LIGHT,
               .mux_selection = 8,
           },
           {
               // Solar sense
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1,
-                                       .pin = PCA9539R_PIN_IO0_7 },
               .current = POWER_DISTRIBUTION_CURRENT_SOLAR_SENSE,
               .mux_selection = 10,
           },
           {
               // MCI
-              .enable_gpio_address = { .i2c_address = POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0,
-                                       .pin = PCA9539R_PIN_IO1_7 },
               .current = POWER_DISTRIBUTION_CURRENT_MCI,
               .mux_selection = 3,
           } },

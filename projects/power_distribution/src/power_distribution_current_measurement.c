@@ -70,8 +70,6 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     }
 
     bts_7200_settings.select_pin = &s_hw_config.bts7200s[i].dsel_pin;
-    bts_7200_settings.enable_pin_0 = &s_hw_config.bts7200s[i].enable_pin_0;
-    bts_7200_settings.enable_pin_1 = &s_hw_config.bts7200s[i].enable_pin_1;
     status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 
@@ -85,7 +83,6 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 
-    bts_7040_settings.enable_pin = &s_hw_config.bts7040s[i].enable_gpio_address;
     status_ok_or_return(bts_7040_init(&s_bts7040_storages[i], &bts_7040_settings));
   }
 

@@ -53,16 +53,6 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
   };
   status_ok_or_return(gpio_init_pin(storage->select_pin_stm32, &select_settings));
 
-  // initialize the enable pins high
-  GpioSettings enable_settings = {
-    .direction = PCA9539R_GPIO_DIR_OUT,
-    .state = PCA9539R_GPIO_STATE_HIGH,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_NONE,
-  };
-  status_ok_or_return(gpio_init_pin(settings->enable_pin_0, &select_settings));
-  status_ok_or_return(gpio_init_pin(settings->enable_pin_1, &select_settings));
-
   return prv_init_common(storage);
 }
 
@@ -84,14 +74,6 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
     .state = PCA9539R_GPIO_STATE_LOW,
   };
   status_ok_or_return(pca9539r_gpio_init_pin(storage->select_pin_pca9539r, &select_settings));
-
-  // initialize the enable pins high
-  Pca9539rGpioSettings enable_settings = {
-    .direction = PCA9539R_GPIO_DIR_OUT,
-    .state = PCA9539R_GPIO_STATE_HIGH,
-  };
-  status_ok_or_return(pca9539r_gpio_init_pin(settings->enable_pin_0, &select_settings));
-  status_ok_or_return(pca9539r_gpio_init_pin(settings->enable_pin_1, &select_settings));
 
   return prv_init_common(storage);
 }
