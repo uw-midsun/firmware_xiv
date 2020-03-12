@@ -1,5 +1,6 @@
 #include "begin_charge_fsm.h"
 #include "charger_events.h"
+#include "charger_controller.h"
 
 #include "event_queue.h"
 #include "fsm.h"
@@ -31,7 +32,8 @@ static void prv_state_idle_output(Fsm *fsm, const Event *e, void *context) {
   uint16_t max_current = e->data;
   // set control pilot state
   gpio_set_state(&s_control_pilot_pin, GPIO_STATE_HIGH);
-  // TODO(SOFT-130): activate charger controller
+  // activate charger controller
+  charger_controller_activate();
 }
 
 StatusCode begin_charge_fsm_init() {

@@ -1,5 +1,6 @@
 #include "stop_charger.h"
 #include "charger_events.h"
+#include "charger_controller.h"
 
 #include "can.h"
 #include "can_transmit.h"
@@ -9,7 +10,8 @@
 static GpioAddress s_control_pilot_pin = { .port = GPIO_PORT_A, .pin = 2 };
 
 void stop_charger(void) {
-  // TODO(SOFT-130): deactivate charger controller
+  // deactivate charger controller
+  charger_controller_deactivate();
   // set control pilot pin
   gpio_set_state(&s_control_pilot_pin, GPIO_STATE_LOW);
   // TODO(SOFT-130): broadcast charger disconnected can message
