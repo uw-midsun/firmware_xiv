@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "adc.h"
 #include "can.h"
 #include "can_msg_defs.h"
 #include "delay.h"
@@ -16,6 +17,8 @@
 #include "steering_can.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
+#include "adc_periodic_reader.h"
+#include "steering_control_stalk.h"
 #include "test_helpers.h"
 #include "wait.h"
 
@@ -38,7 +41,9 @@ CanSettings can_settings = {
 };
 
 static CanStorage s_can_storage;
+
 void setup_test(void) {
+  adc_init(ADC_MODE_SINGLE);
   gpio_init();
   interrupt_init();
   event_queue_init();
@@ -46,6 +51,8 @@ void setup_test(void) {
   soft_timer_init();
   steering_digital_input_init();
   can_init(&s_can_storage, &can_settings);
+  adc_periodic_reader_init();
+  control_stalk_init();
 }
 
 void test_steering_digital_input_horn() {
@@ -88,5 +95,16 @@ void test_invalid_can_message() {
   Event e = { .id = 9, .data = 0 };
   TEST_ASSERT_NOT_OK(steering_can_process_event(&e));
 }
+
+/*
+void test_steering_digital_input_cc_increse_speed() {
+  //set a certain voltage for the address
+  Event e = { 0 };
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT, e.id);
+  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
+  TEST_ASSERT_OK(steering_can_process_event(&e));
+}
+*/
 
 void teardown_test(void) {}

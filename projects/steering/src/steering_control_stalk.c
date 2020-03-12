@@ -20,12 +20,13 @@
 #include "status.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
+#include "steering_control_stalk.h"
 
-#define STEERING_CONTROL_STALK_LEFT_VOLTAGE=1000;
-#define STEERING_CONTROL_STALK_RIGHT_VOLTAGE=2000;
-#define STEERING_CC_INCREASE_SPEED_VOLTAGE=2000;
-#define STEERING_CC_DECREASE_SPEED_VOLTAGE=2500;
-#define STEERING_CC_BRAKE_PRESSED_VOLTAGE=3000;
+#define STEERING_CONTROL_STALK_LEFT_VOLTAGE 1000
+#define STEERING_CONTROL_STALK_RIGHT_VOLTAGE 2000
+#define STEERING_CC_INCREASE_SPEED_VOLTAGE 2000
+#define STEERING_CC_DECREASE_SPEED_VOLTAGE 2500
+#define STEERING_CC_BRAKE_PRESSED_VOLTAGE 3000
 
 // Function prototype
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);
@@ -45,6 +46,8 @@ void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
     event_raise((EventId)STEERING_CC_EVENT_DECREASE_SPEED,data);
   }
   //CHECK FOR BRAKE PRESSED
+  //a can message is sent check Can_transmit_pedal
+  //YOU'LL NEED TO RX THE MESSAGE, UNPACK IT, AND GET THE BRAKE PART
 }
 
 StatusCode control_stalk_init() {

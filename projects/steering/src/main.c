@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "adc.h"
 #include "delay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
@@ -13,13 +14,15 @@
 #include "status.h"
 #include "steering_can.h"
 #include "steering_digital_input.h"
+#include "adc_periodic_reader.h"
+#include "steering_control_stalk.h"
 #include "wait.h"
 #define STEERING_CAN_DEVICE_ID 0x1
 
 static CanStorage s_can_storage;
 
 typedef enum {
-  STEERING_CAN_EVENT_RX = 10,
+  STEERING_CAN_EVENT_RX = 13,
   STEERING_CAN_EVENT_TX,
   STEERING_CAN_FAULT,
 } SteeringCanEvent;
@@ -33,7 +36,9 @@ int main() {
   soft_timer_init();
   steering_digital_input_init();
   adc_periodic_reader_init();
+  control_stalk_init();
 
+//Will be changed for the actual one
   CanSettings can_settings = {
     .device_id = STEERING_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_125KBPS,
@@ -47,10 +52,9 @@ int main() {
   can_init(&s_can_storage, &can_settings);
 
   Event e = { .id = 0, .data = 0 };
-  while (true) {
-    while (event_process(&e)) {
-      steering_can_process_event(&e);
-    }
+  while (event_process(&e)) {
+    steering_can_process_event(&e);
   }
+  
   return 0;
 }
