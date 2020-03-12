@@ -108,8 +108,4 @@ void test_process_power_button_scenarios(void) {
   }
 }
 
-void test_process_drive_button_scenarios(void) {
-
-
-
-}
+void test_process_drive_button_scenarios(void) {}

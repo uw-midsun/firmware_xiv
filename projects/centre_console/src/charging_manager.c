@@ -1,5 +1,5 @@
-#include "main_event_generator.h"
 #include "charging_manager.h"
+#include "main_event_generator.h"
 
 ChargingState s_charging_state = NUM_CHARGING_STATES;
 

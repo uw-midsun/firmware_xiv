@@ -92,9 +92,8 @@ bool prv_process_drive_event(MainEventGeneratorStorage *storage, const Event *e)
   EventId output_event = NUM_CENTRE_CONSOLE_POWER_EVENTS;
   ChargingState charging_state = get_charging_state();
   if (drive_state == DRIVE_STATE_PARKING || drive_state == DRIVE_STATE_NEUTRAL) {
-    output_event = (charging_state == CHARGING_STATE_CHARGING) ? 
+    output_event = (charging_state == CHARGING_STATE_CHARGING) ?
   } else {
-
   }
   return false;
 }
