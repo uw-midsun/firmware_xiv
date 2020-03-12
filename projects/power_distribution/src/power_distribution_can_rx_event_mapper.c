@@ -1,94 +1,61 @@
 #include "power_distribution_can_rx_event_mapper.h"
 #include "can.h"
-#include "can_msg_defs.h"
 #include "event_queue.h"
-#include "exported_enums.h"
-#include "log.h"
-#include "power_distribution_events.h"
 
-// NOT YET GENERIC
+#define CAN_RX_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
 
-static const PowerDistributionSignalEvent s_light_type_to_signal_event[] = {
-  [EE_LIGHT_TYPE_SIGNAL_LEFT] = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
-  [EE_LIGHT_TYPE_SIGNAL_RIGHT] = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
-  [EE_LIGHT_TYPE_SIGNAL_HAZARD] = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
-};
+static PowerDistributionCanRxEventMapperConfig s_config;
 
-static const PowerDistributionGpioEvent s_output_to_gpio_event[] = {
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY] =
-      POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING] = POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE] =
-      POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL] = POWER_DISTRIBUTION_GPIO_EVENT_DRL,
-  [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL] = POWER_DISTRIBUTION_GPIO_EVENT_PEDAL,
-};
+static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
+  PowerDistributionCanRxEventMapperMsgSpec *spec = context;
 
-static StatusCode prv_handle_lights_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
-  EELightType light_type = msg->data_u16[0];
-  EELightState light_state = msg->data_u16[1];
+  EventId event_id;
+  if (spec->has_type) {
+    uint16_t type = msg->data_u16[0];
 
-  if (light_type >= NUM_EE_LIGHT_TYPES) {
-    LOG_WARN("Unknown light type received: %d\r\n", light_type);
-    return STATUS_CODE_OUT_OF_RANGE;
-  }
-  if (light_state >= NUM_EE_LIGHT_STATES) {
-    LOG_WARN("Unknown light state recieved: %d\r\n", light_state);
-    return STATUS_CODE_OUT_OF_RANGE;
+    // make sure it exists
+    bool found = false;
+    for (uint8_t i = 0; i < spec->num_types; i++) {
+      if (spec->all_types[i] == type) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      // silently ignore nonmatching ones - they must not be meant for us
+      return STATUS_CODE_OK;
+    }
+
+    event_id = spec->type_to_event_id[type];
+  } else {
+    event_id = spec->event_id;
   }
 
-  // What to do about EE_LIGHT_TYPE_HIGH_BEAMS, LOW_BEAMS, etc?
+  uint16_t data = 0;
+  if (spec->has_state) {
+    uint16_t raw_data = msg->data_u16[spec->has_type ? 1 : 0];
 
-  uint16_t data = (light_state == EE_LIGHT_STATE_ON) ? 1 : 0;
-
-  if (light_type == EE_LIGHT_TYPE_SIGNAL_LEFT || light_type == EE_LIGHT_TYPE_SIGNAL_RIGHT ||
-      light_type == EE_LIGHT_TYPE_SIGNAL_HAZARD) {
-    return event_raise_priority(EVENT_PRIORITY_NORMAL, s_light_type_to_signal_event[light_type],
-                                data);
+    // coalesce nonzero to 1 to avoid errors due to using u8 or u16
+    data = (raw_data == 0) ? 0 : 1;
   }
 
-  if (light_type == EE_LIGHT_TYPE_DRL) {
-    return event_raise_priority(EVENT_PRIORITY_NORMAL, POWER_DISTRIBUTION_GPIO_EVENT_DRL, data);
+  status_ok_or_return(event_raise_priority(CAN_RX_EVENT_PRIORITY, event_id, data));
+
+  if (spec->ack) {
+    *ack = CAN_ACK_STATUS_OK;
   }
 
-  return STATUS_CODE_OK;  // not meant for us?
+  return STATUS_CODE_OK;
 }
 
-static StatusCode prv_handle_front_power_rx(const CanMessage *msg, void *context,
-                                            CanAckStatus *ack) {
-  EEFrontPowerDistributionOutput output = msg->data_u16[0];
-  EEFrontPowerDistributionOutputState output_state = msg->data_u16[1];
+StatusCode power_distribution_can_rx_event_mapper_init(
+    PowerDistributionCanRxEventMapperConfig config) {
+  s_config = config;
 
-  if (output >= NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUTS) {
-    LOG_WARN("Unknown front power distribution output received: %d\r\n", output);
-    return STATUS_CODE_OUT_OF_RANGE;
-  }
-  if (output_state >= NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATES) {
-    LOG_WARN("Unknown front power distribution output state received: %d\r\n", output_state);
-    return STATUS_CODE_OUT_OF_RANGE;
+  for (uint8_t i = 0; i < config.num_msg_specs; i++) {
+    status_ok_or_return(can_register_rx_handler(s_config.msg_specs[i].msg_id, &prv_handle_rx,
+                                                &s_config.msg_specs[i]));
   }
 
-  uint16_t data = (output_state == EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_ON) ? 1 : 0;
-  return event_raise_priority(EVENT_PRIORITY_NORMAL, s_output_to_gpio_event[output], data);
-}
-
-static StatusCode prv_handle_horn_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
-  EEHornState state = msg->data_u8[0];
-
-  if (state >= NUM_EE_HORN_STATES) {
-    LOG_WARN("Unknown horn state received: %d\r\n", state);
-    return STATUS_CODE_OUT_OF_RANGE;
-  }
-
-  uint16_t data = (state == EE_HORN_STATE_ON) ? 1 : 0;
-  return event_raise_priority(EVENT_PRIORITY_NORMAL, POWER_DISTRIBUTION_GPIO_EVENT_HORN, data);
-}
-
-StatusCode power_distribution_can_rx_event_mapper_init(void) {
-  status_ok_or_return(
-      can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, &prv_handle_lights_rx, NULL));
-  status_ok_or_return(
-      can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_POWER, &prv_handle_front_power_rx, NULL));
-  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, &prv_handle_horn_rx, NULL));
   return STATUS_CODE_OK;
 }

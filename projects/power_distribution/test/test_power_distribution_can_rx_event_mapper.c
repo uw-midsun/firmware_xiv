@@ -1,60 +1,76 @@
 #include "can.h"
 #include "delay.h"
 #include "event_queue.h"
-#include "exported_enums.h"
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
 #include "power_distribution_can_rx_event_mapper.h"
-#include "power_distribution_events.h"
 #include "test_helpers.h"
 #include "unity.h"
-
-// NOT YET GENERIC
 
 #define TEST_CAN_DEVICE_ID 0x1
 
 #define PROCESS_DELAY_US 2000
 
+#define TEST_RX_EVENT_COMMON(msg, can_msg_id, can_data_0, can_data_1) \
+  ({                                                                  \
+    delay_us(PROCESS_DELAY_US);                                       \
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                          \
+    (msg).msg_id = (can_msg_id);                                      \
+    (msg).data_u16[0] = (can_data_0);                                 \
+    (msg).data_u16[1] = (can_data_1);                                 \
+    TEST_ASSERT_OK(can_transmit(&(msg), NULL));                       \
+    MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);   \
+  })
+
 #define TEST_RX_TO_EVENT(msg, can_msg_id, can_data_0, can_data_1, event_id, event_data) \
   ({                                                                                    \
-    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                                            \
-    (msg).msg_id = (can_msg_id);                                                        \
-    (msg).data_u16[0] = (can_data_0);                                                   \
-    (msg).data_u16[1] = (can_data_1);                                                   \
-    TEST_ASSERT_OK(can_transmit(&(msg), NULL));                                         \
-    MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);                     \
+    TEST_RX_EVENT_COMMON(msg, can_msg_id, can_data_0, can_data_1);                      \
     Event e = { 0, 0 };                                                                 \
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (event_id), (event_data));                      \
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                                            \
   })
 
-#define TEST_RX_TO_ON_EVENT(msg, can_msg_id, can_data_0, on_id, event_id) \
-  TEST_RX_TO_EVENT(msg, can_msg_id, can_data_0, on_id, event_id, 1)
-
-#define TEST_RX_TO_OFF_EVENT(msg, can_msg_id, can_data_0, off_id, event_id) \
-  TEST_RX_TO_EVENT(msg, can_msg_id, can_data_0, off_id, event_id, 0)
-
-#define TEST_RX_TO_ON_OFF_EVENT(msg, can_msg_id, can_data_0, off_id, on_id, event_id) \
-  ({                                                                                  \
-    TEST_RX_TO_ON_EVENT(msg, can_msg_id, can_data_0, on_id, event_id);                \
-    TEST_RX_TO_OFF_EVENT(msg, can_msg_id, can_data_0, off_id, event_id);              \
+#define TEST_RX_NO_EVENT(msg, can_msg_id, can_data_0, can_data_1)  \
+  ({                                                               \
+    TEST_RX_EVENT_COMMON(msg, can_msg_id, can_data_0, can_data_1); \
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                       \
   })
 
-#define TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, light_type, event_id)                         \
-  TEST_RX_TO_ON_OFF_EVENT(msg, SYSTEM_CAN_MESSAGE_LIGHTS, light_type, EE_LIGHT_STATE_OFF, \
-                          EE_LIGHT_STATE_ON, event_id)
+#define TEST_RX_TO_EVENT_WITH_ACK(msg, can_msg_id, can_data_0, can_data_1, event_id, event_data) \
+  ({                                                                                             \
+    TEST_RX_EVENT_COMMON(msg, can_msg_id, can_data_0, can_data_1);                               \
+    Event e = { 0, 0 };                                                                          \
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (event_id), (event_data));                               \
+    MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX); /* for the ack */            \
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                                                     \
+  })
 
-#define TEST_RX_TO_ON_OFF_POWER_EVENT(msg, output_type, event_id)           \
-  TEST_RX_TO_ON_OFF_EVENT(msg, SYSTEM_CAN_MESSAGE_FRONT_POWER, output_type, \
-                          EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_OFF,     \
-                          EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_ON, event_id)
+typedef enum {
+  TEST_CAN_MESSAGE_0 = 20,
+  TEST_CAN_MESSAGE_1,
+  TEST_CAN_MESSAGE_2,
+  TEST_CAN_MESSAGE_3_ACKABLE = 0,  // 0 because we can only ack small-ID messages
+} TestCanMessage;
 
 typedef enum {
   TEST_CAN_EVENT_RX = 10,
   TEST_CAN_EVENT_TX,
   TEST_CAN_EVENT_FAULT,
+  NUM_TEST_CAN_EVENTS,
 } TestCanEvent;
+
+typedef enum {
+  TEST_EVENT_0 = NUM_TEST_CAN_EVENTS + 1,
+  TEST_EVENT_1,
+  NUM_TEST_EVENTS,
+} TestEvent;
+
+typedef enum {
+  TEST_TYPE_0 = 0,
+  TEST_TYPE_1,
+  NUM_TEST_TYPES,
+} TestType;
 
 static CanStorage s_can_storage;
 
@@ -78,9 +94,34 @@ void setup_test(void) {
 }
 void teardown_test(void) {}
 
-// Comprehensive happy-path test: receiving each type of CAN message gives each event ID
-void test_can_rx_event_mapper_raises_each_event_type(void) {
-  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init());
+// Test that we can specify types but no states and no ack.
+void test_can_rx_event_mapper_type_state_no_ack_works() {
+  PowerDistributionCanRxEventMapperConfig test_config = {
+    .msg_specs =
+        (PowerDistributionCanRxEventMapperMsgSpec[]){
+            {
+                // type and state, no ack
+                .msg_id = TEST_CAN_MESSAGE_0,
+                .has_type = true,
+                .has_state = true,
+                .all_types =
+                    (uint16_t[]){
+                        TEST_TYPE_0,
+                        TEST_TYPE_1,
+                    },
+                .num_types = 2,
+                .type_to_event_id =
+                    (EventId[]){
+                        [TEST_TYPE_0] = TEST_EVENT_0,
+                        [TEST_TYPE_1] = TEST_EVENT_1,
+                    },
+                .ack = false,
+            },
+        },
+    .num_msg_specs = 1,
+  };
+
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init(test_config));
 
   CanMessage msg = {
     .source_id = TEST_CAN_DEVICE_ID,
@@ -88,61 +129,131 @@ void test_can_rx_event_mapper_raises_each_event_type(void) {
     .dlc = 8,
   };
 
-  TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_DRL, POWER_DISTRIBUTION_GPIO_EVENT_DRL);
-  TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_SIGNAL_LEFT,
-                                 POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT);
-  TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_SIGNAL_RIGHT,
-                                 POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT);
-  TEST_RX_TO_ON_OFF_LIGHTS_EVENT(msg, EE_LIGHT_TYPE_SIGNAL_HAZARD,
-                                 POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD);
-
-  TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY,
-                                POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY);
-  TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING,
-                                POWER_DISTRIBUTION_GPIO_EVENT_STEERING);
-  TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE,
-                                POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE);
-  TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL,
-                                POWER_DISTRIBUTION_GPIO_EVENT_PEDAL);
-  TEST_RX_TO_ON_OFF_POWER_EVENT(msg, EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL,
-                                POWER_DISTRIBUTION_GPIO_EVENT_DRL);
-  // STROBE and DRIVER_FANS not implemented because what is their port?
-
-  // horn is a one-off so there's no point having a macro to make it nice
-  TEST_RX_TO_EVENT(msg, SYSTEM_CAN_MESSAGE_HORN, EE_HORN_STATE_OFF, 0,
-                   POWER_DISTRIBUTION_GPIO_EVENT_HORN, 0);
-  TEST_RX_TO_EVENT(msg, SYSTEM_CAN_MESSAGE_HORN, EE_HORN_STATE_ON, 0,
-                   POWER_DISTRIBUTION_GPIO_EVENT_HORN, 1);
+  // try with type and state
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_0, TEST_TYPE_0, 0, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_0, TEST_TYPE_0, 1, TEST_EVENT_0, 1);
+  // coalesces nonzero state to 1
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_0, TEST_TYPE_0, 20, TEST_EVENT_0, 1);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_0, TEST_TYPE_1, 0, TEST_EVENT_1, 0);
+  // doesn't respond to unknown types
+  TEST_RX_NO_EVENT(msg, TEST_CAN_MESSAGE_0, NUM_TEST_TYPES, 0);
 }
 
-// Test that the module ignores messages with different IDs/type fields which presumably aren't
-// meant for it.
-void test_can_rx_event_mapper_ignores_other_messages(void) {
-  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init());
+// Test that we can specify a type without a state and no ack.
+void test_can_rx_event_mapper_type_no_state_no_ack_works() {
+  PowerDistributionCanRxEventMapperConfig test_config = {
+    .msg_specs =
+        (PowerDistributionCanRxEventMapperMsgSpec[]){
+            {
+                // type, no state, no ack
+                .msg_id = TEST_CAN_MESSAGE_1,
+                .has_type = true,
+                .has_state = false,
+                .all_types =
+                    (uint16_t[]){
+                        TEST_TYPE_0,
+                        TEST_TYPE_1,
+                    },
+                .num_types = 2,
+                .type_to_event_id =
+                    (EventId[]){
+                        [TEST_TYPE_0] = TEST_EVENT_0,
+                        [TEST_TYPE_1] = TEST_EVENT_1,
+                    },
+                .ack = false,
+            },
+        },
+    .num_msg_specs = 1,
+  };
 
-  // First, an message id not used by anything
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init(test_config));
+
   CanMessage msg = {
     .source_id = TEST_CAN_DEVICE_ID,
     .type = CAN_MSG_TYPE_DATA,
     .dlc = 8,
-    .msg_id = NUM_SYSTEM_CAN_MESSAGES,  // hopefully this doesn't trigger an assert in can...
-    .data_u16 = { 0, 0, 0, 0 },
   };
-  can_transmit(&msg, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  // Then, lights with an unused light type
-  msg.msg_id = SYSTEM_CAN_MESSAGE_LIGHTS;
-  msg.data_u16[0] = NUM_EE_LIGHT_TYPES;
-  can_transmit(&msg, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  // try with type and no state - always sets state to 0
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_1, TEST_TYPE_0, 20, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_1, TEST_TYPE_0, 1, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_1, TEST_TYPE_1, 0, TEST_EVENT_1, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_1, TEST_TYPE_1, 30, TEST_EVENT_1, 0);
+  TEST_RX_NO_EVENT(msg, TEST_CAN_MESSAGE_1, NUM_TEST_TYPES, 0);
+}
 
-  // Then, power with an unused output
-  msg.msg_id = SYSTEM_CAN_MESSAGE_FRONT_POWER;
-  msg.data_u16[0] = NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUTS;
-  can_transmit(&msg, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+// Test that we can specify a state with no type and no ack.
+void test_can_rx_event_mapper_state_no_type_no_ack_works() {
+  PowerDistributionCanRxEventMapperConfig test_config = {
+    .msg_specs =
+        (PowerDistributionCanRxEventMapperMsgSpec[]){
+            {
+                // state, no type, no ack
+                .msg_id = TEST_CAN_MESSAGE_2,
+                .has_type = false,
+                .has_state = true,
+                .event_id = TEST_EVENT_0,
+                .ack = false,
+            },
+        },
+    .num_msg_specs = 1,
+  };
+
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init(test_config));
+
+  CanMessage msg = {
+    .source_id = TEST_CAN_DEVICE_ID,
+    .type = CAN_MSG_TYPE_DATA,
+    .dlc = 8,
+  };
+
+  // try with state and no type - in first u16 spot
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 0, 0, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 1, 0, TEST_EVENT_0, 1);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 20, 0, TEST_EVENT_0, 1);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 1, 30, TEST_EVENT_0, 1);
+}
+
+// Test that we can specify no state, no type, but test ack true and false.
+void test_can_rx_event_mapper_no_type_no_state_with_varying_ack_works() {
+  PowerDistributionCanRxEventMapperConfig test_config = {
+    .msg_specs =
+        (PowerDistributionCanRxEventMapperMsgSpec[]){
+            {
+                // no state or type, no ack
+                .msg_id = TEST_CAN_MESSAGE_2,
+                .has_type = false,
+                .has_state = false,
+                .event_id = TEST_EVENT_0,
+                .ack = false,
+            },
+            {
+                // no state or type, with ack
+                .msg_id = TEST_CAN_MESSAGE_3_ACKABLE,
+                .has_type = false,
+                .has_state = false,
+                .event_id = TEST_EVENT_0,
+                .ack = true,
+            },
+        },
+    .num_msg_specs = 2,
+  };
+
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init(test_config));
+
+  CanMessage msg = {
+    .source_id = TEST_CAN_DEVICE_ID,
+    .type = CAN_MSG_TYPE_DATA,
+    .dlc = 8,
+  };
+
+  // try with no state or type - doesn't respond to data, state is 0
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 0, 0, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 1, 4, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT(msg, TEST_CAN_MESSAGE_2, 10, 5, TEST_EVENT_0, 0);
+
+  // try with acking now
+  TEST_RX_TO_EVENT_WITH_ACK(msg, TEST_CAN_MESSAGE_3_ACKABLE, 0, 0, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT_WITH_ACK(msg, TEST_CAN_MESSAGE_3_ACKABLE, 1, 4, TEST_EVENT_0, 0);
+  TEST_RX_TO_EVENT_WITH_ACK(msg, TEST_CAN_MESSAGE_3_ACKABLE, 10, 5, TEST_EVENT_0, 0);
 }
