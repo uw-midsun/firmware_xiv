@@ -1,6 +1,6 @@
 #include "main_event_generator.h"
 #include "centre_console_events.h"
-#include "charging_permission_manager.h"
+#include "charging_manager.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
 #include "log.h"
@@ -31,6 +31,11 @@
 // drive/reverse:
 //   setting the car to drive/reverse
 //     speed: low
+//     drive state: drive/reverse
+//     charging state: no charging
+//
+// drive/reverse:
+//   setting the car to drive/reverse
 //     drive state: parking/neutral
 //     charging state: no charging
 //
@@ -52,57 +57,6 @@ StatusCode main_event_generator_init(MainEventGeneratorStorage *storage,
 
 #define prv_check_event(event_id, expected_event_id) \
   if ((event_id) != (expected_event_id)) return false
-
-// typedef struct OutputConditions {
-//  DriveState drive_state;
-//  PedalState pedal_state;
-//  PowerState power_state;
-//  ChargingState charging_state;
-//} OutputConditions;
-//
-// typedef struct OutputEventInfo {
-//  EventId output_event;
-//  OutputConditions conditions;
-//} OutputEventInfo;
-//
-// static OutputEventInfo s_power_button_output_info[] = {
-//  {
-//    .conditions = {
-//      .power_state = POWER_STATE_OFF,
-//      .pedal_state = PEDAL_STATE_PRESSED,
-//    },
-//    .output_event = CENTRE_CONSOLE_POWER_EVENT_ON_MAIN,
-//  },
-//  {
-//    .conditions = {
-//      .power_state = POWER_STATE_OFF,
-//      .pedal_state = PEDAL_STATE_RELEASED,
-//    },
-//    .output_event = CENTRE_CONSOLE_POWER_EVENT_ON_AUX,
-//  },
-//  {
-//    .conditions = {
-//      .power_state = POWER_STATE_AUX,
-//      .pedal_state = PEDAL_STATE_PRESSED,
-//    },
-//    .output_event = CENTRE_CONSOLE_POWER_EVENT_ON_MAIN,
-//  },
-//  {
-//    .conditions = {
-//      .power_state = POWER_STATE_AUX,
-//      .pedal_state = PEDAL_STATE_RELEASED,
-//    },
-//    .output_event = CENTRE_CONSOLE_POWER_EVENT_OFF,
-//  },
-//  {
-//    .conditions = {
-//      .power_state = POWER_STATE_MAIN,
-//      .pedal_state = PEDAL_STATE_RELEASED,
-//    },
-//    .output_event = CENTRE_CONSOLE_POWER_EVENT_OFF,
-//  },
-//
-//};
 
 bool prv_process_power_event(MainEventGeneratorStorage *storage, const Event *e) {
   prv_check_event(e->id, CENTRE_CONSOLE_BUTTON_PRESS_EVENT_POWER);
@@ -130,8 +84,18 @@ bool prv_process_power_event(MainEventGeneratorStorage *storage, const Event *e)
 
 bool prv_process_drive_event(MainEventGeneratorStorage *storage, const Event *e) {
   prv_check_event(e->id, CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE);
+  const PowerState power_state = power_fsm_get_current_state(storage->power_fsm);
+  if (power_state != POWER_STATE_MAIN) {
+    return false;
+  }
+  DriveState drive_state = drive_fsm_get_global_state(storage->drive_fsm);
+  EventId output_event = NUM_CENTRE_CONSOLE_POWER_EVENTS;
+  ChargingState charging_state = get_charging_state();
+  if (drive_state == DRIVE_STATE_PARKING || drive_state == DRIVE_STATE_NEUTRAL) {
+    output_event = (charging_state == CHARGING_STATE_CHARGING) ? 
+  } else {
 
-
+  }
   return false;
 }
 
