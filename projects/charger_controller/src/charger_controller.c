@@ -31,16 +31,17 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
 
 void prv_rx_cb(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("RUNNING\n");
+  GenericCanMsg can_msg = {
+    .id = msg->id,
+    .data = msg->data | (1 << 24),
+    .dlc = msg->dlc,
+    .extended = msg->extended,
+  };
 
   if (msg->data & (uint64_t)(255 << 24)) {  // looking at fifth byte
     charger_controller_deactivate();
     // transmit max vc and not to charge
-    GenericCanMsg can_msg = {
-      .id = msg->id,
-      .data = msg->data | (1 << 24),
-      .dlc = msg->dlc,
-      .extended = msg->extended,
-    };
+
     generic_can_tx(&s_generic_can, &can_msg);
     if (msg->data & (uint64_t)(1 << 24)) {
       // hardware failure
@@ -55,16 +56,16 @@ void prv_rx_cb(const GenericCanMsg *msg, void *context) {
       // communication failure
     }
   }
-  // check each byte of the data
+  // check each byte of the data if over max allowable vc
   // Byte 1 is at the end
-  for (size_t i = 0; i < 7; i++) {
+  for (size_t i = 4; i < 7; ++i) {
     if ((msg->data << (i * 8)) > (MAX_ALLOWABLE_VC << (i * 8))) {
       charger_controller_deactivate();
       // transmit max vc and not to charge
+      generic_can_tx(&s_generic_can, &can_msg);
       // maybe raise event
       // cus vc extended max vc
-      // mcp2515_tx(charger_data.storage, charger_data.id, charger_data.extended,
-      // charger_data.data | (1 << 24), charger_data.dlc);
+      break;
     }
   }
 }
@@ -72,8 +73,7 @@ void prv_rx_cb(const GenericCanMsg *msg, void *context) {
 StatusCode charger_controller_init(GenericCan *generic_can) {
   s_generic_can = *generic_can;
   // register a rx
-  generic_can_register_rx(generic_can, prv_rx_cb, GENERIC_CAN_EMPTY_MASK, BCA_CCS_ID, false, NULL);
-  return charger_controller_activate();
+  return generic_can_register_rx(generic_can, prv_rx_cb, GENERIC_CAN_EMPTY_MASK, BCA_CCS_ID, false, NULL);
 }
 
 StatusCode charger_controller_activate() {
