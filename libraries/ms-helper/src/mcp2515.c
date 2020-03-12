@@ -171,8 +171,9 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     .sclk = settings->sclk,
     .cs = settings->cs,
   };
-  status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
 
+  status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
+  
   prv_reset(storage);
 
   // Set to Config mode, CLKOUT /4
