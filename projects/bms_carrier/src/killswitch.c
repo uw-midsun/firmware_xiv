@@ -1,7 +1,7 @@
 #include "killswitch.h"
 #include "gpio_it.h"
 #include "log.h"
-#include "debouncer.h"
+// #include "debouncer.h"
 
 static void prv_killswitch_handler(const GpioAddress *address, void *context) {
   BatteryHeartbeatStorage *storage = context;
