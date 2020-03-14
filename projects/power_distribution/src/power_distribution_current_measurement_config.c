@@ -7,7 +7,7 @@
 #define POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_0 0x74
 #define POWER_DISTRIBUTION_DSEL_I2C_ADDRESS_1 0x76
 
-const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG = {
+const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG = {
   .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
   .dsel_i2c_addresses =
       (I2CAddress[]){
@@ -132,7 +132,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_HW_CONFIG 
 
 // This is based on https://uwmidsun.atlassian.net/wiki/x/GgODP, assuming that the currents in
 // each row are connected to the same BTS7200s/BTS7040s (on the same pins with same mux selections).
-const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_HW_CONFIG = {
+const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG = {
   .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
   .dsel_i2c_addresses =
       (I2CAddress[]){

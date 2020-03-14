@@ -7,6 +7,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_CAN_EVENTS,
 } PowerDistributionCanEvent;
 
+// Handled by power_distribution_gpio
 typedef enum {
   POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY = NUM_POWER_DISTRIBUTION_CAN_EVENTS + 1,
   POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
@@ -22,6 +23,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_GPIO_EVENTS,
 } PowerDistributionGpioEvent;
 
+// Handled by a lights_signal_fsm instance
 typedef enum {
   POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT = NUM_POWER_DISTRIBUTION_GPIO_EVENTS + 1,
   POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
@@ -29,11 +31,13 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_SIGNAL_EVENTS,
 } PowerDistributionSignalEvent;
 
+// TODO(SOFT-138): Add a module to handle sync events
 typedef enum {
   POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS = NUM_POWER_DISTRIBUTION_SIGNAL_EVENTS + 1,
   NUM_POWER_DISTRIBUTION_SYNC_EVENTS,
 } PowerDistributionSyncEvent;
 
+// Also handled by power_distribution_gpio
 typedef enum {
   POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN =
       NUM_POWER_DISTRIBUTION_SYNC_EVENTS + 1,
@@ -43,6 +47,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_POWER_SEQUENCE_EVENTS,
 } PowerDistributionPowerSequenceEvent;
 
+// is this even used? we should use it
 typedef enum {
   POWER_DISTRIBUTION_CURRENT_SENSE_EVENT_DATA_READY =
       NUM_POWER_DISTRIBUTION_POWER_SEQUENCE_EVENTS + 1,

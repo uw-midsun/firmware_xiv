@@ -1,86 +1,83 @@
 #include "power_distribution_gpio.h"
 #include "power_distribution_events.h"
 
-// NOT YET GENERIC
-// make (most of?) this configurable
+static PowerDistributionGpioConfig s_config;
 
-#define I2C_ADDR_0 0x74
-#define I2C_ADDR_1 0x76
+StatusCode power_distribution_gpio_init(PowerDistributionGpioConfig config) {
+  s_config = config;
 
-static PowerDistributionGpioOutput s_events_to_gpio_outputs[] = {
-  [POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY] = POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY,
-  [POWER_DISTRIBUTION_GPIO_EVENT_STEERING] = POWER_DISTRIBUTION_OUTPUT_STEERING,
-  [POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE] = POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE,
-  [POWER_DISTRIBUTION_GPIO_EVENT_DRL] = POWER_DISTRIBUTION_OUTPUT_DRL,
-  [POWER_DISTRIBUTION_GPIO_EVENT_PEDAL] = POWER_DISTRIBUTION_OUTPUT_PEDAL,
-  [POWER_DISTRIBUTION_GPIO_EVENT_HORN] = POWER_DISTRIBUTION_OUTPUT_HORN,
-  [POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT] = POWER_DISTRIBUTION_OUTPUT_SIGNAL_LEFT,
-  [POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT] = POWER_DISTRIBUTION_OUTPUT_SIGNAL_RIGHT,
-};
-
-static Pca9539rGpioState s_default_gpio_states[] = {
-  [POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY] = PCA9539R_GPIO_STATE_LOW,  //
-  [POWER_DISTRIBUTION_OUTPUT_STEERING] = PCA9539R_GPIO_STATE_LOW,        //
-  [POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE] = PCA9539R_GPIO_STATE_LOW,  //
-  [POWER_DISTRIBUTION_OUTPUT_DRL] = PCA9539R_GPIO_STATE_LOW,             //
-  [POWER_DISTRIBUTION_OUTPUT_PEDAL] = PCA9539R_GPIO_STATE_LOW,           //
-  [POWER_DISTRIBUTION_OUTPUT_HORN] = PCA9539R_GPIO_STATE_LOW,            //
-  [POWER_DISTRIBUTION_OUTPUT_SIGNAL_LEFT] = PCA9539R_GPIO_STATE_LOW,     //
-  [POWER_DISTRIBUTION_OUTPUT_SIGNAL_RIGHT] = PCA9539R_GPIO_STATE_LOW,    //
-};
-
-static Pca9539rGpioAddress s_output_gpio_pins[] = {
-  [POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY] = { .i2c_address = I2C_ADDR_0,
-                                                 .pin = PCA9539R_PIN_IO0_7 },
-  [POWER_DISTRIBUTION_OUTPUT_STEERING] = { .i2c_address = I2C_ADDR_1, .pin = PCA9539R_PIN_IO1_3 },
-  [POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE] = { .i2c_address = I2C_ADDR_1,
-                                                 .pin = PCA9539R_PIN_IO1_5 },
-  [POWER_DISTRIBUTION_OUTPUT_DRL] = { .i2c_address = I2C_ADDR_1, .pin = PCA9539R_PIN_IO0_5 },
-  [POWER_DISTRIBUTION_OUTPUT_PEDAL] = { .i2c_address = I2C_ADDR_1, .pin = PCA9539R_PIN_IO1_1 },
-  [POWER_DISTRIBUTION_OUTPUT_HORN] = { .i2c_address = I2C_ADDR_0, .pin = PCA9539R_PIN_IO1_7 },
-  [POWER_DISTRIBUTION_OUTPUT_SIGNAL_LEFT] = { .i2c_address = I2C_ADDR_1,
-                                              .pin = PCA9539R_PIN_IO0_4 },
-  [POWER_DISTRIBUTION_OUTPUT_SIGNAL_RIGHT] = { .i2c_address = I2C_ADDR_1,
-                                               .pin = PCA9539R_PIN_IO0_2 },
-};
-
-void power_distribution_gpio_init(void) {
   // initialize all the output pins
   Pca9539rGpioSettings settings = {
     .direction = PCA9539R_GPIO_DIR_OUT,
   };
-  for (PowerDistributionGpioOutput i = 0; i < NUM_POWER_DISTRIBUTION_GPIO_OUTPUTS; i++) {
-    settings.state = s_default_gpio_states[i];
-    pca9539r_gpio_init_pin(&s_output_gpio_pins[i], &settings);
+  for (uint8_t i = 0; i < s_config.num_addresses; i++) {
+    PowerDistributionGpioState state = s_config.all_addresses_and_default_states[i].state;
+
+    if (state != POWER_DISTRIBUTION_GPIO_STATE_LOW && state != POWER_DISTRIBUTION_GPIO_STATE_HIGH) {
+      // the only valid default states are low and high (no same/opposite/invalid)
+      return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+
+    settings.state = (state == POWER_DISTRIBUTION_GPIO_STATE_LOW) ? PCA9539R_GPIO_STATE_LOW
+                                                                  : PCA9539R_GPIO_STATE_HIGH;
+
+    status_ok_or_return(
+        pca9539r_gpio_init_pin(&s_config.all_addresses_and_default_states[i].address, &settings));
   }
-}
 
-StatusCode power_distribution_gpio_process_event(Event *e) {
-  PowerDistributionGpioEvent id = e->id;
-
-  if (!(POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY <= id &&
-        id < NUM_POWER_DISTRIBUTION_GPIO_EVENTS)) {
-    // this event isn't for us
-    return STATUS_CODE_OUT_OF_RANGE;
-  }
-
-  Pca9539rGpioState new_state = (e->data == 1) ? PCA9539R_GPIO_STATE_HIGH : PCA9539R_GPIO_STATE_LOW;
-
-  if (id == POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD) {
-    // special case: maps to both left and right signals
-    pca9539r_gpio_set_state(&s_output_gpio_pins[POWER_DISTRIBUTION_OUTPUT_SIGNAL_LEFT], new_state);
-    pca9539r_gpio_set_state(&s_output_gpio_pins[POWER_DISTRIBUTION_OUTPUT_SIGNAL_RIGHT], new_state);
-  } else {
-    pca9539r_gpio_set_state(&s_output_gpio_pins[s_events_to_gpio_outputs[id]], new_state);
+  // catch all invalid states here for fast failure
+  for (uint8_t i = 0; i < s_config.num_events; i++) {
+    for (uint8_t j = 0; j < s_config.events[i].num_outputs; j++) {
+      if (s_config.events[i].outputs[j].state >= NUM_POWER_DISTRIBUTION_GPIO_STATES) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+    }
   }
 
   return STATUS_CODE_OK;
 }
 
-Pca9539rGpioAddress *power_distribution_gpio_test_provide_gpio_addresses(void) {
-  return s_output_gpio_pins;
-}
+StatusCode power_distribution_gpio_process_event(Event *e) {
+  PowerDistributionGpioEvent id = e->id;
 
-PowerDistributionGpioOutput *power_distribution_gpio_test_provide_events_to_outputs(void) {
-  return s_events_to_gpio_outputs;
+  // find the event spec or ignore if it isn't there
+  PowerDistributionGpioEventSpec *event_spec = NULL;
+  for (uint8_t i = 0; i < s_config.num_events; i++) {
+    if (s_config.events[i].event_id == id) {
+      event_spec = &s_config.events[i];
+      break;
+    }
+  }
+  if (!event_spec) {
+    // silently ignore unspecified events - it wasn't meant for us
+    return STATUS_CODE_OK;
+  }
+
+  // act on all the event spec's outputs
+  for (uint8_t i = 0; i < event_spec->num_outputs; i++) {
+    PowerDistributionGpioOutputSpec *output_spec = &event_spec->outputs[i];
+
+    Pca9539rGpioState state;
+    switch (output_spec->state) {
+      case POWER_DISTRIBUTION_GPIO_STATE_LOW:
+        state = PCA9539R_GPIO_STATE_LOW;
+        break;
+      case POWER_DISTRIBUTION_GPIO_STATE_HIGH:
+        state = PCA9539R_GPIO_STATE_HIGH;
+        break;
+      case POWER_DISTRIBUTION_GPIO_STATE_SAME:
+        state = (e->data == 0) ? PCA9539R_GPIO_STATE_LOW : PCA9539R_GPIO_STATE_HIGH;
+        break;
+      case POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE:
+        state = (e->data == 0) ? PCA9539R_GPIO_STATE_HIGH : PCA9539R_GPIO_STATE_LOW;
+        break;
+      default:
+        // should be impossible, we verified in init that all states are valid
+        return status_code(STATUS_CODE_INTERNAL_ERROR);
+    }
+    
+    status_ok_or_return(pca9539r_gpio_set_state(&output_spec->address, state));
+  }
+  
+  return STATUS_CODE_OK;
 }
