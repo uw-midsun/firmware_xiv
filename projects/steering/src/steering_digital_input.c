@@ -1,5 +1,4 @@
 #include "steering_digital_input.h"
-#include "steering_events.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,6 +14,7 @@
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
+#include "steering_events.h"
 #include "wait.h"
 
 GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {

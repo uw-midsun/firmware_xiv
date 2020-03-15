@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "adc.h"
+#include "adc_periodic_reader.h"
 #include "can.h"
 #include "can_msg_defs.h"
 #include "delay.h"
@@ -12,13 +13,13 @@
 #include "interrupt_def.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
+#include "pedal_rx.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
+#include "steering_control_stalk.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
-#include "adc_periodic_reader.h"
-#include "steering_control_stalk.h"
 #include "test_helpers.h"
 #include "wait.h"
 

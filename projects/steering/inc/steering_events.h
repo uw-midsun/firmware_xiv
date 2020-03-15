@@ -1,7 +1,7 @@
 #pragma once
 
 typedef enum {
-  //Digital 
+  // Digital
   STEERING_INPUT_HORN_EVENT = 0,
   STEERING_RADIO_PPT_EVENT,
   STEERING_HIGH_BEAM_FORWARD_EVENT,
@@ -12,7 +12,7 @@ typedef enum {
 } SteeringDigitalEvent;
 
 typedef enum {
-  //Analog
+  // Analog
   STEERING_CONTROL_STALK_EVENT_LEFT = 7,
   STEERING_CONTROL_STALK_EVENT_RIGHT,
   STEERING_CC_EVENT_INCREASE_SPEED,
@@ -20,5 +20,3 @@ typedef enum {
   STEERING_CC_BRAKE_PRESSED,
   NUM_STEERING_EVENTS
 } SteeringAnalogEvent;
-
-

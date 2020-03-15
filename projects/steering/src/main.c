@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "adc.h"
+#include "adc_periodic_reader.h"
 #include "delay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
@@ -13,10 +14,10 @@
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
-#include "steering_digital_input.h"
-#include "adc_periodic_reader.h"
 #include "steering_control_stalk.h"
+#include "steering_digital_input.h"
 #include "wait.h"
+#include "pedal_rx.h"
 #define STEERING_CAN_DEVICE_ID 0x1
 
 static CanStorage s_can_storage;
@@ -38,7 +39,7 @@ int main() {
   adc_periodic_reader_init();
   control_stalk_init();
 
-//Will be changed for the actual one
+  // Will be changed for the actual one
   CanSettings can_settings = {
     .device_id = STEERING_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_125KBPS,
@@ -55,6 +56,6 @@ int main() {
   while (event_process(&e)) {
     steering_can_process_event(&e);
   }
-  
+
   return 0;
 }
