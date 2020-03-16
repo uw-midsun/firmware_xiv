@@ -22,7 +22,7 @@
 #include "steering_digital_input.h"
 #include "steering_events.h"
 
-//Will be edited later
+// Will be edited later
 #define STEERING_CONTROL_STALK_LEFT_VOLTAGE 1000
 #define STEERING_CONTROL_STALK_RIGHT_VOLTAGE 2000
 #define STEERING_CC_INCREASE_SPEED_VOLTAGE 2000
