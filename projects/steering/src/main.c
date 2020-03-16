@@ -17,7 +17,6 @@
 #include "steering_control_stalk.h"
 #include "steering_digital_input.h"
 #include "wait.h"
-#include "pedal_rx.h"
 #define STEERING_CAN_DEVICE_ID 0x1
 
 static CanStorage s_can_storage;

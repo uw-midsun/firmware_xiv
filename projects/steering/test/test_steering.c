@@ -13,7 +13,6 @@
 #include "interrupt_def.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
-#include "pedal_rx.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
@@ -93,19 +92,20 @@ void test_steering_digital_input_cc_toggle() {
 
 void test_invalid_can_message() {
   // provide an invalid id
-  Event e = { .id = 9, .data = 0 };
+  Event e = { .id = 16, .data = 0 };
   TEST_ASSERT_NOT_OK(steering_can_process_event(&e));
 }
 
-/*
+
 void test_steering_digital_input_cc_increse_speed() {
   //set a certain voltage for the address
-  Event e = { 0 };
+  Event e = { .id = STEERING_CC_EVENT_INCREASE_SPEED, .data = 0 };
+  event_raise(e.id, e.data);
   TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT, e.id);
+  TEST_ASSERT_EQUAL(STEERING_CC_EVENT_INCREASE_SPEED, e.id);
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
   TEST_ASSERT_OK(steering_can_process_event(&e));
 }
-*/
+
 
 void teardown_test(void) {}
