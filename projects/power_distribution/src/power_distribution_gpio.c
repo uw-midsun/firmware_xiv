@@ -65,19 +65,19 @@ StatusCode power_distribution_gpio_process_event(Event *e) {
       case POWER_DISTRIBUTION_GPIO_STATE_HIGH:
         state = PCA9539R_GPIO_STATE_HIGH;
         break;
-      case POWER_DISTRIBUTION_GPIO_STATE_SAME:
+      case POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA:
         state = (e->data == 0) ? PCA9539R_GPIO_STATE_LOW : PCA9539R_GPIO_STATE_HIGH;
         break;
-      case POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE:
+      case POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE_TO_DATA:
         state = (e->data == 0) ? PCA9539R_GPIO_STATE_HIGH : PCA9539R_GPIO_STATE_LOW;
         break;
       default:
         // should be impossible, we verified in init that all states are valid
         return status_code(STATUS_CODE_INTERNAL_ERROR);
     }
-    
+
     status_ok_or_return(pca9539r_gpio_set_state(&output_spec->address, state));
   }
-  
+
   return STATUS_CODE_OK;
 }

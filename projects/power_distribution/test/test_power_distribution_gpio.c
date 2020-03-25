@@ -1,5 +1,6 @@
 #include "log.h"
 #include "power_distribution_gpio.h"
+#include "power_distribution_gpio_config.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -167,7 +168,7 @@ void test_power_distribution_gpio_multiple_outputs(void) {
   TEST_ASSERT_GPIO_STATE(s_test_address_1, PCA9539R_GPIO_STATE_LOW);
 }
 
-// Test that the POWER_DISTRIBUTION_STATE_SAME and POWER_DISTRIBUTION_STATE_OPPOSITE states work.
+// Test that the POWER_DISTRIBUTION_STATE_SAME_AS_DATA and OPPOSITE_TO_DATA states work.
 void test_power_distribution_gpio_same_opposite(void) {
   PowerDistributionGpioConfig test_config = {
     .events =
@@ -178,7 +179,7 @@ void test_power_distribution_gpio_same_opposite(void) {
                     (PowerDistributionGpioOutputSpec[]){
                         {
                             .address = s_test_address_0,
-                            .state = POWER_DISTRIBUTION_GPIO_STATE_SAME,
+                            .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
                         },
                     },
                 .num_outputs = 1,
@@ -189,7 +190,7 @@ void test_power_distribution_gpio_same_opposite(void) {
                     (PowerDistributionGpioOutputSpec[]){
                         {
                             .address = s_test_address_1,
-                            .state = POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE,
+                            .state = POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE_TO_DATA,
                         },
                     },
                 .num_outputs = 1,
@@ -216,7 +217,7 @@ void test_power_distribution_gpio_same_opposite(void) {
   TEST_ASSERT_GPIO_STATE(s_test_address_0, PCA9539R_GPIO_STATE_LOW);
   TEST_ASSERT_GPIO_STATE(s_test_address_1, PCA9539R_GPIO_STATE_HIGH);
 
-  // make sure SAME functions correctly (and the other doesn't change)
+  // make sure SAME_AS_DATA functions correctly (and the other doesn't change)
   SEND_TEST_EVENT(TEST_EVENT_0, 1);  // set to high
   TEST_ASSERT_GPIO_STATE(s_test_address_0, PCA9539R_GPIO_STATE_HIGH);
   TEST_ASSERT_GPIO_STATE(s_test_address_1, PCA9539R_GPIO_STATE_HIGH);  // doesn't change
@@ -227,7 +228,7 @@ void test_power_distribution_gpio_same_opposite(void) {
   TEST_ASSERT_GPIO_STATE(s_test_address_0, PCA9539R_GPIO_STATE_HIGH);
   TEST_ASSERT_GPIO_STATE(s_test_address_1, PCA9539R_GPIO_STATE_HIGH);  // doesn't change
 
-  // make sure OPPOSITE functions correctly (and the other doesn't change)
+  // make sure OPPOSITE_TO_DATA functions correctly (and the other doesn't change)
   SEND_TEST_EVENT(TEST_EVENT_1, 1);  // set to low
   TEST_ASSERT_GPIO_STATE(s_test_address_1, PCA9539R_GPIO_STATE_LOW);
   TEST_ASSERT_GPIO_STATE(s_test_address_0, PCA9539R_GPIO_STATE_HIGH);  // doesn't change
@@ -321,4 +322,9 @@ void test_power_distribution_gpio_invalid_config(void) {
 
   // otherwise valid
   TEST_ASSERT_OK(power_distribution_gpio_init(test_config));
+}
+
+// Test that FRONT_POWER_DISTRIBUTION_GPIO_CONFIG is valid.
+void test_front_power_distribution_gpio_config_valid(void) {
+  TEST_ASSERT_OK(power_distribution_gpio_init(FRONT_POWER_DISTRIBUTION_GPIO_CONFIG));
 }

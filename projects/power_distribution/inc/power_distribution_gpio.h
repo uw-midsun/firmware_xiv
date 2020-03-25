@@ -12,8 +12,8 @@ typedef enum {
 
   // The following states depend on the value in the event's data field.
   // We map 0 in the event data to LOW and any nonzero value there to HIGH.
-  POWER_DISTRIBUTION_GPIO_STATE_SAME,      // use the same state as in the event data
-  POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE,  // use the opposite state as in the event data
+  POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,      // use the same state as in the event data
+  POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE_TO_DATA,  // use the opposite state as in the event data
 
   NUM_POWER_DISTRIBUTION_GPIO_STATES,
 } PowerDistributionGpioState;
