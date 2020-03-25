@@ -328,3 +328,8 @@ void test_power_distribution_gpio_invalid_config(void) {
 void test_front_power_distribution_gpio_config_valid(void) {
   TEST_ASSERT_OK(power_distribution_gpio_init(FRONT_POWER_DISTRIBUTION_GPIO_CONFIG));
 }
+
+// Test that REAR_POWER_DISTRIBUTION_GPIO_CONFIG is valid.
+void test_rear_power_distribution_gpio_config_valid(void) {
+  TEST_ASSERT_OK(power_distribution_gpio_init(REAR_POWER_DISTRIBUTION_GPIO_CONFIG));
+}
