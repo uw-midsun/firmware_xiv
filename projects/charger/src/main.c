@@ -2,7 +2,7 @@
 // Charger Modules
 // - charger_controller
 //     - implements api for init, activate, and deactivate using mcp215
-// - charger_controller_fault_monitor
+//     - charger_controller_fault_monitor (merged with charger controller)
 //     - register can rx callbacks to find faults, then broadcasts them. implements init
 // - [DONE] charger_control_pilot_monitor
 //     - handles pwm reading requests, then raises an event with the result

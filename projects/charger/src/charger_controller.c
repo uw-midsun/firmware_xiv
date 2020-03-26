@@ -4,6 +4,8 @@
 #include "log.h"
 #include "mcp2515.h"
 #include "soft_timer.h"
+#include "can_transmit.h"
+#include "exported_enums.h"
 
 #define CHARGER_PERIOD 1000
 #define CCS_BMS_ID 0x1806E5F4
@@ -56,6 +58,7 @@ void prv_rx_cb(const GenericCanMsg *msg, void *context) {
       // communication failure
     }
   }
+  // probably don't need this
   // check each byte of the data if over max allowable vc
   // Byte 1 is at the end
   for (size_t i = 4; i < 7; ++i) {
