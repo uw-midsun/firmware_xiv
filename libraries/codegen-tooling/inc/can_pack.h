@@ -14,11 +14,11 @@
                     SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, 4, (relay_mask_u16), (relay_state_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_GET_RELAY_STATES(msg_ptr, relay_state_u8)                                        \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                                   \
-                   SYSTEM_CAN_MESSAGE_GET_RELAY_STATES, 1, (relay_state_u8), CAN_PACK_IMPL_EMPTY, \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_CHARGER_FAULT(msg_ptr, fault_u8)                                             \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_FAULT, 1, \
+                   (fault_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
+                   CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_POWERTRAIN_HEARTBEAT(msg_ptr)                     \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
@@ -179,6 +179,12 @@
 #define CAN_PACK_ODOMETER(msg_ptr, odometer_val_u32)                                               \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_ODOMETER, 4, \
                     (odometer_val_u32), CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_CRUISE_CONTROL_COMMAND(msg_ptr, command_u8)                               \
+  can_pack_impl_u8(                                                                        \
+      (msg_ptr), SYSTEM_CAN_DEVICE_STEERING, SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, 1, \
+      (command_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_AUX_DCDC_VC(msg_ptr, aux_voltage_u16, aux_current_u16, dcdc_voltage_u16,    \
                              dcdc_current_u16)                                               \

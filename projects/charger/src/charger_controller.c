@@ -43,19 +43,26 @@ void prv_rx_cb(const GenericCanMsg *msg, void *context) {
   if (msg->data & (uint64_t)(255 << 24)) {  // looking at fifth byte
     charger_controller_deactivate();
     // transmit max vc and not to charge
-
     generic_can_tx(&s_generic_can, &can_msg);
     if (msg->data & (uint64_t)(1 << 24)) {
       // hardware failure
+      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_HARDWARE_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 25)) {
       // temperature too high
+      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_TEMP_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 26)) {
       // input voltage wrong
+      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_INPUT_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 27)) {
-      // communication failure
+      // wrong state
+      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_STATE_FAULT);
+    }
+    if (msg->data & (uint64_t)(1 << 28)) {
+      // communication fault
+      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_COMMUNICATION_FAULT);
     }
   }
   // probably don't need this
