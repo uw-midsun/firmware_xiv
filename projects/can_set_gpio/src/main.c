@@ -39,6 +39,7 @@ static const GpioAddress gpio = { .port = GPIO_PORT_B, .pin = 5 };
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   gpio_set_state(&gpio, GPIO_STATE_HIGH);
+  LOG_DEBUG("GPIO state is high");
   return STATUS_CODE_OK;
 }
 
