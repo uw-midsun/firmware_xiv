@@ -5,8 +5,4 @@
 #include "can_transmit.h"
 #include "can_unpack.h"
 
-int16_t get_brake_position();
-
-int16_t get_throttle_position();
-
 StatusCode pedal_data_tx_init();
