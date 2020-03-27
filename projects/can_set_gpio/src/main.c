@@ -7,39 +7,32 @@
 #include "log.h"
 #include "soft_timer.h"
 
-#define TEST_CAN_DEVICE_ID 0x1
+#define CAN_DEVICE_ID 0x1
 
 typedef enum {
-  TEST_CAN_EVENT_RX = 0,
-  TEST_CAN_EVENT_TX,
-  TEST_CAN_EVENT_FAULT,
-} TestCanEvent;
+  CAN_EVENT_RX = 0,
+  CAN_EVENT_TX,
+  CAN_EVENT_FAULT,
+  NUM_CAN_EVENTS,
+} CanEvent;
 
 static CanStorage s_can_storage;
-
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply);
-
-void init_can(void) {
-  CanSettings can_settings = {
-    .device_id = TEST_CAN_DEVICE_ID,
+static CanSettings s_can_settings = {
+    .device_id = CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = TEST_CAN_EVENT_RX,
-    .tx_event = TEST_CAN_EVENT_TX,
-    .fault_event = TEST_CAN_EVENT_FAULT,
+    .rx_event = CAN_EVENT_RX,
+    .tx_event = CAN_EVENT_TX,
+    .fault_event = CAN_EVENT_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
     .loopback = false,
   };
 
-  StatusCode ret = can_init(&s_can_storage, &can_settings);
-  can_register_rx_default_handler(prv_rx_callback, NULL);
-}
-
 static const GpioAddress gpio = { .port = GPIO_PORT_B, .pin = 5 };
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   gpio_set_state(&gpio, GPIO_STATE_HIGH);
-  LOG_DEBUG("GPIO state is high");
+  LOG_DEBUG("GPIO state is high\n");
   return STATUS_CODE_OK;
 }
 
@@ -56,7 +49,8 @@ int main() {
                                 .resistor = GPIO_RES_NONE };
   gpio_init_pin(&gpio, &led_settings);
 
-  init_can();
+  can_init(&s_can_storage, &s_can_settings);
+  can_register_rx_default_handler(prv_rx_callback, NULL);
 
   Event e = { 0 };
   int i = 0;
