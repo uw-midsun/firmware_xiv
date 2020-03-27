@@ -69,16 +69,16 @@ void prv_rx_cb(const GenericCanMsg *msg, void *context) {
   // probably don't need this
   // check each byte of the data if over max allowable vc
   // Byte 1 is at the end
-  for (size_t i = 4; i < 7; ++i) {
-    if ((msg->data << (i * 8)) > (MAX_ALLOWABLE_VC << (i * 8))) {
-      charger_controller_deactivate();
-      // transmit max vc and not to charge
-      generic_can_tx(&s_generic_can, &can_msg);
-      // maybe raise event
-      // cus vc extended max vc
-      break;
-    }
-  }
+  // for (size_t i = 4; i < 7; ++i) {
+  //   if ((msg->data << (i * 8)) > (MAX_ALLOWABLE_VC << (i * 8))) {
+  //     charger_controller_deactivate();
+  //     // transmit max vc and not to charge
+  //     generic_can_tx(&s_generic_can, &can_msg);
+  //     // maybe raise event
+  //     // cus vc extended max vc
+  //     break;
+  //   }
+  // }
 }
 
 StatusCode charger_controller_init(GenericCan *generic_can) {
