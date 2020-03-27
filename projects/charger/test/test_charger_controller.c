@@ -13,6 +13,7 @@
 #include "status.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
+#define BCA_CCS_ID 0x18FF50E5
 
 static CanStorage s_can_storage;
 static GenericCanMcp2515 s_generic_can = { 0 };
@@ -56,28 +57,45 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_charger_controller_activate(void) {
-    TEST_ASSERT_OK(charger_controller_activate());
+  TEST_ASSERT_OK(charger_controller_activate());
 }
 
 void test_charger_controller_deactivate(void) {
-    TEST_ASSERT_EQUAL(charger_controller_deactivate(), STATUS_CODE_UNINITIALIZED);
+  TEST_ASSERT_EQUAL(charger_controller_deactivate(), STATUS_CODE_UNINITIALIZED);
 
-    TEST_ASSERT_OK(charger_controller_activate());
-    TEST_ASSERT_OK(charger_controller_deactivate());
+  TEST_ASSERT_OK(charger_controller_activate());
+  TEST_ASSERT_OK(charger_controller_deactivate());
 }
 
 // this test makes sure the charger is transmitting properly
 void test_charger_tx(void) {
-    charger_controller_activate();
-    // should transmit immediately
+  charger_controller_activate();
+  // should transmit immediately
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
 
-  //TEST_ASSERT_EQUAL(counter, 1);
+  // TEST_ASSERT_EQUAL(counter, 1);
 
   delay_ms(100);
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
-  //TEST_ASSERT_EQUAL(counter, 2);
+  // TEST_ASSERT_EQUAL(counter, 2);
 
   delay_ms(95);
-  //TEST_ASSERT_EQUAL(counter, 2);
+  // TEST_ASSERT_EQUAL(counter, 2);
+}
+
+void test_charger_rx(void) {
+  charger_controller_activate();
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+
+  static GenericCanMsg s_gen_can_msg = {
+    .id = BCA_CCS_ID,
+    .extended = false,
+    .data = (uint64_t)(1 << 24),
+    .dlc = 0,
+  };
+  generic_can_tx(&s_generic_can.base, &s_gen_can_msg);
+
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  //test message is fault
+
 }
