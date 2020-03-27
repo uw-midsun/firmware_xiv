@@ -32,6 +32,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
 }
 
 void prv_rx_cb(const GenericCanMsg *msg, void *context) {
+  // still need to test if this receives
   LOG_DEBUG("RUNNING\n");
   GenericCanMsg can_msg = {
     .id = msg->id,
@@ -46,23 +47,23 @@ void prv_rx_cb(const GenericCanMsg *msg, void *context) {
     generic_can_tx(&s_generic_can, &can_msg);
     if (msg->data & (uint64_t)(1 << 24)) {
       // hardware failure
-      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_HARDWARE_FAULT);
+      CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_HARDWARE_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 25)) {
       // temperature too high
-      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_TEMP_FAULT);
+      CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_TEMP_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 26)) {
       // input voltage wrong
-      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_INPUT_FAULT);
+      CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_INPUT_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 27)) {
       // wrong state
-      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_STATE_FAULT);
+      CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_STATE_FAULT);
     }
     if (msg->data & (uint64_t)(1 << 28)) {
       // communication fault
-      // CAN_TRANSMIT_CHARGER_FAULT( , EE_CHARGER_COMMUNICATION_FAULT);
+      CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_COMMUNICATION_FAULT);
     }
   }
   // probably don't need this

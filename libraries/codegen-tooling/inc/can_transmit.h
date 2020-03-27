@@ -23,14 +23,6 @@
     status;                                                                     \
   })
 
-#define CAN_TRANSMIT_CHARGER_FAULT(ack_ptr, fault_u8)  \
-  ({                                                   \
-    CanMessage msg = { 0 };                            \
-    CAN_PACK_CHARGER_FAULT(&msg, (fault_u8));          \
-    StatusCode status = can_transmit(&msg, (ack_ptr)); \
-    status;                                            \
-  })
-
 #define CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(ack_ptr)     \
   ({                                                   \
     CanMessage msg = { 0 };                            \
@@ -346,6 +338,14 @@
   ({                                              \
     CanMessage msg = { 0 };                       \
     CAN_PACK_ANGULAR_ROTATION(&msg);              \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_CHARGER_FAULT(fault_u8)      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_CHARGER_FAULT(&msg, (fault_u8));     \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })

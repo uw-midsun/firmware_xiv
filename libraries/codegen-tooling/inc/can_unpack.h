@@ -12,11 +12,6 @@
   can_unpack_impl_u16((msg_ptr), 4, (relay_mask_u16_ptr), (relay_state_u16_ptr),      \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_CHARGER_FAULT(msg_ptr, fault_u8_ptr)                                          \
-  can_unpack_impl_u8((msg_ptr), 1, (fault_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
 #define CAN_UNPACK_POWERTRAIN_HEARTBEAT(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_GET_AUX_STATUS(msg_ptr, aux_bat_ov_flag_u8_ptr, aux_bat_ut_flag_u8_ptr) \
@@ -168,3 +163,8 @@
 #define CAN_UNPACK_LINEAR_ACCELERATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_ANGULAR_ROTATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+
+#define CAN_UNPACK_CHARGER_FAULT(msg_ptr, fault_u8_ptr)                                          \
+  can_unpack_impl_u8((msg_ptr), 1, (fault_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
