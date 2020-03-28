@@ -18,21 +18,26 @@ typedef enum {
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
-    .device_id = CAN_DEVICE_ID,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = CAN_EVENT_RX,
-    .tx_event = CAN_EVENT_TX,
-    .fault_event = CAN_EVENT_FAULT,
-    .tx = { GPIO_PORT_A, 12 },
-    .rx = { GPIO_PORT_A, 11 },
-    .loopback = false,
-  };
+  .device_id = CAN_DEVICE_ID,
+  .bitrate = CAN_HW_BITRATE_500KBPS,
+  .rx_event = CAN_EVENT_RX,
+  .tx_event = CAN_EVENT_TX,
+  .fault_event = CAN_EVENT_FAULT,
+  .tx = { GPIO_PORT_A, 12 },
+  .rx = { GPIO_PORT_A, 11 },
+  .loopback = false,
+};
 
-static const GpioAddress gpio = { .port = GPIO_PORT_B, .pin = 5 };
+static GpioSettings s_led_settings = { .direction = GPIO_DIR_OUT,
+                                       .state = GPIO_STATE_HIGH,
+                                       .alt_function = GPIO_ALTFN_NONE,
+                                       .resistor = GPIO_RES_NONE };
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  const GpioAddress gpio = { .port = msg->data_u8[0], .pin = msg->data_u8[1] };
+  gpio_init_pin(&gpio, &s_led_settings);
   gpio_set_state(&gpio, GPIO_STATE_HIGH);
-  LOG_DEBUG("GPIO state is high\n");
+  LOG_DEBUG("GPIO {Port: %d Pin: %d} is high\n", gpio.port, gpio.pin);
   return STATUS_CODE_OK;
 }
 
@@ -42,12 +47,6 @@ int main() {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
-
-  GpioSettings led_settings = { .direction = GPIO_DIR_OUT,
-                                .state = GPIO_STATE_HIGH,
-                                .alt_function = GPIO_ALTFN_NONE,
-                                .resistor = GPIO_RES_NONE };
-  gpio_init_pin(&gpio, &led_settings);
 
   can_init(&s_can_storage, &s_can_settings);
   can_register_rx_default_handler(prv_rx_callback, NULL);
