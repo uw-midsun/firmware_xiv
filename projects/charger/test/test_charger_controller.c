@@ -16,6 +16,8 @@
 
 #define TEST_CAN_DEVICE_ID 0x1
 #define BCA_CCS_ID 0x18FF50E5
+#define CCS_BMS_ID 0x1806E5F4
+#define MAX_ALLOWABLE_VC 0x00000000ffffffff
 
 static CanStorage s_can_storage;
 static GenericCanMcp2515 s_generic_can = { 0 };
@@ -42,6 +44,11 @@ static Mcp2515Settings mcp2515_settings = {
   .can_bitrate = MCP2515_BITRATE_250KBPS,
   .loopback = false,
 };
+
+void prv_rx_cb(const GenericCanMsg *msg, void *context) {
+  TEST_ASSERT_EQUAL(msg->id, CCS_BMS_ID);
+  TEST_ASSERT_EQUAL(msg->data, MAX_ALLOWABLE_VC);
+}
 
 void setup_test(void) {
   event_queue_init();
@@ -71,18 +78,13 @@ void test_charger_controller_deactivate(void) {
 
 // this test makes sure the charger is transmitting properly
 void test_charger_tx(void) {
+  generic_can_register_rx(&s_generic_can.base, prv_rx_cb, GENERIC_CAN_EMPTY_MASK, NULL, false, NULL);
   charger_controller_activate();
   // should transmit immediately
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
 
-  // TEST_ASSERT_EQUAL(counter, 1);
-
-  delay_ms(100);
+  delay_ms(1000);
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
-  // TEST_ASSERT_EQUAL(counter, 2);
-
-  delay_ms(95);
-  // TEST_ASSERT_EQUAL(counter, 2);
 }
 
 void test_charger_rx(void) {
