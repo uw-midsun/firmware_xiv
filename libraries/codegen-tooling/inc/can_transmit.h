@@ -23,14 +23,6 @@
     status;                                                                     \
   })
 
-#define CAN_TRANSMIT_GET_RELAY_STATES(ack_ptr, relay_state_u8) \
-  ({                                                           \
-    CanMessage msg = { 0 };                                    \
-    CAN_PACK_GET_RELAY_STATES(&msg, (relay_state_u8));         \
-    StatusCode status = can_transmit(&msg, (ack_ptr));         \
-    status;                                                    \
-  })
-
 #define CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(ack_ptr)     \
   ({                                                   \
     CanMessage msg = { 0 };                            \
@@ -291,6 +283,14 @@
     status;                                       \
   })
 
+#define CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(command_u8)  \
+  ({                                                     \
+    CanMessage msg = { 0 };                              \
+    CAN_PACK_CRUISE_CONTROL_COMMAND(&msg, (command_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);        \
+    status;                                              \
+  })
+
 #define CAN_TRANSMIT_AUX_DCDC_VC(aux_voltage_u16, aux_current_u16, dcdc_voltage_u16,     \
                                  dcdc_current_u16)                                       \
   ({                                                                                     \
@@ -338,6 +338,14 @@
   ({                                              \
     CanMessage msg = { 0 };                       \
     CAN_PACK_ANGULAR_ROTATION(&msg);              \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_CHARGER_FAULT(fault_u8)      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_CHARGER_FAULT(&msg, (fault_u8));     \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
