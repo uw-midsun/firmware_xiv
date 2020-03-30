@@ -367,7 +367,7 @@ const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
+              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
                       {
