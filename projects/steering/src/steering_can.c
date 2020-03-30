@@ -34,15 +34,15 @@ StatusCode steering_can_process_event(Event *e) {
   } else if (e->id == STEERING_REGEN_BRAKE_EVENT) {
     // transmit something
   } else if (e->id == STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT) {
-    // transmit something
+    CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_TOGGLE);
   } else if (e->id == STEERING_CONTROL_STALK_EVENT_LEFT) {
     CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_LEFT, (EELightState)e->data);
   } else if (e->id == STEERING_CONTROL_STALK_EVENT_RIGHT) {
     CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_RIGHT, (EELightState)e->data);
   } else if (e->id == STEERING_CC_EVENT_INCREASE_SPEED) {
-    // transmit something
+    CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_INCREASE);
   } else if (e->id == STEERING_CC_EVENT_DECREASE_SPEED) {
-    // transmit something
+    CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_DECREASE);
   }
   return STATUS_CODE_OK;
 }
