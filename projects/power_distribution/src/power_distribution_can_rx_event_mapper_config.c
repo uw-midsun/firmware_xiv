@@ -152,8 +152,8 @@ const PowerDistributionCanRxEventMapperConfig REAR_POWER_DISTRIBUTION_CAN_RX_CON
               .num_types = 5,
               .type_to_event_id =
                   (EventId[]){
+                      [EE_LIGHT_TYPE_STROBE] = POWER_DISTRIBUTION_STROBE_EVENT,
                       [EE_LIGHT_TYPE_BRAKES] = POWER_DISTRIBUTION_GPIO_EVENT_BRAKE_LIGHT,
-                      [EE_LIGHT_TYPE_STROBE] = POWER_DISTRIBUTION_GPIO_EVENT_STROBE,
                       [EE_LIGHT_TYPE_SIGNAL_RIGHT] = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
                       [EE_LIGHT_TYPE_SIGNAL_LEFT] = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
                       [EE_LIGHT_TYPE_SIGNAL_HAZARD] = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,

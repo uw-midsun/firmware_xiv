@@ -321,7 +321,6 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
   .num_events = 12,
 };
 
-// Note: strobe isn't handled here because it has to be blinked
 const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG = {
   .events =
       (PowerDistributionGpioEventSpec[]){
@@ -380,6 +379,17 @@ const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG = {
                       },
                   },
               .num_outputs = 2,
+          },
+          {
+              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_STROBE,
+              .outputs =
+                  (PowerDistributionGpioOutputSpec[]){
+                      {
+                          .address = REAR_PIN_STROBE_LIGHT_EN,
+                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                      },
+                  },
+              .num_outputs = 1,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
@@ -497,5 +507,5 @@ const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG = {
               .num_outputs = 10,
           },
       },
-  .num_events = 7,
+  .num_events = 8,
 };
