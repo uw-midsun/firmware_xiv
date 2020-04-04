@@ -38,6 +38,7 @@ typedef enum {
   })
 
 void setup_test(void) {
+  event_queue_init();
   gpio_init();
 
   I2CSettings i2c_settings = {
