@@ -1,7 +1,7 @@
 #pragma once
 
 // Receive events and set the PCA9539R GPIO pin states as specified.
-// Requires GPIO, I2C, and PCA9539R to be initialized.
+// Requires the event queue, GPIO, I2C, and PCA9539R to be initialized.
 
 #include "event_queue.h"
 #include "pca9539r_gpio_expander.h"
