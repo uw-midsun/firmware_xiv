@@ -74,7 +74,7 @@ int main(void) {
   can_init(&s_can_storage, &s_can_settings);
   generic_can_mcp2515_init(&s_generic_can, &mcp2515_settings);
 
-  charger_controller_init(&s_generic_can.base);
+  charger_controller_init(&s_generic_can);
   connection_sense_init();
   control_pilot_monitor_init();
   begin_charge_fsm_init();
