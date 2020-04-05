@@ -20,7 +20,6 @@
 #define TEST_CAN_DEVICE_ID 0x1
 #define BCA_CCS_ID 0x18FF50E5
 #define CCS_BMS_ID 0x1806E5F4
-#define MAX_ALLOWABLE_VC 0xffff
 
 static CanStorage s_can_storage;
 static GenericCanMcp2515 s_can_mcp2515;
@@ -56,7 +55,7 @@ static Mcp2515Settings s_mcp2515_settings = {
 static void prv_generic_rx_cb (uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
   ++generic_counter;
   TEST_ASSERT_EQUAL(id, CCS_BMS_ID);
-  TEST_ASSERT_EQUAL(data, MAX_ALLOWABLE_VC);
+  TEST_ASSERT_EQUAL(data, get_max_allowable_vc());
 }
 
 StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
