@@ -1,82 +1,120 @@
 #include "charger_controller.h"
+
+#include "can_transmit.h"
+#include "charger_events.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "generic_can.h"
+#include "generic_can_mcp2515.h"
 #include "log.h"
 #include "mcp2515.h"
 #include "soft_timer.h"
 
 #define CHARGER_PERIOD 1000
 #define CCS_BMS_ID 0x1806E5F4
-#define MAX_ALLOWABLE_VC 0x00000000ffffffff
-// try and get the max allowable data
+uint64_t max_allowable_vc;
+
+// you need to find max current from the pwm from the control pilot
+// signal.
+// control_pilot pwm has some duty cycle, that dc proportional to max
+// current. YOU CAN FIND THIS IN THE Charging Standard.
+// you CAN hardcode max voltage, it can be
+// something near when our battery is getting fully charged.
+// Ask Micah Black what that voltage is.
+// what is the voltage of our batteries when they're 95% charged.
+
 #define BCA_CCS_ID 0x18FF50E5
 
 static SoftTimerId charger_controller_timer_id;
 
-static GenericCan s_generic_can;
-static GenericCanMsg s_gen_can_msg = {
-  .id = CCS_BMS_ID,
-  .extended = false,
-  .data = MAX_ALLOWABLE_VC,
-  .dlc = 0,
-};
+static GenericCan *s_generic_can;
+
+
+uint64_t get_max_allowable_vc() {
+  return max_allowable_vc;
+}
 
 static void prv_timer_callback(SoftTimerId timer_id, void *context) {
+  GenericCanMsg gen_can_msg = {
+    .id = CCS_BMS_ID,
+    .extended = true,
+    .data = max_allowable_vc,
+    .dlc = 8,
+  };
   // send max allowable vc
-  generic_can_tx(&s_generic_can, &s_gen_can_msg);
+  generic_can_tx(s_generic_can, &gen_can_msg);
 
   soft_timer_start_millis(CHARGER_PERIOD, prv_timer_callback, context,
                           &charger_controller_timer_id);
 }
 
-void prv_rx_cb(const GenericCanMsg *msg, void *context) {
+void prv_generic_rx_callback(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  // still need to test if this receives
   LOG_DEBUG("RUNNING\n");
   GenericCanMsg can_msg = {
-    .id = msg->id,
-    .data = msg->data | (1 << 24),
-    .dlc = msg->dlc,
-    .extended = msg->extended,
+    .id = CCS_BMS_ID,
+    .data = max_allowable_vc | (1 << 24),
+    .dlc = 8,
+    .extended = true,
   };
 
-  if (msg->data & (uint64_t)(255 << 24)) {  // looking at fifth byte
-    charger_controller_deactivate();
-    // transmit max vc and not to charge
-
-    generic_can_tx(&s_generic_can, &can_msg);
-    if (msg->data & (uint64_t)(1 << 24)) {
-      // hardware failure
-    }
-    if (msg->data & (uint64_t)(1 << 25)) {
-      // temperature too high
-    }
-    if (msg->data & (uint64_t)(1 << 26)) {
-      // input voltage wrong
-    }
-    if (msg->data & (uint64_t)(1 << 27)) {
-      // communication failure
-    }
-  }
-  // check each byte of the data if over max allowable vc
-  // Byte 1 is at the end
-  for (size_t i = 4; i < 7; ++i) {
-    if ((msg->data << (i * 8)) > (MAX_ALLOWABLE_VC << (i * 8))) {
+  if (id == BCA_CCS_ID) {
+    if (data & (uint64_t)(255 << 24)) {  // looking at fifth byte
       charger_controller_deactivate();
       // transmit max vc and not to charge
-      generic_can_tx(&s_generic_can, &can_msg);
-      // maybe raise event
-      // cus vc extended max vc
-      break;
+      generic_can_tx(s_generic_can, &can_msg);
+      if (data & (uint64_t)(1 << 24)) {
+        // hardware failure
+        CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_HARDWARE_FAULT);
+      }
+      if (data & (uint64_t)(1 << 25)) {
+        // temperature too high
+        CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_TEMP_FAULT);
+      }
+      if (data & (uint64_t)(1 << 26)) {
+        // input voltage wrong
+        CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_INPUT_FAULT);
+      }
+      if (data & (uint64_t)(1 << 27)) {
+        // wrong state
+        CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_STATE_FAULT);
+      }
+      if (data & (uint64_t)(1 << 28)) {
+        // communication fault
+        CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_COMMUNICATION_FAULT);
+      }
     }
+    // probably don't need this
+    // check each byte of the data if over max allowable vc
+    // Byte 1 is at the end
+    // for (size_t i = 4; i < 7; ++i) {
+    //   if ((data << (i * 8)) > (max_allowable_vc << (i * 8))) {
+    //     charger_controller_deactivate();
+    //     // transmit max vc and not to charge
+    //     generic_can_tx(&s_generic_can, &can_msg);
+    //     // maybe raise event
+    //     // cus vc extended max vc
+    //     break;
+    //   }
+    // }
   }
 }
 
-StatusCode charger_controller_init(GenericCan *generic_can) {
-  s_generic_can = *generic_can;
+// needs generic_can_mcp2515_init
+StatusCode charger_controller_init(GenericCanMcp2515 *can_mcp2515) {
+  s_generic_can = (GenericCan *)can_mcp2515;
   // register a rx
-  return generic_can_register_rx(generic_can, prv_rx_cb, GENERIC_CAN_EMPTY_MASK, BCA_CCS_ID, false, NULL);
+  return mcp2515_register_cbs(can_mcp2515->mcp2515, prv_generic_rx_callback, NULL, NULL);
 }
 
 StatusCode charger_controller_activate() {
+  event_raise(CHARGER_PWM_EVENT_REQUEST_READING, 0);
+  Event e = { 0 };
+  while (event_process(&e) != STATUS_CODE_OK) {
+  }
+  if (e.id == CHARGER_PWM_EVENT_VALUE_AVAILABLE) {
+    max_allowable_vc = (uint64_t) (0xff | (e.data << 16));
+  }
   return soft_timer_start_millis(CHARGER_PERIOD, prv_timer_callback, NULL,
                                  &charger_controller_timer_id);
 }

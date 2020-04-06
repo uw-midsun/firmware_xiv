@@ -365,3 +365,11 @@
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
+
+#define CAN_TRANSMIT_CHARGER_FAULT(fault_u8)      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_CHARGER_FAULT(&msg, (fault_u8));     \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })

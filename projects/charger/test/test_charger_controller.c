@@ -1,84 +1,174 @@
-// #include "delay.h"
-// #include "gpio.h"
-// #include "gpio_it.h"
-// #include "interrupt.h"
-// #include "log.h"
-// #include "mcp2515.h"
-// #include "soft_timer.h"
-// #include "spi.h"
-// #include "test_helpers.h"
-// #include "unity.h"
-// #include "charger_controller.h"
+#include "can.h"
+#include "can_msg_defs.h"
+#include "charger_controller.h"
+#include "charger_events.h"
+#include "delay.h"
+#include "event_queue.h"
+#include "exported_enums.h"
+#include "generic_can_hw.h"
+#include "generic_can_mcp2515.h"
+#include "gpio.h"
+#include "gpio_it.h"
+#include "interrupt.h"
+#include "log.h"
+#include "mcp2515.h"
+#include "ms_test_helpers.h"
+#include "soft_timer.h"
+#include "status.h"
+#include "test_helpers.h"
 
-// static Mcp2515Storage s_mcp2515;
-// static volatile bool s_msg_rx = false;
+#define TEST_CAN_DEVICE_ID 0x1
+#define BCA_CCS_ID 0x18FF50E5
+#define CCS_BMS_ID 0x1806E5F4
 
-// static uint32_t s_id = 0;
-// static bool s_extended = false;
-// static uint64_t s_data = 0;
-// static size_t s_dlc = 0;
-// int counter = 0;
+static CanStorage s_can_storage;
+static GenericCanMcp2515 s_can_mcp2515;
+static GenericCan *s_can;
+static int generic_counter = 0;
+static int system_counter = 0;
+static uint64_t data;
 
-// static void prv_handle_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
-//   s_id = id;
-//   s_extended = extended;
-//   s_data = data;
-//   s_dlc = dlc;
+static CanSettings s_can_settings = {
+  .device_id = TEST_CAN_DEVICE_ID,
+  .bitrate = CAN_HW_BITRATE_250KBPS,
+  .tx = { GPIO_PORT_A, 12 },
+  .rx = { GPIO_PORT_A, 11 },
+  .rx_event = CHARGER_CAN_EVENT_RX,
+  .tx_event = CHARGER_CAN_EVENT_TX,
+  .fault_event = CHARGER_CAN_EVENT_FAULT,
+  .loopback = true,
+};
 
-//   s_msg_rx = true;
-//   ++counter;
-// }
+static Mcp2515Settings s_mcp2515_settings = {
+  .spi_port = SPI_PORT_2,
+  .spi_baudrate = 6000000,
+  .mosi = { .port = GPIO_PORT_B, 15 },
+  .miso = { .port = GPIO_PORT_B, 14 },
+  .sclk = { .port = GPIO_PORT_B, 13 },
+  .cs = { .port = GPIO_PORT_B, 12 },
+  .int_pin = { .port = GPIO_PORT_A, 8 },
 
-// void setup_test(void) {
-//   gpio_init();
-//   interrupt_init();
-//   gpio_it_init();
-//   soft_timer_init();
+  .can_bitrate = MCP2515_BITRATE_250KBPS,
+  .loopback = true,
+};
 
-//   s_msg_rx = false;
-//   s_id = 0;
-//   s_extended = false;
-//   s_data = 0;
-//   s_dlc = 0;
+static void prv_generic_rx_cb (uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  ++generic_counter;
+  TEST_ASSERT_EQUAL(id, CCS_BMS_ID);
+  TEST_ASSERT_EQUAL(data, get_max_allowable_vc());
+}
 
-//   const Mcp2515Settings mcp2515_settings = {
-//     .spi_port = SPI_PORT_2,
-//     .spi_baudrate = MCP2515_BITRATE_250KBPS,
-//     .mosi = { .port = GPIO_PORT_B, 15 },
-//     .miso = { .port = GPIO_PORT_B, 14 },
-//     .sclk = { .port = GPIO_PORT_B, 13 },
-//     .cs = { .port = GPIO_PORT_B, 12 },
-//     .int_pin = { .port = GPIO_PORT_A, 8 },
+StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  LOG_DEBUG("WORKING\n");
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_CHARGER_FAULT, msg->msg_id);
+  data = msg->data;
+  ++system_counter;
+  return STATUS_CODE_OK;
+}
 
-//     .loopback = true,
-//     .can_bitrate = MCP2515_BITRATE_250KBPS,
-//   };
-//   LOG_DEBUG("Initializing mcp2515\n");
-//   TEST_ASSERT_OK(mcp2515_init(&s_mcp2515, &mcp2515_settings));
-//   TEST_ASSERT_OK(charger_controller_init(&s_mcp2515));
-//   mcp2515_register_cbs(&s_mcp2515, prv_handle_rx, NULL, NULL);
-// }
+StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
+                                 size_t dlc) {
+  if (storage->rx_cb != NULL) {
+    storage->rx_cb(id, extended, data, dlc, storage->context);
+  }
+  return STATUS_CODE_OK;
+}
 
-// void teardown_test(void) {}
+void setup_test(void) {
+  event_queue_init();
+  interrupt_init();
+  gpio_init();
+  gpio_it_init();
+  soft_timer_init();
 
-// void test_mcp2515_extended(void) {
-//   LOG_DEBUG("Testing send extended id\n");
-//   // shows that a filtered-out message does not update the static vars
-//   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x19999999, true, 0xBEEFDEADBEEFDEAD, 8));
-//   delay_ms(50);
-//   TEST_ASSERT_NOT_EQUAL(0x19999999, s_id);
-//   TEST_ASSERT_NOT_EQUAL(0xBEEFDEADBEEFDEAD, s_data);
+  // system can
+  can_init(&s_can_storage, &s_can_settings);
+  // charger can
+  generic_can_mcp2515_init(&s_can_mcp2515, &s_mcp2515_settings);
 
-//   // shows that a filtered-in message updates static vars
-//   TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x1EADBEEF, true, 0x8877665544332211, 8));
-//   delay_ms(50);
-//   TEST_ASSERT_EQUAL(0x1EADBEEF, s_id);
-//   TEST_ASSERT_EQUAL(true, s_extended);
-//   TEST_ASSERT_EQUAL(0x8877665544332211, s_data);
-//   TEST_ASSERT_EQUAL(8, s_dlc);
+  s_can = (GenericCan *)&s_can_mcp2515;
+  TEST_ASSERT_OK(charger_controller_init(&s_can_mcp2515));
+}
 
-//   delay_s(1);
-//   TEST_ASSERT_EQUAL(counter, 5);
-//   delay_s(1);
-//   TEST_ASSERT_EQUAL(counter, 5);
-// }
+void teardown_test(void) {}
+
+void test_charger_controller_activate(void) {
+  TEST_ASSERT_OK(charger_controller_activate());
+}
+
+void test_charger_controller_deactivate(void) {
+  TEST_ASSERT_EQUAL(charger_controller_deactivate(), STATUS_CODE_UNINITIALIZED);
+
+  TEST_ASSERT_OK(charger_controller_activate());
+  TEST_ASSERT_OK(charger_controller_deactivate());
+}
+
+// this test makes sure the charger is transmitting properly
+void test_charger_tx(void) {
+  TEST_ASSERT_OK(mcp2515_register_cbs(s_can_mcp2515.mcp2515, prv_generic_rx_cb, NULL, NULL));
+  TEST_ASSERT_OK(charger_controller_activate());
+  // should not transmit immediately
+  delay_ms(1000);
+  TEST_ASSERT_EQUAL(1, generic_counter);
+
+  delay_ms(1000);
+  TEST_ASSERT_EQUAL(2, generic_counter);
+}
+
+void test_charger_rx(void) {
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_CHARGER_FAULT, prv_rx_callback, NULL);
+
+  static GenericCanMsg s_gen_can_msg = {
+    .id = BCA_CCS_ID,
+    .extended = true,
+    .data = (uint64_t)(1 << 24),
+    .dlc = 8,
+  };
+
+  // hardware fault
+  charger_controller_activate();
+  generic_can_tx(s_can, &s_gen_can_msg);
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(EE_CHARGER_HARDWARE_FAULT, data);
+  TEST_ASSERT_EQUAL(system_counter, 1);
+
+  // temperature fault
+  s_gen_can_msg.data = (uint64_t)(1 << 25);
+  charger_controller_activate();
+  generic_can_tx(s_can, &s_gen_can_msg);
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(EE_CHARGER_TEMP_FAULT, data);
+  TEST_ASSERT_EQUAL(system_counter, 2);
+
+  // temperature fault
+  s_gen_can_msg.data = (uint64_t)(1 << 25);
+  charger_controller_activate();
+  generic_can_tx(s_can, &s_gen_can_msg);
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(EE_CHARGER_TEMP_FAULT, data);
+  TEST_ASSERT_EQUAL(system_counter, 3);
+
+  // input fault
+  s_gen_can_msg.data = (uint64_t)(1 << 26);
+  charger_controller_activate();
+  generic_can_tx(s_can, &s_gen_can_msg);
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(EE_CHARGER_INPUT_FAULT, data);
+  TEST_ASSERT_EQUAL(system_counter, 4);
+
+  // state fault
+  s_gen_can_msg.data = (uint64_t)(1 << 27);
+  charger_controller_activate();
+  generic_can_tx(s_can, &s_gen_can_msg);
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(EE_CHARGER_STATE_FAULT, data);
+  TEST_ASSERT_EQUAL(system_counter, 5);
+
+  // communication fault
+  s_gen_can_msg.data = (uint64_t)(1 << 28);
+  charger_controller_activate();
+  generic_can_tx(s_can, &s_gen_can_msg);
+  MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(EE_CHARGER_COMMUNICATION_FAULT, data);
+  TEST_ASSERT_EQUAL(system_counter, 6);
+}
