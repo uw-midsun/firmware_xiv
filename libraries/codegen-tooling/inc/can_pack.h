@@ -200,6 +200,19 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_INFO, 6, \
                     (current_u16), (voltage_u16), (status_bitset_u16), CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_REQUEST_TO_CHARGE(msg_ptr) \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_REQUEST_TO_CHARGE)
+
+#define CAN_PACK_ALLOW_CHARGING(msg_ptr)                           \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_ALLOW_CHARGING)
+
+#define CAN_PACK_CHARGER_CONNECTED_STATE(msg_ptr, is_connected_u8)                         \
+  can_pack_impl_u8(                                                                        \
+      (msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_CONNECTED_STATE, 1, \
+      (is_connected_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,    \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_LINEAR_ACCELERATION(msg_ptr) \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_IMU, SYSTEM_CAN_MESSAGE_LINEAR_ACCELERATION)
 

@@ -6,6 +6,7 @@
 #include "can_transmit.h"
 #include "event_queue.h"
 #include "gpio.h"
+#include "exported_enums.h"
 
 static GpioAddress s_control_pilot_pin = { .port = GPIO_PORT_A, .pin = 2 };
 
@@ -14,7 +15,8 @@ void stop_charger(void) {
   charger_controller_deactivate();
   // set control pilot pin
   gpio_set_state(&s_control_pilot_pin, GPIO_STATE_LOW);
-  // TODO(SOFT-130): broadcast charger disconnected can message
+  // broadcast charger disconnected can message
+  CAN_TRANSMIT_CHARGER_CONNECTED_STATE(EE_CHARGER_CONN_STATE_DISCONNECTED);
 }
 
 void stop_charger_process_event(const Event *e) {

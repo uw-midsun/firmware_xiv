@@ -1,6 +1,6 @@
 
 // Charger Modules
-// - charger_controller
+// - [DONE] charger_controller
 //     - implements api for init, activate, and deactivate using mcp215
 // - charger_controller_fault_monitor
 //     - register can rx callbacks to find faults, then broadcasts them. implements init
@@ -12,7 +12,7 @@
 //     - implements init
 // - permission_resolver
 //     - handles connection events
-// - [TODOS] begin_charge_fsm
+// - [DONE] begin_charge_fsm
 // - [TODOS] stop_charge_fsm
 // - battery_voltage_monitor
 //     - handles overvoltage faults from BMS
@@ -23,6 +23,7 @@
 #include "charger_control_pilot_monitor.h"
 #include "stop_charger.h"
 #include "charger_controller.h"
+#include "permission_resolver.h"
 
 #include "event_queue.h"
 #include "gpio.h"
@@ -78,6 +79,7 @@ int main(void) {
   connection_sense_init();
   control_pilot_monitor_init();
   begin_charge_fsm_init();
+  permission_resolver_init();
 
   Event e = { 0 };
   while (true) {
@@ -86,6 +88,7 @@ int main(void) {
       control_pilot_monitor_process_event(&e);
       begin_fsm_process_event(&e);
       stop_charger_process_event(&e);
+      permission_resolver_process_event(&e);
     }
   }
   return 0;
