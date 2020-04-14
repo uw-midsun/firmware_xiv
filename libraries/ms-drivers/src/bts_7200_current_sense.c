@@ -65,6 +65,9 @@ StatusCode bts_7200_init_mcp23008(Bts7200Storage *storage, Bts7200Mcp23008Settin
   storage->callback = settings->callback;
   storage->callback_context = settings->callback_context;
 
+  // initialize MCP23008 on the relevant port
+  mcp23008_gpio_init(settings->i2c_port, storage->select_pin_mcp23008->i2c_address);
+
   // initialize the select pin
   Mcp23008GpioSettings select_settings = {
     .direction = MCP23008_GPIO_DIR_OUT,
