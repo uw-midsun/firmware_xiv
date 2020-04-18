@@ -1,26 +1,26 @@
 #include "button_press.h"
+#include "can.h"
+#include "can_msg_defs.h"
+#include "centre_console_events.h"
+#include "charging_manager.h"
 #include "delay.h"
+#include "drive_fsm.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
-#include "soft_timer.h"
-#include "can.h"
-#include "can_msg_defs.h"
-#include "centre_console_events.h"
+#include "main_event_generator.h"
 #include "pedal_monitor.h"
 #include "power_aux_sequence.h"
+#include "power_fsm.h"
 #include "power_main_sequence.h"
 #include "power_off_sequence.h"
-#include "power_fsm.h"
-#include "charging_manager.h"
-#include "drive_fsm.h"
-#include "main_event_generator.h"
+#include "soft_timer.h"
 #include "speed_monitor.h"
 #include "wait.h"
 
-#define SPEED_MONITOR_WATCHDOG_TIMEOUT (1000 * 3) // 3 seconds
+#define SPEED_MONITOR_WATCHDOG_TIMEOUT (1000 * 3)  // 3 seconds
 
 static CanStorage s_can_storage;
 
@@ -69,10 +69,8 @@ int main(void) {
   init_charging_manager();
   speed_monitor_init(SPEED_MONITOR_WATCHDOG_TIMEOUT);
 
-  MainEventGeneratorResources resources = {
-    .power_fsm = &s_power_fsm_storage,
-    .drive_fsm = &s_drive_fsm_storage
-  };
+  MainEventGeneratorResources resources = { .power_fsm = &s_power_fsm_storage,
+                                            .drive_fsm = &s_drive_fsm_storage };
 
   main_event_generator_init(&s_main_event_generator, &resources);
 
