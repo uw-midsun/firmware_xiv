@@ -163,3 +163,8 @@
 #define CAN_UNPACK_LINEAR_ACCELERATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_ANGULAR_ROTATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+
+#define CAN_UNPACK_CHARGER_FAULT(msg_ptr, fault_u8_ptr)                                          \
+  can_unpack_impl_u8((msg_ptr), 1, (fault_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
