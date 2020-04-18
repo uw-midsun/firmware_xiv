@@ -2,7 +2,7 @@
 
 // This is the module that handles the generation of events that kick off
 // the power and drive state machines.
-// requires event_queue, charging manager, power fsm, speed monitor, drive fsm, 
+// requires event_queue, charging manager, power fsm, speed monitor, drive fsm,
 // and pedal monitor to be initialized.
 
 // Inputs to this module are button press events.
