@@ -1,5 +1,8 @@
 #pragma once
 
+// This module keeps state of the current state of charging.
+// It also resolves charging permissions to the charger board.
+
 #include "status.h"
 
 typedef enum {
