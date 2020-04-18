@@ -1,5 +1,7 @@
-#include "status.h"
+#pragma once
+
 #include "soft_timer.h"
+#include "status.h"
 
 typedef uint32_t WatchdogTimeout;
 typedef void (*WatchdogExpiryCallback)(void *context);
@@ -17,9 +19,7 @@ typedef struct WatchdogSettings {
   void *callback_context;
 } WatchdogSettings;
 
-void watchdog_start(WatchdogStorage *storage, 
-                    WatchdogTimeout timeout_ms,
-                    WatchdogExpiryCallback callback,
-                    void *context);
+void watchdog_start(WatchdogStorage *storage, WatchdogTimeout timeout_ms,
+                    WatchdogExpiryCallback callback, void *context);
 
 void watchdog_kick(WatchdogStorage *storage);

@@ -6,44 +6,7 @@
 #include "log.h"
 #include "pedal_monitor.h"
 #include "power_fsm.h"
-
-// button input events: drive, reverse, parking, neutral, power
-// states:
-//  drive state
-//  power state
-//  charging state
-//  pedal state
-//  speed
-
-// power:
-//   powering on main:
-//     power state: off/aux
-//     pedal state: pressed
-//
-//   powering on aux
-//     power state: off
-//     pedal state: released
-//
-//   powering off
-//     power state: on
-//     drive state: parking/neutral
-//
-// drive/reverse:
-//   setting the car to drive/reverse
-//     speed: low
-//     drive state: drive/reverse
-//     charging state: no charging
-//
-// drive/reverse:
-//   setting the car to drive/reverse
-//     drive state: parking/neutral
-//     charging state: no charging
-//
-// neutal/parking:
-//   setting the car to neutal/parking
-//     power state: on
-//     speed: low
-//
+#include "speed_monitor.h"
 
 StatusCode main_event_generator_init(MainEventGeneratorStorage *storage,
                                      MainEventGeneratorResources *resources) {
@@ -82,39 +45,85 @@ bool prv_process_power_event(MainEventGeneratorStorage *storage, const Event *e)
   return true;
 }
 
-bool prv_process_drive_event(MainEventGeneratorStorage *storage, const Event *e) {
-  prv_check_event(e->id, CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE);
-  const PowerState power_state = power_fsm_get_current_state(storage->power_fsm);
-  if (power_state != POWER_STATE_MAIN) {
+#define prv_power_main_or_return(storage)                                         \
+  const PowerState power_state = power_fsm_get_current_state(storage->power_fsm); \
+  if (power_state != POWER_STATE_MAIN) {                                          \
+    return false;                                                                 \
+  }
+
+#define prv_check_drive_state(drive_state)                  \
+  if (drive_state >= DRIVE_STATE_TRANSITIONING) {           \
+    if (drive_state > DRIVE_STATE_TRANSITIONING) {          \
+      LOG_CRITICAL("Invalid drive state: %d", drive_state); \
+    }                                                       \
+    return false;                                           \
+  }
+
+bool prv_process_drive_reverse_event(MainEventGeneratorStorage *storage, const Event *e) {
+  if (e->id != CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE &&
+      e->id != CENTRE_CONSOLE_BUTTON_PRESS_EVENT_REVERSE) {
     return false;
   }
-  DriveState drive_state = drive_fsm_get_global_state(storage->drive_fsm);
-  EventId output_event = NUM_CENTRE_CONSOLE_POWER_EVENTS;
-  ChargingState charging_state = get_charging_state();
-  if (drive_state == DRIVE_STATE_PARKING || drive_state == DRIVE_STATE_NEUTRAL) {
-    output_event = (charging_state == CHARGING_STATE_CHARGING) ?
-  } else {
+
+  prv_power_main_or_return(storage);
+
+  const ChargingState charging_state = *get_global_charging_state();
+  if (charging_state == CHARGING_STATE_CHARGING) {
+    return false;
   }
-  return false;
+
+  EventId output_event = NUM_DRIVE_FSM_INPUT_EVENTS;
+
+  DriveState drive_state = drive_fsm_get_global_state(storage->drive_fsm);
+  prv_check_drive_state(drive_state);
+
+  SpeedState speed_state = *get_global_speed_state();
+  if (drive_state == DRIVE_STATE_DRIVE || drive_state == DRIVE_STATE_REVERSE) {
+    if (speed_state == SPEED_STATE_STATIONARY) {
+      output_event = e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE
+                         ? DRIVE_FSM_INPUT_EVENT_DRIVE
+                         : DRIVE_FSM_INPUT_EVENT_REVERSE;
+    }
+  } else {
+    output_event = e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE ? DRIVE_FSM_INPUT_EVENT_DRIVE
+                                                                    : DRIVE_FSM_INPUT_EVENT_REVERSE;
+  }
+  if (output_event == NUM_DRIVE_FSM_INPUT_EVENTS) {
+    return false;
+  }
+  event_raise(output_event, 0);
+  return true;
 }
 
-bool prv_process_reverse_event(MainEventGeneratorStorage *storage, const Event *e) {
-  return false;
-}
+bool prv_process_neutral_parking_event(MainEventGeneratorStorage *storage, const Event *e) {
+  if (e->id != CENTRE_CONSOLE_BUTTON_PRESS_EVENT_NEUTRAL &&
+      e->id != CENTRE_CONSOLE_BUTTON_PRESS_EVENT_PARKING) {
+    return false;
+  }
+  const PowerState power_state = power_fsm_get_current_state(storage->power_fsm);
+  if (power_state == POWER_STATE_OFF) {
+    return false;
+  }
+  EventId output_event = NUM_DRIVE_FSM_INPUT_EVENTS;
+  SpeedState speed_state = *get_global_speed_state();
 
-bool prv_process_neutral_event(MainEventGeneratorStorage *storage, const Event *e) {
-  return false;
-}
+  output_event = e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_NEUTRAL ? DRIVE_FSM_INPUT_EVENT_NEUTRAL
+                                                                    : DRIVE_FSM_INPUT_EVENT_PARKING;
 
-bool prv_process_parking_event(MainEventGeneratorStorage *storage, const Event *e) {
-  return false;
+  if ((e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_PARKING) && speed_state == SPEED_STATE_MOVING) {
+    output_event = NUM_DRIVE_FSM_INPUT_EVENTS;
+  }
+
+  if (output_event == NUM_DRIVE_FSM_INPUT_EVENTS) {
+    return false;
+  }
+  event_raise(output_event, 0);
+  return true;
 }
 
 bool main_event_generator_process_event(MainEventGeneratorStorage *storage, const Event *event) {
   prv_false_or_return(prv_process_power_event(storage, event));
-  prv_false_or_return(prv_process_drive_event(storage, event));
-  prv_false_or_return(prv_process_reverse_event(storage, event));
-  prv_false_or_return(prv_process_neutral_event(storage, event));
-  prv_false_or_return(prv_process_parking_event(storage, event));
+  prv_false_or_return(prv_process_drive_reverse_event(storage, event));
+  prv_false_or_return(prv_process_neutral_parking_event(storage, event));
   return false;
 }

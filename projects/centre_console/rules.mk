@@ -10,4 +10,6 @@ $(T)_DEPS := ms-common ms-helper
 
 $(T)_test_main_event_generator_MOCKS := get_pedal_state \
 																				drive_fsm_get_global_state \
-																				power_fsm_get_current_state
+																				power_fsm_get_current_state \
+																				get_global_speed_state \
+																				get_global_charging_state

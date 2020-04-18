@@ -10,4 +10,4 @@ typedef enum {
 
 StatusCode init_charging_manager(void);
 
-ChargingState get_charging_state(void);
+ChargingState *get_global_charging_state(void);

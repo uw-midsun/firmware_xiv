@@ -1,15 +1,14 @@
-#include "unity.h"
-#include "log.h"
-#include "watchdog.h"
-#include "test_helpers.h"
-#include "soft_timer.h"
-#include "interrupt.h"
-#include "delay.h"
 #include "can.h"
-#include "ms_test_helpers.h"
-#include "speed_monitor.h"
 #include "can_transmit.h"
-
+#include "delay.h"
+#include "interrupt.h"
+#include "log.h"
+#include "ms_test_helpers.h"
+#include "soft_timer.h"
+#include "speed_monitor.h"
+#include "test_helpers.h"
+#include "unity.h"
+#include "watchdog.h"
 
 typedef enum {
   TEST_CAN_EVENT_RX = 0,
@@ -47,10 +46,9 @@ void teardown_test(void) {}
 
 void test_speed_monitor_reports_correct_thresholds(void) {
   float speed = STATIONARY_VELOCITY_THRESHOLD + 20.0;
-  uint16_t speed_left = (uint16_t) speed, speed_right = (uint16_t) speed;
+  uint16_t speed_left = (uint16_t)speed, speed_right = (uint16_t)speed;
 
   TEST_ASSERT_EQUAL(*get_global_speed_state(), NUM_SPEED_STATES);
-
 
   CAN_TRANSMIT_MOTOR_VELOCITY(speed_left, speed_right);
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
@@ -58,7 +56,7 @@ void test_speed_monitor_reports_correct_thresholds(void) {
   TEST_ASSERT_EQUAL(*get_global_speed_state(), SPEED_STATE_MOVING);
 
   speed = STATIONARY_VELOCITY_THRESHOLD - 20.0;
-  speed_left = (uint16_t) speed, speed_right = (uint16_t) speed;
+  speed_left = (uint16_t)speed, speed_right = (uint16_t)speed;
   CAN_TRANSMIT_MOTOR_VELOCITY(speed_left, speed_right);
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
@@ -67,10 +65,9 @@ void test_speed_monitor_reports_correct_thresholds(void) {
 
 void tset_speed_monitor_has_timeout(void) {
   float speed = STATIONARY_VELOCITY_THRESHOLD + 20.0;
-  uint16_t speed_left = (uint16_t) speed, speed_right = (uint16_t) speed;
+  uint16_t speed_left = (uint16_t)speed, speed_right = (uint16_t)speed;
 
   TEST_ASSERT_EQUAL(*get_global_speed_state(), NUM_SPEED_STATES);
-
 
   CAN_TRANSMIT_MOTOR_VELOCITY(speed_left, speed_right);
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);

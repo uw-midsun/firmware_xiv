@@ -1,18 +1,17 @@
+#include "delay.h"
+#include "interrupt.h"
+#include "soft_timer.h"
+#include "test_helpers.h"
 #include "unity.h"
 #include "watchdog.h"
-#include "test_helpers.h"
-#include "soft_timer.h"
-#include "interrupt.h"
-#include "delay.h"
 
 WatchdogStorage s_watchdog;
 
 #define TIMEOUT_MS 50
 
-
 static bool s_expiry_called = false;
 
-static void* s_passed_context;
+static void *s_passed_context;
 
 static void prv_expiry_callback(void *context) {
   s_expiry_called = true;
@@ -24,10 +23,9 @@ const WatchdogSettings settings = {
   .callback = prv_expiry_callback,
 };
 
-
 static void prv_reset_callback() {
   s_expiry_called = false;
-  s_passed_context = (void *) 0;
+  s_passed_context = (void *)0;
 }
 
 void setup_test() {
