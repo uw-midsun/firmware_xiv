@@ -54,7 +54,7 @@
 
 #define MS_TEST_HELPER_ASSERT_EVENT(event, e_id, e_data) \
   ({                                                     \
-    TEST_ASSERT_OK(event_process(&e));                   \
+    TEST_ASSERT_OK(event_process(&(event)));             \
     TEST_ASSERT_EQUAL((e_id), event.id);                 \
     TEST_ASSERT_EQUAL((e_data), event.data);             \
   })

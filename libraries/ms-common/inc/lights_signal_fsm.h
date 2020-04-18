@@ -32,7 +32,6 @@ typedef struct {
   BlinkEventGeneratorStorage blink_event_generator;
 } SignalFsmStorage;
 
-// configure output events?
 StatusCode lights_signal_fsm_init(SignalFsmStorage *storage, const SignalFsmSettings *settings);
 
 StatusCode lights_signal_fsm_process_event(SignalFsmStorage *storage, const Event *event);

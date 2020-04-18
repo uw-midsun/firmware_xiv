@@ -3,8 +3,8 @@
 
 #define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
 #define STM32_GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
-#define MCP23008_GPIO_STATE_SELECT_OUT_0 MCP23008_GPIO_STATE_LOW
-#define MCP23008_GPIO_STATE_SELECT_OUT_1 MCP23008_GPIO_STATE_HIGH
+#define PCA9539R_GPIO_STATE_SELECT_OUT_0 PCA9539R_GPIO_STATE_LOW
+#define PCA9539R_GPIO_STATE_SELECT_OUT_1 PCA9539R_GPIO_STATE_HIGH
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
@@ -37,7 +37,7 @@ static StatusCode prv_init_common(Bts7200Storage *storage) {
 
 StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings) {
   storage->select_pin_stm32 = settings->select_pin;
-  storage->select_pin_mcp23008 = NULL;
+  storage->select_pin_pca9539r = NULL;
   storage->select_pin_type = BTS7200_SELECT_PIN_STM32;
   storage->sense_pin = settings->sense_pin;
   storage->interval_us = settings->interval_us;
@@ -56,24 +56,24 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
   return prv_init_common(storage);
 }
 
-StatusCode bts_7200_init_mcp23008(Bts7200Storage *storage, Bts7200Mcp23008Settings *settings) {
-  storage->select_pin_mcp23008 = settings->select_pin;
+StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings) {
+  storage->select_pin_pca9539r = settings->select_pin;
   storage->select_pin_stm32 = NULL;
-  storage->select_pin_type = BTS7200_SELECT_PIN_MCP23008;
+  storage->select_pin_type = BTS7200_SELECT_PIN_PCA9539R;
   storage->sense_pin = settings->sense_pin;
   storage->interval_us = settings->interval_us;
   storage->callback = settings->callback;
   storage->callback_context = settings->callback_context;
 
-  // initialize MCP23008 on the relevant port
-  mcp23008_gpio_init(settings->i2c_port, storage->select_pin_mcp23008->i2c_address);
+  // initialize PCA9539R on the relevant port
+  pca9539r_gpio_init(settings->i2c_port, storage->select_pin_pca9539r->i2c_address);
 
   // initialize the select pin
-  Mcp23008GpioSettings select_settings = {
-    .direction = MCP23008_GPIO_DIR_OUT,
-    .state = MCP23008_GPIO_STATE_LOW,
+  Pca9539rGpioSettings select_settings = {
+    .direction = PCA9539R_GPIO_DIR_OUT,
+    .state = PCA9539R_GPIO_STATE_LOW,
   };
-  status_ok_or_return(mcp23008_gpio_init_pin(storage->select_pin_mcp23008, &select_settings));
+  status_ok_or_return(pca9539r_gpio_init_pin(storage->select_pin_pca9539r, &select_settings));
 
   return prv_init_common(storage);
 }
@@ -85,14 +85,14 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_0);
   } else {
-    mcp23008_gpio_set_state(storage->select_pin_mcp23008, MCP23008_GPIO_STATE_SELECT_OUT_0);
+    pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
   adc_read_raw(sense_channel, meas0);
 
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_1);
   } else {
-    mcp23008_gpio_set_state(storage->select_pin_mcp23008, MCP23008_GPIO_STATE_SELECT_OUT_1);
+    pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
   adc_read_raw(sense_channel, meas1);
 

@@ -1,6 +1,11 @@
-#include "sn74_mux.h"
+#include "mux.h"
 
-StatusCode sn74_mux_init_mux(Sn74MuxAddress *address) {
+StatusCode mux_init(MuxAddress *address) {
+  // make sure the bit width isn't wonky
+  if (address->bit_width > MAX_MUX_BIT_WIDTH) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+
   // initialize the select pins
   GpioSettings select_settings = {
     .direction = GPIO_DIR_OUT,
@@ -8,7 +13,7 @@ StatusCode sn74_mux_init_mux(Sn74MuxAddress *address) {
     .resistor = GPIO_RES_NONE,
     .alt_function = GPIO_ALTFN_NONE,
   };
-  for (uint8_t i = 0; i < SN74_MUX_BIT_WIDTH; i++) {
+  for (uint8_t i = 0; i < address->bit_width; i++) {
     status_ok_or_return(gpio_init_pin(&address->sel_pins[i], &select_settings));
   }
 
@@ -19,15 +24,24 @@ StatusCode sn74_mux_init_mux(Sn74MuxAddress *address) {
   };
   status_ok_or_return(gpio_init_pin(&address->mux_output_pin, &mux_output_settings));
 
+  // initialize the enable pin to high
+  GpioSettings mux_enable_settings = {
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_HIGH,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
+  };
+  status_ok_or_return(gpio_init_pin(&address->mux_enable_pin, &mux_output_settings));
+
   return STATUS_CODE_OK;
 }
 
-StatusCode sn74_mux_set(Sn74MuxAddress *address, uint8_t selected) {
-  if (selected >= (1 << SN74_MUX_BIT_WIDTH)) {
-    return STATUS_CODE_OUT_OF_RANGE;
+StatusCode mux_set(MuxAddress *address, uint8_t selected) {
+  if (selected >= (1 << address->bit_width)) {
+    return status_code(STATUS_CODE_OUT_OF_RANGE);
   }
 
-  for (uint8_t bit = 0; bit < SN74_MUX_BIT_WIDTH; bit++) {
+  for (uint8_t bit = 0; bit < address->bit_width; bit++) {
     GpioState select_state = ((selected & (1 << bit)) == 0) ? GPIO_STATE_LOW : GPIO_STATE_HIGH;
     status_ok_or_return(gpio_set_state(&address->sel_pins[bit], select_state));
   }
