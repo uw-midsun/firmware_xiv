@@ -23,12 +23,14 @@ typedef enum {
   DRIVE_STATE_PARKING,
   DRIVE_STATE_DRIVE,
   DRIVE_STATE_REVERSE,
+  DRIVE_STATE_TRANSITIONING,
   NUM_DRIVE_STATES
 } DriveState;
 
 typedef struct DriveFsmStorage {
   Fsm drive_fsm;
   DriveState destination;
+  DriveState current_state;
   PrechargeMonitor precharge_monitor_storage;
   EbrakeTxStorage ebrake_storage;
   MciOutputTxStorage mci_output_storage;
@@ -38,4 +40,4 @@ StatusCode drive_fsm_init(DriveFsmStorage *storage);
 
 bool drive_fsm_process_event(DriveFsmStorage *storage, Event *e);
 
-DriveState *drive_fsm_get_global_state(DriveFsmStorage *storage);
+DriveState drive_fsm_get_global_state(DriveFsmStorage *storage);
