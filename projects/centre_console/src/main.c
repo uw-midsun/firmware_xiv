@@ -85,7 +85,7 @@ int main(void) {
       power_off_sequence_process_event(&s_off_sequence_storage, &e);
       power_fsm_process_event(&s_power_fsm_storage, &e);
       drive_fsm_process_event(&s_drive_fsm_storage, &e);
-      main_event_generator_process_event(&s_main_sequence_storage, &e);
+      main_event_generator_process_event(&s_main_event_generator, &e);
     }
     wait();
   }
