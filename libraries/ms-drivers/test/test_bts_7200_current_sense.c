@@ -76,13 +76,13 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
   TEST_ASSERT_EQUAL(times_callback_called, 2);
 }
 
-// Same, but for mcp23008 initialization.
-void test_bts_7200_current_sense_timer_mcp23008_works(void) {
+// Same, but for pca9539r initialization.
+void test_bts_7200_current_sense_timer_pca9539r_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  Mcp23008GpioAddress test_select_pin = { .i2c_address = 0, .pin = 0 };
+  Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200Mcp23008Settings settings = {
+  Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
@@ -91,7 +91,7 @@ void test_bts_7200_current_sense_timer_mcp23008_works(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_mcp23008(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_pca9539r(&storage, &settings));
 
   // make sure we don't start anything in init
   TEST_ASSERT_EQUAL(times_callback_called, 0);
@@ -187,18 +187,18 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   select_pin.port = 0;
   sense_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&storage, &settings));
+
+  // otherwise valid
+  sense_pin.port = 0;
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
 }
 
-// Same, but for mcp23008.
-void test_bts_7200_current_sense_mcp23008_init_invalid_settings(void) {
+// Same, but for pca9539r.
+void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
   // start with invalid select pin
-  Mcp23008GpioAddress select_pin = {
-    // valid
-    .i2c_address = 0,
-    .pin = NUM_MCP23008_GPIO_PINS,
-  };
-  GpioAddress sense_pin = { .port = 0, .pin = 0 };  // invalid
-  Bts7200Mcp23008Settings settings = {
+  Pca9539rGpioAddress select_pin = { .i2c_address = 0, .pin = NUM_PCA9539R_GPIO_PINS };  // invalid
+  GpioAddress sense_pin = { .port = GPIO_PORT_A, .pin = 0 };                             // valid
+  Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
@@ -207,12 +207,16 @@ void test_bts_7200_current_sense_mcp23008_init_invalid_settings(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_NOT_OK(bts_7200_init_mcp23008(&storage, &settings));
+  TEST_ASSERT_NOT_OK(bts_7200_init_pca9539r(&storage, &settings));
 
   // invalid sense pin
   select_pin.pin = 0;
   sense_pin.port = NUM_GPIO_PORTS;
-  TEST_ASSERT_NOT_OK(bts_7200_init_mcp23008(&storage, &settings));
+  TEST_ASSERT_NOT_OK(bts_7200_init_pca9539r(&storage, &settings));
+
+  // otherwise valid
+  sense_pin.port = GPIO_PORT_A;
+  TEST_ASSERT_OK(bts_7200_init_pca9539r(&storage, &settings));
 }
 
 // Test that having a NULL callback works and we don't segfault.
@@ -235,7 +239,7 @@ void test_bts_7200_current_sense_null_callback(void) {
 }
 
 // Test that bts_7200_get_measurement returns ok.
-void test_bts_7200_current_sense_get_measurement_native_valid(void) {
+void test_bts_7200_current_sense_get_measurement_stm32_valid(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
@@ -255,12 +259,12 @@ void test_bts_7200_current_sense_get_measurement_native_valid(void) {
   LOG_DEBUG("STM32 readings: %d, %d\r\n", reading0, reading1);
 }
 
-// Same, but with MCP23008 initialization.
-void test_bts_7200_current_sense_get_measurement_mcp23008_valid(void) {
-  Mcp23008GpioAddress test_select_pin = { .i2c_address = 0, .pin = 0 };
+// Same, but with pca9539r initialization.
+void test_bts_7200_current_sense_get_measurement_pca9539r_valid(void) {
+  Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   uint32_t interval_us = 500;  // 0.5 ms
-  Bts7200Mcp23008Settings settings = {
+  Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
@@ -269,11 +273,11 @@ void test_bts_7200_current_sense_get_measurement_mcp23008_valid(void) {
   };
   Bts7200Storage storage = { 0 };
 
-  TEST_ASSERT_OK(bts_7200_init_mcp23008(&storage, &settings));
+  TEST_ASSERT_OK(bts_7200_init_pca9539r(&storage, &settings));
 
   uint16_t reading0 = 0, reading1 = 0;
   TEST_ASSERT_OK(bts_7200_get_measurement(&storage, &reading0, &reading1));
-  LOG_DEBUG("MCP23008 readings: %d, %d\r\n", reading0, reading1);
+  LOG_DEBUG("PCA9539R readings: %d, %d\r\n", reading0, reading1);
 }
 
 // Test that bts_7200_stop returns true only when it stops a timer

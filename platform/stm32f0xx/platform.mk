@@ -74,7 +74,7 @@ else
 MACOS_SSH_IP := 10.0.2.2
 MAKE_ARGS := TEST PROJECT LIBRARY PLATFORM PROBE SERIAL
 MAKE_PARAMS := $(foreach arg,$(MAKE_ARGS),$(arg)=$($(arg)))
-SSH_CMD := ssh -t $(MACOS_SSH_USERNAME)@$(MACOS_SSH_IP) "bash -c 'cd $(MACOS_SSH_BOX_PATH)/shared/firmware && make $(MAKECMDGOALS) $(MAKE_PARAMS)'"
+SSH_CMD := ssh -t $(MACOS_SSH_USERNAME)@$(MACOS_SSH_IP) "bash -c 'cd $(MACOS_SSH_BOX_PATH)/shared/firmware_xiv && make $(MAKECMDGOALS) $(MAKE_PARAMS)'"
 
 .PHONY: unsupported run_ssh
 
