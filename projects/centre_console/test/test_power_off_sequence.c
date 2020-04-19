@@ -168,8 +168,9 @@ void test_fault_during_set_relay_sequence(void) {
 
   // open battery relays -> fault
   TEST_ASSERT_TRUE(power_off_sequence_process_event(&s_storage, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT,
-                                   ((StateTransitionFault){ .state_machine = POWER_OFF_SEQUENCE_STATE_MACHINE,
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+      e, CENTRE_CONSOLE_POWER_EVENT_FAULT,
+      ((StateTransitionFault){ .state_machine = POWER_OFF_SEQUENCE_STATE_MACHINE,
                                .fault_reason = EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS })
           .raw);
 
