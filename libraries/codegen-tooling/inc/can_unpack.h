@@ -114,6 +114,10 @@
 #define CAN_UNPACK_BATTERY_AGGREGATE_VC(msg_ptr, voltage_u32_ptr, current_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (voltage_u32_ptr), (current_u32_ptr))
 
+#define CAN_UNPACK_STATE_TRANSITION_FAULT(msg_ptr, state_machine_u16_ptr, fault_reason_u16_ptr) \
+  can_unpack_impl_u16((msg_ptr), 4, (state_machine_u16_ptr), (fault_reason_u16_ptr),            \
+                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_MOTOR_CONTROLLER_VC(msg_ptr, mc_voltage_1_u16_ptr, mc_current_1_u16_ptr, \
                                        mc_voltage_2_u16_ptr, mc_current_2_u16_ptr)          \
   can_unpack_impl_u16((msg_ptr), 8, (mc_voltage_1_u16_ptr), (mc_current_1_u16_ptr),         \

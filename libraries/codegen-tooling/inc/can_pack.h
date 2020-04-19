@@ -146,6 +146,11 @@
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER,            \
                     SYSTEM_CAN_MESSAGE_BATTERY_AGGREGATE_VC, 8, (voltage_u32), (current_u32))
 
+#define CAN_PACK_STATE_TRANSITION_FAULT(msg_ptr, state_machine_u16, fault_reason_u16)  \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,                       \
+                    SYSTEM_CAN_MESSAGE_STATE_TRANSITION_FAULT, 4, (state_machine_u16), \
+                    (fault_reason_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_MOTOR_CONTROLLER_VC(msg_ptr, mc_voltage_1_u16, mc_current_1_u16,  \
                                      mc_voltage_2_u16, mc_current_2_u16)           \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,                 \
