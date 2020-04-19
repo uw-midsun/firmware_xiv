@@ -3,6 +3,7 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
@@ -123,8 +124,11 @@ void test_sequence_fault_cancels_monitor(void) {
   power_aux_sequence_process_event(&s_sequence_storage, &e);
 
   // must broadcast the fault to power_fsm
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_AUX_SEQUENCE,
-                                   EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+      e, CENTRE_CONSOLE_POWER_EVENT_FAULT,
+      ((StateTransitionFault){ .state_machine = POWER_AUX_SEQUENCE_STATE_MACHINE,
+                               .fault_reason = EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING })
+          .raw);
   // go back to none
   TEST_ASSERT_TRUE(power_aux_sequence_process_event(&s_sequence_storage, &e));
 }

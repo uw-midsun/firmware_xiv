@@ -108,10 +108,15 @@ void prv_fail_ebrake_state(Event *event, EEEbrakeState state) {
                                            SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
                                            CAN_ACK_STATUS_INVALID);
   }
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_EBRAKE_STATE,
-                          .fault_state = state };
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+      e, DRIVE_FSM_INPUT_EVENT_FAULT,
+      ((StateTransitionFault){
+           .state_machine = DRIVE_FSM_STATE_MACHINE,
+           .fault_reason = (DriveFsmFaultReason){ .step = DRIVE_FSM_TRANSITION_STEP_EBRAKE_STATE,
+                                                  .state = state }
+                               .raw })
+          .raw);
   *event = e;
 }
 
@@ -122,10 +127,15 @@ void prv_fail_mci_output(Event *event, EEDriveOutput output) {
                                            SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
                                            CAN_ACK_STATUS_INVALID);
   }
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT,
-                          .fault_state = output };
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+      e, DRIVE_FSM_INPUT_EVENT_FAULT,
+      ((StateTransitionFault){
+           .state_machine = DRIVE_FSM_STATE_MACHINE,
+           .fault_reason = (DriveFsmFaultReason){ .step = DRIVE_FSM_TRANSITION_STEP_MCI_OUTPUT,
+                                                  .state = output }
+                               .raw })
+          .raw);
   *event = e;
 }
 

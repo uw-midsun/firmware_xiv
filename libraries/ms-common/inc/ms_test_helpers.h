@@ -7,6 +7,7 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "status.h"
+#include "test_helpers.h"
 #include "unity.h"
 
 // Awaits an event and populates |e| with that event.
@@ -66,6 +67,9 @@
     TEST_ASSERT_EQUAL((e_id), event.id);                      \
     TEST_ASSERT_EQUAL((e_data), event.data);                  \
   })
+
+#define MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(event, e_id) \
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT((event), (e_id), (0))
 
 // assert no events
 #define MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED() \

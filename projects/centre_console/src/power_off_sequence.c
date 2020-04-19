@@ -1,6 +1,7 @@
 #include "power_off_sequence.h"
 #include "can_transmit.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "exported_enums.h"
 #include "fsm.h"
 #include "log.h"
@@ -37,7 +38,7 @@ FSM_STATE_TRANSITION(state_power_off_complete) {
 }
 
 FSM_STATE_TRANSITION(state_fault) {
-  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_OFF_SEQUENCE, state_none);
+  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_FAULT, state_none);
 }
 
 static void prv_state_discharge(Fsm *fsm, const Event *e, void *context) {
@@ -80,8 +81,10 @@ static void prv_power_off_complete(Fsm *fsm, const Event *e, void *context) {
 }
 
 static void prv_fault(Fsm *fsm, const Event *e, void *context) {
-  PowerOffSequenceStorage *storage = (PowerOffSequenceStorage *)context;
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_OFF_SEQUENCE, e->data);
+  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT,
+              ((StateTransitionFault){ .state_machine = POWER_OFF_SEQUENCE_STATE_MACHINE,
+                                       .fault_reason = e->data })
+                  .raw);
 }
 
 StatusCode power_off_sequence_init(PowerOffSequenceStorage *storage) {

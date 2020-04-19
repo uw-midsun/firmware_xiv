@@ -123,8 +123,12 @@ static void prv_set_motorcontroller_output(Fsm *fsm, const Event *e, void *conte
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
   storage->current_state = DRIVE_STATE_TRANSITIONING;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT,
-                          .fault_state = info.mci_drive_output };
+  StateTransitionFault fault = {
+    .state_machine = DRIVE_FSM_STATE_MACHINE,
+    .fault_reason = (DriveFsmFaultReason){ .step = DRIVE_FSM_TRANSITION_STEP_MCI_OUTPUT,
+                                           .state = info.mci_drive_output }
+                        .raw
+  };
   RetryTxRequest tx_req = { .completion_event_id = info.mci_output_success_event,
                             .completion_event_data = 0,
                             .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
@@ -137,8 +141,14 @@ static void prv_set_ebrake_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
   storage->current_state = DRIVE_STATE_TRANSITIONING;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_EBRAKE_STATE,
-                          .fault_state = info.ebrake_state };
+
+  StateTransitionFault fault = {
+    .state_machine = DRIVE_FSM_STATE_MACHINE,
+    .fault_reason = (DriveFsmFaultReason){ .step = DRIVE_FSM_TRANSITION_STEP_EBRAKE_STATE,
+                                           .state = info.ebrake_state }
+                        .raw
+  };
+
   RetryTxRequest tx_req = { .completion_event_id = (info.ebrake_state == EE_EBRAKE_STATE_PRESSED)
                                                        ? DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_PRESSED
                                                        : DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_RELEASED,
@@ -198,8 +208,15 @@ StatusCode drive_fsm_init(DriveFsmStorage *storage) {
   status_ok_or_return(mci_output_init(&storage->mci_output_storage));
   storage->current_state = DRIVE_STATE_NEUTRAL;
   Event precharge_success_event = { .id = DRIVE_FSM_INPUT_EVENT_PRECHARGE_COMPLETED, .data = 0 };
-  Event precharge_fault_event = { .id = DRIVE_FSM_INPUT_EVENT_FAULT,
-                                  .data = DRIVE_FSM_FAULT_REASON_PRECHARGE_TIMEOUT };
+
+  StateTransitionFault fault = { .state_machine = DRIVE_FSM_STATE_MACHINE,
+                                 .fault_reason =
+                                     (DriveFsmFaultReason){
+                                         .step = DRIVE_FSM_TRANSITION_STEP_PRECHARGE_TIMEOUT,
+                                     }
+                                         .raw };
+
+  Event precharge_fault_event = { .id = DRIVE_FSM_INPUT_EVENT_FAULT, .data = fault.raw };
   status_ok_or_return(precharge_monitor_init(&storage->precharge_monitor_storage,
                                              PRECHARGE_TIMEOUT_S * 1000, &precharge_success_event,
                                              &precharge_fault_event));

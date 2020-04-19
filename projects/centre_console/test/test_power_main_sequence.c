@@ -149,8 +149,11 @@ void test_sequence_fault_raises_fault_event(void) {
   TEST_ASSERT_TRUE(power_main_sequence_fsm_process_event(&s_sequence_storage, &e));
 
   // Must broadcast the fault to power_fsm
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_MAIN_SEQUENCE,
-                                   EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+      e, CENTRE_CONSOLE_POWER_EVENT_FAULT,
+      ((StateTransitionFault){ .state_machine = POWER_MAIN_SEQUENCE_STATE_MACHINE,
+                               .fault_reason = EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS })
+          .raw);
 
   // transition to none
   TEST_ASSERT_TRUE(power_main_sequence_fsm_process_event(&s_sequence_storage, &e));
@@ -198,8 +201,11 @@ void test_sequence_can_ack_failure_raises_fault_event(void) {
     TEST_ASSERT_TRUE(power_main_sequence_fsm_process_event(&s_sequence_storage, &e));
 
     // Must broadcast the fault to power_fsm
-    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_MAIN_SEQUENCE,
-                                     faulting_sequence);
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+        e, CENTRE_CONSOLE_POWER_EVENT_FAULT,
+        ((StateTransitionFault){ .state_machine = POWER_MAIN_SEQUENCE_STATE_MACHINE,
+                                 .fault_reason = faulting_sequence })
+            .raw);
 
     // transition to none
     TEST_ASSERT_TRUE(power_main_sequence_fsm_process_event(&s_sequence_storage, &e));

@@ -3,6 +3,7 @@
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "fsm.h"
@@ -58,7 +59,7 @@ FSM_STATE_TRANSITION(state_power_main_complete) {
 }
 
 FSM_STATE_TRANSITION(state_fault) {
-  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_MAIN_SEQUENCE, state_none);
+  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_FAULT, state_none);
 }
 
 static uint32_t s_ack_devices_lookup[NUM_EE_POWER_MAIN_SEQUENCES] = { 0 };
@@ -151,8 +152,10 @@ static void prv_state_power_main_complete(Fsm *fsm, const Event *e, void *contex
 }
 
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
-  PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_MAIN_SEQUENCE, e->data);
+  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT,
+              ((StateTransitionFault){ .state_machine = POWER_MAIN_SEQUENCE_STATE_MACHINE,
+                                       .fault_reason = e->data })
+                  .raw);
 }
 
 StatusCode power_main_sequence_init(PowerMainSequenceFsmStorage *storage) {
