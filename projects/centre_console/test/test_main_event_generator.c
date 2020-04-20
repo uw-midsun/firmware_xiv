@@ -8,6 +8,7 @@
 #include "speed_monitor.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "fault_monitor.h"
 
 void teardown_test(void) {}
 
@@ -45,10 +46,10 @@ ChargingState *TEST_MOCK(get_global_charging_state)(void) {
 
 void setup_test(void) {
   event_queue_init();
-
   MainEventGeneratorResources resources = { .power_fsm = &s_power_storage,
                                             .drive_fsm = &s_drive_storage };
   main_event_generator_init(&s_storage, &resources);
+  *get_fault_status() = FAULT_STATUS_OK;
 }
 
 typedef struct TestScenario {
@@ -228,3 +229,11 @@ void test_process_neutral_reverse_button_scenarios(void) {
   prv_run_scenarios(s_neutral_reverse_button_scenarios,
                     SIZEOF_ARRAY(s_neutral_reverse_button_scenarios));
 }
+
+void test_if_we_have_fault_it_wont_do_anything(void) {
+  *get_fault_status() = FAULT_STATUS_FAULT;
+  Event e = { .id = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_POWER };
+  main_event_generator_process_event(&s_storage, &e);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
