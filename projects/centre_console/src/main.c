@@ -22,7 +22,7 @@
 #include "wait.h"
 
 #define SPEED_MONITOR_WATCHDOG_TIMEOUT (1000 * 3)  // 3 seconds
-#define FAULT_MONITOR_TIMEOUT = (1000 * 3)
+#define FAULT_MONITOR_TIMEOUT (1000 * 3)
 
 static CanStorage s_can_storage;
 
