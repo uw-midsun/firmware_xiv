@@ -6,6 +6,7 @@
 #include "event_queue.h"
 #include "interrupt.h"
 #include "log.h"
+#include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "power_fsm.h"
 #include "unity.h"
@@ -14,19 +15,9 @@ static PowerFsmStorage s_power_fsm_storage;
 static CanStorage s_can_storage;
 
 void setup_test(void) {
-  gpio_init();
-  event_queue_init();
-  interrupt_init();
-  soft_timer_init();
-  const CanSettings s_can_settings = { .device_id = SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
-                                       .loopback = true,
-                                       .bitrate = CAN_HW_BITRATE_500KBPS,
-                                       .rx = { .port = GPIO_PORT_A, .pin = 11 },
-                                       .tx = { .port = GPIO_PORT_A, .pin = 12 },
-                                       .rx_event = CENTRE_CONSOLE_EVENT_CAN_RX,
-                                       .tx_event = CENTRE_CONSOLE_EVENT_CAN_TX,
-                                       .fault_event = CENTRE_CONSOLE_EVENT_CAN_FAULT };
-  TEST_ASSERT_OK(can_init(&s_can_storage, &s_can_settings));
+  initialize_can_in_test(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
+                         CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
+                         CENTRE_CONSOLE_EVENT_CAN_FAULT);
   memset(&s_power_fsm_storage, 0, sizeof(s_power_fsm_storage));
   power_fsm_init(&s_power_fsm_storage);
 }
