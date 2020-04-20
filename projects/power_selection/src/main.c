@@ -10,7 +10,7 @@
 #define TEST_CAN_DEVICE_ID 0x1
 
 typedef enum {
-  POWER_SELECTION_CAN_EVENT_RX = 10,
+  POWER_SELECTION_CAN_EVENT_RX = 0,
   POWER_SELECTION_CAN_EVENT_TX,
   POWER_SELECTION_CAN_EVENT_FAULT,
 } PowerSelectionCanEvent;
@@ -27,21 +27,6 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  LOG_DEBUG("Received a message!\n");
-
-  if (msg->data_u16 == EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS) {
-  }
-  if (msg->data_u16 == EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC) {
-  }
-
-  return STATUS_CODE_OK;
-}
-
-static void aux_dcdc_monitor_init() {
-  
-}
-
 int main() {
   LOG_DEBUG("Welcome to Power Selection!\n");
   gpio_init();
@@ -50,7 +35,6 @@ int main() {
   soft_timer_init();
 
   can_init(&s_can_storage, &s_can_settings);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_rx_callback, NULL);
 
 
   LOG_DEBUG("Working!\n");
