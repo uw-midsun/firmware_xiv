@@ -6,6 +6,7 @@
 #include "delay.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
+#include "fault_monitor.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -19,7 +20,6 @@
 #include "soft_timer.h"
 #include "speed_monitor.h"
 #include "wait.h"
-#include "fault_monitor.h"
 
 #define SPEED_MONITOR_WATCHDOG_TIMEOUT (1000 * 3)  // 3 seconds
 #define FAULT_MONITOR_TIMEOUT = (1000 * 3)

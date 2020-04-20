@@ -3,11 +3,11 @@
 #include "charging_manager.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
+#include "fault_monitor.h"
 #include "log.h"
 #include "pedal_monitor.h"
 #include "power_fsm.h"
 #include "speed_monitor.h"
-#include "fault_monitor.h"
 
 StatusCode main_event_generator_init(MainEventGeneratorStorage *storage,
                                      MainEventGeneratorResources *resources) {
@@ -123,7 +123,7 @@ bool prv_process_neutral_parking_event(MainEventGeneratorStorage *storage, const
 }
 
 bool main_event_generator_process_event(MainEventGeneratorStorage *storage, const Event *event) {
-  if (*get_fault_status() != FAULT_STATUS_OK)   {
+  if (*get_fault_status() != FAULT_STATUS_OK) {
     return false;
   }
   prv_false_or_return(prv_process_power_event(storage, event));

@@ -1,5 +1,6 @@
 #include "centre_console_events.h"
 #include "charging_manager.h"
+#include "fault_monitor.h"
 #include "log.h"
 #include "main_event_generator.h"
 #include "ms_test_helpers.h"
@@ -8,7 +9,6 @@
 #include "speed_monitor.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "fault_monitor.h"
 
 void teardown_test(void) {}
 
@@ -236,4 +236,3 @@ void test_if_we_have_fault_it_wont_do_anything(void) {
   main_event_generator_process_event(&s_storage, &e);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
-
