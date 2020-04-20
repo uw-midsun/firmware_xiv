@@ -5,7 +5,6 @@
 #include "stdint.h"
 #include "watchdog.h"
 
-
 #define FAULT_MONITOR_WATCHDOG_TIMEOUT 4000
 
 typedef enum {

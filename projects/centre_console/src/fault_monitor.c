@@ -37,8 +37,7 @@ static StatusCode prv_rx_bps_heartbeat(const CanMessage *msg, void *context,
 }
 
 StatusCode fault_monitor_init(WatchdogTimeout timeout) {
-  watchdog_start(&(s_storage.watchdog_storage), timeout, prv_watchdog_expiry,
-                 &s_storage);
+  watchdog_start(&(s_storage.watchdog_storage), timeout, prv_watchdog_expiry, &s_storage);
   status_ok_or_return(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_BPS_HEARTBEAT, prv_rx_bps_heartbeat, &s_storage));
   return STATUS_CODE_OK;

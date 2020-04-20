@@ -2,13 +2,13 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "centre_console_events.h"
+#include "delay.h"
 #include "exported_enums.h"
 #include "fault_monitor.h"
 #include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "unity.h"
-#include "delay.h"
 
 static CanStorage s_can_storage = { 0 };
 static bool s_callback_acked = false;
@@ -37,11 +37,10 @@ void test_fault_monitor_sets_the_status_if_theres_a_fault_and_clearas_it(void) {
 
   uint8_t bps_fault_bitset = EE_BATTERY_HEARTBEAT_STATE_FAULT_KILLSWITCH |
                              EE_BATTERY_HEARTBEAT_STATE_FAULT_CURRENT_SENSE_AFE_CELL;
-  CanAckRequest s_req = { 
-    .callback = prv_ack_cb,
-    .context = NULL,
-    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE)
-  };
+  CanAckRequest s_req = { .callback = prv_ack_cb,
+                          .context = NULL,
+                          .expected_bitset =
+                              CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE) };
   CAN_TRANSMIT_BPS_HEARTBEAT(&s_req, bps_fault_bitset);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
 
@@ -61,11 +60,10 @@ void test_fault_monitor_times_out(void) {
   TEST_ASSERT_EQUAL(*get_fault_status(), NUM_FAULT_STATUS);
   uint8_t bps_fault_bitset = EE_BATTERY_HEARTBEAT_STATE_FAULT_KILLSWITCH |
                              EE_BATTERY_HEARTBEAT_STATE_FAULT_CURRENT_SENSE_AFE_CELL;
-  CanAckRequest s_req = { 
-    .callback = prv_ack_cb,
-    .context = NULL,
-    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE)
-  };
+  CanAckRequest s_req = { .callback = prv_ack_cb,
+                          .context = NULL,
+                          .expected_bitset =
+                              CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE) };
   CAN_TRANSMIT_BPS_HEARTBEAT(&s_req, bps_fault_bitset);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
 
