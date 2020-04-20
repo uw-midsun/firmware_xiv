@@ -111,9 +111,9 @@ static DestinationTransitionInfo s_destination_transition_lookup[NUM_DRIVE_STATE
 
 static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
-  CAN_TRANSMIT_DISCHARGE_PRECHARGE();
   StateTransitionFault fault = (StateTransitionFault)e->data;
-  // CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.state_machine, fault.fault_reason);
+  CAN_TRANSMIT_DISCHARGE_PRECHARGE();
+  CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.state_machine, fault.fault_reason);
   EventId id = (storage->ebrake_storage.current_state == EE_EBRAKE_STATE_PRESSED)
                    ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_EBRAKE_PRESSED
                    : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;

@@ -1,5 +1,7 @@
 #include "power_fsm.h"
+#include "can_transmit.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
@@ -58,7 +60,8 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   // Go back to previous state
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->destination_state = power_fsm->previous_state;
-  // TODO(SOFT-148): broadcast transition fault here...
+  StateTransitionFault fault = (StateTransitionFault)e->data;
+  CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.state_machine, fault.fault_reason);
   prv_set_current_state(context, POWER_STATE_FAULT);
   event_raise(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, power_fsm->previous_state);
 }

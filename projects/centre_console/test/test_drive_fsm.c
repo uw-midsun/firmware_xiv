@@ -90,12 +90,14 @@ void prv_assert_ebrake_state(Event *event, EEEbrakeState state) {
 void prv_recover_from_fault(Event *event, EEEbrakeState state) {
   // Send discharge message
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e,
                                    (state == EE_EBRAKE_STATE_PRESSED)
                                        ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_EBRAKE_PRESSED
                                        : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED,
                                    0);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   *event = e;
