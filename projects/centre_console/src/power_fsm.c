@@ -85,7 +85,7 @@ bool power_fsm_process_event(PowerFsmStorage *power_fsm, const Event *event) {
   return fsm_process_event(&power_fsm->power_fsm, event);
 }
 
-static CentreConsoleEvent s_event_lookup[] = {
+static EventId s_event_lookup[] = {
   [CENTRE_CONSOLE_POWER_EVENT_ON_MAIN] = POWER_MAIN_SEQUENCE_EVENT_BEGIN,
   [CENTRE_CONSOLE_POWER_EVENT_ON_AUX] = POWER_AUX_SEQUENCE_EVENT_BEGIN,
   [CENTRE_CONSOLE_POWER_EVENT_OFF] = POWER_OFF_SEQUENCE_EVENT_BEGIN,
