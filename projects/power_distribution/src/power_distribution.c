@@ -9,7 +9,9 @@
 #include "log.h"
 #include "power_distribution_current_measurement.h"
 #include "power_distribution_current_measurement_config.h"
+#include "power_distribution_pin_defs.h"
 #include "soft_timer.h"
+#include "wait.h"
 
 #define I2C_PORT I2C_PORT_2
 #define I2C_SCL_PIN \
@@ -133,6 +135,9 @@ int main(void) {
   };
   i2c_init(I2C_PORT, &i2c_settings);
 
+  pca9539r_gpio_init(I2C_PORT, POWER_DISTRIBUTION_I2C_ADDRESS_0);
+  pca9539r_gpio_init(I2C_PORT, POWER_DISTRIBUTION_I2C_ADDRESS_1);
+
   s_is_front_power_distribution = prv_detect_is_front_power_distribution();
 
   PowerDistributionCurrentSettings settings = {
@@ -142,6 +147,25 @@ int main(void) {
     .callback = &prv_print_current_measurements,
   };
   power_distribution_current_measurement_init(&settings);
+
+  // turn on every PCA9539R GPIO pin to enable everything
+  Pca9539rGpioSettings en_settings = {
+    .direction = PCA9539R_GPIO_DIR_OUT,
+    .state = PCA9539R_GPIO_STATE_HIGH,
+  };
+  Pca9539rGpioAddress address;
+  for (Pca9539rPinAddress pin = PCA9539R_PIN_IO0_0; pin < NUM_PCA9539R_GPIO_PINS; pin++) {
+    address.pin = pin;
+    address.i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_0;
+    pca9539r_gpio_init_pin(&address, &en_settings);
+    address.i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_1;
+    pca9539r_gpio_init_pin(&address, &en_settings);
+  }
+
+  // prevent from exiting
+  while (true) {
+    wait();
+  }
 
   return 0;
 }
