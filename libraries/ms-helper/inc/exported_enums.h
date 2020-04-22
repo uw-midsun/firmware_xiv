@@ -166,5 +166,3 @@ typedef enum {
   EE_CRUISE_CONTROL_COMMAND_DECREASE,
   NUM_EE_CRUISE_CONTROL_COMMANDS,
 } EECruiseControlCommand
-
-

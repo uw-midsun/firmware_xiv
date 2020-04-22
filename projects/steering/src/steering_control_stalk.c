@@ -23,11 +23,11 @@
 #include "steering_events.h"
 
 // Will be edited later
-#define STEERING_CONTROL_STALK_LEFT_VOLTAGE 1000
-#define STEERING_CONTROL_STALK_RIGHT_VOLTAGE 2000
+#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE 1000
+#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE 2000
 #define STEERING_CC_INCREASE_SPEED_VOLTAGE 2000
 #define STEERING_CC_DECREASE_SPEED_VOLTAGE 2500
-#define STEERING_CC_BRAKE_PRESSED_VOLTAGE 100
+#define TOL 100
 
 // Function prototype
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);
@@ -36,15 +36,30 @@ void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);
 AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, .pin = 3 },
                                               .callback = control_stalk_callback };
 
+// Stores event id of the event that was just raised
+SteeringAnalogEvent prev = NUM_STEERING_EVENTS;
+
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
-  if (data == STEERING_CONTROL_STALK_LEFT_VOLTAGE) {
-    event_raise((EventId)STEERING_CONTROL_STALK_EVENT_LEFT, data);
-  } else if (data == STEERING_CONTROL_STALK_RIGHT_VOLTAGE) {
-    event_raise((EventId)STEERING_CONTROL_STALK_EVENT_RIGHT, data);
-  } else if (data == STEERING_CC_INCREASE_SPEED_VOLTAGE) {
+  if (data > STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE - TOL &&
+      data < STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE + TOL &&
+      prev != STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL) {
+    event_raise((EventId)STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL, data);
+    prev = STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL;
+  } else if (data > STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE - TOL &&
+             data < STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE + TOL &&
+             prev != STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL) {
+    event_raise((EventId)STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL, data);
+    prev = STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL;
+  } else if (data > STEERING_CC_INCREASE_SPEED_VOLTAGE - TOL &&
+             data < STEERING_CC_INCREASE_SPEED_VOLTAGE + TOL &&
+             prev != STEERING_CC_EVENT_INCREASE_SPEED) {
     event_raise((EventId)STEERING_CC_EVENT_INCREASE_SPEED, data);
-  } else if (data == STEERING_CC_DECREASE_SPEED_VOLTAGE) {
+    prev = STEERING_CC_EVENT_INCREASE_SPEED;
+  } else if (data > STEERING_CC_DECREASE_SPEED_VOLTAGE - TOL &&
+             data < STEERING_CC_DECREASE_SPEED_VOLTAGE + TOL &&
+             prev != STEERING_CC_EVENT_DECREASE_SPEED) {
     event_raise((EventId)STEERING_CC_EVENT_DECREASE_SPEED, data);
+    prev = STEERING_CC_EVENT_DECREASE_SPEED;
   }
 }
 

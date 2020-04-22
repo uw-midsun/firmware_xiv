@@ -10,13 +10,8 @@
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
-/*
-Requires
--Soft Timers
--Interrupts
--GPIO
--ADC (ADC Mode Single)
-*/
+// Requires soft timers, interrupts, GPIO, and ADC (ADC Mode Single)
+
 typedef enum {
   PERIODIC_READER_ID_0 = 0,
   PERIODIC_READER_ID_1,

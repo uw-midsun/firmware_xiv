@@ -38,6 +38,7 @@ CanSettings can_settings = {
   .fault_event = STEERING_CAN_FAULT,
   .tx = { GPIO_PORT_A, 12 },
   .rx = { GPIO_PORT_A, 11 },
+  .loopback = false,
 };
 
 static CanStorage s_can_storage;
@@ -55,48 +56,7 @@ void setup_test(void) {
   control_stalk_init();
 }
 
-void test_steering_digital_input_horn() {
-  GpioAddress *horn_address = test_get_address(STEERING_INPUT_HORN_EVENT);
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(horn_address));
-
-  Event e = { 0 };
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(STEERING_INPUT_HORN_EVENT, e.id);
-  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
-  // Should be empty after the event is popped off
-  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-  TEST_ASSERT_OK(steering_can_process_event(&e));
-}
-void test_steering_digital_input_high_beam_forward() {
-  GpioAddress *high_beam_forward_address = test_get_address(STEERING_HIGH_BEAM_FORWARD_EVENT);
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(high_beam_forward_address));
-
-  Event e = { 0 };
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(STEERING_HIGH_BEAM_FORWARD_EVENT, e.id);
-  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, e.data);
-  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-  TEST_ASSERT_OK(steering_can_process_event(&e));
-}
-
-void test_steering_digital_input_cc_toggle() {
-  GpioAddress *cc_toggle_address = test_get_address(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT);
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(cc_toggle_address));
-
-  Event e = { 0 };
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT, e.id);
-  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
-  TEST_ASSERT_OK(steering_can_process_event(&e));
-}
-
-void test_invalid_can_message() {
-  // provide an invalid id
-  Event e = { .id = 16, .data = 0 };
-  TEST_ASSERT_NOT_OK(steering_can_process_event(&e));
-}
-
-void test_steering_digital_input_cc_increse_speed() {
+void test_control_stalk_cc_increse_speed() {
   // set a certain voltage for the address
   Event e = { .id = STEERING_CC_EVENT_INCREASE_SPEED, .data = 0 };
   event_raise(e.id, e.data);
