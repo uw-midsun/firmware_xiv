@@ -36,17 +36,33 @@ CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
                              .rx = { GPIO_PORT_A, 11 },
                              .loopback = false };
 
-can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, prv_test_pedal_data_tx_callback_handler, NULL);
-
 int count = 0;
 static CanStorage s_can_storage;
 
-StatusCode prv_test_horn_tx_callback_handler(const CanMessage *msg, void *context,
+StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
                                              CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(STEERING_INPUT_HORN_EVENT, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
 }
+
+StatusCode prv_test_high_beam_rx_cb_handler(const CanMessage *msg, void *context,
+                                             CanAckStatus *ack_reply) {
+  TEST_ASSERT_EQUAL(STEERING_HIGH_BEAM_FORWARD_EVENT, msg->msg_id);
+  count++;
+  return STATUS_CODE_OK;
+}
+
+StatusCode prv_test_cc_toggle_rx_cb_handler(const CanMessage *msg, void *context,
+                                             CanAckStatus *ack_reply) {
+  TEST_ASSERT_EQUAL(STEERING_CC_TOGGLE_PRESSED_EVENT, msg->msg_id);
+  count++;
+  return STATUS_CODE_OK;
+}
+
+can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, prv_test_horn_rx_cb_handler, NULL);
+can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_high_beam_rx_cb_handler, NULL);
+can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, prv_test_cc_toggle_rx_cb_handler, NULL);
 
 void setup_test(void) {
   gpio_init();
@@ -67,7 +83,10 @@ void test_steering_digital_input_horn() {
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_INPUT_HORN_EVENT, (uint16_t)GPIO_STATE_LOW);
   // Should be empty after the event is popped off
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   TEST_ASSERT_OK(steering_can_process_event(&e));
+  delay_s(1);
+  TEST_ASSERT_TRUE(1,count);
 }
 
 void test_steering_digital_input_high_beam_forward() {
@@ -78,18 +97,22 @@ void test_steering_digital_input_high_beam_forward() {
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_HIGH_BEAM_FORWARD_EVENT,
                                    (uint16_t)GPIO_STATE_LOW);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   TEST_ASSERT_OK(steering_can_process_event(&e));
+  TEST_ASSERT_TRUE(2,count);
 }
 
 void test_steering_digital_input_cc_toggle() {
-  GpioAddress *cc_toggle_address = test_get_address(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT);
+  GpioAddress *cc_toggle_address = test_get_address(STEERING_CC_TOGGLE_PRESSED_EVENT);
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(cc_toggle_address));
   Event e = { 0 };
   TEST_ASSERT_OK(event_process(&e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT,
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CC_TOGGLE_PRESSED_EVENT,
                                    (uint16_t)GPIO_STATE_LOW);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   TEST_ASSERT_OK(steering_can_process_event(&e));
+  TEST_ASSERT_TRUE(3,count);
 }
 
 void test_invalid_can_message() {
