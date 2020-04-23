@@ -40,21 +40,21 @@ int count = 0;
 static CanStorage s_can_storage;
 
 StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
-                                             CanAckStatus *ack_reply) {
+                                       CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(STEERING_INPUT_HORN_EVENT, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
 }
 
 StatusCode prv_test_high_beam_rx_cb_handler(const CanMessage *msg, void *context,
-                                             CanAckStatus *ack_reply) {
+                                            CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(STEERING_HIGH_BEAM_FORWARD_EVENT, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
 }
 
 StatusCode prv_test_cc_toggle_rx_cb_handler(const CanMessage *msg, void *context,
-                                             CanAckStatus *ack_reply) {
+                                            CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(STEERING_CC_TOGGLE_PRESSED_EVENT, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
@@ -86,7 +86,7 @@ void test_steering_digital_input_horn() {
   MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   TEST_ASSERT_OK(steering_can_process_event(&e));
   delay_s(1);
-  TEST_ASSERT_TRUE(1,count);
+  TEST_ASSERT_TRUE(1, count);
 }
 
 void test_steering_digital_input_high_beam_forward() {
@@ -99,7 +99,7 @@ void test_steering_digital_input_high_beam_forward() {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   TEST_ASSERT_OK(steering_can_process_event(&e));
-  TEST_ASSERT_TRUE(2,count);
+  TEST_ASSERT_TRUE(2, count);
 }
 
 void test_steering_digital_input_cc_toggle() {
@@ -112,7 +112,7 @@ void test_steering_digital_input_cc_toggle() {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   TEST_ASSERT_OK(steering_can_process_event(&e));
-  TEST_ASSERT_TRUE(3,count);
+  TEST_ASSERT_TRUE(3, count);
 }
 
 void test_invalid_can_message() {
