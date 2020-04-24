@@ -28,6 +28,7 @@ void test_blink_event_generator_valid(void) {
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_ON,  // custom
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -101,6 +102,7 @@ void test_blink_event_generator_start_same_event_id(void) {
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_OFF,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -131,6 +133,7 @@ void test_blink_event_generator_init_default_first_value_is_0(void) {
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     // default_state not specified
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
 
@@ -150,6 +153,7 @@ void test_blink_event_generator_init_invalid_first_value(void) {
   BlinkEventGeneratorSettings invalid_settings = {
     .interval_us = 1000,
     .default_state = NUM_BLINKER_STATES,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   TEST_ASSERT_NOT_OK(blink_event_generator_init(&storage, &invalid_settings));
@@ -165,6 +169,7 @@ void test_multiple_blink_event_generators(void) {
   BlinkEventGeneratorSettings settings1 = {
     .interval_us = interval_us1,
     .default_state = BLINKER_STATE_ON,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage1;
   TEST_ASSERT_OK(blink_event_generator_init(&storage1, &settings1));
@@ -174,6 +179,7 @@ void test_multiple_blink_event_generators(void) {
   BlinkEventGeneratorSettings settings2 = {
     .interval_us = interval_us2,
     .default_state = BLINKER_STATE_OFF,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage2;
   TEST_ASSERT_OK(blink_event_generator_init(&storage2, &settings2));
@@ -239,6 +245,7 @@ void test_blink_event_generator_stop_return_value(void) {
   const uint32_t interval_us = 5000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
@@ -261,6 +268,7 @@ void test_blink_event_generator_stop_raises_last_event(void) {
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_ON,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -279,4 +287,47 @@ void test_blink_event_generator_stop_raises_last_event(void) {
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(1, e.data);
   TEST_ASSERT_NOT_OK(event_process(&e));
+}
+
+static uint16_t s_times_callback_called = 0;
+static void *s_passed_context = NULL;
+
+static void prv_counter_callback(void *context) {
+  s_times_callback_called++;
+  s_passed_context = context;
+}
+
+// Test that the callback is called with the appropriate context.
+void test_blink_event_generator_callback(void) {
+  s_times_callback_called = 0;
+  s_passed_context = NULL;
+
+  const uint32_t interval_us = 5000;
+  void *arbitrary_context = &interval_us;
+  BlinkEventGeneratorSettings settings = {
+    .interval_us = interval_us,
+    .default_state = BLINKER_STATE_ON,
+    .callback = &prv_counter_callback,
+    .callback_context = arbitrary_context,
+  };
+  BlinkEventGeneratorStorage storage;
+  TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
+
+  // initial event: make sure it was called
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL(arbitrary_context, s_passed_context);
+  s_passed_context = NULL;
+
+  // make sure it's not called before the next event
+  delay_us(interval_us / 2);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL(NULL, s_passed_context);
+
+  // next event: make sure it's called again
+  delay_us(interval_us / 2 + 5);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(arbitrary_context, s_passed_context);
+
+  TEST_ASSERT_EQUAL(true, blink_event_generator_stop(&storage));
 }

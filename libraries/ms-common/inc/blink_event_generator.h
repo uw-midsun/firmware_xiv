@@ -6,6 +6,8 @@
 #include "event_queue.h"
 #include "soft_timer.h"
 
+typedef void (*BlinkEventGeneratorCallback)(void *context);
+
 typedef enum {
   BLINKER_STATE_OFF = 0,
   BLINKER_STATE_ON,
@@ -14,12 +16,16 @@ typedef enum {
 
 typedef struct {
   uint32_t interval_us;
-  BlinkerState default_state;  // defaults to BLINKER_STATE_OFF
+  BlinkerState default_state;            // defaults to BLINKER_STATE_OFF
+  BlinkEventGeneratorCallback callback;  // can be null; else, called after each event raised
+  void *callback_context;
 } BlinkEventGeneratorSettings;
 
 typedef struct {
   uint32_t interval_us;
   EventId event_id;
+  BlinkEventGeneratorCallback callback;
+  void *callback_context;
   BlinkerState default_state;
   BlinkerState current_state;
   SoftTimerId timer_id;

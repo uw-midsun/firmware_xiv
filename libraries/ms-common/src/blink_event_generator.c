@@ -18,6 +18,8 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
 
   storage->interval_us = settings->interval_us;
   storage->default_state = storage->current_state = settings->default_state;
+  storage->callback = settings->callback;
+  storage->callback_context = settings->callback_context;
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
   return STATUS_CODE_OK;
 }
@@ -31,6 +33,10 @@ static void prv_raise_blink_event_callback(SoftTimerId timer_id, void *context) 
   BlinkerState new_state = prv_opposite_state(storage->current_state);
   event_raise_priority(BLINK_EVENT_PRIORITY, storage->event_id, prv_state_to_value(new_state));
   storage->current_state = new_state;
+
+  if (storage->callback) {
+    storage->callback(storage->callback_context);
+  }
 
   soft_timer_start(storage->interval_us, &prv_raise_blink_event_callback, storage,
                    &storage->timer_id);
