@@ -6,13 +6,14 @@
 #include "event_queue.h"
 #include "soft_timer.h"
 
-typedef void (*BlinkEventGeneratorCallback)(void *context);
-
 typedef enum {
   BLINKER_STATE_OFF = 0,
   BLINKER_STATE_ON,
   NUM_BLINKER_STATES,
 } BlinkerState;
+
+// new_state is the state of the most recently raised event.
+typedef void (*BlinkEventGeneratorCallback)(BlinkerState new_state, void *context);
 
 typedef struct {
   uint32_t interval_us;
@@ -48,3 +49,8 @@ StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, Even
 // If the timer is running and we aren't currently in the default state, raise a final event
 // immediately to move back to the default state.
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage);
+
+// Stop generating blihk events and return whether it was stopped.
+// Unlike blink_event_generator_stop, don't raise a final event to move back to the default state.
+// This means we may be stuck outside the default state.
+bool blink_event_generator_stop_silently(BlinkEventGeneratorStorage *storage);
