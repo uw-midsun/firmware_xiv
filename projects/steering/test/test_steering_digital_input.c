@@ -1,4 +1,4 @@
-/*#include <stdbool.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "can.h"
@@ -122,4 +122,4 @@ void test_invalid_can_message() {
 }
 
 void teardown_test(void) {}
-*/
+

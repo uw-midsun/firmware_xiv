@@ -1,4 +1,3 @@
-/*
 #include "steering_can.h"
 #include <stdio.h>
 #include "adc_periodic_reader.h"
@@ -50,4 +49,3 @@ StatusCode steering_can_process_event(Event *e) {
   return STATUS_CODE_OK;
   
 }
-*/

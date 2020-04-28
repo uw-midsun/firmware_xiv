@@ -1,4 +1,3 @@
-/*
 #include "steering_digital_input.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -74,4 +73,4 @@ StatusCode steering_digital_input_init() {
   }
   return STATUS_CODE_OK;
 }
-*/
+

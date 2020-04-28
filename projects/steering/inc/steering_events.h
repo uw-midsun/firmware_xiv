@@ -1,5 +1,4 @@
 #pragma once
-/*
 typedef enum {
   // Digital
   STEERING_INPUT_HORN_EVENT = 0,
@@ -19,4 +18,3 @@ typedef enum {
   STEERING_CC_EVENT_DECREASE_SPEED,
   NUM_STEERING_EVENTS
 } SteeringAnalogEvent;
-*/

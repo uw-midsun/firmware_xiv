@@ -1,5 +1,3 @@
-/*
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -55,9 +53,8 @@ int main() {
 
   Event e = { .id = 0, .data = 0 };
   while (event_process(&e)) {
-    //steering_can_process_event(&e);
+    steering_can_process_event(&e);
   }
 
   return 0;
 }
-*/
