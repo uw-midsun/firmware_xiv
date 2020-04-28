@@ -1,4 +1,3 @@
-/*
 #pragma once
 // Module to set up analog readers to read voltages and convert
 // them to signal events
@@ -11,4 +10,3 @@
 #include "steering_can.h"
 
 StatusCode control_stalk_init();
-*/
