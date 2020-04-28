@@ -1,3 +1,4 @@
+/*
 #include "steering_can.h"
 #include <stdio.h>
 #include "adc_periodic_reader.h"
@@ -21,6 +22,7 @@
 #include "steering_events.h"
 
 StatusCode steering_can_process_event(Event *e) {
+  
   if (e->id >= NUM_STEERING_EVENTS) {
     return STATUS_CODE_INVALID_ARGS;
   } else if (e->id == STEERING_INPUT_HORN_EVENT) {
@@ -33,7 +35,7 @@ StatusCode steering_can_process_event(Event *e) {
     CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_LOW_BEAMS, (EELightState)e->data);
   } else if (e->id == STEERING_REGEN_BRAKE_EVENT) {
     // will be implemented
-  } else if (e->id == STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT) {
+  } else if (e->id == STEERING_CC_TOGGLE_PRESSED_EVENT) {
     CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_TOGGLE);
   } else if (e->id == STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL) {
     CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_LEFT, (EELightState)e->data);
@@ -44,5 +46,8 @@ StatusCode steering_can_process_event(Event *e) {
   } else if (e->id == STEERING_CC_EVENT_DECREASE_SPEED) {
     CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_DECREASE);
   }
+  
   return STATUS_CODE_OK;
+  
 }
+*/

@@ -1,4 +1,4 @@
-#include <stdbool.h>
+/*#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "can.h"
@@ -36,7 +36,7 @@ CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
                              .rx = { GPIO_PORT_A, 11 },
                              .loopback = false };
 
-int count = 0;
+static int count = 0;
 static CanStorage s_can_storage;
 
 StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
@@ -122,3 +122,4 @@ void test_invalid_can_message() {
 }
 
 void teardown_test(void) {}
+*/

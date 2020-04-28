@@ -1,3 +1,4 @@
+/*
 #include "steering_control_stalk.h"
 #include <stdio.h>
 #include "adc.h"
@@ -68,3 +69,4 @@ StatusCode control_stalk_init() {
   status_ok_or_return(adc_periodic_reader_start(PERIODIC_READER_ID_0));
   return STATUS_CODE_OK;
 }
+*/

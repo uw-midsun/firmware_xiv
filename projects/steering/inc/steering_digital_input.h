@@ -1,4 +1,5 @@
 #pragma once
+/*
 // Module to sets up all the interrupts for the GPIO pins to raise events
 // in the event queue when triggered
 // Requires GPIO,Interrupts,Event Queue,Soft-timer
@@ -22,3 +23,4 @@ typedef enum {
 StatusCode steering_digital_input_init();
 
 GpioAddress *test_get_address(int digital_input_id);
+*/

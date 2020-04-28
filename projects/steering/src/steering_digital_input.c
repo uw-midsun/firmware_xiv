@@ -1,3 +1,4 @@
+/*
 #include "steering_digital_input.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -32,7 +33,7 @@ EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = STEERING_HIGH_BEAM_FORWARD_EVENT,
   [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = STEERING_HIGH_BEAM_REAR_EVENT,
   [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = STEERING_REGEN_BRAKE_EVENT,
-  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT
+  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = STEERING_CC_TOGGLE_PRESSED_EVENT
 };
 
 GpioAddress *test_get_address(int digital_input_id) {
@@ -73,3 +74,4 @@ StatusCode steering_digital_input_init() {
   }
   return STATUS_CODE_OK;
 }
+*/
