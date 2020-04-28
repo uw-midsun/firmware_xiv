@@ -1,4 +1,3 @@
-/*
 #pragma once
 // Module to process events on the queue and send CAN messages
 // Requires GPIO,Interrupts,Event Queue, and CAN to be initialized
@@ -18,4 +17,3 @@
 
 // Receives an event and sends a CAN message
 StatusCode steering_can_process_event(Event *e);
-*/

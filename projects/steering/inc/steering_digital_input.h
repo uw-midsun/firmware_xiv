@@ -22,4 +22,3 @@ typedef enum {
 StatusCode steering_digital_input_init();
 
 GpioAddress *test_get_address(int digital_input_id);
-

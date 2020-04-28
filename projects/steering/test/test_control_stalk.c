@@ -60,11 +60,10 @@ void test_control_stalk_cc_increse_speed() {
   // set a certain voltage for the address
   Event e = { .id = STEERING_CC_EVENT_INCREASE_SPEED, .data = 0 };
   event_raise(e.id, e.data);
-  TEST_ASSERT_OK(event_process(&e));
-  TEST_ASSERT_EQUAL(STEERING_CC_EVENT_INCREASE_SPEED, e.id);
-  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CC_EVENT_INCREASE_SPEED,
+                                   (uint16_t)GPIO_STATE_LOW);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
 }
 
 void teardown_test(void) {}
-

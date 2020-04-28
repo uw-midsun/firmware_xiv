@@ -52,8 +52,11 @@ int main() {
   can_init(&s_can_storage, &can_settings);
 
   Event e = { .id = 0, .data = 0 };
-  while (event_process(&e)) {
-    steering_can_process_event(&e);
+
+  while (true) {
+    while (event_process(&e)) {
+      steering_can_process_event(&e);
+    }
   }
 
   return 0;
