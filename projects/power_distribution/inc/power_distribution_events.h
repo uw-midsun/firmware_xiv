@@ -23,6 +23,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_GPIO_EVENTS,
 } PowerDistributionGpioEvent;
 
+// Handled by rear_power_distribution_strobe_blinker
 typedef enum {
   POWER_DISTRIBUTION_STROBE_EVENT = NUM_POWER_DISTRIBUTION_GPIO_EVENTS + 1,
   NUM_POWER_DISTRIBUTION_STROBE_EVENTS,
@@ -36,7 +37,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_SIGNAL_EVENTS,
 } PowerDistributionSignalEvent;
 
-// TODO(SOFT-138): Add a module to handle sync events
+// ALso handled by a lights_signal_fsm instance
 typedef enum {
   POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS = NUM_POWER_DISTRIBUTION_SIGNAL_EVENTS + 1,
   NUM_POWER_DISTRIBUTION_SYNC_EVENTS,
@@ -50,10 +51,3 @@ typedef enum {
   POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
   NUM_POWER_DISTRIBUTION_POWER_SEQUENCE_EVENTS,
 } PowerDistributionPowerSequenceEvent;
-
-// is this even used? we should use it
-typedef enum {
-  POWER_DISTRIBUTION_CURRENT_SENSE_EVENT_DATA_READY =
-      NUM_POWER_DISTRIBUTION_POWER_SEQUENCE_EVENTS + 1,
-  NUM_POWER_DISTRIBUTION_CURRENT_SENSE_EVENTS,
-} PowerDistributionCurrentSenseEvent;
