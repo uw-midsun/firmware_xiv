@@ -1,6 +1,10 @@
+#include "can.h"
+#include "can_msg_defs.h"
+#include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
 #include "power_distribution_publish_data.h"
+#include "power_distribution_publish_data_config.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -11,7 +15,37 @@
 #define TEST_CURRENT_DATA_2 0xDA
 #define TEST_CURRENT_DATA_3 0x5F
 
-void setup_test(void) {}
+typedef enum {
+  TEST_CAN_EVENT_RX = 10,
+  TEST_CAN_EVENT_TX,
+  TEST_CAN_EVENT_FAULT,
+  NUM_TEST_CAN_EVENTS,
+} TestCanEvent;
+
+static CanStorage s_can_storage;
+
+static void prv_initialize_can(SystemCanDevice can_device) {
+  // We don't initialize CAN in setup_test to avoid littering other tests with CAN logging
+  // (and to allow setting to front or rear).
+  CanSettings can_settings = {
+    .device_id = can_device,
+    .loopback = false,  // we don't care about receiving them
+    .bitrate = CAN_HW_BITRATE_500KBPS,
+    .rx_event = TEST_CAN_EVENT_RX,
+    .tx_event = TEST_CAN_EVENT_TX,
+    .fault_event = TEST_CAN_EVENT_FAULT,
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
+  };
+  can_init(&s_can_storage, &can_settings);
+}
+
+void setup_test(void) {
+  interrupt_init();
+  event_queue_init();
+  gpio_init();
+  soft_timer_init();
+}
 void teardown_test(void) {}
 
 static PowerDistributionCurrent s_single_received_current_id;
@@ -145,4 +179,46 @@ void test_power_distribution_publish_data_mirrors_transmitter_error(void) {
   };
   TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR,
                     power_distribution_publish_data_publish(test_current_measurements));
+}
+
+// Test that the standard configs initialize correctly.
+void test_power_distribution_publish_data_standard_configs_initialize(void) {
+  TEST_ASSERT_OK(
+      power_distribution_publish_data_init(FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+  TEST_ASSERT_OK(power_distribution_publish_data_init(REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+}
+
+// Test that we actually send CAN messages on front.
+void test_power_distribution_publish_data_send_can_msgs_front(void) {
+  prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
+  TEST_ASSERT_OK(
+      power_distribution_publish_data_init(FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+
+  // the values aren't important
+  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = { 0 };
+  TEST_ASSERT_OK(power_distribution_publish_data_publish(test_current_measurements));
+
+  // make sure we can tx all of them
+  for (uint16_t i = 0; i < FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG.num_currents_to_publish;
+       i++) {
+    MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
+  }
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();  // and no extras
+}
+
+// Test that we actually send CAN messages on rear.
+void test_power_distribution_publish_data_send_can_msgs_rear(void) {
+  prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
+  TEST_ASSERT_OK(power_distribution_publish_data_init(REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+
+  // the values aren't important
+  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = { 0 };
+  TEST_ASSERT_OK(power_distribution_publish_data_publish(test_current_measurements));
+
+  // make sure we can tx all of them
+  for (uint16_t i = 0; i < FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG.num_currents_to_publish;
+       i++) {
+    MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
+  }
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();  // and no extras
 }
