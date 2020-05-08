@@ -23,6 +23,7 @@
 #define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
 #define STROBE_BLINK_INTERVAL_US 100000         // 0.1s between blinks of the strobe light
+#define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
 
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
@@ -123,6 +124,10 @@ int main(void) {
     .signal_right_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
     .signal_hazard_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
     .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
+    .sync_behaviour = is_front_power_distribution ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
+                                                  : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
+    .sync_event = POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS,
+    .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
 
