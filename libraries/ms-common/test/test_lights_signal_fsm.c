@@ -13,7 +13,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_BLINK_INTERVAL_US 6000
+#define TEST_BLINK_INTERVAL_US 30000
 #define TEST_BLINKS_BETWEEN_SYNCS 2
 
 // Sending sync events requires that we're rear power distribution
@@ -61,7 +61,7 @@ static const SignalFsmSettings s_settings = {
   .signal_right_output_event = TEST_SIGNAL_OUTPUT_EVENT_RIGHT,
   .signal_hazard_output_event = TEST_SIGNAL_OUTPUT_EVENT_HAZARD,
   .sync_event = TEST_SYNC_EVENT,
-  .sync_behaviour = SYNC_BEHAVIOUR_NO_SYNC,  // to change in a test, copy it and overwrite
+  .sync_behaviour = LIGHTS_SYNC_BEHAVIOUR_NO_SYNC,  // to change in a test, copy it and overwrite
   .num_blinks_between_syncs = TEST_BLINKS_BETWEEN_SYNCS,
   .blink_interval_us = TEST_BLINK_INTERVAL_US,
 };
@@ -211,7 +211,7 @@ void test_lights_signal_fsm_none_left_hazardleft_hazard_none(void) {
 // Test that we restart when we receive a sync event and behaviour is set to receive.
 void test_lights_signal_fsm_restarts_receiving_sync_event(void) {
   SignalFsmSettings sync_receive_settings = s_settings;
-  sync_receive_settings.sync_behaviour = SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS;
+  sync_receive_settings.sync_behaviour = LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS;
   TEST_ASSERT_OK(lights_signal_fsm_init(&s_storage, &sync_receive_settings));
 
   // begin: none
@@ -288,7 +288,7 @@ void test_lights_signal_fsm_restarts_receiving_sync_event(void) {
 // Test that we send sync CAN msgs when in SYNC_BEHAVIOUR_SEND_SYNC_MSGS.
 void test_lights_signal_fsm_sends_sync_msgs(void) {
   SignalFsmSettings send_settings = s_settings;
-  send_settings.sync_behaviour = SYNC_BEHAVIOUR_SEND_SYNC_MSGS;
+  send_settings.sync_behaviour = LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS;
   send_settings.num_blinks_between_syncs = TEST_BLINKS_BETWEEN_SYNCS;
   TEST_ASSERT_OK(lights_signal_fsm_init(&s_storage, &send_settings));
 

@@ -50,7 +50,7 @@ StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, Even
 // immediately to move back to the default state.
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage);
 
-// Stop generating blihk events and return whether it was stopped.
+// Stop generating blink events and return whether it was stopped.
 // Unlike blink_event_generator_stop, don't raise a final event to move back to the default state.
 // This means we may be stuck outside the default state.
 bool blink_event_generator_stop_silently(BlinkEventGeneratorStorage *storage);

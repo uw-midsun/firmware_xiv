@@ -26,61 +26,58 @@ static bool prv_stop_blinker(const Fsm *fsm, const Event *e, void *context) {
 
 FSM_STATE_TRANSITION(state_none) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_on, state_left_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_on, state_right_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_on,
-                             state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, prv_guard_on, state_left_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, prv_guard_on, state_right_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, prv_guard_on, state_hazard_signal);
 }
 
 FSM_STATE_TRANSITION(state_left_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_off, state_none);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_on,
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, prv_guard_off, state_none);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, prv_guard_on,
                              state_hazard_left_signal);
-  if (storage->sync_behaviour == SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
-    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, &prv_stop_blinker, state_left_signal);
+  if (storage->sync_behaviour == LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
+    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, prv_stop_blinker, state_left_signal);
   }
 }
 
 FSM_STATE_TRANSITION(state_right_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_off, state_none);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_on,
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, prv_guard_off, state_none);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, prv_guard_on,
                              state_hazard_right_signal);
-  if (storage->sync_behaviour == SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
-    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, &prv_stop_blinker, state_right_signal);
+  if (storage->sync_behaviour == LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
+    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, prv_stop_blinker, state_right_signal);
   }
 }
 
 FSM_STATE_TRANSITION(state_hazard_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_on,
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, prv_guard_on,
                              state_hazard_left_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_on,
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, prv_guard_on,
                              state_hazard_right_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_off, state_none);
-  if (storage->sync_behaviour == SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
-    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, &prv_stop_blinker, state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, prv_guard_off, state_none);
+  if (storage->sync_behaviour == LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
+    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, prv_stop_blinker, state_hazard_signal);
   }
 }
 
 FSM_STATE_TRANSITION(state_hazard_left_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, &prv_guard_off, state_hazard_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_off, state_left_signal);
-  if (storage->sync_behaviour == SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
-    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, &prv_stop_blinker, state_hazard_left_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_left_input_event, prv_guard_off, state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, prv_guard_off, state_left_signal);
+  if (storage->sync_behaviour == LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
+    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, prv_stop_blinker, state_hazard_left_signal);
   }
 }
 
 FSM_STATE_TRANSITION(state_hazard_right_signal) {
   SignalFsmStorage *storage = fsm->context;
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, &prv_guard_off,
-                             state_hazard_signal);
-  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, &prv_guard_off,
-                             state_right_signal);
-  if (storage->sync_behaviour == SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
-    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, &prv_stop_blinker, state_hazard_right_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_right_input_event, prv_guard_off, state_hazard_signal);
+  FSM_ADD_GUARDED_TRANSITION(storage->signal_hazard_input_event, prv_guard_off, state_right_signal);
+  if (storage->sync_behaviour == LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS) {
+    FSM_ADD_GUARDED_TRANSITION(storage->sync_event, prv_stop_blinker, state_hazard_right_signal);
   }
 }
 
@@ -108,11 +105,10 @@ static void prv_blink_event_raised_callback(BlinkerState new_state, void *contex
   SignalFsmStorage *storage = context;
 
   // we only send sync events on rising edges
-  if (new_state == BLINKER_STATE_ON) {
+  if (storage->sync_behaviour == LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS &&
+      new_state == BLINKER_STATE_ON) {
     storage->blink_counter++;
-
-    if (storage->sync_behaviour == SYNC_BEHAVIOUR_SEND_SYNC_MSGS &&
-        storage->blink_counter >= storage->num_blinks_between_syncs) {
+    if (storage->blink_counter >= storage->num_blinks_between_syncs) {
       // transmit sync event
       storage->blink_counter = 0;
       CAN_TRANSMIT_LIGHTS_SYNC();
@@ -139,18 +135,18 @@ StatusCode lights_signal_fsm_init(SignalFsmStorage *storage, const SignalFsmSett
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->blink_interval_us,
     .default_state = BLINKER_STATE_OFF,  // all lights default to off
-    .callback = &prv_blink_event_raised_callback,
+    .callback = prv_blink_event_raised_callback,
     .callback_context = storage,
   };
   blink_event_generator_init(&storage->blink_event_generator, &blinker_settings);
 
   fsm_init(&storage->fsm, "Lights Signal FSM", &state_none, storage);
-  fsm_state_init(state_none, &prv_state_none_output);
-  fsm_state_init(state_left_signal, &prv_state_left_signal_output);
-  fsm_state_init(state_right_signal, &prv_state_right_signal_output);
-  fsm_state_init(state_hazard_signal, &prv_state_hazard_signal_output);
-  fsm_state_init(state_hazard_left_signal, &prv_state_hazard_signal_output);
-  fsm_state_init(state_hazard_right_signal, &prv_state_hazard_signal_output);
+  fsm_state_init(state_none, prv_state_none_output);
+  fsm_state_init(state_left_signal, prv_state_left_signal_output);
+  fsm_state_init(state_right_signal, prv_state_right_signal_output);
+  fsm_state_init(state_hazard_signal, prv_state_hazard_signal_output);
+  fsm_state_init(state_hazard_left_signal, prv_state_hazard_signal_output);
+  fsm_state_init(state_hazard_right_signal, prv_state_hazard_signal_output);
 
   return STATUS_CODE_OK;
 }
