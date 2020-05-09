@@ -28,6 +28,7 @@
 #define STEERING_CC_INCREASE_SPEED_VOLTAGE 3000
 #define STEERING_CC_DECREASE_SPEED_VOLTAGE 4000
 #define STEERING_CC_BRAKE_PRESSED_VOLTAGE 5000
+#define INVALID_VOLTAGE 6000
 #define TOL 100
 
 typedef enum {
@@ -50,8 +51,15 @@ CanSettings can_settings = {
 static CanStorage s_can_storage;
 int count = 0;
 
+StatusCode prv_test_left_signal_rx_cb_handler(const CanMessage *msg, void *context,
+                                              CanAckStatus *ack_reply) {
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, msg->msg_id);
+  count++;
+  return STATUS_CODE_OK;
+}
+
 StatusCode prv_test_cc_increase_rx_cb_handler(const CanMessage *msg, void *context,
-                                       CanAckStatus *ack_reply) {
+                                              CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
@@ -70,17 +78,41 @@ void setup_test(void) {
   TEST_ASSERT_OK(control_stalk_init());
 }
 
-void test_control_stalk_cc_increse_speed() {
-  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, prv_test_cc_increase_rx_cb_handler, NULL));
-  //Manually call the callback function with the CC_INCREASE_SPEED voltage
-  //to raise an event
-  control_stalk_callback(STEERING_CC_INCREASE_SPEED_VOLTAGE, PERIODIC_READER_ID_0, NULL);
+void test_control_stalk_left_signal() {
+  TEST_ASSERT_OK(
+      can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_left_signal_rx_cb_handler, NULL));
+  // Manually call the callback function with LEFT_SIGNAL voltage
+  control_stalk_callback(STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE, PERIODIC_READER_ID_0, NULL);
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CC_EVENT_INCREASE_SPEED,STEERING_CC_INCREASE_SPEED_VOLTAGE);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL,
+                                   (uint16_t)STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(1, count);
+}
+
+void test_control_stalk_cc_increse_speed_with_simultaneous_calls() {
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND,
+                                         prv_test_cc_increase_rx_cb_handler, NULL));
+  // Only a single event should be raised when there are multiple simulataneous calls
+  // with slightly different voltage values
+  control_stalk_callback(STEERING_CC_INCREASE_SPEED_VOLTAGE, PERIODIC_READER_ID_0, NULL);
+  control_stalk_callback(STEERING_CC_INCREASE_SPEED_VOLTAGE + 5, PERIODIC_READER_ID_0, NULL);
+  control_stalk_callback(STEERING_CC_INCREASE_SPEED_VOLTAGE - 5, PERIODIC_READER_ID_0, NULL);
+  Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CC_EVENT_INCREASE_SPEED,
+                                   (uint16_t)STEERING_CC_INCREASE_SPEED_VOLTAGE);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_OK(steering_can_process_event(&e));
+  MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(2, count);
+}
+
+void test_invalid_voltage() {
+  control_stalk_callback(INVALID_VOLTAGE, PERIODIC_READER_ID_0, NULL);
+  Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 void teardown_test(void) {}
