@@ -73,20 +73,20 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_high_beam_rx_cb_handler, NULL);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, prv_test_cc_toggle_rx_cb_handler, NULL);
 }
-/*
+
 void test_steering_digital_input_horn() {
   GpioAddress *horn_address = test_get_address(STEERING_INPUT_HORN_EVENT);
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(horn_address));
   Event e = { 0 };
-  printf("%d\n",e.data);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_INPUT_HORN_EVENT, (uint16_t)GPIO_STATE_LOW);
   // Should be empty after the event is popped off
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
+  printf("%d\n",e.data);
   TEST_ASSERT_OK(steering_can_process_event(&e));
   TEST_ASSERT_EQUAL(1, count);
 }
-
+/*
 void test_steering_digital_input_high_beam_forward() {
   GpioAddress *high_beam_forward_address = test_get_address(STEERING_HIGH_BEAM_FORWARD_EVENT);
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(high_beam_forward_address));
