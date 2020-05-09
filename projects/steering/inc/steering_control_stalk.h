@@ -10,3 +10,6 @@
 #include "steering_can.h"
 
 StatusCode control_stalk_init();
+
+//Used for testing by manually inserting values for voltage
+void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);

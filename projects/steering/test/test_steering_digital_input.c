@@ -63,7 +63,7 @@ StatusCode prv_test_cc_toggle_rx_cb_handler(const CanMessage *msg, void *context
 }
 
 void setup_test(void) {
-  gpio_init();
+  TEST_ASSERT_OK(gpio_init());
   interrupt_init();
   event_queue_init();
   gpio_it_init();

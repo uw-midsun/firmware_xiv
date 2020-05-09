@@ -23,6 +23,12 @@
 #include "wait.h"
 
 #define STEERING_CAN_DEVICE_ID 0x1
+#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE 1000
+#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE 2000
+#define STEERING_CC_INCREASE_SPEED_VOLTAGE 3000
+#define STEERING_CC_DECREASE_SPEED_VOLTAGE 4000
+#define STEERING_CC_BRAKE_PRESSED_VOLTAGE 5000
+#define TOL 100
 
 typedef enum {
   STEERING_CAN_EVENT_RX = 10,
@@ -38,7 +44,7 @@ CanSettings can_settings = {
   .fault_event = STEERING_CAN_FAULT,
   .tx = { GPIO_PORT_A, 12 },
   .rx = { GPIO_PORT_A, 11 },
-  .loopback = false,
+  .loopback = true,
 };
 
 static CanStorage s_can_storage;
@@ -53,28 +59,28 @@ StatusCode prv_test_cc_increase_rx_cb_handler(const CanMessage *msg, void *conte
 
 void setup_test(void) {
   adc_init(ADC_MODE_SINGLE);
-  gpio_init();
+  TEST_ASSERT_OK(gpio_init());
   interrupt_init();
   event_queue_init();
   gpio_it_init();
   soft_timer_init();
-  steering_digital_input_init();
-  can_init(&s_can_storage, &can_settings);
-  adc_periodic_reader_init();
-  control_stalk_init();
+  TEST_ASSERT_OK(steering_digital_input_init());
+  TEST_ASSERT_OK(can_init(&s_can_storage, &can_settings));
+  TEST_ASSERT_OK(adc_periodic_reader_init());
+  TEST_ASSERT_OK(control_stalk_init());
 }
 
 void test_control_stalk_cc_increse_speed() {
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, prv_test_cc_increase_rx_cb_handler, NULL));
-  // set a certain voltage for the address
-  Event e = { .id = STEERING_CC_EVENT_INCREASE_SPEED, .data = 0 };
-  event_raise(e.id, e.data);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CC_EVENT_INCREASE_SPEED,
-                                   (uint16_t)GPIO_STATE_LOW);
+  //Manually call the callback function with the CC_INCREASE_SPEED voltage
+  //to raise an event
+  control_stalk_callback(STEERING_CC_INCREASE_SPEED_VOLTAGE, PERIODIC_READER_ID_0, NULL);
+  Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CC_EVENT_INCREASE_SPEED,STEERING_CC_INCREASE_SPEED_VOLTAGE);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
-  //MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
-  //TEST_ASSERT_EQUAL(1, count);
+  MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(1, count);
 }
 
 void teardown_test(void) {}
