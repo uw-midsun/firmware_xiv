@@ -43,21 +43,21 @@ int count = 0;
 
 StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
                                        CanAckStatus *ack_reply) {
-  TEST_ASSERT_EQUAL(STEERING_INPUT_HORN_EVENT, msg->msg_id);
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_HORN, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
 }
 
 StatusCode prv_test_high_beam_rx_cb_handler(const CanMessage *msg, void *context,
                                             CanAckStatus *ack_reply) {
-  TEST_ASSERT_EQUAL(STEERING_HIGH_BEAM_FORWARD_EVENT, msg->msg_id);
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
 }
 
 StatusCode prv_test_cc_toggle_rx_cb_handler(const CanMessage *msg, void *context,
                                             CanAckStatus *ack_reply) {
-  TEST_ASSERT_EQUAL(STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT, msg->msg_id);
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
 }
@@ -80,12 +80,9 @@ void test_steering_digital_input_horn() {
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(horn_address));
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_INPUT_HORN_EVENT, (uint16_t)GPIO_STATE_LOW);
-  // Should be empty after the event is popped off
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  steering_can_process_event(&e);
-  MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
-  printf("%d\n",e.data);
   TEST_ASSERT_OK(steering_can_process_event(&e));
+  //MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(1, count);
 }
 /*
