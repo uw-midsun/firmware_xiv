@@ -28,8 +28,10 @@ typedef enum {
   STEERING_CAN_FAULT,
 } SteeringCanEvent;
 
+static CanStorage s_can_storage;
+
 CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
-                             .bitrate = CAN_HW_BITRATE_125KBPS,
+                             .bitrate = CAN_HW_BITRATE_500KBPS,
                              .rx_event = STEERING_CAN_EVENT_RX,
                              .tx_event = STEERING_CAN_EVENT_TX,
                              .fault_event = STEERING_CAN_FAULT,
@@ -38,7 +40,6 @@ CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
                              .loopback = true };
 
 int count = 0;
-static CanStorage s_can_storage;
 
 StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
                                        CanAckStatus *ack_reply) {
@@ -71,7 +72,7 @@ void setup_test(void) {
   TEST_ASSERT_OK(can_init(&s_can_storage, &can_settings));
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, prv_test_horn_rx_cb_handler, NULL);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_high_beam_rx_cb_handler, NULL);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_HORN, prv_test_cc_toggle_rx_cb_handler, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, prv_test_cc_toggle_rx_cb_handler, NULL);
 }
 
 void test_steering_digital_input_horn() {
@@ -81,6 +82,7 @@ void test_steering_digital_input_horn() {
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_INPUT_HORN_EVENT, (uint16_t)GPIO_STATE_LOW);
   // Should be empty after the event is popped off
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  steering_can_process_event(&e);
   MS_TEST_HELPER_CAN_RX(STEERING_CAN_EVENT_RX);
   printf("%d\n",e.data);
   TEST_ASSERT_OK(steering_can_process_event(&e));
