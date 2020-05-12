@@ -24,10 +24,11 @@ void teardown_test(void) {
 
 // Test that we can initialize, receive events at the proper times, stop, restart, and stop.
 void test_blink_event_generator_valid(void) {
-  const uint32_t interval_us = 5000;
+  const uint32_t interval_us = 10000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_ON,  // custom
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -101,6 +102,7 @@ void test_blink_event_generator_start_same_event_id(void) {
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_OFF,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -127,10 +129,11 @@ void test_blink_event_generator_start_same_event_id(void) {
 
 // Test that blink_event_generator_init has the correct default default state of 0.
 void test_blink_event_generator_init_default_first_value_is_0(void) {
-  const uint32_t interval_us = 5000;
+  const uint32_t interval_us = 10000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     // default_state not specified
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
 
@@ -150,6 +153,7 @@ void test_blink_event_generator_init_invalid_first_value(void) {
   BlinkEventGeneratorSettings invalid_settings = {
     .interval_us = 1000,
     .default_state = NUM_BLINKER_STATES,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   TEST_ASSERT_NOT_OK(blink_event_generator_init(&storage, &invalid_settings));
@@ -165,6 +169,7 @@ void test_multiple_blink_event_generators(void) {
   BlinkEventGeneratorSettings settings1 = {
     .interval_us = interval_us1,
     .default_state = BLINKER_STATE_ON,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage1;
   TEST_ASSERT_OK(blink_event_generator_init(&storage1, &settings1));
@@ -174,6 +179,7 @@ void test_multiple_blink_event_generators(void) {
   BlinkEventGeneratorSettings settings2 = {
     .interval_us = interval_us2,
     .default_state = BLINKER_STATE_OFF,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage2;
   TEST_ASSERT_OK(blink_event_generator_init(&storage2, &settings2));
@@ -234,24 +240,29 @@ void test_multiple_blink_event_generators(void) {
   TEST_ASSERT_NOT_OK(event_process(&e));
 }
 
-// Test that blink_event_generator_stop's return value is correct.
+// Test that blink_event_generator_stop and blink_event_generator_stop_silently return correctly.
 void test_blink_event_generator_stop_return_value(void) {
   const uint32_t interval_us = 5000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
 
   // not started - false
   TEST_ASSERT_EQUAL(false, blink_event_generator_stop(&storage));
+  TEST_ASSERT_EQUAL(false, blink_event_generator_stop_silently(&storage));
 
   // started - true
   TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
   TEST_ASSERT_EQUAL(true, blink_event_generator_stop(&storage));
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_EQUAL(true, blink_event_generator_stop_silently(&storage));
 
   // already stopped - false
   TEST_ASSERT_EQUAL(false, blink_event_generator_stop(&storage));
+  TEST_ASSERT_EQUAL(false, blink_event_generator_stop_silently(&storage));
 }
 
 // Test that if not in the default state, blink_event_generator_stop raises an event to transition
@@ -261,6 +272,7 @@ void test_blink_event_generator_stop_raises_last_event(void) {
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
     .default_state = BLINKER_STATE_ON,
+    .callback = NULL,
   };
   BlinkEventGeneratorStorage storage;
   Event e;
@@ -279,4 +291,110 @@ void test_blink_event_generator_stop_raises_last_event(void) {
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(1, e.data);
   TEST_ASSERT_NOT_OK(event_process(&e));
+}
+
+// Test that whether in the default state or not, blink_event_generator_stop_silently does not
+// raise any more events (yet still stops it).
+void test_blink_event_generator_stop_silently_does_not_raise_last_event(void) {
+  const uint32_t interval_us = 5000;
+  BlinkEventGeneratorSettings settings = {
+    .interval_us = interval_us,
+    .default_state = BLINKER_STATE_ON,
+    .callback = NULL,
+  };
+  BlinkEventGeneratorStorage storage;
+  Event e;
+  TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
+
+  // start: transition to off
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // stop silently: make sure there's no transition
+  TEST_ASSERT_EQUAL(true, blink_event_generator_stop_silently(&storage));
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // wait for a while: make sure it actually stopped
+  delay_us(2 * interval_us);
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // start again: transition to off and then to on
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_NOT_OK(event_process(&e));
+  delay_us(interval_us + 5);
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // stop silently: make sure there's no transition
+  TEST_ASSERT_EQUAL(true, blink_event_generator_stop_silently(&storage));
+  TEST_ASSERT_NOT_OK(event_process(&e));
+
+  // wait and make sure it actually stopped again
+  delay_us(2 * interval_us);
+  TEST_ASSERT_NOT_OK(event_process(&e));
+}
+
+static uint16_t s_times_callback_called;
+static BlinkerState s_passed_state;
+static void *s_passed_context;
+
+static void prv_counter_callback(BlinkerState new_state, void *context) {
+  s_times_callback_called++;
+  s_passed_context = context;
+  s_passed_state = new_state;
+}
+
+// Test that the callback is called with the appropriate context.
+void test_blink_event_generator_callback(void) {
+  s_times_callback_called = 0;
+  s_passed_context = NULL;
+  s_passed_state = NUM_BLINKER_STATES;
+
+  const uint32_t interval_us = 10000;
+  void *arbitrary_context = &interval_us;
+  BlinkEventGeneratorSettings settings = {
+    .interval_us = interval_us,
+    .default_state = BLINKER_STATE_ON,
+    .callback = &prv_counter_callback,
+    .callback_context = arbitrary_context,
+  };
+  BlinkEventGeneratorStorage storage;
+  Event e = { 0 };
+  TEST_ASSERT_OK(blink_event_generator_init(&storage, &settings));
+
+  // initial event: make sure it was called
+  TEST_ASSERT_OK(blink_event_generator_start(&storage, TEST_EVENT_ID));
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(0, e.data);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL(arbitrary_context, s_passed_context);
+  TEST_ASSERT_EQUAL(BLINKER_STATE_OFF, s_passed_state);
+  s_passed_context = NULL;
+  s_passed_state = NUM_BLINKER_STATES;
+
+  // make sure it's not called before the next event
+  delay_us(interval_us / 2);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL(NULL, s_passed_context);
+  TEST_ASSERT_EQUAL(NUM_BLINKER_STATES, s_passed_state);
+
+  // next event: make sure it's called again
+  delay_us(interval_us / 2 + 5);
+  TEST_ASSERT_OK(event_process(&e));
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
+  TEST_ASSERT_EQUAL(1, e.data);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(arbitrary_context, s_passed_context);
+  TEST_ASSERT_EQUAL(BLINKER_STATE_ON, s_passed_state);
+
+  TEST_ASSERT_EQUAL(true, blink_event_generator_stop(&storage));
 }
