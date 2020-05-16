@@ -25,15 +25,14 @@ static GenericCanMcp2515 s_can_mcp2515;
 
 static void prv_rx_callback(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("Received a message!\n");
-  char log_message[30];
-  printf("Data:\n\t");
+  LOG_DEBUG("Data:\n\t");
   uint8_t i;
   for (i = 0; i < msg->dlc; i++) {
     uint8_t byte = 0;
     byte = msg->data >> (i * 8);
-    printf("%x ", byte);
+    LOG_DEBUG("%x ", byte);
   }
-  printf("\n");
+  LOG_DEBUG("\n");
 }
 
 static void prv_setup_mcp2515(void) {
@@ -54,13 +53,13 @@ static void prv_setup_mcp2515(void) {
   generic_can_register_rx(&s_can_mcp2515.base, prv_rx_callback, 0x0, 0x0, false, NULL);
 }
 
-void ps(SoftTimerId timer_id, void *context) {
+static void prv_periodic_send(SoftTimerId timer_id, void *context) {
   uint64_t data = 0x1234567890abcdef;
   GenericCanMsg msg = { .id = s_id, .data = data, .dlc = TEST_DLC, .extended = TEST_EXTENDED };
   LOG_DEBUG("Sending: id: %x, data: %x%x!\n", s_id, (unsigned)((data >> 32) & 0xffffffff),
             (unsigned)(data & 0xffffffff));
   generic_can_tx(&s_can_mcp2515.base, &msg);
-  soft_timer_start_millis(500, ps, NULL, NULL);
+  soft_timer_start_millis(500, prv_periodic_send, NULL, NULL);
 }
 
 int main(void) {
@@ -70,10 +69,10 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   prv_setup_mcp2515();
-  LOG_DEBUG("Initializing mcp2515 can smoke test\n");
+  LOG_DEBUG("Initializing mcp2515 CAN smoke test\n");
 
   Event e = { 0 };
-  soft_timer_start_millis(500, ps, NULL, NULL);
+  soft_timer_start_millis(500, prv_periodic_send, NULL, NULL);
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
     }
