@@ -18,6 +18,8 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
 
   storage->interval_us = settings->interval_us;
   storage->default_state = storage->current_state = settings->default_state;
+  storage->callback = settings->callback;
+  storage->callback_context = settings->callback_context;
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
   return STATUS_CODE_OK;
 }
@@ -34,6 +36,10 @@ static void prv_raise_blink_event_callback(SoftTimerId timer_id, void *context) 
 
   soft_timer_start(storage->interval_us, &prv_raise_blink_event_callback, storage,
                    &storage->timer_id);
+
+  if (storage->callback) {
+    storage->callback(new_state, storage->callback_context);
+  }
 }
 
 StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, EventId event_id) {
@@ -54,15 +60,18 @@ StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, Even
 }
 
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage) {
-  bool result = soft_timer_cancel(storage->timer_id);
-  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
-
   if (storage->current_state != storage->default_state) {
     // raise a final event to go back to the default state
     event_raise_priority(BLINK_EVENT_PRIORITY, storage->event_id,
                          prv_state_to_value(storage->default_state));
-    storage->current_state = storage->default_state;
   }
 
+  return blink_event_generator_stop_silently(storage);
+}
+
+bool blink_event_generator_stop_silently(BlinkEventGeneratorStorage *storage) {
+  bool result = soft_timer_cancel(storage->timer_id);
+  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->current_state = storage->default_state;
   return result;
 }
