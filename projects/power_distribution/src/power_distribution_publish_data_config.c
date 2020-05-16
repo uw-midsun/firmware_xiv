@@ -12,7 +12,7 @@ static StatusCode prv_publish_rear_current_measurement(PowerDistributionCurrent 
 }
 
 const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
-  .transmitter = &prv_publish_front_current_measurement,
+  .transmitter = prv_publish_front_current_measurement,
   .currents_to_publish =
       (PowerDistributionCurrent[]){
           FRONT_POWER_DISTRIBUTION_CURRENT_CENTRE_CONSOLE,
@@ -42,7 +42,7 @@ const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFI
 };
 
 const PowerDistributionPublishConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
-  .transmitter = &prv_publish_rear_current_measurement,
+  .transmitter = prv_publish_rear_current_measurement,
   .currents_to_publish =
       (PowerDistributionCurrent[]){
           REAR_POWER_DISTRIBUTION_CURRENT_BMS_CARRIER,
