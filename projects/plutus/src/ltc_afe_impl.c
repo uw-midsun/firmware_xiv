@@ -237,7 +237,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
       // the Packet Error Code is transmitted after the cell data (see p.45)
       uint16_t received_pec = SWAP_UINT16(voltage_register[device].pec);
       uint16_t data_pec = crc15_calculate((uint8_t *)&voltage_register[device], 6);
-      LOG_DEBUG("CALCULATING CRC FOR rev_pec=%lx and data_pec=%lx\n", received_pec, data_pec);
+      LOG_DEBUG("CALCULATING PACKET ERROR CODE (CRC) FOR rev_pec=%lx and data_pec=%lx\n", received_pec, data_pec);
       if (received_pec != data_pec) {
         // return early on failure
         return status_code(STATUS_CODE_INTERNAL_ERROR);
