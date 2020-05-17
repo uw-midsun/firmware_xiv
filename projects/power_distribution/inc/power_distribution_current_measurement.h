@@ -65,4 +65,4 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
 PowerDistributionCurrentStorage *power_distribution_current_measurement_get_storage(void);
 
 // Stop periodically reading currents.
-StatusCode power_distribution_stop(void);
+StatusCode power_distribution_current_measurement_stop(void);
