@@ -44,7 +44,6 @@ int main(void) {
   while (true) {
     wait();
     while (status_ok(event_process(&e))) {
-      can_process_event(&e);
       if (board_type == PLUTUS_SYS_TYPE_MASTER) {
         fault_monitor_process_event(&s_fault_monitor, &e);
         ltc_afe_process_event(&s_plutus.ltc_afe, &e);
