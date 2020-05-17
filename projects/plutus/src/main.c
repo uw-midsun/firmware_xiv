@@ -16,6 +16,7 @@ static FaultMonitorStorage s_fault_monitor;
 static size_t s_telemetry_counter = 0;
 
 int main(void) {
+  LOG_DEBUG("THIS IS THE START");
   PlutusSysType board_type = plutus_sys_get_type();
   plutus_sys_init(&s_plutus, board_type);
   LOG_DEBUG("Board type: %d\n", board_type);
@@ -39,6 +40,7 @@ int main(void) {
   }
 
   current_sense_zero_reset(&s_plutus.current_sense);
+
 
   Event e = { 0 };
   while (true) {
