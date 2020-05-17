@@ -22,7 +22,7 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
   // output results
   bool fault = false;
   for (size_t i = 0; i < len; i++) {
-    LOG_DEBUG("CELL_VOLTAGE #%ld = %u", i, result_arr[i]);
+    LOG_DEBUG("CELL_VOLTAGE #%zu = %u", i, result_arr[i]);
   }
 }
 
@@ -39,7 +39,7 @@ static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *conte
   // output results
   bool fault = false;
   for (size_t i = 0; i < len; i++) {
-    LOG_DEBUG("CELL_TEMP #%ld = %u", i, result_arr[i]);
+    LOG_DEBUG("CELL_TEMP #%zu = %u", i, result_arr[i]);
   }
 }
 
@@ -47,7 +47,7 @@ static void prv_extract_current(int32_t value, void *context) {
   FaultMonitorStorage *storage = context;
 
   storage->result.current = value;
-  LOG_DEBUG("CELL_CURRENT = %u", value);
+  LOG_DEBUG("CELL_CURRENT = %ld", value);
 }
 
 static void prv_handle_adc_timeout(void *context) {}
