@@ -37,7 +37,7 @@ typedef enum {
   STEERING_CAN_FAULT,
 } SteeringCanEvent;
 
-CanSettings can_settings = {
+static CanSettings can_settings = {
   .device_id = STEERING_CAN_DEVICE_ID,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = STEERING_CAN_EVENT_RX,
@@ -49,7 +49,8 @@ CanSettings can_settings = {
 };
 
 static CanStorage s_can_storage;
-int count = 0;
+
+static int count = 0;
 
 StatusCode prv_test_left_signal_rx_cb_handler(const CanMessage *msg, void *context,
                                               CanAckStatus *ack_reply) {

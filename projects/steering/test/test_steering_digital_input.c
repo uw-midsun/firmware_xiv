@@ -30,7 +30,7 @@ typedef enum {
 
 static CanStorage s_can_storage;
 
-CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
+static CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
                              .bitrate = CAN_HW_BITRATE_500KBPS,
                              .rx_event = STEERING_CAN_EVENT_RX,
                              .tx_event = STEERING_CAN_EVENT_TX,
@@ -39,7 +39,7 @@ CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
                              .rx = { GPIO_PORT_A, 11 },
                              .loopback = true };
 
-int count = 0;
+static int count = 0;
 
 StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
                                        CanAckStatus *ack_reply) {
