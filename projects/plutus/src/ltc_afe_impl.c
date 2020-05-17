@@ -4,6 +4,7 @@
 #include "crc15.h"
 #include "delay.h"
 #include "ltc68041.h"
+#include "log.h"
 
 // - 12-bit, 16-bit and 24-bit values are little endian
 // - commands and PEC are big endian
@@ -217,7 +218,6 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
   // Read all voltage A, then B, ...
   for (uint8_t cell_reg = 0; cell_reg < NUM_LTC_AFE_VOLTAGE_REGISTERS; ++cell_reg) {
     LtcAfeVoltageRegisterGroup voltage_register[PLUTUS_CFG_AFE_DEVICES_IN_CHAIN] = { 0 };
-
     prv_read_voltage(afe, cell_reg, voltage_register);
 
     for (uint8_t device = 0; device < PLUTUS_CFG_AFE_DEVICES_IN_CHAIN; ++device) {
@@ -227,6 +227,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         uint16_t device_cell = cell + (cell_reg * LTC6804_CELLS_IN_REG);
         uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
+        LOG_DEBUG("Got cell voltage for cell index: %lx with value %lx\n", afe->cell_result_index[index], voltage);
         if (((afe->cell_bitset[device] >> device_cell) & 0x1) == 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_index[index]] = voltage;
@@ -236,6 +237,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
       // the Packet Error Code is transmitted after the cell data (see p.45)
       uint16_t received_pec = SWAP_UINT16(voltage_register[device].pec);
       uint16_t data_pec = crc15_calculate((uint8_t *)&voltage_register[device], 6);
+      LOG_DEBUG("CALCULATING CRC FOR rev_pec=%lx and data_pec=%lx\n", received_pec, data_pec);
       if (received_pec != data_pec) {
         // return early on failure
         return status_code(STATUS_CODE_INTERNAL_ERROR);
