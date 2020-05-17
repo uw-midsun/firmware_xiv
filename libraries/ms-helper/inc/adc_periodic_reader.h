@@ -6,7 +6,6 @@
 #include "gpio_it.h"
 #include "gpio_mcu.h"
 #include "interrupt.h"
-#include "log.h"
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"

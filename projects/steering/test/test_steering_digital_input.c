@@ -31,13 +31,13 @@ typedef enum {
 static CanStorage s_can_storage;
 
 static CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
-                             .bitrate = CAN_HW_BITRATE_500KBPS,
-                             .rx_event = STEERING_CAN_EVENT_RX,
-                             .tx_event = STEERING_CAN_EVENT_TX,
-                             .fault_event = STEERING_CAN_FAULT,
-                             .tx = { GPIO_PORT_A, 12 },
-                             .rx = { GPIO_PORT_A, 11 },
-                             .loopback = true };
+                                    .bitrate = CAN_HW_BITRATE_500KBPS,
+                                    .rx_event = STEERING_CAN_EVENT_RX,
+                                    .tx_event = STEERING_CAN_EVENT_TX,
+                                    .fault_event = STEERING_CAN_FAULT,
+                                    .tx = { GPIO_PORT_A, 12 },
+                                    .rx = { GPIO_PORT_A, 11 },
+                                    .loopback = true };
 
 static int count = 0;
 

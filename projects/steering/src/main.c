@@ -51,7 +51,7 @@ int main() {
 
   can_init(&s_can_storage, &can_settings);
 
-  Event e = { .id = 0, .data = 0 };
+  Event e = { 0 };
 
   while (true) {
     while (event_process(&e)) {

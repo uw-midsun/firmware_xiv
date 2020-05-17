@@ -21,7 +21,7 @@
 #include "steering_events.h"
 
 StatusCode steering_can_process_event(Event *e) {
-  switch(e->id) {
+  switch (e->id) {
     case STEERING_INPUT_HORN_EVENT:
       CAN_TRANSMIT_HORN((EEHornState)e->data);
       break;

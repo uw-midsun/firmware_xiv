@@ -31,7 +31,7 @@
 #define TOL 100
 
 // Function prototype
-void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);
+void prv_control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);
 
 // Needs to be edited for the actual stalk
 AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, .pin = 3 },
