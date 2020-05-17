@@ -227,7 +227,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         uint16_t device_cell = cell + (cell_reg * LTC6804_CELLS_IN_REG);
         uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
-        LOG_DEBUG("Got cell voltage for cell index: %lx with value %lx\n", afe->cell_result_index[index], voltage);
+        LOG_DEBUG("Got cell voltage for cell index: %d with value %d\n", afe->cell_result_index[index], voltage);
         if (((afe->cell_bitset[device] >> device_cell) & 0x1) == 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_index[index]] = voltage;
@@ -237,7 +237,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
       // the Packet Error Code is transmitted after the cell data (see p.45)
       uint16_t received_pec = SWAP_UINT16(voltage_register[device].pec);
       uint16_t data_pec = crc15_calculate((uint8_t *)&voltage_register[device], 6);
-      LOG_DEBUG("CALCULATING PACKET ERROR CODE (CRC) FOR rev_pec=%lx and data_pec=%lx\n", received_pec, data_pec);
+      LOG_DEBUG("CALCULATING PACKET ERROR CODE (CRC) FOR rev_pec=%d and data_pec=%d\n", received_pec, data_pec);
       if (received_pec != data_pec) {
         // return early on failure
         return status_code(STATUS_CODE_INTERNAL_ERROR);
