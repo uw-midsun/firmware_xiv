@@ -160,6 +160,12 @@ typedef enum {
   NUM_EE_DRIVE_STATES,
 } EEDriveState;
 
+typedef enum {
+  EE_CRUISE_CONTROL_COMMAND_TOGGLE = 0,
+  EE_CRUISE_CONTROL_COMMAND_INCREASE,
+  EE_CRUISE_CONTROL_COMMAND_DECREASE,
+} EECruiseControl;
+
 #define EE_PEDAL_VALUE_DENOMINATOR ((1 << 12))
 
 typedef enum {
