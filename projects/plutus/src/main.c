@@ -43,13 +43,13 @@ int main(void) {
 
 
   Event e = { 0 };
+  if (board_type == PLUTUS_SYS_TYPE_MASTER) {
+    fault_monitor_process_event(&s_fault_monitor, &e);
+  }
+
   while (true) {
-    wait();
     while (status_ok(event_process(&e))) {
-      if (board_type == PLUTUS_SYS_TYPE_MASTER) {
-        fault_monitor_process_event(&s_fault_monitor, &e);
         ltc_afe_process_event(&s_plutus.ltc_afe, &e);
-      }
     }
   }
 }
