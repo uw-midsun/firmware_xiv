@@ -49,6 +49,7 @@ int main() {
 
   while (true) {
     while (event_process(&e)) {
+      can_process_event(&e);
       steering_can_process_event(&e);
     }
   }

@@ -40,6 +40,5 @@ StatusCode steering_can_process_event(Event *e) {
     default:
       return STATUS_CODE_OUT_OF_RANGE;
   }
-  can_process_event(e);
   return STATUS_CODE_OK;
 }
