@@ -58,12 +58,14 @@ void test_adc_periodic_reader_test_callback() {
   TEST_ASSERT_OK(adc_periodic_reader_start(PERIODIC_READER_ID_0));
   delay_ms(100);
   TEST_ASSERT_TRUE(callback_called);
+  TEST_ASSERT_OK(adc_periodic_reader_stop(PERIODIC_READER_ID_0));
 }
 
 void test_invalid_ports_and_pins() {
   callback_called = false;
   TEST_ASSERT_NOT_OK(adc_periodic_reader_set_up_reader(NUM_PERIODIC_READER_IDS, &reader_settings1));
   TEST_ASSERT_NOT_OK(adc_periodic_reader_start(NUM_PERIODIC_READER_IDS));
+  TEST_ASSERT_NOT_OK(adc_periodic_reader_stop(NUM_PERIODIC_READER_IDS));
   delay_ms(100);
   TEST_ASSERT_FALSE(callback_called);
 }
@@ -82,6 +84,7 @@ void test_count_time_callback_runs() {
   TEST_ASSERT_EQUAL(4, count);
   delay_ms(51 * 5);  // Check count after 9 cycles
   TEST_ASSERT_EQUAL(9, count);
+  TEST_ASSERT_OK(adc_periodic_reader_stop(PERIODIC_READER_ID_3));
 }
 
 void teardown_test(void) {}
