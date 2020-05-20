@@ -30,12 +30,6 @@ void prv_callback(SoftTimerId timer_id, void *context) {
 
 StatusCode adc_periodic_reader_init() {
   soft_timer_start_millis(TIMER_INTERVAL, prv_callback, NULL, NULL);
-
-  // Disable all ADCs
-  for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
-    s_storage[i].activated = false;
-  }
-
   return STATUS_CODE_OK;
 }
 

@@ -38,7 +38,7 @@ AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, 
                                               .callback = control_stalk_callback };
 
 // Stores event id of the event that was just raised
-SteeringAnalogEvent prev = NUM_STEERING_EVENTS;
+static SteeringAnalogEvent prev = NUM_STEERING_EVENTS;
 
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
   if (data > STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE - VOLTAGE_TOLERANCE_MV &&
