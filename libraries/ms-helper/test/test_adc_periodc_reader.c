@@ -17,7 +17,6 @@
 static int count = 0;
 static bool callback_called = false;
 
-// Function prototypes
 void callback_test_1(uint16_t data, PeriodicReaderId id, void *context);
 void callback_test_2(uint16_t data, PeriodicReaderId id, void *context);
 
