@@ -1,3 +1,4 @@
+#include "steering_control_stalk.h"
 #include "adc.h"
 #include "adc_periodic_reader.h"
 #include "can_transmit.h"
@@ -8,7 +9,6 @@
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
-#include "steering_control_stalk.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
 
@@ -19,9 +19,6 @@
 #define STEERING_CC_DECREASE_SPEED_VOLTAGE 4000
 #define STEERING_CC_BRAKE_PRESSED_VOLTAGE 5000
 #define VOLTAGE_TOLERANCE_MV 100
-
-// Function prototype
-void prv_control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);
 
 // Needs to be edited for the actual stalk
 AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, .pin = 3 },

@@ -1,3 +1,4 @@
+#include "steering_digital_input.h"
 #include "can_transmit.h"
 #include "event_queue.h"
 #include "exported_enums.h"
@@ -7,7 +8,6 @@
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
-#include "steering_digital_input.h"
 #include "steering_events.h"
 
 GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {

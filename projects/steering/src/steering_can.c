@@ -1,3 +1,4 @@
+#include "steering_can.h"
 #include "can.h"
 #include "can_ack.h"
 #include "can_fsm.h"
@@ -7,7 +8,6 @@
 #include "exported_enums.h"
 #include "fsm.h"
 #include "status.h"
-#include "steering_can.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
 
