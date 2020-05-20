@@ -18,10 +18,10 @@ void prv_callback(SoftTimerId timer_id, void *context) {
   for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
     uint16_t data = 0;
     AdcChannel channel;
-    adc_get_channel(s_storage[i].address, &channel);
-    adc_read_converted(channel, &data);
-    s_storage[i].data = data;
     if (s_storage[i].activated) {
+      adc_get_channel(s_storage[i].address, &channel);
+      adc_read_converted(channel, &data);
+      s_storage[i].data = data;
       s_storage[i].callback(s_storage[i].data, i, s_storage[i].context);
     }
   }
