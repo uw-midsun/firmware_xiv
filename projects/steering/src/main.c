@@ -1,15 +1,9 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "adc.h"
 #include "adc_periodic_reader.h"
-#include "delay.h"
 #include "event_queue.h"
-#include "exported_enums.h"
 #include "gpio_it.h"
 #include "gpio_mcu.h"
 #include "interrupt.h"
-#include "log.h"
 #include "misc.h"
 #include "soft_timer.h"
 #include "status.h"

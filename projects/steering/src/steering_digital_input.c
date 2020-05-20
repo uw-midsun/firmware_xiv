@@ -1,21 +1,14 @@
-#include "steering_digital_input.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "can_transmit.h"
-#include "delay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio_it.h"
 #include "gpio_mcu.h"
 #include "interrupt_def.h"
-#include "log.h"
-#include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
+#include "steering_digital_input.h"
 #include "steering_events.h"
-#include "wait.h"
 
 GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HORN] = { .port = GPIO_PORT_B, .pin = 1 },

@@ -1,6 +1,3 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "adc.h"
 #include "adc_periodic_reader.h"
 #include "can.h"
@@ -20,7 +17,6 @@
 #include "steering_digital_input.h"
 #include "steering_events.h"
 #include "test_helpers.h"
-#include "wait.h"
 
 #define STEERING_CAN_DEVICE_ID 0x1
 #define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE 1000

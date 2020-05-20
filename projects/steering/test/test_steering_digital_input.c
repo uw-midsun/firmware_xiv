@@ -1,6 +1,3 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "can.h"
 #include "can_msg_defs.h"
 #include "delay.h"
@@ -17,8 +14,6 @@
 #include "steering_digital_input.h"
 #include "steering_events.h"
 #include "test_helpers.h"
-#include "unity.h"
-#include "wait.h"
 
 #define STEERING_CAN_DEVICE_ID 0x1
 
