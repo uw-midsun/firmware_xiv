@@ -1,15 +1,7 @@
 #include "steering_control_stalk.h"
-#include "adc.h"
 #include "adc_periodic_reader.h"
-#include "can_transmit.h"
 #include "event_queue.h"
-#include "exported_enums.h"
-#include "fsm.h"
-#include "interrupt.h"
-#include "soft_timer.h"
-#include "status.h"
 #include "steering_can.h"
-#include "steering_digital_input.h"
 #include "steering_events.h"
 
 // Will be edited later

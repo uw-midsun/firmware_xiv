@@ -4,13 +4,11 @@
 #include "gpio_it.h"
 #include "gpio_mcu.h"
 #include "interrupt.h"
-#include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
 #include "steering_control_stalk.h"
 #include "steering_digital_input.h"
-#include "wait.h"
 #define STEERING_CAN_DEVICE_ID 0x1
 #define TIMER_INTERVAL_MS 50
 static CanStorage s_can_storage;

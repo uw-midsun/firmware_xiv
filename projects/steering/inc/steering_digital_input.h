@@ -1,13 +1,9 @@
 #pragma once
 // Module to sets up all the interrupts for the GPIO pins to raise events
 // in the event queue when triggered
-// Requires GPIO,Interrupts,Event Queue,Soft-timer
 #include "event_queue.h"
 #include "gpio.h"
-#include "interrupt.h"
-#include "soft_timer.h"
 #include "status.h"
-#include "steering_can.h"
 
 typedef enum {
   STEERING_DIGITAL_INPUT_HORN = 0,
