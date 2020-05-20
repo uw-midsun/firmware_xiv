@@ -26,6 +26,7 @@
 #define STEERING_CC_BRAKE_PRESSED_VOLTAGE 5000
 #define INVALID_VOLTAGE 6000
 #define VOLTAGE_TOLERANCE_MV 100
+#define TIMER_INTERVAL_MS 50
 
 typedef enum {
   STEERING_CAN_EVENT_RX = 10,
@@ -71,7 +72,7 @@ void setup_test(void) {
   soft_timer_init();
   TEST_ASSERT_OK(steering_digital_input_init());
   TEST_ASSERT_OK(can_init(&s_can_storage, &can_settings));
-  TEST_ASSERT_OK(adc_periodic_reader_init());
+  TEST_ASSERT_OK(adc_periodic_reader_init(TIMER_INTERVAL_MS));
   TEST_ASSERT_OK(control_stalk_init());
 }
 

@@ -37,7 +37,7 @@ typedef struct {
 } AdcPeriodicReaderStorage;
 
 // Sets soft-timer and disables all ADCs
-StatusCode adc_periodic_reader_init();
+StatusCode adc_periodic_reader_init(uint32_t reader_interval_ms);
 
 // Intialize pins and enable ADC reader
 StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,

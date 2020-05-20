@@ -12,7 +12,7 @@
 #include "steering_digital_input.h"
 #include "wait.h"
 #define STEERING_CAN_DEVICE_ID 0x1
-
+#define TIMER_INTERVAL_MS 50
 static CanStorage s_can_storage;
 
 typedef enum {
@@ -29,7 +29,7 @@ int main() {
   gpio_it_init();
   soft_timer_init();
   steering_digital_input_init();
-  adc_periodic_reader_init();
+  adc_periodic_reader_init(TIMER_INTERVAL_MS);
   control_stalk_init();
 
   // Will be changed for the actual one

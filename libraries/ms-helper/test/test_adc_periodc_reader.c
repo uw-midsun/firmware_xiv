@@ -13,6 +13,7 @@
 #include "test_helpers.h"
 #include "wait.h"
 
+#define TIMER_INTERVAL_MS 50
 static int count = 0;
 static bool callback_called = false;
 
@@ -46,7 +47,7 @@ void setup_test(void) {
   interrupt_init();
   gpio_it_init();
   soft_timer_init();
-  adc_periodic_reader_init();
+  adc_periodic_reader_init(TIMER_INTERVAL_MS);
   adc_init(ADC_MODE_SINGLE);
 }
 
