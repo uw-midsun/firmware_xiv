@@ -1,7 +1,8 @@
 #pragma once
 // GPIO HAL interface for the PCA9539RPW/Q900J GPIO expander.
 // Requires I2C to be initialized.
-// Note: we don't check the validity of the I2C address.
+// Note: we don't check the validity of the I2C address, and it can only be used on one
+// I2C port on one board.
 #include "i2c.h"
 
 // Addresses of the 16 pins.
@@ -50,7 +51,7 @@ typedef struct {
   Pca9539rGpioState state;
 } Pca9539rGpioSettings;
 
-// Initialize PCA9539R GPIO at this I2C port and address. Set all pins to the default (input/low).
+// Initialize PCA9539R GPIO at this I2C port and address.
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address);
 
 // Initialize an PCA9539R GPIO pin by address.
