@@ -6,14 +6,10 @@
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "power_selection_events.h"
+#include "power_selection.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
-
-typedef enum {
-  POWER_SELECTION_CAN_EVENT_RX = 0,
-  POWER_SELECTION_CAN_EVENT_TX,
-  POWER_SELECTION_CAN_EVENT_FAULT,
-} PowerSelectionCanEvent;
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
@@ -35,7 +31,7 @@ int main() {
   soft_timer_init();
 
   can_init(&s_can_storage, &s_can_settings);
-
+  aux_dcdc_monitor_init();
 
   LOG_DEBUG("Working!\n");
   Event e = { 0 };

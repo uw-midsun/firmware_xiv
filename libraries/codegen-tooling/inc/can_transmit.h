@@ -342,10 +342,12 @@
     status;                                       \
   })
 
-#define CAN_TRANSMIT_CHARGER_FAULT(fault_u8)      \
-  ({                                              \
-    CanMessage msg = { 0 };                       \
-    CAN_PACK_CHARGER_FAULT(&msg, (fault_u8));     \
-    StatusCode status = can_transmit(&msg, NULL); \
-    status;                                       \
+#define CAN_TRANSMIT_AUX_BATTERY_STATUS(aux_battery_volt_u16, aux_battery_temp_u16,   \
+                                        dcdc_status_u16)                              \
+  ({                                                                                  \
+    CanMessage msg = { 0 };                                                           \
+    CAN_PACK_AUX_BATTERY_STATUS(&msg, (aux_battery_volt_u16), (aux_battery_temp_u16), \
+                                (dcdc_status_u16));                                   \
+    StatusCode status = can_transmit(&msg, NULL);                                     \
+    status;                                                                           \
   })

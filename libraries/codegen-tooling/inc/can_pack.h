@@ -206,8 +206,8 @@
 #define CAN_PACK_ANGULAR_ROTATION(msg_ptr) \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_IMU, SYSTEM_CAN_MESSAGE_ANGULAR_ROTATION)
 
-#define CAN_PACK_CHARGER_FAULT(msg_ptr, fault_u8)                                             \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_FAULT, 1, \
-                   (fault_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
-                   CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16, aux_battery_temp_u16, \
+                                    dcdc_status_u16)                                     \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                        \
+                    SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 6, (aux_battery_volt_u16),    \
+                    (aux_battery_temp_u16), (dcdc_status_u16), CAN_PACK_IMPL_EMPTY)
