@@ -111,11 +111,8 @@ int main() {
   pca9539r_init_all_pins(PCA9539R_GPIO_DIR_OUT);
   pca9539r_check_all_pin_states(PCA9539R_GPIO_STATE_HIGH);
   LOG_DEBUG("GPIO initialization complete. Now beginning toggling of GPIO states\n");
-  LOG_DEBUG("First read will be listed as incorrect...\n");
-
   Pca9539rGpioState state;
-  /* Toggles gpio states and compares expected values against registers. 
-    First read will be listed as incorrect -> can be ignored */
+  // Toggles gpio, compares expected values against registers, first read should be ignored
   soft_timer_start_millis(100, prv_soft_timer_callback_output, (void *)&state, NULL);
 
   while (true) {
