@@ -64,7 +64,7 @@ StatusCode pca9539r_check_all_pin_states(Pca9539rGpioState state) {
 
 
 //used to test proper gpio toggling. A multi-meter will be needed
-static void prv_soft_timer_callback(SoftTimerId *timer_id, void *context) {
+static void prv_soft_timer_callback(SoftTimerId timer_id, void *context) {
     Pca9539rGpioAddress address = { .i2c_address = VALID_I2C_ADDRESS};
     for(Pca9539rPinAddress pin = PCA9539R_PIN_IO0_0; pin < NUM_PCA9539R_GPIO_PINS; pin++) {
         address.pin = pin;
