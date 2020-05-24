@@ -38,10 +38,10 @@ AdcChannel aux_channels[3] = { NUM_ADC_CHANNELS, NUM_ADC_CHANNELS, NUM_ADC_CHANN
 // again not used currently
 AdcChannel dcdc_channels[3] = { NUM_ADC_CHANNELS, NUM_ADC_CHANNELS, NUM_ADC_CHANNELS };
 
-static uint16_t prv_checker() {
+static uint16_t s_status = 0;
+uint16_t prv_checker() {
   uint16_t aux_volt = 0;
   uint16_t aux_temp = 0;
-  uint16_t status = 0;
 
   adc_read_raw(aux_channels[0], &aux_volt);
   adc_read_raw(aux_channels[1], &aux_temp);
@@ -50,36 +50,36 @@ static uint16_t prv_checker() {
 
   // need to map data to voltages
   if ((aux_volt - AUX_VOLT_DEFAULT) < 9.1) {
-    status = status & AUX_OV;
+    s_status = s_status & AUX_OV;
   } else if ((aux_volt) > 15) {
-    status = status & AUX_UV;
+    s_status = s_status & AUX_UV;
   }
   // need to map data to temperatures (50 is 0 Celsius)
   if ((aux_temp - AUX_TEMP_DEFAULT) < 50) {
-    status = status & AUX_OT;
+    s_status = s_status & AUX_OT;
   } else if ((aux_temp) > 95) {
-    status = status & AUX_UT;
+    s_status = s_status & AUX_UT;
   }
 
   // checks if DCDC is on
   GpioState state = GPIO_STATE_HIGH;
   gpio_get_state(&s_dcdc_address, &state);
   if (state == GPIO_STATE_LOW) {
-    status = status & DCDC_OFF;
+    s_status = s_status & DCDC_OFF;
   }
 
-  return status;
+  return s_status;
 }
 
 static void prv_power_selection_callback(SoftTimerId timer_id, void *context) {
   uint16_t aux_volt = 0;
   uint16_t aux_temp = 0;
-  uint16_t status = prv_checker();
 
   adc_read_raw(aux_channels[0], &aux_volt);
   adc_read_raw(aux_channels[1], &aux_temp);
   // SENDING AUX BATTERY DATA
-  CAN_TRANSMIT_AUX_BATTERY_STATUS(aux_volt - AUX_VOLT_DEFAULT, aux_temp - AUX_TEMP_DEFAULT, status);
+  CAN_TRANSMIT_AUX_BATTERY_STATUS(aux_volt - AUX_VOLT_DEFAULT, aux_temp - AUX_TEMP_DEFAULT,
+                                  prv_checker());
   soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_power_selection_callback, context, NULL);
 }
 
