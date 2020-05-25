@@ -1,10 +1,15 @@
+#include <stddef.h>
+
 #include "adc.h"
+#include "interrupt.h"
+#include "soft_timer.h"
 // x86 implementation very similar to STM32F0 implementation.
 // adc_read_raw should always return 4090.
 // Vdda locked at 3300 mV.
-// adc_read_converted should always return close to 3.3V.
+// adc_read_converted should always return close to 2V
 
-#define ADC_RETURNED_VOLTAGE_RAW 4090
+#define ADC_RETURNED_VOLTAGE_RAW 2500
+#define ADC_CONTINUOUS_CB_FREQ_MS 50
 
 // TS_CAL addresses obtained from section 3.10.1 of the specific device
 // datasheet
@@ -42,7 +47,22 @@ static uint16_t prv_get_vdda(uint16_t reading) {
   return 3300;
 }
 
+static void prv_periodic_continous_cb(SoftTimerId id, void *context) {
+  for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++) {
+    if (s_adc_interrupts[i].callback != NULL) {
+      s_adc_interrupts[i].callback(i, s_adc_interrupts[i].context);
+    }
+  }
+  soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
+}
+
 void adc_init(AdcMode adc_mode) {
+  interrupt_init();
+  soft_timer_init();
+  if (adc_mode == ADC_MODE_CONTINUOUS) {
+    soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
+  }
+
   adc_set_channel(ADC_CHANNEL_REF, true);
 }
 
@@ -103,6 +123,11 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
   }
   if (s_active_channels[adc_channel] != true) {
     return status_code(STATUS_CODE_EMPTY);
+  }
+
+  // this section mimics the IRQ handler
+  if (s_adc_interrupts[adc_channel].callback != NULL) {
+    s_adc_interrupts[adc_channel].callback(adc_channel, s_adc_interrupts[adc_channel].context);
   }
 
   s_adc_interrupts[adc_channel].reading = ADC_RETURNED_VOLTAGE_RAW;
