@@ -36,7 +36,7 @@ void setup_test(void) {
 }
 
 // initialize all pins to in/out - must be called after pca9539r_gpio_init
-StatusCode pca9539r_init_all_pins(Pca9539rGpioDirection direction) {
+static StatusCode prv_pca9539r_init_all_pins(Pca9539rGpioDirection direction) {
   Pca9539rGpioSettings gpio_settings = {
     .direction = direction,
   };
@@ -57,7 +57,7 @@ StatusCode pca9539r_init_all_pins(Pca9539rGpioDirection direction) {
 }
 
 // reads back configuration registers and compares them to input state
-StatusCode pca9539r_check_all_pin_states(Pca9539rGpioState state) {
+static StatusCode prv_pca9539r_check_all_pin_states(Pca9539rGpioState state) {
   Pca9539rGpioState in_state;
   Pca9539rGpioAddress address = { .i2c_address = PCA9539_I2C_ADDRESS };
   for (Pca9539rPinAddress pin = PCA9539R_PIN_IO0_0; pin < NUM_PCA9539R_GPIO_PINS; pin++) {
@@ -104,8 +104,8 @@ int main() {
 
   LOG_DEBUG("Testing GPIO initialization...\n");
   LOG_DEBUG("Initializing all pins out...\n");
-  pca9539r_init_all_pins(PCA9539R_GPIO_DIR_OUT);
-  pca9539r_check_all_pin_states(PCA9539R_GPIO_STATE_HIGH);
+  prv_pca9539r_init_all_pins(PCA9539R_GPIO_DIR_OUT);
+  prv_pca9539r_check_all_pin_states(PCA9539R_GPIO_STATE_HIGH);
   LOG_DEBUG("GPIO initialization complete. Now beginning toggling of GPIO states\n");
   Pca9539rGpioState state;
 
