@@ -4,20 +4,12 @@
 #include "steering_can.h"
 #include "steering_events.h"
 
-// Will be edited later
-#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE 1000
-#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE 2000
-#define STEERING_CC_INCREASE_SPEED_VOLTAGE 3000
-#define STEERING_CC_DECREASE_SPEED_VOLTAGE 4000
-#define STEERING_CC_BRAKE_PRESSED_VOLTAGE 5000
-#define VOLTAGE_TOLERANCE_MV 100
-
 // Needs to be edited for the actual stalk
 AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, .pin = 3 },
                                               .callback = control_stalk_callback };
 
 // Stores event id of the event that was just raised
-static SteeringAnalogEvent prev = NUM_STEERING_EVENTS;
+static SteeringAnalogEvent prev = NUM_TOTAL_STEERING_EVENTS;
 
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
   if (data > STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE - VOLTAGE_TOLERANCE_MV &&

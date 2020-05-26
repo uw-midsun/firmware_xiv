@@ -9,15 +9,10 @@
 #include "steering_can.h"
 #include "steering_control_stalk.h"
 #include "steering_digital_input.h"
+#include "steering_events.h"
 #define STEERING_CAN_DEVICE_ID 0x1
 #define TIMER_INTERVAL_MS 50
 static CanStorage s_can_storage;
-
-typedef enum {
-  STEERING_CAN_EVENT_RX = 13,
-  STEERING_CAN_EVENT_TX,
-  STEERING_CAN_FAULT,
-} SteeringCanEvent;
 
 int main() {
   adc_init(ADC_MODE_SINGLE);

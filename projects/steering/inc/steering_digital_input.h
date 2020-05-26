@@ -5,6 +5,19 @@
 #include "gpio.h"
 #include "status.h"
 
+#define HORN_GPIO_ADDR \
+  { .port = GPIO_PORT_B, .pin = 1 }
+#define RADIO_PPT_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 6 }
+#define HIGH_BEAM_FORWARD_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 7 }
+#define HIGH_BEAM_REAR_GPIO_ADDR \
+  { .port = GPIO_PORT_B, .pin = 0 }
+#define REGEN_BRAKE_TOGGLE_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 4 }
+#define CC_TOGGLE_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 5 }
+
 typedef enum {
   STEERING_DIGITAL_INPUT_HORN = 0,
   STEERING_DIGITAL_INPUT_RADIO_PPT,
@@ -16,5 +29,3 @@ typedef enum {
 } SteeringInterfaceDigitalInput;
 
 StatusCode steering_digital_input_init();
-
-GpioAddress *test_get_address(int digital_input_id);

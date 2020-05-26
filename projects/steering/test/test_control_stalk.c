@@ -16,21 +16,8 @@
 #include "steering_events.h"
 #include "test_helpers.h"
 
-#define STEERING_CAN_DEVICE_ID 0x1
-#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE 1000
-#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE 2000
-#define STEERING_CC_INCREASE_SPEED_VOLTAGE 3000
-#define STEERING_CC_DECREASE_SPEED_VOLTAGE 4000
-#define STEERING_CC_BRAKE_PRESSED_VOLTAGE 5000
 #define INVALID_VOLTAGE 6000
-#define VOLTAGE_TOLERANCE_MV 100
 #define TIMER_INTERVAL_MS 50
-
-typedef enum {
-  STEERING_CAN_EVENT_RX = 10,
-  STEERING_CAN_EVENT_TX,
-  STEERING_CAN_FAULT,
-} SteeringCanEvent;
 
 static CanSettings can_settings = {
   .device_id = STEERING_CAN_DEVICE_ID,
@@ -63,7 +50,7 @@ StatusCode prv_test_cc_increase_rx_cb_handler(const CanMessage *msg, void *conte
 
 void setup_test(void) {
   adc_init(ADC_MODE_SINGLE);
-  TEST_ASSERT_OK(gpio_init());
+  gpio_init();
   interrupt_init();
   event_queue_init();
   gpio_it_init();
