@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
+#autoformates the code
 echo "auto formatting" && make test_format && make lint
+
+while read -p "Have you double checked that only relevant files were added? (Y/n) " yn; do
+    case $yn in
+        [Yy] ) break;;
+        [Nn] ) echo "Please ensure the right files were added!"; exit 1;;
+        * ) echo "Please answer y (yes) or n (no):" && continue;
+    esac
+done
 
 if [[ $GIT_AUTHOR_NAME == 'vagrant' || $GIT_AUTHOR_EMAIL == 'vagrant@midsunbox' ]]; then
   echo "You didn't set up your git config! Please follow the Software 101 modules on Confluence."
