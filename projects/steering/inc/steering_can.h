@@ -1,5 +1,5 @@
 #pragma once
-// Module to process events on the queue and send CAN messages
+// Module to process events on the queue and send CAN messages.
 // Requires GPIO,Interrupts,Event Queue, and CAN to be initialized
 #include "can.h"
 #include "event_queue.h"
