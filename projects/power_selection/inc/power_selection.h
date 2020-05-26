@@ -1,12 +1,6 @@
-#include "adc.h"
-#include "can.h"
-#include "can_msg_defs.h"
-#include "event_queue.h"
-#include "exported_enums.h"
-#include "gpio.h"
-#include "interrupt.h"
-#include "log.h"
-#include "soft_timer.h"
+#pragma once
+
+#include "status.h"
 
 #define TIMER_TIMEOUT_IN_MILLIS 1000
 #define AUX_VOLT_DEFAULT 0
