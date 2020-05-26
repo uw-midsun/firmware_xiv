@@ -172,7 +172,7 @@
                                       dcdc_status_u16_ptr)                                         \
   can_unpack_impl_u16((msg_ptr), 6, (aux_battery_volt_u16_ptr), (aux_battery_temp_u16_ptr),        \
                       (dcdc_status_u16_ptr), CAN_UNPACK_IMPL_EMPTY)
-                      
+
 #define CAN_UNPACK_CHARGER_FAULT(msg_ptr, fault_u8_ptr)                                          \
   can_unpack_impl_u8((msg_ptr), 1, (fault_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
