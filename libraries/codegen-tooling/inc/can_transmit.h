@@ -233,6 +233,14 @@
     status;                                                            \
   })
 
+#define CAN_TRANSMIT_STATE_TRANSITION_FAULT(state_machine_u16, fault_reason_u16)    \
+  ({                                                                                \
+    CanMessage msg = { 0 };                                                         \
+    CAN_PACK_STATE_TRANSITION_FAULT(&msg, (state_machine_u16), (fault_reason_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);                                   \
+    status;                                                                         \
+  })
+
 #define CAN_TRANSMIT_MOTOR_CONTROLLER_VC(mc_voltage_1_u16, mc_current_1_u16, mc_voltage_2_u16,     \
                                          mc_current_2_u16)                                         \
   ({                                                                                               \
@@ -350,4 +358,20 @@
                                 (dcdc_status_u16));                                   \
     StatusCode status = can_transmit(&msg, NULL);                                     \
     status;                                                                           \
+  })
+
+#define CAN_TRANSMIT_FRONT_CURRENT_MEASUREMENT(current_id_u16, current_u16)    \
+  ({                                                                           \
+    CanMessage msg = { 0 };                                                    \
+    CAN_PACK_FRONT_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);                              \
+    status;                                                                    \
+  })
+
+#define CAN_TRANSMIT_REAR_CURRENT_MEASUREMENT(current_id_u16, current_u16)    \
+  ({                                                                          \
+    CanMessage msg = { 0 };                                                   \
+    CAN_PACK_REAR_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);                             \
+    status;                                                                   \
   })
