@@ -7,18 +7,12 @@
 // adc_read_raw should always return 4090.
 // Vdda locked at 3300 mV.
 // adc_read_converted should always return close to 2V
+// temperature reading always returns 293 kelvin.
 
 #define ADC_RETURNED_VOLTAGE_RAW 2500
 #define ADC_CONTINUOUS_CB_FREQ_MS 50
-
-// TS_CAL addresses obtained from section 3.10.1 of the specific device
-// datasheet
-#define ADC_TS_CAL1 0x1FFFF7b8
-#define ADC_TS_CAL2 0x1FFFF7c2
-
-// ADC_VREFINT_CAL address obtained from section 3.10.2 of the specific device
-// datasheet
-#define ADC_VREFINT_CAL 0x1FFFF7ba
+#define ADC_TEMP_RETURN 293
+#define ADC_VDDA_RETURN 3300
 
 typedef struct AdcInterrupt {
   AdcCallback callback;
@@ -30,21 +24,12 @@ static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
 
 static bool s_active_channels[NUM_ADC_CHANNELS];
 
-// Formula obtained from section 13.9 of the reference manual. Returns reading
-// in kelvin
 static uint16_t prv_get_temp(uint16_t reading) {
-  uint16_t ts_cal1 = *(uint16_t *)ADC_TS_CAL1;
-  uint16_t ts_cal2 = *(uint16_t *)ADC_TS_CAL2;
-
-  reading = ((110 - 30) * (reading - ts_cal1)) / (ts_cal2 - ts_cal1) + 30;
-
-  return reading + 273;
+  return ADC_TEMP_RETURN;
 }
 
-// Formula obtained from section 13.9 of the reference manual. Returns Vdda in
-// mV
 static uint16_t prv_get_vdda(uint16_t reading) {
-  return 3300;
+  return ADC_VDDA_RETURN;
 }
 
 static void prv_periodic_continous_cb(SoftTimerId id, void *context) {
@@ -124,7 +109,6 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
   if (s_active_channels[adc_channel] != true) {
     return status_code(STATUS_CODE_EMPTY);
   }
-
   // this section mimics the IRQ handler
   if (s_adc_interrupts[adc_channel].callback != NULL) {
     s_adc_interrupts[adc_channel].callback(adc_channel, s_adc_interrupts[adc_channel].context);
@@ -146,7 +130,6 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
 
   uint16_t adc_reading = 0;
   adc_read_raw(adc_channel, &adc_reading);
-
   switch (adc_channel) {
     case ADC_CHANNEL_TEMP:
       *reading = prv_get_temp(adc_reading);

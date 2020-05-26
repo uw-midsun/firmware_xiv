@@ -5,6 +5,10 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+// temps in kelvin
+#define ADC_INVALID_UNDER_TEMP 253
+#define ADC_INVALID_OVER_TEMP 373
+
 static volatile uint8_t s_callback_runs = 0;
 static volatile bool s_callback_ran = false;
 
@@ -199,4 +203,16 @@ void test_adc_get_channel() {
   TEST_ASSERT_OK(adc_get_channel(address[2], &adc_channel));
   address[2].pin = 6;
   TEST_ASSERT_NOT_OK(adc_get_channel(address[2], &adc_channel));
+}
+
+void test_adc_read_temp() {
+  adc_init(ADC_MODE_SINGLE);
+  adc_set_channel(ADC_CHANNEL_TEMP, true);
+
+  uint16_t reading;
+  adc_read_converted(ADC_CHANNEL_TEMP, &reading);
+
+  // ensure value is within reason
+  TEST_ASSERT_TRUE(ADC_INVALID_UNDER_TEMP < reading);
+  TEST_ASSERT_TRUE(ADC_INVALID_OVER_TEMP > reading);
 }
