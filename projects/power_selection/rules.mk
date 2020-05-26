@@ -8,4 +8,4 @@
 # Specify the libraries you want to include
 $(T)_DEPS := ms-helper ms-common codegen-tooling
 
-$(T)_test_power_selection_MOCKS := adc_read_raw prv_checker
+$(T)_test_power_selection_MOCKS := adc_read_raw

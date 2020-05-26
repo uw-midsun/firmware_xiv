@@ -1,7 +1,5 @@
 #include "can.h"
-#include "can_msg_defs.h"
 #include "event_queue.h"
-#include "exported_enums.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
@@ -9,11 +7,11 @@
 #include "power_selection_events.h"
 #include "power_selection.h"
 
-#define TEST_CAN_DEVICE_ID 0x1
+#define POWER_SELECTION_CAN_DEVICE_ID 0x1
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
-  .device_id = TEST_CAN_DEVICE_ID,
+  .device_id = POWER_SELECTION_CAN_DEVICE_ID,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = POWER_SELECTION_CAN_EVENT_RX,
   .tx_event = POWER_SELECTION_CAN_EVENT_TX,

@@ -29,16 +29,22 @@ static CanSettings s_can_settings = {
   .loopback = true,
 };
 
+static GpioAddress s_aux_status_addresses[3] = {
+  { .port = GPIO_PORT_A, .pin = 0 },  // aux voltage sense
+  { .port = GPIO_PORT_A, .pin = 3 },  // aux temp sense
+  { .port = GPIO_PORT_A, .pin = 5 }   // aux current sense  //not needed in the module currently
+};
 static GpioAddress s_dcdc_address = { .port = GPIO_PORT_A, .pin = 9 };
+static AdcChannel s_aux_channels[3] = { ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_2 };
 
-uint16_t changeable_value = 0;
-uint16_t status = 0;
-uint16_t TEST_MOCK(prv_checker)() {
-  LOG_DEBUG("WHY WHY WHY\n");
-  return status;
-}
+static uint16_t s_aux_volt_value = 0;
+static uint16_t s_aux_temp_value = 0;
 StatusCode TEST_MOCK(adc_read_raw)(AdcChannel adc_channel, uint16_t *reading) {
-  *reading = changeable_value;
+  if (adc_channel == s_aux_channels[0]) {
+    *reading = s_aux_volt_value;
+  } else if (adc_channel == s_aux_channels[1]) {
+    *reading = s_aux_temp_value;
+  }
   return STATUS_CODE_OK;
 }
 
@@ -56,10 +62,20 @@ StatusCode prv_test_power_selection_callback_handler(const CanMessage *msg, void
   return STATUS_CODE_OK;
 }
 
+static bool supposed_to_fail = false;
+static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+                                     uint16_t num_remaining, void *context) {
+  if (supposed_to_fail) {
+    TEST_ASSERT_EQUAL(status, CAN_ACK_STATUS_INVALID);
+  } else {
+    TEST_ASSERT_EQUAL(status, CAN_ACK_STATUS_OK);
+  }
+  return STATUS_CODE_OK;
+}
+
 void setup_test(void) {
   gpio_init();
   interrupt_init();
-  gpio_it_init();
   soft_timer_init();
   event_queue_init();
 
@@ -67,6 +83,9 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS,
                           prv_test_power_selection_callback_handler, NULL);
   TEST_ASSERT_OK(aux_dcdc_monitor_init());
+  for (int i = 0; i < 2; ++i) {
+    adc_get_channel(s_aux_status_addresses[i], &s_aux_channels[i]);
+  }
 }
 
 void teardown_test(void) {}
@@ -75,80 +94,84 @@ void test_power_selection_tx(void) {
   // should transmit immediately
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 1);
-  changeable_value = 32;
-  status = 0;
+  s_aux_volt_value = 10;
+  s_aux_temp_value = 52;
 
   delay_ms(1000);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 2);
-  TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(changeable_value - AUX_VOLT_DEFAULT));
-  TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(changeable_value - AUX_TEMP_DEFAULT));
-  //TEST_ASSERT_EQUAL(dcdc_status, (uint16_t)(status));
-  changeable_value = 13;
-  status = 20;
+  TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
+  s_aux_volt_value = 16;
+  s_aux_temp_value = 62;
 
   delay_ms(1000);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 3);
-  TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(changeable_value - AUX_VOLT_DEFAULT));
-  TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(changeable_value - AUX_TEMP_DEFAULT));
-  //TEST_ASSERT_EQUAL(dcdc_status, (uint16_t)(status));
-  changeable_value = 1;
-  status = 3;
+  TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
+  s_aux_volt_value = 5;
+  s_aux_temp_value = 72;
 
   delay_ms(100);
   TEST_ASSERT_NOT_EQUAL(counter, 4);
-  TEST_ASSERT_NOT_EQUAL(aux_volt, (uint16_t)(changeable_value - AUX_VOLT_DEFAULT));
-  TEST_ASSERT_NOT_EQUAL(aux_temp, (uint16_t)(changeable_value - AUX_TEMP_DEFAULT));
-  //TEST_ASSERT_NOT_EQUAL(dcdc_status, (uint16_t)(status));
+  TEST_ASSERT_NOT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  TEST_ASSERT_NOT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 
   delay_ms(900);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 4);
-  TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(changeable_value - AUX_VOLT_DEFAULT));
-  TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(changeable_value - AUX_TEMP_DEFAULT));
-  //TEST_ASSERT_EQUAL(dcdc_status, (uint16_t)(status));
+  TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 }
 
 void test_power_selection_rx(void) {
   CanAckRequest ack_req = { 0 };
+  ack_req.callback = prv_can_simple_ack;
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
 
   // FOR DCDC CHECK
   gpio_set_state(&s_dcdc_address, GPIO_STATE_HIGH);
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
   gpio_set_state(&s_dcdc_address, GPIO_STATE_LOW);
+  supposed_to_fail = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_OK);
 
   // FOR AUX CHECK
-  status = 0b0101000000000000;  // UV and UT
+  s_aux_volt_value = 5;
+  s_aux_temp_value = 2;  // UV and UT
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
-  status = 0b1010000000000000;  // OV and OT
+  s_aux_volt_value = 20;
+  s_aux_temp_value = 122;  // OV and OT
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
-  status = 0b0001000000000000;  // Voltage is ok but UT
+  s_aux_volt_value = 11;
+  s_aux_temp_value = 2;  // Voltage is ok but UT
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
-  status = 0b0010000000000000;  // Voltage is ok but OT
+  s_aux_volt_value = 12;
+  s_aux_temp_value = 132;  // Voltage is ok but OT
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
-  status = 0b1000000000000000;  // OV but temperature is ok
+  s_aux_volt_value = 25;
+  s_aux_temp_value = 62;  // OV but temperature is ok
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
-  status = 0b0100000000000000;  // UV but temperature is ok
+  s_aux_volt_value = 3;
+  s_aux_temp_value = 82;  // UV but temperature is ok
+  supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_INVALID);
 
-  status = 0;  // everything ok
+  s_aux_volt_value = 12;
+  s_aux_temp_value = 75;  // everything ok
+  supposed_to_fail = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  TEST_ASSERT_EQUAL(ack_req.expected_bitset, CAN_ACK_STATUS_OK);
 }
