@@ -4,7 +4,7 @@
 #include "steering_can.h"
 #include "steering_events.h"
 
-// Needs to be edited for the actual stalk
+// Needs to be edited for the actual control stalk
 AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, .pin = 3 },
                                               .callback = control_stalk_callback };
 
