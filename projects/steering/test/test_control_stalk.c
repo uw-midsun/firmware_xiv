@@ -17,7 +17,7 @@
 #include "test_helpers.h"
 
 #define INVALID_VOLTAGE 6000
-#define TIMER_INTERVAL_MS 50
+#define TIMER_INTERVAL_MS 10
 
 static CanSettings can_settings = {
   .device_id = STEERING_CAN_DEVICE_ID,
