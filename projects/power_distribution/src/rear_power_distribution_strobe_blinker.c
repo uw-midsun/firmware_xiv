@@ -10,6 +10,7 @@ StatusCode rear_power_distribution_strobe_blinker_init(
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->strobe_blink_delay_us,
     .default_state = BLINKER_STATE_OFF,  // go back to off when we stop
+    .callback = NULL,
   };
   return blink_event_generator_init(&s_blinker_storage, &blinker_settings);
 }
