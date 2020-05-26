@@ -42,7 +42,7 @@ StatusCode adc_periodic_reader_init(uint32_t reader_interval_ms);
 // Intialize pins and enable ADC reader
 StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
                                              AdcPeriodicReaderSettings *adc_settings);
-// Enables a specific ADC
+// Enables an ADC
 StatusCode adc_periodic_reader_start(PeriodicReaderId reader_id);
 
 StatusCode adc_periodic_reader_stop(PeriodicReaderId reader_id);
