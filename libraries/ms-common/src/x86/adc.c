@@ -109,13 +109,14 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
   if (s_active_channels[adc_channel] != true) {
     return status_code(STATUS_CODE_EMPTY);
   }
+
+  s_adc_interrupts[adc_channel].reading = ADC_RETURNED_VOLTAGE_RAW;
+  *reading = s_adc_interrupts[adc_channel].reading;
+
   // this section mimics the IRQ handler
   if (s_adc_interrupts[adc_channel].callback != NULL) {
     s_adc_interrupts[adc_channel].callback(adc_channel, s_adc_interrupts[adc_channel].context);
   }
-
-  s_adc_interrupts[adc_channel].reading = ADC_RETURNED_VOLTAGE_RAW;
-  *reading = s_adc_interrupts[adc_channel].reading;
 
   return STATUS_CODE_OK;
 }

@@ -9,12 +9,19 @@
 #define ADC_INVALID_UNDER_TEMP 253
 #define ADC_INVALID_OVER_TEMP 373
 
+#define ADC_MOCK_READING 999
+
 static volatile uint8_t s_callback_runs = 0;
 static volatile bool s_callback_ran = false;
 
 void prv_callback(AdcChannel adc_channel, void *context) {
   s_callback_runs++;
   s_callback_ran = true;
+}
+
+void prv_mock_read_callback(AdcChannel adc_channel, void *context) {
+  uint16_t *reading = context;
+  *reading = ADC_MOCK_READING;
 }
 
 // Check multiple samples to ensure they are within the correct range
@@ -215,4 +222,20 @@ void test_adc_read_temp() {
   // ensure value is within reason
   TEST_ASSERT_TRUE(ADC_INVALID_UNDER_TEMP < reading);
   TEST_ASSERT_TRUE(ADC_INVALID_OVER_TEMP > reading);
+}
+
+// test to help with other tests
+void test_adc_mock_reading() {
+  adc_init(ADC_MODE_SINGLE);
+  GpioAddress address = { .port = GPIO_PORT_A, .pin = 0 };
+  AdcChannel channel;
+  adc_get_channel(address, &channel);
+  adc_set_channel(channel, true);
+
+  uint16_t reading;
+
+  adc_register_callback(channel, prv_mock_read_callback, &reading);
+
+  adc_read_raw(channel, &reading);
+  TEST_ASSERT_TRUE(reading == ADC_MOCK_READING);
 }
