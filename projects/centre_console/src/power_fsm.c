@@ -94,7 +94,7 @@ static EventId s_event_lookup[] = {
 static void prv_power_state_transitioning(Fsm *fsm, const Event *e, void *context) {
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->previous_state = power_fsm->current_state;
-  prv_set_current_state(context, POWER_STATE_TRANSITIONING);
+  prv_set_current_state(power_fsm, POWER_STATE_TRANSITIONING);
   event_raise_no_data(s_event_lookup[e->id]);
 }
 

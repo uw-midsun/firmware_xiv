@@ -15,7 +15,7 @@ static PowerFsmStorage s_power_fsm_storage;
 static CanStorage s_can_storage;
 
 void setup_test(void) {
-  initialize_can_in_test(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
                          CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
                          CENTRE_CONSOLE_EVENT_CAN_FAULT);
   memset(&s_power_fsm_storage, 0, sizeof(s_power_fsm_storage));
