@@ -2,7 +2,7 @@
 #include "log.h"
 #include "soft_timer.h"  // Software timers for scheduling future events.
 #include "wait.h"        // for the wait function
-#define HALF_SECOND_MS 500;
+#define HALF_SECOND_MS 500
 
 typedef struct Counters {
   uint8_t counter_a;
@@ -10,7 +10,7 @@ typedef struct Counters {
   bool half_second;
 } Counters;
 
-static void prev_timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *counters = context;
 
   if (counters->half_second == true) {
@@ -25,7 +25,7 @@ static void prev_timer_callback(SoftTimerId timer_id, void *context) {
 
   counters->half_second = !counters->half_second;
 
-  soft_timer_start_millis(HALF_SECOND_MS, prev_timer_callback, counters, NULL);
+  soft_timer_start_millis(HALF_SECOND_MS, prv_timer_callback, counters, NULL);
 }
 
 int main(void) {
@@ -34,7 +34,7 @@ int main(void) {
 
   Counters counters = { 0 };
 
-  soft_timer_start_millis(HALF_SECOND_MS, prev_timer_callback, &counters, NULL);
+  soft_timer_start_millis(HALF_SECOND_MS, prv_timer_callback, &counters, NULL);
 
   while (true) {
     wait();
