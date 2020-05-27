@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+echo "Automatically formatting and linting" && make format && make lint
+
+if [ $? -ne 0 ]; then
+ echo "Code must be properly formatted before commiting!"
+ exit 1
+fi
 
 if [[ $GIT_AUTHOR_NAME == 'vagrant' || $GIT_AUTHOR_EMAIL == 'vagrant@midsunbox' ]]; then
   echo "You didn't set up your git config! Please follow the Software 101 modules on Confluence."
