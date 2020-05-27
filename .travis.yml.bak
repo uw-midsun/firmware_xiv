@@ -83,9 +83,9 @@ before_script:
   - pylint --version
 
 script:
-  - make test_format
-  - make lint
-  - make pylint
+  - make test_format || travis_terminate 1;
+  - make lint || travis_terminate 1;
+  - make pylint || travis_terminate 1;
   - make build_all PLATFORM=x86
   - make clean
   - make build_all PLATFORM=stm32f0xx
