@@ -1,8 +1,8 @@
-#include "delay.h"  // For real-time delays
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"  // Software timers for scheduling future events.
 #include "wait.h"        // for the wait function
+#define HALF_SECOND_MS 500;
 
 typedef struct Counters {
   uint8_t counter_a;
@@ -10,7 +10,7 @@ typedef struct Counters {
   bool half_second;
 } Counters;
 
-void callback(SoftTimerId timer_id, void *context) {
+static void prev_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *counters = context;
 
   if (counters->half_second == true) {
@@ -25,19 +25,16 @@ void callback(SoftTimerId timer_id, void *context) {
 
   counters->half_second = !counters->half_second;
 
-  soft_timer_start_millis(500, callback, counters, NULL);
+  soft_timer_start_millis(HALF_SECOND_MS, prev_timer_callback, counters, NULL);
 }
 
 int main(void) {
   interrupt_init();
   soft_timer_init();
 
-  Counters counters;
-  counters.counter_a = 0;
-  counters.counter_b = 0;
-  counters.half_second = false;
+  Counters counters = { 0 };
 
-  soft_timer_start_millis(500, callback, &counters, NULL);
+  soft_timer_start_millis(HALF_SECOND_MS, prev_timer_callback, &counters, NULL);
 
   while (true) {
     wait();
