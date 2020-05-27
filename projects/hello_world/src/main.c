@@ -2,7 +2,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"  // Software timers for scheduling future events.
-#include "wait.h"
+#include "wait.h" //for the wait function
 
 typedef struct Counters {
   uint8_t counter_a;
