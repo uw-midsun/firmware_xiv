@@ -7,11 +7,11 @@
 // this driver with multiple SPV1020s, make a wrapper.
 
 // Note that this driver does not attempt to convert data from the SPV1020's internal ADC values.
-// The reference voltage is 1.25V.
+// The reference voltage is 1.25V as per the application note.
 
 #include <stdbool.h>
-#include "status.h"
 #include "spi.h"
+#include "status.h"
 
 // Issue a SHUT command to the SPV1020. This shuts down the SPV1020.
 StatusCode spv1020_shut(SpiPort port);
