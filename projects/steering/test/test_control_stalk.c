@@ -35,7 +35,7 @@ static CanStorage s_can_storage;
 static int count = 0;
 
 StatusCode prv_test_signal_rx_cb_handler(const CanMessage *msg, void *context,
-                                              CanAckStatus *ack_reply) {
+                                         CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, msg->msg_id);
   count++;
   return STATUS_CODE_OK;
@@ -74,8 +74,10 @@ void test_control_stalk_right_signal_with_simultaneous_calls() {
   // Only a single event should be raised when there are multiple simulataneous calls
   // with slightly different voltage values
   control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE, PERIODIC_READER_ID_0, NULL);
-  control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE + 5, PERIODIC_READER_ID_0, NULL);
-  control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE - 5, PERIODIC_READER_ID_0, NULL);
+  control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE + 5, PERIODIC_READER_ID_0,
+                         NULL);
+  control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE - 5, PERIODIC_READER_ID_0,
+                         NULL);
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL,
                                    (uint16_t)STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE);
