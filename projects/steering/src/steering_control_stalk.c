@@ -22,16 +22,6 @@ void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
              prev != STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL) {
     event_raise((EventId)STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL, data);
     prev = STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL;
-  } else if (data > STEERING_CC_INCREASE_SPEED_VOLTAGE - VOLTAGE_TOLERANCE_MV &&
-             data < STEERING_CC_INCREASE_SPEED_VOLTAGE + VOLTAGE_TOLERANCE_MV &&
-             prev != STEERING_CC_EVENT_INCREASE_SPEED) {
-    event_raise((EventId)STEERING_CC_EVENT_INCREASE_SPEED, data);
-    prev = STEERING_CC_EVENT_INCREASE_SPEED;
-  } else if (data > STEERING_CC_DECREASE_SPEED_VOLTAGE - VOLTAGE_TOLERANCE_MV &&
-             data < STEERING_CC_DECREASE_SPEED_VOLTAGE + VOLTAGE_TOLERANCE_MV &&
-             prev != STEERING_CC_EVENT_DECREASE_SPEED) {
-    event_raise((EventId)STEERING_CC_EVENT_DECREASE_SPEED, data);
-    prev = STEERING_CC_EVENT_DECREASE_SPEED;
   }
 }
 

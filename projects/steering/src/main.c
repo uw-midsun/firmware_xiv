@@ -25,7 +25,6 @@ int main() {
   adc_periodic_reader_init(TIMER_INTERVAL_MS);
   control_stalk_init();
 
-  // Will be changed for the actual one
   CanSettings can_settings = {
     .device_id = STEERING_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_125KBPS,
