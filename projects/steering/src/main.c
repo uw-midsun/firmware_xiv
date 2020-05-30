@@ -1,5 +1,6 @@
 #include "adc.h"
 #include "adc_periodic_reader.h"
+#include "can_msg_defs.h"
 #include "event_queue.h"
 #include "gpio_it.h"
 #include "gpio_mcu.h"
@@ -10,7 +11,6 @@
 #include "steering_control_stalk.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
-#define STEERING_CAN_DEVICE_ID 0x1
 #define TIMER_INTERVAL_MS 50
 static CanStorage s_can_storage;
 
@@ -26,7 +26,7 @@ int main() {
   control_stalk_init();
 
   CanSettings can_settings = {
-    .device_id = STEERING_CAN_DEVICE_ID,
+    .device_id = SYSTEM_CAN_DEVICE_STEERING,
     .bitrate = CAN_HW_BITRATE_125KBPS,
     .rx_event = STEERING_CAN_EVENT_RX,
     .tx_event = STEERING_CAN_EVENT_TX,

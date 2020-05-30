@@ -18,7 +18,7 @@
 
 static CanStorage s_can_storage;
 
-static CanSettings can_settings = { .device_id = STEERING_CAN_DEVICE_ID,
+static CanSettings can_settings = { .device_id = SYSTEM_CAN_DEVICE_STEERING,
                                     .bitrate = CAN_HW_BITRATE_500KBPS,
                                     .rx_event = STEERING_CAN_EVENT_RX,
                                     .tx_event = STEERING_CAN_EVENT_TX,

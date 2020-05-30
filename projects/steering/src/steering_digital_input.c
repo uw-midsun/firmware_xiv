@@ -7,7 +7,7 @@
 #include "steering_can.h"
 #include "steering_events.h"
 
-GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
+static GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HORN] = HORN_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_RADIO_PPT] = RADIO_PPT_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = HIGH_BEAM_FORWARD_GPIO_ADDR,
@@ -18,7 +18,7 @@ GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
 };
 
-EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
+static EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HORN] = STEERING_INPUT_HORN_EVENT,
   [STEERING_DIGITAL_INPUT_RADIO_PPT] = STEERING_RADIO_PPT_EVENT,
   [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = STEERING_HIGH_BEAM_FORWARD_EVENT,
@@ -28,14 +28,6 @@ EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = STEERING_CC_INCREASE_SPEED_EVENT,
   [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = STEERING_CC_DECREASE_SPEED_EVENT,
 };
-
-GpioAddress *get_address(int digital_input_id) {
-  return &s_steering_address_lookup_table[digital_input_id];
-}
-
-EventId *get_event(int digital_input_id) {
-  return &s_steering_event_lookup_table[digital_input_id];
-}
 
 void prv_callback_raise_event(const GpioAddress *address, void *context) {
   GpioState state;
