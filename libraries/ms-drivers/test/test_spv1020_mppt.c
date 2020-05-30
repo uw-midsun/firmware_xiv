@@ -35,7 +35,7 @@ void test_shut_and_turn_on(void) {
   TEST_ASSERT_OK(spv1020_shut(TEST_SPI_PORT));
   TEST_ASSERT_OK(spv1020_turn_on(TEST_SPI_PORT));
   TEST_ASSERT_OK(spv1020_shut(TEST_SPI_PORT));
-  TEST_ASSERT_OK(spv1020_shut(TEST_SPI_PORT));  // 2 in a row
+  TEST_ASSERT_OK(spv1020_shut(TEST_SPI_PORT));  // 2 in a row, there should be a warning on x86
   TEST_ASSERT_OK(spv1020_turn_on(TEST_SPI_PORT));
   TEST_ASSERT_OK(spv1020_turn_on(TEST_SPI_PORT));  // unnecessary, there should be a warning on x86
 }

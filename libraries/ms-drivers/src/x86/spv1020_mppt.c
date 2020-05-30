@@ -17,8 +17,13 @@ StatusCode spv1020_shut(SpiPort port) {
     return STATUS_CODE_INVALID_ARGS;
   }
 
-  // just log it and move on
+  // this doesn't occur on stm32 but is useful for debugging
+  if (s_is_shut) {
+    LOG_WARN("Issuing SHUT command to SPV1020 MPPT when it's already shut\r\n");
+  }
   s_is_shut = true;
+
+  // just log it and move on
   LOG_DEBUG("SPV1020 MPPT command: SHUT\r\n");
   return STATUS_CODE_OK;
 }
@@ -28,7 +33,6 @@ StatusCode spv1020_turn_on(SpiPort port) {
     return STATUS_CODE_INVALID_ARGS;
   }
 
-  // this doesn't occur on stm32 but is useful for debugging
   if (!s_is_shut) {
     LOG_WARN("Issuing Turn ON command to SPV1020 MPPT before a SHUT command\r\n");
   }
