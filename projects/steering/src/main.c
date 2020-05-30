@@ -1,31 +1,18 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include "adc.h"
 #include "adc_periodic_reader.h"
-#include "delay.h"
 #include "event_queue.h"
-#include "exported_enums.h"
 #include "gpio_it.h"
 #include "gpio_mcu.h"
 #include "interrupt.h"
-#include "log.h"
-#include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
 #include "steering_control_stalk.h"
 #include "steering_digital_input.h"
-#include "wait.h"
+#include "steering_events.h"
 #define STEERING_CAN_DEVICE_ID 0x1
-
+#define TIMER_INTERVAL_MS 50
 static CanStorage s_can_storage;
-
-typedef enum {
-  STEERING_CAN_EVENT_RX = 13,
-  STEERING_CAN_EVENT_TX,
-  STEERING_CAN_FAULT,
-} SteeringCanEvent;
 
 int main() {
   adc_init(ADC_MODE_SINGLE);
@@ -35,10 +22,9 @@ int main() {
   gpio_it_init();
   soft_timer_init();
   steering_digital_input_init();
-  adc_periodic_reader_init();
+  adc_periodic_reader_init(TIMER_INTERVAL_MS);
   control_stalk_init();
 
-  // Will be changed for the actual one
   CanSettings can_settings = {
     .device_id = STEERING_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_125KBPS,
@@ -55,6 +41,7 @@ int main() {
 
   while (true) {
     while (event_process(&e)) {
+      can_process_event(&e);
       steering_can_process_event(&e);
     }
   }

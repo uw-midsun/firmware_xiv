@@ -3,13 +3,12 @@
 // them to signal events
 #include "adc_periodic_reader.h"
 #include "event_queue.h"
-#include "gpio.h"
-#include "interrupt.h"
-#include "soft_timer.h"
 #include "status.h"
-#include "steering_can.h"
+
+#define VOLTAGE_TOLERANCE_MV 100
+#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE 1000
+#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE 2000
 
 StatusCode control_stalk_init();
 
-// Used for testing by manually inserting values for voltage
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context);

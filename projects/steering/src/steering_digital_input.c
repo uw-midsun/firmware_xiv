@@ -1,29 +1,21 @@
 #include "steering_digital_input.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include "can_transmit.h"
-#include "delay.h"
 #include "event_queue.h"
-#include "exported_enums.h"
 #include "gpio_it.h"
-#include "gpio_mcu.h"
 #include "interrupt_def.h"
-#include "log.h"
-#include "misc.h"
 #include "soft_timer.h"
 #include "status.h"
 #include "steering_can.h"
 #include "steering_events.h"
-#include "wait.h"
 
 GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
-  [STEERING_DIGITAL_INPUT_HORN] = { .port = GPIO_PORT_B, .pin = 1 },
-  [STEERING_DIGITAL_INPUT_RADIO_PPT] = { .port = GPIO_PORT_A, .pin = 6 },
-  [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = { .port = GPIO_PORT_A, .pin = 7 },
-  [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = { .port = GPIO_PORT_B, .pin = 0 },
-  [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = { .port = GPIO_PORT_A, .pin = 4 },
-  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = { .port = GPIO_PORT_A, .pin = 5 },
+  [STEERING_DIGITAL_INPUT_HORN] = HORN_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_RADIO_PPT] = RADIO_PPT_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = HIGH_BEAM_FORWARD_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = HIGH_BEAM_REAR_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = REGEN_BRAKE_TOGGLE_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = CC_TOGGLE_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
 };
 
 EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
@@ -32,11 +24,17 @@ EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = STEERING_HIGH_BEAM_FORWARD_EVENT,
   [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = STEERING_HIGH_BEAM_REAR_EVENT,
   [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = STEERING_REGEN_BRAKE_EVENT,
-  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = STEERING_INPUT_CC_TOGGLE_PRESSED_EVENT
+  [STEERING_DIGITAL_INPUT_CC_TOGGLE] = STEERING_DIGITAL_INPUT_CC_TOGGLE_PRESSED_EVENT,
+  [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = STEERING_CC_INCREASE_SPEED_EVENT,
+  [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = STEERING_CC_DECREASE_SPEED_EVENT,
 };
 
-GpioAddress *test_get_address(int digital_input_id) {
+GpioAddress *get_address(int digital_input_id) {
   return &s_steering_address_lookup_table[digital_input_id];
+}
+
+EventId *get_event(int digital_input_id) {
+  return &s_steering_event_lookup_table[digital_input_id];
 }
 
 void prv_callback_raise_event(const GpioAddress *address, void *context) {
@@ -61,7 +59,9 @@ StatusCode steering_digital_input_init() {
     InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                              .priority = INTERRUPT_PRIORITY_NORMAL };
 
-    if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT) {
+    if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT ||
+        i == STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED ||
+        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
                                  INTERRUPT_EDGE_RISING_FALLING, prv_callback_raise_event,
                                  &s_steering_event_lookup_table[i]);

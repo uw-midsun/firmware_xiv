@@ -10,32 +10,26 @@
 #include "soft_timer.h"
 #include "status.h"
 
-#define TIMER_INTERVAL 50
-
 static AdcPeriodicReaderStorage s_storage[NUM_PERIODIC_READER_IDS];
+static uint32_t timer_interval_ms = 0;
 
 void prv_callback(SoftTimerId timer_id, void *context) {
   for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
     uint16_t data = 0;
     AdcChannel channel;
-    adc_get_channel(s_storage[i].address, &channel);
-    adc_read_converted(channel, &data);
-    s_storage[i].data = data;
     if (s_storage[i].activated) {
+      adc_get_channel(s_storage[i].address, &channel);
+      adc_read_converted(channel, &data);
+      s_storage[i].data = data;
       s_storage[i].callback(s_storage[i].data, i, s_storage[i].context);
     }
   }
-  soft_timer_start_millis(TIMER_INTERVAL, prv_callback, NULL, NULL);
+  soft_timer_start_millis(timer_interval_ms, prv_callback, NULL, NULL);
 }
 
-StatusCode adc_periodic_reader_init() {
-  soft_timer_start_millis(TIMER_INTERVAL, prv_callback, NULL, NULL);
-
-  // Disable all ADCs
-  for (size_t i = 0; i < NUM_PERIODIC_READER_IDS; i++) {
-    s_storage[i].activated = false;
-  }
-
+StatusCode adc_periodic_reader_init(uint32_t reader_interval_ms) {
+  timer_interval_ms = reader_interval_ms;
+  soft_timer_start_millis(timer_interval_ms, prv_callback, NULL, NULL);
   return STATUS_CODE_OK;
 }
 
@@ -60,8 +54,8 @@ StatusCode adc_periodic_reader_set_up_reader(PeriodicReaderId reader_id,
 
   AdcChannel channel;
   status_ok_or_return(gpio_init_pin(&s_storage[reader_id].address, &gpio_settings));
-  status_ok_or_return(adc_get_channel(s_storage[reader_id].address, &channel));
-  status_ok_or_return(adc_set_channel(channel, true));
+  adc_get_channel(s_storage[reader_id].address, &channel);
+  adc_set_channel(channel, true);
   return STATUS_CODE_OK;
 }
 

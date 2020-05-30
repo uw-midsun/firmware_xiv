@@ -1,13 +1,21 @@
 #pragma once
 
-// Aliases of EN and DSEL pin addresses on front and rear power distribution.
-
-#include "pca9539r_gpio_expander.h"
+// Aliases of pin addresses on front and rear power distribution.
 
 #define POWER_DISTRIBUTION_I2C_PORT I2C_PORT_2
 
 #define POWER_DISTRIBUTION_I2C_ADDRESS_0 0x74
 #define POWER_DISTRIBUTION_I2C_ADDRESS_1 0x76
+
+#define POWER_DISTRIBUTION_I2C_SCL_PIN \
+  { GPIO_PORT_B, 10 }
+#define POWER_DISTRIBUTION_I2C_SDA_PIN \
+  { GPIO_PORT_B, 11 }
+
+#define POWER_DISTRIBUTION_CAN_TX_PIN \
+  { GPIO_PORT_A, 12 }
+#define POWER_DISTRIBUTION_CAN_RX_PIN \
+  { GPIO_PORT_A, 11 }
 
 // Front power distribution
 #define FRONT_PIN_CTR_CONSL_EN \

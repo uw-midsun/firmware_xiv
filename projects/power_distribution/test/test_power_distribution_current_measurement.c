@@ -58,7 +58,7 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // stop it and make sure the callback is no longer called
-  TEST_ASSERT_OK(power_distribution_stop());
+  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
   delay_us(interval_us * 2);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
@@ -81,7 +81,7 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // stop it and make sure the callback is no longer called
-  TEST_ASSERT_OK(power_distribution_stop());
+  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
   delay_us(interval_us * 2);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
@@ -111,7 +111,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
     LOG_DEBUG("front hw config: current %d is %d\r\n", i, storage->measurements[i]);
   }
 
-  TEST_ASSERT_OK(power_distribution_stop());
+  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
 }
 
 // Test that we can successfully get measurements with the rear hardware config.
@@ -139,7 +139,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
     LOG_DEBUG("rear hw config: current %d is %d\r\n", i, storage->measurements[i]);
   }
 
-  TEST_ASSERT_OK(power_distribution_stop());
+  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
 }
 
 // Test that init errors with invalid hardware config.
@@ -225,5 +225,5 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
 
   // otherwise valid
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
-  TEST_ASSERT_OK(power_distribution_stop());
+  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
 }
