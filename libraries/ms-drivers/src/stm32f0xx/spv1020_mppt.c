@@ -14,8 +14,11 @@ static StatusCode prv_send_command(SpiPort port, uint8_t command, uint8_t *rx_da
   spi_cs_set_state(port, GPIO_STATE_LOW);
   spi_tx(port, &command, 1);
 
-  spi_rx(port, rx_data, rx_len, COMMAND_NOP);
-  spi_cs_set_state(port, GPIO_STATE_LOW);
+  if (rx_len > 0) {
+    spi_rx(port, rx_data, rx_len, COMMAND_NOP);
+  }
+
+  spi_cs_set_state(port, GPIO_STATE_HIGH);
 
   return STATUS_CODE_OK;
 }
