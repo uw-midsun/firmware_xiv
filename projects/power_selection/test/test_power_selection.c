@@ -2,6 +2,7 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "delay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
@@ -16,6 +17,8 @@
 #include "test_helpers.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
+#undef TIMER_TIMEOUT_MS
+#define TIMER_TIMEOUT_MS 10
 
 static CanStorage s_can_storage = { 0 };
 static CanSettings s_can_settings = {
@@ -35,14 +38,16 @@ static GpioAddress s_aux_status_addresses[3] = {
   { .port = GPIO_PORT_A, .pin = 5 }   // aux current sense  //not needed in the module currently
 };
 static GpioAddress s_dcdc_address = { .port = GPIO_PORT_A, .pin = 9 };
-static AdcChannel s_aux_channels[3] = { ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_2 };
+static AdcChannel s_aux_channels[AUX_ADC_CURRENT_CHANNEL] = {
+  [AUX_ADC_VOLT_CHANNEL] = ADC_CHANNEL_0, [AUX_ADC_TEMP_CHANNEL] = ADC_CHANNEL_1
+};
 
 static uint16_t s_aux_volt_value = 0;
 static uint16_t s_aux_temp_value = 0;
 StatusCode TEST_MOCK(adc_read_raw)(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel == s_aux_channels[0]) {
+  if (adc_channel == s_aux_channels[AUX_ADC_VOLT_CHANNEL]) {
     *reading = s_aux_volt_value;
-  } else if (adc_channel == s_aux_channels[1]) {
+  } else if (adc_channel == s_aux_channels[AUX_ADC_TEMP_CHANNEL]) {
     *reading = s_aux_temp_value;
   }
   return STATUS_CODE_OK;
@@ -56,9 +61,7 @@ StatusCode prv_test_power_selection_callback_handler(const CanMessage *msg, void
                                                      CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, msg->msg_id);
   counter++;
-  aux_volt = msg->data_u16[0];
-  aux_temp = msg->data_u16[1];
-  dcdc_status = msg->data_u16[2];
+  CAN_UNPACK_AUX_BATTERY_STATUS(msg, &aux_volt, &aux_temp, &dcdc_status);
   return STATUS_CODE_OK;
 }
 
@@ -66,7 +69,7 @@ static bool supposed_to_fail = false;
 static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                                      uint16_t num_remaining, void *context) {
   if (supposed_to_fail) {
-    TEST_ASSERT_EQUAL(status, CAN_ACK_STATUS_INVALID);
+    TEST_ASSERT_NOT_EQUAL(status, CAN_ACK_STATUS_OK);
   } else {
     TEST_ASSERT_EQUAL(status, CAN_ACK_STATUS_OK);
   }
@@ -83,7 +86,7 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS,
                           prv_test_power_selection_callback_handler, NULL);
   TEST_ASSERT_OK(aux_dcdc_monitor_init());
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < AUX_ADC_CURRENT_CHANNEL; ++i) {
     adc_get_channel(s_aux_status_addresses[i], &s_aux_channels[i]);
   }
 }
@@ -97,7 +100,7 @@ void test_power_selection_tx(void) {
   s_aux_volt_value = 10;
   s_aux_temp_value = 52;
 
-  delay_ms(1000);
+  delay_ms(10);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 2);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
@@ -105,7 +108,7 @@ void test_power_selection_tx(void) {
   s_aux_volt_value = 16;
   s_aux_temp_value = 62;
 
-  delay_ms(1000);
+  delay_ms(10);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 3);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
@@ -113,12 +116,12 @@ void test_power_selection_tx(void) {
   s_aux_volt_value = 5;
   s_aux_temp_value = 72;
 
-  delay_ms(100);
+  delay_ms(1);
   TEST_ASSERT_NOT_EQUAL(counter, 4);
   TEST_ASSERT_NOT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
   TEST_ASSERT_NOT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 
-  delay_ms(900);
+  delay_ms(9);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 4);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
