@@ -20,4 +20,6 @@ bool spv1020_is_overtemperature(uint8_t status) {
   return (status & OVT_BITMASK) != 0;
 }
 
-// What should we do about the CR bit (or bits)? Ask Micah.
+bool spv1020_is_cr_bit_set(uint8_t status) {
+  return (status & CR_BITMASK) != 0;
+}

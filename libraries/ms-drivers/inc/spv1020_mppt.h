@@ -21,12 +21,15 @@ StatusCode spv1020_shut(SpiPort port);
 StatusCode spv1020_turn_on(SpiPort port);
 
 // Read current through the SPV1020. Current is 10 bits, converted by the SPV1020's internal ADC.
+// This is either the input current or the average phase current (input current / 4 / duty cycle).
 StatusCode spv1020_read_current(SpiPort port, uint16_t *current);
 
 // Read the SPV1020's input voltage. Voltage is 10 bits, converted by the SPV1020's internal ADC.
 StatusCode spv1020_read_voltage_in(SpiPort port, uint16_t *vin);
 
-// Read PWM from the SPV1020. This is 9 bits.
+// Read the PWM duty cycle from the SPV1020. This is 9 bits. Note that as per the application note,
+// the PWM duty cycle can vary from 5% to 90% with a step of 0.2%, giving 425 possible values, so
+// this likely gives the "step number" of the duty cycle (duty cycle = 5% + 85% * (pwm/425)).
 StatusCode spv1020_read_pwm(SpiPort port, uint16_t *pwm);
 
 // Read a status byte from the SPV1020. The status byte should then be passed to
@@ -43,3 +46,7 @@ bool spv1020_is_overvoltage(uint8_t status);
 
 // Return whether the overtemperature (OVT) bit is set in the status byte.
 bool spv1020_is_overtemperature(uint8_t status);
+
+// Return whether the CR bit is set in the status byte. We don't know what the CR bit is, but it
+// might be useful to log it.
+bool spv1020_is_cr_bit_set(uint8_t status);

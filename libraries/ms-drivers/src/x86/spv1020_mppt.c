@@ -4,11 +4,10 @@
 // This file implements an x86 approximation of the stm32-specific functionality.
 // See ../spv1020_mppt.c for the shared functions.
 
-// TODO: ask Micah what "reasonable" voltages/currents/pwm are.
-// These are in the middle of their ranges.
-#define FIXED_CURRENT 0x200
-#define FIXED_VIN 0x200
-#define FIXED_PWM 0x100
+// These are "reasonable" values of the inputs.
+#define FIXED_CURRENT 512  // middle of the 10-bit current range
+#define FIXED_VIN 720      // 70% of max (2^10), about the maximum power point
+#define FIXED_PWM 225      // would give a duty cycle of 50% if assumptions are correct
 #define FIXED_STATUS 0
 
 static bool s_is_shut = false;
@@ -17,7 +16,7 @@ StatusCode spv1020_shut(SpiPort port) {
   if (port >= NUM_SPI_PORTS) {
     return STATUS_CODE_INVALID_ARGS;
   }
-  
+
   // just log it and move on
   s_is_shut = true;
   LOG_DEBUG("SPV1020 MPPT command: SHUT\r\n");
@@ -28,13 +27,13 @@ StatusCode spv1020_turn_on(SpiPort port) {
   if (port >= NUM_SPI_PORTS) {
     return STATUS_CODE_INVALID_ARGS;
   }
-  
+
   // this doesn't occur on stm32 but is useful for debugging
   if (!s_is_shut) {
     LOG_WARN("Issuing Turn ON command to SPV1020 MPPT before a SHUT command\r\n");
   }
   s_is_shut = false;
-  
+
   LOG_DEBUG("SPV1020 MPPT command: Turn ON\r\n");
   return STATUS_CODE_OK;
 }
