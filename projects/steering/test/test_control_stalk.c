@@ -73,7 +73,8 @@ void test_control_stalk_right_signal_with_simultaneous_calls() {
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_signal_rx_cb_handler, NULL));
   // Only a single event should be raised when there are multiple simulataneous calls
   // with slightly different voltage values
-  control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV, PERIODIC_READER_ID_0, NULL);
+  control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV, PERIODIC_READER_ID_0,
+                         NULL);
   control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV + 5, PERIODIC_READER_ID_0,
                          NULL);
   control_stalk_callback(STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV - 5, PERIODIC_READER_ID_0,
@@ -91,10 +92,6 @@ void test_invalid_voltage() {
   control_stalk_callback(INVALID_VOLTAGE, PERIODIC_READER_ID_0, NULL);
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-
-
-
-  
 }
 
 void teardown_test(void) {}
