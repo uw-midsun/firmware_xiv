@@ -1,6 +1,6 @@
+#include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
-#include "interrupt.h"
 #include "wait.h"
 
 #include <stdint.h>
@@ -10,7 +10,7 @@
 typedef struct {
   uint8_t counter_a; 
   uint8_t counter_b;
-} Counters; // instructions say to put this in main function fyi
+} Counters;
 
 static void prv_counter(SoftTimerId timer_id, void *context) {
   Counters *counter = context;
