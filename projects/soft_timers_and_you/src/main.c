@@ -8,7 +8,7 @@
 #define CONST_MILLIS_COUNTER 500
 
 typedef struct {
-  uint8_t counter_a; 
+  uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
