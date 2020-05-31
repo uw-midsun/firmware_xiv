@@ -2,9 +2,6 @@
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
-
-#include <stdint.h>
-
 #define CONST_MILLIS_COUNTER 500
 
 typedef struct {
