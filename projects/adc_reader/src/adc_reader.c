@@ -61,4 +61,6 @@ int main(void) {
   while (true) {
     wait();
   }
+
+  return 0;
 }
