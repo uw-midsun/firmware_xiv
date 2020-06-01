@@ -11,7 +11,7 @@ typedef struct {
 
 static void prv_button_pressed(const GpioAddress *address, void *context) {
   AdcReader *reader = context;
-  adc_read_converted(reader->channel,&reader->data);
+  adc_read_converted(reader->channel, &reader->data);
 }
 
 int main(void) {
@@ -43,7 +43,7 @@ int main(void) {
 
   gpio_init_pin(&reader_addr, &reader_settings);
   gpio_init_pin(&button_addr, &button_settings);
-  
+
   adc_init(ADC_MODE_SINGLE);
   AdcChannel reader_channel = NUM_ADC_CHANNELS;
   adc_get_channel(reader_addr, &reader_channel);
@@ -54,10 +54,9 @@ int main(void) {
     .data = 0,
   };
 
-  gpio_it_register_interrupt(&button_addr, &interrupt_settings,
-                              INTERRUPT_EDGE_FALLING, 
-                              prv_button_pressed, 
-                              &adc_reader);
+  gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING,
+                             prv_button_pressed, &adc_reader);
 
-  while (true) {}
+  while (true) {
+  }
 }
