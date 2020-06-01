@@ -16,9 +16,9 @@ static void prv_counter_timer_callback(SoftTimerId timer_id, void *context) {
   if (counter->counter_a % 2 == 0) {
     counter->counter_b++;
     LOG_DEBUG("Counter B: %i\n", counter->counter_b);
-    soft_timer_start_millis(CONST_COUNTER_MS, prv_counter, counter, NULL);
+    soft_timer_start_millis(CONST_COUNTER_MS, prv_counter_timer_callback, counter, NULL);
   } else {
-    soft_timer_start_millis(CONST_COUNTER_MS, prv_counter, counter, NULL);
+    soft_timer_start_millis(CONST_COUNTER_MS, prv_counter_timer_callback, counter, NULL);
   }
 }
 
@@ -27,7 +27,7 @@ int main(void) {
   soft_timer_init();
 
   Counters counters = { 0 };
-  soft_timer_start_millis(CONST_COUNTER_MS, prv_counter, &counters, NULL);
+  soft_timer_start_millis(CONST_COUNTER_MS, prv_counter_timer_callback, &counters, NULL);
 
   while (true) {
     wait();
