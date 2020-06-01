@@ -7,7 +7,7 @@
 // These are "reasonable" values of the inputs.
 #define FIXED_CURRENT 512  // middle of the 10-bit current range
 #define FIXED_VIN 720      // 70% of max (2^10), about the maximum power point
-#define FIXED_PWM 225      // would give a duty cycle of 50% if assumptions are correct
+#define FIXED_PWM 500      // a duty cycle of 50%
 #define FIXED_STATUS 0
 
 static bool s_is_shut = false;

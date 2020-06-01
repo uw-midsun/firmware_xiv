@@ -1,9 +1,9 @@
 #pragma once
 
 // Driver for the SPV1020 maximum power point tracker.
-// Requires GPIO and SPI to be initialized.
+// Requires GPIO and SPI to be initialized. SPI must be initialized with SPI_MODE_3.
 
-// This driver only issues commands the given SPI port and does not select between MPPTs. To use
+// This driver only issues commands to the given SPI port and does not select between MPPTs. To use
 // this driver with multiple SPV1020s, make a wrapper.
 
 // Note that this driver does not attempt to convert data from the SPV1020's internal ADC values.
@@ -27,9 +27,9 @@ StatusCode spv1020_read_current(SpiPort port, uint16_t *current);
 // Read the SPV1020's input voltage. Voltage is 10 bits, converted by the SPV1020's internal ADC.
 StatusCode spv1020_read_voltage_in(SpiPort port, uint16_t *vin);
 
-// Read the PWM duty cycle from the SPV1020. This is 9 bits. Note that as per the application note,
-// the PWM duty cycle can vary from 5% to 90% with a step of 0.2%, giving 425 possible values, so
-// this likely gives the "step number" of the duty cycle (duty cycle = 5% + 85% * (pwm/425)).
+// Read the PWM duty cycle from the SPV1020, converted from the original 9 bits to a percentage
+// accurate to 0.2%, represented with 4 decimal places (e.g. 12.3% = 123, actually permille).
+// This should be in the range [50, 900] = [5%, 90%].
 StatusCode spv1020_read_pwm(SpiPort port, uint16_t *pwm);
 
 // Read a status byte from the SPV1020. The status byte should then be passed to

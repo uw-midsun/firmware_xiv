@@ -20,7 +20,7 @@ void setup_test() {
   gpio_init();
   SpiSettings spi_settings = {
     .baudrate = 60000,
-    .mode = SPI_MODE_0,
+    .mode = SPI_MODE_3,
     .mosi = TEST_MOSI_PIN,
     .miso = TEST_MISO_PIN,
     .sclk = TEST_SCLK_PIN,
@@ -60,11 +60,12 @@ void test_read_voltage_in(void) {
 
 // Test that we can successfully read PWM and it's in the stated range.
 void test_read_pwm(void) {
-  uint16_t pwm = 0xFFFF;  // over 9 bits
+  uint16_t pwm = 0xFFFF;  // over 900
   TEST_ASSERT_OK(spv1020_read_pwm(TEST_SPI_PORT, &pwm));
 
-  // make sure the 6 highest bits are low, so it's a 9-bit value
-  TEST_ASSERT_BITS_LOW(0b1111111000000000, pwm);
+  // make sure it's in [50, 900] and is even (accurate to 0.2%)
+  TEST_ASSERT_TRUE_MESSAGE(pwm >= 50 && pwm <= 900, "PWM out of range [50, 900]");
+  TEST_ASSERT_TRUE_MESSAGE(pwm % 2 == 0, "PWM not even (not accurate to 0.2%)");
 }
 
 // Test that we can successfully read a status and it's only 7 bits.
