@@ -3,6 +3,7 @@
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "interrupt_def.h"
+#include "wait.h"
 
 typedef struct {
   AdcChannel channel;
@@ -58,5 +59,6 @@ int main(void) {
                              prv_button_pressed, &adc_reader);
 
   while (true) {
+    wait();
   }
 }
