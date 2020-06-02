@@ -1,8 +1,8 @@
 #include <stdint.h>
-#include "soft_timer.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "wait.h"
 
 #define DEBUG_TEST_TIMEOUT_MS 50
@@ -23,10 +23,7 @@ static void prv_init_leds(DebugTestStorage *storage) {
     { .port = GPIO_PORT_C, .pin = 7 },  //
   };
 
-  GpioSettings led_settings = {
-    .direction = GPIO_DIR_OUT,
-    .state = GPIO_STATE_HIGH
-  };
+  GpioSettings led_settings = { .direction = GPIO_DIR_OUT, .state = GPIO_STATE_HIGH };
 
   storage->leds = leds;
   storage->num_leds = SIZEOF_ARRAY(leds);
