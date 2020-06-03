@@ -6,20 +6,20 @@
 
 bool spv1020_is_overcurrent(uint8_t status, uint8_t *ovc_branches) {
   // this is the number of bits to shift to get the OVC bits of the bitmask as the LSBs
-  const uint8_t ovc_bitshift = __builtin_ctz(OVC_BITMASK);
+  const uint8_t ovc_bitshift = __builtin_ctz(SPV1020_OVC_MASK);
 
-  *ovc_branches = (status & OVC_BITMASK) >> ovc_bitshift;
+  *ovc_branches = (status & SPV1020_OVC_MASK) >> ovc_bitshift;
   return *ovc_branches != 0;
 }
 
 bool spv1020_is_overvoltage(uint8_t status) {
-  return (status & OVV_BITMASK) != 0;
+  return (status & SPV1020_OVV_MASK) != 0;
 }
 
 bool spv1020_is_overtemperature(uint8_t status) {
-  return (status & OVT_BITMASK) != 0;
+  return (status & SPV1020_OVT_MASK) != 0;
 }
 
 bool spv1020_is_cr_bit_set(uint8_t status) {
-  return (status & CR_BITMASK) != 0;
+  return (status & SPV1020_CR_MASK) != 0;
 }

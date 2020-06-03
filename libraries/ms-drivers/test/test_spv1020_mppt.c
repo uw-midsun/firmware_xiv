@@ -102,7 +102,7 @@ void test_is_overcurrent(void) {
   TEST_ASSERT_EQUAL(0b1000, ovc);
 
   ovc = 0xFF;
-  TEST_ASSERT_TRUE(spv1020_is_overcurrent(OVC_BITMASK, &ovc));
+  TEST_ASSERT_TRUE(spv1020_is_overcurrent(SPV1020_OVC_MASK, &ovc));
   TEST_ASSERT_EQUAL(0b1111, ovc);
 }
 
@@ -113,7 +113,7 @@ void test_is_overvoltage(void) {
   TEST_ASSERT_FALSE(spv1020_is_overvoltage(0b11111011));
   TEST_ASSERT_TRUE(spv1020_is_overvoltage(0b0000100));
   TEST_ASSERT_TRUE(spv1020_is_overvoltage(0b1111111));
-  TEST_ASSERT_TRUE(spv1020_is_overvoltage(OVV_BITMASK));
+  TEST_ASSERT_TRUE(spv1020_is_overvoltage(SPV1020_OVV_MASK));
 }
 
 // Test that we can detect when the OVT bit is set in a status byte.
@@ -123,7 +123,7 @@ void test_is_overtemperature(void) {
   TEST_ASSERT_FALSE(spv1020_is_overtemperature(0b11111101));
   TEST_ASSERT_TRUE(spv1020_is_overtemperature(0b0000010));
   TEST_ASSERT_TRUE(spv1020_is_overtemperature(0b1111111));
-  TEST_ASSERT_TRUE(spv1020_is_overtemperature(OVT_BITMASK));
+  TEST_ASSERT_TRUE(spv1020_is_overtemperature(SPV1020_OVT_MASK));
 }
 
 // Test that we can detect when the CR bit is set in a status byte, whatever it means.
@@ -133,5 +133,5 @@ void test_is_cr_bit_set(void) {
   TEST_ASSERT_FALSE(spv1020_is_cr_bit_set(0b11111110));
   TEST_ASSERT_TRUE(spv1020_is_cr_bit_set(0b0000001));
   TEST_ASSERT_TRUE(spv1020_is_cr_bit_set(0b1111111));
-  TEST_ASSERT_TRUE(spv1020_is_cr_bit_set(CR_BITMASK));
+  TEST_ASSERT_TRUE(spv1020_is_cr_bit_set(SPV1020_CR_MASK));
 }

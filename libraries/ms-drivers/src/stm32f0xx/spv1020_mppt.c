@@ -24,24 +24,24 @@ static StatusCode prv_send_command(SpiPort port, uint8_t command, uint8_t *rx_da
 }
 
 StatusCode spv1020_shut(SpiPort port) {
-  return prv_send_command(port, COMMAND_SHUT, NULL, 0);
+  return prv_send_command(port, SPV1020_CMD_SHUT, NULL, 0);
 }
 
 StatusCode spv1020_turn_on(SpiPort port) {
-  return prv_send_command(port, COMMAND_TURN_ON, NULL, 0);
+  return prv_send_command(port, SPV1020_CMD_TURN_ON, NULL, 0);
 }
 
 StatusCode spv1020_read_current(SpiPort port, uint16_t *current) {
-  return prv_send_command(port, COMMAND_READ_CURRENT, (uint8_t *)current, 2);
+  return prv_send_command(port, SPV1020_CMD_READ_CURRENT, (uint8_t *)current, 2);
 }
 
 StatusCode spv1020_read_voltage_in(SpiPort port, uint16_t *vin) {
-  return prv_send_command(port, COMMAND_READ_VIN, (uint8_t *)vin, 2);
+  return prv_send_command(port, SPV1020_CMD_READ_VIN, (uint8_t *)vin, 2);
 }
 
 StatusCode spv1020_read_pwm(SpiPort port, uint16_t *pwm) {
   uint16_t raw_pwm;
-  StatusCode code = prv_send_command(port, COMMAND_READ_PWM, (uint8_t *)raw_pwm, 2);
+  StatusCode code = prv_send_command(port, SPV1020_CMD_READ_PWM, (uint8_t *)&raw_pwm, 2);
 
   // Convert the raw 9-bit value to a permille. The application note says that the PWM duty cycle
   // ranges from 5% to 90% with a step of 0.2%, giving 425 values; we assume that the raw value
@@ -53,5 +53,5 @@ StatusCode spv1020_read_pwm(SpiPort port, uint16_t *pwm) {
 }
 
 StatusCode spv1020_read_status(SpiPort port, uint8_t *status) {
-  return prv_send_command(port, COMMAND_READ_STATUS, status, 1);
+  return prv_send_command(port, SPV1020_CMD_READ_STATUS, status, 1);
 }
