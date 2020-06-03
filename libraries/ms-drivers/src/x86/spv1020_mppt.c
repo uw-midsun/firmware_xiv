@@ -19,12 +19,12 @@ StatusCode spv1020_shut(SpiPort port) {
 
   // this doesn't occur on stm32 but is useful for debugging
   if (s_is_shut) {
-    LOG_WARN("Issuing SHUT command to SPV1020 MPPT when it's already shut\r\n");
+    LOG_WARN("Issuing SHUT command to SPV1020 MPPT when it's already shut\n");
   }
   s_is_shut = true;
 
   // just log it and move on
-  LOG_DEBUG("SPV1020 MPPT command: SHUT\r\n");
+  LOG_DEBUG("SPV1020 MPPT command: SHUT\n");
   return STATUS_CODE_OK;
 }
 
@@ -34,34 +34,34 @@ StatusCode spv1020_turn_on(SpiPort port) {
   }
 
   if (!s_is_shut) {
-    LOG_WARN("Issuing Turn ON command to SPV1020 MPPT before a SHUT command\r\n");
+    LOG_WARN("Issuing Turn ON command to SPV1020 MPPT before a SHUT command\n");
   }
   s_is_shut = false;
 
-  LOG_DEBUG("SPV1020 MPPT command: Turn ON\r\n");
+  LOG_DEBUG("SPV1020 MPPT command: Turn ON\n");
   return STATUS_CODE_OK;
 }
 
 StatusCode spv1020_read_current(SpiPort port, uint16_t *current) {
-  LOG_DEBUG("SPV1020 MPPT command: Read current\r\n");
+  LOG_DEBUG("SPV1020 MPPT command: Read current\n");
   *current = FIXED_CURRENT;
   return STATUS_CODE_OK;
 }
 
 StatusCode spv1020_read_voltage_in(SpiPort port, uint16_t *vin) {
-  LOG_DEBUG("SPV1020 MPPT command: Read vin\r\n");
+  LOG_DEBUG("SPV1020 MPPT command: Read vin\n");
   *vin = FIXED_VIN;
   return STATUS_CODE_OK;
 }
 
 StatusCode spv1020_read_pwm(SpiPort port, uint16_t *pwm) {
-  LOG_DEBUG("SPV1020 MPPT command: Read pwm\r\n");
+  LOG_DEBUG("SPV1020 MPPT command: Read pwm\n");
   *pwm = FIXED_PWM;
   return STATUS_CODE_OK;
 }
 
 StatusCode spv1020_read_status(SpiPort port, uint8_t *status) {
-  LOG_DEBUG("SPV1020 MPPT command: Read status\r\n");
+  LOG_DEBUG("SPV1020 MPPT command: Read status\n");
   *status = FIXED_STATUS;
   return STATUS_CODE_OK;
 }
