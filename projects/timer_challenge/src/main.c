@@ -1,10 +1,10 @@
+#include <stdint.h>  // for integer types
+#include <stdlib.h>  // for random numbers
+
 #include "interrupt.h"   // interrupts are required for soft timers
 #include "log.h"         // for printing
 #include "soft_timer.h"  // for soft timers
 #include "wait.h"        // for wait function
-
-#include <stdint.h>  // for integer types
-#include <stdlib.h>  // for random numbers
 
 typedef struct Counters {
   uint8_t counter_a;
