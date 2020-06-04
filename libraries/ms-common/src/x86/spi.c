@@ -2,7 +2,7 @@
 #include "log.h"
 #include "spi_mcu.h"
 
-static GpioState cs_curr_state = GPIO_STATE_HIGH;
+static GpioState s_cs_curr_state = GPIO_STATE_HIGH;
 
 StatusCode spi_init(SpiPort spi, const SpiSettings *settings) {
   LOG_DEBUG("Note this is an x86 version of SPI\n");
@@ -34,7 +34,7 @@ StatusCode spi_rx(SpiPort spi, uint8_t *rx_data, size_t rx_len, uint8_t placehol
   return STATUS_CODE_OK;
 }
 StatusCode spi_cs_set_state(SpiPort spi, GpioState state) {
-  cs_curr_state = state;
+  s_cs_curr_state = state;
   if (state == GPIO_STATE_LOW) {
     LOG_DEBUG("CS state set to LOW\n");
   } else {
@@ -44,12 +44,12 @@ StatusCode spi_cs_set_state(SpiPort spi, GpioState state) {
 }
 
 StatusCode spi_cs_get_state(SpiPort spi, GpioState *input_state) {
-  if (cs_curr_state == GPIO_STATE_LOW) {
+  if (s_cs_curr_state == GPIO_STATE_LOW) {
     LOG_DEBUG("CS state is LOW\n");
   } else {
     LOG_DEBUG("CS state is HIGH\n");
   }
-  *input_state = cs_curr_state;
+  *input_state = s_cs_curr_state;
   return STATUS_CODE_OK;
 }
 
