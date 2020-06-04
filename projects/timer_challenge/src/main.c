@@ -1,10 +1,9 @@
-#include <stdint.h>  // for integer types
-#include <stdlib.h>  // for random numbers
-
 #include "interrupt.h"   // interrupts are required for soft timers
 #include "log.h"         // for printing
 #include "soft_timer.h"  // for soft timers
 #include "wait.h"        // for wait function
+
+#define COUNTER_UPDATE_PERIOD_MS 500  // miliseconds between counter update
 
 typedef struct Counters {
   uint8_t counter_a;
@@ -21,7 +20,7 @@ void prv_counter_timer_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %i\n", storage->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_counter_timer_callback, storage, NULL);
+  soft_timer_start_millis(COUNTER_UPDATE_PERIOD_MS, prv_counter_timer_callback, storage, NULL);
 }
 
 int main() {
@@ -30,7 +29,8 @@ int main() {
 
   Counters counterStorage = { 0 };
 
-  soft_timer_start_millis(500, prv_counter_timer_callback, &counterStorage, NULL);
+  soft_timer_start_millis(COUNTER_UPDATE_PERIOD_MS, prv_counter_timer_callback, &counterStorage,
+                          NULL);
 
   while (true) {
     wait();
