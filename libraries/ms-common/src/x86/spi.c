@@ -17,7 +17,7 @@ StatusCode spi_init(SpiPort spi, const SpiSettings *settings) {
 StatusCode spi_tx(SpiPort spi, uint8_t *tx_data, size_t tx_len) {
   LOG_DEBUG("Sending Data...\n");
   for (size_t i = 0; i < tx_len; i++) {
-    LOG_DEBUG("%d\n", tx_data[i]);
+    LOG_DEBUG("0x%x\n", tx_data[i]);
   }
   return STATUS_CODE_OK;
 }
@@ -29,7 +29,7 @@ StatusCode spi_rx(SpiPort spi, uint8_t *rx_data, size_t rx_len, uint8_t placehol
     if (i % 2 == 0) {
       rx_data[i] = 1;
     }
-    LOG_DEBUG("%d\n", rx_data[i]);
+    LOG_DEBUG("0x%x\n", rx_data[i]);
   }
   return STATUS_CODE_OK;
 }
