@@ -1,20 +1,19 @@
-// Blink an LED
 #include <stdint.h>
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
 
-#define HALF_SECOND 500  //
+#define HALF_SECOND_MS 500  //
 
 typedef struct CounterStorage {
   uint16_t counter_a;
   uint16_t counter_b;
 } CounterStorage;
 
-void prv_timer_call(const SoftTimerId timer_id, void *empty) {
+void prv_timer_call(const SoftTimerId timer_id, void *context) {
   // cast void* to our struct so we can use it
-  CounterStorage *storage = empty;
+  CounterStorage *storage = context;
   storage->counter_a++;
   storage->counter_b++;
 
