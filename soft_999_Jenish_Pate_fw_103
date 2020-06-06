@@ -9,65 +9,67 @@
 #include <stdlib.h>
 
 typedef struct CounterStorage {
-  uint16_t potentiometer_data;   // Stores data
-  AdcChannel address;            // Stores channel
+  uint16_t potentiometer_data;  // Stores data
+  AdcChannel channel;           // Stores channel
 } CounterStorage;
 
- void prv_button_interrupt_handler(const Gpiovoid *empty) {    
-      CounterStorage *storage = empty;
-      adc_read_converted(storage->potentiometer_data, &storage->address);
-      LOG_DEBUG("potentiometer data: %d\n", storage->potentiometer_data);
-      delay_ms(200);
+void prv_button_interrupt_handler(const GpioAddress *address, void *context) { 
+  CounterStorage *storage = context;
+  adc_read_converted(storage->channel, storage->potentiometer_data);
+  LOG_DEBUG("potentiometer data: %d\n", storage->potentiometer_data);
 }
 
-int main(void) {
-      interrupt_init();       // Initializing Interrupts
-      gpio_init();            // Initializing GPIO
-      gpio__it_init():        // Initializing Interrupts 
+int main() {
+  interrupt_init();  // Initializing Interrupts
+  gpio_init();       // Initializing GPIO
+  gpio_it_init() :
+     
 
-      GpioAddress button = { .port = GPIO_PORT_B, .pin = 2 };                     // Assigning Adress
+  GpioAddress button = { .port = GPIO_PORT_B, .pin = 2 };
+  GpioAddresss potentiometer_addr = { .port = GPIO_PORT_A, .pin = 6 };
 
-      GpioAddresss potentiometer_addr = { .port = GPIO_PORT_A, .pin = 6};          // Assigning Adress
+  GpioSettings pot_settings{
+    // GPIO Settings
+    GPIO_DIR_IN,
+    GPIO_STATE_LOW,
+    GPIO_RES_NONE,
+    GPIO_ALTFN_ANALOG,
+  };
 
-      GpioSettings pot_settings {                    // GPIO Settings 
-            GPIO_DIR_IN,
-            GPIO_STATE_LOW,
-            GPIO_RES_NONE,
-            GPIO_ALTFN_ANALOG,
-             };
+  GpioSettings button_settings{ 
+    // GPIO Button Settings
+    .direction = GPIO_DIR_IN,
+    .alt_function = GPIO_ALTFN_NONE,
+    .resistor = GPIO_RES_PULLDOWN
+  };
 
-       GpioSettings s_button_settings {     // GPIO Settings Button Settings (The videos was very helpful)
-          .direction = GPIO_DIR_IN,         // In direction because we are reading
-          .alt_function = GPIO_ALTFN_NONE,  
-          .resistor =  GPIO_RES_PULLDOWN    // Needs to be pull down
-          };
+  InterruptSettings s_interrupt_settings = {
+    // Required Interrupt Settings
+    .type = INTERRUPT_TYPE_INTERRUPT,
+    .priority = INTERRUPT_PRIORITY_NORMAL,
+  };
 
-       InterruptSettings s_interrupt_settings = {
-            .type = INTERRUPT_TYPE_INTERRUPT,                   // Required Interrupt Settings            
-            .priority = INTERRUPT_PRIORITY_NORMAL,              
-       };
-        
-      AdcChannel pot_channel = NUM_ADC_CHANNELS;
+  AdcChannel pot_channel = NUM_ADC_CHANNELS;
 
-      gpio_init_pin(&potentiometer_addr, &pot_settings);      
-      gpio_init_pin(&button, &s_button_settings);        
-      adc_init(ADC_MODE_SINGLE);
+  gpio_init_pin(&potentiometer_addr, &pot_settings);
+  gpio_init_pin(&button, &button_settings);
+  adc_init(ADC_MODE_SINGLE);
 
-      adc_get_channel(potentiometer_addr, &pot_channel);   // Gets the Address
-      adc_set_channel(pot_channel, true);                  // Enables the Channel
+  adc_get_channel(potentiometer_addr, &pot_channel);  // Gets the Address
+  adc_set_channel(pot_channel, true);                 // Enables the Channel
 
-      // Creates the structure
-      CounterStorage Store_in_here = {potentiometer_data = 0, address = pot_channel};
+  // Creates the structure
+  CounterStorage store_in_here = { 
+    .potentiometer_data = 0, 
+    .address = pot_channel 
+  };
 
-      // Registers an Interrupt
-      gpio_it_register_interrupt(&potentiometer_addr, &s_interrupt_settings,
-                                 INTERRUPT_EDGE_FALLING, prv_button_interrupt_handler,
-                                 &Store_in_here);               
+  // Registers an Interrupt
+  gpio_it_register_interrupt(&potentiometer_addr, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
+                             prv_button_interrupt_handler, &store_in_here);
 
-      while(true) {
+  while (true) {
+  }
 
-      }
-
- return 0;
-
+  return 0;
 }
