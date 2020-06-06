@@ -65,9 +65,9 @@ typedef enum {
 } DataPoint;
 
 // Overwrites the value of the data point with |value|.
-StatusCode data_store_enter(DataPoint data_point, uint16_t value);
+StatusCode data_store_set(DataPoint data_point, uint16_t value);
 
-// Call this when you're done a session of calling |data_store_enter| and you want data consumers
+// Call this when you're done a session of calling |data_store_set| and you want data consumers
 // to be notified. Raises a DATA_READY_EVENT. Every data point should have been overwritten from
 // its initial garbage when this is called.
 StatusCode data_store_done(void);

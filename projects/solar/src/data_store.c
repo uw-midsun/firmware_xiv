@@ -4,7 +4,7 @@
 
 static uint16_t s_data_store[NUM_DATA_POINTS];
 
-StatusCode data_store_enter(DataPoint data_point, uint16_t value) {
+StatusCode data_store_set(DataPoint data_point, uint16_t value) {
   if (data_point >= NUM_DATA_POINTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -18,7 +18,7 @@ StatusCode data_store_done(void) {
 }
 
 StatusCode data_store_get(DataPoint data_point, uint16_t *value) {
-  if (!value || data_point >= NUM_DATA_POINTS) {
+  if (value == NULL || data_point >= NUM_DATA_POINTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   *value = s_data_store[data_point];
