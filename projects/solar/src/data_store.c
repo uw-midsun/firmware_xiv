@@ -2,8 +2,6 @@
 #include "event_queue.h"
 #include "solar_events.h"
 
-#define DATA_READY_PRIORITY EVENT_PRIORITY_NORMAL
-
 static uint16_t s_data_store[NUM_DATA_POINTS];
 
 StatusCode data_store_enter(DataPoint data_point, uint16_t value) {
@@ -16,7 +14,7 @@ StatusCode data_store_enter(DataPoint data_point, uint16_t value) {
 
 StatusCode data_store_done(void) {
   // the data ready event has no associated data
-  return event_raise_priority(DATA_READY_PRIORITY, DATA_READY_EVENT, 0);
+  return event_raise_priority(DATA_READY_EVENT_PRIORITY, DATA_READY_EVENT, 0);
 }
 
 StatusCode data_store_get(DataPoint data_point, uint16_t *value) {

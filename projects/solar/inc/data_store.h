@@ -2,6 +2,8 @@
 
 // Stores all data collected by solar.
 // Requires the event queue to be initialized.
+// Note that on startup, all data will be garbage, so data consumers must only read data after
+// receiving a DATA_READY_EVENT.
 
 #include <stdint.h>
 #include "status.h"
@@ -66,7 +68,8 @@ typedef enum {
 StatusCode data_store_enter(DataPoint data_point, uint16_t value);
 
 // Call this when you're done a session of calling |data_store_enter| and you want data consumers
-// to be notified. Raises a DATA_READY_EVENT.
+// to be notified. Raises a DATA_READY_EVENT. Every data point should have been overwritten from
+// its initial garbage when this is called.
 StatusCode data_store_done(void);
 
 // Puts the value of the data point in |value|.
