@@ -34,12 +34,12 @@ void test_data_store_enter_invalid_index(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_enter(NUM_DATA_POINTS, 0));
 }
 
-// Test that |data_store_get| responds correclty on an invalid index.
+// Test that |data_store_get| responds correctly on an invalid index.
 void test_data_store_get_invalid_index(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_enter(NUM_DATA_POINTS, 0));
 }
 
-// Test that |data_store_done| correclty raises DATA_READY_EVENTs.
+// Test that |data_store_done| correctly raises DATA_READY_EVENTs.
 void test_data_store_done_raises_events(void) {
   Event e;
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
