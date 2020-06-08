@@ -186,7 +186,7 @@ void test_ltc_afe_read_all_voltage_repeated_within_tolerances(void) {
 
   for (size_t i = 0; i < TEST_LTC_AFE_NUM_CELLS; i++) {
     uint16_t delta = bounds[i].max - bounds[i].min;
-    LOG_DEBUG("C%ld delta %d (min %d, max %d)\n", i, delta, bounds[i].min, bounds[i].max);
+    LOG_DEBUG("C%zu delta %d (min %d, max %d)\n", i, delta, bounds[i].min, bounds[i].max);
   }
 }
 
@@ -214,7 +214,7 @@ void test_ltc_afe_read_all_aux_repeated_within_tolerances(void) {
 
   for (size_t i = 0; i < TEST_LTC_AFE_NUM_CELLS; i++) {
     uint16_t delta = bounds[i].max - bounds[i].min;
-    LOG_DEBUG("C%ld aux delta %d (min %d, max %d)\n", i, delta, bounds[i].min, bounds[i].max);
+    LOG_DEBUG("C%zu aux delta %d (min %d, max %d)\n", i, delta, bounds[i].min, bounds[i].max);
   }
 }
 
