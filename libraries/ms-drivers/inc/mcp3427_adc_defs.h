@@ -1,6 +1,6 @@
 #pragma once
 
-#define MCP3427_DEVICE_CODE 0xd
+#define MCP3427_DEVICE_CODE 0xD
 #define MCP3427_RDY_MASK (1 << 7)
 #define MCP3427_CH_SEL_OFFSET 5
 #define MCP3427_CONVERSION_MODE_OFFSET 4

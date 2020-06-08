@@ -1,7 +1,7 @@
 #include "mcp3427_adc.h"
-#include "mcp3427_adc_defs.h"
 #include "fsm.h"
 #include "log.h"
+#include "mcp3427_adc_defs.h"
 #include "soft_timer.h"
 
 #define MCP3427_FSM_NAME "MCP3427 FSM"
@@ -52,7 +52,7 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
   // If the latest data is not ready, we log it.
 
   if (config & MCP3427_RDY_MASK) {
-    LOG_WARN("Ready bit not cleared. Data may not be the latest data available.\n");
+    LOG_WARN("MCP3427 ADC: Ready bit not cleared. Data may not be the latest data available.\n");
     if (storage->fault_callback != NULL) {
       storage->fault_callback(storage->fault_context);
     }
@@ -87,8 +87,7 @@ static void prv_channel_trigger(struct Fsm *fsm, const Event *e, void *context) 
   uint8_t config = storage->config;
 
   config |= MCP3427_RDY_MASK;
-  // Setting the current channel we want to read from. We just flip it from the
-  // previous read.
+  // Setting the current channel we want to read from. We just flip it from the previous read.
   config ^= (1 << MCP3427_CH_SEL_OFFSET);
   storage->config = config;
 
@@ -96,14 +95,14 @@ static void prv_channel_trigger(struct Fsm *fsm, const Event *e, void *context) 
   soft_timer_start_millis(MCP3427_MAX_CONV_TIME_MS, prv_raise_ready, storage, NULL);
 }
 
-// Lookup table for selected address. (TODO: manual tbl)
+// Lookup table for selected address. See manual table 5-3.
 static uint8_t s_addr_lookup[NUM_MCP3427_PIN_STATES][NUM_MCP3427_PIN_STATES] = {
   { 0x0, 0x1, 0x2 },
   { 0x3, 0x0, 0x7 },
   { 0x4, 0x5, 0x6 },
 };
 
-StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Setting *setting) {
+StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
   if (storage == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -112,15 +111,16 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Setting *setting) {
   fsm_state_init(channel_1_readback, prv_channel_ready);
   fsm_state_init(channel_2_trigger, prv_channel_trigger);
   fsm_state_init(channel_2_readback, prv_channel_ready);
-  storage->port = setting->port;
-  storage->addr = s_addr_lookup[setting->Adr0][setting->Adr1] | (MCP3427_DEVICE_CODE << 3);
+  storage->port = settings->port;
+  storage->addr =
+      s_addr_lookup[settings->addr_pin_0][settings->addr_pin_1] | (MCP3427_DEVICE_CODE << 3);
 
   // Writing configuration to the chip (see section 5.3.3 of manual).
-  uint8_t config = 0;
   // Note: Here, channel gets defaulted to 0.
-  config |= (setting->conversion_mode << MCP3427_CONVERSION_MODE_OFFSET);
-  config |= (setting->sample_rate << MCP3427_SAMPLE_RATE_OFFSET);
-  config |= (setting->amplifier_gain << MCP3427_GAIN_SEL_OFFSET);
+  uint8_t config = 0;
+  config |= (settings->conversion_mode << MCP3427_CONVERSION_MODE_OFFSET);
+  config |= (settings->sample_rate << MCP3427_SAMPLE_RATE_OFFSET);
+  config |= (settings->amplifier_gain << MCP3427_GAIN_SEL_OFFSET);
   storage->config = config;
 
   return i2c_write(storage->port, storage->addr, &config, MCP3427_NUM_CONFIG_BYTES);
