@@ -63,11 +63,8 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
   }
   // Don't handle config packets
   if (tx_len != 4) return STATUS_CODE_OK;
-
-  uint8_t cmd[2];
-  cmd[0] = tx_data[1];
-  cmd[1] = tx_data[0];
-  switch (*(uint16_t *)(cmd)) {
+  uint16_t cmd = (tx_data[0] << 8) | tx_data[1];
+  switch (cmd) {
     case LTC6811_RDCVA_RESERVED:
     case LTC6811_RDCVB_RESERVED:
     case LTC6811_RDCVC_RESERVED:
