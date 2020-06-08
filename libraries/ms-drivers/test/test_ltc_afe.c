@@ -5,7 +5,7 @@
 #include "event_queue.h"
 #include "interrupt.h"
 #include "log.h"
-#include "ltc68111.h"
+#include "ltc6811.h"
 #include "ltc_adc.h"
 #include "ltc_afe.h"
 #include "misc.h"
