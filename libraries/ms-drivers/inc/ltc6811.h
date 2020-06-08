@@ -80,7 +80,8 @@ typedef struct {
   // devices are ordered with the last slave first
   LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_CELLS_PER_DEVICE];
 } _PACKED LtcAfeWriteConfigPacket;
-#define SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(num_devices) (4+(num_devices)*sizeof(LtcAfeWriteConfigPacket))
+#define SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(devices) \
+  (4 + (devices) * sizeof(LtcAfeWriteConfigPacket))
 
 typedef union {
   uint16_t voltages[3];

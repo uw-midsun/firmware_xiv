@@ -1,12 +1,13 @@
 #pragma once
 // Driver for LTC6811 AFE chip
-// Assumes that:
-// TODO (SOFT-9): Need to update GPIO part
+
+// TODO(SOFT-9): Need to update GPIO/ADC part
+
 // Requires GPIO, Interrupts, Soft Timers, and Event Queue to be initialized
-//
+
 // Note that all units are in 100uV.
-//
-// This module supports AFEs with fewer than 12 cells using the |cell/aux_bitset|.
+
+// This module supports AFEs with >=12 cells using the |cell/aux_bitset|.
 // Note that due to the long conversion delays required, we use an FSM to return control to the
 // application.
 #include <assert.h>
@@ -18,7 +19,6 @@
 #include "gpio.h"
 #include "spi.h"
 #include "status.h"
-
 
 // This is an arbitrary limitation, can be increased/decreased if needed
 #define LTC_AFE_MAX_DEVICES 5
@@ -46,8 +46,6 @@ typedef enum {
   LTC_AFE_ADC_MODE_2KHZ,
   NUM_LTC_AFE_ADC_MODES
 } LtcAfeAdcMode;
-
-
 
 typedef struct LtcAfeBitset {
   uint16_t cell_bitset;
@@ -85,7 +83,6 @@ typedef struct LtcAfeSettings {
   LtcAfeResultCallback aux_result_cb;
   void *result_context;
 } LtcAfeSettings;
-
 
 typedef struct LtcAfeStorage {
   Fsm fsm;

@@ -5,9 +5,9 @@
 #include "event_queue.h"
 #include "interrupt.h"
 #include "log.h"
-#include "ltc_afe.h"
-#include "ltc_adc.h"
 #include "ltc68111.h"
+#include "ltc_adc.h"
+#include "ltc_afe.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
@@ -50,17 +50,16 @@ static LtcAfeStorage s_afe;
 static uint16_t s_result_arr[TEST_LTC_AFE_NUM_CELLS];
 
 StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len, uint8_t *rx_data,
-                                    size_t rx_len) {
+                                   size_t rx_len) {
   // Return a voltage of 0x6969 on voltage read
   TEST_ASSERT_EQUAL(spi, TEST_LTC_AFE_SPI_PORT);
-  LtcAfeVoltageRegisterGroup registers[TEST_LTC_AFE_NUM_DEVICES] = { {
-      .reg = {
-        .voltages = { 0x6969, 0x420, 0x1337}
-      }
-   } };
+  LtcAfeVoltageRegisterGroup registers[TEST_LTC_AFE_NUM_DEVICES] = {
+    { .reg = { .voltages = { 0x6969, 0x420, 0x1337 } } }
+  };
 
-   for (int i = 0; i < TEST_LTC_AFE_NUM_DEVICES; i ++) {
-    registers[i].pec = SWAP_UINT16(crc15_calculate(registers[i].reg.values, sizeof(registers[i].reg)));
+  for (int i = 0; i < TEST_LTC_AFE_NUM_DEVICES; i++) {
+    registers[i].pec =
+        SWAP_UINT16(crc15_calculate(registers[i].reg.values, sizeof(registers[i].reg)));
   }
   // Don't handle config packets
   if (tx_len != 4) return STATUS_CODE_OK;
@@ -120,7 +119,7 @@ void setup_test(void) {
     .miso = TEST_LTC_AFE_SPI_MISO,
     .sclk = TEST_LTC_AFE_SPI_SCLK,
     .cs = TEST_LTC_AFE_SPI_CS,
-    
+
     .spi_port = TEST_LTC_AFE_SPI_PORT,
     .spi_baudrate = TEST_LTC_AFE_SPI_BAUDRATE,
     .adc_mode = TEST_LTC_AFE_ADC_MODE,
@@ -128,25 +127,23 @@ void setup_test(void) {
     // Because these need to be the max size, should do initialize this way
     .cell_bitset = { 0 },
     .aux_bitset = { 0 },
-    
+
     .num_devices = TEST_LTC_AFE_NUM_DEVICES,
     .num_cells = TEST_LTC_AFE_NUM_CELLS,
 
-    .ltc_events = {
-      .trigger_cell_conv_event = TEST_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
-      .cell_conv_complete_event = TEST_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
-      .trigger_aux_conv_event = TEST_LTC_AFE_TRIGGER_AUX_CONV_EVENT,
-      .aux_conv_complete_event = TEST_LTC_AFE_AUX_CONV_COMPLETE_EVENT,
-      .callback_run_event = TEST_LTC_AFE_CALLBACK_RUN_EVENT,
-      .fault_event = TEST_LTC_AFE_FAULT_EVENT
-    },
+    .ltc_events = { .trigger_cell_conv_event = TEST_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
+                    .cell_conv_complete_event = TEST_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
+                    .trigger_aux_conv_event = TEST_LTC_AFE_TRIGGER_AUX_CONV_EVENT,
+                    .aux_conv_complete_event = TEST_LTC_AFE_AUX_CONV_COMPLETE_EVENT,
+                    .callback_run_event = TEST_LTC_AFE_CALLBACK_RUN_EVENT,
+                    .fault_event = TEST_LTC_AFE_FAULT_EVENT },
 
     .cell_result_cb = prv_conv_cb,
     .aux_result_cb = prv_conv_cb,
     .result_context = NULL,
   };
 
-  for(int i = 0; i < TEST_LTC_AFE_NUM_DEVICES; i++) {
+  for (int i = 0; i < TEST_LTC_AFE_NUM_DEVICES; i++) {
     afe_settings.cell_bitset[i] = TEST_LTC_AFE_INPUT_BITSET_FULL;
     afe_settings.aux_bitset[i] = TEST_LTC_AFE_INPUT_BITSET_FULL;
   }

@@ -5,7 +5,7 @@
 // Requires SPI, soft timers to be initialized
 //
 // Assumes that:
-// TODO (SOFT-9): Update to handle gpio
+// TODO(SOFT-9): Update to handle gpio
 // Requires GPIO, Interrupts and Soft Timers to be initialized
 //
 // Note that all units are in 100uV.

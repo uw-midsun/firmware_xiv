@@ -1,7 +1,7 @@
 #include "ltc_afe_fsm.h"
+#include "log.h"
 #include "ltc_afe_impl.h"
 #include "soft_timer.h"
-#include "log.h"
 
 FSM_DECLARE_STATE(afe_idle);
 FSM_DECLARE_STATE(afe_trigger_cell_conv);
@@ -100,7 +100,7 @@ static void prv_afe_read_cells_output(struct Fsm *fsm, const Event *e, void *con
   LtcAfeEventList *afe_events = &afe->settings.ltc_events;
 
   StatusCode ret = ltc_afe_impl_read_cells(afe);
-  
+
   LOG_DEBUG("READING FROM CELLS\n");
   if (status_ok(ret)) {
     // Raise the event first in case the user raises a trigger conversion event in the callback
@@ -109,11 +109,8 @@ static void prv_afe_read_cells_output(struct Fsm *fsm, const Event *e, void *con
 
     if (afe->settings.cell_result_cb != NULL) {
       LOG_DEBUG("RUNNING CELL CALLBACK\n");
-      afe->settings.cell_result_cb(
-        afe->cell_voltages,
-        afe->settings.num_cells,
-        afe->settings.result_context
-      );
+      afe->settings.cell_result_cb(afe->cell_voltages, afe->settings.num_cells,
+                                   afe->settings.result_context);
     }
   } else if (afe->retry_count < LTC_AFE_FSM_MAX_RETRY_COUNT) {
     LOG_DEBUG("TRIGGERING CELL RETRIES\n");
@@ -174,7 +171,8 @@ static void prv_afe_aux_complete_output(struct Fsm *fsm, const Event *e, void *c
 
   // 12 aux conversions complete - the array should be fully populated
   if (afe->settings.aux_result_cb != NULL) {
-    afe->settings.aux_result_cb(afe->aux_voltages, afe->settings.num_cells, afe->settings.result_context);
+    afe->settings.aux_result_cb(afe->aux_voltages, afe->settings.num_cells,
+                                afe->settings.result_context);
   }
 }
 

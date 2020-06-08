@@ -3,8 +3,8 @@
 #include <string.h>
 #include "crc15.h"
 #include "delay.h"
-#include "ltc6811.h"
 #include "log.h"
+#include "ltc6811.h"
 
 // - 12-bit, 16-bit and 24-bit values are little endian
 // - commands and PEC are big endian
@@ -175,10 +175,11 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
 }
 
 StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings) {
-  if (settings->num_devices > LTC_AFE_MAX_DEVICES || settings->num_cells > settings->num_devices * LTC_AFE_MAX_CELLS) {
+  if (settings->num_devices > LTC_AFE_MAX_DEVICES ||
+      settings->num_cells > settings->num_devices * LTC_AFE_MAX_CELLS) {
     // bad no. devices (needs code change)
     // bad no. of cells (needs verification)
-    // might also want to verify bitset is valid, but might not be worth
+    return status_code(STATUS_CODE_INVALID_ARGS);
   }
   memset(afe, 0, sizeof(*afe));
   memcpy(&afe->settings, settings, sizeof(afe->settings));
@@ -231,7 +232,8 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         uint16_t device_cell = cell + (cell_reg * LTC6811_CELLS_IN_REG);
         uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
-        LOG_DEBUG("Got cell voltage for cell index: %d with value %d\n", afe->cell_result_lookup[index], voltage);
+        LOG_DEBUG("Got cell voltage for cell index: %d with value %d\n",
+                  afe->cell_result_lookup[index], voltage);
         if (((settings->cell_bitset[device] >> device_cell) & 0x1) == 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_lookup[index]] = voltage;
@@ -241,7 +243,8 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
       // the Packet Error Code is transmitted after the cell data (see p.45)
       uint16_t received_pec = SWAP_UINT16(voltage_register[device].pec);
       uint16_t data_pec = crc15_calculate((uint8_t *)&voltage_register[device], 6);
-      LOG_DEBUG("CALCULATING PACKET ERROR CODE (CRC) FOR rev_pec=%d and data_pec=%d\n", received_pec, data_pec);
+      LOG_DEBUG("CALCULATING PACKET ERROR CODE (CRC) FOR rev_pec=%d and data_pec=%d\n",
+                received_pec, data_pec);
       if (received_pec != data_pec) {
         // return early on failure
         return status_code(STATUS_CODE_INTERNAL_ERROR);
@@ -258,7 +261,6 @@ StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
 
   size_t len = settings->num_devices * sizeof(LtcAfeAuxRegisterGroupPacket);
   prv_read_register(afe, LTC_AFE_REGISTER_AUX_A, (uint8_t *)register_data, len);
-
 
   for (uint16_t device = 0; device < settings->num_devices; ++device) {
     // data comes in in the form { 1, 1, 2, 2, 3, 3, PEC, PEC }
