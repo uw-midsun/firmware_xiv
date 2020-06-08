@@ -1,6 +1,7 @@
 #pragma once
 #include <assert.h>
-#include "plutus_cfg.h"
+
+#include "ltc_afe.h"
 
 // used internally by the LTC AFE driver
 
@@ -77,10 +78,9 @@ typedef struct {
   uint8_t wrcfg[4];
 
   // devices are ordered with the last slave first
-  LtcAfeWriteDeviceConfigPacket devices[PLUTUS_CFG_AFE_DEVICES_IN_CHAIN];
+  LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_CELLS_PER_DEVICE];
 } _PACKED LtcAfeWriteConfigPacket;
-static_assert(sizeof(LtcAfeWriteConfigPacket) == 4 + 8 * PLUTUS_CFG_AFE_DEVICES_IN_CHAIN,
-              "LtcAfeWriteConfigPacket is not expected size");
+#define SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(num_devices) (4+(num_devices)*sizeof(LtcAfeWriteConfigPacket))
 
 typedef union {
   uint16_t voltages[3];
@@ -101,9 +101,9 @@ typedef struct {
   LtcAfeRegisterGroup reg;
 
   uint16_t pec;
-} _PACKED LTCAFEAuxRegisterGroupPacket;
-static_assert(sizeof(LTCAFEAuxRegisterGroupPacket) == 8,
-              "LTCAFEAuxRegisterGroupPacket must be 8 bytes");
+} _PACKED LtcAfeAuxRegisterGroupPacket;
+static_assert(sizeof(LtcAfeAuxRegisterGroupPacket) == 8,
+              "LtcAfeAuxRegisterGroupPacket must be 8 bytes");
 
 // command codes
 // see Table 34 (p.49)

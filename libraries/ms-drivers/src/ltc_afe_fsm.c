@@ -1,6 +1,5 @@
 #include "ltc_afe_fsm.h"
 #include "ltc_afe_impl.h"
-#include "plutus_event.h"
 #include "soft_timer.h"
 #include "log.h"
 
@@ -88,7 +87,7 @@ static void prv_afe_trigger_cell_conv_output(struct Fsm *fsm, const Event *e, vo
   StatusCode ret = ltc_afe_impl_trigger_cell_conv(afe);
   if (status_ok(ret)) {
     LOG_DEBUG("TRIGGERED CELL CONVERSION SUCCESSFULLY\n");
-    soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, NULL, NULL);
+    soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, afe, NULL);
   } else {
     LOG_DEBUG("FAILED TO TRIGGER CONVERSION\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
@@ -119,7 +118,7 @@ static void prv_afe_read_cells_output(struct Fsm *fsm, const Event *e, void *con
   } else if (afe->retry_count < LTC_AFE_FSM_MAX_RETRY_COUNT) {
     LOG_DEBUG("TRIGGERING CELL RETRIES\n");
     afe->retry_count++;
-    soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, NULL, NULL);
+    soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, afe, NULL);
   } else {
     LOG_DEBUG("FAULT WHILE TRYING TO READ FROM CELLS\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,

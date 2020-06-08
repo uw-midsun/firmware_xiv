@@ -2,7 +2,6 @@
 #include "critical_section.h"
 #include "ltc_afe_fsm.h"
 #include "ltc_afe_impl.h"
-#include "plutus_event.h"
 
 StatusCode ltc_afe_init(LtcAfeStorage *afe, const LtcAfeSettings *settings) {
   status_ok_or_return(ltc_afe_impl_init(afe, settings));

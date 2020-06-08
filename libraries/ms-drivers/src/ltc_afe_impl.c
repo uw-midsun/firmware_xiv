@@ -136,9 +136,9 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
     config_packet.devices[curr_device].pec = SWAP_UINT16(cfgr_pec);
   }
 
+  size_t len = SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(settings->num_devices);
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, (uint8_t *)&config_packet, sizeof(LtcAfeWriteConfigPacket),
-                      NULL, 0);
+  return spi_exchange(settings->spi_port, (uint8_t *)&config_packet, len, NULL, 0);
 }
 
 static void prv_calc_offsets(LtcAfeStorage *afe) {
@@ -254,10 +254,11 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
 
 StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
   LtcAfeSettings *settings = &afe->settings;
-  LTCAFEAuxRegisterGroupPacket register_data[LTC_AFE_MAX_DEVICES] = { 0 };
+  LtcAfeAuxRegisterGroupPacket register_data[LTC_AFE_MAX_DEVICES] = { 0 };
 
-  size_t len = settings->num_devices * sizeof(LTCAFEAuxRegisterGroupPacket);
+  size_t len = settings->num_devices * sizeof(LtcAfeAuxRegisterGroupPacket);
   prv_read_register(afe, LTC_AFE_REGISTER_AUX_A, (uint8_t *)register_data, len);
+
 
   for (uint16_t device = 0; device < settings->num_devices; ++device) {
     // data comes in in the form { 1, 1, 2, 2, 3, 3, PEC, PEC }
@@ -281,7 +282,7 @@ StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
 }
 
 StatusCode ltc_afe_impl_toggle_cell_discharge(LtcAfeStorage *afe, uint16_t cell, bool discharge) {
-  if (cell >= LTC_AFE_MAX_CELLS) {
+  if (cell >= afe->settings.num_cells) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
