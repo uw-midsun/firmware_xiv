@@ -1,5 +1,5 @@
 #pragma once
-// crc15 implementation for the LTC6804-1
+// crc15 implementation for the LTC6811
 #include <stddef.h>
 #include <stdint.h>
 
