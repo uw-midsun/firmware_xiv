@@ -3,17 +3,17 @@
 #include <string.h>
 #include "crc15.h"
 #include "delay.h"
-#include "ltc68041.h"
+#include "ltc6811.h"
 #include "log.h"
 
 // - 12-bit, 16-bit and 24-bit values are little endian
 // - commands and PEC are big endian
 
 static uint16_t s_read_reg_cmd[NUM_LTC_AFE_REGISTERS] = {
-  LTC6804_RDCFG_RESERVED,  LTC6804_RDCVA_RESERVED,   LTC6804_RDCVB_RESERVED,
-  LTC6804_RDCVC_RESERVED,  LTC6804_RDCVD_RESERVED,   LTC6804_RDAUXA_RESERVED,
-  LTC6804_RDAUXA_RESERVED, LTC6804_RDSTATA_RESERVED, LTC6804_RDSTATB_RESERVED,
-  LTC6804_RDCOMM_RESERVED
+  LTC6811_RDCFG_RESERVED,  LTC6811_RDCVA_RESERVED,   LTC6811_RDCVB_RESERVED,
+  LTC6811_RDCVC_RESERVED,  LTC6811_RDCVD_RESERVED,   LTC6811_RDAUXA_RESERVED,
+  LTC6811_RDAUXA_RESERVED, LTC6811_RDSTATA_RESERVED, LTC6811_RDSTATB_RESERVED,
+  LTC6811_RDCOMM_RESERVED
 };
 
 static uint8_t s_voltage_reg[NUM_LTC_AFE_VOLTAGE_REGISTERS] = {
@@ -80,8 +80,8 @@ static StatusCode prv_trigger_adc_conversion(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   uint8_t mode = (uint8_t)((settings->adc_mode + 1) % 3);
   // ADCV command
-  uint16_t adcv = LTC6804_ADCV_RESERVED | LTC6804_ADCV_DISCHARGE_NOT_PERMITTED |
-                  LTC6804_CNVT_CELL_ALL | (mode << 7);
+  uint16_t adcv = LTC6811_ADCV_RESERVED | LTC6811_ADCV_DISCHARGE_NOT_PERMITTED |
+                  LTC6811_CNVT_CELL_ALL | (mode << 7);
 
   uint8_t cmd[4] = { 0 };
   prv_build_cmd(adcv, cmd, SIZEOF_ARRAY(cmd));
@@ -94,7 +94,7 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   uint8_t mode = (uint8_t)((settings->adc_mode + 1) % 3);
   // ADAX
-  uint16_t adax = LTC6804_ADAX_RESERVED | LTC6804_ADAX_GPIO1 | (mode << 7);
+  uint16_t adax = LTC6811_ADAX_RESERVED | LTC6811_ADAX_GPIO1 | (mode << 7);
 
   uint8_t cmd[4] = { 0 };
   prv_build_cmd(adax, cmd, SIZEOF_ARRAY(cmd));
@@ -109,7 +109,7 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
   // see p.54 in datasheet
   LtcAfeWriteConfigPacket config_packet = { 0 };
 
-  prv_build_cmd(LTC6804_WRCFG_RESERVED, config_packet.wrcfg, SIZEOF_ARRAY(config_packet.wrcfg));
+  prv_build_cmd(LTC6811_WRCFG_RESERVED, config_packet.wrcfg, SIZEOF_ARRAY(config_packet.wrcfg));
 
   // essentially, each set of CFGR registers are clocked through each device,
   // until the first set reaches the last device (like a giant shift register)
@@ -143,7 +143,7 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
 
 static void prv_calc_offsets(LtcAfeStorage *afe) {
   // Our goal is to populate result arrays as if the ignored inputs don't exist. This requires
-  // converting the actual LTC6804 cell index to some potentially smaller result index.
+  // converting the actual LTC6811 cell index to some potentially smaller result index.
   //
   // Since we access the same register across multiple devices, we can't just keep a counter and
   // increment it for each new value we get during register access. Instead, we precompute each
@@ -198,8 +198,8 @@ StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings)
 
   // TODO(SOFT-9): Update GPIO usage to match updated design
   // Use GPIO1 as analog input, GPIO2-5 as digital output
-  uint8_t gpio_bits = LTC6804_GPIO1_PD_OFF | LTC6804_GPIO2_PD_ON | LTC6804_GPIO3_PD_ON |
-                      LTC6804_GPIO4_PD_ON | LTC6804_GPIO5_PD_ON;
+  uint8_t gpio_bits = LTC6811_GPIO1_PD_OFF | LTC6811_GPIO2_PD_ON | LTC6811_GPIO3_PD_ON |
+                      LTC6811_GPIO4_PD_ON | LTC6811_GPIO5_PD_ON;
   return prv_write_config(afe, gpio_bits);
 }
 
@@ -212,7 +212,7 @@ StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell
   // configure the mux to read from cell
   // we use GPIO2, GPIO3, GPIO4, GPIO5 to select which input to read
   // corresponding to the binary representation of the cell
-  prv_write_config(afe, (device_cell << 4) | LTC6804_GPIO1_PD_OFF);
+  prv_write_config(afe, (device_cell << 4) | LTC6811_GPIO1_PD_OFF);
 
   return prv_trigger_aux_adc_conversion(afe);
 }
@@ -225,10 +225,10 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
     prv_read_voltage(afe, cell_reg, voltage_register);
 
     for (uint8_t device = 0; device < settings->num_devices; ++device) {
-      for (uint16_t cell = 0; cell < LTC6804_CELLS_IN_REG; ++cell) {
+      for (uint16_t cell = 0; cell < LTC6811_CELLS_IN_REG; ++cell) {
         // LSB of the reading is 100 uV
         uint16_t voltage = voltage_register[device].reg.voltages[cell];
-        uint16_t device_cell = cell + (cell_reg * LTC6804_CELLS_IN_REG);
+        uint16_t device_cell = cell + (cell_reg * LTC6811_CELLS_IN_REG);
         uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
         LOG_DEBUG("Got cell voltage for cell index: %d with value %d\n", afe->cell_result_lookup[index], voltage);

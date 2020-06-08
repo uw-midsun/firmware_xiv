@@ -1,9 +1,7 @@
 #pragma once
-// Driver for LTC<CHANGED> AFE chip
+// Driver for LTC6811 AFE chip
 // Assumes that:
-// - a <CHANGED> channel analog MUX is attached to the GPIO outputs
-// - <CHANGED> are used as AUX channel select outputs
-// - <CHANGED> is used as a thermistor input
+// TODO (SOFT-9): Need to update GPIO part
 // Requires GPIO, Interrupts, Soft Timers, and Event Queue to be initialized
 //
 // Note that all units are in 100uV.
@@ -108,7 +106,7 @@ typedef struct LtcAfeStorage {
   LtcAfeSettings settings;
 } LtcAfeStorage;
 
-// Initialize the LTC<CHANGED>.
+// Initialize the LTC6811.
 // |settings.cell_bitset| and |settings.aux_bitset| should be an array of bitsets where bits 0 to 11
 // represent whether we should monitor the cell input for the given device.
 // |settings.cell_result_cb| and |settings.aux_result_cb| will be called when the corresponding
@@ -126,5 +124,5 @@ StatusCode ltc_afe_request_aux_conversion(LtcAfeStorage *afe);
 bool ltc_afe_process_event(LtcAfeStorage *afe, const Event *e);
 
 // Mark cell for discharging (takes effect after config is re-written)
-// |cell| should be [0, settings.max_total_cells)
+// |cell| should be [0, settings.num_cells)
 StatusCode ltc_afe_toggle_cell_discharge(LtcAfeStorage *afe, uint16_t cell, bool discharge);

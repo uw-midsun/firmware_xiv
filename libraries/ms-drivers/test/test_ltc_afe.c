@@ -7,7 +7,7 @@
 #include "log.h"
 #include "ltc_afe.h"
 #include "ltc_adc.h"
-#include "ltc68041.h"
+#include "ltc68111.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
@@ -69,25 +69,25 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
   cmd[0] = tx_data[1];
   cmd[1] = tx_data[0];
   switch (*(uint16_t *)(cmd)) {
-    case LTC6804_RDCVA_RESERVED:
-    case LTC6804_RDCVB_RESERVED:
-    case LTC6804_RDCVC_RESERVED:
-    case LTC6804_RDCVD_RESERVED:
+    case LTC6811_RDCVA_RESERVED:
+    case LTC6811_RDCVB_RESERVED:
+    case LTC6811_RDCVC_RESERVED:
+    case LTC6811_RDCVD_RESERVED:
       TEST_ASSERT_NOT_NULL(rx_data);
       TEST_ASSERT_EQUAL(sizeof(registers), rx_len);
       memcpy(rx_data, registers, sizeof(registers));
       break;
-    case LTC6804_RDAUXA_RESERVED:
-    case LTC6804_RDAUXB_RESERVED:
+    case LTC6811_RDAUXA_RESERVED:
+    case LTC6811_RDAUXB_RESERVED:
       TEST_ASSERT_NOT_NULL(rx_data);
       TEST_ASSERT_EQUAL(sizeof(registers), rx_len);
       memcpy(rx_data, registers, sizeof(registers));
       break;
       break;
-    case LTC6804_RDCFG_RESERVED:
-    case LTC6804_RDSTATA_RESERVED:
-    case LTC6804_RDSTATB_RESERVED:
-    case LTC6804_RDCOMM_RESERVED:
+    case LTC6811_RDCFG_RESERVED:
+    case LTC6811_RDSTATA_RESERVED:
+    case LTC6811_RDSTATB_RESERVED:
+    case LTC6811_RDCOMM_RESERVED:
     default:
       TEST_ASSERT_NULL(rx_data);
       break;
