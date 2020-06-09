@@ -260,7 +260,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
 
 StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
   // TODO(SOFT-9): Update GPIO usage to match updated design
-  
+
   LtcAfeSettings *settings = &afe->settings;
   LtcAfeAuxRegisterGroupPacket register_data[LTC_AFE_MAX_DEVICES] = { 0 };
 
