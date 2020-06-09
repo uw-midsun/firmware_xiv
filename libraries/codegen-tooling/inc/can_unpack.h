@@ -180,3 +180,8 @@
 #define CAN_UNPACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),              \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16_ptr, aux_battery_temp_u16_ptr, \
+                                      dcdc_status_u16_ptr)                                         \
+  can_unpack_impl_u16((msg_ptr), 6, (aux_battery_volt_u16_ptr), (aux_battery_temp_u16_ptr),        \
+                      (dcdc_status_u16_ptr), CAN_UNPACK_IMPL_EMPTY)

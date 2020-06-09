@@ -6,10 +6,6 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common
+$(T)_DEPS := ms-helper ms-common codegen-tooling
 
-ifeq (x86,$(PLATFORM))
-$(T)_EXCLUDE_TESTS := mcp2515 adc_periodic_reader
-endif
-
-$(T)_test_thermistor_MOCKS := adc_read_converted adc_get_channel adc_set_channel
+$(T)_test_power_selection_MOCKS := adc_read_raw
