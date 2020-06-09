@@ -6,7 +6,6 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ltc6811.h"
-#include "ltc_adc.h"
 #include "ltc_afe.h"
 #include "misc.h"
 #include "ms_test_helpers.h"
