@@ -91,6 +91,7 @@ static StatusCode prv_trigger_adc_conversion(LtcAfeStorage *afe) {
 }
 
 static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
+  // TODO(SOFT-9): Update GPIO usage to match updated design
   LtcAfeSettings *settings = &afe->settings;
   uint8_t mode = (uint8_t)((settings->adc_mode + 1) % 3);
   // ADAX
@@ -198,6 +199,7 @@ StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings)
   spi_init(settings->spi_port, &spi_config);
 
   // TODO(SOFT-9): Update GPIO usage to match updated design
+
   // Use GPIO1 as analog input, GPIO2-5 as digital output
   uint8_t gpio_bits = LTC6811_GPIO1_PD_OFF | LTC6811_GPIO2_PD_ON | LTC6811_GPIO3_PD_ON |
                       LTC6811_GPIO4_PD_ON | LTC6811_GPIO5_PD_ON;
@@ -210,6 +212,7 @@ StatusCode ltc_afe_impl_trigger_cell_conv(LtcAfeStorage *afe) {
 
 StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell) {
   // TODO(SOFT-9): Update GPIO usage to match updated design
+
   // configure the mux to read from cell
   // we use GPIO2, GPIO3, GPIO4, GPIO5 to select which input to read
   // corresponding to the binary representation of the cell
@@ -256,6 +259,8 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
 }
 
 StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
+  // TODO(SOFT-9): Update GPIO usage to match updated design
+  
   LtcAfeSettings *settings = &afe->settings;
   LtcAfeAuxRegisterGroupPacket register_data[LTC_AFE_MAX_DEVICES] = { 0 };
 
