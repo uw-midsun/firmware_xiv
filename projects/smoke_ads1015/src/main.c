@@ -1,7 +1,7 @@
 // A simple smoke test for ADS1015
 
 // Periodically take reading from user selected channels and log the result
-// Configurable items: channels to be tested, conversion enable, wait time
+// Configurable items: wait time, I2C port, channels to be tested and conversion enable
 #include "ads1015.h"
 #include "gpio.h"
 #include "i2c.h"
