@@ -39,10 +39,14 @@
   0x80  // Setting a polarity bit to 1 makes the corresponding GPIO pin active high. Clearing the
         // polarity bit to 0 makes it active low.
 
-#define ADR7470_I2C_ADDRESS_1 010111
+// how are these read? on the schematic it says I2C address: 0101100_R/W and hex values for read or
+// write. assuming those are tagged on after a don't care for a total of 16 bits?
+#define ADR7470_I2C_ADDRESS_1 010111  // 15 bits?
 #define ADR7470_I2C_ADDRESS_2 0101100
 
 #define I2C1_SDA \
   { .port = GPIO_PORT_B, .pin = 16 }
 #define I2C1_SCL \
   { .port = GPIO_PORT_B, .pin = 1 }
+
+#define SET_SPEED_NUM_BYTES 2

@@ -6,13 +6,12 @@
 
 #define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
 #define STM32_GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
-
-// PWM duty cycle is set from 0-100, in steps of 0.39
-StatusCode apt7470_set_speed(I2CPort port, uint8_t *speed) {
-  // speed stuff
-  StatusCode status;
-  status = i2c_write_reg(I2C_PORT_1, ADR7470_I2C_ADDRESS, ADT7470_PWM1_DUTY_CYCLE, speed, 2);
-  return status;
+// need to set interrupt once fan goes out of range
+// PWM duty cycle is set from 0-100, in steps of 0.39 (0 - 0xFF)
+StatusCode apt7470_set_speed(I2CPort port, uint8_t *speed, Fan FAN, uint16_t ADR7470_I2C_ADDRESS) {
+  // need to select duty fan - correct fan duty cycle
+  return i2c_write_reg(I2C_PORT_1, ADR7470_I2C_ADDRESS, ADT7470_PWM2_DUTY_CYCLE, speed,
+                       SET_SPEED_NUM_BYTES);
 }
 
 static StatusCode prv_init_common(Adt7470Storage *storage) {
@@ -34,14 +33,14 @@ StatusCode bts_7240_init(Adt7470Storage *storage, Adt7470Settings *settings) {
   }
 
   memset(storage, 0, sizeof(Adt7470Storage));
-  // init i2c? where does that go
+
   // 4 gpio's need to be set to PWM
   storage->fan_1_pin = settings->fan_1_pin;
   storage->fan_2_pin = settings->fan_2_pin;
   storage->fan_3_pin = settings->fan_3_pin;
   storage->fan_4_pin = settings->fan_4_pin;
   storage->interval_us = settings->interval_us;
-  storage->callback = settings->callback;
+  storage->callback = settings->callback;  // probably will use to check if tachometre reads 0
   storage->callback_context = settings->callback_context;
 
   // initialize the select pin
@@ -52,7 +51,7 @@ StatusCode bts_7240_init(Adt7470Storage *storage, Adt7470Settings *settings) {
     .alt_function = GPIO_ALTFN_NONE,
   };
 
-  // setting 4 fans
+  // setting 4 fans to PWM output
   status_ok_or_return(gpio_init_pin(storage->fan_1_pin, &select_settings));
   status_ok_or_return(gpio_init_pin(storage->fan_2_pin, &select_settings));
   status_ok_or_return(gpio_init_pin(storage->fan_3_pin, &select_settings));
