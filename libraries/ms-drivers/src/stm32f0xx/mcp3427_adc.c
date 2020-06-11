@@ -4,6 +4,10 @@
 #include "mcp3427_adc_defs.h"
 #include "soft_timer.h"
 
+// Note: we always read from both channels before reporting, taking 100ms between reports. If timing
+// is an issue, an optimization for boards (i.e. solar) using only one channel is to only read that
+// channel, so reports take 50ms.
+
 #define MCP3427_FSM_NAME "MCP3427 FSM"
 #define MCP3427_MAX_CONV_TIME_MS 50
 
@@ -72,8 +76,8 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
 
   if (current_channel == MCP3427_CHANNEL_2 && storage->callback != NULL) {
     // We have all the data ready.
-    uint32_t data = (uint32_t)storage->sensor_data[0] << 16 | storage->sensor_data[1];
-    storage->callback(data, storage->context);
+    storage->callback((int16_t)storage->sensor_data[0], (int16_t)storage->sensor_data[1],
+                      storage->context);
   }
 
   event_raise(storage->data_trigger_event, storage->addr ^ (MCP3427_DEVICE_CODE << 3));
@@ -103,9 +107,12 @@ static uint8_t s_addr_lookup[NUM_MCP3427_PIN_STATES][NUM_MCP3427_PIN_STATES] = {
 };
 
 StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
-  if (storage == NULL) {
+  if (storage == NULL || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
+
+  storage->data_ready_event = settings->adc_data_ready_event;
+  storage->data_trigger_event = settings->adc_data_trigger_event;
 
   fsm_state_init(channel_1_trigger, prv_channel_trigger);
   fsm_state_init(channel_1_readback, prv_channel_ready);
@@ -145,5 +152,10 @@ StatusCode mcp3427_register_fault_callback(Mcp3427Storage *storage, Mcp3427Fault
   }
   storage->fault_callback = callback;
   storage->fault_context = context;
+  return STATUS_CODE_OK;
+}
+
+StatusCode mcp3427_process_event(Mcp3427Storage *storage, Event *e) {
+  fsm_process_event(&storage->fsm, e);
   return STATUS_CODE_OK;
 }

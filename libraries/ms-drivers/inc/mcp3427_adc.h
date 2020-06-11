@@ -1,5 +1,15 @@
 #pragma once
 
+// MCP3427 analog-to-digital converter driver.
+// Requires the event queue and I2C to be initialized.
+// I2C must be initialized on the port used.
+
+// Once a callback is initialized, we continually request a conversion (in one-shot mode), wait
+// at least 50 ms, then read the conversion result and call the callback or fault if the
+// conversion is not ready.
+
+// Note that the reference voltage of the MCP3427 is 2.048V.
+
 #include "event_queue.h"
 #include "fsm.h"
 #include "i2c.h"
@@ -13,14 +23,15 @@ typedef enum {
 } Mcp3427PinState;
 
 // Number of bits of the converted values. More bits is more precise but takes longer.
+// See page 1 of manual.
 typedef enum {
-  MCP3427_SAMPLE_RATE_12_BIT = 0,  // 12-bit precision, 240 samples/second
-  MCP3427_SAMPLE_RATE_14_BIT,      // 14-bit precision, 60 samples/second
-  MCP3427_SAMPLE_RATE_16_BIT,      // 16-bit precision, 15 samples/second
+  MCP3427_SAMPLE_RATE_12_BIT = 0,  // 12-bit precision, 240 samples/second in continuous mode
+  MCP3427_SAMPLE_RATE_14_BIT,      // 14-bit precision, 60 samples/second in continuous mode
+  MCP3427_SAMPLE_RATE_16_BIT,      // 16-bit precision, 15 samples/second in continuous mode
   NUM_MCP3427_SAMPLE_RATES
 } Mcp3427SampleRate;
 
-// The MCP3427's two input channels.
+// The MCP3427's two input channels, used internally.
 typedef enum {
   MCP3427_CHANNEL_1 = 0,  //
   MCP3427_CHANNEL_2,      //
@@ -36,13 +47,17 @@ typedef enum {
   NUM_MCP3427_AMP_GAINS
 } Mcp3427AmpGain;
 
+// Conversion mode: in one-shot mode we repeatedly ask for one-off conversions, while in continuous
+// mode the conversions are performed continuously. One-shot draws far less power, but conversion
+// result timing may be unreliable and results may be missed. See section 5.1 of manual.
 typedef enum {
   MCP3427_CONVERSION_MODE_ONE_SHOT = 0,
   MCP3427_CONVERSION_MODE_CONTINUOUS,
   NUM_MCP3427_CONVERSION_MODES
 } Mcp3427ConversionMode;
 
-typedef void (*Mcp3427Callback)(uint32_t value, void *context);
+// |value_ch1| and |value_ch2| are signed conversion results from channels 1 and 2, respectively.
+typedef void (*Mcp3427Callback)(int16_t value_ch1, int16_t value_ch2, void *context);
 typedef void (*Mcp3427FaultCallback)(void *context);
 
 typedef struct {
@@ -52,6 +67,10 @@ typedef struct {
   Mcp3427AmpGain amplifier_gain;
   Mcp3427ConversionMode conversion_mode;
   I2CPort port;
+
+  // Events used internally.
+  EventId adc_data_trigger_event;
+  EventId adc_data_ready_event;
 } Mcp3427Settings;
 
 typedef struct {
@@ -76,6 +95,10 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings);
 StatusCode mcp3427_register_callback(Mcp3427Storage *storage, Mcp3427Callback callback,
                                      void *context);
 
-// Register a callback to be run whenever there is a fault.
+// Register a callback to be run whenever there is a fault, i.e., a conversion is missed.
+// This will be called instead of the regular callback when the conversion takes too long.
 StatusCode mcp3427_register_fault_callback(Mcp3427Storage *storage, Mcp3427FaultCallback callback,
                                            void *context);
+
+// Process an event. All modules using this driver must call this in a *_process_event function.
+StatusCode mcp3427_process_event(Mcp3427Storage *storage, Event *e);
