@@ -69,7 +69,7 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
   uint16_t sensor_data = (read_data[0] << 8) | read_data[1];
   sensor_data &= s_data_mask_lookup[storage->sample_rate];
 
-  uint8_t current_channel =
+  Mcp3427Channel current_channel =
       (storage->config & (1 << MCP3427_CH_SEL_OFFSET)) >> MCP3427_CH_SEL_OFFSET;
 
   storage->sensor_data[current_channel] = sensor_data;

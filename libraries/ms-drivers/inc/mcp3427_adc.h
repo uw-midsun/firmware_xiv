@@ -86,6 +86,7 @@ typedef struct {
   void *fault_context;
   Mcp3427SampleRate sample_rate;
   Fsm fsm;
+  Mcp3427Channel current_channel; // only used on x86
 } Mcp3427Storage;
 
 // Initialize the ADC by configuring it with the selected settings.
