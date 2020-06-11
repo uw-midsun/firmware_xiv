@@ -50,3 +50,6 @@
   { .port = GPIO_PORT_B, .pin = 1 }
 
 #define SET_SPEED_NUM_BYTES 2
+
+// need to create masks for temperature interrupt, since we aren't handling that in this driver
+// need to set up interrupt? somehow not sure how it is raised yet.
