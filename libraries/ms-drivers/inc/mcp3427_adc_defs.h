@@ -1,5 +1,8 @@
 #pragma once
 
+// Internal MCP3427 definitions
+// Datasheet: http://ww1.microchip.com/downloads/en/DeviceDoc/22226a.pdf
+
 #define MCP3427_DEVICE_CODE 0xD
 #define MCP3427_RDY_MASK (1 << 7)
 #define MCP3427_CH_SEL_OFFSET 5
@@ -13,3 +16,5 @@
 #define MCP3427_DATA_MASK_16_BIT MCP3427_DATA_MASK_N_BIT(16)
 
 #define MCP3427_DATA_MASK_N_BIT(N) ((1 << N) - 1)
+
+#define MCP3427_MAX_CONV_TIME_MS 50

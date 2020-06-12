@@ -8,8 +8,14 @@
 // is an issue, an optimization for boards (i.e. solar) using only one channel is to only read that
 // channel, so reports take 50ms.
 
+// We use a combination of the address and I2C port in the event data to only transition on events
+// that we raised. Possible optimization if necessary: make prv_get_chip_identifier public, then
+// keep a reverse lookup table of identifier -> MCP3427 storage and only call the appropriate
+// MCP3427 when receiving an MCP3427 event. That way, using n MCP3427s generates n calls to
+// |mcp3427_process_event| per cycle rather than n^2 if we pass every event to every MCP3427.
+// (I think this was done on MSXII.)
+
 #define MCP3427_FSM_NAME "MCP3427 FSM"
-#define MCP3427_MAX_CONV_TIME_MS 50
 
 FSM_DECLARE_STATE(channel_1_trigger);
 FSM_DECLARE_STATE(channel_1_readback);
@@ -36,9 +42,14 @@ FSM_STATE_TRANSITION(channel_2_readback) {
   FSM_ADD_TRANSITION(storage->data_trigger_event, channel_1_trigger);
 }
 
+static uint16_t prv_get_chip_identifier(Mcp3427Storage *storage) {
+  // used to gate events we raised to only this MCP3427
+  return (storage->addr << 8) | (storage->port == I2C_PORT_1 ? 0 : 1);
+}
+
 static void prv_raise_ready(SoftTimerId timer_id, void *context) {
   Mcp3427Storage *storage = (Mcp3427Storage *)context;
-  event_raise(storage->data_ready_event, storage->addr ^ (MCP3427_DEVICE_CODE << 3));
+  event_raise(storage->data_ready_event, prv_get_chip_identifier(storage));
 }
 
 static uint16_t s_data_mask_lookup[] = {
@@ -60,7 +71,7 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
     if (storage->fault_callback != NULL) {
       storage->fault_callback(storage->fault_context);
     }
-    event_raise(storage->data_trigger_event, storage->addr ^ (MCP3427_DEVICE_CODE << 3));
+    event_raise(storage->data_trigger_event, prv_get_chip_identifier(storage));
     return;
   }
 
@@ -80,7 +91,7 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
                       storage->context);
   }
 
-  event_raise(storage->data_trigger_event, storage->addr ^ (MCP3427_DEVICE_CODE << 3));
+  event_raise(storage->data_trigger_event, prv_get_chip_identifier(storage));
 }
 
 // Trigger data read. Schedule a data ready event to be raised.
@@ -88,14 +99,11 @@ static void prv_channel_trigger(struct Fsm *fsm, const Event *e, void *context) 
   Mcp3427Storage *storage = (Mcp3427Storage *)context;
   // We want to trigger a read. So we set the ready bit.
   // If operating in continuous conversion mode, setting this bit has no effect.
-  uint8_t config = storage->config;
-
-  config |= MCP3427_RDY_MASK;
+  storage->config |= MCP3427_RDY_MASK;
   // Setting the current channel we want to read from. We just flip it from the previous read.
-  config ^= (1 << MCP3427_CH_SEL_OFFSET);
-  storage->config = config;
+  storage->config ^= (1 << MCP3427_CH_SEL_OFFSET);
 
-  i2c_write(storage->port, storage->addr, &config, MCP3427_NUM_CONFIG_BYTES);
+  i2c_write(storage->port, storage->addr, &storage->config, MCP3427_NUM_CONFIG_BYTES);
   soft_timer_start_millis(MCP3427_MAX_CONV_TIME_MS, prv_raise_ready, storage, NULL);
 }
 
@@ -130,24 +138,25 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
   config |= (settings->amplifier_gain << MCP3427_GAIN_SEL_OFFSET);
   storage->config = config;
 
-  return i2c_write(storage->port, storage->addr, &config, MCP3427_NUM_CONFIG_BYTES);
+  StatusCode status = i2c_write(storage->port, storage->addr, &config, MCP3427_NUM_CONFIG_BYTES);
+  // start the state machine ready to transition to channel_1_trigger
+  fsm_init(&storage->fsm, MCP3427_FSM_NAME, &channel_2_readback, storage);
+  return status;
 }
 
 StatusCode mcp3427_register_callback(Mcp3427Storage *storage, Mcp3427Callback callback,
                                      void *context) {
-  if (storage == NULL) {
+  if (storage == NULL || callback == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   storage->callback = callback;
   storage->context = context;
-  // Starting the state machine.
-  fsm_init(&storage->fsm, MCP3427_FSM_NAME, &channel_1_trigger, storage);
   return STATUS_CODE_OK;
 }
 
 StatusCode mcp3427_register_fault_callback(Mcp3427Storage *storage, Mcp3427FaultCallback callback,
                                            void *context) {
-  if (storage == NULL) {
+  if (storage == NULL || callback == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   storage->fault_callback = callback;
@@ -155,7 +164,17 @@ StatusCode mcp3427_register_fault_callback(Mcp3427Storage *storage, Mcp3427Fault
   return STATUS_CODE_OK;
 }
 
+StatusCode mcp3427_start(Mcp3427Storage *storage) {
+  return event_raise(storage->data_trigger_event, prv_get_chip_identifier(storage));
+}
+
 StatusCode mcp3427_process_event(Mcp3427Storage *storage, Event *e) {
-  fsm_process_event(&storage->fsm, e);
+  if (storage == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  if (e->data == prv_get_chip_identifier(storage)) {
+    // only process events raised by us
+    fsm_process_event(&storage->fsm, e);
+  }
   return STATUS_CODE_OK;
 }
