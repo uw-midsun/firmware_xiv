@@ -29,16 +29,14 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
   int16_t reading = 0;
   StatusCode status = STATUS_CODE_OK;
 
-  if (READ_CONVERTED) {
-    for (size_t i = 0; i < SIZEOF_ARRAY(test_channels) && status == STATUS_CODE_OK; i++) {
+  for (size_t i = 0; i < SIZEOF_ARRAY(test_channels) && status == STATUS_CODE_OK; i++) {
+    if (READ_CONVERTED) {
       status = ads1015_read_converted(storage, test_channels[i], &reading);
       if (status == STATUS_CODE_OK)
         LOG_DEBUG("Channel: %d; Converted value: %d mVolt\n", test_channels[i], reading);
       else
         LOG_DEBUG("Fail to take converted reading\n");
-    }
-  } else {
-    for (size_t i = 0; i < SIZEOF_ARRAY(test_channels) && status == STATUS_CODE_OK; i++) {
+    } else {
       status = ads1015_read_raw(storage, test_channels[i], &reading);
       if (status == STATUS_CODE_OK)
         LOG_DEBUG("Channel: %d; Raw value: %d\n", test_channels[i], reading);
@@ -46,7 +44,7 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
         LOG_DEBUG("Fail to take raw reading\n");
     }
   }
-  soft_timer_start_millis(SMOKE_READING_WAIT_MS, prv_read_and_log, &s_storage, NULL);
+  soft_timer_start_millis(SMOKE_READING_WAIT_MS, prv_read_and_log, storage, NULL);
 }
 
 int main(void) {
