@@ -6,13 +6,13 @@
 #include "soft_timer.h
 
 typedef struct AdcData {
-  uint16_t  reading;
+  uint16_t reading;
   AdcChannel channel;
 } AdcData;
 
-void prv_button_interrupt_handler(const GpioAddress *address, void *context){
-  AdcData* temp_store = context;
-  adc_read_converted(temp_store->channel,&temp_store->reading);
+void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
+  AdcData *temp_store = context;
+  adc_read_converted(temp_store->channel, &temp_store->reading);
   LOG_DEBUG("adc reading %d\n", temp_store->reading);
 }
 
@@ -24,25 +24,19 @@ int main(void) {
 
   GpioAdress button_address = { .port = GPIO_PORT_B, .pin = 2 };
 
-  GpioAddress adc_address = {.port = GPIO_PORT_A, pin = 6 };
+  GpioAddress adc_address = { .port = GPIO_PORT_A, pin = 6 };
 
-  GpioSettings adc_settings = {
-    .direction = GPIO_DIR_IN,
-    .state = GPIO_STATE_LOW,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_ANALOG
-  };
+  GpioSettings adc_settings = { .direction = GPIO_DIR_IN,
+                                .state = GPIO_STATE_LOW,
+                                .resistor = GPIO_RES_NONE,
+                                .alt_function = GPIO_ALTFN_ANALOG };
 
   GpioSettings button_settings = {
-    .direction = GPIO_DIR_IN,
-    .alt_function = GPIO_ALTFN_NONE,
-    .resistor = GPIO_RES_PULLDOWN
+    .direction = GPIO_DIR_IN, .alt_function = GPIO_ALTFN_NONE, .resistor = GPIO_RES_PULLDOWN
   };
 
-  InterruptSettings interrupt_settings = {
-    .type = INTERRUPT_TYPE_INTERRUPT,
-    .priority = INTERRUPT_PRIORITY_NORMAL
-  };
+  InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
+                                           .priority = INTERRUPT_PRIORITY_NORMAL };
 
   gpio_init_pin(&adc_address, &adc_settings);
   gpio_init_pin(&button_address, &button_settings);
@@ -52,11 +46,10 @@ int main(void) {
   adc_get_channel(adc_address, &adc_channel);
   adc_set_channel(adc_channel, true);
 
-  AdcData adc_channel_and_reading = {.reading = 0, .channel = adc_channel };
+  AdcData adc_channel_and_reading = { .reading = 0, .channel = adc_channel };
 
-  gpio_it_register_interrupt(&button_address, &interrupt_settings,
-                             INTERRUPT_EDGE_FALLING, prv_button_interrupt_handler,
-                             &adc_channel_and_reading);
+  gpio_it_register_interrupt(&button_address, &interrupt_settings, INTERRUPT_EDGE_FALLING,
+                             prv_button_interrupt_handler, &adc_channel_and_reading);
 
   while (true) {
   }
