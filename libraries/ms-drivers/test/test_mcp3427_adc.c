@@ -1,14 +1,14 @@
 #include "delay.h"
 #include "event_queue.h"
 #include "i2c.h"
+#include "interrupt.h"
 #include "log.h"
 #include "mcp3427_adc.h"
 #include "mcp3427_adc_defs.h"
 #include "ms_test_helpers.h"
+#include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "interrupt.h"
-#include "soft_timer.h"
 
 #define TEST_ADDR_PIN_0 MCP3427_PIN_STATE_LOW
 #define TEST_ADDR_PIN_1 MCP3427_PIN_STATE_LOW
@@ -34,10 +34,10 @@ typedef enum {
 
 // Like MS_TEST_HELPERS_ASSERT_EVENT, but only checks ID and not data
 #define TEST_ASSERT_EVENT_WITH_ID(e, event_id) \
- ({\
-    TEST_ASSERT_OK(event_process(&(e)));\
-    TEST_ASSERT_EQUAL((event_id), (e).id);\
- })
+  ({                                           \
+    TEST_ASSERT_OK(event_process(&(e)));       \
+    TEST_ASSERT_EQUAL((event_id), (e).id);     \
+  })
 
 static uint16_t s_times_callback_called = 0;
 static void *s_callback_context = NULL;
@@ -307,10 +307,10 @@ void test_multiple_mcp3427s(void) {
   // CH2 read: data trigger event raised immediately, callbacks called
   TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e1));
   TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e2));
-  TEST_ASSERT_EQUAL(1, s_times_callback_called); // one of those should have called the callback
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);  // one of those should have called the callback
   TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e1));
   TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e2));
-  TEST_ASSERT_EQUAL(2, s_times_callback_called); // now both callbacks have been called
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);  // now both callbacks have been called
   TEST_ASSERT_EVENT_WITH_ID(e1, TEST_MCP3427_DATA_TRIGGER_EVENT);
   TEST_ASSERT_EVENT_WITH_ID(e2, TEST_MCP3427_DATA_TRIGGER_EVENT);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();

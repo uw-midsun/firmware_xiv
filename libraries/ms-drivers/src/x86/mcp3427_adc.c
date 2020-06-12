@@ -1,7 +1,7 @@
 #include "mcp3427_adc.h"
-#include "mcp3427_adc_defs.h"
 #include "fsm.h"
 #include "log.h"
+#include "mcp3427_adc_defs.h"
 #include "soft_timer.h"
 
 // x86 emulation of STM32 MCP3427 implementation.
