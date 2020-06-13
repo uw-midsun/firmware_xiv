@@ -26,7 +26,7 @@ void prv_timer_call(const SoftTimerId timer_id, void *context) {
   }
 
   // start the timer again, so it keeps periodically flipping coins
-  soft_timer_start_millis(HALF_SECOND, prv_timer_call, &storage, NULL);
+  soft_timer_start_millis(HALF_SECOND_MS, prv_timer_call, &storage, NULL);
 }
 
 int main() {
@@ -34,7 +34,7 @@ int main() {
   soft_timer_init();               // Initalize soft_timer
   CounterStorage storage = { 0 };  // Make the struct 0
 
-  soft_timer_start_millis(HALF_SECOND, prv_timer_call, &storage, NULL);
+  soft_timer_start_millis(HALF_SECOND_MS, prv_timer_call, &storage, NULL);
 
   while (true) {
     wait();
