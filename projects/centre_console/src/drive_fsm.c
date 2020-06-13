@@ -121,6 +121,7 @@ static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
 
 static void prv_set_motorcontroller_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
+  storage->current_state = DRIVE_STATE_TRANSITIONING;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
   DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT,
                           .fault_state = info.mci_drive_output };
@@ -134,6 +135,7 @@ static void prv_set_motorcontroller_output(Fsm *fsm, const Event *e, void *conte
 
 static void prv_set_ebrake_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
+  storage->current_state = DRIVE_STATE_TRANSITIONING;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
   DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_EBRAKE_STATE,
                           .fault_state = info.ebrake_state };
@@ -152,7 +154,7 @@ static void prv_drive_fsm_destination_output(Fsm *fsm, const Event *e, void *con
   if (storage->destination >= NUM_DRIVE_STATES) {
     return;
   }
-  s_drive_state = storage->destination;
+  storage->current_state = storage->destination;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
   event_raise(info.fsm_output_event_id, 0);
 }
@@ -165,6 +167,7 @@ static DriveFsmInputEvent s_neutral_destination_event_lookup[NUM_DRIVE_STATES] =
 
 static void prv_drive_fsm_set_precharge_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
+  storage->current_state = DRIVE_STATE_TRANSITIONING;
   if (storage->destination == DRIVE_STATE_PARKING) {
     CAN_TRANSMIT_DISCHARGE_PRECHARGE();
     event_raise(DRIVE_FSM_INPUT_EVENT_DISCHARGE_COMPLETED, 0);
@@ -193,6 +196,7 @@ StatusCode drive_fsm_init(DriveFsmStorage *storage) {
   fsm_state_init(state_fault, prv_fault_output);
   status_ok_or_return(ebrake_tx_init(&storage->ebrake_storage));
   status_ok_or_return(mci_output_init(&storage->mci_output_storage));
+  storage->current_state = DRIVE_STATE_NEUTRAL;
   Event precharge_success_event = { .id = DRIVE_FSM_INPUT_EVENT_PRECHARGE_COMPLETED, .data = 0 };
   Event precharge_fault_event = { .id = DRIVE_FSM_INPUT_EVENT_FAULT,
                                   .data = DRIVE_FSM_FAULT_REASON_PRECHARGE_TIMEOUT };
@@ -216,6 +220,6 @@ bool drive_fsm_process_event(DriveFsmStorage *storage, Event *e) {
   return fsm_process_event(&(storage->drive_fsm), e);
 }
 
-DriveState *drive_fsm_get_global_state(DriveFsmStorage *storage) {
-  return &s_drive_state;
+DriveState drive_fsm_get_global_state(DriveFsmStorage *storage) {
+  return storage->current_state;
 }

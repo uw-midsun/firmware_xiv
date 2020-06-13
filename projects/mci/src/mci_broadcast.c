@@ -8,6 +8,8 @@
 #include "can_unpack.h"
 #include "critical_section.h"
 
+#define M_TO_CM_CONV 100
+
 static void prv_broadcast_speed(MotorControllerBroadcastStorage *storage) {
   float *measurements = storage->measurements.vehicle_velocity;
   CAN_TRANSMIT_MOTOR_VELOCITY((uint16_t)measurements[LEFT_MOTOR_CONTROLLER],
@@ -32,7 +34,7 @@ static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     if (can_id.device_id == storage->ids[motor_id]) {
       bool disabled = critical_section_start();
-      measurements[motor_id] = can_data.velocity_measurement.vehicle_velocity_ms * 100;
+      measurements[motor_id] = can_data.velocity_measurement.vehicle_velocity_ms * M_TO_CM_CONV;
       storage->velocity_rx_bitset |= 1 << motor_id;
       critical_section_end(disabled);
       break;

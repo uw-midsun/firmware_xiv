@@ -10,7 +10,7 @@ int main(void) {
   soft_timer_init();
   gpio_init();
 
-  GpioAddress potentiometer_addr = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress potentiometer_addr = { .port = GPIO_PORT_A, .pin = 4 };
 
   GpioSettings pot_settings = {
     GPIO_DIR_IN,        //
