@@ -1,48 +1,44 @@
-#include "interrupt.h"   // interrupts are required for soft timers
-#include "log.h"         // for printing
-#include "soft_timer.h"  // for soft timers
-#include "wait.h"        // for wait function
+// Blink an LED
+#include <stdint.h>
+#include "interrupt.h"
+#include "log.h"
+#include "soft_timer.h"
+#include "wait.h"
 
-#include <stdint.h>  // for integer types
-#include <stdlib.h>  // for random numbers
+#define HALF_SECOND 500  //
 
-#define COIN_FLIP_PERIOD_MS 1000  // milliseconds between coin flips
+typedef struct CounterStorage {
+  uint16_t counter_a;
+  uint16_t counter_b;
+} CounterStorage;
 
-typedef struct CoinFlipStorage {
-  uint16_t num_heads;
-  uint16_t num_tails;
-} CoinFlipStorage;
+void prv_timer_call(const SoftTimerId timer_id, void *empty) {
+  // cast void* to our struct so we can use it
+  CounterStorage *storage = empty;
+  storage->counter_a++;
+  storage->counter_b++;
 
-void prv_timer_callback(SoftTimerId timer_id, void *context) {
-  CoinFlipStorage *storage = context;  // cast void* to our struct so we can use it
-  uint8_t coinflip = rand() % 2;
-  if (coinflip == 1)
-    storage->num_heads++;
-  else if (coinflip == 0)
-    storage->num_tails++;
+  // Prints Every half-second
+  LOG_DEBUG("Counter A: %i\n", storage->counter_a);
 
-  // log output
-  LOG_DEBUG("Num heads: %i, num tails: %i\n", storage->num_heads, storage->num_tails);
+  // Prints Every Second
+  if (storage->counter_b % 2 == 0) {
+    LOG_DEBUG("Counter B: %i\n", storage->counter_b / 2);
+  }
 
   // start the timer again, so it keeps periodically flipping coins
-  soft_timer_start_millis(COIN_FLIP_PERIOD_MS, prv_timer_callback, &storage, NULL);
+  soft_timer_start_millis(HALF_SECOND, prv_timer_call, &storage, NULL);
 }
 
 int main() {
-  srand(14);  // seed the random number generator with (MS)XIV, our car number
+  interrupt_init();                // Initalize interrupt
+  soft_timer_init();               // Initalize soft_timer
+  CounterStorage storage = { 0 };  // Make the struct 0
 
-  interrupt_init();   // interrupts must be initialized for soft timers to work
-  soft_timer_init();  // soft timers must be initialized before using them
-
-  CoinFlipStorage storage = { 0 };  // we use this to initialize a struct to be all 0
-
-  soft_timer_start_millis(COIN_FLIP_PERIOD_MS,  // timer duration
-                          prv_timer_callback,   // function to call after timer
-                          &storage,             // automatically gets cast to void*
-                          NULL);                // timer id - not needed here
+  soft_timer_start_millis(HALF_SECOND, prv_timer_call, &storage, NULL);
 
   while (true) {
-    wait();  // waits until an interrupt is triggered rather than endlessly spinning
+    wait();
   }
 
   return 0;
