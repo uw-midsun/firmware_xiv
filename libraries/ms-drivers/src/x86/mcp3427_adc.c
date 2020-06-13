@@ -41,7 +41,7 @@ FSM_STATE_TRANSITION(channel_2_readback) {
 
 static uint16_t prv_get_chip_identifier(Mcp3427Storage *storage) {
   // used to gate events we raised to only this MCP3427
-  return (storage->addr << 8) | (storage->port == I2C_PORT_1 ? 0 : 1);
+  return (storage->addr << 1) | (storage->port == I2C_PORT_1 ? 0 : 1);
 }
 
 static Mcp3427Channel other_channel(Mcp3427Channel channel) {

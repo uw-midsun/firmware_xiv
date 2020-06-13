@@ -9,9 +9,9 @@
 // channel, so reports take 50ms.
 
 // We use a combination of the address and I2C port in the event data to only transition on events
-// that we raised. Possible optimization if necessary: make prv_get_chip_identifier public, then
-// keep a reverse lookup table of identifier -> MCP3427 storage and only call the appropriate
-// MCP3427 when receiving an MCP3427 event. That way, using n MCP3427s generates n calls to
+// that we raised. Possible optimization if necessary: keep a static storage-independent reverse
+// lookup table of identifier -> MCP3427 storage and only call the appropriate MCP3427
+// when receiving an MCP3427 event. That way, using n MCP3427s generates n calls to
 // |mcp3427_process_event| per cycle rather than n^2 if we pass every event to every MCP3427.
 // (I think this was done on MSXII.)
 
@@ -44,7 +44,8 @@ FSM_STATE_TRANSITION(channel_2_readback) {
 
 static uint16_t prv_get_chip_identifier(Mcp3427Storage *storage) {
   // used to gate events we raised to only this MCP3427
-  return (storage->addr << 8) | (storage->port == I2C_PORT_1 ? 0 : 1);
+  uint8_t base_addr = storage->addr ^ (MCP3427_DEVICE_CODE << 3);
+  return (base_addr << 1) | (storage->port == I2C_PORT_1 ? 0 : 1);
 }
 
 static void prv_raise_ready(SoftTimerId timer_id, void *context) {
