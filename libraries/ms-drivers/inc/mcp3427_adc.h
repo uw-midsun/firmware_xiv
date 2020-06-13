@@ -104,5 +104,5 @@ StatusCode mcp3427_register_fault_callback(Mcp3427Storage *storage, Mcp3427Fault
 // Start the data conversion cycle.
 StatusCode mcp3427_start(Mcp3427Storage *storage);
 
-// Process an event. All modules using this driver must call this in a *_process_event function.
-StatusCode mcp3427_process_event(Mcp3427Storage *storage, Event *e);
+// Process an event. All projects using this driver must call this in the main event loop.
+StatusCode mcp3427_process_event(Event *e);

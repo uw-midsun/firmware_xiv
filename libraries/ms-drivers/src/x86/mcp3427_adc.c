@@ -12,7 +12,14 @@
 #define FIXED_RESULT 0
 
 #define MCP3427_FSM_NAME "MCP3427 FSM on x86"
-#define MCP3427_MAX_CONV_TIME_MS 50
+
+#define NUM_MCP3427_CHIP_IDS (1 << 4)
+
+// A lookup table of MCP3427 chip IDs (see |prv_get_chip_identifier|) to their storages,
+// used to automagically direct events to the correct storage in |mcp3427_process_event|.
+// This saves having to pass each event to every MCP3427, which is more of a concern on STM32,
+// but we emulate STM32 behaviour nonetheless.
+static Mcp3427Storage *s_id_to_storage_cache[NUM_MCP3427_CHIP_IDS] = { 0 };
 
 FSM_DECLARE_STATE(channel_1_trigger);
 FSM_DECLARE_STATE(channel_1_readback);
@@ -39,8 +46,10 @@ FSM_STATE_TRANSITION(channel_2_readback) {
   FSM_ADD_TRANSITION(storage->data_trigger_event, channel_1_trigger);
 }
 
-static uint16_t prv_get_chip_identifier(Mcp3427Storage *storage) {
-  // used to gate events we raised to only this MCP3427
+static uint8_t prv_get_chip_identifier(Mcp3427Storage *storage) {
+  // Used to gate events we raised to only this MCP3427.
+  // ID is 4 bits, with the 3-bit base address on STM32 as the most significant bits and the I2C
+  // port encoded as the LSB.
   return (storage->addr << 1) | (storage->port == I2C_PORT_1 ? 0 : 1);
 }
 
@@ -88,8 +97,10 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
 
   // emulate the address and port from stm32 since it's used for the identifier
   storage->port = settings->port;
-  storage->addr =
-      s_addr_lookup[settings->addr_pin_0][settings->addr_pin_1] | (MCP3427_DEVICE_CODE << 3);
+  storage->addr = s_addr_lookup[settings->addr_pin_0][settings->addr_pin_1];
+
+  // Cache the storage for lookup in |mcp3427_process_event|
+  s_id_to_storage_cache[prv_get_chip_identifier(storage)] = storage;
 
   fsm_state_init(channel_1_trigger, prv_channel_trigger);
   fsm_state_init(channel_1_readback, prv_channel_ready);
@@ -128,13 +139,23 @@ StatusCode mcp3427_start(Mcp3427Storage *storage) {
   return event_raise(storage->data_trigger_event, prv_get_chip_identifier(storage));
 }
 
-StatusCode mcp3427_process_event(Mcp3427Storage *storage, Event *e) {
+StatusCode mcp3427_process_event(Event *e) {
+  if (e == NULL) {
+    return STATUS_CODE_INVALID_ARGS;
+  }
+  if (e->data >= NUM_MCP3427_CHIP_IDS) {
+    // not for us
+    return STATUS_CODE_OK;
+  }
+
+  // look up which storage to use
+  Mcp3427Storage *storage = s_id_to_storage_cache[e->data];
   if (storage == NULL) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
+    // also not for us
+    return STATUS_CODE_OK;
   }
-  if (e->data == prv_get_chip_identifier(storage)) {
-    // only process events raised by us
-    fsm_process_event(&storage->fsm, e);
-  }
+
+  // process the event for that storage
+  fsm_process_event(&storage->fsm, e);
   return STATUS_CODE_OK;
 }

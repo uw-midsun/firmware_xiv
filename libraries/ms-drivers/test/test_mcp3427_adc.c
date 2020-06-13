@@ -29,7 +29,7 @@
 typedef enum {
   TEST_MCP3427_DATA_TRIGGER_EVENT = 0,
   TEST_MCP3427_DATA_READY_EVENT,
-  NUM_MCP3427_DATA_READY_EVENTS,
+  NUM_MCP3427_TEST_EVENTS,
 } TestMcp3427Event;
 
 // Like MS_TEST_HELPERS_ASSERT_EVENT, but only checks ID and not data
@@ -76,7 +76,7 @@ void teardown_test(void) {}
 // Test a single data fetching round (2 conversions) in the current MCP3427 settings.
 static void prv_test_data_round(Mcp3427Storage *storage, Event *e, void *callback_context) {
   // triggering CH1 conversion, a data ready event should be raised in MCP3427_MAX_CONV_TIME_MS
-  TEST_ASSERT_OK(mcp3427_process_event(storage, e));
+  TEST_ASSERT_OK(mcp3427_process_event(e));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_ms(MCP3427_MAX_CONV_TIME_MS);
   TEST_ASSERT_EVENT_WITH_ID(*e, TEST_MCP3427_DATA_READY_EVENT);
@@ -84,13 +84,13 @@ static void prv_test_data_round(Mcp3427Storage *storage, Event *e, void *callbac
   TEST_ASSERT_EQUAL(0, s_times_callback_called);  // callback not called yet
 
   // reading CH1 data, a data trigger event should be raised immediately
-  TEST_ASSERT_OK(mcp3427_process_event(storage, e));
+  TEST_ASSERT_OK(mcp3427_process_event(e));
   TEST_ASSERT_EVENT_WITH_ID(*e, TEST_MCP3427_DATA_TRIGGER_EVENT);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_EQUAL(0, s_times_callback_called);  // callback not called yet, only CH1 read
 
   // triggering CH2 conversion, data ready event raised in MCP3427_MAX_CONV_TIME_MS
-  TEST_ASSERT_OK(mcp3427_process_event(storage, e));
+  TEST_ASSERT_OK(mcp3427_process_event(e));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_ms(MCP3427_MAX_CONV_TIME_MS);
   TEST_ASSERT_EVENT_WITH_ID(*e, TEST_MCP3427_DATA_READY_EVENT);
@@ -98,7 +98,7 @@ static void prv_test_data_round(Mcp3427Storage *storage, Event *e, void *callbac
   TEST_ASSERT_EQUAL(0, s_times_callback_called);  // callback not called yet
 
   // reading CH2 data, callback called and data trigger event raised
-  TEST_ASSERT_OK(mcp3427_process_event(storage, e));
+  TEST_ASSERT_OK(mcp3427_process_event(e));
   TEST_ASSERT_EVENT_WITH_ID(*e, TEST_MCP3427_DATA_TRIGGER_EVENT);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_EQUAL(1, s_times_callback_called);            // callback called since it's CH2
@@ -264,17 +264,15 @@ void test_multiple_mcp3427s(void) {
   TEST_ASSERT_OK(mcp3427_start(&storage2));
 
   // Process the start data trigger events
-  // We should be able to pass both events to both MCP3427s in any order.
+  // Passing both events to |mcp3427_process_event| should process both for the appropriate storages
   TEST_ASSERT_EVENT_WITH_ID(e1, TEST_MCP3427_DATA_TRIGGER_EVENT);
   TEST_ASSERT_EVENT_WITH_ID(e2, TEST_MCP3427_DATA_TRIGGER_EVENT);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // CH1 trigger: wait for data ready event
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e2));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e2));
+  TEST_ASSERT_OK(mcp3427_process_event(&e1));
+  TEST_ASSERT_OK(mcp3427_process_event(&e2));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
   delay_ms(MCP3427_MAX_CONV_TIME_MS);
@@ -284,20 +282,16 @@ void test_multiple_mcp3427s(void) {
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   // CH1 read: data trigger event raised immediately
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e2));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e2));
+  TEST_ASSERT_OK(mcp3427_process_event(&e1));
+  TEST_ASSERT_OK(mcp3427_process_event(&e2));
   TEST_ASSERT_EVENT_WITH_ID(e1, TEST_MCP3427_DATA_TRIGGER_EVENT);
   TEST_ASSERT_EVENT_WITH_ID(e2, TEST_MCP3427_DATA_TRIGGER_EVENT);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_EQUAL(0, s_times_callback_called);  // callback not called yet, only CH1 read
 
   // CH2 trigger: wait for data ready event
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e2));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e2));
+  TEST_ASSERT_OK(mcp3427_process_event(&e1));
+  TEST_ASSERT_OK(mcp3427_process_event(&e2));
   delay_ms(MCP3427_MAX_CONV_TIME_MS);
   TEST_ASSERT_EVENT_WITH_ID(e1, TEST_MCP3427_DATA_READY_EVENT);
   TEST_ASSERT_EVENT_WITH_ID(e2, TEST_MCP3427_DATA_READY_EVENT);
@@ -305,11 +299,9 @@ void test_multiple_mcp3427s(void) {
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   // CH2 read: data trigger event raised immediately, callbacks called
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage1, &e2));
-  TEST_ASSERT_EQUAL(1, s_times_callback_called);  // one of those should have called the callback
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e1));
-  TEST_ASSERT_OK(mcp3427_process_event(&storage2, &e2));
+  TEST_ASSERT_OK(mcp3427_process_event(&e1));
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_OK(mcp3427_process_event(&e2));
   TEST_ASSERT_EQUAL(2, s_times_callback_called);  // now both callbacks have been called
   TEST_ASSERT_EVENT_WITH_ID(e1, TEST_MCP3427_DATA_TRIGGER_EVENT);
   TEST_ASSERT_EVENT_WITH_ID(e2, TEST_MCP3427_DATA_TRIGGER_EVENT);
@@ -346,5 +338,34 @@ void test_failure_on_null(void) {
                     mcp3427_register_fault_callback(NULL, prv_fault_callback, NULL));
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
                     mcp3427_register_fault_callback(&valid_storage, NULL, NULL));
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, mcp3427_process_event(NULL, &e));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, mcp3427_process_event(NULL));
+}
+
+// Test that we can pass unrelated events into |mcp3427_process_event|.
+void test_process_event_with_unrelated_events(void) {
+  Mcp3427Settings settings = {
+    .sample_rate = MCP3427_SAMPLE_RATE_12_BIT,
+    .conversion_mode = MCP3427_CONVERSION_MODE_ONE_SHOT,
+    .addr_pin_0 = TEST_ADDR_PIN_0,
+    .addr_pin_1 = TEST_ADDR_PIN_1,
+    .amplifier_gain = TEST_AMP_GAIN,
+    .port = TEST_I2C_PORT,
+    .adc_data_ready_event = TEST_MCP3427_DATA_READY_EVENT,
+    .adc_data_trigger_event = TEST_MCP3427_DATA_TRIGGER_EVENT,
+  };
+  Mcp3427Storage storage;
+  TEST_ASSERT_OK(mcp3427_init(&storage, &settings));
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  Event e = {NUM_MCP3427_TEST_EVENTS, 0};
+  TEST_ASSERT_OK(mcp3427_process_event(&e));
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED(); // should have no effect
+
+  e.data = 1 << 9; // would cause a segfault if lookup is done without checking
+  TEST_ASSERT_OK(mcp3427_process_event(&e));
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  // make sure there's no effect by waiting for any soft timers to expire
+  delay_ms(MCP3427_MAX_CONV_TIME_MS * 2);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
