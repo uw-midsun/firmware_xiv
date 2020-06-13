@@ -10,8 +10,8 @@
 #include "interrupt.h"
 #include "log.h"
 #include "power_selection_events.h"
-#include "soft_timer.h"
 #include "resistance_to_temp.h"
+#include "soft_timer.h"
 
 // dcdc address if on. Pull Down is means it's on
 static GpioAddress s_dcdc_address = { .port = GPIO_PORT_A, .pin = 9 };
@@ -41,7 +41,7 @@ uint16_t prv_status_checker() {
   LOG_DEBUG("AUX Temp Voltage Data: %d\n", s_aux_temp);
   double resistance = 33000.0 / (double)(s_aux_temp / 1000.0) - 10000;
   LOG_DEBUG("AUX Temp Resistance Value: %f\n", resistance);
-  s_aux_temp = (uint16_t) resistance_to_temp(resistance);
+  s_aux_temp = (uint16_t)resistance_to_temp(resistance);
   LOG_DEBUG("AUX Temp Data in C: %d\n", s_aux_temp);
 
   // see https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1055326209/Power+Selector+Board for
