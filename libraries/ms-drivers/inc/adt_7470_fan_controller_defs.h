@@ -22,7 +22,7 @@
 #define ADT7470_FAN_MODE_REGISTER_1 0x68  // bits 6 and 7 contorl the mode for PWM2 and PWM1
 #define ADT7470_FAN_MODE_REGISTER_2 0x69  // bits 6 and 7 contorl the mode for PWM4 and PWM3
 
-#define ADT7470_MANUAL_MODE_MASK 00001111
+#define ADT7470_MANUAL_MODE_MASK 0b00001111
 
 #define NUM_GPIO_FAN_PINS \
   4  // The ADT7470 has four pins that can be configured as either general-purpose logic pins or as
@@ -41,8 +41,6 @@
 
 // how are these read? on the schematic it says I2C address: 0101100_R/W and hex values for read or
 // write. assuming those are tagged on after a don't care for a total of 16 bits?
-#define ADR7470_I2C_ADDRESS_1 010111  // 15 bits?
-#define ADR7470_I2C_ADDRESS_2 0101100
 
 #define I2C1_SDA \
   { .port = GPIO_PORT_B, .pin = 16 }
