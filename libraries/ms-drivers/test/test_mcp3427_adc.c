@@ -357,11 +357,11 @@ void test_process_event_with_unrelated_events(void) {
   TEST_ASSERT_OK(mcp3427_init(&storage, &settings));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  Event e = {NUM_MCP3427_TEST_EVENTS, 0};
+  Event e = { NUM_MCP3427_TEST_EVENTS, 0 };
   TEST_ASSERT_OK(mcp3427_process_event(&e));
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED(); // should have no effect
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();  // should have no effect
 
-  e.data = 1 << 9; // would cause a segfault if lookup is done without checking
+  e.data = 1 << 9;  // would cause a segfault if lookup is done without checking
   TEST_ASSERT_OK(mcp3427_process_event(&e));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
