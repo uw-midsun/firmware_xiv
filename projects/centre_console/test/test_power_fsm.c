@@ -3,7 +3,9 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helper_can.h"
@@ -16,8 +18,8 @@ static CanStorage s_can_storage;
 
 void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
-                         CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
-                         CENTRE_CONSOLE_EVENT_CAN_FAULT);
+                                  CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
+                                  CENTRE_CONSOLE_EVENT_CAN_FAULT);
   memset(&s_power_fsm_storage, 0, sizeof(s_power_fsm_storage));
   power_fsm_init(&s_power_fsm_storage);
 }
@@ -29,10 +31,9 @@ void prv_assert_current_state(PowerState current_state) {
 }
 
 void prv_assert_faulted_cleared_it_and_it_went_back_to(PowerState state) {
-  Event e = { 0 };
-  uint8_t fault_data = 123;
-  e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
-  e.data = fault_data;
+  FaultReason fault = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_MAIN,
+                                    .reason = EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS } };
+  Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_FAULT, .data = fault.raw };
 
   TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
   prv_assert_current_state(POWER_STATE_FAULT);
@@ -66,7 +67,6 @@ void test_turn_on_event_begins_turn_on_main_battery_process(void) {
 void test_fault_during_turn_on_transitions_to_fault_state_then_back_to_off(void) {
   // off -> transitioning -> fault -> off
   prv_assert_current_state(POWER_STATE_OFF);
-
   Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_ON_MAIN, .data = 0 };
   TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
   prv_assert_current_state(POWER_STATE_TRANSITIONING);
@@ -130,4 +130,29 @@ void test_from_aux_to_main_begins_main_transition(void) {
   prv_assert_current_state(POWER_STATE_MAIN);
 
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+void test_bps_faults_to_off(void) {
+  // off -> transitioning -> aux -> transitioning -> off
+  prv_assert_current_state(POWER_STATE_OFF);
+
+  Event e = { .id = CENTRE_CONSOLE_POWER_EVENT_ON_AUX };
+  TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
+
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, POWER_AUX_SEQUENCE_EVENT_BEGIN);
+  prv_assert_current_state(POWER_STATE_TRANSITIONING);
+
+  e.id = POWER_AUX_SEQUENCE_EVENT_COMPLETE;
+  TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
+  prv_assert_current_state(POWER_STATE_AUX);
+
+  FaultReason fault = { .fields = { .area = EE_CONSOLE_FAULT_AREA_BPS_HEARTBEAT, .reason = 0 } };
+  e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
+  e.data = fault.raw;
+  TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, CENTRE_CONSOLE_POWER_EVENT_OFF);
+  prv_assert_current_state(POWER_STATE_FAULT);
+  TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
+  prv_assert_current_state(POWER_STATE_TRANSITIONING);
+  TEST_ASSERT_TRUE(s_power_fsm_storage.destination_state == POWER_STATE_OFF);
 }

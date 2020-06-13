@@ -60,6 +60,7 @@ static StatusCode prv_can_ack_everything_turned_off(CanMessageId msg_id, uint16_
 }
 
 static void prv_state_turn_off_everything(Fsm *fsm, const Event *e, void *context) {
+  printf("turning off everything\n");
   CanAckRequest ack_req = { .callback = prv_can_ack_everything_turned_off,
                             .expected_bitset = CAN_ACK_EXPECTED_DEVICES(
                                 SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
@@ -81,10 +82,8 @@ static void prv_power_off_complete(Fsm *fsm, const Event *e, void *context) {
 }
 
 static void prv_fault(Fsm *fsm, const Event *e, void *context) {
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT,
-              ((StateTransitionFault){ .state_machine = POWER_OFF_SEQUENCE_STATE_MACHINE,
-                                       .fault_reason = e->data })
-                  .raw);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_OFF, .reason = e->data } };
+  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 }
 
 StatusCode power_off_sequence_init(PowerOffSequenceStorage *storage) {

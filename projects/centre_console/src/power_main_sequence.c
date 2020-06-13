@@ -152,10 +152,9 @@ static void prv_state_power_main_complete(Fsm *fsm, const Event *e, void *contex
 }
 
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT,
-              ((StateTransitionFault){ .state_machine = POWER_MAIN_SEQUENCE_STATE_MACHINE,
-                                       .fault_reason = e->data })
-                  .raw);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_MAIN,
+                                     .reason = e->data } };
+  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 }
 
 StatusCode power_main_sequence_init(PowerMainSequenceFsmStorage *storage) {

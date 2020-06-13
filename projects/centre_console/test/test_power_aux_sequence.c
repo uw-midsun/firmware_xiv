@@ -124,11 +124,9 @@ void test_sequence_fault_cancels_monitor(void) {
   power_aux_sequence_process_event(&s_sequence_storage, &e);
 
   // must broadcast the fault to power_fsm
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
-      e, CENTRE_CONSOLE_POWER_EVENT_FAULT,
-      ((StateTransitionFault){ .state_machine = POWER_AUX_SEQUENCE_STATE_MACHINE,
-                               .fault_reason = EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING })
-          .raw);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_AUX,
+                                     .reason = EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING } };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
   // go back to none
   TEST_ASSERT_TRUE(power_aux_sequence_process_event(&s_sequence_storage, &e));
 }

@@ -14,6 +14,4 @@ typedef enum {
   NUM_FAULT_STATUS
 } FaultStatus;
 
-FaultStatus *get_fault_status(void);
-
 StatusCode fault_monitor_init(WatchdogTimeout timeout);

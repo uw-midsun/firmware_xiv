@@ -95,10 +95,8 @@ static void prv_state_power_aux_complete(Fsm *fsm, const Event *e, void *context
 }
 
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT,
-              ((StateTransitionFault){ .state_machine = POWER_AUX_SEQUENCE_STATE_MACHINE,
-                                       .fault_reason = e->data })
-                  .raw);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_AUX, .reason = e->data } };
+  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 }
 
 StatusCode power_aux_sequence_init(PowerAuxSequenceFsmStorage *storage) {

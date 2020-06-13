@@ -49,6 +49,7 @@ FSM_STATE_TRANSITION(power_state_fault) {
                              power_state_aux);
   FSM_ADD_GUARDED_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, prv_guard_clear_fault,
                              power_state_main);
+  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_OFF, power_state_transitioning);
 }
 
 void prv_set_current_state(void *context, PowerState state) {
@@ -60,10 +61,15 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   // Go back to previous state
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->destination_state = power_fsm->previous_state;
-  StateTransitionFault fault = (StateTransitionFault)e->data;
-  CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.state_machine, fault.fault_reason);
+  FaultReason fault = { .raw = e->data };
   prv_set_current_state(context, POWER_STATE_FAULT);
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, power_fsm->previous_state);
+  if (fault.fields.area != EE_CONSOLE_FAULT_AREA_BPS_HEARTBEAT) {
+    CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.fields.area, fault.fields.reason);
+    event_raise(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, power_fsm->previous_state);
+  } else {
+    power_fsm->previous_state = POWER_STATE_OFF;
+    event_raise(CENTRE_CONSOLE_POWER_EVENT_OFF, 0);
+  }
 }
 
 static void prv_destination_state_output(Fsm *fsm, const Event *e, void *context) {

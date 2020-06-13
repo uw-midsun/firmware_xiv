@@ -123,9 +123,6 @@ bool prv_process_neutral_parking_event(MainEventGeneratorStorage *storage, const
 }
 
 bool main_event_generator_process_event(MainEventGeneratorStorage *storage, const Event *event) {
-  if (*get_fault_status() != FAULT_STATUS_OK) {
-    return false;
-  }
   prv_false_or_return(prv_process_power_event(storage, event));
   prv_false_or_return(prv_process_drive_reverse_event(storage, event));
   prv_false_or_return(prv_process_neutral_parking_event(storage, event));
