@@ -15,6 +15,7 @@
 #include "power_selection_events.h"
 #include "soft_timer.h"
 #include "test_helpers.h"
+#include "resistance_to_temp.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
 #undef TIMER_TIMEOUT_MS
@@ -98,33 +99,42 @@ void test_power_selection_tx(void) {
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 1);
   s_aux_volt_value = 10;
-  s_aux_temp_value = 52;
+  s_aux_temp_value = 520;
+  double resistance = 0;
 
   delay_ms(10);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 2);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
   s_aux_volt_value = 16;
-  s_aux_temp_value = 62;
+  s_aux_temp_value = 320;
 
   delay_ms(10);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 3);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
   s_aux_volt_value = 5;
-  s_aux_temp_value = 72;
+  s_aux_temp_value = 200;
 
   delay_ms(1);
   TEST_ASSERT_NOT_EQUAL(counter, 4);
   TEST_ASSERT_NOT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_NOT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 
   delay_ms(9);
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 4);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
+  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 }
 
@@ -144,22 +154,22 @@ void test_power_selection_rx(void) {
 
   // FOR AUX CHECK
   s_aux_volt_value = 5;
-  s_aux_temp_value = 2;  // UV and UT
+  s_aux_temp_value = 492;  // UV and UT
   supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
 
   s_aux_volt_value = 20;
-  s_aux_temp_value = 122;  // OV and OT
+  s_aux_temp_value = 2467;  // OV and OT
   supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
 
   s_aux_volt_value = 11;
-  s_aux_temp_value = 2;  // Voltage is ok but UT
+  s_aux_temp_value = 492;  // Voltage is ok but UT
   supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
 
   s_aux_volt_value = 12;
-  s_aux_temp_value = 132;  // Voltage is ok but OT
+  s_aux_temp_value = 2467;  // Voltage is ok but OT
   supposed_to_fail = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
 
