@@ -30,6 +30,15 @@
 #define TEST_LTC_AFE_SPI_CS \
   { .port = GPIO_PORT_A, .pin = 4 }
 
+#define TEST_LTC_AFE_TEMP_MUX_SCLK \
+  { .port = GPIO_PORT_A, .pin = 5 }
+#define TEST_LTC_AFE_TEMP_MUX_DIN \
+  { .port = GPIO_PORT_A, .pin = 4 }
+#define TEST_LTC_AFE_TEMP_MUX_SYNC \
+  { .port = GPIO_PORT_A, .pin = 3 }
+#define TEST_LTC_AFE_TEMP_MUX_SENSE \
+  { .port = GPIO_PORT_A, .pin = 1 }
+
 typedef enum {
   TEST_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
   TEST_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
