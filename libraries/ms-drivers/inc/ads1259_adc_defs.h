@@ -22,7 +22,7 @@
 
 //Samples per second on ADS1259
 typedef enum {
-    ADS1259_DATA_RATE_10 = 0x0,
+    ADS1259_DATA_RATE_10 = 0,
     ADS1259_DATA_RATE_17,
     ADS1259_DATA_RATE_50,
     ADS1259_DATA_RATE_60,
@@ -43,49 +43,27 @@ typedef enum {
 #define ADS1259_ADDRESS_FSC0 0x06
 #define ADS1259_ADDRESS_FSC1 0x07
 #define ADS1259_ADDRESS_FSC2 0x08
-#define NUM_REGISTERS 0x09
+#define NUM_ADS1259_REGISTERS 0x09
 
 // ADS1259 Register Configurations - LSB to MSB
 //These values can be changed based on needed configurations
 
 // CONFIG0
-#define ADS1259_SPI_TIMEOUT_ENABLE 1 // If 1 SPI timeout enabled
-#define ADS1259_INTERNAL_REF_BIAS_ENABLE 1 // If 1 internal ref bias enabled
-
-#define ADS1259_CONFIG0_SETTINGS ((ADS1259_INTERNAL_REF_BIAS_ENABLE<<3) | (ADS1259_SPI_TIMEOUT_ENABLE))
+#define ADS1259_SPI_TIMEOUT_ENABLE 0x01 // Enable SPI Timeout
+#define ADS1259_INTERNAL_REF_BIAS_ENABLE 0x04 // Enable internal ref bias
 
 // CONFIG1
-#define ADS1259_CONVERSION_DELAY_MS 0 // If 0 Conversion delay disabled
-#define ADS1259_VOLTAGE_REFERENCE_SELECT_EXTERNAL 1 // If 1 uses external voltage reference
-#define ADS1259_DIGITAL_FILTER_SINC_2 0 // If 0 uses auto SINC1 digital filter (default)
-#define ADS1259_CHECK_SUM_ENABLE 1 // If 1 check sum byte appended to output message
-#define ADS1259_OUT_OF_RANGE_FLAG_ENABLE 1 // If 1 out of range flag appended to message
+#define ADS1259_CONVERSION_DELAY_MS 0x0 // Conversion delay not used -> if needed see datasheet
+#define ADS1259_VREF_EXTERNAL 0x04 // Enable external voltage reference
+#define ADS1259_DIGITAL_FILTER_2 0x10 // Enable SINC2 digital filter 
+#define ADS1259_CHECK_SUM_ENABLE 0x40 // Enable check sum byte 
+#define ADS1259_OUT_OF_RANGE_FLAG_ENABLE 0x80 // Enable out of range flag 
 
-#define ADS1259_CONFIG1_SETTINGS ((ADS1259_OUT_OF_RANGE_FLAG_ENABLE<<7) | (ADS1259_CHECK_SUM_ENABLE<<6) | \
-    (ADS1259_VOLTAGE_REFERENCE_SELECT_EXTERNAL<<3) | (ADS1259_CONVERSION_DELAY_MS))
 
 // CONFIG2
-#define ADS1259_SYNCOUT_ENABLE 0 // If 1 Syncout clock enabled
-#define ADS1259_CONVERSION_CONTROL_MODE_PULSE 1 // If 1 conversions set to pulse mode
+#define ADS1259_SYNCOUT_ENABLE 0x20 // Enable Syncout clock 
+#define ADS1259_CONVERSION_CONTROL_MODE_PULSE 0x10 // Set Conversion mode to pulse
 #define ADS1259_DATA_RATE_SPS ADS1259_DATA_RATE_60 
 
-#define ADS1259_CONFIG2_SETTINGS ((ADS1259_SYNCOUT_ENABLE<<5) | (ADS1259_CONVERSION_CONTROL_MODE_PULSE<<4) | \
-            (ADS1259_DATA_RATE_SPS))
-
-typedef enum {
-    ADS_RX_MSB = 0,
-    ADS_RX_MID,
-    ADS_RX_LSB,
-    ADS_RX_CHK_SUM,
-    NUM_ADS_RX_BYTES
-} AdsRxBytes;
-
-//Calibration Register Reset Values
-#define ADS1259_OFC0_RESET 0x0
-#define ADS1259_OFC1_RESET 0x0
-#define ADS1259_OFC2_RESET 0x0
-#define ADS1259_FSC0_RESET 0x0
-#define ADS1259_FSC1_RESET 0x0
-#define ADS1259_FSC2_RESET 0x64
 
 #define ADS1259_CHECKSUM_OFFSET 0x9B
