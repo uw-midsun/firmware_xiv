@@ -96,7 +96,7 @@ PowerDistributionCurrentStorage *power_distribution_current_measurement_get_stor
   return &s_storage;
 }
 
-StatusCode power_distribution_stop(void) {
+StatusCode power_distribution_current_measurement_stop(void) {
   soft_timer_cancel(s_timer_id);
   s_timer_id = SOFT_TIMER_INVALID_TIMER;
   return STATUS_CODE_OK;

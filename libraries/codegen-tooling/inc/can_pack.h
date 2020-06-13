@@ -216,3 +216,19 @@
                    (fault_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
                    CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_FRONT_CURRENT_MEASUREMENT(msg_ptr, current_id_u16, current_u16)       \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,             \
+                    SYSTEM_CAN_MESSAGE_FRONT_CURRENT_MEASUREMENT, 4, (current_id_u16), \
+                    (current_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16, current_u16)       \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,             \
+                    SYSTEM_CAN_MESSAGE_REAR_CURRENT_MEASUREMENT, 4, (current_id_u16), \
+                    (current_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16, aux_battery_temp_u16, \
+                                    dcdc_status_u16)                                     \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                        \
+                    SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 6, (aux_battery_volt_u16),    \
+                    (aux_battery_temp_u16), (dcdc_status_u16), CAN_PACK_IMPL_EMPTY)

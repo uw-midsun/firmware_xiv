@@ -357,3 +357,29 @@
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
+
+#define CAN_TRANSMIT_FRONT_CURRENT_MEASUREMENT(current_id_u16, current_u16)    \
+  ({                                                                           \
+    CanMessage msg = { 0 };                                                    \
+    CAN_PACK_FRONT_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);                              \
+    status;                                                                    \
+  })
+
+#define CAN_TRANSMIT_REAR_CURRENT_MEASUREMENT(current_id_u16, current_u16)    \
+  ({                                                                          \
+    CanMessage msg = { 0 };                                                   \
+    CAN_PACK_REAR_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);                             \
+    status;                                                                   \
+  })
+
+#define CAN_TRANSMIT_AUX_BATTERY_STATUS(aux_battery_volt_u16, aux_battery_temp_u16,   \
+                                        dcdc_status_u16)                              \
+  ({                                                                                  \
+    CanMessage msg = { 0 };                                                           \
+    CAN_PACK_AUX_BATTERY_STATUS(&msg, (aux_battery_volt_u16), (aux_battery_temp_u16), \
+                                (dcdc_status_u16));                                   \
+    StatusCode status = can_transmit(&msg, NULL);                                     \
+    status;                                                                           \
+  })
