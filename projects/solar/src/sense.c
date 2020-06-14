@@ -1,6 +1,7 @@
 #include "sense.h"
 #include <stddef.h>
 #include "data_store.h"
+#include "log.h"
 #include "soft_timer.h"
 
 static SenseCallback s_callbacks[MAX_SENSE_CALLBACKS];
@@ -21,7 +22,12 @@ static void prv_do_sense_cycle(SoftTimerId timer_id, void *context) {
   }
   data_store_done();
 
-  soft_timer_start(s_period_us, prv_do_sense_cycle, NULL, &s_timer_id);
+  StatusCode code = soft_timer_start(s_period_us, prv_do_sense_cycle, NULL, &s_timer_id);
+  if (!status_ok(code)) {
+    Status status = status_get();
+    LOG_CRITICAL("Sense cycle could not restart! Code %d, %s:%s \"%s\"\n", code, status.source,
+                 status.caller, status.message);
+  }
 }
 
 StatusCode sense_init(SenseSettings *settings) {
@@ -29,16 +35,16 @@ StatusCode sense_init(SenseSettings *settings) {
     return STATUS_CODE_INVALID_ARGS;
   }
   s_period_us = settings->sense_period_us;
-  s_num_callbacks = 0;  // reset callback stack upon reinitialization
+  s_num_callbacks = 0;  // reset callback stack upon reinitialization for ease of testing
   return STATUS_CODE_OK;
 }
 
 StatusCode sense_register(SenseCallback callback, void *callback_context) {
-  if (s_num_callbacks >= MAX_SENSE_CALLBACKS) {
-    return STATUS_CODE_RESOURCE_EXHAUSTED;
-  }
   if (callback == NULL) {
     return STATUS_CODE_INVALID_ARGS;
+  }
+  if (s_num_callbacks >= MAX_SENSE_CALLBACKS) {
+    return STATUS_CODE_RESOURCE_EXHAUSTED;
   }
   s_callbacks[s_num_callbacks] = callback;
   s_contexts[s_num_callbacks] = callback_context;
@@ -47,8 +53,9 @@ StatusCode sense_register(SenseCallback callback, void *callback_context) {
 }
 
 void sense_start(void) {
+  // immediately perform a sense round
   // the timer id and context are never used in |prv_do_sense_cycle|
-  prv_do_sense_cycle(NULL, NULL);
+  prv_do_sense_cycle(0, NULL);
 }
 
 bool sense_stop(void) {
