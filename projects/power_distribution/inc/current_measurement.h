@@ -7,7 +7,7 @@
 #include "gpio.h"
 #include "mux.h"
 #include "pca9539r_gpio_expander.h"
-#include "power_distribution_currents.h"
+#include "currents.h"
 #include "status.h"
 
 #define MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS 16  // max BTS7200s per board

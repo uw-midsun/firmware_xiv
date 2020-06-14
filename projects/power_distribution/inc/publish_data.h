@@ -4,7 +4,7 @@
 // Requires CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
 
 #include <stdint.h>
-#include "power_distribution_currents.h"
+#include "currents.h"
 #include "status.h"
 
 // A callback which actually transmits the data over CAN.

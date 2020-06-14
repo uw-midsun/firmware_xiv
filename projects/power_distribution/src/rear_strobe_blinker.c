@@ -1,6 +1,6 @@
-#include "rear_power_distribution_strobe_blinker.h"
+#include "rear_strobe_blinker.h"
 #include "blink_event_generator.h"
-#include "power_distribution_events.h"
+#include "events.h"
 
 static BlinkEventGeneratorStorage s_blinker_storage;
 

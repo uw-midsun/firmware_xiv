@@ -3,8 +3,8 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
-#include "power_distribution_publish_data.h"
-#include "power_distribution_publish_data_config.h"
+#include "publish_data.h"
+#include "publish_data_config.h"
 #include "test_helpers.h"
 #include "unity.h"
 

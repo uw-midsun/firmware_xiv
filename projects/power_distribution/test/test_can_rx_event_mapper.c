@@ -4,7 +4,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
-#include "power_distribution_can_rx_event_mapper.h"
+#include "can_rx_event_mapper.h"
 #include "test_helpers.h"
 #include "unity.h"
 

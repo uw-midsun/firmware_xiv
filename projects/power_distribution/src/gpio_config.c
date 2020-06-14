@@ -1,6 +1,6 @@
-#include "power_distribution_gpio_config.h"
-#include "power_distribution_events.h"
-#include "power_distribution_pin_defs.h"
+#include "gpio_config.h"
+#include "events.h"
+#include "pin_defs.h"
 
 #define POWER_DISTRIBUTION_I2C_ADDRESS_0 0x74
 #define POWER_DISTRIBUTION_I2C_ADDRESS_1 0x76

@@ -1,4 +1,4 @@
-#include "power_distribution_publish_data.h"
+#include "publish_data.h"
 
 static PowerDistributionPublishConfig s_config = { 0 };
 

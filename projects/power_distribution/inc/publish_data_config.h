@@ -2,7 +2,7 @@
 
 // Standard configurations for power_distribution_publish_data.
 
-#include "power_distribution_publish_data.h"
+#include "publish_data.h"
 
 extern const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG;
 extern const PowerDistributionPublishConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG;

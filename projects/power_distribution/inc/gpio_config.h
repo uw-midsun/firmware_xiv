@@ -2,7 +2,7 @@
 
 // Standard configurations for power_distribution_gpio.
 
-#include "power_distribution_gpio.h"
+#include "gpio.h"
 
 extern const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG;
 extern const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG;

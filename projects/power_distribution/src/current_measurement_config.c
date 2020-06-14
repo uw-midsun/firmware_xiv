@@ -1,5 +1,5 @@
-#include "power_distribution_current_measurement_config.h"
-#include "power_distribution_pin_defs.h"
+#include "current_measurement_config.h"
+#include "pin_defs.h"
 
 // Definitions of the hardware configs declared in the header
 
