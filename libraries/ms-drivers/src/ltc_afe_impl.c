@@ -13,7 +13,7 @@ static uint16_t s_read_reg_cmd[NUM_LTC_AFE_REGISTERS] = {
   LTC6811_RDCFG_RESERVED,  LTC6811_RDCVA_RESERVED,   LTC6811_RDCVB_RESERVED,
   LTC6811_RDCVC_RESERVED,  LTC6811_RDCVD_RESERVED,   LTC6811_RDAUXA_RESERVED,
   LTC6811_RDAUXA_RESERVED, LTC6811_RDSTATA_RESERVED, LTC6811_RDSTATB_RESERVED,
-  LTC6811_RDCOMM_RESERVED
+  LTC6811_RDCOMM_RESERVED, LTC6811_STCOMM_RESERVED
 };
 
 static uint8_t s_voltage_reg[NUM_LTC_AFE_VOLTAGE_REGISTERS] = {
@@ -91,7 +91,6 @@ static StatusCode prv_trigger_adc_conversion(LtcAfeStorage *afe) {
 }
 
 static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
-  // TODO(SOFT-9): Update GPIO usage to match updated design
   LtcAfeSettings *settings = &afe->settings;
   uint8_t mode = (uint8_t)((settings->adc_mode + 1) % 3);
   // ADAX
@@ -102,6 +101,19 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
 
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
+}
+
+static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
+  LtcAfeSettings *settings = &afe->settings;
+  // Setting sending STCOMM command
+  uint16_t stcomm = LTC6811_STCOMM_RESERVED;
+
+  uint8_t cmd[3] = { 0 };
+  prv_build_cmd(stcomm, cmd, SIZEOF_ARRAY(cmd));
+
+  prv_wakeup_idle(afe);
+
+  return spi_exchange(settings->spi_port, cmd, 3, NULL, 0);
 }
 
 // write config to all devices
@@ -217,7 +229,7 @@ StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell
   // we use GPIO2, GPIO3, GPIO4, GPIO5 to select which input to read
   // corresponding to the binary representation of the cell
   prv_write_config(afe, (device_cell << 4) | LTC6811_GPIO1_PD_OFF);
-
+  prv_mux_enable_spi(afe);
   return prv_trigger_aux_adc_conversion(afe);
 }
 
