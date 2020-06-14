@@ -108,7 +108,7 @@ static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
   // Setting sending STCOMM command
   uint16_t stcomm = LTC6811_STCOMM_RESERVED;
 
-  uint8_t cmd[3] = { 0 };
+  uint8_t cmd[4] = { 0 };
   prv_build_cmd(stcomm, cmd, SIZEOF_ARRAY(cmd));
 
   prv_wakeup_idle(afe);
