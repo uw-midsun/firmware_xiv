@@ -49,7 +49,7 @@ StatusCode event_raise_priority(EventPriority priority, EventId id, uint16_t dat
 #define event_raise(id, data) event_raise_priority(EVENT_PRIORITY_NORMAL, (id), (data))
 
 // Raises an event at default priority with 0 for data
-#define event_raise_no_data(id) event_raise((id), (0))
+#define event_raise_no_data(id) event_raise((id), 0)
 
 // Returns the next event to be processed.
 // Note that events are processed by priority.

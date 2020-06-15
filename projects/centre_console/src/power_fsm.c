@@ -52,17 +52,12 @@ FSM_STATE_TRANSITION(power_state_fault) {
   FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_OFF, power_state_transitioning);
 }
 
-void prv_set_current_state(void *context, PowerState state) {
-  PowerFsmStorage *storage = (PowerFsmStorage *)context;
-  storage->current_state = state;
-}
-
 static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   // Go back to previous state
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->destination_state = power_fsm->previous_state;
   FaultReason fault = { .raw = e->data };
-  prv_set_current_state(context, POWER_STATE_FAULT);
+  power_fsm->current_state = POWER_STATE_FAULT;
   if (fault.fields.area != EE_CONSOLE_FAULT_AREA_BPS_HEARTBEAT) {
     CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.fields.area, fault.fields.reason);
     event_raise(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, power_fsm->previous_state);
@@ -74,7 +69,7 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
 
 static void prv_destination_state_output(Fsm *fsm, const Event *e, void *context) {
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
-  prv_set_current_state(context, power_fsm->destination_state);
+  power_fsm->current_state = power_fsm->destination_state;
 }
 
 static PowerState s_destination_lookup[] = {
@@ -100,7 +95,7 @@ static EventId s_event_lookup[] = {
 static void prv_power_state_transitioning(Fsm *fsm, const Event *e, void *context) {
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->previous_state = power_fsm->current_state;
-  prv_set_current_state(power_fsm, POWER_STATE_TRANSITIONING);
+  power_fsm->current_state = POWER_STATE_TRANSITIONING;
   event_raise_no_data(s_event_lookup[e->id]);
 }
 
@@ -110,7 +105,7 @@ StatusCode power_fsm_init(PowerFsmStorage *power_fsm) {
   fsm_state_init(power_state_aux, prv_destination_state_output);
   fsm_state_init(power_state_main, prv_destination_state_output);
   fsm_state_init(power_state_off, prv_destination_state_output);
-  prv_set_current_state(power_fsm, POWER_STATE_OFF);
+  power_fsm->current_state = POWER_STATE_OFF;
   fsm_init(&power_fsm->power_fsm, "power_fsm", &power_state_off, power_fsm);
   return STATUS_CODE_OK;
 }

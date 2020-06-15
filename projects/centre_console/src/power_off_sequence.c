@@ -60,7 +60,6 @@ static StatusCode prv_can_ack_everything_turned_off(CanMessageId msg_id, uint16_
 }
 
 static void prv_state_turn_off_everything(Fsm *fsm, const Event *e, void *context) {
-  printf("turning off everything\n");
   CanAckRequest ack_req = { .callback = prv_can_ack_everything_turned_off,
                             .expected_bitset = CAN_ACK_EXPECTED_DEVICES(
                                 SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,

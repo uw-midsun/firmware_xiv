@@ -69,7 +69,7 @@
   })
 
 #define MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(event, e_id) \
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT((event), (e_id), (0))
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT((event), (e_id), 0)
 
 // assert no events
 #define MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED() \
