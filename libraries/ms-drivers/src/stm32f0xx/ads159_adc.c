@@ -7,14 +7,10 @@
 #define NUM_CONFIG_REGISTERS 3
 #define CHK_SUM_FLAG_BIT 0x80
 
+// Timer used to collect data after convert command sent
 static SoftTimerId s_timer_id;
 
-static const uint8_t s_register_settings_lookup[NUM_CONFIG_REGISTERS] = {
-    [ADS1259_ADDRESS_CONFIG0] = (ADS1259_INTERNAL_REF_BIAS_ENABLE | ADS1259_SPI_TIMEOUT_ENABLE),
-    [ADS1259_ADDRESS_CONFIG1] = (ADS1259_OUT_OF_RANGE_FLAG_ENABLE | ADS1259_CHECK_SUM_ENABLE ),
-    [ADS1259_ADDRESS_CONFIG2] = (ADS1259_CONVERSION_CONTROL_MODE_PULSE | ADS1259_DATA_RATE_SPS),
-};
-
+// Used to determine length of time needed between convert command sent and data collection
 static const uint8_t s_conversion_time_ms_lookup[NUM_ADS1259_DATA_RATE] {
     [ADS1259_DATA_RATE_10] = 100,
     [ADS1259_DATA_RATE_17] = 61,
@@ -38,21 +34,28 @@ static const uint8_t s_calibration_time_ms_lookup[NUM_ADS1259_DATA_RATE] {
 };
 
 
-// TODO (SOFT-173): determine whether or not reset registers need to be written to
 static StatusCode prv_configure_registers(Ads1259Storage* storage) {
+    uint8_t register_lookup[NUM_CONFIG_REGISTERS] = {
+        (ADS1259_INTERNAL_REF_BIAS_ENABLE | ADS1259_SPI_TIMEOUT_ENABLE),
+        (ADS1259_OUT_OF_RANGE_FLAG_ENABLE | ADS1259_CHECK_SUM_ENABLE ),
+        (ADS1259_CONVERSION_CONTROL_MODE_PULSE | ADS1259_DATA_RATE_SPS),
+    };
+    // reset all register values to default
     prv_send_command(storage, ADS1259_RESET); // Needs 8 fclk cycles before next command
     uint8_t payload[] =  { 
-        ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0, NUM_CONFIG_REGISTERS, 
-        s_register_settings_lookup[ADS1259_ADDRESS_CONFIG0], s_register_settings_lookup[ADS1259_ADDRESS_CONFIG1],
-        s_register_settings_lookup[ADS1259_ADDRESS_CONFIG2],
+        (ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0), NUM_CONFIG_REGISTERS, 
+        register_lookup[0], register_lookup[1], register_lookup[2]
         };
+    // tx write-reg command and data for all three config registers
     spi_tx(storage->spi_port, payload, sizeof(payload));
+    // sanity check that data was written correctly
     for(int reg = 0; reg < NUM_ADS1259_REGISTERS; reg++) {
-        status_ok_or_return(prv_check_register(storage, reg, s_register_settings_lookup[reg]));
+        status_ok_or_return(prv_check_register(storage, reg, register_lookup[reg]));
     }
     return STATUS_CODE_OK;
 }
 
+// Reads 1-byte reg value to storage->data
 static StatusCode prv_check_register(Ads1259Storage* storage, uint8_t register_address, uint8_t register_val) {
     uint8_t payload[] =  { ADS1259_READ_REGISTER | register_address };
     spi_exchange(storage->spi_port, payload, sizeof(payload), &storage->data.ADS_RX_MSB,
@@ -62,6 +65,7 @@ static StatusCode prv_check_register(Ads1259Storage* storage, uint8_t register_a
     return STATUS_CODE_OK;
 }
 
+// tx spi command to ads1259
 static void prv_send_command(Ads1259Storage* storage, uint8_t command) {
     uint8_t payload[] = { command };
     spi_tx(storage->spi_port, payload, size_of(payload)); 
@@ -78,6 +82,7 @@ static void prv_conversion_callback(SoftTimerId timer_id, void* context) {
     free(rx_data);
 }
 
+// calculate check-sum based on page 29 of datasheet
 static StatusCode prv_checksum(Ads1259Storage* storage) {
     uint8_t sum = (uint8_t)(storage->data.ADS_RX_LSB + storage->data.ADS_RX_MID +
         storage->data.ADS_RX_MSB + ADS1259_CHECKSUM_OFFSET);
@@ -89,6 +94,13 @@ static StatusCode prv_checksum(Ads1259Storage* storage) {
         }
 }
 
+//concatenates output bytes into final reading
+static void prv_convert_data(Ads1259Storage* storage) {
+    storage->reading = (storage->data.ADS_RX_MSB<<16 | 
+        storage->data.ADS_RX_MID<<8 | storage->data.ADS_RX_LSB);
+}
+
+// Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
 StatusCode ads1259_init(Ads1259Settings* settings, Ads1259Storage* storage) {
     storage->spi_port = settings->spi_port;
     const SpiSettings spi_settings = {
@@ -100,18 +112,21 @@ StatusCode ads1259_init(Ads1259Settings* settings, Ads1259Storage* storage) {
     .cs = settings->cs,
     };
     status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
-    delay_us(100); //NEED TO HASH OUT DELAY TIMES DURING CONFIG
+    delay_us(100);
+    // first command that must be sent on power-up before registers can be read
     prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
     status_ok_or_return(prv_configure_registers(storage));
     prv_send_command(storage, ADS1259_OFFSET_CALIBRATION);
     delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
-    prv_send_command(storage, ADS1259_GAIN_CALIBRATION); // Double check this is all that is needed to calibrate
+    prv_send_command(storage, ADS1259_GAIN_CALIBRATION); 
     delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
 }
 
+// Reads conversion data to data struct in storage. data->reading gives total value
 StatusCode ads1259_get_conversion_data(Ads1259Storage* storage) {
     prv_send_command(storage, ADS1259_START_CONV);
     status_ok_or_return(soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS], 
         prv_conversion_callback, storage, s_timer_id));
-    status_ok_or_return(prv_checksum(storage));    
+    status_ok_or_return(prv_checksum(storage));   
+    prv_convert_data(storage); 
 }

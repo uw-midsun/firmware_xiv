@@ -14,6 +14,7 @@ typedef struct Ads1259RxData {
   uint8_t ADS_RX_CHK_SUM;
 } Ads1259RxData;
 
+// Initialize Ads1259Settings with SPI settings
 typedef struct Ads1259Settings {
   SpiPort spi_port;
   uint32_t spi_baudrate;
@@ -23,9 +24,12 @@ typedef struct Ads1259Settings {
   GpioAddress cs;
 } Ads1259Settings;
 
+// Static instance of Ads1259Storage must be declared
+// ads1259_get_data() reads 24-bit conversion data into 'reading'
 typedef struct Ads1259Storage {
   Ads1259RxData data;
   SpiPort spi_port;
+  uint32_t reading;
 } Ads1259Storage;
 
 
@@ -34,5 +38,3 @@ StatusCode ads1259_init(Ads1259Settings* settings, Ads1259Storage* storage);
 
 // Gets reading via single conversion mode
 StatusCode ads1259_get_data(Ads1259Storage* storage);
-
-//If we use re-init to reset/calibrate, then may need to redo the wait
