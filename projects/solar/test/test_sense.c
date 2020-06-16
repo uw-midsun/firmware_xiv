@@ -66,12 +66,12 @@ void test_sense_cycle_single_callback_multiple_cycles(void) {
   s_callback_context = NULL;
 
   // make sure the next round isn't too early
-  delay_us(TEST_SENSE_PERIOD_US / 2);
+  delay_us(TEST_SENSE_PERIOD_US / 4);
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
   TEST_ASSERT_EQUAL(1, s_times_data_store_done_called);
 
   // there should be another cycle after cumulative TEST_SENSE_PERIOD_US, add 1ms to be sure
-  delay_us(TEST_SENSE_PERIOD_US / 2 + 1000);
+  delay_us(3 * TEST_SENSE_PERIOD_US / 4 + 1000);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
   TEST_ASSERT_EQUAL(2, s_times_data_store_done_called);
   TEST_ASSERT_EQUAL(&context, s_callback_context);
@@ -86,9 +86,6 @@ void test_sense_cycle_single_callback_multiple_cycles(void) {
   delay_us(2 * TEST_SENSE_PERIOD_US);
   TEST_ASSERT_EQUAL(3, s_times_callback_called);
   TEST_ASSERT_EQUAL(3, s_times_data_store_done_called);
-
-  // no events should have been raised since we mocked data_store_done
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 // Test that we can have two callbacks with distinct contexts.
@@ -118,23 +115,20 @@ void test_sense_cycle_two_callbacks_with_contexts(void) {
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
   TEST_ASSERT_EQUAL(1, s_times_callback_2_called);
   TEST_ASSERT_EQUAL(1, s_times_data_store_done_called);
-
-  // no events since we mocked data_store_done
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 // Test that we can have several callbacks.
 void test_sense_cycle_many_callbacks(void) {
-  const size_t num_callbacks = MAX_SENSE_CALLBACKS;
   TEST_ASSERT_OK(sense_init(&test_settings));
 
-  for (size_t i = 0; i < num_callbacks; i++) {
+  // define up to the maximum number of callbacks
+  for (uint8_t i = 0; i < MAX_SENSE_CALLBACKS; i++) {
     TEST_ASSERT_OK(sense_register(prv_callback, NULL));
   }
 
   // all of the callbacks are called
   sense_start();
-  TEST_ASSERT_EQUAL(num_callbacks, s_times_callback_called);
+  TEST_ASSERT_EQUAL(MAX_SENSE_CALLBACKS, s_times_callback_called);
   TEST_ASSERT_EQUAL(1, s_times_data_store_done_called);
   sense_stop();
 }
@@ -144,7 +138,8 @@ void test_sense_cycle_many_callbacks(void) {
 void test_registering_too_many_callbacks(void) {
   TEST_ASSERT_OK(sense_init(&test_settings));
 
-  for (size_t i = 0; i < MAX_SENSE_CALLBACKS; i++) {
+  // use up all of the callbacks
+  for (uint8_t i = 0; i < MAX_SENSE_CALLBACKS; i++) {
     TEST_ASSERT_OK(sense_register(prv_callback, NULL));
   }
 
@@ -167,7 +162,7 @@ void test_passing_null(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, sense_register(NULL, NULL));
 }
 
-// Test that |sense_stop| returns true iff it stops an ongoing sense cycle.
+// Test that |sense_stop| returns true if and only if it stops an ongoing sense cycle.
 void test_sense_stop_return_value(void) {
   TEST_ASSERT_OK(sense_init(&test_settings));
   TEST_ASSERT_EQUAL(false, sense_stop());

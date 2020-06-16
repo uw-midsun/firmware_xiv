@@ -1,7 +1,7 @@
 #pragma once
 
 // Generic sense module.
-// Requires interrupts, soft timers, and the event queue (for data_store) to be initialized.
+// Requires interrupts, soft timers, and the event queue to be initialized.
 
 // This module operates a "sense cycle": periodically, all registered sense callbacks will be run,
 // then |data_store_done| will be called to notify data consumers that new data is available.
