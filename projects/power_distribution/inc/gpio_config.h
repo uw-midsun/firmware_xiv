@@ -1,6 +1,6 @@
 #pragma once
 
-// Standard configurations for power_distribution_gpio.
+// Standard configurations for pd_gpio.
 
 #include "gpio.h"
 

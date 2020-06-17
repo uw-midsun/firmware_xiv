@@ -1,5 +1,5 @@
 #include "log.h"
-#include "gpio.h"
+#include "pd_gpio.h"
 #include "gpio_config.h"
 #include "test_helpers.h"
 #include "unity.h"

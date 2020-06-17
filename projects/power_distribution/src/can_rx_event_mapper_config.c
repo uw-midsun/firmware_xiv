@@ -1,7 +1,7 @@
 #include "can_rx_event_mapper_config.h"
 #include "can_msg_defs.h"
 #include "exported_enums.h"
-#include "events.h"
+#include "pd_events.h"
 
 const PowerDistributionCanRxEventMapperConfig FRONT_POWER_DISTRIBUTION_CAN_RX_CONFIG = {
   .msg_specs =

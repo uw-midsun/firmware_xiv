@@ -1,6 +1,6 @@
 #pragma once
 
-// Standard configurations for power_distribution_publish_data.
+// Standard configurations for publish_data.
 
 #include "publish_data.h"
 

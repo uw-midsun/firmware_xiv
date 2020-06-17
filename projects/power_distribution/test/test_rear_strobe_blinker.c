@@ -2,7 +2,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
-#include "events.h"
+#include "pd_events.h"
 #include "rear_strobe_blinker.h"
 #include "soft_timer.h"
 #include "test_helpers.h"

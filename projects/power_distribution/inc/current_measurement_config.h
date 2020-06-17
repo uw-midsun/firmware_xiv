@@ -1,6 +1,6 @@
 #pragma once
 
-// Standard hardware configurations for power_distribution_current_measurement.
+// Standard hardware configurations for current_measurement.
 
 #include "current_measurement.h"
 

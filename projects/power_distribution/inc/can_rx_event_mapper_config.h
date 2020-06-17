@@ -1,6 +1,6 @@
 #pragma once
 
-// Standard configurations for power_distribution_can_rx_event_mapper.
+// Standard configurations for can_rx_event_mapper.
 
 #include "can_rx_event_mapper.h"
 

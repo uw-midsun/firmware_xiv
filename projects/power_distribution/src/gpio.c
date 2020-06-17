@@ -1,5 +1,5 @@
-#include "gpio.h"
-#include "events.h"
+#include "pd_gpio.h"
+#include "pd_events.h"
 
 static PowerDistributionGpioConfig s_config;
 

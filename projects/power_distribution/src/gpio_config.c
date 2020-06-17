@@ -1,5 +1,5 @@
 #include "gpio_config.h"
-#include "events.h"
+#include "pd_events.h"
 #include "pin_defs.h"
 
 #define POWER_DISTRIBUTION_I2C_ADDRESS_0 0x74
