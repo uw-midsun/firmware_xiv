@@ -60,7 +60,7 @@ typedef enum {
 typedef void (*Mcp3427Callback)(int16_t value_ch1, int16_t value_ch2, void *context);
 typedef void (*Mcp3427FaultCallback)(void *context);
 
-typedef struct {
+typedef struct Mcp3427Settings {
   Mcp3427SampleRate sample_rate;
   Mcp3427PinState addr_pin_0;
   Mcp3427PinState addr_pin_1;
@@ -73,7 +73,7 @@ typedef struct {
   EventId adc_data_ready_event;
 } Mcp3427Settings;
 
-typedef struct {
+typedef struct Mcp3427Storage {
   I2CPort port;
   I2CAddress addr;
   uint8_t config;

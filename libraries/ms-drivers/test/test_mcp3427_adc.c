@@ -68,8 +68,10 @@ void setup_test(void) {
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
 
-  s_times_callback_called = s_times_fault_callback_called = 0;
-  s_callback_context = s_fault_callback_context = NULL;
+  s_times_callback_called = 0;
+  s_times_fault_callback_called = 0;
+  s_callback_context = NULL;
+  s_fault_callback_context = NULL;
 }
 void teardown_test(void) {}
 
@@ -107,10 +109,6 @@ static void prv_test_data_round(Mcp3427Storage *storage, Event *e, void *callbac
   // the fault callback shouldn't have been called ever
   TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
   TEST_ASSERT_EQUAL(NULL, s_fault_callback_context);
-
-  // clean up for a possible next round
-  s_callback_context = NULL;
-  s_times_callback_called = 0;
 }
 
 // Test initialization and that the callback is called when it's supposed to be without faults.
@@ -145,6 +143,8 @@ void test_12_bit_continuous_sampling_and_multiple_rounds(void) {
   // test two rounds to make sure the loop succeeds
   prv_test_data_round(&storage, &e, &callback_context);
   LOG_DEBUG("Data round 1 succeeded\n");
+  s_callback_context = NULL;  // reset between rounds
+  s_times_callback_called = 0;
   prv_test_data_round(&storage, &e, &callback_context);
   LOG_DEBUG("Data round 2 succeeded\n");
 }
