@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "battery_monitor.h"
 #include "can_transmit.h"
+#include "charger_defs.h"
 #include "charger_events.h"
 #include "event_queue.h"
 #include "exported_enums.h"
@@ -98,6 +98,7 @@ StatusCode charger_controller_deactivate() {
   s_vc.values.complete.current = 0;
   TxMsgData tx_data = prv_build_charger_tx(false);
 
+  // Send 'stop' message
   GenericCanMsg tx_msg = {
     .id = CHARGER_TX_CAN_ID,    //
     .extended = true,           //

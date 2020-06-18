@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-#include "charger_events.h"
-#include "event_queue.h"
 #include "gpio.h"
 #include "pwm_input.h"
 #include "status.h"
@@ -36,17 +34,15 @@ uint16_t prv_duty_to_current(uint32_t duty) {
   return ret;
 }
 
-void control_pilot_process_event(Event *e) {
-  if (e->id == CHARGER_CP_EVENT_REQUEST_READING) {
-    PwmInputReading reading = { 0 };
-    pwm_input_get_reading(PWM_TIMER_3, &reading);
-    event_raise(CHARGER_CP_EVENT_VALUE_AVAILABLE, prv_duty_to_current(reading.dc_percent));
-  }
+uint16_t control_pilot_get_current() {
+  PwmInputReading reading = { 0 };
+  pwm_input_get_reading(PWM_TIMER_3, &reading);
+  return prv_duty_to_current(reading.dc_percent);
 }
 
 StatusCode control_pilot_init() {
   PwmTimer input_timer = PWM_TIMER_3;
-  GpioAddress cp_address = CONTROL_PILOT_GPIO_ADDR;
+  GpioAddress cp_address = CONTROL_PILOT_PWM_GPIO_ADDR;
   GpioSettings cp_settings = {
     .direction = GPIO_DIR_IN,     //
     .state = GPIO_STATE_LOW,      //

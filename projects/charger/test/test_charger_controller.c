@@ -1,9 +1,9 @@
 #include <string.h>
 
-#include "battery_monitor.h"
 #include "can_msg_defs.h"
 #include "can_unpack.h"
 #include "charger_controller.h"
+#include "charger_defs.h"
 #include "charger_events.h"
 #include "delay.h"
 #include "event_queue.h"

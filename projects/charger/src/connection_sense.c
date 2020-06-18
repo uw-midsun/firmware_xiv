@@ -1,8 +1,12 @@
 #include "connection_sense.h"
+
 #include <stdint.h>
+
 #include "adc.h"
+#include "can_transmit.h"
 #include "charger_events.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "gpio.h"
 #include "soft_timer.h"
 #include "status.h"
@@ -37,9 +41,11 @@ static void prv_periodic_cs_poll(SoftTimerId timer_id, void *context) {
 
   if (cur_state != s_prev_state) {
     if (cur_state == CHARGER_STATE_UNPLUGGED) {
-      event_raise(CHARGER_CONNECTION_EVENT_DISCONNECTED, 0);
+      CAN_TRANSMIT_CHARGER_CONNECTED_STATE(EE_CHARGER_CONN_STATE_DISCONNECTED);
+      event_raise(CHARGER_CHARGE_EVENT_STOP, 0);
     } else if (cur_state == CHARGER_STATE_PLUGGED_RELEASED) {
-      event_raise(CHARGER_CONNECTION_EVENT_CONNECTED, 0);
+      CAN_TRANSMIT_CHARGER_CONNECTED_STATE(EE_CHARGER_CONN_STATE_CONNECTED);
+      event_raise(CHARGER_CHARGE_EVENT_BEGIN, 0);
     }
   }
 

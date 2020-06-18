@@ -5,6 +5,4 @@
 
 #include "status.h"
 
-#define CHARGER_BATTERY_THRESHOLD 1350  // decivolts, = 135.0 volts
-
 StatusCode battery_monitor_init();
