@@ -61,6 +61,25 @@ static uint16_t s_data_mask_lookup[] = {
   [MCP3427_SAMPLE_RATE_16_BIT] = MCP3427_DATA_MASK_16_BIT,  //
 };
 
+static int16_t prv_normalize_conversion_result(Mcp3427Storage *storage, uint16_t raw) {
+  // shift it to the full 16 bits - this preserves the sign bit
+  uint16_t scaled;
+  switch (storage->sample_rate) {
+    case MCP3427_SAMPLE_RATE_12_BIT:
+      scaled = raw << 4;
+      break;
+    case MCP3427_SAMPLE_RATE_14_BIT:
+      scaled = raw << 2;
+      break;
+    case MCP3427_SAMPLE_RATE_16_BIT:
+    default:
+      scaled = raw;
+      break;
+  }
+  // convert to the signed value
+  return (int16_t)scaled;
+}
+
 static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
   Mcp3427Storage *storage = (Mcp3427Storage *)context;
   uint8_t read_data[MCP3427_NUM_DATA_BYTES] = { 0 };
@@ -90,8 +109,9 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
 
   if (current_channel == MCP3427_CHANNEL_2 && storage->callback != NULL) {
     // We have all the data ready.
-    storage->callback((int16_t)storage->sensor_data[0], (int16_t)storage->sensor_data[1],
-                      storage->context);
+    int16_t normalized_0 = prv_normalize_conversion_result(storage, storage->sensor_data[0]);
+    int16_t normalized_1 = prv_normalize_conversion_result(storage, storage->sensor_data[1]);
+    storage->callback(normalized_0, normalized_1, storage->context);
   }
 
   event_raise(storage->data_trigger_event, prv_get_chip_identifier(storage));
