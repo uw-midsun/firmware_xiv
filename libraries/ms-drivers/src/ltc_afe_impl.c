@@ -103,6 +103,19 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
   return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
 }
 
+static StatusCode prv_write_comm_register(LtcAfeStorage *afe) {
+  LtcAfeSettings *settings = &afe->settings;
+  // Write data to COMM register
+  uint16_t wrcomm = LTC6811_WRCOMM_RESERVED;
+
+  uint8_t cmd[4] = { 0 };
+  prv_build_cmd(wrcomm, cmd, SIZEOF_ARRAY(cmd));
+
+  prv_wakeup_idle(afe);
+
+  return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
+}
+
 static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   // Setting sending STCOMM command
@@ -113,7 +126,7 @@ static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
 
   prv_wakeup_idle(afe);
 
-  return spi_exchange(settings->spi_port, cmd, 3, NULL, 0);
+  return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
 }
 
 // write config to all devices
