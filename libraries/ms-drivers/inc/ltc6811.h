@@ -7,6 +7,8 @@
 
 #define LTC6811_CELLS_IN_REG 3
 #define LTC6811_GPIOS_IN_REG 3
+#define ADS1259_SHIFT_REG_SIZE 8
+#define ADS1259_NUM_PINS 32
 
 typedef enum {
   LTC_AFE_REGISTER_CONFIG = 0,
@@ -51,7 +53,6 @@ typedef enum {
 } LtcAfeDischargeTimeout;
 
 // SPI Packets
-
 typedef struct {
   uint8_t adcopt : 1;
   uint8_t swtrd : 1;
@@ -67,12 +68,35 @@ typedef struct {
 } _PACKED LtcAfeConfigRegisterData;
 static_assert(sizeof(LtcAfeConfigRegisterData) == 6, "LtcAfeConfigRegisterData must be 6 bytes");
 
+// COMM Register, refer to LTC6803 datasheet page 31, Table 15
+typedef struct {
+  // COMM0
+  uint8_t icom0 : 4;
+  uint8_t d0 : 8;
+  uint8_t fcom0 : 4;
+
+  uint8_t icom1 : 4;
+  uint8_t d1 : 8;
+  uint8_t fcom1 : 4;
+
+  uint8_t icom2 : 4;
+  uint8_t d2 : 8;
+  uint8_t fcom2 : 4;
+} _PACKED LtcAfeCommRegisterData;
+static_assert(sizeof(LtcAfeCommRegisterData) == 6, "LtcAfeCommRegisterData must be 6 bytes");
+
 // CFGR packet
 typedef struct {
   LtcAfeConfigRegisterData reg;
 
   uint16_t pec;
 } _PACKED LtcAfeWriteDeviceConfigPacket;
+
+// WRCOMM + mux pin
+typedef struct {
+  uint8_t wrcomm[4];
+  LtcAfeCommRegisterData reg;
+} _PACKED LtcAfeWriteCommRegPacket;
 
 // WRCFG + all slave registers
 typedef struct {
@@ -183,3 +207,10 @@ static_assert(sizeof(LtcAfeAuxRegisterGroupPacket) == 8,
 
 #define LTC6811_ADAX_GPIO1 0x01
 #define LTC6811_ADAX_MODE_FAST (0 << 8) | (1 << 7)
+
+#define LTC6811_ICOM_CSBM_LOW (1 << 3)
+#define LTC6811_ICOM_CSBM_HIGH (1 << 3) | 1
+#define LTC6811_ICOM_NO_TRANSMIT (1 << 3) | (1 << 2) | (1 << 1) | 1
+
+#define LTC6811_FCOM_CSBM_LOW 0
+#define LTC6811_FCOM_CSBM_HIGH (1 << 3) | 1

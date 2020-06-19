@@ -103,29 +103,39 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
   return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
 }
 
-static StatusCode prv_write_comm_register(LtcAfeStorage *afe) {
+static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cell) {
+  if (device_cell > ADS1259_NUM_PINS) {
+    return STATUS_CODE_OUT_OF_RANGE;
+  }
   LtcAfeSettings *settings = &afe->settings;
-  // Write data to COMM register
-  uint16_t wrcomm = LTC6811_WRCOMM_RESERVED;
+  LtcAfeWriteCommRegPacket packet = { 0 };
+  // Build WRCOMM Command
+  prv_build_cmd(LTC6811_WRCOMM_RESERVED, packet.wrcomm, SIZEOF_ARRAY(packet.wrcomm));
+  // Write 3 bytes of data to the COMM registers
+  // We send the same data 3 times since using the WRCOMM command forces us to send 3 bytes
+  // However, the mux only needs a byte of data
+  packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
+  packet.reg.d0 = device_cell;
+  packet.reg.fcom0 = LTC6811_FCOM_CSBM_LOW;
 
-  uint8_t cmd[4] = { 0 };
-  prv_build_cmd(wrcomm, cmd, SIZEOF_ARRAY(cmd));
+  packet.reg.icom1 = LTC6811_ICOM_CSBM_LOW;
+  packet.reg.d1 = device_cell;
+  packet.reg.fcom1 = LTC6811_FCOM_CSBM_LOW;
 
+  packet.reg.icom2 = LTC6811_ICOM_CSBM_LOW;
+  packet.reg.d2 = device_cell;
+  packet.reg.fcom2 = LTC6811_FCOM_CSBM_HIGH;
   prv_wakeup_idle(afe);
-
-  return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
+  return spi_exchange(settings->spi_port, (uint8_t *)&packet, 4, NULL, 0);
 }
 
 static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   // Setting sending STCOMM command
   uint16_t stcomm = LTC6811_STCOMM_RESERVED;
-
   uint8_t cmd[4] = { 0 };
   prv_build_cmd(stcomm, cmd, SIZEOF_ARRAY(cmd));
-
   prv_wakeup_idle(afe);
-
   return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
 }
 
@@ -242,6 +252,7 @@ StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell
   // we use GPIO2, GPIO3, GPIO4, GPIO5 to select which input to read
   // corresponding to the binary representation of the cell
   prv_write_config(afe, (device_cell << 4) | LTC6811_GPIO1_PD_OFF);
+  prv_write_comm_register(afe, device_cell);
   prv_mux_enable_spi(afe);
   return prv_trigger_aux_adc_conversion(afe);
 }
