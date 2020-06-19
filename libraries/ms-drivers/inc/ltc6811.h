@@ -97,6 +97,7 @@ typedef struct {
 typedef struct {
   uint8_t wrcomm[4];
   LtcAfeCommRegisterData reg;
+  uint8_t pec;
 } _PACKED LtcAfeWriteCommRegPacket;
 
 // WRCFG + all slave registers

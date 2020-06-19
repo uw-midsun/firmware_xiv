@@ -112,19 +112,13 @@ static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cel
   // Build WRCOMM Command
   prv_build_cmd(LTC6811_WRCOMM_RESERVED, packet.wrcomm, SIZEOF_ARRAY(packet.wrcomm));
   // Write 3 bytes of data to the COMM registers
-  // We send the same data 3 times since using the WRCOMM command forces us to send 3 bytes
-  // However, the mux only needs a byte of data
+  // We send the a byte and then we send CSBM_HIGH to
+  // release the SPI port
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
   packet.reg.d0 = device_cell;
-  packet.reg.fcom0 = LTC6811_FCOM_CSBM_LOW;
+  packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
+  uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, 4);
 
-  packet.reg.icom1 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d1 = device_cell;
-  packet.reg.fcom1 = LTC6811_FCOM_CSBM_LOW;
-
-  packet.reg.icom2 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d2 = device_cell;
-  packet.reg.fcom2 = LTC6811_FCOM_CSBM_HIGH;
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, 4, NULL, 0);
 }
@@ -165,7 +159,7 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
     config_packet.devices[curr_device].reg.undervoltage = undervoltage;
     config_packet.devices[curr_device].reg.overvoltage = overvoltage;
 
-    // GPIO5, ..., GPIO2 are used to MUX data
+    // GPIO 1 is used to read data from the mux
     config_packet.devices[curr_device].reg.gpio = (enable >> 3);
 
     uint16_t cfgr_pec = crc15_calculate((uint8_t *)&config_packet.devices[curr_device].reg, 6);
@@ -233,11 +227,9 @@ StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings)
   };
   spi_init(settings->spi_port, &spi_config);
 
-  // TODO(SOFT-9): Update GPIO usage to match updated design
-
-  // Use GPIO1 as analog input, GPIO2-5 as digital output
-  uint8_t gpio_bits = LTC6811_GPIO1_PD_OFF | LTC6811_GPIO2_PD_ON | LTC6811_GPIO3_PD_ON |
-                      LTC6811_GPIO4_PD_ON | LTC6811_GPIO5_PD_ON;
+  // Use GPIO1 as analog input, GPIO 3-5 for SPI
+  uint8_t gpio_bits =
+      LTC6811_GPIO1_PD_OFF | LTC6811_GPIO3_PD_OFF | LTC6811_GPIO4_PD_OFF | LTC6811_GPIO5_PD_OFF;
   return prv_write_config(afe, gpio_bits);
 }
 
@@ -291,8 +283,6 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
 }
 
 StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
-  // TODO(SOFT-9): Update GPIO usage to match updated design
-
   LtcAfeSettings *settings = &afe->settings;
   LtcAfeAuxRegisterGroupPacket register_data[LTC_AFE_MAX_DEVICES] = { 0 };
 
