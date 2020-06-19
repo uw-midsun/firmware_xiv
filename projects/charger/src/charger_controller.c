@@ -12,9 +12,6 @@
 #include "mcp2515.h"
 #include "soft_timer.h"
 
-#define CHARGER_TX_CAN_ID 0x1806E5F4
-#define CHARGER_RX_CAN_ID 0x18FF50E5
-
 #define TX_CONTROL_START_CHARGING 0
 #define TX_CONTROL_STOP_CHARGING 1
 

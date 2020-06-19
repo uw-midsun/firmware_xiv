@@ -15,7 +15,6 @@
 #include "test_helpers.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
-#define CHARGER_RX_CAN_ID 0x18FF50E5
 
 static uint8_t s_msg_txed;
 static GenericCanMsg s_tx_msg;

@@ -9,6 +9,9 @@
 
 #define CHARGER_TX_PERIOD_MS 1000
 
+#define CHARGER_TX_CAN_ID 0x1806E5F4
+#define CHARGER_RX_CAN_ID 0x18FF50E5
+
 typedef union TxMsgData {
   struct {
     uint8_t max_voltage_high;
