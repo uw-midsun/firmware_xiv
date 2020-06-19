@@ -117,10 +117,11 @@ static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cel
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
   packet.reg.d0 = device_cell;
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
-  uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, 4);
+  uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData) / 3);
 
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, (uint8_t *)&packet, 4, NULL, 0);
+  return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeWriteCommRegPacket),
+                      NULL, 0);
 }
 
 static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
