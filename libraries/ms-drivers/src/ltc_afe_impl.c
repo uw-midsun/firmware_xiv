@@ -104,7 +104,7 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
 }
 
 static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cell) {
-  if (device_cell > ADS1259_NUM_PINS) {
+  if (device_cell >= AUX_ADG731_NUM_PINS) {
     return STATUS_CODE_OUT_OF_RANGE;
   }
   LtcAfeSettings *settings = &afe->settings;
@@ -115,15 +115,15 @@ static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cel
   // We send the same data 3 times since using the WRCOMM command forces us to send 3 bytes
   // However, the mux only needs a byte of data
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d0 = device_cell - 1;
+  packet.reg.d0 = device_cell;
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_LOW;
 
   packet.reg.icom1 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d1 = device_cell - 1;
+  packet.reg.d1 = device_cell;
   packet.reg.fcom1 = LTC6811_FCOM_CSBM_LOW;
 
   packet.reg.icom2 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d2 = device_cell - 1;
+  packet.reg.d2 = device_cell;
   packet.reg.fcom2 = LTC6811_FCOM_CSBM_HIGH;
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, 4, NULL, 0);
@@ -246,11 +246,7 @@ StatusCode ltc_afe_impl_trigger_cell_conv(LtcAfeStorage *afe) {
 }
 
 StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell) {
-  // TODO(SOFT-9): Update GPIO usage to match updated design
-
-  // configure the mux to read from cell
-  // we use GPIO2, GPIO3, GPIO4, GPIO5 to select which input to read
-  // corresponding to the binary representation of the cell
+  // We use GPIO 1 to read data from the mux
   prv_write_config(afe, (device_cell << 4) | LTC6811_GPIO1_PD_OFF);
   prv_write_comm_register(afe, device_cell);
   prv_mux_enable_spi(afe);

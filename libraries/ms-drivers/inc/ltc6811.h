@@ -4,11 +4,12 @@
 #include "ltc_afe.h"
 
 // used internally by the LTC AFE driver
-
 #define LTC6811_CELLS_IN_REG 3
 #define LTC6811_GPIOS_IN_REG 3
-#define ADS1259_SHIFT_REG_SIZE 8
-#define ADS1259_NUM_PINS 32
+
+// used for the external mux (ADG731) connected to the AFE
+#define AUX_ADG731_SHIFT_REG_SIZE 8
+#define AUX_ADG731_NUM_PINS 32
 
 typedef enum {
   LTC_AFE_REGISTER_CONFIG = 0,
@@ -209,8 +210,8 @@ static_assert(sizeof(LtcAfeAuxRegisterGroupPacket) == 8,
 #define LTC6811_ADAX_MODE_FAST (0 << 8) | (1 << 7)
 
 #define LTC6811_ICOM_CSBM_LOW (1 << 3)
-#define LTC6811_ICOM_CSBM_HIGH (1 << 3) | 1
-#define LTC6811_ICOM_NO_TRANSMIT (1 << 3) | (1 << 2) | (1 << 1) | 1
+#define LTC6811_ICOM_CSBM_HIGH (1 << 3) | (1 << 0)
+#define LTC6811_ICOM_NO_TRANSMIT (1 << 3) | (1 << 2) | (1 << 1) | (1 << 0)
 
-#define LTC6811_FCOM_CSBM_LOW 0
-#define LTC6811_FCOM_CSBM_HIGH (1 << 3) | 1
+#define LTC6811_FCOM_CSBM_LOW (0 << 0)
+#define LTC6811_FCOM_CSBM_HIGH (1 << 3) | (1 << 0)
