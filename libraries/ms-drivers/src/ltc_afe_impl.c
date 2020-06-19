@@ -115,15 +115,15 @@ static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cel
   // We send the same data 3 times since using the WRCOMM command forces us to send 3 bytes
   // However, the mux only needs a byte of data
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d0 = device_cell;
+  packet.reg.d0 = device_cell - 1;
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_LOW;
 
   packet.reg.icom1 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d1 = device_cell;
+  packet.reg.d1 = device_cell - 1;
   packet.reg.fcom1 = LTC6811_FCOM_CSBM_LOW;
 
   packet.reg.icom2 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d2 = device_cell;
+  packet.reg.d2 = device_cell - 1;
   packet.reg.fcom2 = LTC6811_FCOM_CSBM_HIGH;
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, 4, NULL, 0);
