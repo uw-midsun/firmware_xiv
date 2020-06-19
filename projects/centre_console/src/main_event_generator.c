@@ -67,7 +67,7 @@ bool prv_process_drive_reverse_event(MainEventGeneratorStorage *storage, const E
 
   prv_power_main_or_return(storage);
 
-  const ChargingState charging_state = *get_global_charging_state();
+  const ChargingState charging_state = get_global_charging_state();
   if (charging_state == CHARGING_STATE_CHARGING) {
     return false;
   }
