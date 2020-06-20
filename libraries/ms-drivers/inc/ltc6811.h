@@ -14,7 +14,7 @@
 #define LTC6811_CMD_SIZE 4
 
 // 3 bytes are required to send 24 clock cycles with our SPI driver for the STCOMM command
-#define LTC6811_24_CLOCK_CYCLES_STCOMM_BYTES 3
+#define LTC6811_NUM_COMM_REG_BYTES 3
 
 typedef enum {
   LTC_AFE_REGISTER_CONFIG = 0,
