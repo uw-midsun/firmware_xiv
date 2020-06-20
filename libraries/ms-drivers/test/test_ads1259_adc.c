@@ -37,6 +37,4 @@ void setup_test() {
 
 void teardown_test() {}
 
-void test_conversions() {
-
-}
+void test_conversions() {}
