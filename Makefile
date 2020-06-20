@@ -133,12 +133,16 @@ FIND := find $(PROJ_DIR) $(LIB_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 
+FIND_PROJ := find $(PROJECT_DIR) $(LIB_DIR) \
+			  	\( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
+					-iname "*.[ch]" -print
+
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
 lint:
-	@echo "Linting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIB_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@$(FIND) | xargs -r python2 lint.py
+	@$(FIND_PROJ) | xargs -r python2 lint.py
 
 # Disable import error
 .PHONY: pylint
@@ -151,9 +155,9 @@ pylint:
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
 format:
-	@echo "Formatting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIB_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@$(FIND) | xargs -r clang-format -i -style=file
+	@$(FIND_PROJ) | xargs -r clang-format -i -style=file
 
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
