@@ -118,6 +118,7 @@ static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t device
   packet.reg.d0 = device_cell;
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
   packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
+  packet.reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
   uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData));
 
   prv_wakeup_idle(afe);
@@ -246,7 +247,7 @@ StatusCode ltc_afe_impl_trigger_cell_conv(LtcAfeStorage *afe) {
 StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell) {
   uint8_t gpio_bits =
       LTC6811_GPIO1_PD_OFF | LTC6811_GPIO3_PD_OFF | LTC6811_GPIO4_PD_OFF | LTC6811_GPIO5_PD_OFF;
-  prv_write_config(afe, (device_cell << 4) | gpio_bits);
+  prv_write_config(afe, gpio_bits);
   prv_aux_write_comm_register(afe, device_cell);
   prv_aux_send_comm_register(afe);
   return prv_trigger_aux_adc_conversion(afe);
