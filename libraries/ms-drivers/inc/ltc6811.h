@@ -10,6 +10,12 @@
 // used for the external mux (ADG731) connected to the AFE
 #define AUX_ADG731_NUM_PINS 32
 
+// Size of command code + PEC
+#define LTC6811_CMD_SIZE 4
+
+// 3 bytes are required to send 24 clock cycles with our SPI driver for the STCOMM command
+#define LTC6811_24_CLOCK_CYCLES_STCOMM_BYTES 3
+
 typedef enum {
   LTC_AFE_REGISTER_CONFIG = 0,
   LTC_AFE_REGISTER_CELL_VOLTAGE_A,
@@ -70,7 +76,6 @@ static_assert(sizeof(LtcAfeConfigRegisterData) == 6, "LtcAfeConfigRegisterData m
 
 // COMM Register, refer to LTC6803 datasheet page 31, Table 15
 typedef struct {
-  // COMM0
   uint8_t icom0 : 4;
   uint8_t d0 : 8;
   uint8_t fcom0 : 4;
@@ -94,26 +99,26 @@ typedef struct {
 
 // WRCOMM + mux pin
 typedef struct {
-  uint8_t wrcomm[4];
+  uint8_t wrcomm[LTC6811_CMD_SIZE];
   LtcAfeCommRegisterData reg;
   uint8_t pec;
 } _PACKED LtcAfeWriteCommRegPacket;
 
 // STMCOMM + clock cycles
 typedef struct {
-  uint8_t stcomm[4];
-  uint8_t clk[3];
+  uint8_t stcomm[LTC6811_CMD_SIZE];
+  uint8_t clk[LTC6811_24_CLOCK_CYCLES_STCOMM_BYTES];
 } _PACKED LtcAfeSendCommRegPacket;
 
 // WRCFG + all slave registers
 typedef struct {
-  uint8_t wrcfg[4];
+  uint8_t wrcfg[LTC6811_CMD_SIZE];
 
   // devices are ordered with the last slave first
   LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_CELLS_PER_DEVICE];
 } _PACKED LtcAfeWriteConfigPacket;
 #define SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(devices) \
-  (4 + (devices) * sizeof(LtcAfeWriteConfigPacket))
+  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteConfigPacket))
 
 typedef union {
   uint16_t voltages[3];

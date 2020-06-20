@@ -35,7 +35,7 @@ static void prv_wakeup_idle(LtcAfeStorage *afe) {
 }
 
 static StatusCode prv_build_cmd(uint16_t command, uint8_t *cmd, size_t len) {
-  if (len != 4) {
+  if (len != LTC6811_CMD_SIZE) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -57,11 +57,11 @@ static StatusCode prv_read_register(LtcAfeStorage *afe, LtcAfeRegister reg, uint
 
   uint16_t reg_cmd = s_read_reg_cmd[reg];
 
-  uint8_t cmd[4] = { 0 };
-  prv_build_cmd(reg_cmd, cmd, SIZEOF_ARRAY(cmd));
+  uint8_t cmd[LTC6811_CMD_SIZE] = { 0 };
+  prv_build_cmd(reg_cmd, cmd, LTC6811_CMD_SIZE);
 
   prv_wakeup_idle(afe);
-  return spi_exchange(afe->settings.spi_port, cmd, 4, data, len);
+  return spi_exchange(afe->settings.spi_port, cmd, LTC6811_CMD_SIZE, data, len);
 }
 
 // read from a voltage register
@@ -83,11 +83,11 @@ static StatusCode prv_trigger_adc_conversion(LtcAfeStorage *afe) {
   uint16_t adcv = LTC6811_ADCV_RESERVED | LTC6811_ADCV_DISCHARGE_NOT_PERMITTED |
                   LTC6811_CNVT_CELL_ALL | (mode << 7);
 
-  uint8_t cmd[4] = { 0 };
-  prv_build_cmd(adcv, cmd, SIZEOF_ARRAY(cmd));
+  uint8_t cmd[LTC6811_CMD_SIZE] = { 0 };
+  prv_build_cmd(adcv, cmd, LTC6811_CMD_SIZE);
 
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
+  return spi_exchange(settings->spi_port, cmd, LTC6811_CMD_SIZE, NULL, 0);
 }
 
 static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
@@ -96,11 +96,11 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
   // ADAX
   uint16_t adax = LTC6811_ADAX_RESERVED | LTC6811_ADAX_GPIO1 | (mode << 7);
 
-  uint8_t cmd[4] = { 0 };
-  prv_build_cmd(adax, cmd, SIZEOF_ARRAY(cmd));
+  uint8_t cmd[LTC6811_CMD_SIZE] = { 0 };
+  prv_build_cmd(adax, cmd, LTC6811_CMD_SIZE);
 
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
+  return spi_exchange(settings->spi_port, cmd, LTC6811_CMD_SIZE, NULL, 0);
 }
 
 static StatusCode prv_mux_write_comm_register(LtcAfeStorage *afe, uint8_t device_cell) {
@@ -110,7 +110,7 @@ static StatusCode prv_mux_write_comm_register(LtcAfeStorage *afe, uint8_t device
   LtcAfeSettings *settings = &afe->settings;
   LtcAfeWriteCommRegPacket packet = { 0 };
   // Build WRCOMM Command
-  prv_build_cmd(LTC6811_WRCOMM_RESERVED, packet.wrcomm, SIZEOF_ARRAY(packet.wrcomm));
+  prv_build_cmd(LTC6811_WRCOMM_RESERVED, packet.wrcomm, LTC6811_CMD_SIZE);
   // Write 3 bytes of data to the COMM registers
   // We send the a byte and then we send CSBM_HIGH to
   // release the SPI port
@@ -128,8 +128,8 @@ static StatusCode prv_mux_send_comm_register(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   LtcAfeSendCommRegPacket packet = { 0 };
   // Build STCOMM command
-  prv_build_cmd(LTC6811_STCOMM_RESERVED, packet.stcomm, SIZEOF_ARRAY(packet.stcomm));
-  for (uint8_t i = 0; i < SIZEOF_ARRAY(packet.clk); i++) {
+  prv_build_cmd(LTC6811_STCOMM_RESERVED, packet.stcomm, LTC6811_CMD_SIZE);
+  for (uint8_t i = 0; i < LTC6811_24_CLOCK_CYCLES_STCOMM_BYTES; i++) {
     // NULL bytes so our SPI drivers will send 24 clock cycles
     packet.clk[i] = 0;
   }
