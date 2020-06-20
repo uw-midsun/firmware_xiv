@@ -131,7 +131,7 @@ static StatusCode prv_aux_send_comm_register(LtcAfeStorage *afe) {
   LtcAfeSendCommRegPacket packet = { 0 };
   // Build STCOMM command
   prv_build_cmd(LTC6811_STCOMM_RESERVED, packet.stcomm, LTC6811_CMD_SIZE);
-  for (uint8_t i = 0; i < LTC6811_24_CLOCK_CYCLES_STCOMM_BYTES; i++) {
+  for (uint8_t i = 0; i < LTC6811_NUM_COMM_REG_BYTES; i++) {
     // NULL bytes so our SPI drivers will send 24 clock cycles
     packet.clk[i] = 0;
   }

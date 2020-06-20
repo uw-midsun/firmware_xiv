@@ -107,7 +107,7 @@ typedef struct {
 // STMCOMM + clock cycles
 typedef struct {
   uint8_t stcomm[LTC6811_CMD_SIZE];
-  uint8_t clk[LTC6811_24_CLOCK_CYCLES_STCOMM_BYTES];
+  uint8_t clk[LTC6811_NUM_COMM_REG_BYTES];
 } _PACKED LtcAfeSendCommRegPacket;
 
 // WRCFG + all slave registers
