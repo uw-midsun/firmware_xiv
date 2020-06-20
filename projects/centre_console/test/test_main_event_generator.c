@@ -1,5 +1,6 @@
 #include "centre_console_events.h"
 #include "charging_manager.h"
+#include "fault_monitor.h"
 #include "log.h"
 #include "main_event_generator.h"
 #include "ms_test_helpers.h"
@@ -39,13 +40,12 @@ SpeedState *TEST_MOCK(get_global_speed_state)(void) {
   return &s_current_speed_state;
 }
 
-ChargingState *TEST_MOCK(get_global_charging_state)(void) {
-  return &s_current_charging_state;
+ChargingState TEST_MOCK(get_global_charging_state)(void) {
+  return s_current_charging_state;
 }
 
 void setup_test(void) {
   event_queue_init();
-
   MainEventGeneratorResources resources = { .power_fsm = &s_power_storage,
                                             .drive_fsm = &s_drive_storage };
   main_event_generator_init(&s_storage, &resources);
