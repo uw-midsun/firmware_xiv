@@ -103,7 +103,7 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
   return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
 }
 
-static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cell) {
+static StatusCode prv_mux_write_comm_register(LtcAfeStorage *afe, uint8_t device_cell) {
   if (device_cell >= AUX_ADG731_NUM_PINS) {
     return STATUS_CODE_OUT_OF_RANGE;
   }
@@ -124,14 +124,18 @@ static StatusCode prv_write_comm_register(LtcAfeStorage *afe, uint8_t device_cel
                       NULL, 0);
 }
 
-static StatusCode prv_mux_enable_spi(LtcAfeStorage *afe) {
+static StatusCode prv_mux_send_comm_register(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
-  // Setting sending STCOMM command
-  uint16_t stcomm = LTC6811_STCOMM_RESERVED;
-  uint8_t cmd[4] = { 0 };
-  prv_build_cmd(stcomm, cmd, SIZEOF_ARRAY(cmd));
+  LtcAfeSendCommRegPacket packet = { 0 };
+  // Build STCOMM command
+  prv_build_cmd(LTC6811_STCOMM_RESERVED, packet.stcomm, SIZEOF_ARRAY(packet.stcomm));
+  for (uint8_t i = 0; i < SIZEOF_ARRAY(packet.clk); i++) {
+    // NULL bytes so our SPI drivers will send 24 clock cycles
+    packet.clk[i] = 0;
+  }
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, cmd, 4, NULL, 0);
+  return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeSendCommRegPacket), NULL,
+                      0);
 }
 
 // write config to all devices
@@ -241,8 +245,8 @@ StatusCode ltc_afe_impl_trigger_cell_conv(LtcAfeStorage *afe) {
 StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell) {
   // We use GPIO 1 to read data from the mux
   prv_write_config(afe, (device_cell << 4) | LTC6811_GPIO1_PD_OFF);
-  prv_write_comm_register(afe, device_cell);
-  prv_mux_enable_spi(afe);
+  prv_mux_write_comm_register(afe, device_cell);
+  prv_mux_send_comm_register(afe);
   return prv_trigger_aux_adc_conversion(afe);
 }
 

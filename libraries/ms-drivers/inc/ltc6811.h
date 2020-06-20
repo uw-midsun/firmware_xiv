@@ -100,6 +100,12 @@ typedef struct {
   uint8_t pec;
 } _PACKED LtcAfeWriteCommRegPacket;
 
+// STMCOMM + clock cycles
+typedef struct {
+  uint8_t stcomm[4];
+  uint8_t clk[3];
+} _PACKED LtcAfeSendCommRegPacket;
+
 // WRCFG + all slave registers
 typedef struct {
   uint8_t wrcfg[4];
