@@ -117,7 +117,8 @@ static StatusCode prv_mux_write_comm_register(LtcAfeStorage *afe, uint8_t device
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
   packet.reg.d0 = device_cell;
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
-  uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData) / 3);
+  packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
+  uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData));
 
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeWriteCommRegPacket),
