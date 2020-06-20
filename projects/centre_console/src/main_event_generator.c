@@ -3,6 +3,7 @@
 #include "charging_manager.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
+#include "fault_monitor.h"
 #include "log.h"
 #include "pedal_monitor.h"
 #include "power_fsm.h"
