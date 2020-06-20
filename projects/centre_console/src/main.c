@@ -68,7 +68,7 @@ int main(void) {
   pedal_monitor_init();
   button_press_init();
   prv_init_fsms();
-  init_charging_manager();
+  init_charging_manager(&s_drive_fsm_storage.current_state);
   speed_monitor_init(SPEED_MONITOR_WATCHDOG_TIMEOUT);
   fault_monitor_init(FAULT_MONITOR_TIMEOUT);
 

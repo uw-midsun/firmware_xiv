@@ -40,8 +40,8 @@ SpeedState *TEST_MOCK(get_global_speed_state)(void) {
   return &s_current_speed_state;
 }
 
-ChargingState *TEST_MOCK(get_global_charging_state)(void) {
-  return &s_current_charging_state;
+ChargingState TEST_MOCK(get_global_charging_state)(void) {
+  return s_current_charging_state;
 }
 
 void setup_test(void) {
