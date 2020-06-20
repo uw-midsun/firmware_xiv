@@ -8,7 +8,6 @@
 #define LTC6811_GPIOS_IN_REG 3
 
 // used for the external mux (ADG731) connected to the AFE
-#define AUX_ADG731_SHIFT_REG_SIZE 8
 #define AUX_ADG731_NUM_PINS 32
 
 typedef enum {
