@@ -6,6 +6,7 @@
 #include "delay.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
+#include "fault_monitor.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -21,6 +22,7 @@
 #include "wait.h"
 
 #define SPEED_MONITOR_WATCHDOG_TIMEOUT (1000 * 3)  // 3 seconds
+#define FAULT_MONITOR_TIMEOUT (1000 * 3)
 
 static CanStorage s_can_storage;
 
@@ -68,6 +70,7 @@ int main(void) {
   prv_init_fsms();
   init_charging_manager();
   speed_monitor_init(SPEED_MONITOR_WATCHDOG_TIMEOUT);
+  fault_monitor_init(FAULT_MONITOR_TIMEOUT);
 
   MainEventGeneratorResources resources = { .power_fsm = &s_power_fsm_storage,
                                             .drive_fsm = &s_drive_fsm_storage };
