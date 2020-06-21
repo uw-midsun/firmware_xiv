@@ -73,7 +73,7 @@ static void prv_reset_sample_bounds(void) {
 static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len,
                                                 size_t max_samples) {
   if (len != sizeof(s_result_arr)) {
-    LOG_WARN("Expected reading length to be %d but it was %zu\n", sizeof(s_result_arr), len);
+    LOG_WARN("Expected reading length to be %zu but it was %zu\n", sizeof(s_result_arr), len);
     return STATUS_CODE_INVALID_ARGS;
   }
   bool disabled = critical_section_start();
