@@ -1,3 +1,4 @@
+#define DETERMINISTIC_SOFT_TIMERS
 #include "adc.h"
 #include "adc_periodic_reader.h"
 #include "delay.h"
@@ -46,8 +47,8 @@ void setup_test(void) {
   interrupt_init();
   gpio_it_init();
   soft_timer_init();
-  adc_periodic_reader_init(TIMER_INTERVAL_MS);
   adc_init(ADC_MODE_SINGLE);
+  adc_periodic_reader_init(TIMER_INTERVAL_MS);
 }
 
 void test_adc_periodic_reader_test_callback() {

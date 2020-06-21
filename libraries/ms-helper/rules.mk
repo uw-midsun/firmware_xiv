@@ -9,7 +9,10 @@
 $(T)_DEPS := ms-common
 
 ifeq (x86,$(PLATFORM))
-$(T)_EXCLUDE_TESTS := mcp2515 adc_periodic_reader
+$(T)_EXCLUDE_TESTS := mcp2515
 endif
 
+FAKE_TIMERS = soft_timer_start soft_timer_cancel soft_timer_inuse soft_timer_init delay_us
+
 $(T)_test_thermistor_MOCKS := adc_read_converted adc_get_channel adc_set_channel
+$(T)_test_adc_periodic_reader_MOCKS := $(FAKE_TIMERS)
