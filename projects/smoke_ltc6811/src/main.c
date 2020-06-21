@@ -5,8 +5,8 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ltc_afe.h"
-#include "status.h"
 #include "soft_timer.h"
+#include "status.h"
 
 // device settings
 #define SMOKE_LTC_AFE_NUM_DEVICES 1
@@ -82,7 +82,7 @@ static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len
 
   if (s_num_samples == 0) {
     LOG_DEBUG("INITIAL READINGS:");
-  } else if (s_num_samples == max_samples-1) {
+  } else if (s_num_samples == max_samples - 1) {
     LOG_DEBUG("READING STATS:");
   }
 
@@ -93,8 +93,8 @@ static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len
       LOG_DEBUG("CELL#%zu = %d\n", cell, s_result_arr[cell]);
     } else if (s_num_samples == max_samples - 1) {
       uint16_t delta = s_sample_bounds[cell].max - s_sample_bounds[cell].min;
-      LOG_DEBUG("CELL#%zu DELTA %d (MIN=%d, MAX=%d)\n",
-                 cell, delta, s_sample_bounds[cell].min, s_sample_bounds[cell].max);
+      LOG_DEBUG("CELL#%zu DELTA %d (MIN=%d, MAX=%d)\n", cell, delta, s_sample_bounds[cell].min,
+                s_sample_bounds[cell].max);
     }
   }
 
@@ -107,8 +107,8 @@ static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len
 }
 
 static void prv_dump_voltages(uint16_t *result_arr, size_t len, void *context) {
-  if (!status_ok(prv_extract_and_dump_readings(
-        result_arr, len, SMOKE_LTC_AFE_NUM_VOLTAGE_SAMPLES))) return;
+  if (!status_ok(prv_extract_and_dump_readings(result_arr, len, SMOKE_LTC_AFE_NUM_VOLTAGE_SAMPLES)))
+    return;
   if (s_num_samples != 0) {
     if (!status_ok(ltc_afe_request_cell_conversion(&s_afe))) return;
   } else {
@@ -119,8 +119,8 @@ static void prv_dump_voltages(uint16_t *result_arr, size_t len, void *context) {
 }
 
 static void prv_dump_temps(uint16_t *result_arr, size_t len, void *context) {
-  if (!status_ok(prv_extract_and_dump_readings(
-        result_arr, len, SMOKE_LTC_AFE_NUM_TEMP_SAMPLES))) return;
+  if (!status_ok(prv_extract_and_dump_readings(result_arr, len, SMOKE_LTC_AFE_NUM_TEMP_SAMPLES)))
+    return;
   if (s_num_samples != 0) {
     if (!status_ok(ltc_afe_request_aux_conversion(&s_afe))) return;
   } else {
