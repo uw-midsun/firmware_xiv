@@ -44,6 +44,9 @@ include $(MAKE_DIR)/filter.mk
 # Location of project
 PROJECT_DIR := $(PROJ_DIR)/$(PROJECT)
 
+# Location of library
+LIBRARY_DIR := $(LIB_DIR)/$(LIBRARY)
+
 # Location of platform
 PLATFORM_DIR := $(PLATFORMS_DIR)/$(PLATFORM)
 
@@ -129,21 +132,21 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
-FIND := find $(PROJECT_DIR) $(LIB_DIR) \
+FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
 lint:
-	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIB_DIR)"
+	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
 
 # Disable import error
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
@@ -151,7 +154,7 @@ pylint:
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
 format:
-	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIB_DIR)"
+	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
 
