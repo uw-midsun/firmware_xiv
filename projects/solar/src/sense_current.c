@@ -17,20 +17,26 @@ static void prv_mcp3427_callback(int16_t value_ch1, int16_t value_ch2, void *con
   s_has_value = true;
 }
 
-static void prv_mcp3427_fault_callback(void *context) {}
+static void prv_mcp3427_fault_callback(void *context) {
+  LOG_WARN("sense_current encountered MCP3427 fault\n");
+}
 
 static void prv_sense_cycle_callback(void *context) {
   if (s_has_value) {
     StatusCode status = data_store_set(DATA_POINT_CURRENT, (uint16_t)s_value);
     if (!status_ok(status)) {
-      LOG_CRITICAL("sense_current could not data_store_set with DATA_POINT_CURRENT\n");
+      LOG_WARN("sense_current could not data_store_set with DATA_POINT_CURRENT\n");
     }
   }
 }
 
-StatusCode sense_current_init(void) {
+StatusCode sense_current_init(SenseCurrentSettings *settings) {
+  if (settings == NULL) {
+    return STATUS_CODE_INVALID_ARGS;
+  }
+
   // initialize the MCP3427
-  status_ok_or_return(mcp3427_init(&s_mcp3427_storage, &CURRENT_MCP3427_SETTINGS));
+  status_ok_or_return(mcp3427_init(&s_mcp3427_storage, &settings->current_mcp3427_settings));
   status_ok_or_return(mcp3427_register_callback(&s_mcp3427_storage, prv_mcp3427_callback, NULL));
   status_ok_or_return(
       mcp3427_register_fault_callback(&s_mcp3427_storage, prv_mcp3427_fault_callback, NULL));
