@@ -74,6 +74,9 @@ run: $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT) socketcan
 gdb: $(TARGET_BINARY) socketcan
 	@$(ENV_VARS) $(GDB) $<
 
+mpxe: $(BIN_DIR)/$(PIECE)$(PLATFORM_EXT) socketcan
+	@$(ENV_VARS) $<
+
 test_all: socketcan
 
 test: socketcan
