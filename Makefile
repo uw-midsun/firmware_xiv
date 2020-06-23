@@ -35,6 +35,7 @@
 PROJ_DIR := projects
 PLATFORMS_DIR := platform
 LIB_DIR := libraries
+MPXE_DIR := mpxe
 MAKE_DIR := make
 
 PLATFORM ?= stm32f0xx
@@ -44,6 +45,9 @@ include $(MAKE_DIR)/filter.mk
 
 # Location of project
 PROJECT_DIR := $(PROJ_DIR)/$(PROJECT)
+
+# Location of piece
+PIECE_DIR := $(MPXE_DIR)/$(PIECE)
 
 # Location of platform
 PLATFORM_DIR := $(PLATFORMS_DIR)/$(PLATFORM)
@@ -71,6 +75,10 @@ TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFO
 endif
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
+ifneq (,$(PIECE))
+MPXE_BINARY = $(BIN_DIR)/$(PIECE)$(PLATFORM_EXT)
+endif
+
 COMMA := ,
 
 # Please don't touch anything below this line
@@ -90,6 +98,14 @@ endef
 define include_proj
 $(eval TARGET := $(1));
 $(eval TARGET_TYPE := PROJ);
+$(eval include $(MAKE_DIR)/build.mk);
+$(eval undefine TARGET; undefine TARGET_TYPE)
+endef
+
+# $(call include_piece,piecename)
+define include_piec
+$(eval TARGET := $(1));
+$(eval TARGET_TYPE := MPXE);
 $(eval include $(MAKE_DIR)/build.mk);
 $(eval undefine TARGET; undefine TARGET_TYPE)
 endef
@@ -149,23 +165,26 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
+# Includes all pieces so make can find their targets
+$(foreach piec,$(VALID_PIECES),$(call include_piec,$(piec)))
+
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
-FIND := find $(PROJ_DIR) $(LIB_DIR) \
+FIND := find $(PROJ_DIR) $(LIB_DIR) $(MPXE_DIR)\
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
 lint:
-	@echo "Linting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Linting *.[ch] in $(PROJ_DIR), $(LIB_DIR), $(MPXE_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
 
 # Disable import error
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJ_DIR), $(LIB_DIR), $(MPXE_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
@@ -173,7 +192,7 @@ pylint:
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
 format:
-	@echo "Formatting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Formatting *.[ch] in $(PROJ_DIR), $(LIB_DIR), $(MPXE_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
 
@@ -186,8 +205,10 @@ test_format: format
 .PHONY: build
 ifneq (,$(PROJECT)$(TEST))
 build: $(TARGET_BINARY)
-else
+else ifneq (,$(LIBRARY))
 build: $(STATIC_LIB_DIR)/lib$(LIBRARY).a
+else ifneq (,$(PIECE))
+build: $(MPXE_BINARY)
 endif
 
 # Assumes that all libraries are used and will be built along with the projects

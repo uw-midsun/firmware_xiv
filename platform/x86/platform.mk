@@ -63,7 +63,7 @@ else
 endif
 
 # Platform targets
-.PHONY: run gdb
+.PHONY: run gdb mpxe
 
 run: $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT) socketcan
 	@$(ENV_VARS) $<
@@ -71,9 +71,15 @@ run: $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT) socketcan
 gdb: $(TARGET_BINARY) socketcan
 	@$(ENV_VARS) $(GDB) $<
 
+mpxe: $(BIN_DIR)/$(PIECE)$(PLATFORM_EXT) socketcan
+	@$(ENV_VARS) $<
+
 test_all: socketcan
 
 test: socketcan
+
+mpxe: $(BIN_DIR)/$(PIECE)$(PLATFORM_EXT) socketcan
+	@$(ENV_VARS) $<
 
 define session_wrapper
 $(ENV_VARS) $1

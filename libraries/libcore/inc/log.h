@@ -23,9 +23,19 @@ typedef enum {
 #define LOG_WARN(fmt, ...) LOG(LOG_LEVEL_WARN, fmt, ##__VA_ARGS__)
 #define LOG_CRITICAL(fmt, ...) LOG(LOG_LEVEL_CRITICAL, fmt, ##__VA_ARGS__)
 
+#ifndef MPXE
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
       printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
     }                                                                         \
   } while (0)
+#else
+#define LOG(level, fmt, ...)                                                  \
+  do {                                                                        \
+    if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
+      printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
+      fflush(stdout);                                                         \
+    }                                                                         \
+  } while (0)
+#endif
