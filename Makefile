@@ -39,6 +39,7 @@
 PROJ_DIR := projects
 PLATFORMS_DIR := platform
 LIB_DIR := libraries
+MPXE_DIR := mpxe
 MAKE_DIR := make
 MPXE_DIR := mpxe
 
@@ -86,6 +87,10 @@ TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFO
 endif
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
+ifneq (,$(PIECE))
+MPXE_BINARY = $(BIN_DIR)/$(PIECE)$(PLATFORM_EXT)
+endif
+
 COMMA := ,
 
 # Please don't touch anything below this line
@@ -114,6 +119,14 @@ endef
 define include_proj
 $(eval TARGET := $(1));
 $(eval TARGET_TYPE := PROJ);
+$(eval include $(MAKE_DIR)/build.mk);
+$(eval undefine TARGET; undefine TARGET_TYPE)
+endef
+
+# $(call include_piece,piecename)
+define include_piec
+$(eval TARGET := $(1));
+$(eval TARGET_TYPE := MPXE);
 $(eval include $(MAKE_DIR)/build.mk);
 $(eval undefine TARGET; undefine TARGET_TYPE)
 endef
@@ -226,8 +239,10 @@ test_format: format
 .PHONY: build
 ifneq (,$(PROJECT)$(TEST))
 build: $(TARGET_BINARY)
-else
+else ifneq (,$(LIBRARY))
 build: $(STATIC_LIB_DIR)/lib$(LIBRARY).a
+else ifneq (,$(PIECE))
+build: $(MPXE_BINARY)
 endif
 
 # Assumes that all libraries are used and will be built along with the projects
@@ -273,7 +288,7 @@ socketcan:
 update_codegen:
 	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
 
-MPXE_PROJS := 
+MPXE_PROJS :=
 MPXE_LIBS :=
 -include $(MPXE_DIR)/integration_tests/deps.mk
 
