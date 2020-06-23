@@ -35,6 +35,7 @@
 PROJ_DIR := projects
 PLATFORMS_DIR := platform
 LIB_DIR := libraries
+MPXE_DIR := mpxe
 MAKE_DIR := make
 
 PLATFORM ?= stm32f0xx
@@ -74,6 +75,10 @@ TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFO
 endif
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
+ifneq (,$(PIECE))
+MPXE_BINARY = $(BIN_DIR)/$(PIECE)$(PLATFORM_EXT)
+endif
+
 COMMA := ,
 
 # Please don't touch anything below this line
@@ -93,6 +98,14 @@ endef
 define include_proj
 $(eval TARGET := $(1));
 $(eval TARGET_TYPE := PROJ);
+$(eval include $(MAKE_DIR)/build.mk);
+$(eval undefine TARGET; undefine TARGET_TYPE)
+endef
+
+# $(call include_piece,piecename)
+define include_piec
+$(eval TARGET := $(1));
+$(eval TARGET_TYPE := MPXE);
 $(eval include $(MAKE_DIR)/build.mk);
 $(eval undefine TARGET; undefine TARGET_TYPE)
 endef
@@ -152,6 +165,9 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
+# Includes all pieces so make can find their targets
+$(foreach piec,$(VALID_PIECES),$(call include_piec,$(piec)))
+
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
@@ -201,8 +217,10 @@ test_format: format
 .PHONY: build
 ifneq (,$(PROJECT)$(TEST))
 build: $(TARGET_BINARY)
-else
+else ifneq (,$(LIBRARY))
 build: $(STATIC_LIB_DIR)/lib$(LIBRARY).a
+else ifneq (,$(PIECE))
+build: $(MPXE_BINARY)
 endif
 
 # Assumes that all libraries are used and will be built along with the projects
