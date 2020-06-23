@@ -1,4 +1,4 @@
-#include "gpio_config.h"
+#include "pd_gpio_config.h"
 #include "pd_events.h"
 #include "pin_defs.h"
 
