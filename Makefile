@@ -158,7 +158,6 @@ FIND := find $(PROJ_DIR) $(LIB_DIR) \
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
 lint:
-	@echo dep var is $(DEP_VARS)
 	@echo "Linting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
