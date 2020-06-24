@@ -10,17 +10,24 @@
 // - commands and PEC are big endian
 
 static uint16_t s_read_reg_cmd[NUM_LTC_AFE_REGISTERS] = {
-  LTC6811_RDCFG_RESERVED,  LTC6811_RDCVA_RESERVED,   LTC6811_RDCVB_RESERVED,
-  LTC6811_RDCVC_RESERVED,  LTC6811_RDCVD_RESERVED,   LTC6811_RDAUXA_RESERVED,
-  LTC6811_RDAUXA_RESERVED, LTC6811_RDSTATA_RESERVED, LTC6811_RDSTATB_RESERVED,
-  LTC6811_RDCOMM_RESERVED, LTC6811_STCOMM_RESERVED
+  [LTC_AFE_REGISTER_CONFIG] = LTC6811_RDCFG_RESERVED,
+  [LTC_AFE_REGISTER_CELL_VOLTAGE_A] = LTC6811_RDCVA_RESERVED,
+  [LTC_AFE_REGISTER_CELL_VOLTAGE_B] = LTC6811_RDCVB_RESERVED,
+  [LTC_AFE_REGISTER_CELL_VOLTAGE_C] = LTC6811_RDCVC_RESERVED,
+  [LTC_AFE_REGISTER_CELL_VOLTAGE_D] = LTC6811_RDCVD_RESERVED,
+  [LTC_AFE_REGISTER_AUX_A] = LTC6811_RDAUXA_RESERVED,
+  [LTC_AFE_REGISTER_AUX_B] = LTC6811_RDAUXB_RESERVED,
+  [LTC_AFE_REGISTER_STATUS_A] = LTC6811_RDSTATA_RESERVED,
+  [LTC_AFE_REGISTER_STATUS_B] = LTC6811_RDSTATB_RESERVED,
+  [LTC_AFE_REGISTER_READ_COMM] = LTC6811_RDCOMM_RESERVED,
+  [LTC_AFE_REGISTER_START_COMM] = LTC6811_STCOMM_RESERVED
 };
 
 static uint8_t s_voltage_reg[NUM_LTC_AFE_VOLTAGE_REGISTERS] = {
-  LTC_AFE_REGISTER_CELL_VOLTAGE_A,
-  LTC_AFE_REGISTER_CELL_VOLTAGE_B,
-  LTC_AFE_REGISTER_CELL_VOLTAGE_C,
-  LTC_AFE_REGISTER_CELL_VOLTAGE_D,
+  [LTC_AFE_VOLTAGE_REGISTER_A] = LTC_AFE_REGISTER_CELL_VOLTAGE_A,
+  [LTC_AFE_VOLTAGE_REGISTER_B] = LTC_AFE_REGISTER_CELL_VOLTAGE_B,
+  [LTC_AFE_VOLTAGE_REGISTER_C] = LTC_AFE_REGISTER_CELL_VOLTAGE_C,
+  [LTC_AFE_VOLTAGE_REGISTER_D] = LTC_AFE_REGISTER_CELL_VOLTAGE_D,
 };
 
 static void prv_wakeup_idle(LtcAfeStorage *afe) {
@@ -191,7 +198,7 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   size_t cell_index = 0;
   size_t aux_index = 0;
-  for (size_t device = 0; device < settings->num_cells; device++) {
+  for (size_t device = 0; device < settings->num_devices; device++) {
     for (size_t device_cell = 0; device_cell < LTC_AFE_MAX_CELLS_PER_DEVICE; device_cell++) {
       size_t cell = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
@@ -267,9 +274,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         uint16_t device_cell = cell + (cell_reg * LTC6811_CELLS_IN_REG);
         uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
-        LOG_DEBUG("Got cell voltage for cell index: %d with value %d\n",
-                  afe->cell_result_lookup[index], voltage);
-        if (((settings->cell_bitset[device] >> device_cell) & 0x1) == 0x1) {
+        if ((settings->cell_bitset[device] >> device_cell) & 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_lookup[index]] = voltage;
         }
@@ -278,8 +283,6 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
       // the Packet Error Code is transmitted after the cell data (see p.45)
       uint16_t received_pec = SWAP_UINT16(voltage_register[device].pec);
       uint16_t data_pec = crc15_calculate((uint8_t *)&voltage_register[device], 6);
-      LOG_DEBUG("CALCULATING PACKET ERROR CODE (CRC) FOR rev_pec=%d and data_pec=%d\n",
-                received_pec, data_pec);
       if (received_pec != data_pec) {
         // return early on failure
         return status_code(STATUS_CODE_INTERNAL_ERROR);
