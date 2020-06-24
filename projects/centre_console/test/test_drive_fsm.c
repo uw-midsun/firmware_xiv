@@ -90,12 +90,14 @@ void prv_assert_ebrake_state(Event *event, EEEbrakeState state) {
 void prv_recover_from_fault(Event *event, EEEbrakeState state) {
   // Send discharge message
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e,
                                    (state == EE_EBRAKE_STATE_PRESSED)
                                        ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_EBRAKE_PRESSED
                                        : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED,
                                    0);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   *event = e;
@@ -108,10 +110,9 @@ void prv_fail_ebrake_state(Event *event, EEEbrakeState state) {
                                            SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
                                            CAN_ACK_STATUS_INVALID);
   }
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_EBRAKE_STATE,
-                          .fault_state = state };
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_DRIVE_FSM, .reason = state } };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, reason.raw);
   *event = e;
 }
 
@@ -122,10 +123,9 @@ void prv_fail_mci_output(Event *event, EEDriveOutput output) {
                                            SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
                                            CAN_ACK_STATUS_INVALID);
   }
-  DriveFsmFault fault = { .fault_reason = DRIVE_FSM_FAULT_REASON_MCI_OUTPUT,
-                          .fault_state = output };
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, fault.raw);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_DRIVE_FSM, .reason = output } };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_INPUT_EVENT_FAULT, reason.raw);
   *event = e;
 }
 
