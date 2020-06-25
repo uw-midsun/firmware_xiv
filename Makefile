@@ -158,6 +158,11 @@ pylint:
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
 
+.PHONY: format_quick
+format_quick:
+	@echo "Quick format on ONlY changed/new files"
+	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
+
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
 format:
