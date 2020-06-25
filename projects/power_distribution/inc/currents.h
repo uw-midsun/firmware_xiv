@@ -1,6 +1,6 @@
 #pragma once
 
-// Current IDs used by power_distribution_current_measurement and power_distribution_publish_data.
+// Current IDs used by current_measurement and publish_data.
 
 // These are specified at https://uwmidsun.atlassian.net/wiki/x/AYCsRw, please change there
 // if you update here.

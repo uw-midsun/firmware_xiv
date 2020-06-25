@@ -1,4 +1,4 @@
-#include "power_distribution_current_measurement.h"
+#include "current_measurement.h"
 
 #include <stddef.h>
 #include "bts_7040_7008_current_sense.h"
