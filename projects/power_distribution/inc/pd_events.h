@@ -7,7 +7,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_CAN_EVENTS,
 } PowerDistributionCanEvent;
 
-// Handled by power_distribution_gpio
+// Handled by pd_gpio
 typedef enum {
   POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY = NUM_POWER_DISTRIBUTION_CAN_EVENTS + 1,
   POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
@@ -23,7 +23,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_GPIO_EVENTS,
 } PowerDistributionGpioEvent;
 
-// Handled by rear_power_distribution_strobe_blinker
+// Handled by rear_strobe_blinker
 typedef enum {
   POWER_DISTRIBUTION_STROBE_EVENT = NUM_POWER_DISTRIBUTION_GPIO_EVENTS + 1,
   NUM_POWER_DISTRIBUTION_STROBE_EVENTS,
@@ -43,7 +43,7 @@ typedef enum {
   NUM_POWER_DISTRIBUTION_SYNC_EVENTS,
 } PowerDistributionSyncEvent;
 
-// Also handled by power_distribution_gpio
+// Also handled by pd_gpio
 typedef enum {
   POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN =
       NUM_POWER_DISTRIBUTION_SYNC_EVENTS + 1,
