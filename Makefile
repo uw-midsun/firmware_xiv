@@ -119,7 +119,7 @@ ROOT := $(shell pwd)
 
 # Actually calls the make
 .PHONY: all
-all: build lint pylint lint_quick
+all: build lint pylint
 
 # Includes platform-specific configurations
 include $(PLATFORMS_DIR)/$(PLATFORM)/platform.mk
@@ -135,7 +135,7 @@ FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
-FIND_MOD_NEW := git status --porcelain | grep -v -e "^D" -e "^ D" | grep -e .c -e .h | cut -c 4-
+FIND_MOD_NEW := git status --porcelain | grep -v -e "^D" -e "^ D" | grep -e ".*\.c" -e ".*\.h" | cut -c 4-
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
