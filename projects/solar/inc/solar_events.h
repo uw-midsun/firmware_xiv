@@ -23,4 +23,9 @@ typedef enum {
   NUM_SOLAR_DATA_EVENTS,
 } SolarDataEvent;
 
-// TODO(SOFT-215): Define fault events
+// TODO(SOFT-215): Define more fault events
+typedef enum {
+  // An MCP3427 is faulting too much, event data is the DataPoint associated with the faulty MCP3427
+  SOLAR_FAULT_EVENT_MCP3427 = NUM_SOLAR_DATA_EVENTS + 1,
+  NUM_SOLAR_FAULT_EVENTS,
+} SolarFaultEvent;
