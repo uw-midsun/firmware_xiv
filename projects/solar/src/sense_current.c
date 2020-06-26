@@ -49,7 +49,7 @@ StatusCode sense_current_init(SenseCurrentSettings *settings) {
   }
 
   // initialize the MCP3427
-  status_ok_or_return(mcp3427_init(&s_mcp3427_storage, &settings->current_mcp3427_settings));
+  status_ok_or_return(mcp3427_init(&s_mcp3427_storage, settings->current_mcp3427_settings));
   status_ok_or_return(mcp3427_register_callback(&s_mcp3427_storage, prv_mcp3427_callback, NULL));
   status_ok_or_return(
       mcp3427_register_fault_callback(&s_mcp3427_storage, prv_mcp3427_fault_callback, NULL));

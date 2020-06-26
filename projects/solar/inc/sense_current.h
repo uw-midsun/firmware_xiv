@@ -6,7 +6,7 @@
 #include "mcp3427_adc.h"
 
 typedef struct SenseCurrentSettings {
-  Mcp3427Settings current_mcp3427_settings;
+  Mcp3427Settings *current_mcp3427_settings;
 } SenseCurrentSettings;
 
 // Initialize the module and register it with sense. Must be called after |sense_init|.
