@@ -1,4 +1,4 @@
-#include "power_distribution_publish_data_config.h"
+#include "publish_data_config.h"
 #include "can_transmit.h"
 
 static StatusCode prv_publish_front_current_measurement(PowerDistributionCurrent current_id,
