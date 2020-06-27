@@ -19,6 +19,7 @@ typedef struct PowerFsmStorage {
   uint16_t fault_bitset;
   Fsm power_fsm;
   PowerState current_state;
+  PowerState previous_state;
   PowerState destination_state;
 } PowerFsmStorage;
 
