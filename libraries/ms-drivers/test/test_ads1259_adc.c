@@ -30,11 +30,35 @@ void setup_test() {
     .sclk = TEST_SCLK_PIN,
     .cs = TEST_CS_PIN,
   };
+  interrupt_init();
   gpio_init();
   soft_timer_init();
-  ads1259_init(&settings, &storage);
+  TEST_ASSERT_OK(ads1259_init(&settings, &storage));
 }
 
 void teardown_test() {}
 
-void test_conversions() {}
+void test_setup() {
+  TEST_ASSERT_TRUE(storage.spi_port == TEST_SPI_PORT);
+  TEST
+
+}
+
+void test_conversions() {
+  uint32_t data_storage[10];
+  LOG_DEBUG("TESTING COVERSIONS...\n");
+  TEST_ASSERT_OK(ads1259_get_conversion_data(&storage));
+  // Makes sure that out of range flagged data is not making it through
+  TEST_ASSERT_TRUE((storage.data.ADS_RX_CHK_SUM & CHK_SUM_FLAG_BIT) == 0);
+  // Checks that reading values output are all 24 bits
+  TEST_ASSERT_TRUE(storage.reading >> 24 == 0);
+  // test rapid fire sequential readings
+  for (int i = 0; i < 10; i++) {
+    TEST_ASSERT_OK(ads1259_get_conversion_data(&storage));
+    data_storage[i] = storage.reading;
+  }
+  // Check logs to make sure data is not garbled
+  for (int i = 0; i < 10; i++) {
+    LOG_DEBUG("%lu\n", data_storage[i]);
+  }
+}
