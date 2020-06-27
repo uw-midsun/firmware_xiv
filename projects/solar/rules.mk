@@ -7,3 +7,5 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common ms-drivers
+
+$(T)_test_mppt_MOCKS := mux_set
