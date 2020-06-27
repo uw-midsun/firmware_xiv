@@ -6,4 +6,8 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common
+$(T)_DEPS := ms-common ms-drivers
+
+$(T)_test_sense_MOCKS := data_store_done
+$(T)_test_sense_current_MOCKS := data_store_set sense_register mcp3427_register_callback \
+	mcp3427_register_fault_callback mcp3427_start
