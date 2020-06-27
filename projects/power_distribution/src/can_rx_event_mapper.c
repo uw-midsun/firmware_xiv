@@ -1,4 +1,4 @@
-#include "power_distribution_can_rx_event_mapper.h"
+#include "can_rx_event_mapper.h"
 #include "can.h"
 #include "event_queue.h"
 

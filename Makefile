@@ -9,16 +9,17 @@
 #   CM: [COMPILER=] - Specifies the compiler to use on x86. Defaults to gcc [gcc | clang].
 #   CO: [COPTIONS=] - Specifies compiler options on x86 [asan | tsan].
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
+#   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #
 # Usage:
-#   make [all] [PL] [PR] - Builds the target project and its dependencies
+#   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
 #   make clean - Completely deletes all build output
 #   make format - Formats all non-vendor code
-#   make gdb [PL] [PR|LI] [TE] - Builds and runs the specified unit test and connects an instance of GDB
+#   make gdb [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test and connects an instance of GDB
 #   make lint - Lints all non-vendor code
 #   make new [PR|LI] - Creates folder structure for new project or library
-#   make remake [PL] [PR] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
-#   make test [PL] [PR|LI] [TE] - Builds and runs the specified unit test, assuming all tests if TE is not defined
+#   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
+#   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
 #
 # Platform specific:
@@ -62,6 +63,9 @@ STATIC_LIB_DIR := $(BUILD_DIR)/lib/$(PLATFORM)
 # Object cache
 OBJ_CACHE := $(BUILD_DIR)/obj/$(PLATFORM)
 
+# Dependable variable directory
+DEP_VAR_DIR := $(BUILD_DIR)/dep_var/$(PLATFORM)
+
 # Set target binary - invalid for targets with more than one binary
 ifeq (,$(TEST))
 TARGET_BINARY = $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT)
@@ -69,7 +73,7 @@ else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
-DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE)
+DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
 # Please don't touch anything below this line
@@ -104,6 +108,18 @@ define find_in
 $(foreach folder,$(1),$(wildcard $(folder)/$(2)))
 endef
 
+# Hack to enable depending on a variable - https://stackoverflow.com/a/26147844
+# $(eval $(call dependable_var,variable))
+DEP_VARS :=
+define dependable_var
+DEP_VARS += $(DEP_VAR_DIR)/$1
+.PHONY: phony
+$(DEP_VAR_DIR)/$1: phony | $(DEP_VAR_DIR)
+	@if [ "`cat $(DEP_VAR_DIR)/$1 2>&1`" != '$($1)' ]; then \
+		echo -n $($1) > $(DEP_VAR_DIR)/$1; \
+	fi
+endef
+
 # include the target build rules
 -include $(PROJECT_DIR)/rules.mk
 
@@ -123,6 +139,12 @@ all: build lint pylint
 
 # Includes platform-specific configurations
 include $(PLATFORMS_DIR)/$(PLATFORM)/platform.mk
+
+# Adds preprocessor defines
+CFLAGS += $(addprefix -D,$(DEFINE))
+
+# Allow depending on the value of DEFINE so we rebuild after changing defines
+$(eval $(call dependable_var,DEFINE))
 
 # Includes all libraries so make can find their targets
 $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))

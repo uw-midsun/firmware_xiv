@@ -7,7 +7,12 @@
 // Once started, we continually request a conversion (in one-shot mode), wait at least 50 ms, then
 // read the conversion result and call the callback or fault if the conversion is not ready.
 
-// Note that the reference voltage of the MCP3427 is 2.048V.
+// The conversion result is scaled to the full 16 bits, regardless of what sample rate/precision is
+// used. If the sample rate is not MCP3427_SAMPLE_RATE_16_BIT, the least significant bits will be 0.
+
+// Note that the reference voltage of the MCP3427 is 2.048V. Due to the scaling described above,
+// a change of 1 in the conversion result always corresponds to a change of 62.5uV.
+// See section 4.9 of manual.
 
 #include "event_queue.h"
 #include "fsm.h"

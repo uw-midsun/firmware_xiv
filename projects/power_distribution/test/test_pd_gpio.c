@@ -1,6 +1,6 @@
 #include "log.h"
-#include "power_distribution_gpio.h"
-#include "power_distribution_gpio_config.h"
+#include "pd_gpio.h"
+#include "pd_gpio_config.h"
 #include "test_helpers.h"
 #include "unity.h"
 
