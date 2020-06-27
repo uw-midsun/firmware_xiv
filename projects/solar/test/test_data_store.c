@@ -11,32 +11,38 @@ void setup_test(void) {
 }
 void teardown_test(void) {}
 
-// Test that we can enter and retrieve a value from the data store.
-void test_data_store_enter_and_get_basic(void) {
+// Test that we can set and get a value from the data store.
+void test_data_store_set_and_get_basic(void) {
   uint16_t value;
-  TEST_ASSERT_OK(data_store_enter(DATA_POINT_VOLTAGE_1, 0x1337));
+  TEST_ASSERT_OK(data_store_set(DATA_POINT_VOLTAGE_1, 0x1337));
   TEST_ASSERT_OK(data_store_get(DATA_POINT_VOLTAGE_1, &value));
   TEST_ASSERT_EQUAL(0x1337, value);
 }
 
 // Test that every data point works.
-void test_data_store_enter_and_get_thorough(void) {
+void test_data_store_set_and_get_thorough(void) {
   uint16_t value;
   for (DataPoint data_point = 0; data_point < NUM_DATA_POINTS; data_point++) {
-    TEST_ASSERT_OK(data_store_enter(data_point, 0xDEAD));
+    TEST_ASSERT_OK(data_store_set(data_point, 0xDEAD));
     TEST_ASSERT_OK(data_store_get(data_point, &value));
     TEST_ASSERT_EQUAL(0xDEAD, value);
   }
 }
 
-// Test that |data_store_enter| responds correctly on an invalid index.
-void test_data_store_enter_invalid_index(void) {
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_enter(NUM_DATA_POINTS, 0));
+// Test that |data_store_set| responds correctly on an invalid index.
+void test_data_store_set_invalid_index(void) {
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_set(NUM_DATA_POINTS, 0));
 }
 
 // Test that |data_store_get| responds correctly on an invalid index.
 void test_data_store_get_invalid_index(void) {
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_enter(NUM_DATA_POINTS, 0));
+  uint16_t value;
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_get(NUM_DATA_POINTS, &value));
+}
+
+// Test that |data_store_get| responds correctly on a null pointer.
+void test_data_store_get_null_pointer(void) {
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_get(DATA_POINT_VOLTAGE_1, NULL));
 }
 
 // Test that |data_store_done| correctly raises DATA_READY_EVENTs.
