@@ -10,9 +10,6 @@
 // we only use one channel on the MCP3427
 #define CURRENT_MCP3427_CHANNEL MCP3427_CHANNEL_1
 
-// after this many faults in a row, we raise a fault event
-#define MAX_CONSECUTIVE_MCP3427_FAULTS 3
-
 static Mcp3427Storage s_mcp3427_storage;
 static int16_t s_value;
 static bool s_has_value;  // to prevent sending uninitialized garbage to data_store

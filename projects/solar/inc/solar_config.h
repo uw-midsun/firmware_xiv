@@ -1,5 +1,10 @@
 #pragma once
 
-#include "mcp3427_adc.h"
+// Holds all hardware settings and configuration for solar.
 
-extern const Mcp3427Settings current_mcp3427_settings;
+#include "sense_current.h"
+
+// after this many MCP3427 faults in a row, we raise a fault event
+#define MAX_CONSECUTIVE_MCP3427_FAULTS 3
+
+extern const SenseCurrentSettings sense_current_settings;

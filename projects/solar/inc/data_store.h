@@ -77,7 +77,7 @@ StatusCode data_store_set(DataPoint data_point, uint16_t value);
 StatusCode data_store_done(void);
 
 // Puts the value of the data point in |value|. Warning: if the data point is not set in the store,
-// this will put garbage in |value|. Check |data_store_is_set| before every call.
+// this will put garbage in |value|. Check |data_store_get_is_set| before every call.
 StatusCode data_store_get(DataPoint data_point, uint16_t *value);
 
 // Puts whether the data point is set in the data store in |is_set|.

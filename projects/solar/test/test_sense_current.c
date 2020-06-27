@@ -15,10 +15,6 @@
 #define TEST_SENSED_CH2_VALUE 0xDEAD
 #define TEST_STORED_VALUE TEST_SENSED_CH1_VALUE  // only CH1 is used
 
-static const SenseCurrentSettings s_test_settings = {
-  .current_mcp3427_settings = &current_mcp3427_settings,
-};
-
 // these is updated when |sense_register| is called
 static SenseCallback s_sense_callback;
 
@@ -85,7 +81,7 @@ void teardown_test(void) {}
 
 // Test that a sense current cycle works.
 void test_sense_current_normal_cycle(void) {
-  TEST_ASSERT_OK(sense_current_init(&s_test_settings));
+  TEST_ASSERT_OK(sense_current_init(&sense_current_settings));
 
   // make sure the various registration functions were called
   TEST_ASSERT_NOT_NULL(s_sense_callback);
@@ -122,7 +118,7 @@ void test_sense_current_normal_cycle(void) {
 
 // Test that |data_store_set| isn't called when the sense cycle is before the MCP3427 callback.
 void test_sense_current_data_not_ready(void) {
-  TEST_ASSERT_OK(sense_current_init(&s_test_settings));
+  TEST_ASSERT_OK(sense_current_init(&sense_current_settings));
 
   // just to make sure we avoid segfaults, make sure register callbacks were called
   TEST_ASSERT_NOT_NULL(s_sense_callback);
@@ -141,7 +137,7 @@ void test_sense_current_data_not_ready(void) {
 // Test that we log a warning when |data_store_set| returns not ok.
 // We can't automatically test that a log occurs, so you have to manually verify that it occurs.
 void test_sense_current_data_store_set_not_ok(void) {
-  TEST_ASSERT_OK(sense_current_init(&s_test_settings));
+  TEST_ASSERT_OK(sense_current_init(&sense_current_settings));
   TEST_ASSERT_NOT_NULL(s_sense_callback);
   TEST_ASSERT_NOT_NULL(s_mcp3427_callback);
 
