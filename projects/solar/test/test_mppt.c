@@ -8,7 +8,7 @@
 
 #define TEST_SPI_PORT SPI_PORT_2
 
-static uint8_t s_times_mux_set_called = 0;
+static uint8_t s_times_mux_set_called;
 StatusCode TEST_MOCK(mux_set)(MuxAddress *address, uint8_t selected) {
   if (selected >= (1 << address->bit_width)) {
     return status_code(STATUS_CODE_OUT_OF_RANGE);
@@ -28,6 +28,7 @@ void setup_test() {
                                .sclk = { .port = GPIO_PORT_B, 13 },
                                .cs = { .port = GPIO_PORT_B, 12 } };
   spi_init(TEST_SPI_PORT, &spi_settings);
+  s_times_mux_set_called = 0;
 }
 
 void teardown_test() {}

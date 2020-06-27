@@ -2,10 +2,16 @@
 #include "mux.h"
 #include "spv1020_mppt.h"
 
-#define MUX_ENABLE \
-  { .port = GPIO_PORT_B, .pin = 1 }  // need to check hardward for correct pin
-#define MUX_OUTPUT \
-  { .port = GPIO_PORT_B, .pin = 1 }  // need to check hardward for correct pin
+#define MUX_ENABLE                \
+  {                               \
+    .port = GPIO_PORT_B, .pin = 1 \
+  }  // need to check hardward for correct pin
+     // this pin is unused
+#define MUX_OUTPUT                \
+  {                               \
+    .port = GPIO_PORT_B, .pin = 1 \
+  }  // need to check hardward for correct pin
+     // this pin is unused
 #define SEL_PIN_0 \
   { .port = GPIO_PORT_B, .pin = 3 }
 #define SEL_PIN_1 \
