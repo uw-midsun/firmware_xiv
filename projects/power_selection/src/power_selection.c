@@ -39,7 +39,7 @@ uint16_t prv_status_checker() {
   adc_read_raw(aux_channels[AUX_ADC_TEMP_CHANNEL], &s_aux_temp);
   LOG_DEBUG("AUX Volatge Data: %d\n", s_aux_volt);
   LOG_DEBUG("AUX Temp Voltage Data: %d\n", s_aux_temp);
-  double resistance = 33000.0 / (double)(s_aux_temp / 1000.0) - 10000;
+  double resistance = temp_to_res(s_aux_temp);
   LOG_DEBUG("AUX Temp Resistance Value: %f\n", resistance);
   s_aux_temp = (uint16_t)resistance_to_temp(resistance);
   LOG_DEBUG("AUX Temp Data in C: %d\n", s_aux_temp);

@@ -1,8 +1,10 @@
-#include "stdint-gcc.h"
+#include <stdint.h>
+
+#define NUM_OF_RESISTANCES 114
 
 // from
 // http://2avrmz2nom8p47cc28p2743e-wpengine.netdna-ssl.com/wp-content/uploads/2010/11/Thermistor_10K-2.pdf
-const double resistance_temperature_in_C[114][2] = {
+const double resistance_temperature_in_C[NUM_OF_RESISTANCES][2] = {
   { -39.44, 323839 }, { -38.33, 300974 }, { -37.22, 279880 }, { -36.11, 260410 },
   { -35.00, 242427 }, { -33.89, 225809 }, { -32.78, 210443 }, { -31.67, 196227 },
   { -30.56, 183068 }, { -29.44, 170775 }, { -28.33, 159488 }, { -27.22, 149024 },
@@ -38,8 +40,11 @@ double resistance_to_temp(double resistance) {
   // given resistance, use the table to find the temperature.
   double temp = UINT16_MAX;
 
-  // find the first resistance value that is lower
-  for (int i = 0; i < 114; ++i) {
+  // checks the highest possible resistance value first
+  // then goes down until it finds the resistance that's lower than it
+  for (int i = 0; i < NUM_OF_RESISTANCES; ++i) {
+    // the higher the resistance, the lower the temperature
+    // so finds the first resistance value that is lower, else returns an impossible resistance
     if (resistance_temperature_in_C[i][1] < resistance) {
       temp = resistance_temperature_in_C[i][0];
       break;

@@ -106,7 +106,7 @@ void test_power_selection_tx(void) {
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 2);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
-  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  resistance = temp_to_res(s_aux_temp_value);
   s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
   s_aux_volt_value = 16;
@@ -116,7 +116,7 @@ void test_power_selection_tx(void) {
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 3);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
-  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  resistance = temp_to_res(s_aux_temp_value);
   s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
   s_aux_volt_value = 5;
@@ -125,7 +125,7 @@ void test_power_selection_tx(void) {
   delay_ms(1);
   TEST_ASSERT_NOT_EQUAL(counter, 4);
   TEST_ASSERT_NOT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
-  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  resistance = temp_to_res(s_aux_temp_value);
   s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_NOT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 
@@ -133,7 +133,7 @@ void test_power_selection_tx(void) {
   MS_TEST_HELPER_CAN_TX_RX(POWER_SELECTION_CAN_EVENT_TX, POWER_SELECTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(counter, 4);
   TEST_ASSERT_EQUAL(aux_volt, (uint16_t)(s_aux_volt_value - AUX_VOLT_DEFAULT));
-  resistance = 33000.0 / (double)(s_aux_temp_value / 1000.0) - 10000;
+  resistance = temp_to_res(s_aux_temp_value);
   s_aux_temp_value = resistance_to_temp(resistance);
   TEST_ASSERT_EQUAL(aux_temp, (uint16_t)(s_aux_temp_value - AUX_TEMP_DEFAULT));
 }
