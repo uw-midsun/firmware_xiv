@@ -8,7 +8,6 @@
 typedef void (*Adt7470DataCallback)(void *context);
 
 typedef struct {
-  I2CPort i2c_port;
   GpioAddress *fan_1_pin;
   GpioAddress *fan_2_pin;
   GpioAddress *fan_3_pin;
@@ -17,6 +16,8 @@ typedef struct {
   Adt7470DataCallback callback;  // set to NULL for no callback
   void *callback_context;
   I2CPort i2c;
+  I2CAddress i2c_addr;
+  I2CSettings i2c_settings;
 } Adt7470Settings;
 
 typedef struct {
@@ -29,6 +30,8 @@ typedef struct {
   Adt7470DataCallback callback;
   void *callback_context;
   I2CPort i2c;
+  I2CAddress i2c_addr;
+  I2CSettings i2c_settings;
 } Adt7470Storage;
 
 // probably a better name for these

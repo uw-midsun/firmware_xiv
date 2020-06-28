@@ -10,23 +10,31 @@
   0x74  // Writing a 1 to Bit 0 in this register puts the ADT7470 in shutdown mode,
         // which puts the part into a low current onsumption mode
 
-#define ADT7470_INTERRUPT_STATUS_REGISTER_1 0x41
-#define ADT7470_INTERRUPT_STATUS_REGISTER_2 0x42
-#define ADT7470_FAN_PULSES_PER_REV_REGISTER 0x43
-
-#define ADT7470_PWM1_DUTY_CYCLE 0x32
-#define ADT7470_PWM2_DUTY_CYCLE 0x33
-#define ADT7470_PWM3_DUTY_CYCLE 0x34
-#define ADT7470_PWM4_DUTY_CYCLE 0x35
+#define ADT7476A_INTERRUPT_STATUS_REGISTER_1 0x41
+#define ADT7476A_INTERRUPT_STATUS_REGISTER_2 0x42
 
 #define ADT7470_FAN_MODE_REGISTER_1 0x68  // bits 6 and 7 contorl the mode for PWM2 and PWM1
 #define ADT7470_FAN_MODE_REGISTER_2 0x69  // bits 6 and 7 contorl the mode for PWM4 and PWM3
 
-#define ADT7470_MANUAL_MODE_MASK 0b00001111
+#define ADT7476A_FAN_MODE_REGISTER_1 0x5C  // bits 7:5 control mode - 111 for manual
+#define ADT7476A_FAN_MODE_REGISTER_2 0x5D  // bits 7:5 control mode - 111 for manual
+#define ADT7476A_FAN_MODE_REGISTER_3 0x5E  // bits 7:5 control mode - 111 for manual
+
+#define ADT7476A_INTERRUPT_MASK_REGISTER_1 0x74
+#define ADT7476A_INTERRUPT_MASK_REGISTER_2 0x75
+
+#define ADT7476A_PWM_1 0x30  // default 0xFF
+#define ADT7476A_PWM_2 0x31  // default 0xFF
+#define ADT7476A_PWM_3 0x32  // default 0xFF
+
+#define ADT7470_MANUAL_MODE_MASK 0b11100000
 
 #define NUM_GPIO_FAN_PINS \
   4  // The ADT7470 has four pins that can be configured as either general-purpose logic pins or as
      // PWM outputs
+
+#define NUM_BYTES_TO_READ 1
+#define NUM_BYTES_TO_WRITE 1
 
 #define ADT7470_GPIO_ENABLE_REGISTER \
   0x7F  // To enable the PWM output on the ADT7470 as GPIOs, the enable bits in Register 0x7F must
