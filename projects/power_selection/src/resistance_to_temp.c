@@ -2,6 +2,12 @@
 
 #define NUM_OF_RESISTANCES 114
 
+typedef enum {
+    RES_TEMP_TABLE_TEMP = 0,
+    RES_TEMP_TABLE_RES,
+    NUM_RES_TEMP_TABLE_INDICES
+} ResTempTableIndex;
+
 // from
 // http://2avrmz2nom8p47cc28p2743e-wpengine.netdna-ssl.com/wp-content/uploads/2010/11/Thermistor_10K-2.pdf
 const double resistance_temperature_in_C[NUM_OF_RESISTANCES][2] = {
@@ -45,7 +51,7 @@ double resistance_to_temp(double resistance) {
   for (int i = 0; i < NUM_OF_RESISTANCES; ++i) {
     // the higher the resistance, the lower the temperature
     // so finds the first resistance value that is lower, else returns an impossible resistance
-    if (resistance_temperature_in_C[i][1] < resistance) {
+    if (resistance_temperature_in_C[i][RES_TEMP_TABLE_RES] < resistance) {
       temp = resistance_temperature_in_C[i][0];
       break;
     }
