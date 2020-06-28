@@ -194,3 +194,14 @@
                                       dcdc_status_u16_ptr)                                         \
   can_unpack_impl_u16((msg_ptr), 6, (aux_battery_volt_u16_ptr), (aux_battery_temp_u16_ptr),        \
                       (dcdc_status_u16_ptr), CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8_ptr, fan_2_u8_ptr, fan_3_u8_ptr,            \
+                                     fan_4_u8_ptr)                                                 \
+  can_unpack_impl_u8((msg_ptr), 4, (fan_1_u8_ptr), (fan_2_u8_ptr), (fan_3_u8_ptr), (fan_4_u8_ptr), \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_BATTERY_RELAY_STATE(msg_ptr, hv_u8_ptr, gnd_u8_ptr)                    \
+  can_unpack_impl_u8((msg_ptr), 2, (hv_u8_ptr), (gnd_u8_ptr), CAN_UNPACK_IMPL_EMPTY,      \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
