@@ -1,5 +1,8 @@
 #pragma once
 
+//Voltage reference value
+#define EXTERNAL_VREF 50
+
 // ADS1259 Configuration and control commands
 
 #define ADS1259_WAKEUP 0x02      // Wake up from sleep mode

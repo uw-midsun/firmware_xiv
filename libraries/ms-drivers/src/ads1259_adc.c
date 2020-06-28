@@ -3,6 +3,7 @@
 #include "delay.h"
 #include "interrupt.h"
 #include "soft_timer.h"
+#include "math.h"
 
 #define NUM_ADS_RX_BYTES 4
 #define NUM_CONFIG_REGISTERS 3
@@ -25,17 +26,25 @@ static const uint32_t s_calibration_time_ms_lookup[NUM_ADS1259_DATA_RATE] = {
   [ADS1259_DATA_RATE_3600] = 7,  [ADS1259_DATA_RATE_14400] = 3,
 };
 
-// Reads 1-byte reg value to storage->data
-static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, uint8_t reg_val) {
-  spi_rx(storage->spi_port, &storage->data.ADS_RX_MSB, 1, (ADS1259_READ_REGISTER | reg_add));
-  if (reg_val != storage->data.ADS_RX_MSB) return STATUS_CODE_UNINITIALIZED;
-  return STATUS_CODE_OK;
-}
+// Number of noise free bits for each sampling rate
+static const uint8_t s_num_usable_bits[NUM_ADS1259_DATA_RATE] = {
+  [ADS1259_DATA_RATE_10] = 21, [ADS1259_DATA_RATE_17] = 21, [ADS1259_DATA_RATE_50] = 20,
+  [ADS1259_DATA_RATE_60] = 20,  [ADS1259_DATA_RATE_400] = 19,  [ADS1259_DATA_RATE_1200] = 18,
+  [ADS1259_DATA_RATE_3600] = 17,  [ADS1259_DATA_RATE_14400] = 16,
+};
 
 // tx spi command to ads1259
 static void prv_send_command(Ads1259Storage *storage, uint8_t command) {
   uint8_t payload[] = { command };
-  spi_tx(storage->spi_port, payload, 1);
+  spi_exchange(storage->spi_port, payload, 1, NULL, 0);
+}
+
+// Reads 1-byte reg value to storage->data
+static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, uint8_t reg_val) {
+  uint8_t payload[] = { (ADS1259_READ_REGISTER | reg_add) };
+  spi_exchange(storage->spi_port, payload, 1, &storage->rx_data.MSB, 1 );
+  if (reg_val != storage->rx_data.MSB) return STATUS_CODE_UNINITIALIZED;
+  return STATUS_CODE_OK;
 }
 
 static StatusCode prv_configure_registers(Ads1259Storage *storage) {
@@ -50,39 +59,41 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
                                                NUM_CONFIG_REGISTERS, register_lookup[0],
                                                register_lookup[1], register_lookup[2] };
   // tx write-reg command and data for all three config registers
-  spi_tx(storage->spi_port, payload, NUM_REGISTER_WRITE_COMM);
+  spi_exchange(storage->spi_port, payload, NUM_REGISTER_WRITE_COMM, NULL, 0);
   // sanity check that data was written correctly
-  for (int reg = 0; reg < NUM_ADS1259_REGISTERS; reg++) {
+  for (int reg = 0; reg < NUM_CONFIG_REGISTERS; reg++) {
     status_ok_or_return(prv_check_register(storage, reg, register_lookup[reg]));
+  }
+  return STATUS_CODE_OK;
+}
+
+//using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
+static void prv_convert_data(Ads1259Storage* storage) {
+    uint32_t resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS]);
+    storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS]))*ADS1259_VREF_EXTERNAL / resolution;
+}
+// calculate check-sum based on page 29 of datasheet
+static StatusCode prv_checksum(Ads1259Storage *storage) {
+  uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID +
+                          storage->rx_data.MSB + ADS1259_CHECKSUM_OFFSET);
+  if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) return STATUS_CODE_OUT_OF_RANGE;
+  if ((sum &= ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM &= ~(CHK_SUM_FLAG_BIT))) {
+    return STATUS_CODE_INTERNAL_ERROR;
   }
   return STATUS_CODE_OK;
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   Ads1259Storage *storage = (Ads1259Storage *)context;
-  uint8_t rx_data[NUM_ADS_RX_BYTES];
-  spi_rx(storage->spi_port, rx_data, NUM_ADS_RX_BYTES, ADS1259_READ_DATA_BY_OPCODE);
-  storage->data.ADS_RX_MSB = rx_data[0];
-  storage->data.ADS_RX_MID = rx_data[1];
-  storage->data.ADS_RX_LSB = rx_data[2];
-  storage->data.ADS_RX_CHK_SUM = rx_data[3];
-}
-
-// calculate check-sum based on page 29 of datasheet
-static StatusCode prv_checksum(Ads1259Storage *storage) {
-  uint8_t sum = (uint8_t)(storage->data.ADS_RX_LSB + storage->data.ADS_RX_MID +
-                          storage->data.ADS_RX_MSB + ADS1259_CHECKSUM_OFFSET);
-  if (storage->data.ADS_RX_CHK_SUM & CHK_SUM_FLAG_BIT) return STATUS_CODE_OUT_OF_RANGE;
-  if ((sum &= ~(CHK_SUM_FLAG_BIT)) != (storage->data.ADS_RX_CHK_SUM &= ~(CHK_SUM_FLAG_BIT))) {
-    return STATUS_CODE_INTERNAL_ERROR;
+  uint8_t payload[] = { ADS1259_READ_DATA_BY_OPCODE };
+    spi_exchange(storage->spi_port, payload, 1, (uint8_t*)&storage->rx_data, NUM_ADS_RX_BYTES);
+  if(prv_checksum(storage)) {
+      //error handler
   }
-  return STATUS_CODE_OK;
-}
-
-// concatenates output bytes into final reading
-static void prv_convert_data(Ads1259Storage *storage) {
-  storage->reading =
-      (storage->data.ADS_RX_MSB << 16 | storage->data.ADS_RX_MID << 8 | storage->data.ADS_RX_LSB);
+  storage->conv_data.MSB = storage->rx_data.LSB;
+  storage->conv_data.MID = storage->rx_data.MID;
+  storage->conv_data.LSB = storage->rx_data.MSB;
+  prv_convert_data(storage);
 }
 
 // Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
@@ -112,7 +123,7 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
 
 // Reads conversion data to data struct in storage. data->reading gives total value
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
-  prv_send_command(storage, ADS1259_START_CO
+  prv_send_command(storage, ADS1259_START_CONV);
   status_ok_or_return(soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
                                               prv_conversion_callback, storage, &s_timer_id));
   status_ok_or_return(prv_checksum(storage));
