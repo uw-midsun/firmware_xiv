@@ -43,7 +43,8 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
 
   storage->smbalert_pin = settings->smbalert_pin;
   storage->i2c = settings->i2c;
-  storage->i2c_addr = settings->i2c_addr;
+  storage->i2c_read_addr = settings->i2c_read_addr;
+  storage->i2c_write_addr = settings->i2c_write_addr;
   storage->i2c_settings = settings->i2c_settings;
   storage->callback = settings->callback;  // probably will use to check if tachometre reads 0
   storage->callback_context = settings->callback_context;
@@ -59,14 +60,17 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
   uint8_t smbalert_config_data = ADT7476A_CONFIG_REG_3_MASK;
 
   // configure pwm to manual mode
-  status_ok_or_return(i2c_write_reg(storage->i2c, storage->i2c_addr, ADT7476A_FAN_MODE_REGISTER_1,
-                                    &fan_config_data, NUM_BYTES_TO_WRITE));
-  status_ok_or_return(i2c_write_reg(storage->i2c, storage->i2c_addr, ADT7476A_FAN_MODE_REGISTER_3,
-                                    &fan_config_data, NUM_BYTES_TO_WRITE));
+  status_ok_or_return(i2c_write_reg(storage->i2c, storage->i2c_write_addr,
+                                    ADT7476A_FAN_MODE_REGISTER_1, &fan_config_data,
+                                    NUM_BYTES_TO_WRITE));
+  status_ok_or_return(i2c_write_reg(storage->i2c, storage->i2c_write_addr,
+                                    ADT7476A_FAN_MODE_REGISTER_3, &fan_config_data,
+                                    NUM_BYTES_TO_WRITE));
 
   // set pin 10 to SMBALERT rather than pwm output
-  status_ok_or_return(i2c_write_reg(storage->i2c, storage->i2c_addr, ADT7476A_CONFIG_REGISTER_3,
-                                    &smbalert_config_data, NUM_BYTES_TO_WRITE));
+  status_ok_or_return(i2c_write_reg(storage->i2c, storage->i2c_write_addr,
+                                    ADT7476A_CONFIG_REGISTER_3, &smbalert_config_data,
+                                    NUM_BYTES_TO_WRITE));
 
   gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              storage->callback, storage->callback_context);

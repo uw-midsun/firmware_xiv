@@ -10,31 +10,25 @@
 typedef void (*Adt7476ADataCallback)(void *context);
 
 typedef struct {
-  GpioAddress *fan_1_pin;
-  GpioAddress *fan_2_pin;
-  GpioAddress *fan_3_pin;
-  GpioAddress *fan_4_pin;
   GpioAddress *smbalert_pin;
   uint32_t interval_ms;
   Adt7476ADataCallback callback;  // set to NULL for no callback
   void *callback_context;
   I2CPort i2c;
-  I2CAddress i2c_addr;
+  I2CAddress i2c_read_addr;
+  I2CAddress i2c_write_addr;
   I2CSettings i2c_settings;
 } Adt7476aSettings;
 
 typedef struct {
-  GpioAddress *fan_1_pin;
-  GpioAddress *fan_2_pin;
-  GpioAddress *fan_3_pin;
-  GpioAddress *fan_4_pin;
   GpioAddress *smbalert_pin;
   uint32_t interval_ms;
   SoftTimerId timer_id;
   Adt7476ADataCallback callback;
   void *callback_context;
   I2CPort i2c;
-  I2CAddress i2c_addr;
+  I2CAddress i2c_read_addr;
+  I2CAddress i2c_write_addr;
   I2CSettings i2c_settings;
 } Adt7476aStorage;
 
