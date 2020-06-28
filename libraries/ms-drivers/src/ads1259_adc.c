@@ -4,11 +4,13 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 #include "math.h"
+#include "log.h"
 
 #define NUM_ADS_RX_BYTES 4
 #define NUM_CONFIG_REGISTERS 3
 #define NUM_REGISTER_WRITE_COMM 5
 #define CHK_SUM_FLAG_BIT 0x80
+#define DRDY_BIT 0x80
 
 // Timer used to collect data after convert command sent
 static SoftTimerId s_timer_id;
@@ -49,7 +51,7 @@ static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, u
 
 static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   uint8_t register_lookup[NUM_CONFIG_REGISTERS] = {
-    (ADS1259_INTERNAL_REF_BIAS_ENABLE | ADS1259_SPI_TIMEOUT_ENABLE),
+    (ADS1259_SPI_TIMEOUT_ENABLE),
     (ADS1259_OUT_OF_RANGE_FLAG_ENABLE | ADS1259_CHECK_SUM_ENABLE),
     (ADS1259_CONVERSION_CONTROL_MODE_PULSE | ADS1259_DATA_RATE_SPS),
   };
@@ -67,28 +69,33 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   return STATUS_CODE_OK;
 }
 
+// calculate check-sum based on page 29 of datasheet
+static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
+  uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID +
+                          storage->rx_data.MSB + ADS1259_CHECKSUM_OFFSET);
+  if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) return ADS1259_STATUS_CODE_OUT_OF_RANGE;
+  if ((sum &= ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM &= ~(CHK_SUM_FLAG_BIT))) {
+    return ADS1259_STATUS_CODE_CHECKSUM_FAULT;
+  }
+  return ADS1259_STATUS_CODE_OK;
+}
+
 //using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
 static void prv_convert_data(Ads1259Storage* storage) {
     uint32_t resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS]);
     storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS]))*ADS1259_VREF_EXTERNAL / resolution;
 }
-// calculate check-sum based on page 29 of datasheet
-static StatusCode prv_checksum(Ads1259Storage *storage) {
-  uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID +
-                          storage->rx_data.MSB + ADS1259_CHECKSUM_OFFSET);
-  if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) return STATUS_CODE_OUT_OF_RANGE;
-  if ((sum &= ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM &= ~(CHK_SUM_FLAG_BIT))) {
-    return STATUS_CODE_INTERNAL_ERROR;
-  }
-  return STATUS_CODE_OK;
-}
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
+  LOG_DEBUG("CALLBACK CALLED\n");
   Ads1259Storage *storage = (Ads1259Storage *)context;
+  Ads1259StatusCode code;
+  uint8_t check_drdy;
   uint8_t payload[] = { ADS1259_READ_DATA_BY_OPCODE };
-    spi_exchange(storage->spi_port, payload, 1, (uint8_t*)&storage->rx_data, NUM_ADS_RX_BYTES);
-  if(prv_checksum(storage)) {
-      //error handler
+  spi_exchange(storage->spi_port, payload, 1, (uint8_t*)&storage->rx_data, NUM_ADS_RX_BYTES);
+  code = prv_checksum(storage);
+  if(code){
+    (*storage->handler)(code, NULL);
   }
   storage->conv_data.MSB = storage->rx_data.LSB;
   storage->conv_data.MID = storage->rx_data.MID;
@@ -99,6 +106,7 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
 // Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
 StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
   storage->spi_port = settings->spi_port;
+  storage->handler = settings->handler;
   const SpiSettings spi_settings = {
     .baudrate = settings->spi_baudrate,
     .mode = SPI_MODE_1,
@@ -120,13 +128,14 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
                           &s_timer_id);
   return STATUS_CODE_OK;
 }
-
+static void super_cb(SoftTimerId timer_id, void* context) {
+  LOG_DEBUG("CALLBACK SUPER CALLED\n");
+}
 // Reads conversion data to data struct in storage. data->reading gives total value
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
   prv_send_command(storage, ADS1259_START_CONV);
-  status_ok_or_return(soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
-                                              prv_conversion_callback, storage, &s_timer_id));
-  status_ok_or_return(prv_checksum(storage));
-  prv_convert_data(storage);
+  soft_timer_start_millis(17, &super_cb, NULL, NULL);
+  soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
+                                              prv_conversion_callback, storage, &s_timer_id);
   return STATUS_CODE_OK;
 }

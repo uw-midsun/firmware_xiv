@@ -24,7 +24,7 @@
 #define ADS1259_WRITE_REGISTER 0x40
 
 // Samples per second on ADS1259
-typedef enum {
+typedef enum Ads1259DataRate {
   ADS1259_DATA_RATE_10 = 0,
   ADS1259_DATA_RATE_17,
   ADS1259_DATA_RATE_50,
