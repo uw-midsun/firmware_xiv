@@ -6,8 +6,6 @@
 
 // Requires interrupts, soft timers, GPIO, and GPIO interrupts to be initialized
 
-typedef void (*Adt7476ADataCallback)(void *context);
-
 typedef struct {
   GpioAddress smbalert_pin;
   uint32_t interval_ms;
