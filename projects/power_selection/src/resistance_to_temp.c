@@ -10,7 +10,7 @@ typedef enum {
 
 // from
 // http://2avrmz2nom8p47cc28p2743e-wpengine.netdna-ssl.com/wp-content/uploads/2010/11/Thermistor_10K-2.pdf
-const double resistance_temperature_in_C[NUM_OF_RESISTANCES][2] = {
+static const double s_resistance_temperature_in_C[NUM_OF_RESISTANCES][NUM_RES_TEMP_TABLE_INDICES] = {
   { -39.44, 323839 }, { -38.33, 300974 }, { -37.22, 279880 }, { -36.11, 260410 },
   { -35.00, 242427 }, { -33.89, 225809 }, { -32.78, 210443 }, { -31.67, 196227 },
   { -30.56, 183068 }, { -29.44, 170775 }, { -28.33, 159488 }, { -27.22, 149024 },
@@ -51,8 +51,8 @@ double resistance_to_temp(double resistance) {
   for (int i = 0; i < NUM_OF_RESISTANCES; ++i) {
     // the higher the resistance, the lower the temperature
     // so finds the first resistance value that is lower, else returns an impossible resistance
-    if (resistance_temperature_in_C[i][RES_TEMP_TABLE_RES] < resistance) {
-      temp = resistance_temperature_in_C[i][0];
+    if (s_resistance_temperature_in_C[i][RES_TEMP_TABLE_RES] < resistance) {
+      temp = s_resistance_temperature_in_C[i][RES_TEMP_TABLE_TEMP];
       break;
     }
   }
