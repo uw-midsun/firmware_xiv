@@ -1,20 +1,18 @@
 #pragma once
+
 // Handles the killswitch
-// Requires GPIO, GPIO interrupts, and interrupts to be initialized.
-//
-// Raises a fault event if the killswitch is hit as an input.
-// Allows bypassing the killswitch as an output.
-#include "battery_heartbeat.h"
+// Requires requires gpio interrupts and soft timers to be initialized.
+
+// Faults if the killswitch is hit as an input.
+
 #include "debouncer.h"
-#include "gpio.h"
+#include "status.h"
 
-typedef struct KillswitchStorage {
-  DebouncerStorage debouncer;
-} KillswitchStorage;
+#define KS_MONITOR_PIN \
+  { GPIO_PORT_A, 15 }
 
-// Set the killswitch up to fault if hit. Assumes the killswitch is active-low.
-StatusCode killswitch_init(KillswitchStorage *storage, const GpioAddress *killswitch,
-                           BatteryHeartbeatStorage *battery_heartbeat);
+#define KS_ENABLE_PIN \
+  { GPIO_PORT_B, 9 }
 
-// Bypass the killswitch. It does not need to be initialized.
-StatusCode killswitch_bypass(const GpioAddress *killswitch);
+// Set the killswitch up to fault if hit. Killswitch is active-low.
+StatusCode killswitch_init(DebouncerStorage *storage);
