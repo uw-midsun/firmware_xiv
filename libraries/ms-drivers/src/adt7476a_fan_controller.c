@@ -32,9 +32,9 @@ StatusCode get_status(I2CPort port, uint8_t adt7476a_i2c_address, uint8_t *regis
                       uint8_t *register_2_data) {
   // read interrupt status register
   status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_address, ADT7476A_INTERRUPT_STATUS_REGISTER_1,
-                                   &register_1_data, ADT7476A_REG_SIZE));
+                                   register_1_data, ADT7476A_REG_SIZE));
   status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_address, ADT7476A_INTERRUPT_STATUS_REGISTER_2,
-                                   &register_2_data, ADT7476A_REG_SIZE));
+                                   register_2_data, ADT7476A_REG_SIZE));
 
   return STATUS_CODE_OK;
 }

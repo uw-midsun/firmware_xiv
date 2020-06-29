@@ -1,4 +1,8 @@
 #pragma once
+#include "gpio.h"
+#include "gpio_it.h"
+#include "i2c.h"
+#include "i2c_mcu.h"
 
 // Requires interrupts, soft timers, GPIO, and GPIO interrupts to be initialized
 
@@ -7,7 +11,7 @@ typedef void (*Adt7476ADataCallback)(void *context);
 typedef struct {
   GpioAddress smbalert_pin;
   uint32_t interval_ms;
-  Adt7476ADataCallback callback;  // set to NULL for no callback
+  GpioItCallback callback;  // set to NULL for no callback
   void *callback_context;
   I2CPort i2c;
   I2CAddress i2c_read_addr;
@@ -18,8 +22,7 @@ typedef struct {
 typedef struct {
   GpioAddress smbalert_pin;
   uint32_t interval_ms;
-  SoftTimerId timer_id;
-  Adt7476ADataCallback callback;
+  GpioItCallback callback;
   void *callback_context;
   I2CPort i2c;
 } Adt7476aStorage;
