@@ -2,15 +2,14 @@
 #include "ads1259_adc_defs.h"
 #include "delay.h"
 #include "interrupt.h"
-#include "soft_timer.h"
-#include "math.h"
 #include "log.h"
+#include "math.h"
+#include "soft_timer.h"
 
 #define NUM_ADS_RX_BYTES 4
 #define NUM_CONFIG_REGISTERS 3
 #define NUM_REGISTER_WRITE_COMM 5
 #define CHK_SUM_FLAG_BIT 0x80
-#define DRDY_BIT 0x80
 
 // Timer used to collect data after convert command sent
 static SoftTimerId s_timer_id;
@@ -30,9 +29,9 @@ static const uint32_t s_calibration_time_ms_lookup[NUM_ADS1259_DATA_RATE] = {
 
 // Number of noise free bits for each sampling rate
 static const uint8_t s_num_usable_bits[NUM_ADS1259_DATA_RATE] = {
-  [ADS1259_DATA_RATE_10] = 21, [ADS1259_DATA_RATE_17] = 21, [ADS1259_DATA_RATE_50] = 20,
-  [ADS1259_DATA_RATE_60] = 20,  [ADS1259_DATA_RATE_400] = 19,  [ADS1259_DATA_RATE_1200] = 18,
-  [ADS1259_DATA_RATE_3600] = 17,  [ADS1259_DATA_RATE_14400] = 16,
+  [ADS1259_DATA_RATE_10] = 21,   [ADS1259_DATA_RATE_17] = 21,    [ADS1259_DATA_RATE_50] = 20,
+  [ADS1259_DATA_RATE_60] = 20,   [ADS1259_DATA_RATE_400] = 19,   [ADS1259_DATA_RATE_1200] = 18,
+  [ADS1259_DATA_RATE_3600] = 17, [ADS1259_DATA_RATE_14400] = 16,
 };
 
 // tx spi command to ads1259
@@ -44,7 +43,7 @@ static void prv_send_command(Ads1259Storage *storage, uint8_t command) {
 // Reads 1-byte reg value to storage->data
 static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, uint8_t reg_val) {
   uint8_t payload[] = { (ADS1259_READ_REGISTER | reg_add) };
-  spi_exchange(storage->spi_port, payload, 1, &storage->rx_data.MSB, 1 );
+  spi_exchange(storage->spi_port, payload, 1, &storage->rx_data.MSB, 1);
   if (reg_val != storage->rx_data.MSB) return STATUS_CODE_UNINITIALIZED;
   return STATUS_CODE_OK;
 }
@@ -71,8 +70,8 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
 
 // calculate check-sum based on page 29 of datasheet
 static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
-  uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID +
-                          storage->rx_data.MSB + ADS1259_CHECKSUM_OFFSET);
+  uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID + storage->rx_data.MSB +
+                          ADS1259_CHECKSUM_OFFSET);
   if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) return ADS1259_STATUS_CODE_OUT_OF_RANGE;
   if ((sum &= ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM &= ~(CHK_SUM_FLAG_BIT))) {
     return ADS1259_STATUS_CODE_CHECKSUM_FAULT;
@@ -80,21 +79,20 @@ static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
   return ADS1259_STATUS_CODE_OK;
 }
 
-//using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
-static void prv_convert_data(Ads1259Storage* storage) {
-    uint32_t resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS]);
-    storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS]))*ADS1259_VREF_EXTERNAL / resolution;
+// using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
+static void prv_convert_data(Ads1259Storage *storage) {
+  double resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS]);
+  storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
+                     EXTERNAL_VREF / resolution;
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
-  LOG_DEBUG("CALLBACK CALLED\n");
   Ads1259Storage *storage = (Ads1259Storage *)context;
   Ads1259StatusCode code;
-  uint8_t check_drdy;
   uint8_t payload[] = { ADS1259_READ_DATA_BY_OPCODE };
-  spi_exchange(storage->spi_port, payload, 1, (uint8_t*)&storage->rx_data, NUM_ADS_RX_BYTES);
+  spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
   code = prv_checksum(storage);
-  if(code){
+  if (code) {
     (*storage->handler)(code, NULL);
   }
   storage->conv_data.MSB = storage->rx_data.LSB;
@@ -128,14 +126,11 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
                           &s_timer_id);
   return STATUS_CODE_OK;
 }
-static void super_cb(SoftTimerId timer_id, void* context) {
-  LOG_DEBUG("CALLBACK SUPER CALLED\n");
-}
+
 // Reads conversion data to data struct in storage. data->reading gives total value
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
   prv_send_command(storage, ADS1259_START_CONV);
-  soft_timer_start_millis(17, &super_cb, NULL, NULL);
   soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
-                                              prv_conversion_callback, storage, &s_timer_id);
+                          prv_conversion_callback, storage, &s_timer_id);
   return STATUS_CODE_OK;
 }
