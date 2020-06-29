@@ -245,3 +245,14 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                        \
                     SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 6, (aux_battery_volt_u16),    \
                     (aux_battery_temp_u16), (dcdc_status_u16), CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8)                \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER, SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE, \
+                   4, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8), CAN_PACK_IMPL_EMPTY,         \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_BATTERY_RELAY_STATE(msg_ptr, hv_u8, gnd_u8)                      \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER,                      \
+                   SYSTEM_CAN_MESSAGE_BATTERY_RELAY_STATE, 2, (hv_u8), (gnd_u8),  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
