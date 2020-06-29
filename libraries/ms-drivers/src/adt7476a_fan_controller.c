@@ -73,7 +73,7 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
                                     ADT7476A_CONFIG_REGISTER_3, &smbalert_config_data,
                                     ADT7476A_REG_SIZE));
 
-  gpio_it_register_interrupt(storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
+  gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              storage->callback, storage->callback_context);
 
   return STATUS_CODE_OK;
