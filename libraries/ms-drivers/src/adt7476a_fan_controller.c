@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -11,9 +12,11 @@
 
 // need to set interrupt once fan goes out of range
 // PWM duty cycle is set from 0-100, in steps of 0.39 (0x00 - 0xFF)
+// accepts number between 0-100, converts into into range of 0x00 - 0xFF
 StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed, FAN_GROUP fan_group,
                               uint8_t adt7476a_i2c_address) {
   // detwermin which PWM output to change
+  uint8_t real_speed = floor(speed / 0.39);
   if (fan_group == ADT_FAN_GROUP_1) {
     status_ok_or_return(
         i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &speed, SET_SPEED_NUM_BYTES));
