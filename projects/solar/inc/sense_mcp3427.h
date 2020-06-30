@@ -22,3 +22,6 @@ typedef struct SenseMcp3427Settings {
 
 // Initialize the module and register it with sense. Must be called after |sense_init|.
 StatusCode sense_mcp3427_init(SenseMcp3427Settings *settings);
+
+// Start sensing from the MCP3427s. Before this is called, no data will be set in the store.
+StatusCode sense_mcp3427_start(void);

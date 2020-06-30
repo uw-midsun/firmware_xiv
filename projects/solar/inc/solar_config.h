@@ -1,6 +1,6 @@
 #pragma once
 
-// Holds all hardware settings and configuration for solar.
+// Provides all hardware settings and configuration for solar.
 
 #include "sense_current.h"
 #include "sense_mcp3427.h"

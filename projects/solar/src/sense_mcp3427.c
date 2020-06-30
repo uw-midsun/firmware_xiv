@@ -48,7 +48,7 @@ static void prv_sense_callback(void *context) {
   uint8_t idx = *(uint8_t *)context;
   if (s_has_value[idx]) {
     DataPoint data_point = s_mcp3427_data_points[idx];
-    StatusCode status = data_store_set(data_point, s_values[idx]);
+    StatusCode status = data_store_set(data_point, (uint16_t)s_values[idx]);
     if (!status_ok(status)) {
       LOG_WARN("sense_mcp3427 could not data_store_set with data point %d\n", data_point);
     }
@@ -56,7 +56,7 @@ static void prv_sense_callback(void *context) {
 }
 
 StatusCode sense_mcp3427_init(SenseMcp3427Settings *settings) {
-  if (settings == NULL || settings->mcp3427s > MAX_SOLAR_MCP3427) {
+  if (settings == NULL || settings->num_mcp3427s > MAX_SOLAR_MCP3427) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -76,10 +76,12 @@ StatusCode sense_mcp3427_init(SenseMcp3427Settings *settings) {
     status_ok_or_return(sense_register(prv_sense_callback, &s_indices[i]));
   }
 
-  // start the mcp3427s after initializing in case any of the initializations goes wrong
+  return STATUS_CODE_OK;
+}
+
+StatusCode sense_mcp3427_start(void) {
   for (uint8_t i = 0; i < s_num_mcp3427s; i++) {
     status_ok_or_return(mcp3427_start(&s_mcp3427_storages[i]));
   }
-
   return STATUS_CODE_OK;
 }

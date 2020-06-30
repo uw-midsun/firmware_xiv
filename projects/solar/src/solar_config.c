@@ -133,7 +133,7 @@ static const uint8_t s_board_type_to_num_mcp3427[] = {
 
 StatusCode config_get_sense_mcp3427_settings(SolarBoardType board_type,
                                              SenseMcp3427Settings *settings) {
-  if (board_type >= NUM_SOLAR_BOARD_TYPES) {
+  if (board_type >= NUM_SOLAR_BOARD_TYPES || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   *settings = s_base_sense_mcp3427_settings;
