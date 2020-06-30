@@ -1,7 +1,7 @@
 #pragma once
 
 // Implementation of sense for reading from the current-sense MCP3427.
-// Requires interrupts, soft timers, the event queue, I2C, and sense to be initialized.
+// Requires interrupts, soft timers, the event queue, I2C, data_store, and sense to be initialized.
 
 #include "mcp3427_adc.h"
 
