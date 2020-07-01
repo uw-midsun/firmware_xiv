@@ -43,17 +43,18 @@ static uint8_t register_lookup[NUM_CONFIG_REGISTERS] = {
 
 typedef enum Ads1259TestMode {
   ADS1259_MODE_MAX_DATA = 0,
+  ADS1259_MODE_MIN_DATA,
   ADS1259_MODE_MIXED_DATA,
   ADS1259_MODE_CHECKSUM_FAULT,
   ADS1259_MODE_OUT_RANGE_FLAG_TRIGGERED,
   NUM_TEST_MODES,
 } Ads1259TestMode;
 
-static Ads1259Storage storage;
-static Ads1259MockRegisters registers;
-static Ads1259TestMode test_mode;
-static bool checksum;
-static bool out_of_range;
+static Ads1259Storage s_storage;
+static Ads1259MockRegisters s_registers;
+static Ads1259TestMode s_test_mode;
+static bool s_checksum;
+static bool s_out_of_range;
 
 static void prv_spi_return_conv_data(uint8_t *rx_data, Ads1259TestMode mode) {
   switch (mode) {
@@ -61,6 +62,12 @@ static void prv_spi_return_conv_data(uint8_t *rx_data, Ads1259TestMode mode) {
       rx_data[0] = 0xFF;
       rx_data[1] = 0xFF;
       rx_data[2] = 0xFF;
+      rx_data[3] = (uint8_t)((0x2FD + ADS1259_CHECKSUM_OFFSET) & 0x7F);
+      break;
+    case ADS1259_MODE_MIN_DATA:
+      rx_data[0] = 0x00;
+      rx_data[1] = 0x00;
+      rx_data[2] = 0x00;
       rx_data[3] = (uint8_t)((0x2FD + ADS1259_CHECKSUM_OFFSET) & 0x7F);
       break;
     case ADS1259_MODE_MIXED_DATA:
@@ -87,8 +94,12 @@ static void prv_spi_return_conv_data(uint8_t *rx_data, Ads1259TestMode mode) {
 }
 
 static void prv_error_handler(Ads1259StatusCode code, void *context) {
-  if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) out_of_range = true;
-  if (code == ADS1259_STATUS_CODE_CHECKSUM_FAULT) checksum = true;
+  if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) {
+    s_out_of_range = true;
+  } 
+  if (code == ADS1259_STATUS_CODE_CHECKSUM_FAULT) {
+    s_checksum = true;
+  }
 }
 
 StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len, uint8_t *rx_data,
@@ -96,9 +107,9 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
   TEST_ASSERT_EQUAL(spi, TEST_AD1259_SPI_PORT);
   uint8_t cmd = tx_data[0];
   if (cmd & ADS1259_READ_REGISTER) {
-    if (cmd == 0x20) rx_data[0] = registers.CONFIG_0;
-    if (cmd == 0x21) rx_data[0] = registers.CONFIG_1;
-    if (cmd == 0x22) rx_data[0] = registers.CONFIG_2;
+    if (cmd == 0x20) rx_data[0] = s_registers.CONFIG_0;
+    if (cmd == 0x21) rx_data[0] = s_registers.CONFIG_1;
+    if (cmd == 0x22) rx_data[0] = s_registers.CONFIG_2;
     return STATUS_CODE_OK;
   }
   switch (cmd) {
@@ -113,21 +124,21 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
       LOG_DEBUG("WRITE_REG CMD SENT\n");
       TEST_ASSERT_TRUE(tx_len == 5 && rx_len == 0);
       TEST_ASSERT_TRUE(tx_data[1] == 3);
-      registers.CONFIG_0 = tx_data[2];
-      registers.CONFIG_1 = tx_data[3];
-      registers.CONFIG_2 = tx_data[4];
+      s_registers.CONFIG_0 = tx_data[2];
+      s_registers.CONFIG_1 = tx_data[3];
+      s_registers.CONFIG_2 = tx_data[4];
       break;
     case ADS1259_OFFSET_CALIBRATION:
       LOG_DEBUG("OFFSET CALIBRATION SENT\n");
-      registers.OFC_0 = 0;
-      registers.OFC_1 = 0;
-      registers.OFC_2 = 0;
+      s_registers.OFC_0 = 0;
+      s_registers.OFC_1 = 0;
+      s_registers.OFC_2 = 0;
       break;
     case ADS1259_GAIN_CALIBRATION:
       LOG_DEBUG("GAIN CALIBRATION SENT\n");
-      registers.FSC_0 = 0;
-      registers.FSC_1 = 0;
-      registers.FSC_2 = 0;
+      s_registers.FSC_0 = 0;
+      s_registers.FSC_1 = 0;
+      s_registers.FSC_2 = 0;
       break;
     // Commands used in Ads1259_get_conversion_data()
     case ADS1259_START_CONV:
@@ -135,7 +146,7 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
       break;
     case ADS1259_READ_DATA_BY_OPCODE:
       LOG_DEBUG("SETTING CONVERSION DATA\n");
-      prv_spi_return_conv_data(rx_data, test_mode);
+      prv_spi_return_conv_data(rx_data, s_test_mode);
       break;
   }
   return STATUS_CODE_OK;
@@ -151,61 +162,73 @@ void setup_test() {
     .cs = TEST_CS_PIN,
     .handler = prv_error_handler,
   };
-  registers.CONFIG_0 = 0;
-  registers.CONFIG_1 = 0;
-  registers.CONFIG_2 = 0;
-  registers.OFC_0 = 1;
-  registers.OFC_1 = 1;
-  registers.OFC_2 = 1;
-  registers.FSC_0 = 1;
-  registers.FSC_1 = 1;
-  registers.FSC_2 = 1;
+  s_registers.CONFIG_0 = 0;
+  s_registers.CONFIG_1 = 0;
+  s_registers.CONFIG_2 = 0;
+  s_registers.OFC_0 = 1;
+  s_registers.OFC_1 = 1;
+  s_registers.OFC_2 = 1;
+  s_registers.FSC_0 = 1;
+  s_registers.FSC_1 = 1;
+  s_registers.FSC_2 = 1;
   interrupt_init();
   gpio_init();
   soft_timer_init();
   // Test that all registers have been configured correctly and setup has worked properly
-  TEST_ASSERT_OK(ads1259_init(&settings, &storage));
-  TEST_ASSERT_EQUAL((registers.FSC_0 | registers.FSC_1 | registers.FSC_2), 0);
-  TEST_ASSERT_EQUAL((registers.OFC_0 | registers.OFC_1 | registers.OFC_2), 0);
-  TEST_ASSERT_EQUAL(registers.CONFIG_0, register_lookup[0]);
-  TEST_ASSERT_EQUAL(registers.CONFIG_1, register_lookup[1]);
-  TEST_ASSERT_EQUAL(registers.CONFIG_2, register_lookup[2]);
+  TEST_ASSERT_OK(ads1259_init(&settings, &s_storage));
+  TEST_ASSERT_EQUAL(0, (s_registers.FSC_0 | s_registers.FSC_1 | s_registers.FSC_2));
+  TEST_ASSERT_EQUAL(0, (s_registers.OFC_0 | s_registers.OFC_1 | s_registers.OFC_2));
+  TEST_ASSERT_EQUAL(register_lookup[0],s_registers.CONFIG_0);
+  TEST_ASSERT_EQUAL(register_lookup[1],s_registers.CONFIG_1);
+  TEST_ASSERT_EQUAL(register_lookup[2],s_registers.CONFIG_2);
 }
 
 void teardown_test(void) {}
 
 void test_ads1259_get_conversion_data() {
   // test with max data
-  test_mode = ADS1259_MODE_MAX_DATA;
+  s_test_mode = ADS1259_MODE_MAX_DATA;
   uint32_t test_raw = 0xFFFFFF;
-  ads1259_get_conversion_data(&storage);
+  ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_EQUAL(storage.conv_data.MSB | storage.conv_data.MID | storage.conv_data.LSB, 0xFF);
-  TEST_ASSERT_EQUAL(storage.conv_data.raw, test_raw);
-  TEST_ASSERT_EQUAL(storage.reading, (test_raw >> 4) * EXTERNAL_VREF / pow(2, 20));
-  // TEST_ASSERT_EQUAL(storage.reading, 50.0);
+  TEST_ASSERT_EQUAL(0xFF, s_storage.conv_data.MSB | s_storage.conv_data.MID | s_storage.conv_data.LSB);
+  TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
+  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / pow(2, 20), s_storage.reading);
+  TEST_ASSERT_EQUAL(49.999952, s_storage.reading);
+
+  // test with min data
+  s_test_mode = ADS1259_MODE_MIN_DATA;
+  test_raw = 0x000000;
+  ads1259_get_conversion_data(&s_storage);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  TEST_ASSERT_EQUAL(0x00, s_storage.conv_data.MSB | s_storage.conv_data.MID | s_storage.conv_data.LSB);
+  TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
+  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / pow(2, 20), s_storage.reading);
+  TEST_ASSERT_EQUAL(0, s_storage.reading);
 
   // test with a random data set
-  test_mode = ADS1259_MODE_MIXED_DATA;
-  test_raw = 0x302010;
-  ads1259_get_conversion_data(&storage);
+  s_test_mode = ADS1259_MODE_MIXED_DATA;
+  test_raw = 0x102030;
+  ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_EQUAL(storage.conv_data.MSB | storage.conv_data.MID | storage.conv_data.LSB, 0x30);
-  TEST_ASSERT_EQUAL(storage.conv_data.raw, test_raw);
-  TEST_ASSERT_EQUAL(storage.reading, (test_raw >> 4) * EXTERNAL_VREF / pow(2, 20));
-  TEST_ASSERT_EQUAL(storage.reading, 9.399462);
+  TEST_ASSERT_EQUAL(0x10,s_storage.conv_data.MSB);
+  TEST_ASSERT_EQUAL(0x20,s_storage.conv_data.MID);
+  TEST_ASSERT_EQUAL(0x30,s_storage.conv_data.LSB);
+  TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
+  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / pow(2, 20), s_storage.reading);
+  TEST_ASSERT_EQUAL(3.149557, s_storage.reading);
 
   // test checksum fault triggered
-  test_mode = ADS1259_MODE_CHECKSUM_FAULT;
-  checksum = false;
-  ads1259_get_conversion_data(&storage);
+  s_test_mode = ADS1259_MODE_CHECKSUM_FAULT;
+  s_checksum = false;
+  ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_TRUE(checksum);
+  TEST_ASSERT_TRUE(s_checksum);
 
   // test out of range flag triggered
-  test_mode = ADS1259_MODE_OUT_RANGE_FLAG_TRIGGERED;
-  out_of_range = false;
-  ads1259_get_conversion_data(&storage);
+  s_test_mode = ADS1259_MODE_OUT_RANGE_FLAG_TRIGGERED;
+  s_out_of_range = false;
+  ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_TRUE(out_of_range);
+  TEST_ASSERT_TRUE(s_out_of_range);
 }

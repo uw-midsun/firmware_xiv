@@ -6,14 +6,6 @@
 #include "math.h"
 #include "soft_timer.h"
 
-#define NUM_ADS_RX_BYTES 4
-#define NUM_CONFIG_REGISTERS 3
-#define NUM_REGISTER_WRITE_COMM 5
-#define CHK_SUM_FLAG_BIT 0x80
-
-// Timer used to collect data after convert command sent
-static SoftTimerId s_timer_id;
-
 // Used to determine length of time needed between convert command sent and data collection
 static const uint32_t s_conversion_time_ms_lookup[NUM_ADS1259_DATA_RATE] = {
   [ADS1259_DATA_RATE_10] = 100, [ADS1259_DATA_RATE_17] = 61,   [ADS1259_DATA_RATE_50] = 21,
@@ -44,7 +36,9 @@ static void prv_send_command(Ads1259Storage *storage, uint8_t command) {
 static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, uint8_t reg_val) {
   uint8_t payload[] = { (ADS1259_READ_REGISTER | reg_add) };
   spi_exchange(storage->spi_port, payload, 1, &storage->rx_data.MSB, 1);
-  if (reg_val != storage->rx_data.MSB) return STATUS_CODE_UNINITIALIZED;
+  if (reg_val != storage->rx_data.MSB) {
+    return STATUS_CODE_UNINITIALIZED;
+  } 
   return STATUS_CODE_OK;
 }
 
@@ -56,8 +50,9 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   };
   // reset all register values to default
   prv_send_command(storage, ADS1259_RESET);  // Needs 8 fclk cycles before next command
+  delay_us(100);
   uint8_t payload[NUM_REGISTER_WRITE_COMM] = { (ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0),
-                                               NUM_CONFIG_REGISTERS, register_lookup[0],
+                                               NUM_CONFIG_REGISTERS - 1, register_lookup[0],
                                                register_lookup[1], register_lookup[2] };
   // tx write-reg command and data for all three config registers
   spi_exchange(storage->spi_port, payload, NUM_REGISTER_WRITE_COMM, NULL, 0);
@@ -72,8 +67,10 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
 static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
   uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID + storage->rx_data.MSB +
                           ADS1259_CHECKSUM_OFFSET);
-  if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) return ADS1259_STATUS_CODE_OUT_OF_RANGE;
-  if ((sum &= ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM &= ~(CHK_SUM_FLAG_BIT))) {
+  if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) {
+    return ADS1259_STATUS_CODE_OUT_OF_RANGE;
+  } 
+  if ((sum & ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM & ~(CHK_SUM_FLAG_BIT))) {
     return ADS1259_STATUS_CODE_CHECKSUM_FAULT;
   }
   return ADS1259_STATUS_CODE_OK;
@@ -83,7 +80,7 @@ static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
 static void prv_convert_data(Ads1259Storage *storage) {
   double resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS]);
   storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
-                     EXTERNAL_VREF / resolution;
+                     EXTERNAL_VREF_V / resolution;
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
@@ -95,9 +92,9 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   if (code) {
     (*storage->handler)(code, NULL);
   }
-  storage->conv_data.MSB = storage->rx_data.LSB;
+  storage->conv_data.MSB = storage->rx_data.MSB;
   storage->conv_data.MID = storage->rx_data.MID;
-  storage->conv_data.LSB = storage->rx_data.MSB;
+  storage->conv_data.LSB = storage->rx_data.LSB;
   prv_convert_data(storage);
 }
 
@@ -119,11 +116,9 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
   prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
   status_ok_or_return(prv_configure_registers(storage));
   prv_send_command(storage, ADS1259_OFFSET_CALIBRATION);
-  soft_timer_start_millis(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS], NULL, NULL,
-                          &s_timer_id);
+  delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
   prv_send_command(storage, ADS1259_GAIN_CALIBRATION);
-  soft_timer_start_millis(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS], NULL, NULL,
-                          &s_timer_id);
+  delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
   return STATUS_CODE_OK;
 }
 
@@ -131,6 +126,6 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
   prv_send_command(storage, ADS1259_START_CONV);
   soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
-                          prv_conversion_callback, storage, &s_timer_id);
+                          prv_conversion_callback, storage, NULL);
   return STATUS_CODE_OK;
 }
