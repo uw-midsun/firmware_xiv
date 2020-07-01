@@ -13,3 +13,5 @@ $(T)_test_mppt_MOCKS := mux_set
 $(T)_test_sense_MOCKS := data_store_done
 $(T)_test_sense_current_MOCKS := data_store_set sense_register mcp3427_register_callback \
 	mcp3427_register_fault_callback mcp3427_start
+$(T)_test_sense_mcp3427_MOCKS := data_store_set sense_register mcp3427_register_callback \
+	mcp3427_register_fault_callback mcp3427_start

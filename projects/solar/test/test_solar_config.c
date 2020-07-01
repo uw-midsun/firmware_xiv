@@ -1,8 +1,8 @@
-#include "solar_config.h"
-#include "sense_mcp3427.h"
-#include "unity.h"
-#include "test_helpers.h"
 #include "log.h"
+#include "sense_mcp3427.h"
+#include "solar_config.h"
+#include "test_helpers.h"
+#include "unity.h"
 
 void setup_test(void) {}
 void teardown_test(void) {}
@@ -19,6 +19,8 @@ void test_initializing_sense_mcp3427_config(void) {
 // Test that passing invalid arguments fails gracefully.
 void test_invalid_args(void) {
   SenseMcp3427Settings settings;
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, config_get_sense_mcp3427_settings(NUM_SOLAR_BOARD_TYPES, &settings));
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, config_get_sense_mcp3427_settings(SOLAR_BOARD_TYPE_5_MPPT, NULL));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
+                    config_get_sense_mcp3427_settings(NUM_SOLAR_BOARD_TYPES, &settings));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
+                    config_get_sense_mcp3427_settings(SOLAR_BOARD_TYPE_5_MPPT, NULL));
 }

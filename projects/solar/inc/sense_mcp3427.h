@@ -6,7 +6,7 @@
 #include "data_store.h"
 #include "mcp3427_adc.h"
 
-#define MAX_SOLAR_MCP3427 8
+#define MAX_SOLAR_MCP3427 16  // the theoretical maximum on a board
 
 // Configuration for a single MCP3427, associating a data point with the MCP3427 settings.
 typedef struct SenseMcp3427AdcConfig {
