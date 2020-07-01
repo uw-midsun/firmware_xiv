@@ -38,7 +38,7 @@ static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, u
   spi_exchange(storage->spi_port, payload, 1, &storage->rx_data.MSB, 1);
   if (reg_val != storage->rx_data.MSB) {
     return STATUS_CODE_UNINITIALIZED;
-  } 
+  }
   return STATUS_CODE_OK;
 }
 
@@ -69,7 +69,7 @@ static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
                           ADS1259_CHECKSUM_OFFSET);
   if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) {
     return ADS1259_STATUS_CODE_OUT_OF_RANGE;
-  } 
+  }
   if ((sum & ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM & ~(CHK_SUM_FLAG_BIT))) {
     return ADS1259_STATUS_CODE_CHECKSUM_FAULT;
   }
@@ -77,10 +77,17 @@ static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
 }
 
 // using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
+// 0x000000-0x7FFFFF positive range, 0xFFFFFF - 0x800000 neg range, rightmost is greatest magnitude
 static void prv_convert_data(Ads1259Storage *storage) {
-  double resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS]);
-  storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
-                     EXTERNAL_VREF_V / resolution;
+  double resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS] - 1);
+  if (storage->conv_data.raw & RX_NEG_VOLTAGE_BIT) {
+    storage->reading = 0 - ((RX_MAX_VALUE - storage->conv_data.raw) >>
+                            (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
+                               EXTERNAL_VREF_V / resolution;
+  } else {
+    storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
+                       EXTERNAL_VREF_V / (resolution - 1);
+  }
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {

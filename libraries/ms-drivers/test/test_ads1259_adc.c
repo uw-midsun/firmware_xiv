@@ -42,8 +42,11 @@ static uint8_t register_lookup[NUM_CONFIG_REGISTERS] = {
 };
 
 typedef enum Ads1259TestMode {
-  ADS1259_MODE_MAX_DATA = 0,
-  ADS1259_MODE_MIN_DATA,
+  ADS1259_MODE_MAX_POS_DATA = 0,
+  ADS1259_MODE_MIN_POS_DATA,
+  ADS1259_MODE_MAX_NEG_DATA,
+  ADS1259_MODE_MIN_NEG_DATA,
+  ADS1259_MODE_ZERO_DATA,
   ADS1259_MODE_MIXED_DATA,
   ADS1259_MODE_CHECKSUM_FAULT,
   ADS1259_MODE_OUT_RANGE_FLAG_TRIGGERED,
@@ -58,13 +61,31 @@ static bool s_out_of_range;
 
 static void prv_spi_return_conv_data(uint8_t *rx_data, Ads1259TestMode mode) {
   switch (mode) {
-    case ADS1259_MODE_MAX_DATA:
+    case ADS1259_MODE_MIN_POS_DATA:
+      rx_data[0] = 0x00;
+      rx_data[1] = 0x00;
+      rx_data[2] = 0x10;
+      rx_data[3] = (uint8_t)((0x27D + ADS1259_CHECKSUM_OFFSET) & 0x7F);
+      break;
+    case ADS1259_MODE_MIN_NEG_DATA:
       rx_data[0] = 0xFF;
       rx_data[1] = 0xFF;
-      rx_data[2] = 0xFF;
-      rx_data[3] = (uint8_t)((0x2FD + ADS1259_CHECKSUM_OFFSET) & 0x7F);
+      rx_data[2] = 0xEF;
+      rx_data[3] = (uint8_t)((0x80 + ADS1259_CHECKSUM_OFFSET) & 0x7F);
       break;
-    case ADS1259_MODE_MIN_DATA:
+    case ADS1259_MODE_MAX_POS_DATA:
+      rx_data[0] = 0x7F;
+      rx_data[1] = 0xFF;
+      rx_data[2] = 0xFF;
+      rx_data[3] = (uint8_t)((0x27D + ADS1259_CHECKSUM_OFFSET) & 0x7F);
+      break;
+    case ADS1259_MODE_MAX_NEG_DATA:
+      rx_data[0] = 0x80;
+      rx_data[1] = 0x00;
+      rx_data[2] = 0x00;
+      rx_data[3] = (uint8_t)((0x80 + ADS1259_CHECKSUM_OFFSET) & 0x7F);
+      break;
+    case ADS1259_MODE_ZERO_DATA:
       rx_data[0] = 0x00;
       rx_data[1] = 0x00;
       rx_data[2] = 0x00;
@@ -96,7 +117,7 @@ static void prv_spi_return_conv_data(uint8_t *rx_data, Ads1259TestMode mode) {
 static void prv_error_handler(Ads1259StatusCode code, void *context) {
   if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) {
     s_out_of_range = true;
-  } 
+  }
   if (code == ADS1259_STATUS_CODE_CHECKSUM_FAULT) {
     s_checksum = true;
   }
@@ -123,7 +144,7 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
     case (ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0):
       LOG_DEBUG("WRITE_REG CMD SENT\n");
       TEST_ASSERT_TRUE(tx_len == 5 && rx_len == 0);
-      TEST_ASSERT_TRUE(tx_data[1] == 3);
+      TEST_ASSERT_TRUE(tx_data[1] == 2);
       s_registers.CONFIG_0 = tx_data[2];
       s_registers.CONFIG_1 = tx_data[3];
       s_registers.CONFIG_2 = tx_data[4];
@@ -142,10 +163,8 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
       break;
     // Commands used in Ads1259_get_conversion_data()
     case ADS1259_START_CONV:
-      LOG_DEBUG("CONVERSIONS STARTED \n");
       break;
     case ADS1259_READ_DATA_BY_OPCODE:
-      LOG_DEBUG("SETTING CONVERSION DATA\n");
       prv_spi_return_conv_data(rx_data, s_test_mode);
       break;
   }
@@ -178,32 +197,48 @@ void setup_test() {
   TEST_ASSERT_OK(ads1259_init(&settings, &s_storage));
   TEST_ASSERT_EQUAL(0, (s_registers.FSC_0 | s_registers.FSC_1 | s_registers.FSC_2));
   TEST_ASSERT_EQUAL(0, (s_registers.OFC_0 | s_registers.OFC_1 | s_registers.OFC_2));
-  TEST_ASSERT_EQUAL(register_lookup[0],s_registers.CONFIG_0);
-  TEST_ASSERT_EQUAL(register_lookup[1],s_registers.CONFIG_1);
-  TEST_ASSERT_EQUAL(register_lookup[2],s_registers.CONFIG_2);
+  TEST_ASSERT_EQUAL(register_lookup[0], s_registers.CONFIG_0);
+  TEST_ASSERT_EQUAL(register_lookup[1], s_registers.CONFIG_1);
+  TEST_ASSERT_EQUAL(register_lookup[2], s_registers.CONFIG_2);
 }
 
 void teardown_test(void) {}
 
 void test_ads1259_get_conversion_data() {
-  // test with max data
-  s_test_mode = ADS1259_MODE_MAX_DATA;
-  uint32_t test_raw = 0xFFFFFF;
+  // test with max pos data
+  s_test_mode = ADS1259_MODE_MAX_POS_DATA;
+  uint32_t test_raw = 0x7FFFFF;
   ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_EQUAL(0xFF, s_storage.conv_data.MSB | s_storage.conv_data.MID | s_storage.conv_data.LSB);
+  TEST_ASSERT_EQUAL(0xFF, s_storage.conv_data.LSB | s_storage.conv_data.MID);
+  TEST_ASSERT_EQUAL(0x7F, s_storage.conv_data.MSB);
   TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
-  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / pow(2, 20), s_storage.reading);
-  TEST_ASSERT_EQUAL(49.999952, s_storage.reading);
+  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / (pow(2, 19) - 1), s_storage.reading);
+  TEST_ASSERT_EQUAL(50, s_storage.reading);
 
-  // test with min data
-  s_test_mode = ADS1259_MODE_MIN_DATA;
-  test_raw = 0x000000;
+  // test with max neg data
+  s_test_mode = ADS1259_MODE_MAX_NEG_DATA;
+  test_raw = 0x800000;
   ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_EQUAL(0x00, s_storage.conv_data.MSB | s_storage.conv_data.MID | s_storage.conv_data.LSB);
-  TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
-  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / pow(2, 20), s_storage.reading);
+  TEST_ASSERT_EQUAL(-50, s_storage.reading);
+
+  // test with min readable pos data
+  s_test_mode = ADS1259_MODE_MIN_POS_DATA;
+  ads1259_get_conversion_data(&s_storage);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  TEST_ASSERT_EQUAL(0.000095, s_storage.reading);
+
+  // test with min readable pos data
+  s_test_mode = ADS1259_MODE_MIN_NEG_DATA;
+  ads1259_get_conversion_data(&s_storage);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  TEST_ASSERT_EQUAL(-0.000095, s_storage.reading);
+
+  // test with zero data
+  s_test_mode = ADS1259_MODE_ZERO_DATA;
+  ads1259_get_conversion_data(&s_storage);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS);
   TEST_ASSERT_EQUAL(0, s_storage.reading);
 
   // test with a random data set
@@ -211,12 +246,11 @@ void test_ads1259_get_conversion_data() {
   test_raw = 0x102030;
   ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
-  TEST_ASSERT_EQUAL(0x10,s_storage.conv_data.MSB);
-  TEST_ASSERT_EQUAL(0x20,s_storage.conv_data.MID);
-  TEST_ASSERT_EQUAL(0x30,s_storage.conv_data.LSB);
+  TEST_ASSERT_EQUAL(0x10, s_storage.conv_data.MSB);
+  TEST_ASSERT_EQUAL(0x20, s_storage.conv_data.MID);
+  TEST_ASSERT_EQUAL(0x30, s_storage.conv_data.LSB);
   TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
-  TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / pow(2, 20), s_storage.reading);
-  TEST_ASSERT_EQUAL(3.149557, s_storage.reading);
+  TEST_ASSERT_EQUAL(6.299126, s_storage.reading);
 
   // test checksum fault triggered
   s_test_mode = ADS1259_MODE_CHECKSUM_FAULT;

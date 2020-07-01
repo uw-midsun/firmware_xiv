@@ -67,7 +67,7 @@ typedef enum Ads1259DataRate {
 #define ADS1259_CONVERSION_CONTROL_MODE_PULSE 0x10  // Set Conversion mode to pulse
 #define ADS1259_DATA_RATE_SPS ADS1259_DATA_RATE_60
 
-//Offset used in Checksum calculation
+// Offset used in Checksum calculation
 #define ADS1259_CHECKSUM_OFFSET 0x9B
 
 typedef enum Ads1259RxByte {
@@ -81,4 +81,5 @@ typedef enum Ads1259RxByte {
 #define NUM_CONFIG_REGISTERS 3
 #define NUM_REGISTER_WRITE_COMM 5
 #define CHK_SUM_FLAG_BIT 0x80
-
+#define RX_NEG_VOLTAGE_BIT 0x800000
+#define RX_MAX_VALUE 0x1000000
