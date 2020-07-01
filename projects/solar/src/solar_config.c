@@ -9,21 +9,6 @@
 #define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 
-static const Mcp3427Settings s_current_mcp3427_settings = {
-  .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
-  .addr_pin_0 = MCP3427_PIN_STATE_LOW,
-  .addr_pin_1 = MCP3427_PIN_STATE_LOW,
-  .amplifier_gain = MCP3427_AMP_GAIN_1,
-  .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
-  .port = I2C_PORT_1,
-  .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
-  .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
-};
-
-const SenseCurrentSettings sense_current_settings = {
-  .current_mcp3427_settings = &s_current_mcp3427_settings,
-};
-
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|
 static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
   .mcp3427s =
