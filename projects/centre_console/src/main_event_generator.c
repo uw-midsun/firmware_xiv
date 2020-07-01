@@ -3,6 +3,7 @@
 #include "charging_manager.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
+#include "fault_monitor.h"
 #include "log.h"
 #include "pedal_monitor.h"
 #include "power_fsm.h"
@@ -67,7 +68,7 @@ bool prv_process_drive_reverse_event(MainEventGeneratorStorage *storage, const E
 
   prv_power_main_or_return(storage);
 
-  const ChargingState charging_state = *get_global_charging_state();
+  const ChargingState charging_state = get_global_charging_state();
   if (charging_state == CHARGING_STATE_CHARGING) {
     return false;
   }

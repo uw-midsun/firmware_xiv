@@ -31,19 +31,14 @@
   { .port = GPIO_PORT_A, .pin = 4 }
 
 typedef enum {
-  TEST_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
+  TEST_LTC_AFE_TRIGGER_CELL_CONV_EVENT = 0,
   TEST_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
   TEST_LTC_AFE_TRIGGER_AUX_CONV_EVENT,
   TEST_LTC_AFE_AUX_CONV_COMPLETE_EVENT,
   TEST_LTC_AFE_CALLBACK_RUN_EVENT,
   TEST_LTC_AFE_FAULT_EVENT,
-  TEST_LTC_EVENTS,
+  NUM_TEST_LTC_EVENTS,
 } TestLtcAfeEvents;
-
-#define TEST_LTC_AFE_NUM_SAMPLES 100
-// Maximum total measurement error in filtered mode - +/-2.8mV
-// Maximum peak-to-peak at 7kHz: +/-250uV
-#define TEST_LTC_AFE_VOLTAGE_VARIATION 5
 
 static LtcAfeStorage s_afe;
 static uint16_t s_result_arr[TEST_LTC_AFE_NUM_CELLS];
@@ -79,10 +74,12 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
       memcpy(rx_data, registers, sizeof(registers));
       break;
       break;
+    case LTC6811_WRCOMM_RESERVED:
+    case LTC6811_RDCOMM_RESERVED:
+    case LTC6811_STCOMM_RESERVED:
     case LTC6811_RDCFG_RESERVED:
     case LTC6811_RDSTATA_RESERVED:
     case LTC6811_RDSTATB_RESERVED:
-    case LTC6811_RDCOMM_RESERVED:
     default:
       TEST_ASSERT_NULL(rx_data);
       break;
@@ -149,71 +146,25 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-void test_ltc_afe_adc_conversion_initiated(void) {
+void test_ltc_afe_cell_conversion_initiated(void) {
   TEST_ASSERT_OK(ltc_afe_request_cell_conversion(&s_afe));
   prv_wait_conv();
 
-  // if the ADC conversion packet is valid, then these should be voltage values
-  // otherwise, the reading will correspond to the values the registers are
-  // initialized as by default (0xFF)
+  // Expect to read some value from cells
   for (int i = 0; i < TEST_LTC_AFE_NUM_CELLS; ++i) {
     TEST_ASSERT_NOT_EQUAL(0xFFFF, s_result_arr[i]);
+    TEST_ASSERT_NOT_EQUAL(0x0000, s_result_arr[i]);
   }
 }
 
-void test_ltc_afe_read_all_voltage_repeated_within_tolerances(void) {
-  // the idea here is that we repeatedly take samples and verify that the values being read
-  // are within an acceptable tolerance
-  struct {
-    uint16_t min;
-    uint16_t max;
-  } bounds[TEST_LTC_AFE_NUM_CELLS] = { 0 };
+void test_ltc_afe_aux_conversion_initiated(void) {
+  TEST_ASSERT_OK(ltc_afe_request_aux_conversion(&s_afe));
+  prv_wait_conv();
 
-  for (int i = 0; i < TEST_LTC_AFE_NUM_CELLS; i++) {
-    bounds[i].min = UINT16_MAX;
-  }
-
-  for (int sample = 0; sample < TEST_LTC_AFE_NUM_SAMPLES; ++sample) {
-    TEST_ASSERT_OK(ltc_afe_request_cell_conversion(&s_afe));
-    prv_wait_conv();
-
-    for (int cell = 0; cell < TEST_LTC_AFE_NUM_CELLS; ++cell) {
-      bounds[cell].min = MIN(s_result_arr[cell], bounds[cell].min);
-      bounds[cell].max = MAX(s_result_arr[cell], bounds[cell].max);
-    }
-  }
-
-  for (size_t i = 0; i < TEST_LTC_AFE_NUM_CELLS; i++) {
-    uint16_t delta = bounds[i].max - bounds[i].min;
-    LOG_DEBUG("C%zu delta %d (min %d, max %d)\n", i, delta, bounds[i].min, bounds[i].max);
-  }
-}
-
-void test_ltc_afe_read_all_aux_repeated_within_tolerances(void) {
-  // the idea here is that we repeatedly take samples and verify that the values being read
-  // are within an acceptable tolerance
-  struct {
-    uint16_t min;
-    uint16_t max;
-  } bounds[TEST_LTC_AFE_NUM_CELLS] = { 0 };
-
-  for (int i = 0; i < TEST_LTC_AFE_NUM_CELLS; i++) {
-    bounds[i].min = UINT16_MAX;
-  }
-
-  for (int sample = 0; sample < TEST_LTC_AFE_NUM_SAMPLES; ++sample) {
-    TEST_ASSERT_OK(ltc_afe_request_aux_conversion(&s_afe));
-    prv_wait_conv();
-
-    for (int cell = 0; cell < TEST_LTC_AFE_NUM_CELLS; ++cell) {
-      bounds[cell].min = MIN(bounds[cell].min, s_result_arr[cell]);
-      bounds[cell].max = MAX(bounds[cell].max, s_result_arr[cell]);
-    }
-  }
-
-  for (size_t i = 0; i < TEST_LTC_AFE_NUM_CELLS; i++) {
-    uint16_t delta = bounds[i].max - bounds[i].min;
-    LOG_DEBUG("C%zu aux delta %d (min %d, max %d)\n", i, delta, bounds[i].min, bounds[i].max);
+  // Expect to read some value from cells
+  for (int i = 0; i < TEST_LTC_AFE_NUM_CELLS; ++i) {
+    TEST_ASSERT_NOT_EQUAL(0xFFFF, s_result_arr[i]);
+    TEST_ASSERT_NOT_EQUAL(0x0000, s_result_arr[i]);
   }
 }
 
