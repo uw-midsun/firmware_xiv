@@ -229,7 +229,7 @@ void test_ads1259_get_conversion_data() {
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
   TEST_ASSERT_EQUAL(0.000095, s_storage.reading);
 
-  // test with min readable pos data
+  // test with min readable neg data
   s_test_mode = ADS1259_MODE_MIN_NEG_DATA;
   ads1259_get_conversion_data(&s_storage);
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
