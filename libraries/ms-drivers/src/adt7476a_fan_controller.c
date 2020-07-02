@@ -2,8 +2,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "adt_7476a_fan_controller.h"
-#include "adt_7476a_fan_controller_defs.h"
+#include "adt7476a_fan_controller.h"
+#include "adt7476a_fan_controller_defs.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "i2c.h"
