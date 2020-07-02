@@ -12,8 +12,7 @@
 #include "mcp2515.h"
 #include "soft_timer.h"
 
-#define TX_CONTROL_START_CHARGING 0
-#define TX_CONTROL_STOP_CHARGING 1
+typedef enum { TX_CONTROL_START_CHARGING = 0, TX_CONTROL_STOP_CHARGING } TxControl;
 
 static SoftTimerId s_charger_timer_id;
 static ChargerVC s_vc = {
@@ -34,13 +33,13 @@ static Mcp2515Settings mcp2515_settings = {
   .loopback = false,                             //
 };
 
-static TxMsgData prv_build_charger_tx(bool start_charging) {
+static TxMsgData prv_build_charger_tx(TxControl charge) {
   TxMsgData tx_data = {
-    .fields.max_voltage_high = s_vc.values.bytes.voltage_high,                               //
-    .fields.max_voltage_low = s_vc.values.bytes.voltage_low,                                 //
-    .fields.max_current_high = s_vc.values.bytes.current_high,                               //
-    .fields.max_current_low = s_vc.values.bytes.current_low,                                 //
-    .fields.control = start_charging ? TX_CONTROL_START_CHARGING : TX_CONTROL_STOP_CHARGING  //
+    .fields.max_voltage_high = s_vc.values.bytes.voltage_high,  //
+    .fields.max_voltage_low = s_vc.values.bytes.voltage_low,    //
+    .fields.max_current_high = s_vc.values.bytes.current_high,  //
+    .fields.max_current_low = s_vc.values.bytes.current_low,    //
+    .fields.control = charge,                                   //
   };
   return tx_data;
 }
@@ -60,7 +59,8 @@ static void prv_periodic_charger_tx(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(CHARGER_TX_PERIOD_MS, prv_periodic_charger_tx, NULL, &s_charger_timer_id);
 }
 
-void prv_charger_can_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+static void prv_charger_can_rx(uint32_t id, bool extended, uint64_t data, size_t dlc,
+                               void *context) {
   if (id != CHARGER_RX_CAN_ID) {
     return;
   }

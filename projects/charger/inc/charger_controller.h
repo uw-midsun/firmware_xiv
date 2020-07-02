@@ -1,7 +1,7 @@
 #pragma once
 
-// requires gpio, soft timers, CAN, and the event queue to be initialized
 // Acts as the charger driver, handling detailed interaction
+// requires gpio, soft timers, CAN, and the event queue to be initialized
 
 #include <stdint.h>
 
@@ -9,6 +9,7 @@
 
 #define CHARGER_TX_PERIOD_MS 1000
 
+// values defined by J1772 standard
 #define CHARGER_TX_CAN_ID 0x1806E5F4
 #define CHARGER_RX_CAN_ID 0x18FF50E5
 

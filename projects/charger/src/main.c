@@ -1,3 +1,4 @@
+#include "adc.h"
 #include "battery_monitor.h"
 #include "begin_sequence.h"
 #include "can.h"
@@ -25,6 +26,7 @@ static CanSettings s_can_settings = {
 
 int main(void) {
   gpio_init();
+  adc_init(ADC_MODE_SINGLE);
   interrupt_init();
   soft_timer_init();
   event_queue_init();

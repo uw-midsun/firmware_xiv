@@ -34,35 +34,35 @@ void test_various_duty_cycles(void) {
   s_duty_cycle = low_no_charge_allowed_dc;
   answer = 0;
   actual = control_pilot_get_current();
-  TEST_ASSERT(actual == answer);
+  TEST_ASSERT_EQUAL(answer, actual);
 
   // case 2
   s_duty_cycle = max_6A_dc;
   answer = 60;  // max allowed should be 6.0 amps
   actual = control_pilot_get_current();
-  TEST_ASSERT(actual == answer);
+  TEST_ASSERT_EQUAL(answer, actual);
 
   // case 3
   s_duty_cycle = dc_times_point_6_dc;
   answer = 360;  // 600 * 0.6 = 360
   actual = control_pilot_get_current();
-  TEST_ASSERT(actual == answer);
+  TEST_ASSERT_EQUAL(answer, actual);
 
   // case 4
   s_duty_cycle = dc_minus_64_times_2_point_5_dc;
   answer = 550;  // (860 - 640) * 2.5 = 550
   actual = control_pilot_get_current();
-  TEST_ASSERT(actual == answer);
+  TEST_ASSERT_EQUAL(answer, actual);
 
   // case 5
   s_duty_cycle = max_80A_dc;
   answer = 800;
   actual = control_pilot_get_current();
-  TEST_ASSERT(actual == answer);
+  TEST_ASSERT_EQUAL(answer, actual);
 
   // case 6
   s_duty_cycle = high_no_charge_allowed_dc;
   answer = 0;
   actual = control_pilot_get_current();
-  TEST_ASSERT(actual == answer);
+  TEST_ASSERT_EQUAL(answer, actual);
 }

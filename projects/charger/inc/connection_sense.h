@@ -1,7 +1,7 @@
 #pragma once
 
-// requires gpio, soft timers, CAN, and event queue to be initialized
 // periodically polls the connection pin and raises events upon state change
+// requires gpio, ADC, soft timers, CAN, and event queue to be initialized
 
 #include "status.h"
 

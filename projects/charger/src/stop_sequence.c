@@ -10,7 +10,7 @@ static const GpioAddress s_cp_select = CONTROL_PILOT_SEL_PIN;
 static const GpioAddress s_relay_en = RELAY_EN_PIN;
 static const GpioAddress s_load_sw_en = LOAD_SW_EN_PIN;
 
-void prv_stop_sequence() {
+static void prv_stop_sequence() {
   // 1. Deactivate charger
   charger_controller_deactivate();
 

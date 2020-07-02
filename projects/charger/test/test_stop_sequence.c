@@ -34,11 +34,11 @@ void test_stop_sequence(void) {
   Event e = { 0 };
   MS_TEST_HELPER_AWAIT_EVENT(e);
 
-  TEST_ASSERT(s_charger_deactivate_calls == 0);
-  TEST_ASSERT(s_gpio_set_state_calls == 0);
+  TEST_ASSERT_EQUAL(0, s_charger_deactivate_calls);
+  TEST_ASSERT_EQUAL(0, s_gpio_set_state_calls);
 
   stop_sequence_process_event(&e);
 
-  TEST_ASSERT(s_charger_deactivate_calls == 1);
-  TEST_ASSERT(s_gpio_set_state_calls == NUM_GPIO_SET_CALLS_IN_STOP_SEQUENCE);
+  TEST_ASSERT_EQUAL(1, s_charger_deactivate_calls);
+  TEST_ASSERT_EQUAL(NUM_GPIO_SET_CALLS_IN_STOP_SEQUENCE, s_gpio_set_state_calls);
 }

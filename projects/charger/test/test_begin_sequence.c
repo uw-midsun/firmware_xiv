@@ -75,8 +75,8 @@ void test_begin_sequence_happy_path(void) {
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
 
   // assert correct number of function calls occured
-  TEST_ASSERT(s_charger_activate_calls == 1);
-  TEST_ASSERT(s_gpio_set_state_calls == NUM_GPIO_SET_CALLS_IN_BEGIN_SEQUENCE);
+  TEST_ASSERT_EQUAL(1, s_charger_activate_calls);
+  TEST_ASSERT_EQUAL(NUM_GPIO_SET_CALLS_IN_BEGIN_SEQUENCE, s_gpio_set_state_calls);
 }
 
 void test_begin_sequence_sad_path(void) {
@@ -92,16 +92,16 @@ void test_begin_sequence_sad_path(void) {
   // tx and rx the permission request
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
 
-  TEST_ASSERT(s_charger_activate_calls == 0);
-  TEST_ASSERT(s_gpio_set_state_calls == 0);
+  TEST_ASSERT_EQUAL(0, s_charger_activate_calls);
+  TEST_ASSERT_EQUAL(0, s_gpio_set_state_calls);
 
   // tx and rx the allow charging message to trigger callback
   CAN_TRANSMIT_ALLOW_CHARGING();
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
 
   // assert no calls occured
-  TEST_ASSERT(s_charger_activate_calls == 0);
-  TEST_ASSERT(s_gpio_set_state_calls == 0);
+  TEST_ASSERT_EQUAL(0, s_charger_activate_calls);
+  TEST_ASSERT_EQUAL(0, s_gpio_set_state_calls);
 }
 
 void test_no_permission(void) {
@@ -116,6 +116,6 @@ void test_no_permission(void) {
 
   // assert nothing happens
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  TEST_ASSERT(s_charger_activate_calls == 0);
-  TEST_ASSERT(s_gpio_set_state_calls == 0);
+  TEST_ASSERT_EQUAL(0, s_charger_activate_calls);
+  TEST_ASSERT_EQUAL(0, s_gpio_set_state_calls);
 }

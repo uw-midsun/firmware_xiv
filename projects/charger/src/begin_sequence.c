@@ -18,7 +18,7 @@ static const GpioAddress s_charger_sense = CHARGER_SENSE_PIN;
 static const GpioAddress s_relay_en = RELAY_EN_PIN;
 static const GpioAddress s_load_sw_en = LOAD_SW_EN_PIN;
 
-StatusCode prv_sequence(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_sequence(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   GpioState state = NUM_GPIO_STATES;
 
   // 1. Ensure charger is on

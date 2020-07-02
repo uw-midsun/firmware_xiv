@@ -38,6 +38,9 @@ static ConnectionState prv_read_conn_state() {
 
 static void prv_periodic_cs_poll(SoftTimerId timer_id, void *context) {
   ConnectionState cur_state = prv_read_conn_state();
+  if (cur_state == NUM_CHARGER_CONNECTION_STATES) {
+    cur_state = CHARGER_STATE_UNPLUGGED;
+  }
 
   if (cur_state != s_prev_state) {
     if (cur_state == CHARGER_STATE_UNPLUGGED) {
@@ -65,7 +68,6 @@ StatusCode connection_sense_init() {
   };
 
   gpio_init_pin(&cs_address, &cs_settings);
-  adc_init(ADC_MODE_SINGLE);
   adc_get_channel(cs_address, &s_connection_adc_channel);
   adc_set_channel(s_connection_adc_channel, true);
 

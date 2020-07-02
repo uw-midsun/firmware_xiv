@@ -48,7 +48,8 @@ StatusCode TEST_MOCK(mcp2515_register_cbs)(Mcp2515Storage *storage, Mcp2515RxCb 
   return STATUS_CODE_OK;
 }
 
-StatusCode prv_charger_fault_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_charger_fault_rx(const CanMessage *msg, void *context,
+                                       CanAckStatus *ack_reply) {
   RxMsgData rx_data = { .raw = msg->data };
   s_charger_fault_counter++;
   uint8_t prev_fault = NUM_EE_CHARGER_FAULTS;
@@ -78,17 +79,18 @@ void test_activate_deactivate() {
                    .values.complete.voltage = CHARGER_BATTERY_THRESHOLD };
 
   Event e = { 0 };
-  TEST_ASSERT(s_msg_txed == 0);
+  TEST_ASSERT_EQUAL(0, s_msg_txed);
   TEST_ASSERT_OK(charger_controller_activate(vc.values.complete.current));
-  TEST_ASSERT(s_msg_txed == 1);
-  TEST_ASSERT_OK(charger_controller_deactivate());
-  TEST_ASSERT(s_msg_txed = 2);
+  TEST_ASSERT_EQUAL(1, s_msg_txed);
 
   TxMsgData tx_data = { .raw = s_tx_msg.data };
-  TEST_ASSERT(tx_data.fields.max_voltage_high = vc.values.bytes.voltage_high);
-  TEST_ASSERT(tx_data.fields.max_voltage_low = vc.values.bytes.voltage_low);
-  TEST_ASSERT(tx_data.fields.max_current_high = vc.values.bytes.current_high);
-  TEST_ASSERT(tx_data.fields.max_current_low = vc.values.bytes.current_low);
+  TEST_ASSERT_EQUAL(vc.values.bytes.voltage_high, tx_data.fields.max_voltage_high);
+  TEST_ASSERT_EQUAL(vc.values.bytes.voltage_low, tx_data.fields.max_voltage_low);
+  TEST_ASSERT_EQUAL(vc.values.bytes.current_high, tx_data.fields.max_current_high);
+  TEST_ASSERT_EQUAL(vc.values.bytes.current_low, tx_data.fields.max_current_low);
+
+  TEST_ASSERT_OK(charger_controller_deactivate());
+  TEST_ASSERT_EQUAL(2, s_msg_txed);
 }
 
 void test_rx() {
@@ -98,18 +100,18 @@ void test_rx() {
 
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_CHARGER_FAULT, prv_charger_fault_rx, NULL);
 
-  TEST_ASSERT(s_msg_txed == 0);
+  TEST_ASSERT_EQUAL(0, s_msg_txed);
   s_mcp2515_cb(CHARGER_RX_CAN_ID, true, rx_data.raw, sizeof(rx_data), NULL);
-  TEST_ASSERT(s_msg_txed == 1);
+  TEST_ASSERT_EQUAL(1, s_msg_txed);
 
-  TEST_ASSERT(s_charger_fault_counter == 0);
-  TEST_ASSERT(s_prev_charger_fault == NUM_EE_CHARGER_FAULTS);
+  TEST_ASSERT_EQUAL(0, s_charger_fault_counter);
+  TEST_ASSERT_EQUAL(NUM_EE_CHARGER_FAULTS, s_prev_charger_fault);
   MS_TEST_HELPER_CAN_TX(CHARGER_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_TX(CHARGER_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_RX(CHARGER_CAN_EVENT_RX);
-  TEST_ASSERT(s_charger_fault_counter == 1);
-  TEST_ASSERT(s_prev_charger_fault == EE_CHARGER_FAULT_HARDWARE_FAILURE);
+  TEST_ASSERT_EQUAL(1, s_charger_fault_counter);
+  TEST_ASSERT_EQUAL(EE_CHARGER_FAULT_HARDWARE_FAILURE, s_prev_charger_fault);
   MS_TEST_HELPER_CAN_RX(CHARGER_CAN_EVENT_RX);
-  TEST_ASSERT(s_charger_fault_counter == 2);
-  TEST_ASSERT(s_prev_charger_fault == EE_CHARGER_FAULT_COMMUNICATION_TIMEOUT);
+  TEST_ASSERT_EQUAL(2, s_charger_fault_counter);
+  TEST_ASSERT_EQUAL(EE_CHARGER_FAULT_COMMUNICATION_TIMEOUT, s_prev_charger_fault);
 }

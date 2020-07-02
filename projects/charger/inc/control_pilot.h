@@ -1,7 +1,7 @@
 #pragma once
 
-// requires gpio to be initialized
 // This module wraps PWM to facilitate getting the current from a PWM reading
+// requires gpio to be initialized
 
 #include <stdint.h>
 

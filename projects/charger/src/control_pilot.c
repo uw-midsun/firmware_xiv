@@ -8,6 +8,10 @@
 
 #include "log.h"
 
+// arbitrary PWM resources since PWM isn't used elsewhere in the project.
+#define CONTROL_PILOT_PWM_TIMER PWM_TIMER_3
+#define CONTROL_PILOT_PWM_CHANNEL PWM_CHANNEL_1
+
 // page 17 of the SAE J1772 standard OCT2017
 // Duty Cycle meaning depends on current:
 // DC <= 8%: no charging allowed
@@ -16,7 +20,7 @@
 // 85% < DC <= 96%: max = (DC% - 64) * 2.5
 // 96% < DC <= 96.5%: max = 80A
 // 96.5 < DC: no charging allowed
-uint16_t prv_duty_to_current(uint32_t duty) {
+static uint16_t prv_duty_to_current(uint32_t duty) {
   // based on a duty cycle representation of ddd.d%
   // return with same representation rrr.r Amps
   uint16_t ret = 0;
@@ -41,7 +45,7 @@ uint16_t control_pilot_get_current() {
 }
 
 StatusCode control_pilot_init() {
-  PwmTimer input_timer = PWM_TIMER_3;
+  PwmTimer input_timer = CONTROL_PILOT_PWM_TIMER;
   GpioAddress cp_address = CONTROL_PILOT_PWM_GPIO_ADDR;
   GpioSettings cp_settings = {
     .direction = GPIO_DIR_IN,     //
@@ -51,6 +55,6 @@ StatusCode control_pilot_init() {
   };
 
   gpio_init_pin(&cp_address, &cp_settings);
-  pwm_input_init(input_timer, PWM_CHANNEL_1);
+  pwm_input_init(input_timer, CONTROL_PILOT_PWM_CHANNEL);
   return STATUS_CODE_OK;
 }
