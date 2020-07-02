@@ -2,20 +2,20 @@
 
 // this module implements a generic mutex-protected ring buffer
 
-#include <stdint.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdint.h>
 
 #include "status.h"
 
-#define MAX_BUFFER_SIZE 64
+#define MAX_BUFFER_SIZE 128
 
 typedef struct Ring {
-  uint8_t item_size;      // size of item
-  uint32_t buffer_size;   // buffer size
+  uint8_t item_size;     // size of item
+  uint32_t buffer_size;  // buffer size
   uint32_t write_index;
   uint32_t read_index;
-  void *buffer;           // dynamically allocated buffer
+  void *buffer;  // dynamically allocated buffer
   sem_t space_count;
   sem_t item_count;
   uint32_t read_item_count;
@@ -23,11 +23,7 @@ typedef struct Ring {
 } Ring;
 
 // Creates a new ring buffer.
-// Params
-// item_size: sizeof(item)
-// buffer_size: max number of items
-// out: will contain new Ring if successful, NULL if not
-StatusCode ring_create(uint8_t item_size, uint32_t buffer_size, Ring **out);
+StatusCode ring_create(size_t item_size, uint32_t buffer_size, Ring **out);
 
 // Destroys and cleans up a ring buffer.
 StatusCode ring_destroy(Ring *ring);
@@ -38,10 +34,14 @@ StatusCode ring_write(Ring *ring, void *item);
 // Writes an item to the ring buffer. Fails if buffer is full.
 StatusCode ring_try_write(Ring *ring, void *item);
 
-// Reads an item from the buffer and removes it.
-// out will be NULL if read failed.
-StatusCode ring_read(Ring *ring, void *out);
+// Writes an item to the ring buffer. Waits if buffer is full.
+StatusCode ring_wait_write(Ring *ring, void *item);
+
+// Reads an item from the buffer and removes it. Waits if buffer is empty.
+StatusCode ring_wait_read(Ring *ring, void *out);
+
+// Reads an item from the buffer and removes it. Fails if buffer is empty.
+StatusCode ring_try_read(Ring *ring, void *item);
 
 // Reads an item from the buffer but doesn't remove it.
-// out will be NULL if read failed.
 StatusCode ring_look(Ring *ring, void *out);

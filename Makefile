@@ -69,9 +69,9 @@ DEP_VAR_DIR := $(BUILD_DIR)/dep_var/$(PLATFORM)
 
 # Set target binary - invalid for targets with more than one binary
 ifeq (,$(TEST))
-TARGET_BINARY = $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT)
+TARGET_BINARY = $(BIN_DIR)/$(PIECE)$(PROJECT)$(PLATFORM_EXT)
 else
-TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
+TARGET_BINARY = $(BIN_DIR)/test/$(PIECE)$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)

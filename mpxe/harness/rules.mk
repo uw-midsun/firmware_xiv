@@ -7,4 +7,3 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
-
