@@ -59,7 +59,7 @@ $($(T)_TESTS): $($(T)_TEST_BIN_DIR)/%_runner$(PLATFORM_EXT): \
 
 .PHONY: test test_ test_$(T)
 
-ifeq ($(T),$(filter $(T),$(LIBRARY) $(PROJECT)))
+ifeq ($(T),$(filter $(T),$(LIBRARY) $(PROJECT) $(PIECE)))
 ifeq (,$(TEST))
 test: test_$(T)
 
