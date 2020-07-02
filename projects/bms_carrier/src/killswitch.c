@@ -7,7 +7,7 @@
 static void prv_killswitch_handler(const GpioAddress *address, void *context) {
   GpioState state = NUM_GPIO_STATES;
   gpio_get_state(address, &state);
-  bool clear = state == GPIO_STATE_LOW ? true : false;
+  bool clear = state == GPIO_STATE_LOW;
   fault_bps(EE_BPS_STATE_FAULT_KILLSWITCH, clear);
 }
 

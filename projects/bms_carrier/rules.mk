@@ -9,6 +9,6 @@
 $(T)_DEPS := ms-common ms-helper
 
 ifeq (x86,$(PLATFORM))
-$(T)_test_killswitch_MOCKS := debouncer_init_pin gpio_get_state fault_bps
+$(T)_test_killswitch_MOCKS := gpio_get_state fault_bps
 $(T)_test_bps_heartbeat_MOCKS := fault_bps
 endif

@@ -13,8 +13,6 @@ static uint8_t s_bps_fault_mask = 0;
 static bool s_bps_fault_clear = false;
 static uint8_t s_fault_bps_calls = 0;
 static GpioState s_gpio_state_get = NUM_GPIO_STATES;
-static GpioItCallback s_registered_callback = NULL;
-static void *s_registered_context = NULL;
 
 static DebouncerStorage s_killswitch_storage = { 0 };
 
@@ -30,16 +28,7 @@ StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *stat
   return STATUS_CODE_OK;
 }
 
-StatusCode TEST_MOCK(debouncer_init_pin)(DebouncerStorage *debouncer, const GpioAddress *address,
-                                         GpioItCallback callback, void *context) {
-  s_registered_callback = callback;
-  s_registered_context = context;
-  return STATUS_CODE_OK;
-}
-
 void setup_test(void) {
-  s_registered_callback = NULL;
-  s_registered_context = NULL;
   s_bps_fault_mask = 0;
   s_bps_fault_clear = false;
   s_fault_bps_calls = 0;
