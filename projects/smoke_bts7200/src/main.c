@@ -17,8 +17,8 @@
 #define CURRENT_MEASURE_INTERVAL_MS 500  // Set wait time between each set of readings
 #define IS_FRONT_POWER_DISTRO true       // Set whether to test FRONT or REAR power distro
 
-#define NUM_TEST_CHANNELS \
-  8  // Number of channels to be tested, MUST match the number of elements in test_channels
+// Number of channels to be tested, MUST match the number of elements in test_channels
+#define NUM_TEST_CHANNELS 8
 // Set of channels to be tested, the number of elements MUST match NUM_TEST_CHANNELS. Range of
 // channels: 0-7
 static uint8_t test_channels[NUM_TEST_CHANNELS] = { 0, 1, 2, 3, 4, 5, 6, 7 };
