@@ -118,35 +118,17 @@ StatusCode TEST_MOCK(mcp3427_start)(void) {
   return STATUS_CODE_OK;
 }
 
-// these are updated when |data_store_set| is called
-static uint8_t s_times_data_store_set_called;
-static DataPoint s_data_store_set_data_point;
-static uint16_t s_data_store_set_value;
-
-// set this to set the return code of |data_store_set|
-static StatusCode s_data_store_set_return_code;
-
-StatusCode TEST_MOCK(data_store_set)(DataPoint point, uint16_t value) {
-  s_times_data_store_set_called++;
-  s_data_store_set_data_point = point;
-  s_data_store_set_value = value;
-  return s_data_store_set_return_code;
-}
-
 void setup_test(void) {
   interrupt_init();
   soft_timer_init();
   event_queue_init();
+  data_store_init();
   // The dependencies on I2C and sense are mocked out, so we don't initialize them
 
   s_num_sense_callbacks = 0;
   s_num_mcp3427_callbacks = 0;
   s_num_mcp3427_fault_callbacks = 0;
   s_times_mcp3427_start_called = 0;
-  s_times_data_store_set_called = 0;
-  s_data_store_set_data_point = NUM_DATA_POINTS;  // invalid
-  s_data_store_set_value = 0;
-  s_data_store_set_return_code = STATUS_CODE_OK;
 }
 void teardown_test(void) {}
 
@@ -162,11 +144,14 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
 
   // make sure the various registration functions were called
+  bool is_set;
+  uint16_t set_value;
   TEST_ASSERT_EQUAL(1, s_num_sense_callbacks);
   TEST_ASSERT_EQUAL(1, s_num_mcp3427_callbacks);
   TEST_ASSERT_EQUAL(1, s_num_mcp3427_fault_callbacks);
-  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);   // |mcp3427_start| not called yet
-  TEST_ASSERT_EQUAL(0, s_times_data_store_set_called);  // |data_store_set| not called yet
+  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // |mcp3427_start| not called yet
+  data_store_get_is_set(TEST_DATA_POINT, &is_set);
+  TEST_ASSERT_EQUAL(false, is_set);  // not setting data yet
   TEST_ASSERT_NOT_NULL(s_sense_callbacks[0]);
   TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[0]);
   TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[0]);
@@ -175,29 +160,28 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   TEST_ASSERT_OK(sense_mcp3427_start());
   TEST_ASSERT_EQUAL(1, s_times_mcp3427_start_called);
 
-  // call the MCP3427 callback, make sure nothing external happened
+  // call the MCP3427 callback, make sure nothing was set yet (we only set data on the sense cycle)
   s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
-  TEST_ASSERT_EQUAL(0, s_times_data_store_set_called);
+  data_store_get_is_set(TEST_DATA_POINT, &is_set);
+  TEST_ASSERT_EQUAL(false, is_set);
 
   // call the sense cycle callback, make sure |data_store_set| is called
   s_sense_callbacks[0](s_sense_callback_contexts[0]);
-  TEST_ASSERT_EQUAL(1, s_times_data_store_set_called);
-  TEST_ASSERT_EQUAL(TEST_DATA_POINT, s_data_store_set_data_point);
-  TEST_ASSERT_EQUAL(TEST_STORED_VALUE, s_data_store_set_value);
+  data_store_get_is_set(TEST_DATA_POINT, &is_set);
+  TEST_ASSERT_EQUAL(true, is_set);
+  data_store_get(TEST_DATA_POINT, &set_value);
+  TEST_ASSERT_EQUAL(TEST_STORED_VALUE, set_value);
 
-  // reset the data point and value for a second cycle
-  s_data_store_set_data_point = NUM_DATA_POINTS;
-  s_data_store_set_value = 0;
+  // reset the data value for a second cycle
+  data_store_set(TEST_DATA_POINT, 0);
 
   // one more cycle, same thing
   s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
-  TEST_ASSERT_EQUAL(1, s_times_data_store_set_called);
   s_sense_callbacks[0](s_sense_callback_contexts[0]);
-  TEST_ASSERT_EQUAL(2, s_times_data_store_set_called);
-  TEST_ASSERT_EQUAL(TEST_DATA_POINT, s_data_store_set_data_point);
-  TEST_ASSERT_EQUAL(TEST_STORED_VALUE, s_data_store_set_value);
+  data_store_get(TEST_DATA_POINT, &set_value);
+  TEST_ASSERT_EQUAL(TEST_STORED_VALUE, set_value);
 
   // no fault events were raised
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -210,13 +194,16 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
 
   // make sure the various registration functions were called
+  bool is_set;
+  uint16_t set_value;
   TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_num_sense_callbacks);
   TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_num_mcp3427_callbacks);
   TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_num_mcp3427_fault_callbacks);
-  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);   // |mcp3427_start| not called yet
-  TEST_ASSERT_EQUAL(0, s_times_data_store_set_called);  // |data_store_set| not called yet
+  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // |mcp3427_start| not called yet
 
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
+    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    TEST_ASSERT_EQUAL(false, is_set);  // nothing set in the data store yet
     TEST_ASSERT_NOT_NULL(s_sense_callbacks[i]);
     TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[i]);
     TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[i]);
@@ -226,22 +213,25 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
   TEST_ASSERT_OK(sense_mcp3427_start());
   TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
 
-  // call the MCP3427 callbacks, make sure nothing external happened
+  // call the MCP3427 callbacks, make sure nothing was set in the data store
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
   }
-  TEST_ASSERT_EQUAL(0, s_times_data_store_set_called);
+  for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
+    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    TEST_ASSERT_EQUAL(false, is_set);
+  }
 
   // call the sense cycle callback, make sure |data_store_set| is called
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    TEST_ASSERT_EQUAL(i + 1, s_times_data_store_set_called);
-    TEST_ASSERT_EQUAL(TEST_DATA_POINT + i, s_data_store_set_data_point);
-    TEST_ASSERT_EQUAL(TEST_STORED_VALUE, s_data_store_set_value);
-    // reset to accurately test the next callback
-    s_data_store_set_data_point = NUM_DATA_POINTS;
-    s_data_store_set_value = 0;
+    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    TEST_ASSERT_EQUAL(true, is_set);
+    data_store_get(TEST_DATA_POINT + i, &set_value);
+    TEST_ASSERT_EQUAL(TEST_STORED_VALUE, set_value);
+    // reset to accurately test the next sense cycle
+    data_store_set(TEST_DATA_POINT + i, 0);
   }
 
   // one more cycle, same thing
@@ -249,22 +239,17 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
     s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
   }
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_data_store_set_called);
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427 + i + 1, s_times_data_store_set_called);
-    TEST_ASSERT_EQUAL(TEST_DATA_POINT + i, s_data_store_set_data_point);
-    TEST_ASSERT_EQUAL(TEST_STORED_VALUE, s_data_store_set_value);
-    // reset to accurately test the next callback
-    s_data_store_set_data_point = NUM_DATA_POINTS;
-    s_data_store_set_value = 0;
+    data_store_get(TEST_DATA_POINT + i, &set_value);
+    TEST_ASSERT_EQUAL(TEST_STORED_VALUE, set_value);
   }
 
   // no fault events were raised
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
-// Test that |data_store_set| isn't called when the sense cycle is before the MCP3427 callback.
+// Test that the data store is not set when the sense cycle is before the MCP3427 callback.
 void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
   SenseMcp3427Settings settings;
   prv_get_max_mcp3427s_settings(&settings);
@@ -276,14 +261,13 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
     TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[i]);
   }
 
+  bool is_set;
+  uint16_t set_value;
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
+    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    TEST_ASSERT_EQUAL(false, is_set);  // the data store was never set
   }
-  TEST_ASSERT_EQUAL(0, s_times_data_store_set_called);  // |data_store_set| wasn't called
-  for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
-    s_sense_callbacks[i](s_sense_callback_contexts[i]);
-  }
-  TEST_ASSERT_EQUAL(0, s_times_data_store_set_called);  // it still wasn't called
 
   TEST_ASSERT_OK(sense_mcp3427_start());
   TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
@@ -293,38 +277,18 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
                          s_mcp3427_callback_contexts[0]);
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
+    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    TEST_ASSERT_EQUAL(i == 0, is_set);  // only the first one sets the data store
   }
-  TEST_ASSERT_EQUAL(1, s_times_data_store_set_called);  // only the first was called
 
+  // call the rest of the mcp3427 callbacks, now the data store should be called
   for (uint8_t i = 1; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
+    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    TEST_ASSERT_EQUAL(true, is_set);
   }
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_data_store_set_called);  // finally all were called
-}
-
-// Test that we log a warning when |data_store_set| returns not ok.
-// We can't automatically test that a log occurs, so you have to manually verify that it occurs.
-void test_sense_mcp3427_data_store_set_not_ok(void) {
-  SenseMcp3427Settings settings = {
-    .mcp3427s = { {
-        .data_point = TEST_DATA_POINT,
-    } },
-    .num_mcp3427s = 1,
-  };
-  settings.mcp3427s[0].mcp3427_settings = s_test_mcp3427_settings;
-  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
-
-  TEST_ASSERT_NOT_NULL(s_sense_callbacks[0]);
-  TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[0]);
-
-  s_data_store_set_return_code = STATUS_CODE_INTERNAL_ERROR;
-  LOG_WARN("Testing bad status code from data_store_set, there should be a warning here:\n");
-  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
-                         s_mcp3427_callback_contexts[0]);
-  s_sense_callbacks[0](s_sense_callback_contexts[0]);  // warning here
-  TEST_ASSERT_EQUAL(1, s_times_data_store_set_called);
 }
 
 // Test that initializing with NULL settings fails gracefully.
