@@ -124,7 +124,7 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   };
   settings.mcp3427s[0].mcp3427_settings = s_test_mcp3427_settings;
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
-  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called); // mcp3427 cycle not started yet
+  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // mcp3427 cycle not started yet
 
   // start the MCP3427 cycles
   TEST_ASSERT_OK(sense_mcp3427_start());
