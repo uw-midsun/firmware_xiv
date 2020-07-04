@@ -7,11 +7,11 @@
 // after this many MCP3427 faults in a row, we raise a fault event
 #define MAX_CONSECUTIVE_MCP3427_FAULTS 3
 
-typedef enum SolarBoardType {
-  SOLAR_BOARD_TYPE_5_MPPT = 0,
-  SOLAR_BOARD_TYPE_6_MPPT,
-  NUM_SOLAR_BOARD_TYPES,
-} SolarBoardType;
+typedef enum SolarMpptCount {
+  SOLAR_BOARD_5_MPPTS = 5,
+  SOLAR_BOARD_6_MPPTS = 6,
+  MAX_SOLAR_BOARD_MPPTS = 6,
+} SolarMpptCount;
 
-StatusCode config_get_sense_mcp3427_settings(SolarBoardType board_type,
+StatusCode config_get_sense_mcp3427_settings(SolarMpptCount mppt_count,
                                              SenseMcp3427Settings *settings);

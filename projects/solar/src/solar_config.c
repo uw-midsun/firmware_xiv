@@ -9,119 +9,123 @@
 #define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 
+// the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
+#define NUM_EXTRA_NON_MPPT_MCP3427S 1
+
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|
 static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
   .mcp3427s =
       {
           // current sense
           {
+              .data_point = DATA_POINT_CURRENT,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_1,
                       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
                       .addr_pin_1 = MCP3427_PIN_STATE_LOW,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN,
                       .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
-                      .port = I2C_PORT_1,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_CURRENT,
           },
           // voltage sense
           {
+              .data_point = DATA_POINT_VOLTAGE_1,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_2,
                       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
                       .addr_pin_1 = MCP3427_PIN_STATE_LOW,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
-                      .port = I2C_PORT_2,
+                      .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_VOLTAGE_1,
           },
           {
+              .data_point = DATA_POINT_VOLTAGE_2,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_2,
                       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
                       .addr_pin_1 = MCP3427_PIN_STATE_FLOAT,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
-                      .port = I2C_PORT_2,
+                      .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_VOLTAGE_2,
           },
           {
+              .data_point = DATA_POINT_VOLTAGE_3,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_2,
                       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
                       .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
-                      .port = I2C_PORT_2,
+                      .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_VOLTAGE_3,
           },
           {
+              .data_point = DATA_POINT_VOLTAGE_4,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_2,
                       .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
                       .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
-                      .port = I2C_PORT_2,
+                      .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_VOLTAGE_4,
           },
           {
+              .data_point = DATA_POINT_VOLTAGE_5,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_2,
                       .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
                       .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
-                      .port = I2C_PORT_2,
+                      .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_VOLTAGE_5,
           },
           {
               // this one is not used on the 5 MPPT board, so it is last
+              .data_point = DATA_POINT_VOLTAGE_6,
               .mcp3427_settings =
                   {
-                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
+                      .port = I2C_PORT_2,
                       .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
                       .addr_pin_1 = MCP3427_PIN_STATE_LOW,
+                      .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
-                      .port = I2C_PORT_2,
+                      .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
                       .adc_data_trigger_event = SOLAR_MCP3427_EVENT_DATA_TRIGGER,
                       .adc_data_ready_event = SOLAR_MCP3427_EVENT_DATA_READY,
                   },
-              .data_point = DATA_POINT_VOLTAGE_6,
           },
       },
 };
 
-static const uint8_t s_board_type_to_num_mcp3427[] = {
-  [SOLAR_BOARD_TYPE_5_MPPT] = 6,
-  [SOLAR_BOARD_TYPE_6_MPPT] = 7,
-};
-
-StatusCode config_get_sense_mcp3427_settings(SolarBoardType board_type,
+StatusCode config_get_sense_mcp3427_settings(SolarMpptCount mppt_count,
                                              SenseMcp3427Settings *settings) {
-  if (board_type >= NUM_SOLAR_BOARD_TYPES || settings == NULL) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   *settings = s_base_sense_mcp3427_settings;
-  settings->num_mcp3427s = s_board_type_to_num_mcp3427[board_type];
+  settings->num_mcp3427s = mppt_count + NUM_EXTRA_NON_MPPT_MCP3427S;
   return STATUS_CODE_OK;
 }

@@ -9,6 +9,7 @@
 #include "sense_mcp3427.h"
 #include "soft_timer.h"
 #include "solar_config.h"
+#include "solar_events.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -18,6 +19,11 @@
 
 // there must be MAX_SOLAR_MCP3427 valid data points after and including this data point
 #define TEST_DATA_POINT DATA_POINT_VOLTAGE_1
+
+// Helper function to get an idx'th unique valid data point
+static DataPoint prv_get_test_data_point(uint8_t idx) {
+  return TEST_DATA_POINT + idx;
+}
 
 typedef enum TestMcp3427Event {
   TEST_MCP3427_EVENT_TRIGGER = 0,
@@ -37,39 +43,27 @@ static Mcp3427Settings s_test_mcp3427_settings = {
   .adc_data_ready_event = TEST_MCP3427_EVENT_READY,
 };
 
-// all possible address combinations of MCP3427s
-static struct {
-  I2CPort port;
-  Mcp3427PinState addr_pin_0;
-  Mcp3427PinState addr_pin_1;
-} s_mcp3427_address_combos[] = {
-  // float & float is the same address as low & low, so we don't include it
-  { I2C_PORT_1, MCP3427_PIN_STATE_LOW, MCP3427_PIN_STATE_LOW },
-  { I2C_PORT_1, MCP3427_PIN_STATE_LOW, MCP3427_PIN_STATE_FLOAT },
-  { I2C_PORT_1, MCP3427_PIN_STATE_LOW, MCP3427_PIN_STATE_HIGH },
-  { I2C_PORT_1, MCP3427_PIN_STATE_FLOAT, MCP3427_PIN_STATE_LOW },
-  { I2C_PORT_1, MCP3427_PIN_STATE_FLOAT, MCP3427_PIN_STATE_HIGH },
-  { I2C_PORT_1, MCP3427_PIN_STATE_HIGH, MCP3427_PIN_STATE_LOW },
-  { I2C_PORT_1, MCP3427_PIN_STATE_HIGH, MCP3427_PIN_STATE_FLOAT },
-  { I2C_PORT_1, MCP3427_PIN_STATE_HIGH, MCP3427_PIN_STATE_HIGH },
-  { I2C_PORT_2, MCP3427_PIN_STATE_LOW, MCP3427_PIN_STATE_LOW },
-  { I2C_PORT_2, MCP3427_PIN_STATE_LOW, MCP3427_PIN_STATE_FLOAT },
-  { I2C_PORT_2, MCP3427_PIN_STATE_LOW, MCP3427_PIN_STATE_HIGH },
-  { I2C_PORT_2, MCP3427_PIN_STATE_FLOAT, MCP3427_PIN_STATE_LOW },
-  { I2C_PORT_2, MCP3427_PIN_STATE_FLOAT, MCP3427_PIN_STATE_HIGH },
-  { I2C_PORT_2, MCP3427_PIN_STATE_HIGH, MCP3427_PIN_STATE_LOW },
-  { I2C_PORT_2, MCP3427_PIN_STATE_HIGH, MCP3427_PIN_STATE_FLOAT },
-  { I2C_PORT_2, MCP3427_PIN_STATE_HIGH, MCP3427_PIN_STATE_HIGH },
-};
-
 // Helper function to get SenseMcp3427Settings that cover the max number of MCP3427s
 static void prv_get_max_mcp3427s_settings(SenseMcp3427Settings *settings) {
+  const Mcp3427PinState s_base_3_digits_to_pin[3] = {
+    MCP3427_PIN_STATE_LOW,
+    MCP3427_PIN_STATE_FLOAT,
+    MCP3427_PIN_STATE_HIGH,
+  };
+
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     settings->mcp3427s[i].mcp3427_settings = s_test_mcp3427_settings;
-    settings->mcp3427s[i].mcp3427_settings.port = s_mcp3427_address_combos[i].port;
-    settings->mcp3427s[i].mcp3427_settings.addr_pin_0 = s_mcp3427_address_combos[i].addr_pin_0;
-    settings->mcp3427s[i].mcp3427_settings.addr_pin_1 = s_mcp3427_address_combos[i].addr_pin_1;
-    settings->mcp3427s[i].data_point = TEST_DATA_POINT + i;
+    settings->mcp3427s[i].data_point = prv_get_test_data_point(i);
+
+    // Generate a unique port/address pin combo for each MCP3427.
+    // There are 2 I2C ports and 8 address pin combos (low & low is the same as float & float).
+    settings->mcp3427s[i].mcp3427_settings.port = (i < 8) ? I2C_PORT_1 : I2C_PORT_2;
+
+    // To generate the address pins, interpret i % 8 + 1 as a 2-digit number in base 3.
+    // That way we skip low & low, which corresponds to 0.
+    uint8_t addr = i % 8 + 1;
+    settings->mcp3427s[i].mcp3427_settings.addr_pin_0 = s_base_3_digits_to_pin[addr % 3];
+    settings->mcp3427s[i].mcp3427_settings.addr_pin_1 = s_base_3_digits_to_pin[addr / 3];
   }
   settings->num_mcp3427s = MAX_SOLAR_MCP3427;
 }
@@ -113,7 +107,7 @@ StatusCode TEST_MOCK(mcp3427_register_fault_callback)(Mcp3427Storage *storage,
 }
 
 // we mock this mostly to prevent actual MCP3427 cycles from starting up
-StatusCode TEST_MOCK(mcp3427_start)(void) {
+StatusCode TEST_MOCK(mcp3427_start)(Mcp3427Storage *storage) {
   s_times_mcp3427_start_called++;
   return STATUS_CODE_OK;
 }
@@ -202,7 +196,7 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
   TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // |mcp3427_start| not called yet
 
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
-    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);  // nothing set in the data store yet
     TEST_ASSERT_NOT_NULL(s_sense_callbacks[i]);
     TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[i]);
@@ -219,19 +213,19 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
                            s_mcp3427_callback_contexts[i]);
   }
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
-    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);
   }
 
   // call the sense cycle callback, make sure |data_store_set| is called
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(true, is_set);
-    data_store_get(TEST_DATA_POINT + i, &set_value);
+    data_store_get(prv_get_test_data_point(i), &set_value);
     TEST_ASSERT_EQUAL(TEST_STORED_VALUE, set_value);
     // reset to accurately test the next sense cycle
-    data_store_set(TEST_DATA_POINT + i, 0);
+    data_store_set(prv_get_test_data_point(i), 0);
   }
 
   // one more cycle, same thing
@@ -241,7 +235,7 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
   }
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    data_store_get(TEST_DATA_POINT + i, &set_value);
+    data_store_get(prv_get_test_data_point(i), &set_value);
     TEST_ASSERT_EQUAL(TEST_STORED_VALUE, set_value);
   }
 
@@ -255,17 +249,11 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
   prv_get_max_mcp3427s_settings(&settings);
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
 
-  // just to make sure we avoid segfaults, make sure register callbacks were called
-  for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
-    TEST_ASSERT_NOT_NULL(s_sense_callbacks[i]);
-    TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[i]);
-  }
-
   bool is_set;
   uint16_t set_value;
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);  // the data store was never set
   }
 
@@ -277,7 +265,7 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
                          s_mcp3427_callback_contexts[0]);
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(i == 0, is_set);  // only the first one sets the data store
   }
 
@@ -286,9 +274,55 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
     s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
-    data_store_get_is_set(TEST_DATA_POINT + i, &is_set);
+    data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(true, is_set);
   }
+}
+
+// Test that a fault event is raised when an MCP3427 faults too much.
+void test_sense_mcp3427_fault(void) {
+  SenseMcp3427Settings settings;
+  prv_get_max_mcp3427s_settings(&settings);
+  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+
+  // fault enough that the next fault will cause a fault event
+  for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
+    for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
+      s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
+      MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+    }
+  }
+
+  // then a single fault event is raised when each MCP3427 exceeds the fault limit
+  // (the data is the data point associated with the MCP3427)
+  Event e = { 0 };
+  for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
+    s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(i));
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  }
+
+  // do it again - fault events happen every MAX_CONSECUTIVE_MCP3427_FAULTS faults
+  for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
+    for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
+      s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
+      MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+    }
+  }
+  for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
+    s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(i));
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  }
+
+  // do it with a single MCP3427 so we know it doesn't have to be done collectively
+  for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
+    s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  }
+  s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(0));
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 // Test that initializing with NULL settings fails gracefully.

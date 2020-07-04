@@ -12,9 +12,6 @@
 // we only use one channel on the MCP3427
 #define SENSE_MCP3427_CHANNEL MCP3427_CHANNEL_1
 
-// after this many MCP3427 faults in a row, we raise a fault event
-#define MAX_CONSECUTIVE_MCP3427_FAULTS 3
-
 static uint8_t s_num_mcp3427s;
 static Mcp3427Storage s_mcp3427_storages[MAX_SOLAR_MCP3427];
 static DataPoint s_mcp3427_data_points[MAX_SOLAR_MCP3427];
