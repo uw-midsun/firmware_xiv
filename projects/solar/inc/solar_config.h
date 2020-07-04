@@ -4,9 +4,6 @@
 
 #include "sense_mcp3427.h"
 
-// after this many MCP3427 faults in a row, we raise a fault event
-#define MAX_CONSECUTIVE_MCP3427_FAULTS 3
-
 typedef enum SolarMpptCount {
   SOLAR_BOARD_5_MPPTS = 5,
   SOLAR_BOARD_6_MPPTS = 6,
