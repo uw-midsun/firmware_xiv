@@ -83,31 +83,18 @@ StatusCode TEST_MOCK(sense_register)(SenseCallback callback, void *context) {
 // these are updated when the mcp3427 mocked functions are called
 static Mcp3427Callback s_mcp3427_callbacks[MAX_SOLAR_MCP3427];
 static void *s_mcp3427_callback_contexts[MAX_SOLAR_MCP3427];
-static uint8_t s_num_mcp3427_callbacks;
 static Mcp3427FaultCallback s_mcp3427_fault_callbacks[MAX_SOLAR_MCP3427];
 static void *s_mcp3427_fault_callback_contexts[MAX_SOLAR_MCP3427];
-static uint8_t s_num_mcp3427_fault_callbacks;
+static uint8_t s_num_mcp3427_callbacks;
 static uint8_t s_times_mcp3427_start_called;
 
-StatusCode TEST_MOCK(mcp3427_register_callback)(Mcp3427Storage *storage, Mcp3427Callback callback,
-                                                void *context) {
-  s_mcp3427_callbacks[s_num_mcp3427_callbacks] = callback;
-  s_mcp3427_callback_contexts[s_num_sense_callbacks] = context;
-  s_num_mcp3427_callbacks++;
-  return STATUS_CODE_OK;
-}
-
-StatusCode TEST_MOCK(mcp3427_register_fault_callback)(Mcp3427Storage *storage,
-                                                      Mcp3427FaultCallback callback,
-                                                      void *context) {
-  s_mcp3427_fault_callbacks[s_num_mcp3427_fault_callbacks] = callback;
-  s_mcp3427_fault_callback_contexts[s_num_sense_callbacks] = context;
-  s_num_mcp3427_fault_callbacks++;
-  return STATUS_CODE_OK;
-}
-
-// we mock this mostly to prevent actual MCP3427 cycles from starting up
+// extract the callbacks and contexts from the MCP3427 storage
 StatusCode TEST_MOCK(mcp3427_start)(Mcp3427Storage *storage) {
+  s_mcp3427_callbacks[s_num_mcp3427_callbacks] = storage->callback;
+  s_mcp3427_callback_contexts[s_num_mcp3427_callbacks] = storage->context;
+  s_mcp3427_fault_callbacks[s_num_mcp3427_callbacks] = storage->fault_callback;
+  s_mcp3427_fault_callback_contexts[s_num_mcp3427_callbacks] = storage->fault_context;
+  s_num_mcp3427_callbacks++;
   s_times_mcp3427_start_called++;
   return STATUS_CODE_OK;
 }
@@ -121,13 +108,14 @@ void setup_test(void) {
 
   s_num_sense_callbacks = 0;
   s_num_mcp3427_callbacks = 0;
-  s_num_mcp3427_fault_callbacks = 0;
   s_times_mcp3427_start_called = 0;
 }
 void teardown_test(void) {}
 
 // Test that we can complete two normal sense cycles with one MCP3427.
 void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
+  bool is_set;
+  uint16_t set_value;
   SenseMcp3427Settings settings = {
     .mcp3427s = { {
         .data_point = TEST_DATA_POINT,
@@ -136,23 +124,18 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   };
   settings.mcp3427s[0].mcp3427_settings = s_test_mcp3427_settings;
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
-
-  // make sure the various registration functions were called
-  bool is_set;
-  uint16_t set_value;
-  TEST_ASSERT_EQUAL(1, s_num_sense_callbacks);
-  TEST_ASSERT_EQUAL(1, s_num_mcp3427_callbacks);
-  TEST_ASSERT_EQUAL(1, s_num_mcp3427_fault_callbacks);
-  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // |mcp3427_start| not called yet
-  data_store_get_is_set(TEST_DATA_POINT, &is_set);
-  TEST_ASSERT_EQUAL(false, is_set);  // not setting data yet
-  TEST_ASSERT_NOT_NULL(s_sense_callbacks[0]);
-  TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[0]);
-  TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[0]);
+  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called); // mcp3427 cycle not started yet
 
   // start the MCP3427 cycles
   TEST_ASSERT_OK(sense_mcp3427_start());
   TEST_ASSERT_EQUAL(1, s_times_mcp3427_start_called);
+  data_store_get_is_set(TEST_DATA_POINT, &is_set);
+  TEST_ASSERT_EQUAL(false, is_set);  // not setting data yet
+
+  // make sure we received the various callbacks
+  TEST_ASSERT_NOT_NULL(s_sense_callbacks[0]);
+  TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[0]);
+  TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[0]);
 
   // call the MCP3427 callback, make sure nothing was set yet (we only set data on the sense cycle)
   s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
@@ -183,18 +166,18 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
 
 // Test that we can complete two normal sense cycles with the maximum number of MCP3427s.
 void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
+  bool is_set;
+  uint16_t set_value;
   SenseMcp3427Settings settings;
   prv_get_max_mcp3427s_settings(&settings);
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // mcp3427 cycle not started yet
 
-  // make sure the various registration functions were called
-  bool is_set;
-  uint16_t set_value;
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_num_sense_callbacks);
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_num_mcp3427_callbacks);
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_num_mcp3427_fault_callbacks);
-  TEST_ASSERT_EQUAL(0, s_times_mcp3427_start_called);  // |mcp3427_start| not called yet
+  // start the MCP3427 cycles
+  TEST_ASSERT_OK(sense_mcp3427_start());
+  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
 
+  // make sure we received the callbacks correctly
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);  // nothing set in the data store yet
@@ -202,10 +185,6 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
     TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[i]);
     TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[i]);
   }
-
-  // start the MCP3427 cycles
-  TEST_ASSERT_OK(sense_mcp3427_start());
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
 
   // call the MCP3427 callbacks, make sure nothing was set in the data store
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
@@ -217,7 +196,7 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
     TEST_ASSERT_EQUAL(false, is_set);
   }
 
-  // call the sense cycle callback, make sure |data_store_set| is called
+  // call the sense cycle callback, make sure data is set in the data store
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
     data_store_get_is_set(prv_get_test_data_point(i), &is_set);
@@ -245,22 +224,22 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
 
 // Test that the data store is not set when the sense cycle is before the MCP3427 callback.
 void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
+  bool is_set;
+  uint16_t set_value;
   SenseMcp3427Settings settings;
   prv_get_max_mcp3427s_settings(&settings);
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_start());
+  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
 
-  bool is_set;
-  uint16_t set_value;
+  // calling the sense callbacks before the MCP3427 callbacks has no effect
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
     data_store_get_is_set(prv_get_test_data_point(i), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);  // the data store was never set
   }
 
-  TEST_ASSERT_OK(sense_mcp3427_start());
-  TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
-
-  // only call the first one
+  // only call the first MCP3427 callback, only the first sense cycle should have an effect
   s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
@@ -269,7 +248,7 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
     TEST_ASSERT_EQUAL(i == 0, is_set);  // only the first one sets the data store
   }
 
-  // call the rest of the mcp3427 callbacks, now the data store should be called
+  // call the rest of the MCP3427 callbacks, now the data store should be called
   for (uint8_t i = 1; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
@@ -284,6 +263,7 @@ void test_sense_mcp3427_fault(void) {
   SenseMcp3427Settings settings;
   prv_get_max_mcp3427s_settings(&settings);
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_start());
 
   // fault enough that the next fault will cause a fault event
   for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
