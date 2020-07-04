@@ -13,22 +13,22 @@
 // need to set interrupt once fan goes out of range
 // PWM duty cycle is set from 0-100, in steps of 0.39 (0x00 - 0xFF)
 // accepts number between 0-100, converts into into range of 0x00 - 0xFF
-StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed, FAN_GROUP fan_group,
+StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup fan_group,
                               uint8_t adt7476a_i2c_address) {
-  // detwermin which PWM output to change
-  uint8_t real_speed = floor(speed / 0.39);
+  // determine which PWM output to change
+  uint8_t real_speed = floor(speed_percent / 0.39);
   if (fan_group == ADT_FAN_GROUP_1) {
     status_ok_or_return(
-        i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &speed, SET_SPEED_NUM_BYTES));
+        i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &speed_percent, SET_SPEED_NUM_BYTES));
   } else {
     status_ok_or_return(
-        i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &speed, SET_SPEED_NUM_BYTES));
+        i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &speed_percent, SET_SPEED_NUM_BYTES));
   }
 
   return STATUS_CODE_OK;
 }
 
-StatusCode get_status(I2CPort port, uint8_t adt7476a_i2c_address, uint8_t *register_1_data,
+StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_address, uint8_t *register_1_data,
                       uint8_t *register_2_data) {
   // read interrupt status register
   status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_address, ADT7476A_INTERRUPT_STATUS_REGISTER_1,
