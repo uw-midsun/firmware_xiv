@@ -36,4 +36,4 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup f
                               uint8_t adt7476a_i2c_addr);
 
 StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_addr, uint8_t *register_1_data,
-                      uint8_t *register_2_data);
+                               uint8_t *register_2_data);
