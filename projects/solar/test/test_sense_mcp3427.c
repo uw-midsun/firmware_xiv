@@ -303,6 +303,16 @@ void test_sense_mcp3427_fault(void) {
   s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(0));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  // make sure that a successful callback resets the consecutive faults
+  for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
+    s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  }
+  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
+                         s_mcp3427_callback_contexts[0]);
+  s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 // Test that initializing with NULL settings fails gracefully.
