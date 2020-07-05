@@ -1,7 +1,9 @@
 #pragma once
 
-// wrapper over spv1020 driver
+// Wrapper over SPV1020 driver for selecting between multiple MPPTs.
 // Requires GPIO and SPI to be initialized. SPI must be initialized with SPI_MODE_3.
+
+// This module is owned by sense_mppt.
 
 #include <stdbool.h>
 #include "spi.h"
