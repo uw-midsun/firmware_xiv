@@ -60,7 +60,7 @@ static void prv_sense_cycle_callback(void *context) {
 }
 
 StatusCode sense_mppt_init(SenseMpptSettings *settings) {
-  if (settings->mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+  if (settings == NULL || settings->mppt_count > MAX_SOLAR_BOARD_MPPTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
