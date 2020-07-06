@@ -48,8 +48,8 @@ static void prv_reset_sample_bounds(void) {
 
 static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len,
                                                 size_t max_samples) {
-  if (len != sizeof(s_result_arr)) {
-    LOG_WARN("Expected reading length to be %zu but it was %zu\n", sizeof(s_result_arr), len);
+  if (len != SMOKE_LTC_AFE_NUM_CELLS) {
+    LOG_WARN("Expected reading length to be %d but it was %zu\n", SMOKE_LTC_AFE_NUM_CELLS, len);
     return STATUS_CODE_INVALID_ARGS;
   }
 
@@ -91,8 +91,8 @@ static void prv_dump_voltages(uint16_t *result_arr, size_t len, void *context) {
   if (s_num_samples != 0) {
     if (!status_ok(ltc_afe_request_cell_conversion(&s_afe))) return;
   } else {
-    LOG_DEBUG("==END OF VOLTAGE SAMPLES==");
-    LOG_DEBUG("==START OF TEMPERATURE SAMPLES==");
+    LOG_DEBUG("==END OF VOLTAGE SAMPLES==\n");
+    LOG_DEBUG("==START OF TEMPERATURE SAMPLES==\n");
     if (!status_ok(ltc_afe_request_aux_conversion(&s_afe))) return;
   }
 }
@@ -106,7 +106,7 @@ static void prv_dump_temps(uint16_t *result_arr, size_t len, void *context) {
   if (s_num_samples != 0) {
     if (!status_ok(ltc_afe_request_aux_conversion(&s_afe))) return;
   } else {
-    LOG_DEBUG("==END OF TEMPERATURE SAMPLES==");
+    LOG_DEBUG("==END OF TEMPERATURE SAMPLES==\n");
     // TODO(SOFT-222): Could test cell discharge here as well ...
   }
 }
@@ -169,7 +169,7 @@ int main(void) {
   // Initialize bound variable
   prv_reset_sample_bounds();
 
-  LOG_DEBUG("==START OF VOLTAGE SAMPLES==");
+  LOG_DEBUG("==START OF VOLTAGE SAMPLES==\n");
   status_ok_or_return(ltc_afe_request_cell_conversion(&s_afe));
 
   Event e = { 0 };
