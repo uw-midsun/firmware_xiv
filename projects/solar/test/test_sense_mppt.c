@@ -243,7 +243,7 @@ void test_status_faults(void) {
   for (uint8_t i = 0; i < MAX_SOLAR_BOARD_MPPTS; i++) {
     TEST_ASSERT_OK(event_process(&e));
     TEST_ASSERT_EQUAL(SOLAR_FAULT_EVENT_MPPT_OVERCURRENT, e.id);
-    TEST_ASSERT_BITS_HIGH(0b111100000000, e.data); // all 4 branches set
+    TEST_ASSERT_BITS_HIGH(0b111100000000, e.data);  // all 4 branches set
     uint8_t mppt = e.data & 0xFF;
     TEST_ASSERT(mppt < MAX_SOLAR_BOARD_MPPTS);
     times_mppt_event_raised[mppt]++;
@@ -276,7 +276,7 @@ void test_status_faults(void) {
         break;
       case SOLAR_FAULT_EVENT_MPPT_OVERCURRENT:
         num_ovc_events++;
-        TEST_ASSERT_BITS_HIGH(0b111100000000, e.data); // all 4 branches set
+        TEST_ASSERT_BITS_HIGH(0b111100000000, e.data);  // all 4 branches set
         mppt = e.data & 0xFF;
         break;
       default:
