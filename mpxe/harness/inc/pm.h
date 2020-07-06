@@ -1,3 +1,5 @@
 #pragma once
 
-void start_project(void);
+void build_project(char *name);
+
+void run_project(char *name);
