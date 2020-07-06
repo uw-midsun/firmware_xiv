@@ -7,6 +7,7 @@
 #include "interrupt.h"
 #include "ms_test_helpers.h"
 #include "test_helpers.h"
+#include "unity.h"
 
 // shorten period for faster tests
 #undef CONNECTION_SENSE_POLL_PERIOD_MS

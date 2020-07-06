@@ -4,6 +4,7 @@
 #include "status.h"
 #include "stop_sequence.h"
 #include "test_helpers.h"
+#include "unity.h"
 
 static uint8_t s_gpio_set_state_calls;
 static uint8_t s_charger_deactivate_calls;

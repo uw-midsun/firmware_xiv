@@ -45,7 +45,7 @@ static TxMsgData prv_build_charger_tx(TxControl charge) {
 }
 
 static void prv_periodic_charger_tx(SoftTimerId timer_id, void *context) {
-  TxMsgData tx_data = prv_build_charger_tx(true);
+  TxMsgData tx_data = prv_build_charger_tx(TX_CONTROL_START_CHARGING);
 
   GenericCanMsg tx_msg = {
     .id = CHARGER_TX_CAN_ID,    //
@@ -93,7 +93,7 @@ StatusCode charger_controller_activate(uint16_t max_allowable_current) {
 
 StatusCode charger_controller_deactivate() {
   s_vc.values.complete.current = 0;
-  TxMsgData tx_data = prv_build_charger_tx(false);
+  TxMsgData tx_data = prv_build_charger_tx(TX_CONTROL_STOP_CHARGING);
 
   // Send 'stop' message
   GenericCanMsg tx_msg = {

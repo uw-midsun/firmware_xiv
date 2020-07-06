@@ -1,6 +1,7 @@
 #pragma once
 
 // This module wraps PWM to facilitate getting the current from a PWM reading
+// Used by the begin_sequence module.
 // requires gpio to be initialized
 
 #include <stdint.h>

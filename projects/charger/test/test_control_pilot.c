@@ -2,6 +2,7 @@
 #include "gpio.h"
 #include "pwm_input.h"
 #include "test_helpers.h"
+#include "unity.h"
 
 static uint32_t s_duty_cycle;
 

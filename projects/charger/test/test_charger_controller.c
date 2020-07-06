@@ -13,6 +13,7 @@
 #include "interrupt.h"
 #include "ms_test_helpers.h"
 #include "test_helpers.h"
+#include "unity.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
 

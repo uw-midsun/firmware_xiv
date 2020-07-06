@@ -38,7 +38,7 @@ int main(void) {
 
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) != STATUS_CODE_OK) {
+    while (event_process(&e) == STATUS_CODE_OK) {
       can_process_event(&e);
       begin_sequence_process_event(&e);
       stop_sequence_process_event(&e);

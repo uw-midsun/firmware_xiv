@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "ms_test_helpers.h"
 #include "test_helpers.h"
+#include "unity.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
 #define NUM_GPIO_SET_CALLS_IN_BEGIN_SEQUENCE 3
@@ -67,8 +68,8 @@ void test_begin_sequence_happy_path(void) {
   // tx and rx the permission request
   MS_TEST_HELPER_CAN_TX_RX(CHARGER_CAN_EVENT_TX, CHARGER_CAN_EVENT_RX);
 
-  TEST_ASSERT(s_charger_activate_calls == 0);
-  TEST_ASSERT(s_gpio_set_state_calls == 0);
+  TEST_ASSERT_EQUAL(0, s_charger_activate_calls);
+  TEST_ASSERT_EQUAL(0, s_gpio_set_state_calls);
 
   // tx and rx the allow charging message to trigger callback
   CAN_TRANSMIT_ALLOW_CHARGING();
