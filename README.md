@@ -32,6 +32,9 @@ make program PROJECT=test_project
 # Append TEST=module for a specific test
 make test LIBRARY=ms-common
 
+# Run a project on x86
+make run PROJECT=test_project
+
 # Flashes the project/test and attaches an instance of GDB
 make gdb TEST=can LIBRARY=ms-common
 
@@ -44,6 +47,9 @@ make clean
 # Linting and formatting - used to help enforce our coding style
 make format
 make lint
+
+# Define a symbol from the command line - for example, setting the log level
+make test LIBRARY=ms-common DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_WARN"
 ```
 
 We use [GNU Make](https://www.gnu.org/software/make/manual/) for our build system. See [Managing Projects with GNU Make, 3.Xth Edition](http://wanderinghorse.net/computing/make/book/ManagingProjectsWithGNUMake-3.1.3.pdf) for a fantastic supplement to the manual.

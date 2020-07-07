@@ -2,6 +2,7 @@
 #include "can_ack.h"
 #include "can_transmit.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "fsm.h"
 
 FSM_DECLARE_STATE(state_none);
@@ -31,7 +32,7 @@ FSM_STATE_TRANSITION(state_power_aux_complete) {
 }
 
 FSM_STATE_TRANSITION(state_fault) {
-  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_AUX_SEQUENCE, state_none);
+  FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_FAULT, state_none);
 }
 
 static EventId s_next_event_lookup[NUM_EE_POWER_AUX_SEQUENCES] = {
@@ -94,7 +95,8 @@ static void prv_state_power_aux_complete(Fsm *fsm, const Event *e, void *context
 }
 
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
-  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_AUX_SEQUENCE, e->data);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_AUX, .reason = e->data } };
+  event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 }
 
 StatusCode power_aux_sequence_init(PowerAuxSequenceFsmStorage *storage) {

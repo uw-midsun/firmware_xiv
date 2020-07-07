@@ -7,6 +7,7 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "status.h"
+#include "test_helpers.h"
 #include "unity.h"
 
 // Awaits an event and populates |e| with that event.
@@ -55,17 +56,20 @@
 #define MS_TEST_HELPER_ASSERT_EVENT(event, e_id, e_data) \
   ({                                                     \
     TEST_ASSERT_OK(event_process(&(event)));             \
-    TEST_ASSERT_EQUAL((e_id), event.id);                 \
-    TEST_ASSERT_EQUAL((e_data), event.data);             \
+    TEST_ASSERT_EQUAL((e_id), (event).id);               \
+    TEST_ASSERT_EQUAL((e_data), (event).data);           \
   })
 
 // assert next event
 #define MS_TEST_HELPER_ASSERT_NEXT_EVENT(event, e_id, e_data) \
   ({                                                          \
     MS_TEST_HELPER_AWAIT_EVENT(event);                        \
-    TEST_ASSERT_EQUAL((e_id), event.id);                      \
-    TEST_ASSERT_EQUAL((e_data), event.data);                  \
+    TEST_ASSERT_EQUAL((e_id), (event).id);                    \
+    TEST_ASSERT_EQUAL((e_data), (event).data);                \
   })
+
+#define MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(event, e_id) \
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT((event), (e_id), 0)
 
 // assert no events
 #define MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED() \
@@ -77,8 +81,8 @@
 #define MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(can_storage, message_id, acking_device, ack_status) \
   ({                                                                                               \
     CanMessage msg = { .type = CAN_MSG_TYPE_ACK,                                                   \
-                       .msg_id = message_id,                                                       \
-                       .source_id = acking_device,                                                 \
-                       .data = ack_status };                                                       \
-    TEST_ASSERT_OK(can_ack_handle_msg(&can_storage.ack_requests, &msg));                           \
+                       .msg_id = (message_id),                                                     \
+                       .source_id = (acking_device),                                               \
+                       .data = (ack_status) };                                                     \
+    TEST_ASSERT_OK(can_ack_handle_msg(&(can_storage).ack_requests, &msg));                         \
   })

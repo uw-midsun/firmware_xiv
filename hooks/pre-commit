@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-echo "Automatically formatting and linting" && make format && git add . && make lint
+echo "Automatically formatting and linting" && make format_quick && git add . && make lint_quick
 
 if [ $? -ne 0 ]; then
  echo "Code must be properly formatted before commiting!"
