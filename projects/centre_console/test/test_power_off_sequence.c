@@ -4,6 +4,7 @@
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "centre_console_events.h"
+#include "centre_console_fault_reason.h"
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
@@ -131,8 +132,10 @@ void test_fault_during_turn_off_everything_sequence(void) {
 
   // turn off everything -> fault
   TEST_ASSERT_TRUE(power_off_sequence_process_event(&s_storage, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_OFF_SEQUENCE,
-                                   EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING);
+
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_OFF,
+                                     .reason = EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING } };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 
   // fault -> none
   TEST_ASSERT_TRUE(power_off_sequence_process_event(&s_storage, &e));
@@ -163,8 +166,9 @@ void test_fault_during_set_relay_sequence(void) {
 
   // open battery relays -> fault
   TEST_ASSERT_TRUE(power_off_sequence_process_event(&s_storage, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT_POWER_OFF_SEQUENCE,
-                                   EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS);
+  FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_OFF,
+                                     .reason = EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS } };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 
   // fault -> none
   TEST_ASSERT_TRUE(power_off_sequence_process_event(&s_storage, &e));
