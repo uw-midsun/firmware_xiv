@@ -10,6 +10,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "power_selection_events.h"
+#include "resistance_to_temp.h"
 #include "soft_timer.h"
 
 // dcdc address if on. Pull Down is means it's on
@@ -36,8 +37,12 @@ static uint16_t s_aux_temp = 0;
 uint16_t prv_status_checker() {
   adc_read_raw(aux_channels[AUX_ADC_VOLT_CHANNEL], &s_aux_volt);
   adc_read_raw(aux_channels[AUX_ADC_TEMP_CHANNEL], &s_aux_temp);
-  // LOG_DEBUG("AUX Volatge Data: %d\n", aux_volt);
-  // LOG_DEBUG("AUX Temp Data: %d\n", aux_temp);
+  LOG_DEBUG("AUX Volatge Data: %d\n", s_aux_volt);
+  LOG_DEBUG("AUX Temp Voltage Data: %d\n", s_aux_temp);
+  double resistance = temp_to_res(s_aux_temp);
+  LOG_DEBUG("AUX Temp Resistance Value: %f\n", resistance);
+  s_aux_temp = (uint16_t)resistance_to_temp(resistance);
+  LOG_DEBUG("AUX Temp Data in C: %d\n", s_aux_temp);
 
   // see https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1055326209/Power+Selector+Board for
   // the hardware specifications need to map data to voltages
