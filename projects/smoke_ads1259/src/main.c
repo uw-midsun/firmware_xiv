@@ -30,7 +30,7 @@ static void prv_dump_queue(double *queue) {
 
 static void prv_periodic_read(SoftTimerId id, void *context) {
   double *queue = context;
-  if (s_index < 10) {
+  if (s_index < READING_QUEUE_LENGTH) {
     ads1259_get_conversion_data(&s_storage);
     queue[s_index] = s_storage.reading;
     s_index++;
