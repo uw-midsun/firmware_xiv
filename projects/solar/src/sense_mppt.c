@@ -11,9 +11,9 @@
 #include "status.h"
 
 static SpiPort s_spi_port;
-static uint8_t s_indices[MAX_SOLAR_BOARD_MPPTS];
+static Mppt s_indices[MAX_SOLAR_BOARD_MPPTS];
 
-static void prv_check_status_for_faults(uint8_t mppt, uint8_t status) {
+static void prv_check_status_for_faults(Mppt mppt, uint8_t status) {
   uint8_t ovc_branch_bitmask;
   if (spv1020_is_overcurrent(status, &ovc_branch_bitmask)) {
     uint16_t ovc_data = (ovc_branch_bitmask << 8) | mppt;
@@ -28,7 +28,7 @@ static void prv_check_status_for_faults(uint8_t mppt, uint8_t status) {
 }
 
 static void prv_sense_cycle_callback(void *context) {
-  uint8_t mppt = *(uint8_t *)context;
+  Mppt mppt = *(Mppt *)context;
 
   uint16_t current, vin, pwm;
   uint8_t status;
@@ -64,10 +64,8 @@ StatusCode sense_mppt_init(SenseMpptSettings *settings) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  status_ok_or_return(mppt_init());
-
   s_spi_port = settings->spi_port;
-  for (uint8_t mppt = 0; mppt < settings->mppt_count; mppt++) {
+  for (Mppt mppt = 0; mppt < settings->mppt_count; mppt++) {
     s_indices[mppt] = mppt;
     status_ok_or_return(sense_register(prv_sense_cycle_callback, &s_indices[mppt]));
   }
