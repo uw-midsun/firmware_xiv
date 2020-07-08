@@ -88,7 +88,7 @@ static void prv_periodic_gpio_toggle_and_check(SoftTimerId timer_id, void *conte
   *state =
       (*state == MCP23008_GPIO_STATE_HIGH ? MCP23008_GPIO_STATE_LOW : MCP23008_GPIO_STATE_HIGH);
 
-  soft_timer_start_millis(WAIT_TIME_MILLIS, prv_soft_timer_callback_output, state, NULL);
+  soft_timer_start_millis(WAIT_TIME_MILLIS, prv_periodic_gpio_toggle_and_check, state, NULL);
 }
 
 int main() {
