@@ -16,9 +16,8 @@ typedef struct BmsStorage {
   CurrentStorage current_storage;
   AfeStorage afe_storage;
   FanStorage fan_storage;
-  DebounceStorage killswitch_storage;
+  DebouncerStorage killswitch_storage;
   BpsStorage bps_storage;
-  uint8_t fault_bitset;
 } BmsStorage;
 
-StatusCode fault_bps(uint8_t fault_bitmask);
+StatusCode fault_bps(uint8_t fault_bitmask, bool clear);
