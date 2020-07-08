@@ -5,8 +5,8 @@
 #include "log.h"
 #include "power_selection.h"
 #include "power_selection_events.h"
-#include "soft_timer.h"
 #include "smoke_test.h"
+#include "soft_timer.h"
 
 #define POWER_SELECTION_CAN_DEVICE_ID 0x1
 
