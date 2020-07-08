@@ -1,5 +1,7 @@
 // Smoke test for mcp23008 gpio expander
-// Test every GPIO on the expander
+// Tests every gpio pin
+// Initializes all 8 pins, checks for correct initialization
+// Periodically toggles states and logs comparison of pin with expected state
 
 #include "gpio.h"
 #include "i2c.h"
@@ -20,7 +22,7 @@
 #define I2C_SDA \
   { GPIO_PORT_B, 11 }
 
-void setup(void) {
+void setup_i2c_and_mcp23008_gpio(void) {
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
     .sda = I2C_SDA,
@@ -30,7 +32,7 @@ void setup(void) {
   mcp23008_gpio_init(I2C_PORT, MCP23008_I2C_ADDRESS);
 }
 
-StatusCode prv_mcp23008_init_all_pins(Mcp23008GpioDirection direction) {
+static StatusCode prv_mcp23008_init_all_pins(Mcp23008GpioDirection direction) {
   Mcp23008GpioSettings gpio_settings = {
     .direction = direction,
   };
@@ -66,7 +68,7 @@ static StatusCode prv_mcp23008_check_pin_states(Mcp23008GpioState state) {
   return STATUS_CODE_OK;
 }
 
-static void prv_soft_timer_callback_output(SoftTimerId timer_id, void *context) {
+static void prv_periodic_gpio_toggle_and_check(SoftTimerId timer_id, void *context) {
   Mcp23008GpioState *state = (Mcp23008GpioState *)context;
   Mcp23008GpioState get_state;
   Mcp23008GpioAddress address = { .i2c_address = MCP23008_I2C_ADDRESS };
@@ -81,17 +83,19 @@ static void prv_soft_timer_callback_output(SoftTimerId timer_id, void *context) 
       LOG_DEBUG("State for pin %d incorrectly\n", pin);
     }
   }
+
+  LOG_DEBUG("GPIO state = %s\n", *state == MCP23008_GPIO_STATE_HIGH ? "high" : "low");
   *state =
       (*state == MCP23008_GPIO_STATE_HIGH ? MCP23008_GPIO_STATE_LOW : MCP23008_GPIO_STATE_HIGH);
 
-  LOG_DEBUG("GPIO state = %d\n", *state);
   soft_timer_start_millis(WAIT_TIME_MILLIS, prv_soft_timer_callback_output, state, NULL);
 }
 
 int main() {
   interrupt_init();
   soft_timer_init();
-  setup();
+  gpio_init();
+  setup_i2c_and_mcp23008_gpio();
 
   LOG_DEBUG("Testing GPIO initialization...\n");
   LOG_DEBUG("Initializing all pins out...\n");
@@ -101,7 +105,7 @@ int main() {
 
   Mcp23008GpioState state;
 
-  soft_timer_start_millis(100, prv_soft_timer_callback_output, &state, NULL);
+  soft_timer_start_millis(100, prv_periodic_gpio_toggle_and_check, &state, NULL);
 
   while (true) {
     wait();
