@@ -127,6 +127,7 @@ static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t device
   packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
   packet.reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
   uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData));
+  packet.pec = comm_pec;
 
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeWriteCommRegPacket),
