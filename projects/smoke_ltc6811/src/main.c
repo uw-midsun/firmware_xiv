@@ -20,10 +20,10 @@
 
 // To disable logging for an event, set the event name to NULL
 static const char *s_event_names[NUM_SMOKE_LTC_EVENTS] = {
-  [SMOKE_LTC_AFE_TRIGGER_CELL_CONV_EVENT] = "CELL CONVERSION TRIGGERED",
-  [SMOKE_LTC_AFE_CELL_CONV_COMPLETE_EVENT] = "CELL CONVERSION COMPLETE",
-  [SMOKE_LTC_AFE_TRIGGER_AUX_CONV_EVENT] = "AUX CONVERSION TRIGGERED",
-  [SMOKE_LTC_AFE_AUX_CONV_COMPLETE_EVENT] = "AUX CONVERSION COMPLETE",
+  [SMOKE_LTC_AFE_TRIGGER_CELL_CONV_EVENT] = NULL,
+  [SMOKE_LTC_AFE_CELL_CONV_COMPLETE_EVENT] = NULL,
+  [SMOKE_LTC_AFE_TRIGGER_AUX_CONV_EVENT] = NULL,
+  [SMOKE_LTC_AFE_AUX_CONV_COMPLETE_EVENT] = NULL,
   [SMOKE_LTC_AFE_CALLBACK_RUN_EVENT] = "CONVERSION CALLBACK RUN",
   [SMOKE_LTC_AFE_FAULT_EVENT] = "FAULT OCCURED"
 };
@@ -36,7 +36,7 @@ typedef struct LtcAfeReadingBound {
 
 static LtcAfeStorage s_afe;
 static uint16_t s_result_arr[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
-static size_t s_num_samples = 0;
+static uint16_t s_num_samples = 0;
 LtcAfeReadingBound s_sample_bounds[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
 
 static void prv_reset_sample_bounds(void) {
@@ -47,7 +47,7 @@ static void prv_reset_sample_bounds(void) {
 }
 
 static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len,
-                                                size_t max_samples) {
+                                                uint16_t max_samples) {
   if (len != SMOKE_LTC_AFE_NUM_CELLS) {
     LOG_WARN("Expected reading length to be %d but it was %zu\n", SMOKE_LTC_AFE_NUM_CELLS, len);
     return STATUS_CODE_INVALID_ARGS;
@@ -56,20 +56,20 @@ static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len
   memcpy(s_result_arr, result_arr, len);
 
   if (s_num_samples == 0) {
-    LOG_DEBUG("INITIAL READINGS:");
+    LOG_DEBUG("INITIAL READINGS:\n");
   } else if (s_num_samples == max_samples - 1) {
-    LOG_DEBUG("READING STATS:");
+    LOG_DEBUG("READING STATS:\n");
   }
 
-  for (size_t cell = 0; cell < SMOKE_LTC_AFE_NUM_CELLS; ++cell) {
+  for (uint16_t cell = 0; cell < SMOKE_LTC_AFE_NUM_CELLS; ++cell) {
     s_sample_bounds[cell].min = MIN(s_result_arr[cell], s_sample_bounds[cell].min);
     s_sample_bounds[cell].max = MAX(s_result_arr[cell], s_sample_bounds[cell].max);
 
     if (s_num_samples == 0) {
-      LOG_DEBUG("CELL#%zu = %d\n", cell, s_result_arr[cell]);
+      LOG_DEBUG("CELL#%u = %d\n", cell, s_result_arr[cell]);
     } else if (s_num_samples == max_samples - 1) {
       uint16_t delta = s_sample_bounds[cell].max - s_sample_bounds[cell].min;
-      LOG_DEBUG("CELL#%zu DELTA %d (MIN=%d, MAX=%d)\n", cell, delta, s_sample_bounds[cell].min,
+      LOG_DEBUG("CELL#%u DELTA %d (MIN=%d, MAX=%d)\n", cell, delta, s_sample_bounds[cell].min,
                 s_sample_bounds[cell].max);
     }
   }
@@ -134,7 +134,7 @@ static StatusCode prv_ltc_init(void) {
     .num_devices = SMOKE_LTC_AFE_NUM_DEVICES,
     .num_cells = SMOKE_LTC_AFE_NUM_CELLS,
 
-    .ltc_events = { .trigger_cell_conv_event = SMOKE_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
+    .ltc_events = { .trigger_cell_conv_event =  SMOKE_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
                     .cell_conv_complete_event = SMOKE_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
                     .trigger_aux_conv_event = SMOKE_LTC_AFE_TRIGGER_AUX_CONV_EVENT,
                     .aux_conv_complete_event = SMOKE_LTC_AFE_AUX_CONV_COMPLETE_EVENT,
