@@ -15,7 +15,6 @@
 #define TEST_FAN_PWM_SPEED_2 0x04
 #define TEST_FAN_PWM_EXPECTED_SPEED 0x80
 
-
 #define TEST_CONFIG_PIN_I2C_SCL \
   { GPIO_PORT_B, 10 }
 #define TEST_CONFIG_PIN_I2C_SDA \
@@ -43,7 +42,6 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-
 // Test initializing with valid parameters
 void test_adt7476a_init_works(void) {
   GpioAddress test_output_pin = { .port = GPIO_PORT_A, .pin = 0 };
@@ -58,7 +56,7 @@ void test_adt7476a_init_works(void) {
     .smbalert_pin = &test_output_pin,
     .callback = NULL,
     .callback_context = NULL,
-    .i2c =  TEST_I2C_PORT,
+    .i2c = TEST_I2C_PORT,
     .i2c_read_addr = TEST_I2C_ADDRESS,
     .i2c_write_addr = TEST_I2C_ADDRESS,
     .i2c_settings = i2c_settings,
@@ -68,7 +66,7 @@ void test_adt7476a_init_works(void) {
   MockStorage.callback = valid_settings.callback;
   MockStorage.callback_context = valid_settings.callback_context;
   MockStorage.i2c = valid_settings.i2c;
-  
+
   TEST_ASSERT_OK(adt7476a_init(&storage, &valid_settings));
 
   TEST_ASSERT_EQUAL(MockStorage.smbalert_pin.pin, storage.smbalert_pin.pin);
@@ -76,13 +74,13 @@ void test_adt7476a_init_works(void) {
   TEST_ASSERT_EQUAL(MockStorage.callback, storage.callback);
   TEST_ASSERT_EQUAL(MockStorage.callback_context, storage.callback_context);
   TEST_ASSERT_EQUAL(MockStorage.i2c, storage.i2c);
-
 }
 
-StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data, size_t tx_len) {
+StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
+                                    size_t tx_len) {
   TEST_ASSERT_EQUAL(i2c, I2C_PORT_2);
   uint8_t cmd = reg;
- 
+
   switch (cmd) {
     // Commands used in ads1259_init()
     case TEST_FAN_GROUP_1_CONFIG_REG:
@@ -92,7 +90,7 @@ StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, u
       MockRegisters.PWM_CONFIG_2 = tx_data;
       return STATUS_CODE_OK;
     case TEST_FAN_SMBALERT_REG:
-      MockRegisters.SMBALERT_PIN = tx_data; 
+      MockRegisters.SMBALERT_PIN = tx_data;
       break;
     case ADT7476A_PWM_1:
       MockRegisters.PWM_SPEED_1 = tx_data;
@@ -105,10 +103,10 @@ StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, u
 }
 
 StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *rx_data,
-                        size_t rx_len) {
+                                   size_t rx_len) {
   TEST_ASSERT_EQUAL(i2c, I2C_PORT_2);
   uint8_t cmd = reg;
- 
+
   switch (cmd) {
     // Commands used in ads1259_init()
     case ADT7476A_INTERRUPT_STATUS_REGISTER_1:
@@ -117,44 +115,42 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
     case ADT7476A_INTERRUPT_STATUS_REGISTER_2:
       rx_data = MockRegisters.INTERRUPT_STATUS_2;
       return STATUS_CODE_OK;
-    
   }
   return STATUS_CODE_OK;
 }
 
 // test that speeds are set correctly
-void test_adt7476a_set_speed(void){
-    uint8_t SPEED_PERCENT = 50;
+void test_adt7476a_set_speed(void) {
+  uint8_t SPEED_PERCENT = 50;
 
-    adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS);
+  adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS);
 
-    TEST_ASSERT_EQUAL(MockRegisters.PWM_SPEED_1,TEST_FAN_PWM_EXPECTED_SPEED);
+  TEST_ASSERT_EQUAL(MockRegisters.PWM_SPEED_1, TEST_FAN_PWM_EXPECTED_SPEED);
 
-    adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS);
+  adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS);
 
-    TEST_ASSERT_EQUAL(MockRegisters.PWM_SPEED_2,TEST_FAN_PWM_EXPECTED_SPEED);
-
+  TEST_ASSERT_EQUAL(MockRegisters.PWM_SPEED_2, TEST_FAN_PWM_EXPECTED_SPEED);
 }
 
 // test that speed fails on out of range speeds
-void test_adt7476a_set_speed_invalid(void){
-    uint8_t invalid_speed = 0x100;
-    TEST_ASSERT_NOT_OK(adt7476a_set_speed(TEST_I2C_PORT, invalid_speed, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS));
-    TEST_ASSERT_NOT_OK(adt7476a_set_speed(TEST_I2C_PORT, invalid_speed, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS));
-
+void test_adt7476a_set_speed_invalid(void) {
+  uint8_t invalid_speed = 0x100;
+  TEST_ASSERT_NOT_OK(
+      adt7476a_set_speed(TEST_I2C_PORT, invalid_speed, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS));
+  TEST_ASSERT_NOT_OK(
+      adt7476a_set_speed(TEST_I2C_PORT, invalid_speed, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS));
 }
 
 // test if fetching data from register works
-void test_adt7476a_get_status(void){
+void test_adt7476a_get_status(void) {
+  MockRegisters.INTERRUPT_STATUS_1 = 0x01;
+  MockRegisters.INTERRUPT_STATUS_2 = 0x02;
 
-    MockRegisters.INTERRUPT_STATUS_1 = 0x01;
-    MockRegisters.INTERRUPT_STATUS_2 = 0x02;
+  uint8_t rx_interrupt_status_reg_1;
+  uint8_t rx_interrupt_status_reg_2;
 
-    uint8_t rx_interrupt_status_reg_1;
-    uint8_t rx_interrupt_status_reg_2;
-
-    adt7476a_get_status(TEST_I2C_PORT, TEST_I2C_ADDRESS, &rx_interrupt_status_reg_1, &rx_interrupt_status_reg_2);
-    TEST_ASSERT_EQUAL(MockRegisters.INTERRUPT_STATUS_1, rx_interrupt_status_reg_1 );
-    TEST_ASSERT_EQUAL(MockRegisters.INTERRUPT_STATUS_2, rx_interrupt_status_reg_2 );
-
+  adt7476a_get_status(TEST_I2C_PORT, TEST_I2C_ADDRESS, &rx_interrupt_status_reg_1,
+                      &rx_interrupt_status_reg_2);
+  TEST_ASSERT_EQUAL(MockRegisters.INTERRUPT_STATUS_1, rx_interrupt_status_reg_1);
+  TEST_ASSERT_EQUAL(MockRegisters.INTERRUPT_STATUS_2, rx_interrupt_status_reg_2);
 }
