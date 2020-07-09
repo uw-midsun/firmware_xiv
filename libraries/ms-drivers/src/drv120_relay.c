@@ -1,12 +1,8 @@
 #include "drv120_relay.h"
 
-
 // Storage for EN pin on DRV120 to open/close relay
 static GpioAddress s_relay_pin;
 
-// Initialize pin for output to open/close relay
-// Pin taken in is the EN pin on the DRV120: high = closed, low = open
-// Relay defaults closed on initialization
 StatusCode drv120_relay_init(GpioAddress *pin) {
   s_relay_pin = *pin;
 

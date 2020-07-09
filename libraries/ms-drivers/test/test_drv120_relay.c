@@ -5,7 +5,7 @@
 #include "ms_test_helpers.h"
 
 // Pin used to enable/disable relay
-static GpioAddress s_test_drv120_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_test_drv120_pin = { GPIO_PORT_A, 8 };
 
 void setup_test(void) {
   LOG_DEBUG("Initializing GPIO\n");
