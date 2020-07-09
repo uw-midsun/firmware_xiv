@@ -122,12 +122,13 @@ static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t device
   // We send the a byte and then we send CSBM_HIGH to
   // release the SPI port
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d0 = device_cell;
+  packet.reg.d0_msb = LTC6811_EXTRACT_DATA_MSB(device_cell);
+  packet.reg.d0_lsb = LTC6811_EXTRACT_DATA_LSB(device_cell);
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
   packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
   packet.reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
   uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData));
-  packet.pec = comm_pec;
+  packet.pec = SWAP_UINT16(comm_pec);
 
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeWriteCommRegPacket),
