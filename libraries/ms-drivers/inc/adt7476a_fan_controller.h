@@ -8,7 +8,6 @@
 
 typedef struct {
   GpioAddress smbalert_pin;
-  uint32_t interval_ms;
   GpioItCallback callback;  // set to NULL for no callback
   void *callback_context;
   I2CPort i2c;
@@ -19,7 +18,6 @@ typedef struct {
 
 typedef struct {
   GpioAddress smbalert_pin;
-  uint32_t interval_ms;
   GpioItCallback callback;
   void *callback_context;
   I2CPort i2c;

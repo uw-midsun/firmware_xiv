@@ -15,6 +15,12 @@
 // accepts number between 0-100, converts into into range of 0x00 - 0xFF
 StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup fan_group,
                               uint8_t adt7476a_i2c_address) {
+  
+  // check for out of range conditions.
+  if ( speed_percent > 100 || speed_percent < 0){
+    return STATUS_CODE_OUT_OF_RANGE;
+  }
+
   // determine which PWM output to change
   uint8_t real_speed = floor(speed_percent / 0.39);
   if (fan_group == ADT_FAN_GROUP_1) {
