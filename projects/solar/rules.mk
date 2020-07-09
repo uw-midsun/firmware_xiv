@@ -12,3 +12,5 @@ $(T)_test_mppt_MOCKS := mux_set
 
 $(T)_test_sense_MOCKS := data_store_done
 $(T)_test_sense_mcp3427_MOCKS := sense_register mcp3427_start
+$(T)_test_sense_mppt_MOCKS := sense_register mppt_read_current mppt_read_voltage_in mppt_read_pwm \
+	mppt_read_status

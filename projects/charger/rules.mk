@@ -9,6 +9,9 @@
 $(T)_DEPS := ms-common ms-helper
 
 ifeq (x86,$(PLATFORM))
-$(T)_test_killswitch_MOCKS := gpio_get_state fault_bps
-$(T)_test_bps_heartbeat_MOCKS := fault_bps
+$(T)_test_control_pilot_MOCKS := pwm_input_get_reading
+$(T)_test_connection_sense_MOCKS := adc_read_converted
+$(T)_test_charger_controller_MOCKS := generic_can_tx mcp2515_register_cbs
+$(T)_test_begin_sequence_MOCKS := charger_controller_activate gpio_set_state gpio_get_state
+$(T)_test_stop_sequence_MOCKS := charger_controller_deactivate gpio_set_state
 endif
