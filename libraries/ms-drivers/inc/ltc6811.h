@@ -76,17 +76,17 @@ static_assert(sizeof(LtcAfeConfigRegisterData) == 6, "LtcAfeConfigRegisterData m
 
 // COMM Register, refer to LTC6803 datasheet page 31, Table 15
 typedef struct {
-  uint8_t icom0 : 4;
-  uint8_t d0 : 8;
-  uint8_t fcom0 : 4;
+  uint16_t icom0 : 4;
+  uint16_t d0 : 8;
+  uint16_t fcom0 : 4;
 
-  uint8_t icom1 : 4;
-  uint8_t d1 : 8;
-  uint8_t fcom1 : 4;
+  uint16_t icom1 : 4;
+  uint16_t d1 : 8;
+  uint16_t fcom1 : 4;
 
-  uint8_t icom2 : 4;
-  uint8_t d2 : 8;
-  uint8_t fcom2 : 4;
+  uint16_t icom2 : 4;
+  uint16_t d2 : 8;
+  uint16_t fcom2 : 4;
 } _PACKED LtcAfeCommRegisterData;
 static_assert(sizeof(LtcAfeCommRegisterData) == 6, "LtcAfeCommRegisterData must be 6 bytes");
 
