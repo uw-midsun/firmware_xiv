@@ -3,9 +3,9 @@
 #include "delay.h"
 #include "interrupt.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "soft_timer.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_I2C_ADDRESS 0x74
