@@ -34,7 +34,6 @@ Adt7476aStorage storage;
 
 StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
                                     size_t tx_len) {
-
   uint8_t cmd = reg;
 
   switch (cmd) {
@@ -125,7 +124,7 @@ void test_adt7476a_set_speed(void) {
   uint8_t SPEED_PERCENT = 50;
 
   adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS);
-  
+
   TEST_ASSERT_EQUAL(TEST_FAN_PWM_EXPECTED_SPEED, MockRegisters.PWM_SPEED_1);
 
   adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS);
@@ -136,8 +135,8 @@ void test_adt7476a_set_speed(void) {
 void test_adt7476a_set_invalid_speed(void) {
   uint8_t INVALID_SPEED_PERCENT = 101;
 
-  TEST_ASSERT_NOT_EQUAL(STATUS_CODE_OK, adt7476a_set_speed(TEST_I2C_PORT, INVALID_SPEED_PERCENT, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS));
-
+  TEST_ASSERT_NOT_EQUAL(STATUS_CODE_OK, adt7476a_set_speed(TEST_I2C_PORT, INVALID_SPEED_PERCENT,
+                                                           ADT_FAN_GROUP_1, TEST_I2C_ADDRESS));
 }
 
 // test if fetching data from register works

@@ -58,7 +58,6 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
   storage->callback_context = settings->callback_context;
   storage->i2c = settings->i2c;
 
-
   static InterruptSettings s_interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,       //
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
