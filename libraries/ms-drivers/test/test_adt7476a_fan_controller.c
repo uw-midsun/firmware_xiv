@@ -5,6 +5,7 @@
 #include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "soft_timer.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_I2C_ADDRESS 0x74
@@ -38,19 +39,19 @@ StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, u
   switch (cmd) {
     // Commands used in ads1259_init()
     case ADT7476A_FAN_MODE_REGISTER_1:
-      MockRegisters.PWM_CONFIG_1 = tx_data;
+      MockRegisters.PWM_CONFIG_1 = *tx_data;
       break;
     case ADT7476A_FAN_MODE_REGISTER_3:
-      MockRegisters.PWM_CONFIG_2 = tx_data;
+      MockRegisters.PWM_CONFIG_2 = *tx_data;
       break;
     case ADT7476A_CONFIG_REGISTER_3:
-      MockRegisters.SMBALERT_PIN = tx_data;
+      MockRegisters.SMBALERT_PIN = *tx_data;
       break;
     case ADT7476A_PWM_1:
-      MockRegisters.PWM_SPEED_1 = tx_data;
+      MockRegisters.PWM_SPEED_1 = *tx_data;
       break;
     case ADT7476A_PWM_3:
-      MockRegisters.PWM_SPEED_2 = tx_data;
+      MockRegisters.PWM_SPEED_2 = *tx_data;
       break;
   }
   return STATUS_CODE_OK;
@@ -63,10 +64,10 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
   switch (cmd) {
     // Commands used in ads1259_init()
     case ADT7476A_INTERRUPT_STATUS_REGISTER_1:
-      rx_data = MockRegisters.INTERRUPT_STATUS_1;
+      *rx_data = MockRegisters.INTERRUPT_STATUS_1;
       break;
     case ADT7476A_INTERRUPT_STATUS_REGISTER_2:
-      rx_data = MockRegisters.INTERRUPT_STATUS_2;
+      *rx_data = MockRegisters.INTERRUPT_STATUS_2;
       break;
   }
   return STATUS_CODE_OK;
@@ -91,7 +92,7 @@ void test_adt7476a_init_works(void) {
   };
 
   Adt7476aSettings valid_settings = {
-    .smbalert_pin = &test_output_pin,
+    .smbalert_pin = test_output_pin,
     .callback = NULL,
     .callback_context = NULL,
     .i2c = TEST_I2C_PORT,
@@ -129,15 +130,6 @@ void test_adt7476a_set_speed(void) {
   adt7476a_set_speed(TEST_I2C_PORT, SPEED_PERCENT, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS);
 
   TEST_ASSERT_EQUAL(MockRegisters.PWM_SPEED_2, TEST_FAN_PWM_EXPECTED_SPEED);
-}
-
-// test that speed fails on out of range speeds
-void test_adt7476a_set_speed_invalid(void) {
-  uint8_t invalid_speed = 0x100;
-  TEST_ASSERT_NOT_OK(
-      adt7476a_set_speed(TEST_I2C_PORT, invalid_speed, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS));
-  TEST_ASSERT_NOT_OK(
-      adt7476a_set_speed(TEST_I2C_PORT, invalid_speed, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS));
 }
 
 // test if fetching data from register works
