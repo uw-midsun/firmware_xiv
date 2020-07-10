@@ -1,7 +1,7 @@
 #pragma once
 
 // Implementation of sense for reading from the MPPTs.
-// Requires the event queue, GPIO, SPI, mppt, and the data store to be initialized.
+// Requires the event queue, GPIO, SPI, mppt, sense, and the data store to be initialized.
 // SPI must be initialized in SPI_MODE_3.
 
 #include "solar_boards.h"
