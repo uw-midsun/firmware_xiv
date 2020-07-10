@@ -8,9 +8,6 @@
 
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_I2C_ADDRESS 0x74
-#define TEST_FAN_GROUP_1_CONFIG_REG 0x00
-#define TEST_FAN_GROUP_3_CONFIG_REG 0x01
-#define TEST_FAN_SMBALERT_REG 0x02
 #define TEST_FAN_PWM_SPEED_1 0x03
 #define TEST_FAN_PWM_SPEED_2 0x04
 #define TEST_FAN_PWM_EXPECTED_SPEED 0x80
@@ -33,6 +30,50 @@ typedef struct Adt7476aMockRegisters {
 Adt7476aMockRegisters MockRegisters;
 Adt7476aStorage MockStorage;
 Adt7476aStorage storage;
+
+StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
+                                    size_t tx_len) {
+ 
+  uint8_t cmd = reg;
+
+  switch (cmd) {
+    // Commands used in ads1259_init()
+    case ADT7476A_FAN_MODE_REGISTER_1:
+      MockRegisters.PWM_CONFIG_1 = tx_data;
+      break;
+    case ADT7476A_FAN_MODE_REGISTER_3:
+      MockRegisters.PWM_CONFIG_2 = tx_data;
+      break;
+    case ADT7476A_CONFIG_REGISTER_3:
+      MockRegisters.SMBALERT_PIN = tx_data;
+      break;
+    case ADT7476A_PWM_1:
+      MockRegisters.PWM_SPEED_1 = tx_data;
+      break;
+    case ADT7476A_PWM_3:
+      MockRegisters.PWM_SPEED_2 = tx_data;
+      break;
+  }
+  return STATUS_CODE_OK;
+}
+
+StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *rx_data,
+                                   size_t rx_len) {
+
+  uint8_t cmd = reg;
+
+  switch (cmd) {
+    // Commands used in ads1259_init()
+    case ADT7476A_INTERRUPT_STATUS_REGISTER_1:
+      rx_data = MockRegisters.INTERRUPT_STATUS_1;
+      break;
+    case ADT7476A_INTERRUPT_STATUS_REGISTER_2:
+      rx_data = MockRegisters.INTERRUPT_STATUS_2;
+      break;
+  }
+  return STATUS_CODE_OK;
+}
+
 
 void setup_test(void) {
   gpio_init();
@@ -74,50 +115,13 @@ void test_adt7476a_init_works(void) {
   TEST_ASSERT_EQUAL(MockStorage.callback, storage.callback);
   TEST_ASSERT_EQUAL(MockStorage.callback_context, storage.callback_context);
   TEST_ASSERT_EQUAL(MockStorage.i2c, storage.i2c);
+
+  TEST_ASSERT_EQUAL(ADT7476A_MANUAL_MODE_MASK, MockRegisters.PWM_CONFIG_1);
+  TEST_ASSERT_EQUAL(ADT7476A_MANUAL_MODE_MASK, MockRegisters.PWM_CONFIG_2);
+  TEST_ASSERT_EQUAL(ADT7476A_CONFIG_REG_3_MASK, MockRegisters.SMBALERT_PIN);
+
 }
 
-StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
-                                    size_t tx_len) {
-  TEST_ASSERT_EQUAL(i2c, I2C_PORT_2);
-  uint8_t cmd = reg;
-
-  switch (cmd) {
-    // Commands used in ads1259_init()
-    case TEST_FAN_GROUP_1_CONFIG_REG:
-      MockRegisters.PWM_CONFIG_1 = tx_data;
-      return STATUS_CODE_OK;
-    case TEST_FAN_GROUP_3_CONFIG_REG:
-      MockRegisters.PWM_CONFIG_2 = tx_data;
-      return STATUS_CODE_OK;
-    case TEST_FAN_SMBALERT_REG:
-      MockRegisters.SMBALERT_PIN = tx_data;
-      break;
-    case ADT7476A_PWM_1:
-      MockRegisters.PWM_SPEED_1 = tx_data;
-      break;
-    case ADT7476A_PWM_3:
-      MockRegisters.PWM_SPEED_2 = tx_data;
-      break;
-  }
-  return STATUS_CODE_OK;
-}
-
-StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *rx_data,
-                                   size_t rx_len) {
-  TEST_ASSERT_EQUAL(i2c, I2C_PORT_2);
-  uint8_t cmd = reg;
-
-  switch (cmd) {
-    // Commands used in ads1259_init()
-    case ADT7476A_INTERRUPT_STATUS_REGISTER_1:
-      rx_data = MockRegisters.INTERRUPT_STATUS_1;
-      return STATUS_CODE_OK;
-    case ADT7476A_INTERRUPT_STATUS_REGISTER_2:
-      rx_data = MockRegisters.INTERRUPT_STATUS_2;
-      return STATUS_CODE_OK;
-  }
-  return STATUS_CODE_OK;
-}
 
 // test that speeds are set correctly
 void test_adt7476a_set_speed(void) {
