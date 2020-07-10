@@ -1,4 +1,5 @@
 #include "solar_config.h"
+
 #include "data_store.h"
 #include "mcp3427_adc.h"
 #include "solar_events.h"

@@ -1,6 +1,7 @@
+#include "solar_config.h"
+
 #include "log.h"
 #include "sense_mcp3427.h"
-#include "solar_config.h"
 #include "test_helpers.h"
 #include "unity.h"
 
