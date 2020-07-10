@@ -1,3 +1,7 @@
+#include "sense_mcp3427.h"
+
+#include <stdint.h>
+
 #include "data_store.h"
 #include "event_queue.h"
 #include "i2c.h"
@@ -6,7 +10,6 @@
 #include "mcp3427_adc.h"
 #include "ms_test_helpers.h"
 #include "sense.h"
-#include "sense_mcp3427.h"
 #include "soft_timer.h"
 #include "solar_config.h"
 #include "solar_events.h"
@@ -76,6 +79,10 @@ static uint8_t s_num_sense_callbacks;
 StatusCode TEST_MOCK(sense_register)(SenseCallback callback, void *context) {
   s_sense_callbacks[s_num_sense_callbacks] = callback;
   s_sense_callback_contexts[s_num_sense_callbacks] = context;
+
+  // we should never receive a null callback
+  TEST_ASSERT_NOT_NULL(s_sense_callbacks[s_num_sense_callbacks]);
+
   s_num_sense_callbacks++;
   return STATUS_CODE_OK;
 }
@@ -94,6 +101,11 @@ StatusCode TEST_MOCK(mcp3427_start)(Mcp3427Storage *storage) {
   s_mcp3427_callback_contexts[s_num_mcp3427_callbacks] = storage->context;
   s_mcp3427_fault_callbacks[s_num_mcp3427_callbacks] = storage->fault_callback;
   s_mcp3427_fault_callback_contexts[s_num_mcp3427_callbacks] = storage->fault_context;
+
+  // we should never receive a null callback
+  TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[s_num_mcp3427_callbacks]);
+  TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[s_num_mcp3427_callbacks]);
+
   s_num_mcp3427_callbacks++;
   s_times_mcp3427_start_called++;
   return STATUS_CODE_OK;
@@ -131,11 +143,6 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   TEST_ASSERT_EQUAL(1, s_times_mcp3427_start_called);
   data_store_get_is_set(TEST_DATA_POINT, &is_set);
   TEST_ASSERT_EQUAL(false, is_set);  // not setting data yet
-
-  // make sure we received the various callbacks
-  TEST_ASSERT_NOT_NULL(s_sense_callbacks[0]);
-  TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[0]);
-  TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[0]);
 
   // call the MCP3427 callback, make sure nothing was set yet (we only set data on the sense cycle)
   s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
@@ -177,13 +184,10 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
   TEST_ASSERT_OK(sense_mcp3427_start());
   TEST_ASSERT_EQUAL(MAX_SOLAR_MCP3427, s_times_mcp3427_start_called);
 
-  // make sure we received the callbacks correctly
+  // make sure nothing was set in the data store yet
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     data_store_get_is_set(prv_get_test_data_point(i), &is_set);
-    TEST_ASSERT_EQUAL(false, is_set);  // nothing set in the data store yet
-    TEST_ASSERT_NOT_NULL(s_sense_callbacks[i]);
-    TEST_ASSERT_NOT_NULL(s_mcp3427_callbacks[i]);
-    TEST_ASSERT_NOT_NULL(s_mcp3427_fault_callbacks[i]);
+    TEST_ASSERT_EQUAL(false, is_set);
   }
 
   // call the MCP3427 callbacks, make sure nothing was set in the data store

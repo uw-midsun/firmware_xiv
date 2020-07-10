@@ -1,4 +1,8 @@
 #include "sense_mcp3427.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "data_store.h"
 #include "event_queue.h"
 #include "log.h"
@@ -12,40 +16,44 @@
 // we only use one channel on the MCP3427
 #define SENSE_MCP3427_CHANNEL MCP3427_CHANNEL_1
 
-static uint8_t s_num_mcp3427s;
-static Mcp3427Storage s_mcp3427_storages[MAX_SOLAR_MCP3427];
-static DataPoint s_mcp3427_data_points[MAX_SOLAR_MCP3427];
-static uint8_t s_indices[MAX_SOLAR_MCP3427];  // for contexts
+// holds all the data for each MCP3427, so we don't have to pass around an array index
+typedef struct SenseMcp3427Data {
+  Mcp3427Storage mcp3427_storage;
+  DataPoint mcp3427_data_point;
 
-static int16_t s_values[MAX_SOLAR_MCP3427];
-static bool s_has_value[MAX_SOLAR_MCP3427];
-static uint8_t s_consecutive_faults[MAX_SOLAR_MCP3427];
+  int16_t value;
+  bool has_value;
+  uint8_t consecutive_faults;
+} SenseMcp3427Data;
+
+static SenseMcp3427Data s_mcp3427_data[MAX_SOLAR_MCP3427];
+static uint8_t s_num_mcp3427s;
 
 static void prv_mcp3427_callback(int16_t value_ch1, int16_t value_ch2, void *context) {
-  uint8_t idx = *(uint8_t *)context;
-  s_values[idx] = (SENSE_MCP3427_CHANNEL == MCP3427_CHANNEL_1) ? value_ch1 : value_ch2;
-  s_has_value[idx] = true;
-  s_consecutive_faults[idx] = 0;
+  SenseMcp3427Data *data = context;
+  data->value = (SENSE_MCP3427_CHANNEL == MCP3427_CHANNEL_1) ? value_ch1 : value_ch2;
+  data->has_value = true;
+  data->consecutive_faults = 0;
 }
 
 static void prv_mcp3427_fault_callback(void *context) {
-  uint8_t idx = *(uint8_t *)context;
-  s_consecutive_faults[idx]++;
-  if (s_consecutive_faults[idx] >= MAX_CONSECUTIVE_MCP3427_FAULTS) {
-    DataPoint data_point = s_mcp3427_data_points[idx];
+  SenseMcp3427Data *data = context;
+  data->consecutive_faults++;
+  if (data->consecutive_faults >= MAX_CONSECUTIVE_MCP3427_FAULTS) {
+    DataPoint data_point = data->mcp3427_data_point;
     LOG_WARN(
         "sense_mcp3427 encountered too many MCP3427 faults on data point %d, raising fault event\n",
         data_point);
     event_raise(SOLAR_FAULT_EVENT_MCP3427, data_point);
-    s_consecutive_faults[idx] = 0;
+    data->consecutive_faults = 0;
   }
 }
 
 static void prv_sense_callback(void *context) {
-  uint8_t idx = *(uint8_t *)context;
-  if (s_has_value[idx]) {
-    DataPoint data_point = s_mcp3427_data_points[idx];
-    StatusCode status = data_store_set(data_point, (uint16_t)s_values[idx]);
+  SenseMcp3427Data *data = context;
+  if (data->has_value) {
+    DataPoint data_point = data->mcp3427_data_point;
+    StatusCode status = data_store_set(data_point, (uint16_t)data->value);
     if (!status_ok(status)) {
       LOG_WARN("sense_mcp3427 could not data_store_set with data point %d\n", data_point);
     }
@@ -60,17 +68,17 @@ StatusCode sense_mcp3427_init(SenseMcp3427Settings *settings) {
   s_num_mcp3427s = settings->num_mcp3427s;
 
   for (uint8_t i = 0; i < s_num_mcp3427s; i++) {
-    s_has_value[i] = false;
-    s_consecutive_faults[i] = 0;
-    s_indices[i] = i;
-    s_mcp3427_data_points[i] = settings->mcp3427s[i].data_point;
+    SenseMcp3427Data *data = &s_mcp3427_data[i];
+    data->has_value = false;
+    data->consecutive_faults = 0;
+    data->mcp3427_data_point = settings->mcp3427s[i].data_point;
     status_ok_or_return(
-        mcp3427_init(&s_mcp3427_storages[i], &settings->mcp3427s[i].mcp3427_settings));
+        mcp3427_init(&data->mcp3427_storage, &settings->mcp3427s[i].mcp3427_settings));
     status_ok_or_return(
-        mcp3427_register_callback(&s_mcp3427_storages[i], prv_mcp3427_callback, &s_indices[i]));
-    status_ok_or_return(mcp3427_register_fault_callback(&s_mcp3427_storages[i],
-                                                        prv_mcp3427_fault_callback, &s_indices[i]));
-    status_ok_or_return(sense_register(prv_sense_callback, &s_indices[i]));
+        mcp3427_register_callback(&data->mcp3427_storage, prv_mcp3427_callback, data));
+    status_ok_or_return(
+        mcp3427_register_fault_callback(&data->mcp3427_storage, prv_mcp3427_fault_callback, data));
+    status_ok_or_return(sense_register(prv_sense_callback, data));
   }
 
   return STATUS_CODE_OK;
@@ -78,7 +86,7 @@ StatusCode sense_mcp3427_init(SenseMcp3427Settings *settings) {
 
 StatusCode sense_mcp3427_start(void) {
   for (uint8_t i = 0; i < s_num_mcp3427s; i++) {
-    status_ok_or_return(mcp3427_start(&s_mcp3427_storages[i]));
+    status_ok_or_return(mcp3427_start(&s_mcp3427_data[i].mcp3427_storage));
   }
   return STATUS_CODE_OK;
 }
