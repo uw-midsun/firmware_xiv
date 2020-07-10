@@ -25,6 +25,7 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup f
   if (fan_group == ADT_FAN_GROUP_1) {
     status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &real_speed,
                                       SET_SPEED_NUM_BYTES));
+
   } else if (fan_group == ADT_FAN_GROUP_2) {
     status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &real_speed,
                                       SET_SPEED_NUM_BYTES));
