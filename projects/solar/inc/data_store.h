@@ -37,7 +37,8 @@ typedef enum {
   // Current from the current sense MCP3427
   DATA_POINT_CURRENT,
 
-  // Temperatures from the thermistors
+  // Temperatures from the thermistors - raw 12-bit values from the ADCs
+  // TODO(SOFT-215?): Figure out how to convert these to temperature values
   DATA_POINT_TEMPERATURE_1,
   DATA_POINT_TEMPERATURE_2,
   DATA_POINT_TEMPERATURE_3,

@@ -1,22 +1,18 @@
 #pragma once
 
 // Implementation of sense for reading from the thermistors.
-// Requires the event queue, GPIO, sense, and the data store to be initialized.
+// Requires the event queue, GPIO, ADC, sense, and the data store to be initialized.
+// ADC should be initialized in ADC_MODE_SINGLE.
 
-#include "data_store.h"
 #include "gpio.h"
 #include "solar_boards.h"
 #include "status.h"
 
 #define MAX_THERMISTORS MAX_SOLAR_BOARD_MPPTS
 
-typedef struct SenseTemperatureThermistorConfig {
-  DataPoint data_point;
-  GpioAddress pin;
-} SenseTemperatureThermistorConfig;
-
 typedef struct SenseTemperatureSettings {
-  SenseTemperatureThermistorConfig thermistors[MAX_THERMISTORS];
+  // The associated data point for the pin at index idx is DATA_POINT_TEMPERATURE(idx)
+  GpioAddress thermistor_pins[MAX_THERMISTORS];
   uint8_t num_thermistors;
 } SenseTemperatureSettings;
 

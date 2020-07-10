@@ -25,32 +25,13 @@ const SenseCurrentSettings sense_current_settings = {
 
 // |num_thermistors| is set dynamically by |config_get_sense_temperature_settings|
 static const SenseTemperatureSettings s_base_sense_temperature_settings =
-    { .thermistors = {
-          {
-              .data_point = DATA_POINT_TEMPERATURE_1,
-              .pin = { GPIO_PORT_A, 0 },
-          },
-          {
-              .data_point = DATA_POINT_TEMPERATURE_2,
-              .pin = { GPIO_PORT_A, 1 },
-          },
-          {
-              .data_point = DATA_POINT_TEMPERATURE_3,
-              .pin = { GPIO_PORT_A, 2 },
-          },
-          {
-              .data_point = DATA_POINT_TEMPERATURE_4,
-              .pin = { GPIO_PORT_A, 3 },
-          },
-          {
-              .data_point = DATA_POINT_TEMPERATURE_5,
-              .pin = { GPIO_PORT_A, 4 },
-          },
-          {
-              // not used on 5 MPPT board
-              .data_point = DATA_POINT_TEMPERATURE_6,
-              .pin = { GPIO_PORT_A, 5 },
-          },
+    { .thermistor_pins = {
+          { GPIO_PORT_A, 0 },
+          { GPIO_PORT_A, 1 },
+          { GPIO_PORT_A, 2 },
+          { GPIO_PORT_A, 3 },
+          { GPIO_PORT_A, 4 },
+          { GPIO_PORT_A, 5 },  // not used on 5 MPPT board
       } };
 
 StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
