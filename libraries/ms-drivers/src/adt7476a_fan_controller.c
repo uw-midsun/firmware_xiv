@@ -22,10 +22,10 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup f
 
   // determine which PWM output to change
   uint8_t real_speed = floor(speed_percent / 0.39);
-  if (fan_group == ADT_FAN_GROUP_1) { 
+  if (fan_group == ADT_FAN_GROUP_1) {
     status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &speed_percent,
                                       SET_SPEED_NUM_BYTES));
-  } else if (fan_group == ADT_FAN_GROUP_2){
+  } else if (fan_group == ADT_FAN_GROUP_2) {
     status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &speed_percent,
                                       SET_SPEED_NUM_BYTES));
   } else {

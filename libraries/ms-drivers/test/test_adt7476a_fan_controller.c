@@ -33,7 +33,6 @@ Adt7476aStorage storage;
 
 StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
                                     size_t tx_len) {
- 
   uint8_t cmd = reg;
 
   switch (cmd) {
@@ -59,7 +58,6 @@ StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, u
 
 StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *rx_data,
                                    size_t rx_len) {
-
   uint8_t cmd = reg;
 
   switch (cmd) {
@@ -73,7 +71,6 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
   }
   return STATUS_CODE_OK;
 }
-
 
 void setup_test(void) {
   gpio_init();
@@ -119,9 +116,7 @@ void test_adt7476a_init_works(void) {
   TEST_ASSERT_EQUAL(ADT7476A_MANUAL_MODE_MASK, MockRegisters.PWM_CONFIG_1);
   TEST_ASSERT_EQUAL(ADT7476A_MANUAL_MODE_MASK, MockRegisters.PWM_CONFIG_2);
   TEST_ASSERT_EQUAL(ADT7476A_CONFIG_REG_3_MASK, MockRegisters.SMBALERT_PIN);
-
 }
-
 
 // test that speeds are set correctly
 void test_adt7476a_set_speed(void) {
