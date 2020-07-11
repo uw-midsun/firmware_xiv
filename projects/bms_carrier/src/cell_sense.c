@@ -1,7 +1,11 @@
 #include "cell_sense.h"
 
+#include <string.h>
+
+#include "bms.h"
 #include "bms_events.h"
 #include "current_sense.h"
+#include "critical_section.h"
 #include "exported_enums.h"
 #include "ltc_afe.h"
 #include "status.h"
@@ -25,7 +29,7 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
     }
   }
 
-  fault_bps(EE_BPS_FAULT_SOURCE_CURRENT_SENSE_AFE_CELL, !fault);
+  fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_CELL, !fault);
 }
 
 static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *context) {
@@ -40,12 +44,12 @@ static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *conte
 
   for (size_t i = 0; i < len; ++i) {
     if (s_storage.readings->temps[i] > threshold) {
-      fault_bps(EE_BPS_FAULT_SOURCE_CURRENT_SENSE_AFE_TEMP, false);
+      fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_TEMP, false);
       return;
     }
   }
 
-  fault_bps(EE_BPS_FAULT_SOURCE_CURRENT_SENSE_AFE_TEMP, true);
+  fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_TEMP, true);
 }
 
 StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *afe_readings,
@@ -53,7 +57,7 @@ StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *afe_r
   s_storage.afe = afe;
   s_storage.readings = afe_readings;
   memset(afe_readings, 0, sizeof(AfeReadings));
-  memcpy(s_storage.settings, settings, sizeof(CellSenseSettings));
+  memcpy(&s_storage.settings, settings, sizeof(CellSenseSettings));
   ltc_afe_set_result_cbs(afe, prv_extract_cell_result, prv_extract_aux_result, NULL);
   return ltc_afe_request_cell_conversion(afe);
 }
@@ -63,7 +67,7 @@ StatusCode cell_sense_process_event(const Event *e) {
     case BMS_AFE_EVENT_FAULT:
       // TODO(SOFT-9): Logic about when to trigger a fault could be exported to fault_bps
       if (s_storage.num_afe_faults > MAX_AFE_FAULTS) {
-        fault_bps(EE_BPS_FAULT_SOURCE_CURRENT_SENSE_AFE_FSM, false);
+        fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM, false);
       }
       s_storage.num_afe_faults++;
       ltc_afe_request_cell_conversion(s_storage.afe);

@@ -11,7 +11,8 @@
 
 #define NUM_AFES 3
 #define NUM_CELL_MODULES_PER_AFE 6
-#define NUM_THERMISTORS_PER_AFE 30
+#define NUM_TOTAL_CELLS (NUM_AFES * NUM_CELL_MODULES_PER_AFE)
+#define NUM_THERMISTORS (NUM_TOTAL_CELLS)
 #define MAX_AFE_FAULTS 5
 
 typedef struct CellSenseSettings {
@@ -24,8 +25,8 @@ typedef struct CellSenseSettings {
 
 typedef struct AfeReadings {
   // TODO(SOFT-9): total_voltage used to be stored here as well
-  uint16_t voltages[NUM_AFES * NUM_CELL_MODULES_PER_AFE];
-  uint16_t temps[NUM_AFES * NUM_THERMISTORS_PER_AFE];
+  uint16_t voltages[NUM_TOTAL_CELLS];
+  uint16_t temps[NUM_THERMISTORS];
 } AfeReadings;
 
 typedef struct CellSenseStorage {
