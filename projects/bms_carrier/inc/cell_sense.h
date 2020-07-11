@@ -3,9 +3,9 @@
 #include <stdint.h>
 
 #include "event_queue.h"
+#include "ltc_afe.h"
 #include "spi.h"
 #include "status.h"
-#include "ltc_afe.h"
 
 // Requires ltc_afe to be initialized
 
@@ -24,8 +24,8 @@ typedef struct CellSenseSettings {
 
 typedef struct AfeReadings {
   // TODO(SOFT-9): total_voltage used to be stored here as well
-  uint16_t voltages[NUM_AFES*NUM_CELL_MODULES_PER_AFE];
-  uint16_t temps[NUM_AFES*NUM_THERMISTORS_PER_AFE];
+  uint16_t voltages[NUM_AFES * NUM_CELL_MODULES_PER_AFE];
+  uint16_t temps[NUM_AFES * NUM_THERMISTORS_PER_AFE];
 } AfeReadings;
 
 typedef struct CellSenseStorage {
@@ -35,6 +35,7 @@ typedef struct CellSenseStorage {
   CellSenseSettings settings;
 } CellSenseStorage;
 
-StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *readings, LtcAfeStorage *afe);
+StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *readings,
+                           LtcAfeStorage *afe);
 
 StatusCode cell_sense_process_event(const Event *e);
