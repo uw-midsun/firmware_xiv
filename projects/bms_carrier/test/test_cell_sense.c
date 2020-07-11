@@ -5,14 +5,13 @@
 #include "current_sense.h"
 #include "event_queue.h"
 #include "exported_enums.h"
-#include "interrupt.h"
 #include "gpio.h"
-#include "soft_timer.h"
-#include "soft_timer.h"
-#include "ltc_afe.h"
+#include "interrupt.h"
 #include "log.h"
-#include "test_helpers.h"
+#include "ltc_afe.h"
 #include "ms_test_helpers.h"
+#include "soft_timer.h"
+#include "test_helpers.h"
 
 #define NUM_GOOD_CELL_SENSE_TESTS 3
 #define NUM_DEVICES_TO_TEST 1
@@ -22,9 +21,9 @@
 #define VOLTAGE_READING_MIN 42
 #define TEMP_READING_MAX 1337
 #define TEMP_READING_MIN 42
-static AfeReadings s_raw_readings = { 
-  .voltages = {42, 69, 420, 1337},
-  .temps = {42, 69, 420, 1337},
+static AfeReadings s_raw_readings = {
+  .voltages = { 42, 69, 420, 1337 },
+  .temps = { 42, 69, 420, 1337 },
 };
 static AfeReadings s_readings;
 
@@ -42,21 +41,20 @@ static bool s_afe_should_fault;
 bool TEST_MOCK(ltc_afe_process_event)(LtcAfeStorage *afe, const Event *e) {
   LtcAfeEventList *afe_events = &afe->settings.ltc_events;
   LtcAfeResultCallback cb;
-  uint16_t* result_arr;
+  uint16_t *result_arr;
   if (e->id == BMS_AFE_EVENT_TRIGGER_AUX_CONV) {
-      cb = afe->settings.aux_result_cb;
-      result_arr = s_raw_readings.temps;
-  }
-  else if (e->id == BMS_AFE_EVENT_TRIGGER_CELL_CONV) {
-      cb = afe->settings.cell_result_cb;
-      result_arr = s_raw_readings.voltages;
-  }
-  else {
+    cb = afe->settings.aux_result_cb;
+    result_arr = s_raw_readings.temps;
+  } else if (e->id == BMS_AFE_EVENT_TRIGGER_CELL_CONV) {
+    cb = afe->settings.cell_result_cb;
+    result_arr = s_raw_readings.voltages;
+  } else {
     return false;
   }
 
   TEST_ASSERT_NOT_NULL(cb);
-  if (s_afe_should_fault) return status_ok(event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event, 0));
+  if (s_afe_should_fault)
+    return status_ok(event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event, 0));
   cb(result_arr, afe->settings.num_cells, afe->settings.result_context);
   return status_ok(event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->callback_run_event, 0));
 }
@@ -85,10 +83,10 @@ static StatusCode prv_init_ltc(void) {
   return ltc_afe_init(&s_afe, &afe_settings);
 }
 
-// TODO(SOFT-9): These checks make sense with mocking, but not without it ... might wanna remove them
+// TODO(SOFT-9): These checks make sense with mocking, but not without it would have to remove
 void prv_check_cell_results(bool is_clear) {
   for (size_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
-    TEST_ASSERT_EQUAL(s_readings.voltages[i], is_clear?0:s_raw_readings.voltages[i]);
+    TEST_ASSERT_EQUAL(s_readings.voltages[i], is_clear ? 0 : s_raw_readings.voltages[i]);
     s_readings.voltages[i] = 0;
   }
 }
@@ -132,13 +130,12 @@ void prv_test_single_loop() {
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_CALLBACK_RUN);
   cell_sense_process_event(&e);
 
-
   // Verify aux fault state matches
   LOG_DEBUG("Verifying if aux fault state matches\n");
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_TRIGGER_AUX_CONV);
   ltc_afe_process_event(&s_afe, &e);
   prv_check_temp_results(false);
-  
+
   LOG_DEBUG("Verifying no FSM result fault\n");
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_CALLBACK_RUN);
   cell_sense_process_event(&e);
@@ -162,7 +159,7 @@ void test_normal_cell_sense(void) {
 
 void test_cell_undervoltage_fault_cell_sense(void) {
   CellSenseSettings settings = {
-    .undervoltage_dmv = VOLTAGE_READING_MIN + 50, // Some voltages should now be undervoltage
+    .undervoltage_dmv = VOLTAGE_READING_MIN + 50,  // Some voltages should now be undervoltage
     .overvoltage_dmv = VOLTAGE_READING_MAX,
     .charge_overtemp_dmv = TEMP_READING_MAX,
     .discharge_overtemp_dmv = TEMP_READING_MAX,
@@ -200,7 +197,7 @@ void test_temp_charging_fault_cell_sense(void) {
   };
   Event e = { 0 };
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
-  
+
   s_is_charging = false;
   s_expected_fault_bitset = EE_BPS_STATE_OK;
   prv_test_single_loop();
@@ -242,7 +239,7 @@ void test_afe_fsm_fault_cell_sense(void) {
   Event e = { 0 };
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
   s_afe_should_fault = true;
-  
+
   s_expected_fault_bitset = EE_BPS_STATE_OK;
   for (size_t i = 0; i < MAX_AFE_FAULTS; i++) {
     prv_test_fsm_fault();
