@@ -111,7 +111,7 @@ void test_adc_read_fail(void) {
   bool is_set;
   uint16_t set_value;
   SenseTemperatureSettings settings = {
-    .thermistor_pins = {{GPIO_PORT_A, 0}},
+    .thermistor_pins = { { GPIO_PORT_A, 0 } },
     .num_thermistors = 1,
   };
   TEST_ASSERT_OK(sense_temperature_init(&settings));
