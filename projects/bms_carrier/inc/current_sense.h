@@ -7,8 +7,10 @@
 
 #define NUM_STORED_CURRENT_READINGS 20
 
-typedef struct CurrentStorage {
+typedef struct CurrentReadings {
   int16_t readings[NUM_STORED_CURRENT_READINGS];
-} CurrentStorage;
+} CurrentReadings;
 
-StatusCode current_sense_init(SpiSettings *settings, CurrentStorage *storage);
+bool current_sense_is_charging();
+
+StatusCode current_sense_init(SpiSettings *settings);
