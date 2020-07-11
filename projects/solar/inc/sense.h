@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include "status.h"
 
-#define MAX_SENSE_CALLBACKS 10
+#define MAX_SENSE_CALLBACKS 32
 
 // Callback implementations should read data and call |data_store_set| with each data point.
 // Implementations should avoid blocking - if data isn't ready, log it, possibly raise a fault
