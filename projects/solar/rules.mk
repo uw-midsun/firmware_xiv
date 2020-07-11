@@ -15,3 +15,4 @@ $(T)_test_sense_current_MOCKS := data_store_set sense_register mcp3427_register_
 	mcp3427_register_fault_callback mcp3427_start
 $(T)_test_sense_mppt_MOCKS := sense_register mppt_read_current mppt_read_voltage_in mppt_read_pwm \
 	mppt_read_status
+$(T)_test_sense_temperature_MOCKS := sense_register adc_read_raw

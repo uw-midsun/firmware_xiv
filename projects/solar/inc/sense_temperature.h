@@ -1,7 +1,7 @@
 #pragma once
 
 // Implementation of sense for reading from the thermistors.
-// Requires the event queue, GPIO, ADC, sense, and the data store to be initialized.
+// Requires GPIO, ADC, sense, and the data store to be initialized.
 // ADC should be initialized in ADC_MODE_SINGLE.
 
 #include "gpio.h"

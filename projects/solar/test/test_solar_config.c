@@ -1,18 +1,39 @@
 #include "solar_config.h"
 
+#include "adc.h"
+#include "data_store.h"
+#include "event_queue.h"
+#include "gpio.h"
+#include "interrupt.h"
 #include "log.h"
+#include "sense.h"
 #include "sense_temperature.h"
+#include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
 
-void setup_test(void) {}
+void setup_test(void) {
+  interrupt_init();
+  soft_timer_init();
+  gpio_init();
+  event_queue_init();
+  data_store_init();
+  adc_init(ADC_MODE_SINGLE);
+
+  SenseSettings sense_settings = { .sense_period_us = 100000 };
+  sense_init(&sense_settings);
+}
 void teardown_test(void) {}
 
-// Test that we can initialize the config returned by |config_get_sense_temperature_settings|
-void test_initializing_sense_temperature_config(void) {
+// Test that we can initialize the configs returned by |config_get_sense_temperature_settings|.
+// This is separated into two tests to avoid exhausting the sense callbacks.
+void test_initializing_sense_temperature_config_5_mppts(void) {
   SenseTemperatureSettings settings;
   TEST_ASSERT_OK(config_get_sense_temperature_settings(SOLAR_BOARD_5_MPPTS, &settings));
   TEST_ASSERT_OK(sense_temperature_init(&settings));
+}
+void test_initializing_sense_temperature_config_6_mppts(void) {
+  SenseTemperatureSettings settings;
   TEST_ASSERT_OK(config_get_sense_temperature_settings(SOLAR_BOARD_6_MPPTS, &settings));
   TEST_ASSERT_OK(sense_temperature_init(&settings));
 }
