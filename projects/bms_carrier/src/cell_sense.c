@@ -68,14 +68,16 @@ StatusCode cell_sense_process_event(const Event *e) {
       // TODO(SOFT-9): Logic about when to trigger a fault could be exported to fault_bps
       if (s_storage.num_afe_faults > MAX_AFE_FAULTS) {
         fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM, false);
+      } 
+      else {
+        s_storage.num_afe_faults++;
       }
-      s_storage.num_afe_faults++;
       ltc_afe_request_cell_conversion(s_storage.afe);
       break;
 
     case BMS_AFE_EVENT_CALLBACK_RUN:
       s_storage.num_afe_faults = 0;
-      fault_bps(EE_BPS_FAULT_SOURCE_CURRENT_SENSE_AFE_FSM, true);
+      fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM, true);
       break;
 
     default:
