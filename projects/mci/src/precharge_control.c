@@ -17,16 +17,22 @@ static PrechargeControlStorage s_precharge_storage = { 0 };
 PrechargeControlStorage *test_get_storage(void) {
   return &s_precharge_storage;
 }
+
 StatusCode prv_set_precharge_control(PrechargeControlStorage *storage, const GpioState state) {
   gpio_set_state(&storage->precharge_control, state);
-  gpio_set_state(&storage->precharge_control2, state);
   return STATUS_CODE_OK;
 }
 
-void prv_precharge_completed(const GpioAddress *address, void *context) {
+void prv_precharge_monitor(const GpioAddress *address, void *context) {
   PrechargeControlStorage *storage = context;
-  storage->state = MCI_PRECHARGE_CHARGED;
-  CAN_TRANSMIT_PRECHARGE_COMPLETED();
+  if (storage->state == MCI_PRECHARGE_INCONSISTENT) {
+    // both pins are in sync
+    storage->state = MCI_PRECHARGE_CHARGED;
+    CAN_TRANSMIT_PRECHARGE_COMPLETED();
+  } else {
+    // inconsistent until second precharge result
+    storage->state = MCI_PRECHARGE_INCONSISTENT;
+  }
 }
 
 StatusCode prv_discharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
@@ -46,9 +52,10 @@ PrechargeState get_precharge_state() {
 
 void prv_populate_storage(PrechargeControlStorage *storage,
                           const PrechargeControlSettings *settings) {
+  storage->state = MCI_PRECHARGE_DISCHARGED;
   storage->precharge_control = settings->precharge_control;
-  storage->precharge_control2 = settings->precharge_control2;
   storage->precharge_monitor = settings->precharge_monitor;
+  storage->precharge_monitor2 = settings->precharge_monitor2;
   storage->initialized = true;
 }
 
@@ -66,11 +73,14 @@ StatusCode precharge_control_init(const PrechargeControlSettings *settings) {
   InterruptSettings monitor_it_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                             .priority = INTERRUPT_PRIORITY_NORMAL };
   status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_control, &control_settings));
-  status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_control2, &control_settings));
   status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_monitor, &monitor_settings));
+  status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_monitor2, &monitor_settings));
   status_ok_or_return(gpio_it_register_interrupt(&s_precharge_storage.precharge_monitor,
                                                  &monitor_it_settings, INTERRUPT_EDGE_RISING,
-                                                 prv_precharge_completed, &s_precharge_storage));
+                                                 prv_precharge_monitor, &s_precharge_storage));
+  status_ok_or_return(gpio_it_register_interrupt(&s_precharge_storage.precharge_monitor2,
+                                                 &monitor_it_settings, INTERRUPT_EDGE_RISING,
+                                                 prv_precharge_monitor, &s_precharge_storage));
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE, prv_precharge_rx,
                                               &s_precharge_storage));
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_DISCHARGE_PRECHARGE,
