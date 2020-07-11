@@ -83,17 +83,28 @@ static StatusCode prv_init_ltc(void) {
   return ltc_afe_init(&s_afe, &afe_settings);
 }
 
-// TODO(SOFT-9): These checks make sense with mocking, but not without it would have to remove
 void prv_check_cell_results(bool is_clear) {
   for (size_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
-    TEST_ASSERT_EQUAL(s_readings.voltages[i], is_clear ? 0 : s_raw_readings.voltages[i]);
+    if (is_clear) {
+      TEST_ASSERT_EQUAL(s_readings.temps[i], 0);
+      continue;
+    }
+
+    TEST_ASSERT_TRUE(s_readings.voltages[i] <= VOLTAGE_READING_MAX);
+    TEST_ASSERT_TRUE(s_readings.voltages[i] >= VOLTAGE_READING_MIN);
     s_readings.voltages[i] = 0;
   }
 }
 
 void prv_check_temp_results(bool is_clear) {
   for (size_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
-    TEST_ASSERT_EQUAL(s_readings.temps[i], is_clear ? 0 : s_raw_readings.temps[i]);
+    if (is_clear) {
+      TEST_ASSERT_EQUAL(s_readings.temps[i], 0);
+      continue;
+    }
+
+    TEST_ASSERT_TRUE(s_readings.temps[i] <= TEMP_READING_MAX);
+    TEST_ASSERT_TRUE(s_readings.temps[i] >= TEMP_READING_MIN);
     s_readings.temps[i] = 0;
   }
 }
