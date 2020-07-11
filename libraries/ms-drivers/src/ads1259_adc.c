@@ -35,8 +35,12 @@ static void prv_send_command(Ads1259Storage *storage, uint8_t command) {
 // Reads 1-byte reg value to storage->data
 static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, uint8_t reg_val) {
   uint8_t payload[] = { (ADS1259_READ_REGISTER | reg_add) };
-  spi_exchange(storage->spi_port, payload, 1, &storage->rx_data.MSB, 1);
-  if (reg_val != storage->rx_data.MSB) {
+  uint8_t read_val = 0;
+  spi_exchange(storage->spi_port, payload, 1, &read_val, 1);
+  printf("register: 0x%x\n", reg_add);
+  printf("gotten: 0x%x\n", read_val);
+  printf("expected: 0x%x\n", reg_val);
+  if (reg_val != read_val) {
     return STATUS_CODE_UNINITIALIZED;
   }
   return STATUS_CODE_OK;
@@ -51,14 +55,18 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   // reset all register values to default
   prv_send_command(storage, ADS1259_RESET);  // Needs 8 fclk cycles before next command
   delay_us(100);
+  prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
   uint8_t payload[NUM_REGISTER_WRITE_COMM] = { (ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0),
                                                NUM_CONFIG_REGISTERS - 1, register_lookup[0],
                                                register_lookup[1], register_lookup[2] };
   // tx write-reg command and data for all three config registers
+  for (uint8_t reg = 0; reg < NUM_CONFIG_REGISTERS; reg++) {
+    prv_check_register(storage, reg, register_lookup[reg]);
+  }
   spi_exchange(storage->spi_port, payload, NUM_REGISTER_WRITE_COMM, NULL, 0);
   // sanity check that data was written correctly
-  for (int reg = 0; reg < NUM_CONFIG_REGISTERS; reg++) {
-    status_ok_or_return(prv_check_register(storage, reg, register_lookup[reg]));
+  for (uint8_t reg = 0; reg < NUM_CONFIG_REGISTERS; reg++) {
+    prv_check_register(storage, reg, register_lookup[reg]);
   }
   return STATUS_CODE_OK;
 }
