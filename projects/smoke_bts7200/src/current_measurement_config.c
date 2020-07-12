@@ -13,38 +13,41 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           POWER_DISTRIBUTION_I2C_ADDRESS_1,  //
       },
   .num_dsel_i2c_addresses = 2,
-  .bts7200s = (PowerDistributionBts7200Data[]){ {
-                                                    .dsel_pin = FRONT_PIN_LEFT_RIGHT_CAM_DSEL,
-                                                    .mux_selection = 12,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_DVR_REAR_DISP_DSEL,
-                                                    .mux_selection = 0,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_L_R_DVR_DISP_DSEL,
-                                                    .mux_selection = 4,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_FRONT_TURN_LIGHT_DSEL,
-                                                    .mux_selection = 9,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_MAIN_REAR_PI_DSEL,
-                                                    .mux_selection = 1,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_5V_SPARE_DSEL,
-                                                    .mux_selection = 2,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_SPARE_2_CTR_CONSL_DSEL,
-                                                    .mux_selection = 7,
-                                                },
-                                                {
-                                                    .dsel_pin = FRONT_PIN_STR_PDL_DSEL,
-                                                    .mux_selection = 6,
-                                                } },
+  .bts7200s =
+      (PowerDistributionBts7200Data[]){
+          {
+              .dsel_pin = FRONT_PIN_LEFT_RIGHT_CAM_DSEL,
+              .mux_selection = 12,
+          },
+          {
+              .dsel_pin = FRONT_PIN_DVR_REAR_DISP_DSEL,
+              .mux_selection = 0,
+          },
+          {
+              .dsel_pin = FRONT_PIN_L_R_DVR_DISP_DSEL,
+              .mux_selection = 4,
+          },
+          {
+              .dsel_pin = FRONT_PIN_FRONT_TURN_LIGHT_DSEL,
+              .mux_selection = 9,
+          },
+          {
+              .dsel_pin = FRONT_PIN_MAIN_REAR_PI_DSEL,
+              .mux_selection = 1,
+          },
+          {
+              .dsel_pin = FRONT_PIN_5V_SPARE_DSEL,
+              .mux_selection = 2,
+          },
+          {
+              .dsel_pin = FRONT_PIN_SPARE_2_CTR_CONSL_DSEL,
+              .mux_selection = 7,
+          },
+          {
+              .dsel_pin = FRONT_PIN_STR_PDL_DSEL,
+              .mux_selection = 6,
+          },
+      },
   .num_bts7200_channels = 8,
   .mux_address =
       {
