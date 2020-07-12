@@ -13,56 +13,38 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           POWER_DISTRIBUTION_I2C_ADDRESS_1,  //
       },
   .num_dsel_i2c_addresses = 2,
-  .bts7200s =
-      (PowerDistributionBts7200Data[]){
-          {
-              .dsel_pin = FRONT_PIN_LEFT_RIGHT_CAM_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_LEFT_CAMERA,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_RIGHT_CAMERA,
-              .mux_selection = 12,
-          },
-          {
-              .dsel_pin = FRONT_PIN_DVR_REAR_DISP_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_DRIVER_DISPLAY,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_REAR_DISPLAY,
-              .mux_selection = 0,
-          },
-          {
-              .dsel_pin = FRONT_PIN_L_R_DVR_DISP_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_LEFT_DRIVER_DISPLAY,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_RIGHT_DRIVER_DISPLAY,
-              .mux_selection = 4,
-          },
-          {
-              .dsel_pin = FRONT_PIN_FRONT_TURN_LIGHT_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_LEFT_FRONT_TURN_LIGHT,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_RIGHT_FRONT_TURN_LIGHT,
-              .mux_selection = 9,
-          },
-          {
-              .dsel_pin = FRONT_PIN_MAIN_REAR_PI_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_MAIN_PI,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_REAR_PI,
-              .mux_selection = 1,
-          },
-          {
-              .dsel_pin = FRONT_PIN_5V_SPARE_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_5V_SPARE_1,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_5V_SPARE_2,
-              .mux_selection = 2,
-          },
-          {
-              .dsel_pin = FRONT_PIN_SPARE_2_CTR_CONSL_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_SPARE_2,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_CENTRE_CONSOLE,
-              .mux_selection = 7,
-          },
-          {
-              .dsel_pin = FRONT_PIN_STR_PDL_DSEL,
-              //   .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_STEERING,
-              //   .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_PEDAL,
-              .mux_selection = 6,
-          } },
+  .bts7200s = (PowerDistributionBts7200Data[]){ {
+                                                    .dsel_pin = FRONT_PIN_LEFT_RIGHT_CAM_DSEL,
+                                                    .mux_selection = 12,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_DVR_REAR_DISP_DSEL,
+                                                    .mux_selection = 0,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_L_R_DVR_DISP_DSEL,
+                                                    .mux_selection = 4,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_FRONT_TURN_LIGHT_DSEL,
+                                                    .mux_selection = 9,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_MAIN_REAR_PI_DSEL,
+                                                    .mux_selection = 1,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_5V_SPARE_DSEL,
+                                                    .mux_selection = 2,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_SPARE_2_CTR_CONSL_DSEL,
+                                                    .mux_selection = 7,
+                                                },
+                                                {
+                                                    .dsel_pin = FRONT_PIN_STR_PDL_DSEL,
+                                                    .mux_selection = 6,
+                                                } },
   .num_bts7200_channels = 8,
   .mux_address =
       {
@@ -93,50 +75,34 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
       (PowerDistributionBts7200Data[]){
           {
               .dsel_pin = REAR_PIN_SOLAR_TELEMETRY_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SOLAR_SENSE,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_TELEMETRY,
               .mux_selection = 7,
           },
           {
               .dsel_pin = REAR_PIN_STROBE_CTR_BRK_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_STROBE,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_CENTRE_BRAKE_LIGHT,
               .mux_selection = 9,
           },
           {
               .dsel_pin = REAR_PIN_REAR_TURN_LIGHT_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_LEFT_REAR_TURN_LIGHT,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_REAR_TURN_LIGHT,
               .mux_selection = 0,
           },
           {
               .dsel_pin = REAR_PIN_REAR_BRAKE_LIGHT_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_LEFT_BRAKE_LIGHT,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_BRAKE_LIGHT,
               .mux_selection = 4,
           },
           {
               .dsel_pin = REAR_PIN_CAM_SPARE_10_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_REAR_CAMERA,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_10,
               .mux_selection = 12,
           },
           {
               .dsel_pin = REAR_PIN_SPARE_1_2_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_1,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_2,
               .mux_selection = 1,
           },
           {
               .dsel_pin = REAR_PIN_SPARE_3_4_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_3,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_4,
               .mux_selection = 2,
           },
           {
               .dsel_pin = REAR_PIN_SPARE_8_9_DSEL,
-              //   .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_8,
-              //   .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_9,
               .mux_selection = 6,
           },
       },
