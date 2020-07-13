@@ -334,6 +334,30 @@
     status;                                                                         \
   })
 
+#define CAN_TRANSMIT_REQUEST_TO_CHARGE()          \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_REQUEST_TO_CHARGE(&msg);             \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_ALLOW_CHARGING()             \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_ALLOW_CHARGING(&msg);                \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_CHARGER_CONNECTED_STATE(is_connected_u8)  \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_CHARGER_CONNECTED_STATE(&msg, (is_connected_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);              \
+    status;                                                    \
+  })
+
 #define CAN_TRANSMIT_LINEAR_ACCELERATION()        \
   ({                                              \
     CanMessage msg = { 0 };                       \
@@ -372,4 +396,30 @@
     CAN_PACK_REAR_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
     StatusCode status = can_transmit(&msg, NULL);                             \
     status;                                                                   \
+  })
+
+#define CAN_TRANSMIT_AUX_BATTERY_STATUS(aux_battery_volt_u16, aux_battery_temp_u16,   \
+                                        dcdc_status_u16)                              \
+  ({                                                                                  \
+    CanMessage msg = { 0 };                                                           \
+    CAN_PACK_AUX_BATTERY_STATUS(&msg, (aux_battery_volt_u16), (aux_battery_temp_u16), \
+                                (dcdc_status_u16));                                   \
+    StatusCode status = can_transmit(&msg, NULL);                                     \
+    status;                                                                           \
+  })
+
+#define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8)        \
+  ({                                                                                  \
+    CanMessage msg = { 0 };                                                           \
+    CAN_PACK_BATTERY_FAN_STATE(&msg, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);                                     \
+    status;                                                                           \
+  })
+
+#define CAN_TRANSMIT_BATTERY_RELAY_STATE(hv_u8, gnd_u8)    \
+  ({                                                       \
+    CanMessage msg = { 0 };                                \
+    CAN_PACK_BATTERY_RELAY_STATE(&msg, (hv_u8), (gnd_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);          \
+    status;                                                \
   })

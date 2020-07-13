@@ -7,3 +7,9 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
+
+
+ifeq (x86,$(PLATFORM))
+$(T)_test_ltc_afe_MOCKS := spi_exchange
+$(T)_test_ads1259_adc_MOCKS := spi_exchange
+endif

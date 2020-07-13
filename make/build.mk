@@ -42,20 +42,21 @@ $(STATIC_LIB_DIR)/lib$(T).a: $($(T)_OBJ) $(call dep_to_lib,$($(T)_DEPS)) | $(STA
 	@$(AR) -r $@ $^
 
 # Application target
-$(BIN_DIR)/$(T)$(PLATFORM_EXT): $($(T)_OBJ) $(call dep_to_lib,$($(T)_DEPS)) | $(T) $(BIN_DIR)
+$(BIN_DIR)/$(T)$(PLATFORM_EXT): $($(T)_OBJ) $(call dep_to_lib,$($(T)_DEPS)) $(DEP_VARS) | $(T) $(BIN_DIR)
 	@echo "Building $(notdir $@) for $(PLATFORM)"
-	@$(CC) $($(firstword $|)_CFLAGS) -Wl,-Map=$(BIN_DIR)/$(notdir $(@:%$(PLATFORM_EXT)=%.map)) $^ -o $@ \
+	@$(CC) $($(firstword $|)_CFLAGS) -Wl,-Map=$(BIN_DIR)/$(notdir $(@:%$(PLATFORM_EXT)=%.map)) \
+		$(filter-out $(DEP_VARS),$^) -o $@ \
 		-L$(STATIC_LIB_DIR) $(addprefix -l,$($(firstword $|)_DEPS)) \
 		$(LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS))
 	@$(OBJDUMP) -St $@ >$(basename $@).lst
 	@$(SIZE) $@
 
 # Object target - use first order-only dependency to expand the library name for subshells
-$($(T)_OBJ_ROOT)/%.o: $($(T)_SRC_ROOT)/%.c | $(T) $(dir $($(T)_OBJ))
+$($(T)_OBJ_ROOT)/%.o: $($(T)_SRC_ROOT)/%.c $(DEP_VARS) | $(T) $(dir $($(T)_OBJ))
 	@echo "$(firstword $|): $(notdir $<) -> $(notdir $@)"
 	@$(CC) -MD -MP -c -o $@ $< $($(firstword $|)_CFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS))
 
-$($(T)_OBJ_ROOT)/%.o: $($(T)_SRC_ROOT)/%.s | $(T) $(dir $($(T)_OBJ))
+$($(T)_OBJ_ROOT)/%.o: $($(T)_SRC_ROOT)/%.s $(DEP_VARS) | $(T) $(dir $($(T)_OBJ))
 	@echo "$(firstword $|): $(notdir $<) -> $(notdir $@)"
 	@$(CC) -MD -MP -c -o $@ $< $($(firstword $|)_CFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS))
 
@@ -64,7 +65,7 @@ $($(T)_OBJ_ROOT)/%.o: $($(T)_SRC_ROOT)/%.s | $(T) $(dir $($(T)_OBJ))
 # Postpone dependency and include directory resolution
 # We use make's dependency resolution to ensure that the libraries and projects
 # are resolved in the correct order.
-$(T): $($(T)_DEPS) | $(TARGET_TYPE)
+$(T): $($(T)_DEPS) $(DEP_VARS) | $(TARGET_TYPE)
 	$(eval $(@)_DEPS += $(foreach dep,$^,$($(dep)_DEPS)))
 	$(eval $(@)_INC_DIRS += $(LIB_INC_DIRS))
 	@echo "Processing $(firstword $|) $@"

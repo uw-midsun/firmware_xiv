@@ -9,16 +9,17 @@
 #   CM: [COMPILER=] - Specifies the compiler to use on x86. Defaults to gcc [gcc | clang].
 #   CO: [COPTIONS=] - Specifies compiler options on x86 [asan | tsan].
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
+#   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #
 # Usage:
-#   make [all] [PL] [PR] - Builds the target project and its dependencies
+#   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
 #   make clean - Completely deletes all build output
 #   make format - Formats all non-vendor code
-#   make gdb [PL] [PR|LI] [TE] - Builds and runs the specified unit test and connects an instance of GDB
+#   make gdb [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test and connects an instance of GDB
 #   make lint - Lints all non-vendor code
 #   make new [PR|LI] - Creates folder structure for new project or library
-#   make remake [PL] [PR] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
-#   make test [PL] [PR|LI] [TE] - Builds and runs the specified unit test, assuming all tests if TE is not defined
+#   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
+#   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
 #
 # Platform specific:
@@ -44,6 +45,9 @@ include $(MAKE_DIR)/filter.mk
 # Location of project
 PROJECT_DIR := $(PROJ_DIR)/$(PROJECT)
 
+# Location of library
+LIBRARY_DIR := $(LIB_DIR)/$(LIBRARY)
+
 # Location of platform
 PLATFORM_DIR := $(PLATFORMS_DIR)/$(PLATFORM)
 
@@ -59,6 +63,9 @@ STATIC_LIB_DIR := $(BUILD_DIR)/lib/$(PLATFORM)
 # Object cache
 OBJ_CACHE := $(BUILD_DIR)/obj/$(PLATFORM)
 
+# Dependable variable directory
+DEP_VAR_DIR := $(BUILD_DIR)/dep_var/$(PLATFORM)
+
 # Set target binary - invalid for targets with more than one binary
 ifeq (,$(TEST))
 TARGET_BINARY = $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT)
@@ -66,7 +73,7 @@ else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
-DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE)
+DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
 # Please don't touch anything below this line
@@ -101,6 +108,18 @@ define find_in
 $(foreach folder,$(1),$(wildcard $(folder)/$(2)))
 endef
 
+# Hack to enable depending on a variable - https://stackoverflow.com/a/26147844
+# $(eval $(call dependable_var,variable))
+DEP_VARS :=
+define dependable_var
+DEP_VARS += $(DEP_VAR_DIR)/$1
+.PHONY: phony
+$(DEP_VAR_DIR)/$1: phony | $(DEP_VAR_DIR)
+	@if [ "`cat $(DEP_VAR_DIR)/$1 2>&1`" != '$($1)' ]; then \
+		echo -n $($1) > $(DEP_VAR_DIR)/$1; \
+	fi
+endef
+
 # include the target build rules
 -include $(PROJECT_DIR)/rules.mk
 
@@ -121,6 +140,12 @@ all: build lint pylint
 # Includes platform-specific configurations
 include $(PLATFORMS_DIR)/$(PLATFORM)/platform.mk
 
+# Adds preprocessor defines
+CFLAGS += $(addprefix -D,$(DEFINE))
+
+# Allow depending on the value of DEFINE so we rebuild after changing defines
+$(eval $(call dependable_var,DEFINE))
+
 # Includes all libraries so make can find their targets
 $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 
@@ -129,29 +154,41 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
-FIND := find $(PROJ_DIR) $(LIB_DIR) \
+FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
+FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
 lint:
-	@echo "Linting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
+
+#Quick lint on ONLY changed/new files
+.PHONY: lint_quick
+lint_quick:
+	@echo "Quick linting on ONLY changed/new files"
+	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
 # Disable import error
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
 
+.PHONY: format_quick
+format_quick:
+	@echo "Quick format on ONlY changed/new files"
+	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
+
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
 format:
-	@echo "Formatting *.[ch] in $(PROJ_DIR), $(LIB_DIR)"
+	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
 

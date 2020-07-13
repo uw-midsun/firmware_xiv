@@ -205,6 +205,19 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_INFO, 6, \
                     (current_u16), (voltage_u16), (status_bitset_u16), CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_REQUEST_TO_CHARGE(msg_ptr) \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_REQUEST_TO_CHARGE)
+
+#define CAN_PACK_ALLOW_CHARGING(msg_ptr)                           \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
+                      SYSTEM_CAN_MESSAGE_ALLOW_CHARGING)
+
+#define CAN_PACK_CHARGER_CONNECTED_STATE(msg_ptr, is_connected_u8)                         \
+  can_pack_impl_u8(                                                                        \
+      (msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_CONNECTED_STATE, 1, \
+      (is_connected_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,    \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_LINEAR_ACCELERATION(msg_ptr) \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_IMU, SYSTEM_CAN_MESSAGE_LINEAR_ACCELERATION)
 
@@ -226,3 +239,20 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,             \
                     SYSTEM_CAN_MESSAGE_REAR_CURRENT_MEASUREMENT, 4, (current_id_u16), \
                     (current_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16, aux_battery_temp_u16, \
+                                    dcdc_status_u16)                                     \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                        \
+                    SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 6, (aux_battery_volt_u16),    \
+                    (aux_battery_temp_u16), (dcdc_status_u16), CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8)                \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER, SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE, \
+                   4, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8), CAN_PACK_IMPL_EMPTY,         \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_BATTERY_RELAY_STATE(msg_ptr, hv_u8, gnd_u8)                      \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER,                      \
+                   SYSTEM_CAN_MESSAGE_BATTERY_RELAY_STATE, 2, (hv_u8), (gnd_u8),  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)

@@ -164,6 +164,15 @@
   can_unpack_impl_u16((msg_ptr), 6, (current_u16_ptr), (voltage_u16_ptr), (status_bitset_u16_ptr), \
                       CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_REQUEST_TO_CHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+
+#define CAN_UNPACK_ALLOW_CHARGING(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+
+#define CAN_UNPACK_CHARGER_CONNECTED_STATE(msg_ptr, is_connected_u8_ptr)                  \
+  can_unpack_impl_u8((msg_ptr), 1, (is_connected_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_LINEAR_ACCELERATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_ANGULAR_ROTATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
@@ -180,3 +189,19 @@
 #define CAN_UNPACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),              \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16_ptr, aux_battery_temp_u16_ptr, \
+                                      dcdc_status_u16_ptr)                                         \
+  can_unpack_impl_u16((msg_ptr), 6, (aux_battery_volt_u16_ptr), (aux_battery_temp_u16_ptr),        \
+                      (dcdc_status_u16_ptr), CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8_ptr, fan_2_u8_ptr, fan_3_u8_ptr,            \
+                                     fan_4_u8_ptr)                                                 \
+  can_unpack_impl_u8((msg_ptr), 4, (fan_1_u8_ptr), (fan_2_u8_ptr), (fan_3_u8_ptr), (fan_4_u8_ptr), \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_BATTERY_RELAY_STATE(msg_ptr, hv_u8_ptr, gnd_u8_ptr)                    \
+  can_unpack_impl_u8((msg_ptr), 2, (hv_u8_ptr), (gnd_u8_ptr), CAN_UNPACK_IMPL_EMPTY,      \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)

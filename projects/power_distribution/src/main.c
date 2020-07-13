@@ -4,21 +4,21 @@
 
 #include "adc.h"
 #include "can_msg_defs.h"
+#include "can_rx_event_mapper.h"
+#include "can_rx_event_mapper_config.h"
+#include "current_measurement.h"
+#include "current_measurement_config.h"
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
-#include "power_distribution_can_rx_event_mapper.h"
-#include "power_distribution_can_rx_event_mapper_config.h"
-#include "power_distribution_current_measurement.h"
-#include "power_distribution_current_measurement_config.h"
-#include "power_distribution_events.h"
-#include "power_distribution_gpio.h"
-#include "power_distribution_gpio_config.h"
-#include "power_distribution_pin_defs.h"
-#include "power_distribution_publish_data.h"
-#include "power_distribution_publish_data_config.h"
-#include "rear_power_distribution_strobe_blinker.h"
+#include "pd_events.h"
+#include "pd_gpio.h"
+#include "pd_gpio_config.h"
+#include "pin_defs.h"
+#include "publish_data.h"
+#include "publish_data_config.h"
+#include "rear_strobe_blinker.h"
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
@@ -145,7 +145,7 @@ int main(void) {
   // process events
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) != STATUS_CODE_OK) {
+    while (event_process(&e) == STATUS_CODE_OK) {
       can_process_event(&e);
       power_distribution_gpio_process_event(&e);
       lights_signal_fsm_process_event(&s_lights_signal_fsm_storage, &e);
