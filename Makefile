@@ -235,14 +235,21 @@ format:
 test_format: format
 	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
+.PHONY: mpxegen
+mpxegen:
+ifneq (,$(filter $(PIECE)$(LIBRARY),mpxe-gen harness))
+	@echo "running mpxegen"
+	@cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *
+	@mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src
+	@rm -r -f $(LIB_DIR)/mpxe-gen/inc/mpxe
+endif
+
 # Builds the project or library
 .PHONY: build
-ifneq (,$(PROJECT)$(TEST))
-build: $(TARGET_BINARY)
+ifneq (,$(PROJECT)$(TEST)$(PIECE))
+build: mpxegen $(TARGET_BINARY)
 else ifneq (,$(LIBRARY))
-build: $(STATIC_LIB_DIR)/lib$(LIBRARY).a
-else ifneq (,$(PIECE))
-build: $(MPXE_BINARY)
+build: mpxegen $(STATIC_LIB_DIR)/lib$(LIBRARY).a
 endif
 
 # Assumes that all libraries are used and will be built along with the projects
