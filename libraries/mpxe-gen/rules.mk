@@ -5,8 +5,5 @@
 # $(T)_INC_DIRS: $(T)_DIR/inc{/$(PLATFORM)}
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
-$(T)_DEPS := $(PLATFORM_LIB) libcore mpxe-gen
-
-ifeq (x86,$(PLATFORM))
-$(T)_EXCLUDE_TESTS := pwm pwm_input
-endif
+# Specify the libraries you want to include
+$(T)_DEPS := 

@@ -50,6 +50,11 @@ endif
 # Linker flags
 LDFLAGS := -lrt
 
+ifneq (,$(filter $(PIECE)$(LIBRARY),mpxe-gen harness))
+CFLAGS += -I/usr/local/include
+LDFLAGS += -L/usr/local/lib -lprotobuf-c
+endif
+
 # Shell environment variables
 FLASH_VAR := MIDSUN_X86_FLASH_FILE
 ifneq (,$(filter test test_all,$(MAKECMDGOALS)))
@@ -68,8 +73,8 @@ CHANNEL ?= vcan0
 # Platform targets
 .PHONY: run gdb babydriver
 
-run: $(BIN_DIR)/$(PROJECT)$(PIECE)$(PLATFORM_EXT) socketcan
-	@$(ENV_VARS) $<
+run: mpxegen build socketcan
+	@$(ENV_VARS) $(TARGET_BINARY)
 
 gdb: $(TARGET_BINARY) socketcan
 	@$(ENV_VARS) $(GDB) $<
