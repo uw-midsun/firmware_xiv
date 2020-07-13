@@ -6,7 +6,7 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common ms-helper
+$(T)_DEPS := ms-common ms-helper ms-drivers
 
 ifeq (x86,$(PLATFORM))
 $(T)_test_killswitch_MOCKS := gpio_get_state fault_bps
