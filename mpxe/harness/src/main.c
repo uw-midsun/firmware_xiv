@@ -19,7 +19,7 @@
 #include "pm.h"
 
 int main(void) {
-  build_project("can_communication");
-  run_project("can_communication");
+  build_project("tutorial_board_button_interrupt");
+  run_project("tutorial_board_button_interrupt");
   return 0;
 }

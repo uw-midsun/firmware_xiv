@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message MxGpioPort {
+    repeated bool pins = 1;
+    repeated uint32 int_ids = 2;
+}
+
+message MxGpioStore {
+  repeated MxGpioPort ports = 1;
+}
