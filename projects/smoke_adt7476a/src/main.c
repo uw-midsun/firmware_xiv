@@ -11,18 +11,25 @@
 #include "soft_timer.h"
 
 #define SET_SPEED_INTERVAL 5
+#define FAN_SPEED_INCREMENT 10
+#define FAN_SPEED_LIMIT 0xFF
 #define I2C_WRITE_ADDR_1 0x5E
 #define I2C_WRITE_ADDR_2 0x58
 
 static Adt7476aStorage s_storage;
+int s_current_speed;
 
 static void prv_periodic_set_speed(SoftTimerId id, void *context) {
-  uint8_t random_speed = rand() % 256;
 
-  adt7476a_set_speed(I2C_PORT_2, random_speed, ADT_FAN_GROUP_1, I2C_WRITE_ADDR_1);
-  adt7476a_set_speed(I2C_PORT_2, random_speed, ADT_FAN_GROUP_2, I2C_WRITE_ADDR_1);
+  
+  s_current_speed += FAN_SPEED_INCREMENT;
+  s_current_speed = s_current_speed % 101;
+
+  adt7476a_set_speed(I2C_PORT_2, s_current_speed, ADT_FAN_GROUP_1, I2C_WRITE_ADDR_1);
+  adt7476a_set_speed(I2C_PORT_2, s_current_speed, ADT_FAN_GROUP_2, I2C_WRITE_ADDR_1);
 
   soft_timer_start_seconds(SET_SPEED_INTERVAL, prv_periodic_set_speed, NULL, NULL);
+
 }
 
 int main() {
@@ -48,6 +55,7 @@ int main() {
   gpio_init();
   soft_timer_init();
   adt7476a_init(&s_storage, &settings);
+  s_current_speed = 0;
 
   while (1) {
     soft_timer_start_seconds(SET_SPEED_INTERVAL, prv_periodic_set_speed, NULL, NULL);
