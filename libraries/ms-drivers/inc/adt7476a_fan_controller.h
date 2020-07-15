@@ -24,13 +24,13 @@ typedef struct {
 } Adt7476aStorage;
 
 // 2 pwm outputs, each controlling 2 fans
-typedef enum { ADT_FAN_GROUP_1, ADT_FAN_GROUP_2, NUM_ADT_FAN_GROUPS } AdtFanGroup;
+typedef enum { ADT_PWM_PORT_1, ADT_PWM_PORT_2, ADT_PWM_PORT_3, NUM_ADT_PWM_PORTS } AdtPwmPort;
 
 // Initialize the Adt7476a with the given settings; the select pin is an STM32 GPIO pin.
 StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings);
 
 // Translate and write the new speed
-StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup fan_group,
+StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort fan_group,
                               uint8_t adt7476a_i2c_addr);
 
 StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_addr, uint8_t *register_1_data,
