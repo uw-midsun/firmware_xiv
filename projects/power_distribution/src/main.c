@@ -145,7 +145,7 @@ int main(void) {
   // process events
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) != STATUS_CODE_OK) {
+    while (event_process(&e) == STATUS_CODE_OK) {
       can_process_event(&e);
       power_distribution_gpio_process_event(&e);
       lights_signal_fsm_process_event(&s_lights_signal_fsm_storage, &e);
