@@ -20,8 +20,6 @@ static Adt7476aStorage s_storage;
 int s_current_speed;
 
 static void prv_periodic_set_speed(SoftTimerId id, void *context) {
-
-  
   s_current_speed += FAN_SPEED_INCREMENT;
   s_current_speed = s_current_speed % 101;
 
@@ -29,7 +27,6 @@ static void prv_periodic_set_speed(SoftTimerId id, void *context) {
   adt7476a_set_speed(I2C_PORT_2, s_current_speed, ADT_FAN_GROUP_2, I2C_WRITE_ADDR_1);
 
   soft_timer_start_seconds(SET_SPEED_INTERVAL, prv_periodic_set_speed, NULL, NULL);
-
 }
 
 int main() {
