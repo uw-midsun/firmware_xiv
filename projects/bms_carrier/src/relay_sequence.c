@@ -42,24 +42,27 @@ void prv_io_int_callback(const GpioAddress *address, void *context) {
   Mcp23008GpioState gnd_state = NUM_MCP23008_GPIO_STATES;
   mcp23008_gpio_get_state(&s_mcp23008_hv, &hv_state);
   mcp23008_gpio_get_state(&s_mcp23008_gnd, &gnd_state);
-  storage->gnd_enabled = gnd_state == MCP23008_GPIO_STATE_HIGH ? true : false;
-  storage->hv_enabled = hv_state == MCP23008_GPIO_STATE_HIGH ? true : false;
+  storage->gnd_enabled = gnd_state;
+  storage->hv_enabled = hv_state;
 }
 
-StatusCode prv_centre_console_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
+StatusCode prv_power_off_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
   RelayStorage *storage = context;
-  if (msg->msg_id == SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE) {
-    uint16_t step = NUM_EE_POWER_MAIN_SEQUENCES;
-    CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &step);
-    if (step == EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS) {
-      relay_close_sequence(storage);
-    }
-  } else if (msg->msg_id == SYSTEM_CAN_MESSAGE_POWER_OFF_SEQUENCE) {
-    uint16_t step = NUM_EE_POWER_OFF_SEQUENCES;
-    CAN_UNPACK_POWER_OFF_SEQUENCE(msg, &step);
-    if (step == EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS) {
-      relay_open_sequence(storage);
-    }
+  uint16_t step = NUM_EE_POWER_OFF_SEQUENCES;
+  CAN_UNPACK_POWER_OFF_SEQUENCE(msg, &step);
+  if (step == EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS) {
+    relay_open_sequence(storage);
+  }
+  *ack = CAN_ACK_STATUS_OK;
+  return STATUS_CODE_OK;
+}
+
+StatusCode prv_power_on_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
+  RelayStorage *storage = context;
+  uint16_t step = NUM_EE_POWER_MAIN_SEQUENCES;
+  CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &step);
+  if (step == EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS) {
+    relay_close_sequence(storage);
   }
   *ack = CAN_ACK_STATUS_OK;
   return STATUS_CODE_OK;
@@ -93,9 +96,8 @@ StatusCode relay_sequence_init(RelayStorage *storage) {
   gpio_init_pin(&s_gnd_relay_en, &relay_en_pin_settings);
 
   // register callbacks
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_OFF_SEQUENCE, prv_centre_console_rx, storage);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_centre_console_rx,
-                          storage);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_OFF_SEQUENCE, prv_power_off_rx, storage);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_power_on_rx, storage);
   return STATUS_CODE_OK;
 }
 

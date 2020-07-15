@@ -56,6 +56,7 @@ static uint8_t s_fault_bps_calls = 0;
 void TEST_MOCK(fault_bps)(uint8_t bitmask, bool clear) {
   s_fault_bps_bitmask = bitmask;
   s_fault_bps_calls++;
+  TEST_ASSERT_NOT_EQUAL((bool)bitmask, clear);
 }
 
 static RelayStorage s_storage = { 0 };
@@ -81,13 +82,13 @@ void teardown_test(void) {}
 void test_io_int(void) {
   TEST_ASSERT_OK(relay_sequence_init(&s_storage));
   // test storage is set correctly
-  TEST_ASSERT_EQUAL(MCP23008_GPIO_STATE_LOW, s_storage.gnd_enabled);
-  TEST_ASSERT_EQUAL(MCP23008_GPIO_STATE_LOW, s_storage.hv_enabled);
+  TEST_ASSERT_FALSE(s_storage.gnd_enabled);
+  TEST_ASSERT_FALSE(s_storage.hv_enabled);
   s_23008_state_0 = MCP23008_GPIO_STATE_HIGH;
   s_23008_state_1 = MCP23008_GPIO_STATE_HIGH;
   gpio_it_trigger_interrupt(&s_io_expander_int);
-  TEST_ASSERT_EQUAL(MCP23008_GPIO_STATE_HIGH, s_storage.gnd_enabled);
-  TEST_ASSERT_EQUAL(MCP23008_GPIO_STATE_HIGH, s_storage.hv_enabled);
+  TEST_ASSERT_TRUE(s_storage.gnd_enabled);
+  TEST_ASSERT_TRUE(s_storage.hv_enabled);
 }
 
 void test_open_good(void) {
@@ -121,8 +122,8 @@ void test_open_good(void) {
   TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
   TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // state should be not enabled
-  TEST_ASSERT_EQUAL(false, s_storage.hv_enabled);
-  TEST_ASSERT_EQUAL(false, s_storage.gnd_enabled);
+  TEST_ASSERT_FALSE(s_storage.hv_enabled);
+  TEST_ASSERT_FALSE(s_storage.gnd_enabled);
   // CAN message should be sent
   MS_TEST_HELPER_CAN_TX_RX(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
 }
@@ -181,8 +182,8 @@ void test_close_good(void) {
   TEST_ASSERT_EQUAL(0, s_fault_bps_bitmask);
   delay_ms(RELAY_SEQUENCE_NEXT_STEP_DELAY_MS - RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
   // state should be gnd on, hv off
-  TEST_ASSERT_EQUAL(true, s_storage.gnd_enabled);
-  TEST_ASSERT_EQUAL(false, s_storage.hv_enabled);
+  TEST_ASSERT_TRUE(s_storage.gnd_enabled);
+  TEST_ASSERT_FALSE(s_storage.hv_enabled);
   TEST_ASSERT_EQUAL(0, s_fault_bps_calls);
   // timers for assertion and next step should be running
   TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
@@ -200,8 +201,8 @@ void test_close_good(void) {
   TEST_ASSERT_EQUAL(0, s_fault_bps_bitmask);
   delay_ms(RELAY_SEQUENCE_NEXT_STEP_DELAY_MS - RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
   // state should be enabled
-  TEST_ASSERT_EQUAL(true, s_storage.gnd_enabled);
-  TEST_ASSERT_EQUAL(true, s_storage.hv_enabled);
+  TEST_ASSERT_TRUE(s_storage.gnd_enabled);
+  TEST_ASSERT_TRUE(s_storage.hv_enabled);
   // no faults should have occured
   TEST_ASSERT_EQUAL(0, s_fault_bps_calls);
   // CAN message should be sent
