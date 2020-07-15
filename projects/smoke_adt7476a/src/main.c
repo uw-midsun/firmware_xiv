@@ -1,5 +1,5 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
