@@ -30,7 +30,7 @@ typedef enum { ADT_PWM_PORT_1, ADT_PWM_PORT_2, ADT_PWM_PORT_3, NUM_ADT_PWM_PORTS
 StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings);
 
 // Translate and write the new speed
-StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort fan_group,
+StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pwm_port,
                               uint8_t adt7476a_i2c_addr);
 
 StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_addr, uint8_t *register_1_data,
