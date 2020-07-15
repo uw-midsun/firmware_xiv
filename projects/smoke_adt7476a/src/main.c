@@ -1,5 +1,6 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 #include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
 #include "delay.h"
@@ -16,7 +17,7 @@
 static Adt7476aStorage s_storage;
 
 static void prv_periodic_set_speed(SoftTimerId id, void *context) {
-  uint8_t random_speed = rand_r() % 254;
+  uint8_t random_speed = rand() % 256;
 
   adt7476a_set_speed(I2C_PORT_2, random_speed, ADT_FAN_GROUP_1, I2C_WRITE_ADDR_1);
   adt7476a_set_speed(I2C_PORT_2, random_speed, ADT_FAN_GROUP_2, I2C_WRITE_ADDR_1);
