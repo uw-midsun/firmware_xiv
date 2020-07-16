@@ -21,7 +21,7 @@ int s_current_speed;
 static void prv_periodic_set_speed(SoftTimerId id, void *context) {
   s_current_speed += FAN_SPEED_INCREMENT;
   s_current_speed = s_current_speed % 101;
-
+  LOG_DEBUG("SETTING SPEED: %d PERCENT\n", s_current_speed);
   adt7476a_set_speed(I2C_PORT_2, s_current_speed, ADT_PWM_PORT_1, I2C_WRITE_ADDR_1);
   adt7476a_set_speed(I2C_PORT_2, s_current_speed, ADT_PWM_PORT_2, I2C_WRITE_ADDR_1);
 
