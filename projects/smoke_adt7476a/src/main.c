@@ -4,6 +4,7 @@
 #include "i2c.h"
 #include "interrupt.h"
 #include "soft_timer.h"
+#include "log.h"
 #include "wait.h"
 
 #define SET_SPEED_INTERVAL 5
