@@ -3,8 +3,8 @@
 #include "gpio.h"
 #include "i2c.h"
 #include "interrupt.h"
-#include "wait.h"
 #include "soft_timer.h"
+#include "wait.h"
 
 #define SET_SPEED_INTERVAL 5
 #define FAN_SPEED_INCREMENT 10
@@ -12,7 +12,6 @@
 #define I2C_WRITE_ADDR_2 0x58
 #define I2C_READ_ADDR_1 0x5F
 #define I2C_READ_ADDR_2 0x59
-
 
 // 2 storages for 2 components
 static Adt7476aStorage s_storage_1;
