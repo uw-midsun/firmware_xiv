@@ -1,23 +1,34 @@
 // Simple smoketest project for the solar boards
 // specifically for the spv1020s
 
-//
+// Periodically reads every SMOKETEST_WAIT_TIME_MS from ONE spv1020 on a solar board
+// It will turn on the spv1020, then
+// read the status, pwm, voltage_in, and current of the spv1020 respectively
+// and output the all values on the screen
+// then turn the specific spv1020 off
+
+// this smoke test will still work even if only one SPV1020 is connected to the SPI GPIO pins
+
+// Configurable items: mux output pin, wait time, spi port,
 #include "delay.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
+#include "mux.h"
 #include "soft_timer.h"
 #include "spi.h"
-#include "mux.h"
 #include "spv1020_mppt.h"
+#include "wait.h"
 
 #define SPI_PORT SPI_PORT_2
 // this is the mux output pin
 // or the address of the spv1020, change it according to which spv1020 you want to read
 #define SPV1020 0
 
+// this is how often the reading will take place
+// modify if you want to read more or less
 #define SMOKETEST_WAIT_TIME_MS 1000
 
 #define BAUDRATE 60000
@@ -30,6 +41,7 @@
 #define CS_PIN \
   { .port = GPIO_PORT_B, 12 }
 
+// these are for setting the demux enable, outputs, and inputs
 #define MUX_ENABLE                \
   {                               \
     .port = GPIO_PORT_B, .pin = 1 \
@@ -49,7 +61,7 @@
 
 #define DISCONNECTED_MUX_OUTPUT 7
 
-// will get the address and size of the demultiplexer
+// this is the demux address
 static MuxAddress s_mux_address = {
   .bit_width = 3,
   .sel_pins[0] = SEL_PIN_0,
@@ -59,6 +71,7 @@ static MuxAddress s_mux_address = {
   .mux_output_pin = MUX_OUTPUT,
 };
 
+// this checks the sepcific spv1020
 static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
   uint8_t status = 0xFF;      // 8th bit is set
   uint16_t pwm = 0xFFFF;      // over 900
@@ -99,7 +112,7 @@ static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
 
   spv1020_shut(SPI_PORT);
 
-  status_ok_or_return(mux_set(&s_mux_address, DISCONNECTED_MUX_OUTPUT));
+  mux_set(&s_mux_address, DISCONNECTED_MUX_OUTPUT);
 
   soft_timer_start_millis(SMOKETEST_WAIT_TIME_MS, prv_spv1020_check, NULL, NULL);
 }
@@ -112,7 +125,7 @@ int main(void) {
   soft_timer_init();
 
   SpiSettings spi_settings = {
-    .baudrate = 60000,
+    .baudrate = BAUDRATE,
     .mode = SPI_MODE_3,
     .mosi = MOSI_PIN,
     .miso = MISO_PIN,
