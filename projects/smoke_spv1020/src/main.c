@@ -10,7 +10,6 @@
 // this smoke test will still work even if only one SPV1020 is connected to the SPI GPIO pins
 
 // Configurable items: mux output pin, wait time, spi port,
-#include "delay.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
