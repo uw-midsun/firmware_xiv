@@ -1,6 +1,7 @@
 #include "solar_config.h"
 
 #include "data_store.h"
+#include "gpio.h"
 #include "mcp3427_adc.h"
 #include "solar_events.h"
 
@@ -128,5 +129,26 @@ StatusCode config_get_sense_mcp3427_settings(SolarMpptCount mppt_count,
   }
   *settings = s_base_sense_mcp3427_settings;
   settings->num_mcp3427s = mppt_count + NUM_EXTRA_NON_MPPT_MCP3427S;
+  return STATUS_CODE_OK;
+}
+
+// |num_thermistors| is set dynamically by |config_get_sense_temperature_settings|
+static const SenseTemperatureSettings s_base_sense_temperature_settings =
+    { .thermistor_pins = {
+          { GPIO_PORT_A, 0 },
+          { GPIO_PORT_A, 1 },
+          { GPIO_PORT_A, 2 },
+          { GPIO_PORT_A, 3 },
+          { GPIO_PORT_A, 4 },
+          { GPIO_PORT_A, 5 },  // not used on 5 MPPT board
+      } };
+
+StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
+                                                 SenseTemperatureSettings *settings) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  *settings = s_base_sense_temperature_settings;
+  settings->num_thermistors = mppt_count;  // we have one thermistor per MPPT
   return STATUS_CODE_OK;
 }
