@@ -218,6 +218,16 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
       }
     }
   }
+
+  if (aux_index != afe->settings.num_cells) {
+    LOG_CRITICAL("Result array has max_index %d but should have max %d",
+                  aux_index, afe->settings.num_cells);
+  }
+
+  if (cell_index != afe->settings.num_cells) {
+    LOG_CRITICAL("Result array has max_index %d but should have max %d",
+                  cell_index, afe->settings.num_cells);
+  }
 }
 
 StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings) {
@@ -264,6 +274,7 @@ StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell
 
 StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
   // Read all voltage A, then B, ...
+  uint16_t num_readings = 0;
   LtcAfeSettings *settings = &afe->settings;
   for (uint8_t cell_reg = 0; cell_reg < NUM_LTC_AFE_VOLTAGE_REGISTERS; ++cell_reg) {
     LtcAfeVoltageRegisterGroup voltage_register[LTC_AFE_MAX_DEVICES] = { 0 };
@@ -279,6 +290,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         if ((settings->cell_bitset[device] >> device_cell) & 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_lookup[index]] = voltage;
+          num_readings++;
         }
       }
 
@@ -292,6 +304,10 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
     }
   }
 
+  if (num_readings != afe->settings.num_cells) {
+    LOG_CRITICAL("Read %d values instead of %d", num_readings, afe->settings.num_cells);
+    return status_code(STATUS_CODE_INTERNAL_ERROR);
+  }
   return STATUS_CODE_OK;
 }
 
