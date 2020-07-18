@@ -120,11 +120,11 @@ void test_adt7476a_init_works(void) {
 void test_adt7476a_set_speed(void) {
   uint8_t speed_percent = 50;
 
-  adt7476a_set_speed(TEST_I2C_PORT, speed_percent, ADT_FAN_GROUP_1, TEST_I2C_ADDRESS);
+  adt7476a_set_speed(TEST_I2C_PORT, speed_percent, ADT_PWM_PORT_1, TEST_I2C_ADDRESS);
 
   TEST_ASSERT_EQUAL(TEST_FAN_PWM_EXPECTED_SPEED, s_mock_registers.PWM_SPEED_1);
 
-  adt7476a_set_speed(TEST_I2C_PORT, speed_percent, ADT_FAN_GROUP_2, TEST_I2C_ADDRESS);
+  adt7476a_set_speed(TEST_I2C_PORT, speed_percent, ADT_PWM_PORT_2, TEST_I2C_ADDRESS);
 
   TEST_ASSERT_EQUAL(TEST_FAN_PWM_EXPECTED_SPEED, s_mock_registers.PWM_SPEED_2);
 }
@@ -133,7 +133,7 @@ void test_adt7476a_set_invalid_speed(void) {
   uint8_t invalid_speed_ercent = 101;
 
   TEST_ASSERT_NOT_EQUAL(STATUS_CODE_OK, adt7476a_set_speed(TEST_I2C_PORT, invalid_speed_ercent,
-                                                           ADT_FAN_GROUP_1, TEST_I2C_ADDRESS));
+                                                           ADT_PWM_PORT_1, TEST_I2C_ADDRESS));
 }
 
 // test if fetching data from register works
