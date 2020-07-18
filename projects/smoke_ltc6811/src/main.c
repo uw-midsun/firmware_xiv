@@ -9,7 +9,7 @@
 #include "soft_timer.h"
 #include "status.h"
 
-// smoke test settings 
+// smoke test settings
 // NOTE: Test assumes num_thermistors == num_cells
 #define SMOKE_LTC_AFE_NUM_DEVICES 1
 #define SMOKE_LTC_AFE_NUM_CELLS 12
