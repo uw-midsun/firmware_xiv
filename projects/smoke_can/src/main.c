@@ -1,8 +1,11 @@
 // this is a simple smoke test to make sure can works
+// simply run the project and it should periodically send can messages and receive them
 
+// Configurable items: bitrate, send time, data
 #include <string.h>
 
 #include "can.h"
+#include "can_msg.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -10,10 +13,16 @@
 #include "soft_timer.h"
 
 #define TEST_CAN_DEVICE_ID 0x1
+#define TEST_CAN_MSG_ID 0x1
 #define TEST_CAN_BITRATE CAN_HW_BITRATE_500KBPS
+
 // this is how often the message will send
 // modify if you want to send more or less
-#define SMOKETEST_WAIT_TIME_MS 1000
+#define SMOKETEST_SEND_TIME_MS 1000
+// this is the data it'll send
+// change if you wish
+#define DATA \
+  { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 }
 
 typedef enum {
   TEST_CAN_EVENT_RX = 0,
@@ -24,17 +33,20 @@ typedef enum {
 static CanStorage s_can_storage;
 
 static void prv_can_transmit(SoftTimerId timer_id, void *context) {
-  can_transmit();
+  CanMessage message = { .source_id = TEST_CAN_DEVICE_ID,
+                         .msg_id = TEST_CAN_MSG_ID,
+                         .data_u8 = DATA,
+                         .type = CAN_MSG_TYPE_DATA,
+                         .dlc = 8 };
+  can_transmit(&message, NULL);
 
-  soft_timer_start_millis(SMOKETEST_WAIT_TIME_MS, prv_can_transmit, NULL, NULL);
+  soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
 }
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   LOG_DEBUG("Received a message!\n");
-  char log_message[30];
   printf("Data:\n\t");
-  uint8_t i;
-  for (i = 0; i < msg->dlc; i++) {
+  for (uint8_t i = 0; i < msg->dlc; i++) {
     uint8_t byte = 0;
     byte = msg->data >> (i * 8);
     printf("%x ", byte);
@@ -65,10 +77,9 @@ int main() {
 
   LOG_DEBUG("Initializing smoke test can\n");
 
+  soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
+
   Event e = { 0 };
-
-  soft_timer_start_millis(SMOKETEST_WAIT_TIME_MS, prv_can_transmit, NULL, NULL);
-
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
     }
