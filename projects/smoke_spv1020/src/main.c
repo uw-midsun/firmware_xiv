@@ -11,10 +11,7 @@
 
 // Configurable items: mux output pin, wait time, spi port,
 #include "delay.h"
-#include "event_queue.h"
 #include "gpio.h"
-#include "gpio_it.h"
-#include "interrupt.h"
 #include "log.h"
 #include "mux.h"
 #include "soft_timer.h"
@@ -83,31 +80,31 @@ static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
   spv1020_turn_on(SPI_PORT);
 
   spv1020_read_status(SPI_PORT, &status);
-  if (status != 0) {
-    LOG_DEBUG("Reading Status failed");
+  if (status == 0xFF) {
+    LOG_DEBUG("Reading Status failed\n");
   } else {
-    LOG_DEBUG("SPV1020 #%d status is: 0x%x\r\n", SPV1020, status);
+    LOG_DEBUG("SPV1020 #%d status is: 0x%x\n", SPV1020, status);
   }
 
   spv1020_read_pwm(SPI_PORT, &pwm);
   if (pwm == 0xFFFF) {
-    LOG_DEBUG("Reading PWM failed");
+    LOG_DEBUG("Reading PWM failed\n");
   } else {
-    LOG_DEBUG("SPV1020 #%d pwm is: 0x%x\r\n", SPV1020, pwm);
+    LOG_DEBUG("SPV1020 #%d pwm is: 0x%x\n", SPV1020, pwm);
   }
 
   spv1020_read_voltage_in(SPI_PORT, &vin);
   if (vin == 0xFFFF) {
-    LOG_DEBUG("Reading Voltage failed");
+    LOG_DEBUG("Reading Voltage failed\n");
   } else {
-    LOG_DEBUG("SPV1020 #%d voltage_in is: 0x%x\r\n", SPV1020, vin);
+    LOG_DEBUG("SPV1020 #%d voltage_in is: 0x%x\n", SPV1020, vin);
   }
 
   spv1020_read_current(SPI_PORT, &current);
   if (current == 0xFFFF) {
-    LOG_DEBUG("Reading Current failed");
+    LOG_DEBUG("Reading Current failed\n");
   } else {
-    LOG_DEBUG("SPV1020 #%d current is: 0x%x\r\n", SPV1020, current);
+    LOG_DEBUG("SPV1020 #%d current is: 0x%x\n", SPV1020, current);
   }
 
   spv1020_shut(SPI_PORT);
@@ -118,10 +115,7 @@ static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
 }
 
 int main(void) {
-  event_queue_init();
   gpio_init();
-  gpio_it_init();
-  interrupt_init();
   soft_timer_init();
 
   SpiSettings spi_settings = {
@@ -138,7 +132,6 @@ int main(void) {
 
   LOG_DEBUG("Initializing spv1020 smoke test\n");
 
-  Event e = { 0 };
   soft_timer_start_millis(SMOKETEST_WAIT_TIME_MS, prv_spv1020_check, NULL, NULL);
   while (true) {
     wait();
