@@ -12,6 +12,7 @@
 // Configurable items: mux output pin, wait time, spi port,
 #include "delay.h"
 #include "gpio.h"
+#include "interrupt.h"
 #include "log.h"
 #include "mux.h"
 #include "soft_timer.h"
@@ -116,6 +117,7 @@ static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
 
 int main(void) {
   gpio_init();
+  interrupt_init();
   soft_timer_init();
 
   SpiSettings spi_settings = {
