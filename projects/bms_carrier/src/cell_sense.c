@@ -65,7 +65,6 @@ StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *afe_r
 StatusCode cell_sense_process_event(const Event *e) {
   switch (e->id) {
     case BMS_AFE_EVENT_FAULT:
-      // TODO(SOFT-9): Logic about when to trigger a fault could be exported to fault_bps
       if (s_storage.num_afe_faults > MAX_AFE_FAULTS) {
         fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM, false);
       } else {
