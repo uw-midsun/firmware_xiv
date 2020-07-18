@@ -13,9 +13,10 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 
-#define NUM_GOOD_CELL_SENSE_TESTS 3
+#define NUM_GOOD_CELL_SENSE_TRIALS 3
 #define NUM_DEVICES_TO_TEST 1
 #define NUM_CELLS_TO_TEST 4
+#define NUM_THERMISTORS_TO_TEST 4
 
 #define VOLTAGE_READING_MAX 1337
 #define VOLTAGE_READING_MIN 42
@@ -69,6 +70,7 @@ static StatusCode prv_init_ltc(void) {
   LtcAfeSettings afe_settings = {
     .num_devices = NUM_DEVICES_TO_TEST,
     .num_cells = NUM_CELLS_TO_TEST,
+    .num_thermistors = NUM_THERMISTORS_TO_TEST,
     // only need to initialize events so the correct ones are called
     .ltc_events = { .trigger_cell_conv_event = BMS_AFE_EVENT_TRIGGER_CELL_CONV,
                     .cell_conv_complete_event = BMS_AFE_EVENT_CELL_CONV_COMPLETE,
@@ -109,15 +111,6 @@ void prv_check_temp_results(bool is_clear) {
   }
 }
 
-void setup_test(void) {
-  s_is_charging = false;
-  s_afe_should_fault = false;
-  s_expected_fault_bitset = EE_BPS_STATE_OK;
-  TEST_ASSERT_OK(prv_init_ltc());
-}
-
-void teardown_test(void) {}
-
 void prv_test_fsm_fault() {
   Event e = { 0 };
   LOG_DEBUG("Verifying cell result empty\n");
@@ -152,6 +145,15 @@ void prv_test_single_loop() {
   cell_sense_process_event(&e);
 }
 
+void setup_test(void) {
+  s_is_charging = false;
+  s_afe_should_fault = false;
+  s_expected_fault_bitset = EE_BPS_STATE_OK;
+  TEST_ASSERT_OK(prv_init_ltc());
+}
+
+void teardown_test(void) {}
+
 void test_normal_cell_sense(void) {
   CellSenseSettings settings = {
     .undervoltage_dmv = VOLTAGE_READING_MIN,
@@ -162,7 +164,7 @@ void test_normal_cell_sense(void) {
   Event e = { 0 };
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
   s_expected_fault_bitset = EE_BPS_STATE_OK;
-  for (size_t i = 0; i < NUM_GOOD_CELL_SENSE_TESTS; i++) {
+  for (size_t i = 0; i < NUM_GOOD_CELL_SENSE_TRIALS; i++) {
     prv_test_single_loop();
   }
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_TRIGGER_CELL_CONV);
