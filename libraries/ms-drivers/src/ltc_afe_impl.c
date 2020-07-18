@@ -220,14 +220,16 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
   }
 
   if (aux_index != afe->settings.num_cells) {
-    LOG_CRITICAL("Result array has max_index %d but should have max %d",
+    LOG_CRITICAL("Result array has max_index %d but should have max %d\n",
                   aux_index, afe->settings.num_cells);
   }
 
   if (cell_index != afe->settings.num_cells) {
-    LOG_CRITICAL("Result array has max_index %d but should have max %d",
+    LOG_CRITICAL("Result array has max_index %d but should have max %d\n",
                   cell_index, afe->settings.num_cells);
+    return;
   }
+  LOG_DEBUG("calc_offsets is fine\n");
 }
 
 StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings) {
@@ -308,6 +310,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
     LOG_CRITICAL("Read %d values instead of %d", num_readings, afe->settings.num_cells);
     return status_code(STATUS_CODE_INTERNAL_ERROR);
   }
+  LOG_DEBUG("read_cells is fine\n");
   return STATUS_CODE_OK;
 }
 
