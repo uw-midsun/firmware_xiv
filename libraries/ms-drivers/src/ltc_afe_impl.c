@@ -220,7 +220,8 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
 
 StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings) {
   if (settings->num_devices > LTC_AFE_MAX_DEVICES ||
-      settings->num_cells > settings->num_devices * LTC_AFE_MAX_CELLS) {
+      settings->num_cells > settings->num_devices * LTC_AFE_MAX_CELLS ||
+      settings->num_thermistors > LTC_AFE_MAX_THERMISTORS) {
     // bad no. devices (needs code change)
     // bad no. of cells (needs verification)
     return status_code(STATUS_CODE_INVALID_ARGS);
