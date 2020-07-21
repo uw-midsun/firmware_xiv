@@ -25,13 +25,13 @@ StatusCode prv_set_precharge_control(PrechargeControlStorage *storage, const Gpi
 
 void prv_precharge_monitor(const GpioAddress *address, void *context) {
   PrechargeControlStorage *storage = context;
-  if (storage->state == MCI_PRECHARGE_INCONSISTENT) {
+  if (storage->state == MCI_PRECHARGE_DISCHARGED) {
+    // inconsistent until second precharge result
+    storage->state = MCI_PRECHARGE_INCONSISTENT;
+  } else {
     // both pins are in sync
     storage->state = MCI_PRECHARGE_CHARGED;
     CAN_TRANSMIT_PRECHARGE_COMPLETED();
-  } else {
-    // inconsistent until second precharge result
-    storage->state = MCI_PRECHARGE_INCONSISTENT;
   }
 }
 
