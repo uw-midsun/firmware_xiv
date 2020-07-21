@@ -25,6 +25,7 @@
 // This is a device limitation
 #define LTC_AFE_MAX_CELLS_PER_DEVICE 12
 #define LTC_AFE_MAX_CELLS (LTC_AFE_MAX_DEVICES * LTC_AFE_MAX_CELLS_PER_DEVICE)
+#define LTC_AFE_MAX_THERMISTORS LTC_AFE_MAX_CELLS
 
 #if defined(__GNUC__)
 #define _PACKED __attribute__((packed))
@@ -77,6 +78,7 @@ typedef struct LtcAfeSettings {
 
   size_t num_devices;
   size_t num_cells;
+  size_t num_thermistors;
 
   LtcAfeEventList ltc_events;
   LtcAfeResultCallback cell_result_cb;
@@ -92,12 +94,12 @@ typedef struct LtcAfeStorage {
   uint16_t retry_count;
 
   uint16_t cell_voltages[LTC_AFE_MAX_CELLS];
-  uint16_t aux_voltages[LTC_AFE_MAX_CELLS];
+  uint16_t aux_voltages[LTC_AFE_MAX_THERMISTORS];
 
   uint16_t discharge_bitset[LTC_AFE_MAX_DEVICES];
 
   uint16_t cell_result_lookup[LTC_AFE_MAX_CELLS];
-  uint16_t aux_result_lookup[LTC_AFE_MAX_CELLS];
+  uint16_t aux_result_lookup[LTC_AFE_MAX_THERMISTORS];
   uint16_t discharge_cell_lookup[LTC_AFE_MAX_CELLS];
 
   LtcAfeSettings settings;
