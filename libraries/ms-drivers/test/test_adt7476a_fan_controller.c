@@ -2,10 +2,10 @@
 #include "adt7476a_fan_controller_defs.h"
 #include "interrupt.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
 #include "wait.h"
-#include "soft_timer.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_I2C_ADDRESS 0x74
@@ -73,7 +73,7 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
   return STATUS_CODE_OK;
 }
 
-static void prv_test_adt7476a_interrupt_callback(const GpioAddress * address, void * context) {
+static void prv_test_adt7476a_interrupt_callback(const GpioAddress *address, void *context) {
   LOG_DEBUG("INTERRUPT CALLBACK TRIGGERED\n");
   uint8_t rx_interrupt_status_reg_1;
   uint8_t rx_interrupt_status_reg_2;
@@ -153,7 +153,6 @@ void test_adt7476a_set_invalid_speed(void) {
 
 // test if fetching data from register works
 void test_adt7476a_get_status(void) {
-
   s_mock_registers.INTERRUPT_STATUS_1 = 0x01;
   s_mock_registers.INTERRUPT_STATUS_2 = 0x02;
 
@@ -167,7 +166,7 @@ void test_adt7476a_get_status(void) {
 
   Adt7476aSettings valid_settings = {
     .smbalert_pin = test_output_pin,
-    .callback = (GpioItCallback) prv_test_adt7476a_interrupt_callback,
+    .callback = (GpioItCallback)prv_test_adt7476a_interrupt_callback,
     .callback_context = NULL,
     .i2c = TEST_I2C_PORT,
     .i2c_read_addr = TEST_I2C_ADDRESS,
@@ -179,11 +178,10 @@ void test_adt7476a_get_status(void) {
   s_mock_storage.callback = valid_settings.callback;
   s_mock_storage.callback_context = valid_settings.callback_context;
   s_mock_storage.i2c = valid_settings.i2c;
-  
+
   // add callback to storage
   TEST_ASSERT_OK(adt7476a_init(&s_storage, &valid_settings));
 
   // trigger interrupt and fetch data
   gpio_it_trigger_interrupt(&test_output_pin);
-
 }
