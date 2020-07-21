@@ -7,7 +7,23 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "solar_boards.h"
 #include "status.h"
+
+#define INVALID_DATA_POINT NUM_DATA_POINTS
+
+// Convenience macros to get the nth data point of a type, up to MAX_SOLAR_BOARD_MPPTS
+#define DATA_POINT_VOLTAGE(n) NTH_DATA_POINT_IMPL((n), DATA_POINT_VOLTAGE_1)
+#define DATA_POINT_TEMPERATURE(n) NTH_DATA_POINT_IMPL((n), DATA_POINT_TEMPERATURE_1)
+#define DATA_POINT_MPPT_CURRENT(n) NTH_DATA_POINT_IMPL((n), DATA_POINT_MPPT_CURRENT_1)
+#define DATA_POINT_MPPT_VOLTAGE(n) NTH_DATA_POINT_IMPL((n), DATA_POINT_MPPT_VOLTAGE_1)
+#define DATA_POINT_MPPT_PWM(n) NTH_DATA_POINT_IMPL((n), DATA_POINT_MPPT_PWM_1)
+#define DATA_POINT_CR_BIT(n) NTH_DATA_POINT_IMPL((n), DATA_POINT_CR_BIT_1)
+
+// Implementation for the above macros, do not call directly
+#define NTH_DATA_POINT_IMPL(n, initial) \
+  ((n) > MAX_SOLAR_BOARD_MPPTS ? INVALID_DATA_POINT : (initial) + (n))
 
 typedef enum {
   // Voltages from the voltage sense MCP3427s
@@ -21,7 +37,8 @@ typedef enum {
   // Current from the current sense MCP3427
   DATA_POINT_CURRENT,
 
-  // Temperatures from the thermistors
+  // Temperatures from the thermistors - raw 12-bit values from the ADCs
+  // TODO(SOFT-215): Figure out how to convert these to temperature values
   DATA_POINT_TEMPERATURE_1,
   DATA_POINT_TEMPERATURE_2,
   DATA_POINT_TEMPERATURE_3,

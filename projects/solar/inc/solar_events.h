@@ -27,5 +27,11 @@ typedef enum {
 typedef enum {
   // An MCP3427 is faulting too much, event data is the DataPoint associated with the faulty MCP3427
   SOLAR_FAULT_EVENT_MCP3427 = NUM_SOLAR_DATA_EVENTS + 1,
+  // An MPPT had an overcurrent, the least significant byte of event data is the index of the MPPT
+  // that faulted, the most significant byte is a 4-bit bitmask of which branches faulted.
+  SOLAR_FAULT_EVENT_MPPT_OVERCURRENT,
+  // An MPPT had an overvoltage or overtemperature, event data is the index of the MPPT that faulted
+  SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE,
+  SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE,
   NUM_SOLAR_FAULT_EVENTS,
 } SolarFaultEvent;
