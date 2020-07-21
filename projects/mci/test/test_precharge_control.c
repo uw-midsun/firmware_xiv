@@ -54,9 +54,9 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 static PrechargeControlSettings s_settings = {
-  .precharge_control = { .port = GPIO_PORT_A, .pin = 1 },
-  .precharge_control2 = { .port = GPIO_PORT_A, .pin = 2 },
-  .precharge_monitor = { .port = GPIO_PORT_B, .pin = 1 }
+  .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
+  .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
+  .precharge_monitor2 = { .port = GPIO_PORT_A, .pin = 10 },
 };
 
 void test_precharge_initializing_twice_returns_non_ok_status() {
@@ -76,10 +76,6 @@ void test_precharge_begins_precharge_process_when_can_msg_is_received(void) {
   TEST_ASSERT_OK(gpio_get_state(&s_settings.precharge_control, &state));
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, state);
 
-  state = NUM_GPIO_STATES;
-  TEST_ASSERT_OK(gpio_get_state(&s_settings.precharge_control2, &state));
-  TEST_ASSERT_EQUAL(state, GPIO_STATE_HIGH);
-
   // Should still be in discharged state cuz interrupt hasn't triggered.
   TEST_ASSERT_EQUAL(get_precharge_state(), MCI_PRECHARGE_DISCHARGED);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -91,11 +87,36 @@ void test_precharge_sends_can_message_when_precharge_has_completed(void) {
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
 
   gpio_it_trigger_interrupt(&s_settings.precharge_monitor);
+  gpio_it_trigger_interrupt(&s_settings.precharge_monitor2);
   TEST_ASSERT_EQUAL(get_precharge_state(), MCI_PRECHARGE_CHARGED);
 
   TEST_ASSERT_FALSE(s_precharge_completed);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   TEST_ASSERT_TRUE(s_precharge_completed);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+void test_inconsistent_precharge_monitor1_sends_no_can_message(void) {
+  TEST_ASSERT_OK(precharge_control_init(&s_settings));
+  CAN_TRANSMIT_BEGIN_PRECHARGE();
+  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+
+  gpio_it_trigger_interrupt(&s_settings.precharge_monitor);
+  TEST_ASSERT_NOT_EQUAL(get_precharge_state(), MCI_PRECHARGE_CHARGED);
+
+  TEST_ASSERT_FALSE(s_precharge_completed);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+void test_inconsistent_precharge_monitor2_sends_no_can_message(void) {
+  TEST_ASSERT_OK(precharge_control_init(&s_settings));
+  CAN_TRANSMIT_BEGIN_PRECHARGE();
+  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+
+  gpio_it_trigger_interrupt(&s_settings.precharge_monitor2);
+  TEST_ASSERT_NOT_EQUAL(get_precharge_state(), MCI_PRECHARGE_CHARGED);
+
+  TEST_ASSERT_FALSE(s_precharge_completed);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -106,6 +127,7 @@ void test_precharge_clears_discharge_message_received(void) {
   TEST_ASSERT_EQUAL(get_precharge_state(), MCI_PRECHARGE_DISCHARGED);
 
   gpio_it_trigger_interrupt(&s_settings.precharge_monitor);
+  gpio_it_trigger_interrupt(&s_settings.precharge_monitor2);
   TEST_ASSERT_EQUAL(get_precharge_state(), MCI_PRECHARGE_CHARGED);
 
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
