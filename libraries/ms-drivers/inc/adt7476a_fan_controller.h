@@ -23,7 +23,7 @@ typedef struct {
   I2CPort i2c;
 } Adt7476aStorage;
 
-// 2 pwm outputs, each controlling 2 fans
+// 3 possible pwm outputs, typically only use 2 to control 4 fans
 typedef enum { ADT_PWM_PORT_1, ADT_PWM_PORT_2, ADT_PWM_PORT_3, NUM_ADT_PWM_PORTS } AdtPwmPort;
 
 // Initialize the Adt7476a with the given settings; the select pin is an STM32 GPIO pin.
