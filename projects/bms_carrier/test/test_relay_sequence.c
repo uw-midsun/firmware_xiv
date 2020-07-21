@@ -101,9 +101,6 @@ void test_open_good(void) {
   s_hv_state = GPIO_STATE_HIGH;
   s_gnd_state = GPIO_STATE_HIGH;
   TEST_ASSERT_OK(relay_open_sequence(&s_storage));
-  // timers should be running
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // set the state to what would happen in hardware in the good case
   s_23008_state_0 = MCP23008_GPIO_STATE_LOW;
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
@@ -111,16 +108,10 @@ void test_open_good(void) {
   TEST_ASSERT_EQUAL(s_gnd_state, GPIO_STATE_LOW);
   gpio_it_trigger_interrupt(&s_io_expander_int);
   delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // assertion should have triggered, next step should be waiting
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // no faults should have occured
   TEST_ASSERT_EQUAL(0, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(0, s_fault_bps_bitmask);
   delay_ms(RELAY_SEQUENCE_NEXT_STEP_DELAY_MS - RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // no timers should be running
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // state should be not enabled
   TEST_ASSERT_FALSE(s_storage.hv_enabled);
   TEST_ASSERT_FALSE(s_storage.gnd_enabled);
@@ -139,18 +130,11 @@ void test_open_bad(void) {
   // gpio should have been set
   TEST_ASSERT_EQUAL(s_hv_state, GPIO_STATE_LOW);
   TEST_ASSERT_EQUAL(s_gnd_state, GPIO_STATE_LOW);
-  // timers should be running
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // set the state to what would happen in hardware in the bad case
   s_23008_state_0 = MCP23008_GPIO_STATE_HIGH;
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&s_io_expander_int);
   delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // assertion should have triggered, next step should be waiting
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  // next step timer should be cancelled
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // relay fault should have occured
   TEST_ASSERT_EQUAL(1, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_RELAY, s_fault_bps_bitmask);
@@ -173,10 +157,6 @@ void test_close_good(void) {
   s_23008_state_0 = MCP23008_GPIO_STATE_HIGH;
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&s_io_expander_int);
-  delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // assertion should have triggered, next step should be waiting
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // no faults should have occured
   TEST_ASSERT_EQUAL(0, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(0, s_fault_bps_bitmask);
@@ -185,17 +165,11 @@ void test_close_good(void) {
   TEST_ASSERT_TRUE(s_storage.gnd_enabled);
   TEST_ASSERT_FALSE(s_storage.hv_enabled);
   TEST_ASSERT_EQUAL(0, s_fault_bps_calls);
-  // timers for assertion and next step should be running
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // set the state to what would happen in hardware in the good case
   s_23008_state_0 = MCP23008_GPIO_STATE_HIGH;
   s_23008_state_1 = MCP23008_GPIO_STATE_HIGH;
   gpio_it_trigger_interrupt(&s_io_expander_int);
   delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // assertion should have triggered, next step should be waiting
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // no faults should have occured
   TEST_ASSERT_EQUAL(0, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(0, s_fault_bps_bitmask);
@@ -217,17 +191,11 @@ void test_close_gnd_bad(void) {
   s_23008_state_0 = MCP23008_GPIO_STATE_LOW;
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
   TEST_ASSERT_OK(relay_close_sequence(&s_storage));
-  // timers should be running
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // set the state to what would happen in hardware in the bad case
   s_23008_state_0 = MCP23008_GPIO_STATE_LOW;
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&s_io_expander_int);
   delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // assertion should have triggered, next step should be cancelled
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // fault should have occured
   TEST_ASSERT_EQUAL(1, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_RELAY, s_fault_bps_bitmask);
@@ -246,17 +214,11 @@ void test_close_hv_bad(void) {
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&s_io_expander_int);
   delay_ms(RELAY_SEQUENCE_NEXT_STEP_DELAY_MS + 5);
-  // timers for assertion and next step should be running
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_NOT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // set the state to what would happen in hardware in the bad case (hv)
   s_23008_state_0 = MCP23008_GPIO_STATE_HIGH;
   s_23008_state_1 = MCP23008_GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&s_io_expander_int);
   delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
-  // assertion should have triggered, next step should be cancelled
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.assertion_timer_id));
-  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(s_storage.next_step_timer_id));
   // fault should have occured
   TEST_ASSERT_EQUAL(1, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_RELAY, s_fault_bps_bitmask);
