@@ -8,19 +8,23 @@
 // Requires GPIO to be initialized
 // Requires GPIO interrupts to be initialized
 
-typedef enum { MCI_PRECHARGE_DISCHARGED = 0, MCI_PRECHARGE_CHARGED } PrechargeState;
+typedef enum {
+  MCI_PRECHARGE_DISCHARGED = 0,
+  MCI_PRECHARGE_INCONSISTENT,
+  MCI_PRECHARGE_CHARGED
+} PrechargeState;
 
 typedef struct PrechargeControlSettings {
   GpioAddress precharge_control;
-  GpioAddress precharge_control2;
   GpioAddress precharge_monitor;
+  GpioAddress precharge_monitor2;
 } PrechargeControlSettings;
 
 typedef struct PrechargeControlStorage {
   PrechargeState state;
   GpioAddress precharge_control;
-  GpioAddress precharge_control2;
   GpioAddress precharge_monitor;
+  GpioAddress precharge_monitor2;
   bool initialized;
 } PrechargeControlStorage;
 
