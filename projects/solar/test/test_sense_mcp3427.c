@@ -21,7 +21,7 @@
 #define TEST_STORED_VALUE TEST_SENSED_CH1_VALUE  // only CH1 is used
 
 // there must be MAX_SOLAR_MCP3427 valid data points after and including this data point
-#define TEST_DATA_POINT DATA_POINT_VOLTAGE_1
+#define TEST_DATA_POINT DATA_POINT_VOLTAGE(0)
 
 // Helper function to get an idx'th unique valid data point
 static DataPoint prv_get_test_data_point(uint8_t idx) {

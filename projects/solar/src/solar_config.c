@@ -35,7 +35,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           // voltage sense
           {
-              .data_point = DATA_POINT_VOLTAGE_1,
+              .data_point = DATA_POINT_VOLTAGE(0),
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -49,7 +49,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_2,
+              .data_point = DATA_POINT_VOLTAGE(1),
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -63,7 +63,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_3,
+              .data_point = DATA_POINT_VOLTAGE(2),
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -77,7 +77,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_4,
+              .data_point = DATA_POINT_VOLTAGE(3),
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -91,7 +91,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_5,
+              .data_point = DATA_POINT_VOLTAGE(4),
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -106,7 +106,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           {
               // this one is not used on the 5 MPPT board, so it is last
-              .data_point = DATA_POINT_VOLTAGE_6,
+              .data_point = DATA_POINT_VOLTAGE(5),
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,

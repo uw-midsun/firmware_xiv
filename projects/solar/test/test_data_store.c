@@ -6,7 +6,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define VALID_TEST_DATA_POINT DATA_POINT_VOLTAGE_1
+#define VALID_TEST_DATA_POINT DATA_POINT_CURRENT
 #define VALID_TEST_VALUE 0x1337
 
 void setup_test(void) {
