@@ -105,6 +105,9 @@ static void prv_afe_read_cells_output(struct Fsm *fsm, const Event *e, void *con
     event_raise(afe_events->callback_run_event, 0);
 
     if (afe->settings.cell_result_cb != NULL) {
+      // for(int i = 0; i < LTC_AFE_MAX_CELLS; i++) {
+      //   LOG_DEBUG("cell_voltages[%d] = %lu\n", i, afe->cell_voltages[i]);
+      // }
       afe->settings.cell_result_cb(afe->cell_voltages, afe->settings.num_cells,
                                    afe->settings.result_context);
     }
@@ -162,6 +165,9 @@ static void prv_afe_aux_complete_output(struct Fsm *fsm, const Event *e, void *c
 
   // 12 aux conversions complete - the array should be fully populated
   if (afe->settings.aux_result_cb != NULL) {
+    // for(int i = 0; i < LTC_AFE_MAX_CELLS; i++) {
+    //   LOG_DEBUG("aux_voltages[%d] = %lu\n", i, afe->aux_voltages[i]);
+    // }
     afe->settings.aux_result_cb(afe->aux_voltages, afe->settings.num_cells,
                                 afe->settings.result_context);
   }

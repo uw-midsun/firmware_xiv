@@ -292,7 +292,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         if ((settings->cell_bitset[device] >> device_cell) & 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_lookup[index]] = voltage;
-          LOG_DEBUG("CELL READING#%lu is CELL#%lu\n", afe->cell_result_lookup[index], index);
+          LOG_DEBUG("CELL READING#%d is CELL#%d\n", afe->cell_result_lookup[index], index);
           num_readings++;
         }
       }
@@ -331,7 +331,7 @@ StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
       // Input enabled - store result
       uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
       afe->aux_voltages[afe->aux_result_lookup[index]] = voltage;
-      LOG_DEBUG("AUX READING#%lu is CELL#%lu\n", afe->aux_result_lookup[index], index);
+      LOG_DEBUG("AUX READING#%d is CELL#%d\n", afe->aux_result_lookup[index], index);
     }
 
     uint16_t received_pec = SWAP_UINT16(register_data[device].pec);
