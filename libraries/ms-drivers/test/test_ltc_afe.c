@@ -15,6 +15,7 @@
 
 #define TEST_LTC_AFE_NUM_DEVICES 1
 #define TEST_LTC_AFE_NUM_CELLS 12
+#define TEST_LTC_AFE_NUM_THERMISTORS 12
 
 #define TEST_LTC_AFE_INPUT_BITSET_FULL 0xFFF
 #define TEST_LTC_AFE_ADC_MODE LTC_AFE_ADC_MODE_7KHZ
@@ -123,6 +124,7 @@ void setup_test(void) {
 
     .num_devices = TEST_LTC_AFE_NUM_DEVICES,
     .num_cells = TEST_LTC_AFE_NUM_CELLS,
+    .num_thermistors = TEST_LTC_AFE_NUM_THERMISTORS,
 
     .ltc_events = { .trigger_cell_conv_event = TEST_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
                     .cell_conv_complete_event = TEST_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
@@ -162,7 +164,7 @@ void test_ltc_afe_aux_conversion_initiated(void) {
   prv_wait_conv();
 
   // Expect to read some value from cells
-  for (int i = 0; i < TEST_LTC_AFE_NUM_CELLS; ++i) {
+  for (int i = 0; i < TEST_LTC_AFE_NUM_THERMISTORS; ++i) {
     TEST_ASSERT_NOT_EQUAL(0xFFFF, s_result_arr[i]);
     TEST_ASSERT_NOT_EQUAL(0x0000, s_result_arr[i]);
   }
