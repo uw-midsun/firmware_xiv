@@ -16,4 +16,5 @@
 
 StatusCode aux_dcdc_monitor_init();
 
-//void smoke_test(uint16_t s_aux_volt, uint16_t s_aux_temp, double resistance, uint16_t s_aux_tempC);
+// void smoke_test(uint16_t s_aux_volt, uint16_t s_aux_temp, double resistance, uint16_t
+// s_aux_tempC);

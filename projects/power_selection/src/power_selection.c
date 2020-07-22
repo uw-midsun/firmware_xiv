@@ -35,7 +35,7 @@ static uint16_t s_status = 0;
 static uint16_t s_aux_volt = 0;
 static uint16_t s_aux_temp = 0;
 
-//note: this section may be used as a smoke test, logging has been separated into this function
+// note: this section may be used as a smoke test, logging has been separated into this function
 /*The typical readings are:
 [0] projects/power_selection/src/power_selection.c:40: AUX Volatge Data: 2500
 [0] projects/power_selection/src/power_selection.c:41: AUX Temp Voltage Data: 2500
@@ -52,15 +52,14 @@ void smoke_test(uint16_t s_aux_volt, uint16_t s_aux_temp, double resistance, uin
 uint16_t prv_status_checker() {
   adc_read_raw(aux_channels[AUX_ADC_VOLT_CHANNEL], &s_aux_volt);
   adc_read_raw(aux_channels[AUX_ADC_TEMP_CHANNEL], &s_aux_temp);
-  
+
   double resistance = temp_to_res(s_aux_temp);
-  
+
   uint32_t s_aux_temp_prev = s_aux_temp;
   s_aux_temp = (uint16_t)resistance_to_temp(resistance);
 
-  //calling the smoke test within this function as per the previous operation of power_selection.c
-  smoke_test(s_aux_volt, s_aux_temp_prev, resistance,  s_aux_temp);
-
+  // calling the smoke test within this function as per the previous operation of power_selection.c
+  smoke_test(s_aux_volt, s_aux_temp_prev, resistance, s_aux_temp);
 
   // see https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1055326209/Power+Selector+Board for
   // the hardware specifications need to map data to voltages
@@ -85,8 +84,6 @@ uint16_t prv_status_checker() {
 
   return s_status;
 }
-
-
 
 static void prv_power_selection_callback(SoftTimerId timer_id, void *context) {
   uint16_t status = prv_status_checker();
