@@ -13,28 +13,40 @@
 // need to set interrupt once fan goes out of range
 // PWM duty cycle is set from 0-100, in steps of 0.39 (0x00 - 0xFF)
 // accepts number between 0-100, converts into into range of 0x00 - 0xFF
-StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtFanGroup fan_group,
+StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pwm_port,
                               uint8_t adt7476a_i2c_address) {
+  // check for out of range conditions.
+  if (speed_percent > 100) {
+    return STATUS_CODE_OUT_OF_RANGE;
+  }
+
   // determine which PWM output to change
-  uint8_t real_speed = floor(speed_percent / 0.39);
-  if (fan_group == ADT_FAN_GROUP_1) {
-    status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &speed_percent,
+  uint8_t real_speed = (speed_percent / 0.39);
+  if (pwm_port == ADT_PWM_PORT_1) {
+    status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &real_speed,
                                       SET_SPEED_NUM_BYTES));
+
+  } else if (pwm_port == ADT_PWM_PORT_2) {
+    status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &real_speed,
+                                      SET_SPEED_NUM_BYTES));
+  } else if (pwm_port == ADT_PWM_PORT_3) {
+    return STATUS_CODE_UNIMPLEMENTED;
   } else {
-    status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &speed_percent,
-                                      SET_SPEED_NUM_BYTES));
+    return STATUS_CODE_INVALID_ARGS;
   }
 
   return STATUS_CODE_OK;
 }
 
-StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_address, uint8_t *register_1_data,
-                               uint8_t *register_2_data) {
+StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
+                               uint8_t *register_1_data, uint8_t *register_2_data) {
   // read interrupt status register
-  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_address, ADT7476A_INTERRUPT_STATUS_REGISTER_1,
-                                   register_1_data, ADT7476A_REG_SIZE));
-  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_address, ADT7476A_INTERRUPT_STATUS_REGISTER_2,
-                                   register_2_data, ADT7476A_REG_SIZE));
+  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_read_address,
+                                   ADT7476A_INTERRUPT_STATUS_REGISTER_1, register_1_data,
+                                   ADT7476A_REG_SIZE));
+  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_read_address,
+                                   ADT7476A_INTERRUPT_STATUS_REGISTER_2, register_2_data,
+                                   ADT7476A_REG_SIZE));
 
   return STATUS_CODE_OK;
 }
@@ -49,6 +61,7 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
   storage->smbalert_pin = settings->smbalert_pin;
   storage->callback = settings->callback;  // called when tachometer goes out of range
   storage->callback_context = settings->callback_context;
+  storage->i2c = settings->i2c;
 
   static InterruptSettings s_interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,       //
