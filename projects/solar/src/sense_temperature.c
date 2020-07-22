@@ -18,6 +18,7 @@ static ThermistorData s_thermistor_data[MAX_THERMISTORS];
 
 static void prv_sense_callback(void *context) {
   // Just dump the raw ADC readings into the data store
+  // TODO(SOFT-280): Turn these into real temperature values
   ThermistorData *data = context;
   uint16_t raw_reading;
   StatusCode status = adc_read_raw(data->adc_channel, &raw_reading);

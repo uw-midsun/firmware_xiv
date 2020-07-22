@@ -36,13 +36,28 @@
 #define NTH_DATA_POINT_IMPL(type, n) (((type) << MAX_MPPT_BIT_WIDTH) | (n))
 
 typedef enum {
+  // Voltages from the voltage sense MCP3427s
   DATA_POINT_TYPE_VOLTAGE = 0,
+
+  // Current from the current sense MCP3427
   DATA_POINT_TYPE_CURRENT,
+
+  // Temperatures from the thermistors
   DATA_POINT_TYPE_TEMPERATURE,
+
+  // MPPT input voltages
   DATA_POINT_TYPE_MPPT_VOLTAGE,
+
+  // MPPT input currents
   DATA_POINT_TYPE_MPPT_CURRENT,
+
+  // MPPT current PWM duty cycles, out of 1000
   DATA_POINT_TYPE_MPPT_PWM,
+
+  // The CR bits on the MPPTs: we don't know what they are, but let's keep track of them for now
+  // Value of the data points will be 0 or 1
   DATA_POINT_TYPE_CR_BIT,
+
   NUM_DATA_POINT_TYPES,
 } DataPointType;
 
@@ -52,7 +67,7 @@ typedef uint8_t DataPoint;
 StatusCode data_store_init(void);
 
 // Overwrites the value of the data point with |value|.
-StatusCode data_store_set(DataPoint data_point, uint16_t value);
+StatusCode data_store_set(DataPoint data_point, uint32_t value);
 
 // Call this when you're done a session of calling |data_store_set| and you want data consumers
 // to be notified. Raises a DATA_READY_EVENT. Every data point should have been overwritten from
@@ -61,7 +76,7 @@ StatusCode data_store_done(void);
 
 // Puts the value of the data point in |value|. Warning: if the data point is not set in the store,
 // this will put garbage in |value|. Check |data_store_get_is_set| before every call.
-StatusCode data_store_get(DataPoint data_point, uint16_t *value);
+StatusCode data_store_get(DataPoint data_point, uint32_t *value);
 
 // Puts whether the data point is set in the data store in |is_set|.
 StatusCode data_store_get_is_set(DataPoint data_point, bool *is_set);

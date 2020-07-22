@@ -99,7 +99,7 @@ void teardown_test(void) {}
 // Test that all the values are set in a cycle with a single MPPT.
 void test_single_mppt_cycle_sets_values(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseMpptSettings settings = {
     .mppt_count = 1,
     .spi_port = TEST_SPI_PORT,
@@ -150,7 +150,7 @@ void test_single_mppt_cycle_sets_values(void) {
 // Test that all the values are set in a cycle with the max number of MPPTs.
 void test_max_mppt_cycle_sets_values(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseMpptSettings settings = {
     .mppt_count = MAX_SOLAR_BOARD_MPPTS,
     .spi_port = TEST_SPI_PORT,

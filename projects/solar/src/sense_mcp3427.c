@@ -53,7 +53,8 @@ static void prv_sense_callback(void *context) {
   SenseMcp3427Data *data = context;
   if (data->has_value) {
     DataPoint data_point = data->mcp3427_data_point;
-    StatusCode status = data_store_set(data_point, (uint16_t)data->value);
+    // we convert the int16_t reported by the MCP3427 directly to a uint32_t for the data store
+    StatusCode status = data_store_set(data_point, (uint32_t)data->value);
     if (!status_ok(status)) {
       LOG_WARN("sense_mcp3427 could not data_store_set with data point %d\n", data_point);
     }

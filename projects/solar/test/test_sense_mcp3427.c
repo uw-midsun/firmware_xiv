@@ -127,7 +127,7 @@ void teardown_test(void) {}
 // Test that we can complete two normal sense cycles with one MCP3427.
 void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseMcp3427Settings settings = {
     .mcp3427s = { {
         .data_point = TEST_DATA_POINT,
@@ -174,7 +174,7 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
 // Test that we can complete two normal sense cycles with the maximum number of MCP3427s.
 void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseMcp3427Settings settings;
   prv_get_max_mcp3427s_settings(&settings);
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
@@ -229,7 +229,7 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
 // Test that the data store is not set when the sense cycle is before the MCP3427 callback.
 void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseMcp3427Settings settings;
   prv_get_max_mcp3427s_settings(&settings);
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
@@ -317,6 +317,32 @@ void test_sense_mcp3427_fault(void) {
                          s_mcp3427_callback_contexts[0]);
   s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+// Test that negative ADC values are converted correctly to unsigned values in 2's complement.
+void test_sense_mcp3427_negative_handling(void) {
+  const int16_t passed = -1;
+  const uint32_t expected = 0xFFFFFFFF;  // 2's complement representation of -1
+  bool is_set;
+  uint32_t set_value;
+
+  SenseMcp3427Settings settings = {
+    .mcp3427s = { {
+        .data_point = TEST_DATA_POINT,
+    } },
+    .num_mcp3427s = 1,
+  };
+  settings.mcp3427s[0].mcp3427_settings = s_test_mcp3427_settings;
+  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_start());
+
+  s_mcp3427_callbacks[0](passed, passed, s_mcp3427_callback_contexts[0]);
+  s_sense_callbacks[0](s_sense_callback_contexts[0]);
+
+  data_store_get_is_set(TEST_DATA_POINT, &is_set);
+  TEST_ASSERT_TRUE(is_set);
+  data_store_get(TEST_DATA_POINT, &set_value);
+  TEST_ASSERT_EQUAL(expected, set_value);
 }
 
 // Test that initializing with NULL settings fails gracefully.
