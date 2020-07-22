@@ -15,3 +15,5 @@
 #define temp_to_res(r) 33000.0 / (double)((r) / 1000.0) - 10000
 
 StatusCode aux_dcdc_monitor_init();
+
+//void smoke_test(uint16_t s_aux_volt, uint16_t s_aux_temp, double resistance, uint16_t s_aux_tempC);

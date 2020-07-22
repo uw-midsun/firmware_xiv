@@ -5,7 +5,6 @@
 #include "log.h"
 #include "power_selection.h"
 #include "power_selection_events.h"
-#include "smoke_test.h"
 #include "soft_timer.h"
 
 #define POWER_SELECTION_CAN_DEVICE_ID 0x1
@@ -35,7 +34,6 @@ int main() {
   LOG_DEBUG("Working!\n");
   Event e = { 0 };
   while (true) {
-    log_analog_pins();
     while (event_process(&e) != STATUS_CODE_OK) {
     }
     can_process_event(&e);
