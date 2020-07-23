@@ -9,12 +9,12 @@
 // Must be calibrated.
 #define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
 
-// Scaling factor from MCP3427 ADC values for current sense to milliamps.
-// MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 264uV/mA.
-// (62.5uV/LSB)/(264uV/mA) = 0.237mA/LSB
-#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 0.237f
+// Scaling factor from MCP3427 ADC values for current sense to microamps.
+// MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 0.264uV/uA.
+// (62.5uV/LSB)/(0.264uV/uA) = 236.74uA/LSB
+#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 236.74f
 
-// Scaling factor to convert SPV1020 current values from SPI to milliamps.
+// Scaling factor to convert SPV1020 current values from SPI to microamps.
 // Must be calibrated.
 #define SOLAR_MPPT_CURRENT_SCALING_FACTOR 1.0f
 
