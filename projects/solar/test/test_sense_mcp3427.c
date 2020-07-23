@@ -57,6 +57,7 @@ static void prv_get_max_mcp3427s_settings(SenseMcp3427Settings *settings) {
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     settings->mcp3427s[i].mcp3427_settings = s_test_mcp3427_settings;
     settings->mcp3427s[i].data_point = prv_get_test_data_point(i);
+    settings->mcp3427s[i].scaling_factor = 1.0f;
 
     // Generate a unique port/address pin combo for each MCP3427.
     // There are 2 I2C ports and 8 address pin combos (low & low is the same as float & float).
@@ -111,6 +112,20 @@ StatusCode TEST_MOCK(mcp3427_start)(Mcp3427Storage *storage) {
   return STATUS_CODE_OK;
 }
 
+// Test that when all MCP3427 callbacks are passed |in|, |expected_out| is stored in the data store.
+static void prv_test_value_transform(SenseMcp3427Settings *settings, int16_t in,
+                                     uint32_t expected_out, char *msg) {
+  for (uint8_t i = 0; i < settings->num_mcp3427s; i++) {
+    s_mcp3427_callbacks[i](in, in, s_mcp3427_callback_contexts[i]);
+    s_sense_callbacks[i](s_sense_callback_contexts[i]);
+  }
+  uint32_t actual_out;
+  for (uint8_t i = 0; i < settings->num_mcp3427s; i++) {
+    data_store_get(settings->mcp3427s[i].data_point, &actual_out);
+    TEST_ASSERT_EQUAL_MESSAGE(expected_out, actual_out, msg);
+  }
+}
+
 void setup_test(void) {
   interrupt_init();
   soft_timer_init();
@@ -131,6 +146,7 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   SenseMcp3427Settings settings = {
     .mcp3427s = { {
         .data_point = TEST_DATA_POINT,
+        .scaling_factor = 1.0f,
     } },
     .num_mcp3427s = 1,
   };
@@ -321,14 +337,10 @@ void test_sense_mcp3427_fault(void) {
 
 // Test that negative ADC values are converted correctly to unsigned values in 2's complement.
 void test_sense_mcp3427_negative_handling(void) {
-  const int16_t passed = -1;
-  const uint32_t expected = 0xFFFFFFFF;  // 2's complement representation of -1
-  bool is_set;
-  uint32_t set_value;
-
   SenseMcp3427Settings settings = {
     .mcp3427s = { {
         .data_point = TEST_DATA_POINT,
+        .scaling_factor = 1.0f,
     } },
     .num_mcp3427s = 1,
   };
@@ -336,13 +348,27 @@ void test_sense_mcp3427_negative_handling(void) {
   TEST_ASSERT_OK(sense_mcp3427_init(&settings));
   TEST_ASSERT_OK(sense_mcp3427_start());
 
-  s_mcp3427_callbacks[0](passed, passed, s_mcp3427_callback_contexts[0]);
-  s_sense_callbacks[0](s_sense_callback_contexts[0]);
+  // -1 is 0xFFFFFFFF in 32-bit 2's complement
+  prv_test_value_transform(&settings, -1, 0xFFFFFFFF, "Negative handling failed");
+}
 
-  data_store_get_is_set(TEST_DATA_POINT, &is_set);
-  TEST_ASSERT_TRUE(is_set);
-  data_store_get(TEST_DATA_POINT, &set_value);
-  TEST_ASSERT_EQUAL(expected, set_value);
+// Test that the scaling factor is correctly handled.
+void test_sense_mcp3427_scaling_factor(void) {
+  uint32_t set_value = 0;
+  SenseMcp3427Settings settings = {
+    .mcp3427s = { {
+        .data_point = TEST_DATA_POINT,
+        .scaling_factor = 0.25f,
+    } },
+    .num_mcp3427s = 1,
+  };
+  settings.mcp3427s[0].mcp3427_settings = s_test_mcp3427_settings;
+  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_start());
+
+  prv_test_value_transform(&settings, 20, 5, "Scaling 20->5 (factor 0.25) failed.");
+  prv_test_value_transform(&settings, 10, 2, "Truncating 10->2 (factor 0.25) failed.");
+  prv_test_value_transform(&settings, -1025, 0xFFFFFF00, "-1025->0xFFFFFF00 (factor 0.25) failed.");
 }
 
 // Test that initializing with NULL settings fails gracefully.

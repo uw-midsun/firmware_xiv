@@ -11,6 +11,15 @@
 #define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 
+// Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
+// Must be calibrated.
+#define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
+
+// Scaling factor from MCP3427 ADC values for current sense to milliamps.
+// MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 264uV/mA.
+// (62.5uV/LSB)/(264uV/mA) = 0.237mA/LSB
+#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 0.237f
+
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
 
@@ -21,6 +30,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           // current sense
           {
               .data_point = DATA_POINT_CURRENT,
+              .scaling_factor = SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_1,
@@ -36,6 +46,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           // voltage sense
           {
               .data_point = DATA_POINT_VOLTAGE(0),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -50,6 +61,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           {
               .data_point = DATA_POINT_VOLTAGE(1),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -64,6 +76,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           {
               .data_point = DATA_POINT_VOLTAGE(2),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -78,6 +91,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           {
               .data_point = DATA_POINT_VOLTAGE(3),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -92,6 +106,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           {
               .data_point = DATA_POINT_VOLTAGE(4),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -107,6 +122,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           {
               // this one is not used on the 5 MPPT board, so it is last
               .data_point = DATA_POINT_VOLTAGE(5),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,

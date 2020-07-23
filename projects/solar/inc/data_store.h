@@ -36,7 +36,7 @@
 #define NTH_DATA_POINT_IMPL(type, n) (((type) << MAX_MPPT_BIT_WIDTH) | (n))
 
 typedef enum {
-  // Voltages from the voltage sense MCP3427s
+  // Voltages from the voltage sense MCP3427s, in millivolts.
   DATA_POINT_TYPE_VOLTAGE = 0,
 
   // Current from the current sense MCP3427
