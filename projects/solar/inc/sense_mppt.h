@@ -11,6 +11,10 @@
 typedef struct SenseMpptSettings {
   SolarMpptCount mppt_count;
   SpiPort spi_port;
+
+  // The factors to multiply the raw values from the MPPTs by to get the needed units.
+  float mppt_current_scaling_factor;
+  float mppt_vin_scaling_factor;
 } SenseMpptSettings;
 
 // Initialize the module and register it with sense. Must be called after |sense_init|.

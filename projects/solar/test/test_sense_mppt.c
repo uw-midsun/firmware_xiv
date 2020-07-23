@@ -103,6 +103,8 @@ void test_single_mppt_cycle_sets_values(void) {
   SenseMpptSettings settings = {
     .mppt_count = 1,
     .spi_port = TEST_SPI_PORT,
+    .mppt_current_scaling_factor = 1.0f,
+    .mppt_vin_scaling_factor = 1.0f,
   };
   TEST_ASSERT_OK(sense_mppt_init(&settings));
 
@@ -154,6 +156,8 @@ void test_max_mppt_cycle_sets_values(void) {
   SenseMpptSettings settings = {
     .mppt_count = MAX_SOLAR_BOARD_MPPTS,
     .spi_port = TEST_SPI_PORT,
+    .mppt_current_scaling_factor = 1.0f,
+    .mppt_vin_scaling_factor = 1.0f,
   };
   TEST_ASSERT_OK(sense_mppt_init(&settings));
 
@@ -202,6 +206,8 @@ void test_status_faults(void) {
   SenseMpptSettings settings = {
     .mppt_count = MAX_SOLAR_BOARD_MPPTS,
     .spi_port = TEST_SPI_PORT,
+    .mppt_current_scaling_factor = 1.0f,
+    .mppt_vin_scaling_factor = 1.0f,
   };
   TEST_ASSERT_OK(sense_mppt_init(&settings));
 
@@ -299,6 +305,28 @@ void test_status_faults(void) {
   TEST_ASSERT_EQUAL(MAX_SOLAR_BOARD_MPPTS, num_ovc_events);
 }
 
+// Test that the current and vin scaling factors are respected.
+void test_scaling_factor(void) {
+  SenseMpptSettings settings = {
+    .mppt_count = 1,
+    .spi_port = TEST_SPI_PORT,
+    .mppt_current_scaling_factor = 2.0f,
+    .mppt_vin_scaling_factor = 0.5f,
+  };
+  TEST_ASSERT_OK(sense_mppt_init(&settings));
+
+  s_mppt_current_ret = 7;
+  s_mppt_voltage_ret = 7;
+
+  prv_trigger_sense_cycle();
+
+  uint32_t set_value = 0;
+  data_store_get(DATA_POINT_MPPT_CURRENT(0), &set_value);
+  TEST_ASSERT_EQUAL(14, set_value);
+  data_store_get(DATA_POINT_MPPT_VOLTAGE(0), &set_value);
+  TEST_ASSERT_EQUAL(3, set_value);  // truncates
+}
+
 // Test that initializing with invalid settings fails gracefully.
 void test_invalid_settings(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, sense_mppt_init(NULL));
@@ -307,6 +335,8 @@ void test_invalid_settings(void) {
   SenseMpptSettings invalid_settings = {
     .mppt_count = MAX_SOLAR_BOARD_MPPTS + 1,
     .spi_port = TEST_SPI_PORT,
+    .mppt_current_scaling_factor = 1.0f,
+    .mppt_vin_scaling_factor = 1.0f,
   };
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, sense_mppt_init(NULL));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, sense_mppt_init(&invalid_settings));
 }

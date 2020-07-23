@@ -5,12 +5,6 @@
 #include "mcp3427_adc.h"
 #include "solar_events.h"
 
-#define SOLAR_MCP3427_CONVERSION_MODE MCP3427_CONVERSION_MODE_CONTINUOUS
-#define SOLAR_MCP3427_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
-
-#define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
-#define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
-
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
 // Must be calibrated.
 #define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
@@ -19,6 +13,20 @@
 // MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 264uV/mA.
 // (62.5uV/LSB)/(264uV/mA) = 0.237mA/LSB
 #define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 0.237f
+
+// Scaling factor to convert SPV1020 current values from SPI to milliamps.
+// Must be calibrated.
+#define SOLAR_MPPT_CURRENT_SCALING_FACTOR 1.0f
+
+// Scaling factor to convert SPV1020 VIN values from SPI to millivolts.
+// Must be calibrated.
+#define SOLAR_MPPT_VIN_SCALING_FACTOR 1.0f
+
+#define SOLAR_MCP3427_CONVERSION_MODE MCP3427_CONVERSION_MODE_CONTINUOUS
+#define SOLAR_MCP3427_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
+
+#define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
+#define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
@@ -166,5 +174,21 @@ StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
   }
   *settings = s_base_sense_temperature_settings;
   settings->num_thermistors = mppt_count;  // we have one thermistor per MPPT
+  return STATUS_CODE_OK;
+}
+
+// |mppt_count| is set dynamically by |config_get_sense_mppt_settings|
+static const SenseMpptSettings s_base_sense_mppt_settings = {
+  .spi_port = SPI_PORT_2,
+  .mppt_current_scaling_factor = SOLAR_MPPT_CURRENT_SCALING_FACTOR,
+  .mppt_vin_scaling_factor = SOLAR_MPPT_VIN_SCALING_FACTOR,
+};
+
+StatusCode config_get_sense_mppt_settings(SolarMpptCount mppt_count, SenseMpptSettings *settings) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  *settings = s_base_sense_mppt_settings;
+  settings->mppt_count = mppt_count;
   return STATUS_CODE_OK;
 }

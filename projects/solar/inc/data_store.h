@@ -39,23 +39,23 @@ typedef enum {
   // Voltages from the voltage sense MCP3427s, in millivolts.
   DATA_POINT_TYPE_VOLTAGE = 0,
 
-  // Current from the current sense MCP3427
+  // Current from the current sense MCP3427, in milliamps.
   DATA_POINT_TYPE_CURRENT,
 
-  // Temperatures from the thermistors
+  // Temperatures from the thermistors, in deciCelsius.
   DATA_POINT_TYPE_TEMPERATURE,
 
-  // MPPT input voltages
+  // MPPT input voltages, in millivolts.
   DATA_POINT_TYPE_MPPT_VOLTAGE,
 
-  // MPPT input currents
+  // MPPT input currents, in milliamps.
   DATA_POINT_TYPE_MPPT_CURRENT,
 
-  // MPPT current PWM duty cycles, out of 1000
+  // MPPT current PWM duty cycles, fraction out of 1000.
   DATA_POINT_TYPE_MPPT_PWM,
 
-  // The CR bits on the MPPTs: we don't know what they are, but let's keep track of them for now
-  // Value of the data points will be 0 or 1
+  // The CR bits on the MPPTs: we don't know what they are, but let's keep track of them for now.
+  // Value of the data points will be 0 or 1.
   DATA_POINT_TYPE_CR_BIT,
 
   NUM_DATA_POINT_TYPES,
