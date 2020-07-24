@@ -20,6 +20,7 @@
 // modify if you want to send more or less
 #define SMOKETEST_SEND_TIME_MS 1000
 // this is the data it'll send
+// this is an array of exactly 8 uint8_ts
 // change if you wish
 #define DATA \
   { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 }
@@ -47,9 +48,8 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   LOG_DEBUG("Received a message!\n");
   printf("Data:\n\t");
   for (uint8_t i = 0; i < msg->dlc; i++) {
-    uint8_t byte = 0;
-    byte = msg->data >> (i * 8);
-    printf("%x ", byte);
+    uint8_t byte = (msg->data >> (i * 8)) & 0xFF;
+    printf("0x%x ", byte);
   }
   printf("\n");
   return STATUS_CODE_OK;
@@ -81,9 +81,9 @@ int main() {
 
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) != STATUS_CODE_OK) {
+    while (event_process(&e) == STATUS_CODE_OK) {
+      can_process_event(&e);
     }
-    can_process_event(&e);
   }
 
   return 0;
