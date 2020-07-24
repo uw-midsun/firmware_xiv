@@ -7,17 +7,13 @@
 #include "soft_timer.h"
 #include "wait.h"
 
-/*
+// this test will increment the fan speed by 10% every second until at full speed,
+// and then loop back to 0% speed and continue.
 
-  this teset will increment the fan speed by 10% every second until at full speed,
-  and then loop back to 0% speed and continue.
+// the speed interval and increment defines can be changed for further testing
 
-  the speed interval and increment defines can be changed for further testing
-
-  the i2c port, i2c write and read address, and i2c settings should be changed as needed
-  depending on the board.
-
-*/
+// the i2c port, i2c write and read address, and i2c settings should be changed as needed
+// depending on the board.
 
 #define ADT_7476A_NUM_FANS 4
 #define ADT_7476A_INTERRUPT_MASK_OFFSET 2
@@ -89,7 +85,6 @@ int main() {
 
   s_current_speed = 0;
 
-  soft_timer_start_seconds(SET_SPEED_INTERVAL_S, prv_periodic_set_speed, NULL, NULL);
   prv_periodic_set_speed(SOFT_TIMER_INVALID_TIMER, NULL);
   while (true) {
     wait();
