@@ -73,7 +73,6 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
   return STATUS_CODE_OK;
 }
 
-
 static void prv_test_adt7476a_interrupt_callback(const GpioAddress *address, void *context) {
   LOG_DEBUG("INTERRUPT CALLBACK TRIGGERED\n");
   uint8_t rx_interrupt_status_reg_1;
@@ -90,7 +89,6 @@ void setup_test(void) {
   interrupt_init();
   gpio_it_init();
   soft_timer_init();
-
 }
 
 void teardown_test(void) {}
@@ -186,5 +184,4 @@ void test_adt7476a_get_status(void) {
 
   // trigger interrupt and fetch data
   gpio_it_trigger_interrupt(&test_output_pin);
-
 }
