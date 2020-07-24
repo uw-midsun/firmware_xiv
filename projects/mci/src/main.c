@@ -55,8 +55,8 @@ static void prv_setup_motor_can(void) {
 void prv_mci_storage_init(void *context) {
   PrechargeControlSettings precharge_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
-    .precharge_control2 = { .port = GPIO_PORT_B, .pin = 1 },
-    .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 }
+    .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
+    .precharge_monitor2 = { .port = GPIO_PORT_A, .pin = 10 },
   };
   precharge_control_init(&precharge_settings);
 
