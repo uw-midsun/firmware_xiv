@@ -368,6 +368,7 @@ void test_sense_mcp3427_scaling_factor(void) {
 
   prv_test_value_transform(&settings, 20, 5, "Scaling 20->5 (factor 0.25) failed.");
   prv_test_value_transform(&settings, 10, 2, "Truncating 10->2 (factor 0.25) failed.");
+  // -1025 * 0.25f = -256.25f is truncated to -256, which is 0xFFFFFF000 in 32 bits
   prv_test_value_transform(&settings, -1025, 0xFFFFFF00, "-1025->0xFFFFFF00 (factor 0.25) failed.");
 }
 

@@ -5,6 +5,8 @@
 #include "mcp3427_adc.h"
 #include "solar_events.h"
 
+// TODO(SOFT-282): Calibrate these scaling factors.
+
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
 // Must be calibrated.
 #define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
