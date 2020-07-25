@@ -2,7 +2,7 @@
 #include "event_queue.h"
 #include "solar_events.h"
 
-static uint16_t s_data_store[NUM_DATA_POINTS];
+static uint32_t s_data_store[NUM_DATA_POINTS];
 static bool s_is_set[NUM_DATA_POINTS];
 
 StatusCode data_store_init(void) {
@@ -13,7 +13,7 @@ StatusCode data_store_init(void) {
   return STATUS_CODE_OK;
 }
 
-StatusCode data_store_set(DataPoint data_point, uint16_t value) {
+StatusCode data_store_set(DataPoint data_point, uint32_t value) {
   if (data_point >= NUM_DATA_POINTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -27,7 +27,7 @@ StatusCode data_store_done(void) {
   return event_raise_priority(DATA_READY_EVENT_PRIORITY, DATA_READY_EVENT, 0);
 }
 
-StatusCode data_store_get(DataPoint data_point, uint16_t *value) {
+StatusCode data_store_get(DataPoint data_point, uint32_t *value) {
   if (value == NULL || data_point >= NUM_DATA_POINTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }

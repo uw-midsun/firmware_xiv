@@ -6,7 +6,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define VALID_TEST_DATA_POINT DATA_POINT_VOLTAGE_1
+#define VALID_TEST_DATA_POINT DATA_POINT_CURRENT
 #define VALID_TEST_VALUE 0x1337
 
 void setup_test(void) {
@@ -17,7 +17,7 @@ void teardown_test(void) {}
 // Test that we can set and get a value from the data store.
 void test_data_store_set_and_get_basic(void) {
   TEST_ASSERT_OK(data_store_init());
-  uint16_t value;
+  uint32_t value;
   TEST_ASSERT_OK(data_store_set(VALID_TEST_DATA_POINT, VALID_TEST_VALUE));
   TEST_ASSERT_OK(data_store_get(VALID_TEST_DATA_POINT, &value));
   TEST_ASSERT_EQUAL(VALID_TEST_VALUE, value);
@@ -37,7 +37,7 @@ void test_data_store_get_is_set_basic(void) {
 // Test that every data point works.
 void test_data_store_set_and_get_and_get_is_set_thorough(void) {
   TEST_ASSERT_OK(data_store_init());
-  uint16_t value;
+  uint32_t value;
   bool is_set;
   for (DataPoint data_point = 0; data_point < NUM_DATA_POINTS; data_point++) {
     TEST_ASSERT_OK(data_store_get_is_set(data_point, &is_set));
@@ -59,7 +59,7 @@ void test_data_store_set_invalid_index(void) {
 // Test that |data_store_get| responds correctly on an invalid index.
 void test_data_store_get_invalid_index(void) {
   TEST_ASSERT_OK(data_store_init());
-  uint16_t value;
+  uint32_t value;
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, data_store_get(NUM_DATA_POINTS, &value));
 }
 

@@ -52,7 +52,7 @@ void teardown_test(void) {}
 // Test that everything works correctly for a sense cycle with a single thermistor.
 void test_single_thermistor_cycle(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseTemperatureSettings settings = {
     .thermistor_pins = { { GPIO_PORT_A, 0 } },
     .num_thermistors = 1,
@@ -79,7 +79,7 @@ void test_single_thermistor_cycle(void) {
 // Test that everything works correctly for a single cycle with the max number of thermistors.
 void test_max_thermistors_cycle(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseTemperatureSettings settings = {
     .num_thermistors = MAX_THERMISTORS,
   };
@@ -109,7 +109,7 @@ void test_max_thermistors_cycle(void) {
 // Test that we can recover after a temporary fault (single thermistor).
 void test_adc_read_fail(void) {
   bool is_set;
-  uint16_t set_value;
+  uint32_t set_value;
   SenseTemperatureSettings settings = {
     .thermistor_pins = { { GPIO_PORT_A, 0 } },
     .num_thermistors = 1,
