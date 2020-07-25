@@ -32,6 +32,15 @@ static void prv_send_command(Ads1259Storage *storage, uint8_t command) {
   spi_exchange(storage->spi_port, payload, 1, NULL, 0);
 }
 
+// [jess] helper function to check drdy bit
+static void prv_check_drdy(Ads1259Storage *storage) {
+  printf("ads1259 driver checking config2 register and drdy: \n");
+  uint8_t payload[] = { (ADS1259_READ_REGISTER | 0x02) };
+  uint8_t read_val = 0;
+  spi_exchange(storage->spi_port, payload, 1, &read_val, 1);
+  printf("config2: 0x%x, drdy bit: %i\n", read_val, read_val & 0b10000000);
+}
+
 // Reads 1-byte reg value to storage->data
 static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, uint8_t reg_val) {
   uint8_t payload[] = { (ADS1259_READ_REGISTER | reg_add) };
@@ -78,20 +87,25 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
 
 // calculate check-sum based on page 29 of datasheet
 static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
+  printf("ads1259 driver calculating checksum\n");
   uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID + storage->rx_data.MSB +
                           ADS1259_CHECKSUM_OFFSET);
   if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) {
+    printf("ads 1259 driver check sum out of range\n");
     return ADS1259_STATUS_CODE_OUT_OF_RANGE;
   }
   if ((sum & ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM & ~(CHK_SUM_FLAG_BIT))) {
+    printf("ads 1259 driver check sum fault\n");
     return ADS1259_STATUS_CODE_CHECKSUM_FAULT;
   }
+  printf("ads 1259 driver check sum ok\n");
   return ADS1259_STATUS_CODE_OK;
 }
 
 // using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
 // 0x000000-0x7FFFFF positive range, 0xFFFFFF - 0x800000 neg range, rightmost is greatest magnitude
 static void prv_convert_data(Ads1259Storage *storage) {
+  printf("ads1259 driver converting data\n");
   double resolution = pow(2, s_num_usable_bits[ADS1259_DATA_RATE_SPS] - 1);
   if (storage->conv_data.raw & RX_NEG_VOLTAGE_BIT) {
     storage->reading = 0 - ((RX_MAX_VALUE - storage->conv_data.raw) >>
@@ -101,13 +115,19 @@ static void prv_convert_data(Ads1259Storage *storage) {
     storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
                        EXTERNAL_VREF_V / (resolution - 1);
   }
+  printf("final reading: %f\n", storage->reading);
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
+  printf("ads1259 driver now getting conversion data\n");
   Ads1259Storage *storage = (Ads1259Storage *)context;
+  prv_check_drdy(storage);
   Ads1259StatusCode code;
   uint8_t payload[] = { ADS1259_READ_DATA_BY_OPCODE };
   spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
+  printf("raw data gotten: 0x%x, 0x%x, 0x%x, 0x%x\n",
+         storage->rx_data.MSB, storage->rx_data.MID,
+         storage->rx_data.LSB, storage->rx_data.CHK_SUM);
   code = prv_checksum(storage);
   if (code) {
     (*storage->handler)(code, NULL);
@@ -115,6 +135,10 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   storage->conv_data.MSB = storage->rx_data.MSB;
   storage->conv_data.MID = storage->rx_data.MID;
   storage->conv_data.LSB = storage->rx_data.LSB;
+  printf("proper order data gotten\n");
+  printf("MSB: 0x%x\n", storage->rx_data.MSB);
+  printf("MID: 0x%x\n", storage->rx_data.MID);
+  printf("LSB: 0x%x\n", storage->rx_data.LSB);
   prv_convert_data(storage);
 }
 
@@ -135,17 +159,26 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
   // first command that must be sent on power-up before registers can be read
   prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
   status_ok_or_return(prv_configure_registers(storage));
-  printf("after configuring registers. Sending offset calibration.\n");
-  prv_send_command(storage, ADS1259_OFFSET_CALIBRATION);
-  delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
-  prv_send_command(storage, ADS1259_GAIN_CALIBRATION);
-  delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
+  // [jess] skip calibration for now, we can always reconfigure later
+  // printf("after configuring registers. Sending offset calibration.\n");
+  // prv_send_command(storage, ADS1259_OFFSET_CALIBRATION);
+  // delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
+  // printf("finished calibration delay. Now sending gain calibration\n");
+  // prv_send_command(storage, ADS1259_GAIN_CALIBRATION);
+  // delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
   return STATUS_CODE_OK;
 }
 
 // Reads conversion data to data struct in storage. data->reading gives total value
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
+  printf("ads1259 driver starting conversion\n");
+  prv_check_drdy(storage);
+
   prv_send_command(storage, ADS1259_START_CONV);
+  // [jess] maybe we try sending stop right after to only do one?
+  delay_ms(1);
+  // [jess] this should finish the current conversion then not do more
+  prv_send_command(storage, ADS1259_STOP_CONV);
   soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
                           prv_conversion_callback, storage, NULL);
   return STATUS_CODE_OK;

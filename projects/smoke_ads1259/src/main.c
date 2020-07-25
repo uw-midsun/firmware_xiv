@@ -7,7 +7,7 @@
 
 // slightly larger than conversion time of adc
 #define CONVERSION_TIME_MS 18
-#define READING_QUEUE_LENGTH 10
+#define READING_QUEUE_LENGTH 3
 static Ads1259Storage s_storage;
 static int s_index;
 
@@ -57,7 +57,11 @@ int main() {
   s_index = 0;
   double reading_queue[READING_QUEUE_LENGTH];
 
-  while (1) {
+  // [jess] just do it twice
+  prv_periodic_read(SOFT_TIMER_INVALID_TIMER, reading_queue);
+  soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
+
+  while (0) {
     soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
     delay_ms(1000);
   }
