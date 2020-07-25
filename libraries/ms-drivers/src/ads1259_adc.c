@@ -39,9 +39,9 @@ static StatusCode prv_check_register(Ads1259Storage *storage, uint8_t reg_add, u
   spi_exchange(storage->spi_port, payload, 1, &read_val, 1);
   printf("register: 0x%x\n", reg_add);
   printf("gotten: 0x%x\n", read_val);
-  printf("expected: 0x%x\n", reg_val);
+  // [jess] could do something like a check for |reg_val != (reg_val & read_val)|
   if (reg_val != read_val) {
-    return STATUS_CODE_UNINITIALIZED;
+    // return STATUS_CODE_UNINITIALIZED;
   }
   return STATUS_CODE_OK;
 }
@@ -55,16 +55,21 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   // reset all register values to default
   prv_send_command(storage, ADS1259_RESET);  // Needs 8 fclk cycles before next command
   delay_us(100);
+  // [jess] we need to send this command after reset
   prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
   uint8_t payload[NUM_REGISTER_WRITE_COMM] = { (ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0),
                                                NUM_CONFIG_REGISTERS - 1, register_lookup[0],
                                                register_lookup[1], register_lookup[2] };
   // tx write-reg command and data for all three config registers
+  // [jess]: we don't STATUS_OK_OR_RETURN here because we don't account for read-only bits
+  //         that are already set in the checks.
+    printf("register status before setting:\n");
   for (uint8_t reg = 0; reg < NUM_CONFIG_REGISTERS; reg++) {
     prv_check_register(storage, reg, register_lookup[reg]);
   }
   spi_exchange(storage->spi_port, payload, NUM_REGISTER_WRITE_COMM, NULL, 0);
   // sanity check that data was written correctly
+  printf("register status after setting:\n");
   for (uint8_t reg = 0; reg < NUM_CONFIG_REGISTERS; reg++) {
     prv_check_register(storage, reg, register_lookup[reg]);
   }
@@ -130,6 +135,7 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
   // first command that must be sent on power-up before registers can be read
   prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
   status_ok_or_return(prv_configure_registers(storage));
+  printf("after configuring registers. Sending offset calibration.\n");
   prv_send_command(storage, ADS1259_OFFSET_CALIBRATION);
   delay_ms(s_calibration_time_ms_lookup[ADS1259_DATA_RATE_SPS]);
   prv_send_command(storage, ADS1259_GAIN_CALIBRATION);
