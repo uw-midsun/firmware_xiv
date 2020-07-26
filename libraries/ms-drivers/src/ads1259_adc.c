@@ -115,7 +115,8 @@ static void prv_convert_data(Ads1259Storage *storage) {
     storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
                        EXTERNAL_VREF_V / (resolution - 1);
   }
-  printf("final reading: %f\n", storage->reading);
+  printf("final reading f: %f\n", storage->reading);
+  printf("final reading lf: %lf\n", storage->reading);
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
@@ -178,12 +179,8 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
   printf("ads1259 driver starting conversion\n");
   prv_check_drdy(storage);
-
+  printf("ads1259 driver sending start command\n");
   prv_send_command(storage, ADS1259_START_CONV);
-  // [jess] maybe we try sending stop right after to only do one?
-  delay_ms(1);
-  // [jess] this should finish the current conversion then not do more
-  prv_send_command(storage, ADS1259_STOP_CONV);
   soft_timer_start_millis(s_conversion_time_ms_lookup[ADS1259_DATA_RATE_SPS],
                           prv_conversion_callback, storage, NULL);
   return STATUS_CODE_OK;

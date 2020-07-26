@@ -20,12 +20,13 @@ static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
 }
 
 static void prv_dump_queue(double *queue) {
-  LOG_DEBUG("\n\nDUMPING QUEUE....\n");
+  LOG_DEBUG("DUMPING QUEUE....\n");
   for (int reading = 0; reading < READING_QUEUE_LENGTH; reading++) {
     LOG_DEBUG("VOLTAGE READING: %lf\n", queue[reading]);
     queue[reading] = 0;
   }
   s_index = 0;
+  LOG_DEBUG("----------DONE DUMPING---------\n");
 }
 
 static void prv_periodic_read(SoftTimerId id, void *context) {
@@ -44,7 +45,7 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
 int main() {
   const Ads1259Settings settings = {
     .spi_port = SPI_PORT_2,
-    .spi_baudrate = 6000000,
+    .spi_baudrate = 600000,
     .mosi = { .port = GPIO_PORT_B, 15 },
     .miso = { .port = GPIO_PORT_B, 14 },
     .sclk = { .port = GPIO_PORT_B, 13 },
@@ -55,6 +56,7 @@ int main() {
   gpio_init();
   soft_timer_init();
   printf("smoke test initializing ads1259\n");
+  delay_ms(100);
   ads1259_init(&settings, &s_storage);
 
   s_index = 0;
@@ -62,9 +64,11 @@ int main() {
 
   // [jess] just do it twice
   printf("smoke test triggering read\n");
-  prv_periodic_read(SOFT_TIMER_INVALID_TIMER, reading_queue);
-  printf("setting timer for another read...\n");
+  // prv_periodic_read(SOFT_TIMER_INVALID_TIMER, reading_queue);
+  // printf("setting timer for another read...\n");
   soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
+
+  soft_timer_start_millis(2000, prv_periodic_read, reading_queue, NULL);
 
   while (1) {
     // soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
