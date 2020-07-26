@@ -43,6 +43,7 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
 int main() {
   const Ads1259Settings settings = {
     .spi_port = SPI_PORT_2,
+    .spi_baudrate = 6000000,
     .mosi = { .port = GPIO_PORT_B, 15 },
     .miso = { .port = GPIO_PORT_B, 14 },
     .sclk = { .port = GPIO_PORT_B, 13 },
