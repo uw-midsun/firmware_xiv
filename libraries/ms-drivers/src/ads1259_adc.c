@@ -144,6 +144,7 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
 
 // Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
 StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
+  printf("ads1259 driver initializing\n");
   storage->spi_port = settings->spi_port;
   storage->handler = settings->handler;
   const SpiSettings spi_settings = {
@@ -154,11 +155,15 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
     .sclk = settings->sclk,
     .cs = settings->cs,
   };
+  printf("ads1259 driver initing spi\n");
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
   delay_us(100);
   // first command that must be sent on power-up before registers can be read
+  printf("ads1259 driver stopping read continuous\n");
   prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
+  printf("ads1259 driver configuring registers first time\n");
   status_ok_or_return(prv_configure_registers(storage));
+  printf("ads1259 driver init all ok\n");
   // [jess] skip calibration for now, we can always reconfigure later
   // printf("after configuring registers. Sending offset calibration.\n");
   // prv_send_command(storage, ADS1259_OFFSET_CALIBRATION);

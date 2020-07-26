@@ -29,6 +29,7 @@ static void prv_dump_queue(double *queue) {
 }
 
 static void prv_periodic_read(SoftTimerId id, void *context) {
+  printf("smoke test reading\n");
   double *queue = context;
   if (s_index < READING_QUEUE_LENGTH) {
     ads1259_get_conversion_data(&s_storage);
@@ -53,17 +54,20 @@ int main() {
   interrupt_init();
   gpio_init();
   soft_timer_init();
+  printf("smoke test initializing ads1259\n");
   ads1259_init(&settings, &s_storage);
 
   s_index = 0;
   double reading_queue[READING_QUEUE_LENGTH];
 
   // [jess] just do it twice
+  printf("smoke test triggering read\n");
   prv_periodic_read(SOFT_TIMER_INVALID_TIMER, reading_queue);
+  printf("setting timer for another read...\n");
   soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
 
-  while (0) {
-    soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
-    delay_ms(1000);
+  while (1) {
+    // soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
+    // delay_ms(1000);
   }
 }
