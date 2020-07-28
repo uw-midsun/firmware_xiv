@@ -10,6 +10,7 @@
 #define READING_QUEUE_LENGTH 3
 static Ads1259Storage s_storage;
 static int s_index;
+static int s_count;
 
 static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
   if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) {
@@ -19,18 +20,16 @@ static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
   }
 }
 
-static void prv_dump_queue(double *queue) {
-  LOG_DEBUG("DUMPING QUEUE....\n");
-  for (int reading = 0; reading < READING_QUEUE_LENGTH; reading++) {
-    LOG_DEBUG("VOLTAGE READING: %lf\n", queue[reading]);
-    queue[reading] = 0;
-  }
-  s_index = 0;
-  LOG_DEBUG("----------DONE DUMPING---------\n");
-}
+// static void prv_dump_queue(double *queue) {
+//   LOG_DEBUG("DUMPING QUEUE....\n");
+//   for (int reading = 0; reading < READING_QUEUE_LENGTH; reading++) {
+//     LOG_DEBUG("VOLTAGE READING: %lf\n", queue[reading]);
+//     queue[reading] = 0;
+//   }
+//   LOG_DEBUG("----------DONE DUMPING---------\n");
+// }
 
 static void prv_periodic_read(SoftTimerId id, void *context) {
-  printf("smoke test reading\n");
   double *queue = context;
   if (s_index < READING_QUEUE_LENGTH) {
     ads1259_get_conversion_data(&s_storage);
@@ -38,7 +37,10 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
     s_index++;
     soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, queue, NULL);
   } else {
-    prv_dump_queue(queue);
+    // prv_dump_queue(queue);
+    s_index = 0;
+    printf("=========READING # %i=========\n", s_count++);
+    soft_timer_start_millis(1000, prv_periodic_read, queue, NULL);
   }
 }
 
@@ -63,12 +65,9 @@ int main() {
   double reading_queue[READING_QUEUE_LENGTH];
 
   // [jess] just do it twice
-  printf("smoke test triggering read\n");
   // prv_periodic_read(SOFT_TIMER_INVALID_TIMER, reading_queue);
   // printf("setting timer for another read...\n");
   soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
-
-  soft_timer_start_millis(2000, prv_periodic_read, reading_queue, NULL);
 
   while (1) {
     // soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
