@@ -10,7 +10,7 @@
 #define READING_QUEUE_LENGTH 3
 static Ads1259Storage s_storage;
 static int s_index;
-static int s_count;
+static int s_count = 1;
 
 static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
   if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) {
@@ -32,14 +32,17 @@ static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
 static void prv_periodic_read(SoftTimerId id, void *context) {
   double *queue = context;
   if (s_index < READING_QUEUE_LENGTH) {
+    printf("=========READING # %i========= vref: %d\n", s_count++, EXTERNAL_VREF_V);
     ads1259_get_conversion_data(&s_storage);
     queue[s_index] = s_storage.reading;
     s_index++;
     soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, queue, NULL);
   } else {
     // prv_dump_queue(queue);
+    if (s_count > 6) {
+      return;
+    }
     s_index = 0;
-    printf("=========READING # %i=========\n", s_count++);
     soft_timer_start_millis(1000, prv_periodic_read, queue, NULL);
   }
 }
