@@ -1,7 +1,7 @@
 #pragma once
 
 // Voltage reference value
-#define EXTERNAL_VREF_V 2
+#define EXTERNAL_VREF_V 2.5
 
 // ADS1259 Configuration and control commands
 
