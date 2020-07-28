@@ -32,7 +32,7 @@ static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
 static void prv_periodic_read(SoftTimerId id, void *context) {
   double *queue = context;
   if (s_index < READING_QUEUE_LENGTH) {
-    printf("=========READING # %i========= vref: %d\n", s_count++, EXTERNAL_VREF_V);
+    printf("=========READING # %i========= vref mv: %d\n", s_count++, (int)(EXTERNAL_VREF_V * 1000));
     ads1259_get_conversion_data(&s_storage);
     queue[s_index] = s_storage.reading;
     s_index++;
