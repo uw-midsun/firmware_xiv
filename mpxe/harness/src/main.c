@@ -16,10 +16,11 @@
 
 #include <stdio.h>
 
-#include "pm.h"
+#include "pm_run.h"
 
 int main(void) {
-  build_project("tutorial_board_button_interrupt");
-  run_project("tutorial_board_button_interrupt");
+  (void)pm_init();
+  // build_project("tutorial_board_button_interrupt");
+  // run_project("tutorial_board_button_interrupt");
   return 0;
 }

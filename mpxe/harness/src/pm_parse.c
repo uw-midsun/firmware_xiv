@@ -10,7 +10,6 @@ int alloc(char *module) {
   if (cmp_gpio == 0) {
     printf("allocing for gpio...\n");
   }
-
   return 0;
 }
 
