@@ -33,8 +33,7 @@ static StatusCode prv_ack_cb(CanMessageId msg_id, uint16_t device, CanAckStatus 
 }
 
 void test_fault_monitor_faults_car(void) {
-  uint8_t bps_fault_bitset = EE_BATTERY_HEARTBEAT_STATE_FAULT_KILLSWITCH |
-                             EE_BATTERY_HEARTBEAT_STATE_FAULT_CURRENT_SENSE_AFE_CELL;
+  uint8_t bps_fault_bitset = EE_BPS_STATE_FAULT_KILLSWITCH | EE_BPS_FAULT_SOURCE_AFE_CELL;
   CanAckRequest s_req = { .callback = prv_ack_cb,
                           .context = NULL,
                           .expected_bitset =
