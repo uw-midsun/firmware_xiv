@@ -10,6 +10,7 @@
 #include "status.h"
 
 // smoke test settings
+// NOTE: Test assumes num_thermistors == num_cells
 #define SMOKE_LTC_AFE_NUM_DEVICES 1
 #define SMOKE_LTC_AFE_NUM_CELLS 12
 #define SMOKE_LTC_AFE_INPUT_BITSET_FULL 0xFFF
@@ -37,7 +38,7 @@ typedef struct LtcAfeReadingBound {
 static LtcAfeStorage s_afe;
 static uint16_t s_result_arr[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
 static size_t s_num_samples = 0;
-LtcAfeReadingBound s_sample_bounds[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
+static LtcAfeReadingBound s_sample_bounds[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
 
 static void prv_reset_sample_bounds(void) {
   for (int i = 0; i < SMOKE_LTC_AFE_NUM_CELLS; i++) {
@@ -61,7 +62,7 @@ static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len
     LOG_DEBUG("READING STATS:");
   }
 
-  for (size_t cell = 0; cell < SMOKE_LTC_AFE_NUM_CELLS; ++cell) {
+  for (size_t cell = 0; cell < len; ++cell) {
     s_sample_bounds[cell].min = MIN(s_result_arr[cell], s_sample_bounds[cell].min);
     s_sample_bounds[cell].max = MAX(s_result_arr[cell], s_sample_bounds[cell].max);
 
@@ -133,6 +134,7 @@ static StatusCode prv_ltc_init(void) {
 
     .num_devices = SMOKE_LTC_AFE_NUM_DEVICES,
     .num_cells = SMOKE_LTC_AFE_NUM_CELLS,
+    .num_thermistors = SMOKE_LTC_AFE_NUM_CELLS,
 
     .ltc_events = { .trigger_cell_conv_event = SMOKE_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
                     .cell_conv_complete_event = SMOKE_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
