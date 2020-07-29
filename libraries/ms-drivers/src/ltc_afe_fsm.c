@@ -11,7 +11,8 @@ FSM_DECLARE_STATE(afe_read_aux);
 FSM_DECLARE_STATE(afe_aux_complete);
 
 static bool prv_all_aux_complete(const struct Fsm *fsm, const Event *e, void *context) {
-  return e->data >= LTC_AFE_MAX_CELLS_PER_DEVICE;
+  LtcAfeStorage *afe = fsm->context;
+  return e->data >= afe->settings.num_thermistors;
 }
 
 FSM_STATE_TRANSITION(afe_idle) {
