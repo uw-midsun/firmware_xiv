@@ -14,7 +14,6 @@
 #include "power_selection.h"
 #include "power_selection_events.h"
 #include "resistance_to_temp.h"
-#include "smoke_test.h"
 #include "soft_timer.h"
 #include "test_helpers.h"
 

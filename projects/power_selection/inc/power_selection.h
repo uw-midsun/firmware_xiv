@@ -15,4 +15,3 @@
 #define temp_to_res(r) 33000.0 / (double)((r) / 1000.0) - 10000
 
 StatusCode aux_dcdc_monitor_init();
-
