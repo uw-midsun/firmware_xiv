@@ -1,5 +1,4 @@
 #include "power_selection.h"
-
 #include "adc.h"
 #include "can.h"
 #include "can_transmit.h"
@@ -36,12 +35,12 @@ static uint16_t s_aux_volt = 0;
 static uint16_t s_aux_temp = 0;
 
 // note: this section may be used as a smoke test, logging has been separated into this function
-/*The typical readings are:
-[0] projects/power_selection/src/power_selection.c:40: AUX Volatge Data: 2500
-[0] projects/power_selection/src/power_selection.c:41: AUX Temp Voltage Data: 2500
-[0] projects/power_selection/src/power_selection.c:42: AUX Temp Resistance Value: 3200.000000
-[0] projects/power_selection/src/power_selection.c:43: AUX Temp Data in C: 53
-*/
+//The typical readings are:
+//[0] projects/power_selection/src/power_selection.c:40: AUX Volatge Data: 2500
+//[0] projects/power_selection/src/power_selection.c:41: AUX Temp Voltage Data: 2500
+//[0] projects/power_selection/src/power_selection.c:42: AUX Temp Resistance Value: 3200.000000
+//[0] projects/power_selection/src/power_selection.c:43: AUX Temp Data in C: 53
+
 void smoke_test(uint16_t s_aux_volt, uint16_t s_aux_temp, double resistance, uint16_t s_aux_tempC) {
   LOG_DEBUG("AUX Volatge Data: %d\n", s_aux_volt);
   LOG_DEBUG("AUX Temp Voltage Data: %d\n", s_aux_temp);
