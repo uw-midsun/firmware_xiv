@@ -1,6 +1,6 @@
 #pragma once
 
-// Logs all the data in the data store to the console every cycle.
+// Logs all the data in the data store to the console on every data ready event.
 // Requires the event queue and the data store to be initialized.
 
 #include <stdbool.h>

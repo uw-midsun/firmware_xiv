@@ -32,7 +32,7 @@
 // and the type is the just above that. This scheme uses at most double the space necessary,
 // plus the few bytes wasted for DATA_POINT_CURRENT, which only uses the first allocated data point.
 #define NTH_DATA_POINT(type, n) \
-  ((n) >= MAX_SOLAR_BOARD_MPPTS ? INVALID_DATA_POINT : NTH_DATA_POINT_IMPL(type, n))
+  ((n) >= MAX_SOLAR_BOARD_MPPTS ? INVALID_DATA_POINT : NTH_DATA_POINT_RAW(type, n))
 #define NTH_DATA_POINT_RAW(type, n) (((type) << MAX_MPPT_BIT_WIDTH) | (n))
 
 typedef enum {
