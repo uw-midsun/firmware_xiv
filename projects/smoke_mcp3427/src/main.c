@@ -23,13 +23,6 @@
 #define SMOKE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SMOKE_CONVERSION_MODE MCP3427_CONVERSION_MODE_ONE_SHOT
 
-#define MAX_NUM_MCP3427 7
-static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427];
-// s_test_devices: hold the indices of specific mcp3427s being tested.
-// Voltage sense mcp3427 indices: 0 to 5.
-// Current sense mcp3427 indices: 6
-static uint8_t s_test_devices[] = { 0, 1, 2, 3, 4, 5, 6 };
-
 // I2C settings
 #define I2C1_SDA \
   { .port = GPIO_PORT_B, .pin = 11 }
@@ -66,6 +59,13 @@ typedef struct SmokeMcp3427Data {
   Mcp3427Storage mcp3427_storage;
   SmokeDataPoint mcp3427_data_point;
 } SmokeMcp3427Data;
+
+#define MAX_NUM_MCP3427 7
+static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427];
+// s_test_devices: hold the indices of specific mcp3427s being tested.
+// Voltage sense mcp3427 indices: 0 to 5.
+// Current sense mcp3427 indices: 6
+static uint8_t s_test_devices[] = { 0, 1, 2, 3, 4, 5, 6 };
 
 // Store the settings of each MCP3427
 static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
@@ -140,7 +140,7 @@ static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
       .adc_data_trigger_event = MCP3427_DATA_TRIGGER_EVENT,
-  }
+  },
 };
 
 static void prv_mcp3427_callback(int16_t value_ch1, int16_t value_ch2, void *context) {
@@ -165,9 +165,9 @@ static void prv_mcp3527_fault_callback(void *context) {
 }
 
 int main() {
+  interrupt_init();
   soft_timer_init();
   event_queue_init();
-  interrupt_init();
   gpio_init();
 
   I2CSettings i2c1_settings = {
