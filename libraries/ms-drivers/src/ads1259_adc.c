@@ -35,7 +35,7 @@ static void prv_send_command(Ads1259Storage *storage, uint8_t command) {
 
 static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   uint8_t register_lookup[NUM_CONFIG_REGISTERS] = {
-    (ADS1259_SPI_TIMEOUT_ENABLE),
+    (ADS1259_SPI_TIMEOUT_ENABLE | ADS1259_INTERNAL_REF_BIAS_ENABLE),
     (ADS1259_OUT_OF_RANGE_FLAG_ENABLE | ADS1259_CHECK_SUM_ENABLE),
     (ADS1259_CONVERSION_CONTROL_MODE_PULSE | ADS1259_DATA_RATE_SPS),
   };
@@ -52,7 +52,8 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   uint8_t check_regs[] = { (ADS1259_READ_REGISTER | ADS1259_ADDRESS_CONFIG0),
                            NUM_ADS1259_REGISTERS - 1 };
   uint8_t reg_readback[NUM_ADS1259_REGISTERS];
-  spi_exchange(storage->spi_port, payload, sizeof(check_regs), reg_readback, NUM_ADS1259_REGISTERS);
+  spi_exchange(storage->spi_port, check_regs, sizeof(check_regs), reg_readback,
+               NUM_ADS1259_REGISTERS);
   printf("ads1259 post init register values:\n");
   for (int i = 0; i < NUM_ADS1259_REGISTERS; i++) {
     printf("reg %d: 0x%x\n", i, reg_readback[i]);
@@ -107,9 +108,8 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   storage->conv_data.MSB = storage->rx_data.MSB;
   storage->conv_data.MID = storage->rx_data.MID;
   storage->conv_data.LSB = storage->rx_data.LSB;
-  printf("read: chksum: 0x%x, lil endian: [%x %x %x]\n",
-         storage->rx_data.CHK_SUM, storage->rx_data.LSB,
-         storage->rx_data.MID, storage->rx_data.MSB);
+  printf("read: chksum: 0x%x, lil endian: [%x %x %x]\n", storage->rx_data.CHK_SUM,
+         storage->rx_data.LSB, storage->rx_data.MID, storage->rx_data.MSB);
   prv_convert_data(storage);
 }
 

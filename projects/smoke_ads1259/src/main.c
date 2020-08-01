@@ -1,11 +1,11 @@
+#include <stdlib.h>
+
 #include "ads1259_adc.h"
 #include "delay.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
-
-#include <stdlib.h>
 
 // change this number to read for x cycles, 0 for infinite
 #define READ_CYCLE_NUM 2
@@ -30,8 +30,8 @@ static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
 static void prv_periodic_read(SoftTimerId id, void *context) {
   double *queue = context;
   if (s_index < READING_QUEUE_LENGTH) {
-    printf("=========READING # %i========= vref mv: %d\n",
-           s_count++, (int)(EXTERNAL_VREF_V * 1000));
+    printf("=========READING # %i========= vref mv: %d\n", s_count++,
+           (int)(EXTERNAL_VREF_V * 1000));
     ads1259_get_conversion_data(&s_storage);
     queue[s_index] = s_storage.reading;
     s_index++;
@@ -68,5 +68,6 @@ int main() {
 
   soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, reading_queue, NULL);
 
-  while (1) {}
+  while (1) {
+  }
 }
