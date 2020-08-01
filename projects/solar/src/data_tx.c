@@ -11,7 +11,7 @@ bool data_is_set;     // boolean to store state of data value (set (T) or not se
 
 // Checks if every data point is set, if true then tx data point to CAN
 static void prv_data_tx() {
-  for (DataPoint data_point = DATA_POINT_VOLTAGE_1; data_point < NUM_DATA_POINTS; data_point++) {
+  for (DataPoint data_point = 0; data_point < NUM_DATA_POINTS; data_point++) {
     data_store_get_is_set(data_point, &data_is_set);
     if (data_is_set) {
       data_store_get(data_point, &data_value);
