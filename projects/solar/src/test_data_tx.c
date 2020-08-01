@@ -11,6 +11,7 @@
 #include "soft_timer.h"
 #include "solar_events.h"
 #include "test_helpers.h"
+#include "unity.h"
 
 int count = -1;                 // count of can msgs sent, incremented in rx_handler
 bool changeable_is_set = true;  // value that tells data_tx if data points are set
@@ -28,19 +29,18 @@ StatusCode TEST_MOCK(data_store_get)(DataPoint data_point, uint32_t *value) {
 typedef enum { TEST_DATA_TX_EVENT_CAN_TX = 0, TEST_DATA_TX_EVENT_CAN_RX } TestDataTxEvent;
 
 static CanStorage s_can_storage = { 0 };
-static CanSettings s_can_settings =
-    {
-      .device_id = SYSTEM_CAN_DEVICE_SOLAR,
-      .bitrate = CAN_HW_BITRATE_500KBPS,
-      .rx_event = TEST_DATA_TX_EVENT_CAN_RX,
-      .tx_event = TEST_DATA_TX_EVENT_CAN_TX,
-      .tx = { GPIO_PORT_A, 12 },
-      .rx = { GPIO_PORT_A, 11 },
-      .loopback = true,
-    }
+static CanSettings s_can_settings = {
+  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+  .bitrate = CAN_HW_BITRATE_500KBPS,
+  .rx_event = TEST_DATA_TX_EVENT_CAN_RX,
+  .tx_event = TEST_DATA_TX_EVENT_CAN_TX,
+  .tx = { GPIO_PORT_A, 12 },
+  .rx = { GPIO_PORT_A, 11 },
+  .loopback = true,
+};
 
-StatusCode
-prv_test_data_tx_callback_handler(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+StatusCode prv_test_data_tx_callback_handler(const CanMessage *msg, void *context,
+                                             CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_SOLAR_DATA, msg->msg_id);
   s_can_msg = *msg;
   count++;
@@ -69,7 +69,7 @@ void test_data_tx(void) {
   TEST_ASSERT_EQUAL(changeable_is_set, true);
   data_tx_process_event(&e);
 
-  for (int can_msg = 0; cam_msg < NUM_DATA_POINTS; can_msg++) {
+  for (int can_msg = 0; can_msg < NUM_DATA_POINTS; can_msg++) {
     MS_TEST_HELPER_CAN_TX_RX(TEST_DATA_TX_EVENT_CAN_TX, TEST_DATA_TX_EVENT_CAN_RX);
     TEST_ASSERT_EQUAL(count, can_msg);
     TEST_ASSERT_EQUAL(s_can_msg.data_u32[0], count);
@@ -79,7 +79,8 @@ void test_data_tx(void) {
 
 // ensure no can messages are sent when data points are not set
 void test_data_tx_no_values_set(void) {
-  count = 0 changeable_is_set = false;
+  count = 0;
+  changeable_is_set = false;
   event_raise(DATA_READY_EVENT, 0);
   Event e = { 0 };
   MS_TEST_HELPER_AWAIT_EVENT(e);
