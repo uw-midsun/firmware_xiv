@@ -3,18 +3,31 @@
 #include <stdint.h>
 
 #include "debouncer.h"
+#include "i2c.h"
 #include "status.h"
 
 #include "bps_heartbeat.h"
 #include "cell_sense.h"
 #include "current_sense.h"
 #include "fan_control.h"
-#include "relay_control_fsm.h"
+#include "relay_sequence.h"
+
+#define BMS_PERIPH_I2C_PORT I2C_PORT_2
+#define BMS_PERIPH_I2C_SDA_PIN \
+  { GPIO_PORT_B, 11 }
+#define BMS_PERIPH_I2C_SCL_PIN \
+  { GPIO_PORT_B, 10 }
+
+#define BMS_IO_EXPANDER_I2C_ADDR 0x40
+
+#define BMS_FAN_CTRL_1_I2C_ADDR 0x5E
+#define BMS_FAN_CTRL_2_I2C_ADDR 0x5F
+#define NUM_BMS_FAN_CTRLS 2
 
 typedef struct BmsStorage {
   RelayStorage relay_storage;
-  CurrentStorage current_storage;
-  AfeStorage afe_storage;
+  CurrentReadings current_readings;
+  AfeReadings afe_readings;
   FanStorage fan_storage;
   DebouncerStorage killswitch_storage;
   BpsStorage bps_storage;

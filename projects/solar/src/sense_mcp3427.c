@@ -20,6 +20,7 @@
 typedef struct SenseMcp3427Data {
   Mcp3427Storage mcp3427_storage;
   DataPoint mcp3427_data_point;
+  float scaling_factor;
 
   int16_t value;
   bool has_value;
@@ -53,7 +54,10 @@ static void prv_sense_callback(void *context) {
   SenseMcp3427Data *data = context;
   if (data->has_value) {
     DataPoint data_point = data->mcp3427_data_point;
-    StatusCode status = data_store_set(data_point, (uint16_t)data->value);
+    // Multiplying the int16 ADC value by the float scaling factor gives a float which we truncate
+    // and convert to an int32, which we then convert to a uint32 for the data store. Phew!
+    int32_t scaled = (int32_t)(data->scaling_factor * data->value);
+    StatusCode status = data_store_set(data_point, (uint32_t)scaled);
     if (!status_ok(status)) {
       LOG_WARN("sense_mcp3427 could not data_store_set with data point %d\n", data_point);
     }
@@ -72,6 +76,7 @@ StatusCode sense_mcp3427_init(SenseMcp3427Settings *settings) {
     data->has_value = false;
     data->consecutive_faults = 0;
     data->mcp3427_data_point = settings->mcp3427s[i].data_point;
+    data->scaling_factor = settings->mcp3427s[i].scaling_factor;
     status_ok_or_return(
         mcp3427_init(&data->mcp3427_storage, &settings->mcp3427s[i].mcp3427_settings));
     status_ok_or_return(
