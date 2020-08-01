@@ -1,5 +1,5 @@
 #include "can.h"
-#include "can_msg_def.h"
+#include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "data_store.h"
 #include "data_tx.h"
