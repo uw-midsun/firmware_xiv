@@ -69,7 +69,7 @@ void test_logger_everything_set(void) {
     data_store_set(data_point, set_value);
   }
 
-  LOG_DEBUG("All data points expected with numeric value %u:\n", set_value);
+  LOG_DEBUG("All data points expected with numeric value %u:\n", (unsigned int)set_value);
   logger_process_event(&s_data_ready_event);
 }
 
@@ -82,7 +82,7 @@ void test_logger_signed_values(void) {
     data_store_set(data_point, unsigned_value);
   }
 
-  LOG_DEBUG("Signed data points expected with %d, unsigned data points with %u:\n", signed_value,
-            unsigned_value);
+  LOG_DEBUG("Signed data points expected with %d, unsigned data points with %u:\n",
+            (int)signed_value, (unsigned int)unsigned_value);
   logger_process_event(&s_data_ready_event);
 }
