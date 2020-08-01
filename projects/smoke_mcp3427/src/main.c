@@ -11,37 +11,49 @@
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "status.h"
 #include "wait.h"
 
-// Which MCP3427 to read from. By default channel 1 according to the schematics.
+// Which channel on the MCP3427s to read from. By default channel 1 according to the schematics.
 #define SENSE_MCP3427_CHANNEL MCP3427_CHANNEL_1
+
+// MCP3427 device settings
+#define SMOKE_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
+#define SMOKE_AMP_GAIN MCP3427_AMP_GAIN_1
+#define SMOKE_CONVERSION_MODE MCP3427_CONVERSION_MODE_ONE_SHOT
+
+#define MAX_NUM_MCP3427 7
+static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427];
+// s_test_devices: hold the indices of specific mcp3427s being tested.
+// Voltage sense mcp3427 indices: 0 to 5.
+// Current sense mcp3427 indices: 6
+static uint8_t s_test_devices[] = { 0, 1, 2, 3, 4, 5, 6 };
 
 // I2C settings
 #define I2C1_SDA \
   { .port = GPIO_PORT_B, .pin = 11 }
 #define I2C1_SCL \
   { .port = GPIO_PORT_B, .pin = 10 }
-#define I2C_PORT I2C_PORT_1  // I2C_PORT_2
 
-// MCP3427 device settings
-#define SMOKE_MAX_CONSECUTIVE_FAULTS 3
-#define SMOKE_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
-#define SMOKE_AMP_GAIN MCP3427_AMP_GAIN_1
-#define SMOKE_CONVERSION_MODE MCP3427_CONVERSION_MODE_ONE_SHOT
+#define I2C2_SDA \
+  { .port = GPIO_PORT_B, .pin = 9 }
+#define I2C2_SCL \
+  { .port = GPIO_PORT_B, .pin = 8 }
 
 // Unique ID of each MCP3427
 typedef enum {
   // Voltages from the voltage sense MCP3427s
-  MCP3427_VOLTAGE_1 = 0,
-  MCP3427_VOLTAGE_2,
-  MCP3427_VOLTAGE_3,
-  MCP3427_VOLTAGE_4,
-  MCP3427_VOLTAGE_5,
-  MCP3427_VOLTAGE_6,
+  SMOKE_DATA_POINT_VOLTAGE_1 = 0,
+  SMOKE_DATA_POINT_VOLTAGE_2,
+  SMOKE_DATA_POINT_VOLTAGE_3,
+  SMOKE_DATA_POINT_VOLTAGE_4,
+  SMOKE_DATA_POINT_VOLTAGE_5,
+  SMOKE_DATA_POINT_VOLTAGE_6,
 
   // Current from the current sense MCP3427s
-  MCP3427_CURRENT,
+  SMOKE_DATA_POINT_CURRENT,
+  NUM_SMOKE_DATA_POINTS,
 } SmokeDataPoint;
 
 typedef enum {
@@ -53,63 +65,66 @@ typedef enum {
 typedef struct SmokeMcp3427Data {
   Mcp3427Storage mcp3427_storage;
   SmokeDataPoint mcp3427_data_point;
-
-  uint8_t consecutive_faults;
 } SmokeMcp3427Data;
 
-#define MAX_NUM_MCP3427 7
 // Store the settings of each MCP3427
 static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
   // Voltage sense mcp3427 settings
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
       .addr_pin_1 = MCP3427_PIN_STATE_LOW,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
       .adc_data_trigger_event = MCP3427_DATA_TRIGGER_EVENT,
   },
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
       .addr_pin_1 = MCP3427_PIN_STATE_FLOAT,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
       .adc_data_trigger_event = MCP3427_DATA_TRIGGER_EVENT,
   },
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
       .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
       .adc_data_trigger_event = MCP3427_DATA_TRIGGER_EVENT,
   },
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
       .addr_pin_1 = MCP3427_PIN_STATE_FLOAT,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
       .adc_data_trigger_event = MCP3427_DATA_TRIGGER_EVENT,
   },
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
       .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
       .adc_data_trigger_event = MCP3427_DATA_TRIGGER_EVENT,
   },
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
       .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
@@ -117,9 +132,10 @@ static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
   },
   // Current sense mcp3427 settings
   {
-      .sample_rate = SMOKE_SAMPLE_RATE,
+      .port = I2C_PORT_1,
       .addr_pin_0 = MCP3427_PIN_STATE_LOW,
       .addr_pin_1 = MCP3427_PIN_STATE_LOW,
+      .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
       .adc_data_ready_event = MCP3427_DATA_READY_EVENT,
@@ -127,39 +143,30 @@ static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
   }
 };
 
-static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427];
-// s_test_devices: hold the indices of specific mcp3427s being tested.
-// For testing voltage sense mcp3427, MUST use indices 0 to 5.
-// For testing current sense mcp3427, MUST use index 6
-static uint8_t s_test_devices[] = { 0, 1, 2, 3, 4, 5 };  // { 6 }
-
 static void prv_mcp3427_callback(int16_t value_ch1, int16_t value_ch2, void *context) {
   SmokeMcp3427Data *data = context;
   int16_t value = (SENSE_MCP3427_CHANNEL == MCP3427_CHANNEL_1) ? value_ch1 : value_ch2;
-  if (data->mcp3427_data_point < MCP3427_CURRENT) {
+  if (data->mcp3427_data_point < SMOKE_DATA_POINT_CURRENT) {
     LOG_DEBUG("Voltage sense mcp3427 ID = %d; Value = %d\n", data->mcp3427_data_point, value);
   } else {
     LOG_DEBUG("Current sense mcp3427 ID = %d; Value = %d\n", data->mcp3427_data_point, value);
   }
-  data->consecutive_faults = 0;
 }
 
 static void prv_mcp3527_fault_callback(void *context) {
   SmokeMcp3427Data *data = context;
-  data->consecutive_faults++;
-  if (data->consecutive_faults >= SMOKE_MAX_CONSECUTIVE_FAULTS) {
-    if (data->mcp3427_data_point < MCP3427_CURRENT) {
-      LOG_WARN("Voltage sense mcp3427 ID = %d encountered too many faults\n",
-               data->mcp3427_data_point);
-    } else {
-      LOG_WARN("Current sense mcp3427 ID = %d encountered too many faults",
-               data->mcp3427_data_point);
-    }
-    data->consecutive_faults = 0;
+
+  if (data->mcp3427_data_point < SMOKE_DATA_POINT_CURRENT) {
+    LOG_WARN("Voltage sense mcp3427 ID = %d encountered too many faults\n",
+             data->mcp3427_data_point);
+  } else {
+    LOG_WARN("Current sense mcp3427 ID = %d encountered too many faults", data->mcp3427_data_point);
   }
 }
 
 int main() {
+  soft_timer_init();
+  event_queue_init();
   interrupt_init();
   gpio_init();
 
@@ -168,18 +175,24 @@ int main() {
     .sda = I2C1_SDA,
     .scl = I2C1_SCL,
   };
-  i2c_init(I2C_PORT, &i2c1_settings);
+  i2c_init(I2C_PORT_1, &i2c1_settings);
+
+  I2CSettings i2c2_settings = {
+    .speed = I2C_SPEED_FAST,
+    .sda = I2C2_SDA,
+    .scl = I2C2_SCL,
+  };
+  i2c_init(I2C_PORT_2, &i2c2_settings);
 
   for (size_t i = 0; i < SIZEOF_ARRAY(s_test_devices); i++) {
     SmokeMcp3427Data *data = &s_mcp3427_data[s_test_devices[i]];
     data->mcp3427_data_point = s_test_devices[i];
-    data->consecutive_faults = 0;
+    status_ok_or_return(
+        mcp3427_init(&data->mcp3427_storage, &s_mcp3427_configs[s_test_devices[i]]));
     status_ok_or_return(
         mcp3427_register_callback(&data->mcp3427_storage, prv_mcp3427_callback, data));
     status_ok_or_return(
         mcp3427_register_fault_callback(&data->mcp3427_storage, prv_mcp3527_fault_callback, data));
-    status_ok_or_return(
-        mcp3427_init(&data->mcp3427_storage, &s_mcp3427_configs[s_test_devices[i]]));
   }
 
   for (size_t i = 0; i < SIZEOF_ARRAY(s_test_devices); i++) {
