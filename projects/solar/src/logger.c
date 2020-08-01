@@ -23,23 +23,33 @@ static DataPointType s_data_point_type_order[] = {
 };
 
 static char *s_data_point_types_to_key_format[] = {
-  [DATA_POINT_TYPE_MPPT_VOLTAGE] = "MPPT %d input voltage",     //
-  [DATA_POINT_TYPE_VOLTAGE] = "MPPT %d output voltage",         //
-  [DATA_POINT_TYPE_MPPT_CURRENT] = "MPPT %d input current",     //
-  [DATA_POINT_TYPE_CURRENT] = "Total output current",           //
-  [DATA_POINT_TYPE_TEMPERATURE] = "Thermistor %d temperature",  //
-  [DATA_POINT_TYPE_MPPT_PWM] = "MPPT %d PWM duty cycle",        //
-  [DATA_POINT_TYPE_CR_BIT] = "MPPT %d CR bit",                  //
+  [DATA_POINT_TYPE_MPPT_VOLTAGE] = "MPPT %ld input voltage",     //
+  [DATA_POINT_TYPE_VOLTAGE] = "MPPT %ld output voltage",         //
+  [DATA_POINT_TYPE_MPPT_CURRENT] = "MPPT %ld input current",     //
+  [DATA_POINT_TYPE_CURRENT] = "Total output current",            //
+  [DATA_POINT_TYPE_TEMPERATURE] = "Thermistor %ld temperature",  //
+  [DATA_POINT_TYPE_MPPT_PWM] = "MPPT %ld PWM duty cycle",        //
+  [DATA_POINT_TYPE_CR_BIT] = "MPPT %ld CR bit",                  //
 };
 
 static char *s_data_point_types_to_value_format[] = {
-  [DATA_POINT_TYPE_MPPT_VOLTAGE] = "%u mV",  //
-  [DATA_POINT_TYPE_VOLTAGE] = "%u mV",       //
-  [DATA_POINT_TYPE_MPPT_CURRENT] = "%u uA",  //
-  [DATA_POINT_TYPE_CURRENT] = "%d uA",       //
-  [DATA_POINT_TYPE_TEMPERATURE] = "%u dC",   //
-  [DATA_POINT_TYPE_MPPT_PWM] = "%u/1000",    //
-  [DATA_POINT_TYPE_CR_BIT] = "%u",           //
+  [DATA_POINT_TYPE_MPPT_VOLTAGE] = "%lu mV",  //
+  [DATA_POINT_TYPE_VOLTAGE] = "%lu mV",       //
+  [DATA_POINT_TYPE_MPPT_CURRENT] = "%lu uA",  //
+  [DATA_POINT_TYPE_CURRENT] = "%ld uA",       //
+  [DATA_POINT_TYPE_TEMPERATURE] = "%lu dC",   //
+  [DATA_POINT_TYPE_MPPT_PWM] = "%lu/1000",    //
+  [DATA_POINT_TYPE_CR_BIT] = "%lu",           //
+};
+
+static bool s_data_point_types_to_signed[] = {
+  [DATA_POINT_TYPE_MPPT_VOLTAGE] = false,  //
+  [DATA_POINT_TYPE_VOLTAGE] = false,       //
+  [DATA_POINT_TYPE_MPPT_CURRENT] = false,  //
+  [DATA_POINT_TYPE_CURRENT] = true,        //
+  [DATA_POINT_TYPE_TEMPERATURE] = false,   //
+  [DATA_POINT_TYPE_MPPT_PWM] = false,      //
+  [DATA_POINT_TYPE_CR_BIT] = false,        //
 };
 
 static void prv_log_data_point(DataPointType type, Mppt mppt, DataPoint data_point) {
@@ -48,10 +58,20 @@ static void prv_log_data_point(DataPointType type, Mppt mppt, DataPoint data_poi
 
   bool is_set;
   data_store_get_is_set(data_point, &is_set);
+
   if (is_set) {
     uint32_t data_value;
     data_store_get(data_point, &data_value);
-    snprintf(value, SIZEOF_ARRAY(value), s_data_point_types_to_value_format[type], data_value);
+
+    // casting to long int is to resolve inconsistent int sizes between STM32 and x86
+    if (s_data_point_types_to_signed[type]) {
+      int32_t signed_value = (int32_t)data_value;
+      snprintf(value, SIZEOF_ARRAY(value), s_data_point_types_to_value_format[type],
+               (long int)signed_value);  // NOLINT(runtime/int)
+    } else {
+      snprintf(value, SIZEOF_ARRAY(value), s_data_point_types_to_value_format[type],
+               (long unsigned int)data_value);  // NOLINT(runtime/int)
+    }
   }
 
   LOG_DEBUG("%s: %s\n", key, value);
