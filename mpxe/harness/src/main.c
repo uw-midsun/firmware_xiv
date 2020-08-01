@@ -17,10 +17,19 @@
 #include <stdio.h>
 
 #include "pm_run.h"
+#include "test_libevent.h"
 
 int main(void) {
-  (void)pm_init();
   // build_project("tutorial_board_button_interrupt");
   // run_project("tutorial_board_button_interrupt");
+  
+  // do_thing();
+
+  pm_init();
+  
+  ProjectId id;
+  pm_start("can_communication", &id);
+  printf("id: %d\n", id);
+  while (1) {}
   return 0;
 }
