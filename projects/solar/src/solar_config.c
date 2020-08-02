@@ -5,7 +5,7 @@
 #include "mcp3427_adc.h"
 #include "solar_events.h"
 
-// TODO(SOFT-282): Calibrate these scaling factors.
+// TODO(SOFT-282): Calibrate scaling factors and thresholds.
 
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
 // Must be calibrated.
@@ -23,6 +23,16 @@
 // Scaling factor to convert SPV1020 VIN values from SPI to millivolts.
 // Must be calibrated.
 #define SOLAR_MPPT_VIN_SCALING_FACTOR 1.0f
+
+// Overcurrent threshold for the output current of the array. 9A.
+#define SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA 9000000
+
+// Overvoltage threshold for the sum of the output voltages of the MPPTs. 160V.
+// Note that this sums 5 MPPTs' output voltages on the 5 MPPT board and 6 on the 6 MPPT board.
+#define SOLAR_OUTPUT_OVERVOLTAGE_THRESHOLD_mV 160000
+
+// Overtemperature threshold for any individual thermistor. To be calibrated, currently 100C.
+#define SOLAR_OVERTEMPERATURE_THRESHOLD_dC 1000
 
 #define SOLAR_MCP3427_CONVERSION_MODE MCP3427_CONVERSION_MODE_CONTINUOUS
 #define SOLAR_MCP3427_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
@@ -191,6 +201,23 @@ StatusCode config_get_sense_mppt_settings(SolarMpptCount mppt_count, SenseMpptSe
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   *settings = s_base_sense_mppt_settings;
+  settings->mppt_count = mppt_count;
+  return STATUS_CODE_OK;
+}
+
+// |mppt_count| is set dynamically by |config_get_fault_monitor_settings|
+static const FaultMonitorSettings s_base_fault_monitor_settings = {
+  .output_overcurrent_threshold_uA = SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA,
+  .output_overvoltage_threshold_mV = SOLAR_OUTPUT_OVERVOLTAGE_THRESHOLD_mV,
+  .overtemperature_threshold_dC = SOLAR_OVERTEMPERATURE_THRESHOLD_dC,
+};
+
+StatusCode config_get_fault_monitor_settings(SolarMpptCount mppt_count,
+                                             FaultMonitorSettings *settings) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  *settings = s_base_fault_monitor_settings;
   settings->mppt_count = mppt_count;
   return STATUS_CODE_OK;
 }
