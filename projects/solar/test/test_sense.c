@@ -9,7 +9,7 @@
 
 #define TEST_SENSE_PERIOD_US 50000  // 50ms, should be okay
 
-static SenseSettings test_settings = {
+static const SenseSettings test_settings = {
   .sense_period_us = TEST_SENSE_PERIOD_US,
 };
 
