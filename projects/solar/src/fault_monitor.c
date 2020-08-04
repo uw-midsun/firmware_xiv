@@ -39,19 +39,18 @@ static void prv_check_temperature(uint8_t thermistor) {
 }
 
 static void prv_check_output_voltage_sum(void) {
-  uint32_t total = 0;
+  uint64_t total = 0;  // extra wide to avoid overflow
   for (Mppt mppt = 0; mppt < s_settings.mppt_count; mppt++) {
     bool is_set;
     data_store_get_is_set(DATA_POINT_VOLTAGE(mppt), &is_set);
     if (is_set) {
       uint32_t value;
       data_store_get(DATA_POINT_VOLTAGE(mppt), &value);
-      // equivalent to value + total >= threshold, but avoids possible overflow if value is large
-      if (s_settings.output_overvoltage_threshold_mV - total <= value) {
+      total += value;
+      if (total >= s_settings.output_overvoltage_threshold_mV) {
         RAISE_FAULT_EVENT(SOLAR_FAULT_EVENT_OVERVOLTAGE, 0);
         return;
       }
-      total += value;
     }
   }
 }
