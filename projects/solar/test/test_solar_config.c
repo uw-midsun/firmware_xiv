@@ -3,6 +3,7 @@
 #include "adc.h"
 #include "data_store.h"
 #include "event_queue.h"
+#include "fault_monitor.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
@@ -66,6 +67,15 @@ void test_initializing_sense_mppt_config_6_mppts(void) {
   TEST_ASSERT_OK(sense_mppt_init(&settings));
 }
 
+// Test that we can initialize the configs returned by |config_get_fault_monitor_settings|.
+void test_initializing_fault_monitor_config(void) {
+  FaultMonitorSettings settings;
+  TEST_ASSERT_OK(config_get_fault_monitor_settings(SOLAR_BOARD_5_MPPTS, &settings));
+  TEST_ASSERT_OK(fault_monitor_init(&settings));
+  TEST_ASSERT_OK(config_get_fault_monitor_settings(SOLAR_BOARD_6_MPPTS, &settings));
+  TEST_ASSERT_OK(fault_monitor_init(&settings));
+}
+
 // Test that passing invalid arguments fails gracefully.
 void test_invalid_args(void) {
   StatusCode status;
@@ -86,5 +96,11 @@ void test_invalid_args(void) {
   status = config_get_sense_mppt_settings(MAX_SOLAR_BOARD_MPPTS + 1, &mppt_settings);
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
   status = config_get_sense_mppt_settings(SOLAR_BOARD_5_MPPTS, NULL);
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
+
+  FaultMonitorSettings fault_settings;
+  status = config_get_fault_monitor_settings(MAX_SOLAR_BOARD_MPPTS + 1, &fault_settings);
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
+  status = config_get_fault_monitor_settings(SOLAR_BOARD_5_MPPTS, NULL);
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
 }

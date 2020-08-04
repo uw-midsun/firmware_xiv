@@ -35,7 +35,7 @@ typedef enum TestMcp3427Event {
 } TestMcp3427Event;
 
 // if using multiple MCP3427s, overwrite the addr pins to avoid overlap
-static Mcp3427Settings s_test_mcp3427_settings = {
+static const Mcp3427Settings s_test_mcp3427_settings = {
   .sample_rate = MCP3427_SAMPLE_RATE_12_BIT,
   .amplifier_gain = MCP3427_AMP_GAIN_1,
   .conversion_mode = MCP3427_CONVERSION_MODE_CONTINUOUS,
