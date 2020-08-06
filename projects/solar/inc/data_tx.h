@@ -1,12 +1,9 @@
 #pragma once
 
+// Requires CAN and the data store to be initialized
 // Recieves a DataReadyEvent
 // Takes data from data_store and tx each data point in CAN message
 
-#include "can.h"
-#include "can_msg_defs.h"
-#include "can_transmit.h"
-#include "can_unpack.h"
-#include "data_store.h"
+#include "event_queue.h"
 
-void data_tx_process_event(Event *e);
+bool data_tx_process_event(Event *e);
