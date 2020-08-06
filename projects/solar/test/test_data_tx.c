@@ -14,7 +14,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-static uint16_t s_can_msg_count;
+static int16_t s_can_msg_count;
 static CanMessage s_can_msg;
 static CanStorage s_can_storage = { 0 };
 
@@ -29,7 +29,7 @@ static StatusCode prv_test_data_tx_callback_handler(const CanMessage *msg, void 
                                                     CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_SOLAR_DATA, msg->msg_id);
   s_can_msg = *msg;
-  count++;
+  s_can_msg_count++;
   return STATUS_CODE_OK;
 }
 
