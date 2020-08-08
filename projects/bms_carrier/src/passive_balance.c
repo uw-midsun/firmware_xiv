@@ -2,8 +2,6 @@
 #include "log.h"
 
 StatusCode passive_balance_init(LtcAfeStorage *storage) {
-  soft_timer_init();
-
   return soft_timer_start_millis(PASSIVE_BALANCE_INTERVAL_MS, passive_balance, storage, NULL);
 }
 
@@ -28,10 +26,9 @@ void passive_balance(SoftTimerId timer_id, void *context) {
     }
   }
   
-  LOG_DEBUG("balancing cell number %d\n", max_voltage_cell_num);
   // Balance cell, pass in whether difference meets threshold.
   ltc_afe_toggle_cell_discharge(storage, max_voltage_cell_num,
       (cell_voltage_max - cell_voltage_min >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV));
 
-  soft_timer_start_millis(PASSIVE_BALANCE_INTERVAL_MS, passive_balance, storage, NULL);
+  //soft_timer_start_millis(PASSIVE_BALANCE_INTERVAL_MS, passive_balance, storage, NULL);
 }
