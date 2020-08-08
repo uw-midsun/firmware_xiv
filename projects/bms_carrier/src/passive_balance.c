@@ -21,7 +21,7 @@ void passive_balance(LtcAfeStorage *storage) {
   uint16_t cell_voltage_min = 0;
   uint16_t max_voltage_cell_num = 0;
 
-  //LtcAfeStorage *storage = context;
+  // LtcAfeStorage *storage = context;
 
   cell_voltage_max = cell_voltage_min = storage->cell_voltages[0];
 
@@ -34,8 +34,9 @@ void passive_balance(LtcAfeStorage *storage) {
       cell_voltage_min = storage->cell_voltages[i];
     }
   }
-  
+
   // Balance cell, pass in whether difference meets threshold.
-  ltc_afe_toggle_cell_discharge(storage, max_voltage_cell_num,
+  ltc_afe_toggle_cell_discharge(
+      storage, max_voltage_cell_num,
       (cell_voltage_max - cell_voltage_min >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV));
 }
