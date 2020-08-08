@@ -24,7 +24,7 @@
 #define TEST_LTC_AFE_SPI_CS \
   { .port = GPIO_PORT_A, .pin = 4 }
 
-// Number of voltages to be directly modified during testing
+// Number of cell voltages to be directly modified during testing
 static const uint8_t NUM_TEST_VOLTAGES = 4;
 
 static LtcAfeSettings s_test_afe_settings = {
@@ -79,7 +79,8 @@ void teardown_test(void) {}
 void test_normal_operation(void) {
   LOG_DEBUG("Testing passive balancing normal operation\n");
   // Doing all tests on first 4 cells of device 0 or last cell for clarity, since max number of
-  // devices is variable Fill rest with numbers from 1010 to 1020
+  // devices is variable
+  // Fill rest with numbers from 1010 to 1020
   for (uint8_t i = NUM_TEST_VOLTAGES; i < LTC_AFE_MAX_CELLS; i++) {
     s_test_afe_storage.cell_voltages[i] = 1010;
   }

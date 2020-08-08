@@ -20,7 +20,7 @@
 // Min voltage difference between highest and lowest cell values for balancing to be required.
 #define PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV 25
 
-// Initialize
+// Initialize, start soft timers
 StatusCode passive_balance_init(LtcAfeStorage *storage);
 
 // Iterate through all cells and call balance_control if required.
