@@ -19,13 +19,13 @@ static void prv_check_status_for_faults(Mppt mppt, uint8_t status) {
   uint8_t ovc_branch_bitmask;
   if (spv1020_is_overcurrent(status, &ovc_branch_bitmask)) {
     uint16_t ovc_data = (ovc_branch_bitmask << 8) | mppt;
-    event_raise(SOLAR_FAULT_EVENT_MPPT_OVERCURRENT, ovc_data);
+    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERCURRENT, ovc_data);
   }
   if (spv1020_is_overvoltage(status)) {
-    event_raise(SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE, mppt);
+    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE, mppt);
   }
   if (spv1020_is_overtemperature(status)) {
-    event_raise(SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE, mppt);
+    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE, mppt);
   }
 }
 
