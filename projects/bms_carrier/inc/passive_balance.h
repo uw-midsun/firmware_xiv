@@ -14,9 +14,8 @@
 
 // LtcAfeStorage will need to change to AfeReadings once SOFT-9 is merged in
 
-// Interval, in ms, between checks of cell voltages.  Setting as 10ms for now, might need to be
-// changed.
-#define PASSIVE_BALANCE_INTERVAL_MS 10
+// Interval, in ms, between checks of cell voltages.
+#define PASSIVE_BALANCE_INTERVAL_MS 1000
 
 // Min voltage difference between highest and lowest cell values for balancing to be required.
 #define PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV 25
@@ -25,4 +24,4 @@
 StatusCode passive_balance_init(LtcAfeStorage *storage);
 
 // Iterate through all cells and call balance_control if required.
-void passive_balance(SoftTimerId timer_id, void *context);
+void passive_balance(LtcAfeStorage *storage);
