@@ -24,20 +24,16 @@
 
 static SystemCanDevice s_id = 123;
 
+static GenericCanMsg s_loopback_msg;
 static Mcp2515Storage s_mcp2515;
 static GenericCanMcp2515 s_can_mcp2515;
 
-static uint32_t s_id_loopback = 0;
-static bool s_extended = false;
-static uint64_t s_data = 0;
-static size_t s_dlc = 0;
-
 static void prv_rx_callback_loopback(uint32_t id, bool extended, uint64_t data, size_t dlc,
                                      void *context) {
-  s_id_loopback = id;
-  s_extended = extended;
-  s_data = data;
-  s_dlc = dlc;
+  s_loopback_msg.id = id;
+  s_loopback_msg.extended = extended;
+  s_loopback_msg.data = data;
+  s_loopback_msg.dlc = dlc;
 }
 
 static void prv_rx_callback(const GenericCanMsg *msg, void *context) {
@@ -100,13 +96,18 @@ static void prv_periodic_send(SoftTimerId timer_id, void *context) {
 }
 
 void prv_send_messages() {
+  bool test_1_passed = false;
+  bool test_2_passed = false;
+
   LOG_DEBUG("Testing send standard id\n");
   mcp2515_tx(&s_mcp2515, 0x246, false, 0x1122334455667788, 8);
   delay_ms(50);
 
-  if ((s_id_loopback == 0x246) && (s_extended == false) && (s_data == 0x1122334455667788) &&
-      (s_dlc == 8)) {
+  if ((s_loopback_msg.id == 0x246) && (s_loopback_msg.extended == false) &&
+      (s_loopback_msg.data == 0x1122334455667788) && (s_loopback_msg.dlc == 8)) {
     LOG_DEBUG("Standard Message Received\n");
+    LOG_DEBUG("Loopback Test #1 Success\n");
+    test_1_passed = true;
   } else {
     LOG_DEBUG("Standard message not received\n");
   }
@@ -115,11 +116,24 @@ void prv_send_messages() {
   mcp2515_tx(&s_mcp2515, 0x19999999, true, 0xBEEFDEADBEEFDEAD, 8);
   delay_ms(50);
 
-  if ((s_id_loopback == 0x19999999) && (s_extended == true) && (s_data == 0xBEEFDEADBEEFDEAD) &&
-      (s_dlc == 8)) {
+  s_loopback_msg.id = 0;
+  s_loopback_msg.extended = false;
+  s_loopback_msg.data = 0;
+  s_loopback_msg.dlc = 0;
+
+  if ((s_loopback_msg.id == 0x19999999) && (s_loopback_msg.extended == true) &&
+      (s_loopback_msg.data == 0xBEEFDEADBEEFDEAD) && (s_loopback_msg.dlc == 8)) {
     LOG_DEBUG("Extended Message Received\n");
+    LOG_DEBUG("Loopback Test #2 Success\n");
+    test_2_passed = true;
   } else {
     LOG_DEBUG("Extended message not received\n");
+  }
+
+  if (test_1_passed && test_2_passed) {
+    LOG_DEBUG("All loopback checks have passed\n");
+  } else {
+    LOG_DEBUG("Loopback check has failed\n");
   }
 }
 
