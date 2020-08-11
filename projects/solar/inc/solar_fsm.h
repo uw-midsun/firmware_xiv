@@ -1,7 +1,7 @@
 #pragma once
 
 // FSM for managing the relay state.
-// Requires the event queue and the DRV120 relay driver to be initialized.
+// Requires the event queue, GPIO, and the DRV120 relay driver to be initialized.
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -24,6 +24,8 @@ typedef struct SolarFsmStorage {
   uint8_t num_relay_open_events;
 } SolarFsmStorage;
 
+// Initialize the FSM. The relay is initialized to closed.
 StatusCode solar_fsm_init(SolarFsmStorage *storage, const SolarFsmSettings *settings);
 
+// Process an event and return whether the relay changed state.
 bool solar_fsm_process_event(SolarFsmStorage *storage, const Event *event);
