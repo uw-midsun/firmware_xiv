@@ -12,6 +12,7 @@
 #include "sense_mppt.h"
 #include "sense_temperature.h"
 #include "soft_timer.h"
+#include "solar_fsm.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -74,6 +75,12 @@ void test_initializing_fault_monitor_config(void) {
   TEST_ASSERT_OK(fault_monitor_init(&settings));
   TEST_ASSERT_OK(config_get_fault_monitor_settings(SOLAR_BOARD_6_MPPTS, &settings));
   TEST_ASSERT_OK(fault_monitor_init(&settings));
+}
+
+// Test that we can initialize the solar_fsm config we provide.
+void test_initializing_solar_fsm_config(void) {
+  SolarFsmStorage storage;
+  TEST_ASSERT_OK(solar_fsm_init(&storage, &solar_fsm_settings));
 }
 
 // Test that passing invalid arguments fails gracefully.
