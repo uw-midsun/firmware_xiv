@@ -10,7 +10,7 @@
 #include "fsm.h"
 #include "status.h"
 
-#define MAX_RELAY_OPEN_EVENTS 32
+#define MAX_RELAY_OPEN_EVENTS 8
 
 typedef struct SolarFsmSettings {
   // Fault events which cause the relay to open.
