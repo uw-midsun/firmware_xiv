@@ -54,9 +54,9 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   uint8_t reg_readback[NUM_ADS1259_REGISTERS];
   spi_exchange(storage->spi_port, check_regs, sizeof(check_regs), reg_readback,
                NUM_ADS1259_REGISTERS);
-  printf("ads1259 post init register values:\n");
+  LOG_DEBUG("ads1259 post init register values:\n");
   for (int i = 0; i < NUM_ADS1259_REGISTERS; i++) {
-    printf("reg %d: 0x%x\n", i, reg_readback[i]);
+    LOG_DEBUG("reg %d: 0x%x\n", i, reg_readback[i]);
   }
   return STATUS_CODE_OK;
 }
@@ -86,14 +86,6 @@ static void prv_convert_data(Ads1259Storage *storage) {
     storage->reading = (storage->conv_data.raw >> (24 - s_num_usable_bits[ADS1259_DATA_RATE_SPS])) *
                        EXTERNAL_VREF_V / (resolution - 1);
   }
-  float float_reading = (float)storage->reading;
-  unsigned int *uint_reading = (unsigned int *)&float_reading;
-  printf("raw reading as a float: 0x%x\n", *uint_reading);
-  int read_int = (int)storage->reading;
-  int read_int10 = (int)(storage->reading * 10.0);
-  int read_int100 = (int)(storage->reading * 100.0);
-  int read_int1000 = (int)(storage->reading * 1000.0);
-  printf("*1: %i, *10: %i, *100: %i, *1000: %i\n", read_int, read_int10, read_int100, read_int1000);
 }
 
 static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
@@ -108,8 +100,6 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   storage->conv_data.MSB = storage->rx_data.MSB;
   storage->conv_data.MID = storage->rx_data.MID;
   storage->conv_data.LSB = storage->rx_data.LSB;
-  printf("read: chksum: 0x%x, lil endian: [%x %x %x]\n", storage->rx_data.CHK_SUM,
-         storage->rx_data.LSB, storage->rx_data.MID, storage->rx_data.MSB);
   prv_convert_data(storage);
 }
 
@@ -127,7 +117,7 @@ StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
   };
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
   status_ok_or_return(prv_configure_registers(storage));
-  printf("ads1259 driver init all ok\n");
+  LOG_DEBUG("ads1259 driver init all ok\n");
   return STATUS_CODE_OK;
 }
 
