@@ -1,24 +1,18 @@
 #pragma once
 
 // Passive balancing module for AFE cells.  Periodically checks for differences in voltages between
-// cells and raises an event in the AFE FSM to set the balance_control pin for the cell with the
-// highest voltage. Only balances if the difference between the max and min voltages >= 25 mV.
+// cells and calls ltc_afe_toggle_cell_discharge on the cell with the highest voltage
+// to mark the cell for discharge, depending on whether the difference between the highest and
+// lowest cell voltages meets the threshold for discharging.
 
 #include "status.h"
 
 #include "cell_sense.h"
 #include "ltc_afe.h"
 
-// LtcAfeStorage will need to change to AfeReadings once SOFT-9 is merged in
-
-// Interval, in ms, between checks of cell voltages.
-#define PASSIVE_BALANCE_INTERVAL_MS 1000
-
 // Min voltage difference between highest and lowest cell values for balancing to be required.
 #define PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV 25
 
-// Initialize, start soft timers
-StatusCode passive_balance_init(LtcAfeStorage *storage);
-
-// Iterate through all cells and call balance_control if required.
+// Iterate through all cells and call ltc_afe_toggle_cell_discharge, passing in whether the
+// difference in voltages meets the threshold.
 StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe);

@@ -32,7 +32,7 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
   }
 
   // Balance cells if needed
-  passive_balance(result_arr, len, s_storage.afe);
+  passive_balance(s_storage.readings->voltages, len, s_storage.afe);
 
   fault_bps(EE_BPS_STATE_FAULT_AFE_CELL, !fault);
 }
