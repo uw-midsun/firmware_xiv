@@ -8,8 +8,12 @@
 #include "ms_test_helpers.h"
 #include "stdio.h"
 #include "string.h"
+#include "cell_sense.h"
 
 #include "log.h"
+
+static uint16_t s_cell_balanced = 0;
+static bool s_cell_discharge = false;
 
 // Just placeholders for afe settings from test_ltc_afe.c
 #define TEST_LTC_AFE_ADC_MODE LTC_AFE_ADC_MODE_7KHZ
@@ -24,12 +28,18 @@
 #define TEST_LTC_AFE_SPI_CS \
   { .port = GPIO_PORT_A, .pin = 4 }
 
+StatusCode TEST_MOCK(ltc_afe_toggle_cell_discharge)(LtcAfeStorage *afe, uint16_t cell, bool discharge) {
+  s_cell_balanced = cell;
+  s_cell_discharge = discharge;
+  return STATUS_CODE_OK;
+}
+
 // Number of cell voltages to be directly modified during testing
 static const uint8_t NUM_TEST_VOLTAGES = 4;
 
 static LtcAfeSettings s_test_afe_settings = {
-  .num_cells = LTC_AFE_MAX_CELLS,
-  .num_devices = LTC_AFE_MAX_DEVICES,
+  .num_cells = NUM_TOTAL_CELLS,
+  .num_devices = NUM_AFES,
   .num_thermistors = LTC_AFE_MAX_THERMISTORS,
   .ltc_events = { .trigger_cell_conv_event = BMS_AFE_EVENT_TRIGGER_CELL_CONV,
                   .cell_conv_complete_event = BMS_AFE_EVENT_CELL_CONV_COMPLETE,
@@ -40,7 +50,6 @@ static LtcAfeSettings s_test_afe_settings = {
   .cell_result_cb = NULL,
   .aux_result_cb = NULL,
   .result_context = NULL,
-  // literally random values
   .mosi = TEST_LTC_AFE_SPI_MOSI,
   .miso = TEST_LTC_AFE_SPI_MISO,
   .sclk = TEST_LTC_AFE_SPI_SCLK,
@@ -70,7 +79,7 @@ void setup_test(void) {
   }
 
   ltc_afe_init(&s_test_afe_storage, &s_test_afe_settings);
-  TEST_ASSERT_OK(passive_balance_init(&s_test_afe_storage));
+  //TEST_ASSERT_OK(passive_balance_init(&s_test_afe_storage));
 }
 
 void teardown_test(void) {}
@@ -78,113 +87,91 @@ void teardown_test(void) {}
 // Balance a few values, ensure cell bitset is set properly.
 void test_normal_operation(void) {
   LOG_DEBUG("Testing passive balancing normal operation\n");
-  // Doing all tests on first 4 cells of device 0 or last cell for clarity, since max number of
+  // Doing all tests on first 4 cells and last cell for clarity, since max number of
   // devices is variable
   // Fill rest with numbers from 1010 to 1020
-  for (uint8_t i = NUM_TEST_VOLTAGES; i < LTC_AFE_MAX_CELLS; i++) {
-    s_test_afe_storage.cell_voltages[i] = 1010;
+  uint16_t test_voltages[NUM_TOTAL_CELLS];
+  for (uint8_t i = NUM_TEST_VOLTAGES; i < NUM_TOTAL_CELLS; i++) {
+    test_voltages[i] = 1010;
   }
 
   // Stores cell and device that should be balanced
   uint8_t balance_cell = 2;
-  uint8_t balance_device = 0;
 
-  // For confirming test
-  uint16_t actual_cell = 0;
-  uint16_t device_cell = 0;
-
-  // Reset discharge bitset
-  s_test_afe_storage.discharge_bitset[balance_device] = AFE_DEFAULT_DISCHARGE_BITSET;
   // Only cell 2 should be balanced
-  s_test_afe_storage.cell_voltages[0] = 1000;
-  s_test_afe_storage.cell_voltages[1] = 1025;
-  s_test_afe_storage.cell_voltages[2] = 1030;
-  s_test_afe_storage.cell_voltages[3] = 1010;
+  test_voltages[0] = 1000;
+  test_voltages[1] = 1025;
+  test_voltages[balance_cell] = 1030;
+  test_voltages[3] = 1010;
 
-  // Calculate device_cell in same way as ltc_afe_impl_toggle_cell_discharge would
-  // to check that bitset is as expected for the given cell
-  actual_cell = s_test_afe_storage.discharge_cell_lookup[balance_cell];
-  device_cell = actual_cell % LTC_AFE_MAX_CELLS_PER_DEVICE;
-  passive_balance(&s_test_afe_storage);
-  TEST_ASSERT_EQUAL(s_test_afe_storage.discharge_bitset[balance_device],
-                    AFE_DEFAULT_DISCHARGE_BITSET | (1 << device_cell));
+  // Verify
+  passive_balance(test_voltages, NUM_TOTAL_CELLS, &s_test_afe_storage);
+  TEST_ASSERT_EQUAL(s_cell_balanced, balance_cell);
+  TEST_ASSERT_EQUAL(s_cell_discharge, true);
+
 
   // First cell in range
   balance_cell = 0;
 
-  // Reset discharge bitset
-  s_test_afe_storage.discharge_bitset[balance_device] = AFE_DEFAULT_DISCHARGE_BITSET;
   // Only cell 0 should be balanced
-  s_test_afe_storage.cell_voltages[0] = 1040;
-  s_test_afe_storage.cell_voltages[1] = 1025;
-  s_test_afe_storage.cell_voltages[2] = 1010;
-  s_test_afe_storage.cell_voltages[3] = 1010;
+  test_voltages[0] = 1040;
+  test_voltages[1] = 1025;
+  test_voltages[2] = 1010;
+  test_voltages[3] = 1010;
 
-  // Calculate device_cell in same way as ltc_afe_impl_toggle_cell_discharge would
-  // to check that bitset is as expected for the given cell
-  actual_cell = s_test_afe_storage.discharge_cell_lookup[balance_cell];
-  device_cell = actual_cell % LTC_AFE_MAX_CELLS_PER_DEVICE;
-  passive_balance(&s_test_afe_storage);
-  TEST_ASSERT_EQUAL(s_test_afe_storage.discharge_bitset[balance_device],
-                    AFE_DEFAULT_DISCHARGE_BITSET | (1 << device_cell));
+  // Verify
+  passive_balance(test_voltages, NUM_TOTAL_CELLS, &s_test_afe_storage);
+  TEST_ASSERT_EQUAL(s_cell_balanced, balance_cell);
+  TEST_ASSERT_EQUAL(s_cell_discharge, true);
+
 
   // Last cell in range
-  balance_cell = LTC_AFE_MAX_CELLS_PER_DEVICE * LTC_AFE_MAX_DEVICES - 1;
-  balance_device = LTC_AFE_MAX_DEVICES - 1;
+  balance_cell = NUM_TOTAL_CELLS - 1;
 
-  // Reset discharge bitset
-  s_test_afe_storage.discharge_bitset[balance_device] = AFE_DEFAULT_DISCHARGE_BITSET;
   // Only last cell should be balanced
-  s_test_afe_storage.cell_voltages[0] = 1000;
-  s_test_afe_storage.cell_voltages[1] = 1025;
-  s_test_afe_storage.cell_voltages[2] = 1030;
-  s_test_afe_storage.cell_voltages[balance_cell] = 1040;
+  test_voltages[0] = 1000;
+  test_voltages[1] = 1025;
+  test_voltages[2] = 1030;
+  test_voltages[balance_cell] = 1040;
 
-  // Calculate device_cell in same way as ltc_afe_impl_toggle_cell_discharge would
-  // to check that bitset is as expected for the given cell
-  actual_cell = s_test_afe_storage.discharge_cell_lookup[balance_cell];
-  device_cell = actual_cell % LTC_AFE_MAX_CELLS_PER_DEVICE;
-  passive_balance(&s_test_afe_storage);
-  TEST_ASSERT_EQUAL(s_test_afe_storage.discharge_bitset[balance_device],
-                    AFE_DEFAULT_DISCHARGE_BITSET | (1 << device_cell));
+  // Verify
+  passive_balance(test_voltages, NUM_TOTAL_CELLS, &s_test_afe_storage);
+  TEST_ASSERT_EQUAL(s_cell_balanced, balance_cell);
+  TEST_ASSERT_EQUAL(s_cell_discharge, true);
 }
 
 // Balance values within allowed range, ensure they don't change
 void test_balance_range(void) {
+
   LOG_DEBUG("Testing balancing around edge of range\n");
   // Same general procedures as above
 
   // Fill cells
-  for (uint8_t i = NUM_TEST_VOLTAGES; i < LTC_AFE_MAX_CELLS; i++) {
-    s_test_afe_storage.cell_voltages[i] = 1010;
+  uint16_t test_voltages[NUM_TOTAL_CELLS];
+  for (uint8_t i = NUM_TEST_VOLTAGES; i < NUM_TOTAL_CELLS; i++) {
+    test_voltages[i] = 1010;
   }
 
   // Storage variables
-  uint8_t balance_cell = 0;
-  uint8_t balance_device = 0;
-  uint16_t actual_cell = 0;
-  uint16_t device_cell = 0;
+  uint8_t balance_cell = 0; 
 
-  // Reset discharge bitset
-  s_test_afe_storage.discharge_bitset[balance_device] = AFE_DEFAULT_DISCHARGE_BITSET;
   // No cell should be balanced
-  s_test_afe_storage.cell_voltages[0] = 1000;
-  s_test_afe_storage.cell_voltages[1] = 1024;
-  s_test_afe_storage.cell_voltages[2] = 1000 + PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV - 1;
-  s_test_afe_storage.cell_voltages[3] = 1010;
+  s_cell_discharge = true;
+  test_voltages[0] = 1000;
+  test_voltages[1] = 1024;
+  test_voltages[2] = 1000 + PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV - 1;
+  test_voltages[3] = 1010;
 
-  // Bitset should be unchanged
-  passive_balance(&s_test_afe_storage);
-  TEST_ASSERT_EQUAL(s_test_afe_storage.discharge_bitset[balance_device],
-                    AFE_DEFAULT_DISCHARGE_BITSET);
+  // Verify
+  passive_balance(test_voltages, NUM_TOTAL_CELLS, &s_test_afe_storage);
+  TEST_ASSERT_EQUAL(s_cell_discharge, false);
 
   // Cell 2 should be balanced here
   balance_cell = 2;
-  s_test_afe_storage.cell_voltages[balance_cell] = 1000 + PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV;
+  test_voltages[balance_cell] = 1000 + PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV;
 
-  actual_cell = s_test_afe_storage.discharge_cell_lookup[balance_cell];
-  device_cell = actual_cell % LTC_AFE_MAX_CELLS_PER_DEVICE;
-  passive_balance(&s_test_afe_storage);
-  TEST_ASSERT_EQUAL(s_test_afe_storage.discharge_bitset[balance_device],
-                    AFE_DEFAULT_DISCHARGE_BITSET | (1 << device_cell));
+  // Verify
+  passive_balance(test_voltages, NUM_TOTAL_CELLS, &s_test_afe_storage);
+  TEST_ASSERT_EQUAL(s_cell_balanced, balance_cell);
+  TEST_ASSERT_EQUAL(s_cell_discharge, true);
 }

@@ -24,4 +24,4 @@
 StatusCode passive_balance_init(LtcAfeStorage *storage);
 
 // Iterate through all cells and call balance_control if required.
-void passive_balance(LtcAfeStorage *storage);
+StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe);
