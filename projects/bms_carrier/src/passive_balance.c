@@ -1,5 +1,5 @@
 #include "passive_balance.h"
-#include "log.h"  
+#include "log.h"
 
 // result_arr stuff here is probably wrong but I'm too tired to fix it right now
 StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe) {
@@ -22,5 +22,7 @@ StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe)
     result_arr++;
   }
   // Balance cell, pass in whether difference meets threshold.
-  return ltc_afe_toggle_cell_discharge(afe, max_voltage_cell_num, (cell_voltage_max - cell_voltage_min >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV));
+  return ltc_afe_toggle_cell_discharge(
+      afe, max_voltage_cell_num,
+      (cell_voltage_max - cell_voltage_min >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV));
 }

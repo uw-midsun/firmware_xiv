@@ -4,9 +4,6 @@
 // cells and raises an event in the AFE FSM to set the balance_control pin for the cell with the
 // highest voltage. Only balances if the difference between the max and min voltages >= 25 mV.
 
-// Requires soft timers to be initialized.
-
-#include "soft_timer.h"
 #include "status.h"
 
 #include "cell_sense.h"
