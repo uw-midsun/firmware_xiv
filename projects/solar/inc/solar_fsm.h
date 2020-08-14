@@ -1,7 +1,8 @@
 #pragma once
 
-// FSM for managing the relay state.
-// Requires the event queue, GPIO, and the DRV120 relay driver to be initialized.
+// FSM for managing the relay state. Handles SYSTEM_CAN_MESSAGE_SET_RELAY_STATES.
+// Requires the event queue, GPIO, interrupts, soft timers, CAN, and the DRV120 relay driver to be
+// initialized.
 
 #include <stdbool.h>
 #include <stdint.h>
