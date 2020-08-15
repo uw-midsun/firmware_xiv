@@ -17,16 +17,14 @@ StatusCode TEST_MOCK(ltc_afe_toggle_cell_discharge)(LtcAfeStorage *afe, uint16_t
   return STATUS_CODE_OK;
 }
 
-// Number of cell voltages to be directly modified during testing
-static const uint8_t NUM_TEST_VOLTAGES = 4;
-
 // To store voltages for test
 static uint16_t s_test_voltages[NUM_TOTAL_CELLS];
 
 static LtcAfeStorage s_test_afe_storage;
 
+// Set all voltages to 1010.  Indices 0-3 only used in most tests for simplicity
 void setup_test(void) {
-  for (uint8_t i = NUM_TEST_VOLTAGES; i < NUM_TOTAL_CELLS; i++) {
+  for (uint8_t i = 0; i < NUM_TOTAL_CELLS; i++) {
     s_test_voltages[i] = 1010;
   }
 }
