@@ -1,6 +1,7 @@
 #include "solar_config.h"
 
 #include "data_store.h"
+#include "exported_enums.h"
 #include "gpio.h"
 #include "mcp3427_adc.h"
 #include "solar_events.h"
@@ -44,13 +45,13 @@
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
 
 const SolarFsmSettings solar_fsm_settings = {
-  .relay_open_events =
+  .relay_open_faults =
       {
-          SOLAR_FAULT_EVENT_OVERCURRENT,
-          SOLAR_FAULT_EVENT_NEGATIVE_CURRENT,
-          SOLAR_FAULT_EVENT_OVERVOLTAGE,
+          EE_SOLAR_FAULT_OVERCURRENT,
+          EE_SOLAR_FAULT_NEGATIVE_CURRENT,
+          EE_SOLAR_FAULT_OVERVOLTAGE,
       },
-  .num_relay_open_events = 3,
+  .num_relay_open_faults = 3,
 };
 
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|

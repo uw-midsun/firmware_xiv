@@ -4,6 +4,7 @@
 
 #include "data_store.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "log.h"
 #include "ms_test_helpers.h"
 #include "solar_events.h"
@@ -13,6 +14,9 @@
 #define TEST_OUTPUT_OVERCURRENT_THRESHOLD 1000000000L
 #define TEST_OUTPUT_OVERVOLTAGE_THRESHOLD 1000000000uL
 #define TEST_TEMPERATURE_THRESHOLD 1000000000uL
+
+#define TEST_ASSERT_FAULT_EVENT(e, fault, data) \
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT((e), SOLAR_FAULT_EVENT, FAULT_EVENT_DATA((fault), (data)))
 
 static const Event s_data_ready_event = { .id = DATA_READY_EVENT };
 
@@ -43,7 +47,7 @@ void test_nothing_set(void) {
 
 // A template test for a simple threshold.
 static void prv_test_basic_threshold_fault(DataPoint data_point, uint32_t threshold,
-                                           SolarFaultEvent fault_event, uint16_t event_data) {
+                                           EESolarFault fault, uint16_t fault_data) {
   prv_initialize(SOLAR_BOARD_6_MPPTS);
   Event e = { 0 };
 
@@ -57,13 +61,13 @@ static void prv_test_basic_threshold_fault(DataPoint data_point, uint32_t thresh
 
   data_store_set(data_point, threshold + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, fault_event, event_data);
+  TEST_ASSERT_FAULT_EVENT(e, fault, fault_data);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // fault must be tripped on the threshold
   data_store_set(data_point, threshold);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, fault_event, event_data);
+  TEST_ASSERT_FAULT_EVENT(e, fault, fault_data);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -72,7 +76,7 @@ static void prv_test_basic_threshold_fault(DataPoint data_point, uint32_t thresh
 // Test that the overcurrent threshold works.
 void test_output_overcurrent_fault(void) {
   prv_test_basic_threshold_fault(DATA_POINT_CURRENT, TEST_OUTPUT_OVERCURRENT_THRESHOLD,
-                                 SOLAR_FAULT_EVENT_OVERCURRENT, 0);
+                                 EE_SOLAR_FAULT_OVERCURRENT, 0);
 }
 
 // Test that the fault on negative current works.
@@ -86,15 +90,15 @@ void test_output_current_negative_fault(void) {
   fault_monitor_process_event(&s_data_ready_event);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  // if signed handling is incorrect, a SOLAR_FAULT_EVENT_OVERCURRENT will be raised here
+  // if signed handling is incorrect, a EE_SOLAR_FAULT_OVERCURRENT will be raised here
   data_store_set(DATA_POINT_CURRENT, (uint32_t)-1);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_NEGATIVE_CURRENT);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   data_store_set(DATA_POINT_CURRENT, (uint32_t)-TEST_OUTPUT_OVERCURRENT_THRESHOLD);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_NEGATIVE_CURRENT);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // must be strictly negative
@@ -125,13 +129,13 @@ static void prv_test_overvoltage_fault_basic(SolarMpptCount mppt_count) {
   // sum is TEST_OUTPUT_OVERVOLTAGE_THRESHOLD + 1
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - mppt_count + 2);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // sum is TEST_OUTPUT_OVERVOLTAGE_THRESHOLD, must be tripped on threshold
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - mppt_count + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -160,7 +164,7 @@ void test_overvoltage_fault_some_unset(void) {
   // only first set
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // only first and last set
@@ -172,7 +176,7 @@ void test_overvoltage_fault_some_unset(void) {
 
   data_store_set(DATA_POINT_VOLTAGE(0), 2);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -185,20 +189,20 @@ void test_overvoltage_fault_overflow(void) {
   // the value would become -1 if signed ints are used
   data_store_set(DATA_POINT_VOLTAGE(0), max_uint32);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // a naive sum would get 1 + max_uint32 == 0
   data_store_set(DATA_POINT_VOLTAGE(0), 1);
   data_store_set(DATA_POINT_VOLTAGE(1), max_uint32);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   data_store_set(DATA_POINT_VOLTAGE(1), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - 2);
   data_store_set(DATA_POINT_VOLTAGE(2), max_uint32);
   fault_monitor_process_event(&s_data_ready_event);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, SOLAR_FAULT_EVENT_OVERVOLTAGE);
+  TEST_ASSERT_FAULT_EVENT(e, EE_SOLAR_FAULT_OVERVOLTAGE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -211,7 +215,7 @@ void test_overtemperature_fault(void) {
     LOG_DEBUG("Testing faults for thermistor %d\n", thermistor);
     data_store_init();  // to reset data from the last thermistor's test
     prv_test_basic_threshold_fault(DATA_POINT_TEMPERATURE(thermistor), TEST_TEMPERATURE_THRESHOLD,
-                                   SOLAR_FAULT_EVENT_OVERTEMPERATURE, thermistor);
+                                   EE_SOLAR_FAULT_OVERTEMPERATURE, thermistor);
   }
 }
 
@@ -244,28 +248,24 @@ void test_all_faults_simultaneously(void) {
 
   fault_monitor_process_event(&s_data_ready_event);
 
-  // build a checklist of fault events to see
-  Event events_wanted[MAX_SOLAR_BOARD_MPPTS + 2] = { 0 };
-  bool events_seen[MAX_SOLAR_BOARD_MPPTS + 2] = { false };
-  uint8_t num_events_wanted = 0;
+  // build a checklist of faults to see
+  uint16_t fault_data_wanted[MAX_SOLAR_BOARD_MPPTS + 2] = { 0 };
+  bool faults_seen[MAX_SOLAR_BOARD_MPPTS + 2] = { false };
+  uint8_t num_faults_wanted = 0;
   for (Mppt mppt = 0; mppt < mppt_count; mppt++) {
-    events_wanted[num_events_wanted].id = SOLAR_FAULT_EVENT_OVERTEMPERATURE;
-    events_wanted[num_events_wanted].data = mppt;
-    num_events_wanted++;
+    fault_data_wanted[num_faults_wanted++] = FAULT_EVENT_DATA(EE_SOLAR_FAULT_OVERTEMPERATURE, mppt);
   }
-  events_wanted[num_events_wanted].id = SOLAR_FAULT_EVENT_OVERCURRENT;
-  num_events_wanted++;
-  events_wanted[num_events_wanted].id = SOLAR_FAULT_EVENT_OVERVOLTAGE;
-  num_events_wanted++;
+  fault_data_wanted[num_faults_wanted++] = FAULT_EVENT_DATA(EE_SOLAR_FAULT_OVERCURRENT, 0);
+  fault_data_wanted[num_faults_wanted++] = FAULT_EVENT_DATA(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 
   // check off the checklist
   Event e = { 0 };
   while (event_process(&e) == STATUS_CODE_OK) {
     bool found = false;
-    for (uint8_t i = 0; i < num_events_wanted; i++) {
-      if (e.id == events_wanted[i].id && e.data == events_wanted[i].data) {
-        TEST_ASSERT_FALSE_MESSAGE(events_seen[i], "Event seen multiple times");
-        events_seen[i] = true;
+    for (uint8_t i = 0; i < num_faults_wanted; i++) {
+      if (e.id == SOLAR_FAULT_EVENT && e.data == fault_data_wanted[i]) {
+        TEST_ASSERT_FALSE_MESSAGE(faults_seen[i], "Event seen multiple times");
+        faults_seen[i] = true;
         found = true;
         break;
       }

@@ -3,11 +3,9 @@
 #include <stdbool.h>
 
 #include "data_store.h"
-#include "event_queue.h"
+#include "exported_enums.h"
 #include "solar_events.h"
 #include "status.h"
-
-#define RAISE_FAULT_EVENT(id, data) event_raise_priority(FAULT_EVENT_PRIORITY, (id), (data))
 
 static FaultMonitorSettings s_settings;
 
@@ -18,10 +16,10 @@ static void prv_check_output_current(void) {
     int32_t value;
     data_store_get(DATA_POINT_CURRENT, (uint32_t *)&value);
     if (value >= s_settings.output_overcurrent_threshold_uA) {
-      RAISE_FAULT_EVENT(SOLAR_FAULT_EVENT_OVERCURRENT, 0);
+      RAISE_FAULT_EVENT(EE_SOLAR_FAULT_OVERCURRENT, 0);
     }
     if (value < 0) {
-      RAISE_FAULT_EVENT(SOLAR_FAULT_EVENT_NEGATIVE_CURRENT, 0);
+      RAISE_FAULT_EVENT(EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
     }
   }
 }
@@ -33,7 +31,7 @@ static void prv_check_temperature(uint8_t thermistor) {
     uint32_t value;
     data_store_get(DATA_POINT_TEMPERATURE(thermistor), &value);
     if (value >= s_settings.overtemperature_threshold_dC) {
-      RAISE_FAULT_EVENT(SOLAR_FAULT_EVENT_OVERTEMPERATURE, thermistor);
+      RAISE_FAULT_EVENT(EE_SOLAR_FAULT_OVERTEMPERATURE, thermistor);
     }
   }
 }
@@ -48,7 +46,7 @@ static void prv_check_output_voltage_sum(void) {
       data_store_get(DATA_POINT_VOLTAGE(mppt), &value);
       total += value;
       if (total >= s_settings.output_overvoltage_threshold_mV) {
-        RAISE_FAULT_EVENT(SOLAR_FAULT_EVENT_OVERVOLTAGE, 0);
+        RAISE_FAULT_EVENT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
         return;
       }
     }

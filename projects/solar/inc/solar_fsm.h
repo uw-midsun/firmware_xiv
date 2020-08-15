@@ -8,21 +8,22 @@
 #include <stdint.h>
 
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "fsm.h"
 #include "status.h"
 
-#define MAX_RELAY_OPEN_EVENTS 8
+#define MAX_RELAY_OPEN_FAULTS 8
 
 typedef struct SolarFsmSettings {
-  // Fault events which cause the relay to open.
-  EventId relay_open_events[MAX_RELAY_OPEN_EVENTS];
-  uint8_t num_relay_open_events;  // length of preceding array
+  // Faults which cause the relay to open.
+  EESolarFault relay_open_faults[MAX_RELAY_OPEN_FAULTS];
+  uint8_t num_relay_open_faults;  // length of preceding array
 } SolarFsmSettings;
 
 typedef struct SolarFsmStorage {
   Fsm fsm;
-  EventId relay_open_events[MAX_RELAY_OPEN_EVENTS];
-  uint8_t num_relay_open_events;
+  EESolarFault relay_open_faults[MAX_RELAY_OPEN_FAULTS];
+  uint8_t num_relay_open_faults;
 } SolarFsmStorage;
 
 // Initialize the FSM. The relay is initialized to closed.

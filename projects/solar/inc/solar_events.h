@@ -2,6 +2,8 @@
 
 // Defines events used in solar.
 
+#include "event_queue.h"
+
 #define DATA_READY_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
 #define FAULT_EVENT_PRIORITY EVENT_PRIORITY_HIGH
 
@@ -23,33 +25,18 @@ typedef enum {
   NUM_SOLAR_DATA_EVENTS,
 } SolarDataEvent;
 
+// The specific faults are from EESolarFault in the exported enums.
+// Use the macros below for handling fault events.
 typedef enum {
-  // An MCP3427 is faulting too much, event data is the DataPoint associated with the faulty MCP3427
-  SOLAR_FAULT_EVENT_MCP3427 = NUM_SOLAR_DATA_EVENTS + 1,
-
-  // An MPPT had an overcurrent, the least significant byte of event data is the index of the MPPT
-  // that faulted, the most significant byte is a 4-bit bitmask of which branches faulted.
-  SOLAR_FAULT_EVENT_MPPT_OVERCURRENT,
-
-  // An MPPT had an overvoltage or overtemperature, event data is the index of the MPPT that faulted
-  SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE,
-  SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE,
-
-  // The current from the whole array is over the threshold. No event data.
-  SOLAR_FAULT_EVENT_OVERCURRENT,
-
-  // The current from the whole array is negative, so we aren't charging. No event data.
-  SOLAR_FAULT_EVENT_NEGATIVE_CURRENT,
-
-  // The sum of the sensed voltages is over the threshold. No event data.
-  SOLAR_FAULT_EVENT_OVERVOLTAGE,
-
-  // The temperature of any array thermistor is over our threshold. Event data is the index of the
-  // too-hot thermistor.
-  SOLAR_FAULT_EVENT_OVERTEMPERATURE,
-
+  SOLAR_FAULT_EVENT = NUM_SOLAR_DATA_EVENTS + 1,
   NUM_SOLAR_FAULT_EVENTS,
 } SolarFaultEvent;
+
+#define RAISE_FAULT_EVENT(fault, data) \
+  event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(fault, data))
+#define FAULT_EVENT_DATA(fault, data) (((fault) << 8) | (data))
+#define GET_FAULT_FROM_EVENT(e) ((e).data >> 8)
+#define GET_DATA_FROM_EVENT(e) ((e).data & 0xFF)
 
 // Used by solar_fsm internally.
 typedef enum {

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "data_store.h"
-#include "event_queue.h"
+#include "exported_enums.h"
 #include "log.h"
 #include "mcp3427_adc.h"
 #include "sense.h"
@@ -45,7 +45,7 @@ static void prv_mcp3427_fault_callback(void *context) {
     LOG_WARN(
         "sense_mcp3427 encountered too many MCP3427 faults on data point %d, raising fault event\n",
         data_point);
-    event_raise(SOLAR_FAULT_EVENT_MCP3427, data_point);
+    RAISE_FAULT_EVENT(EE_SOLAR_FAULT_MCP3427, data_point);
     data->consecutive_faults = 0;
   }
 }

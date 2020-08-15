@@ -4,6 +4,7 @@
 
 #include "data_store.h"
 #include "event_queue.h"
+#include "exported_enums.h"
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
@@ -298,7 +299,8 @@ void test_sense_mcp3427_fault(void) {
   Event e = { 0 };
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
-    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(i));
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+        e, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(EE_SOLAR_FAULT_MCP3427, prv_get_test_data_point(i)));
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   }
 
@@ -311,7 +313,8 @@ void test_sense_mcp3427_fault(void) {
   }
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
-    MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(i));
+    MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+        e, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(EE_SOLAR_FAULT_MCP3427, prv_get_test_data_point(i)));
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   }
 
@@ -321,7 +324,8 @@ void test_sense_mcp3427_fault(void) {
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   }
   s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, SOLAR_FAULT_EVENT_MCP3427, prv_get_test_data_point(0));
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
+      e, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(EE_SOLAR_FAULT_MCP3427, prv_get_test_data_point(0)));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // make sure that a successful callback resets the consecutive faults
