@@ -205,3 +205,8 @@
   can_unpack_impl_u8((msg_ptr), 2, (hv_u8_ptr), (gnd_u8_ptr), CAN_UNPACK_IMPL_EMPTY,      \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_SOLAR_FAULT(msg_ptr, fault_u8_ptr, fault_data_u8_ptr)                       \
+  can_unpack_impl_u8((msg_ptr), 2, (fault_u8_ptr), (fault_data_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,      \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)

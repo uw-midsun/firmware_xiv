@@ -256,3 +256,9 @@
                    SYSTEM_CAN_MESSAGE_BATTERY_RELAY_STATE, 2, (hv_u8), (gnd_u8),  \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_SOLAR_FAULT(msg_ptr, fault_u8, fault_data_u8)                            \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_FAULT, 2, \
+                   (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
+                   CAN_PACK_IMPL_EMPTY)

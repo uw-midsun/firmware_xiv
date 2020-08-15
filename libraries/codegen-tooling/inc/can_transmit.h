@@ -423,3 +423,11 @@
     StatusCode status = can_transmit(&msg, NULL);          \
     status;                                                \
   })
+
+#define CAN_TRANSMIT_SOLAR_FAULT(fault_u8, fault_data_u8)    \
+  ({                                                         \
+    CanMessage msg = { 0 };                                  \
+    CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);            \
+    status;                                                  \
+  })
