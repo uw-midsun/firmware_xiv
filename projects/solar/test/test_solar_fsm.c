@@ -19,7 +19,7 @@
 #define UNRECOGNIZED_EVENT NUM_SOLAR_EXTERNAL_COMMAND_EVENTS
 #define TEST_FAULT_EVENT(n) (NUM_SOLAR_EXTERNAL_COMMAND_EVENTS + 1 + (n))
 
-#define TEST_CAN_DELAY_US 100
+#define TEST_CAN_DELAY_US 1000
 
 static const GpioAddress s_test_relay_pin = { .port = GPIO_PORT_A, .pin = 6 };
 
