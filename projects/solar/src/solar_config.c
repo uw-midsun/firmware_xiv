@@ -5,6 +5,35 @@
 #include "mcp3427_adc.h"
 #include "solar_events.h"
 
+// TODO(SOFT-282): Calibrate scaling factors and thresholds.
+
+// Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
+// Must be calibrated.
+#define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
+
+// Scaling factor from MCP3427 ADC values for current sense to microamps.
+// MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 0.264uV/uA.
+// (62.5uV/LSB)/(0.264uV/uA) = 236.74uA/LSB
+#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 236.74f
+
+// Scaling factor to convert SPV1020 current values from SPI to microamps.
+// Must be calibrated.
+#define SOLAR_MPPT_CURRENT_SCALING_FACTOR 1.0f
+
+// Scaling factor to convert SPV1020 VIN values from SPI to millivolts.
+// Must be calibrated.
+#define SOLAR_MPPT_VIN_SCALING_FACTOR 1.0f
+
+// Overcurrent threshold for the output current of the array. 9A.
+#define SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA 9000000
+
+// Overvoltage threshold for the sum of the output voltages of the MPPTs. 160V.
+// Note that this sums 5 MPPTs' output voltages on the 5 MPPT board and 6 on the 6 MPPT board.
+#define SOLAR_OUTPUT_OVERVOLTAGE_THRESHOLD_mV 160000
+
+// Overtemperature threshold for any individual thermistor. To be calibrated, currently 100C.
+#define SOLAR_OVERTEMPERATURE_THRESHOLD_dC 1000
+
 #define SOLAR_MCP3427_CONVERSION_MODE MCP3427_CONVERSION_MODE_CONTINUOUS
 #define SOLAR_MCP3427_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
 
@@ -21,6 +50,7 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           // current sense
           {
               .data_point = DATA_POINT_CURRENT,
+              .scaling_factor = SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_1,
@@ -35,7 +65,8 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           // voltage sense
           {
-              .data_point = DATA_POINT_VOLTAGE_1,
+              .data_point = DATA_POINT_VOLTAGE(0),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -49,7 +80,8 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_2,
+              .data_point = DATA_POINT_VOLTAGE(1),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -63,7 +95,8 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_3,
+              .data_point = DATA_POINT_VOLTAGE(2),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -77,7 +110,8 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_4,
+              .data_point = DATA_POINT_VOLTAGE(3),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -91,7 +125,8 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
                   },
           },
           {
-              .data_point = DATA_POINT_VOLTAGE_5,
+              .data_point = DATA_POINT_VOLTAGE(4),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -106,7 +141,8 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
           },
           {
               // this one is not used on the 5 MPPT board, so it is last
-              .data_point = DATA_POINT_VOLTAGE_6,
+              .data_point = DATA_POINT_VOLTAGE(5),
+              .scaling_factor = SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
@@ -150,5 +186,38 @@ StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
   }
   *settings = s_base_sense_temperature_settings;
   settings->num_thermistors = mppt_count;  // we have one thermistor per MPPT
+  return STATUS_CODE_OK;
+}
+
+// |mppt_count| is set dynamically by |config_get_sense_mppt_settings|
+static const SenseMpptSettings s_base_sense_mppt_settings = {
+  .spi_port = SPI_PORT_2,
+  .mppt_current_scaling_factor = SOLAR_MPPT_CURRENT_SCALING_FACTOR,
+  .mppt_vin_scaling_factor = SOLAR_MPPT_VIN_SCALING_FACTOR,
+};
+
+StatusCode config_get_sense_mppt_settings(SolarMpptCount mppt_count, SenseMpptSettings *settings) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  *settings = s_base_sense_mppt_settings;
+  settings->mppt_count = mppt_count;
+  return STATUS_CODE_OK;
+}
+
+// |mppt_count| is set dynamically by |config_get_fault_monitor_settings|
+static const FaultMonitorSettings s_base_fault_monitor_settings = {
+  .output_overcurrent_threshold_uA = SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA,
+  .output_overvoltage_threshold_mV = SOLAR_OUTPUT_OVERVOLTAGE_THRESHOLD_mV,
+  .overtemperature_threshold_dC = SOLAR_OVERTEMPERATURE_THRESHOLD_dC,
+};
+
+StatusCode config_get_fault_monitor_settings(SolarMpptCount mppt_count,
+                                             FaultMonitorSettings *settings) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  *settings = s_base_fault_monitor_settings;
+  settings->mppt_count = mppt_count;
   return STATUS_CODE_OK;
 }

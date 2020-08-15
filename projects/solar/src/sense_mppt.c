@@ -12,19 +12,25 @@
 
 static SpiPort s_spi_port;
 static Mppt s_indices[MAX_SOLAR_BOARD_MPPTS];
+static float s_current_scaling_factor;
+static float s_vin_scaling_factor;
 
 static void prv_check_status_for_faults(Mppt mppt, uint8_t status) {
   uint8_t ovc_branch_bitmask;
   if (spv1020_is_overcurrent(status, &ovc_branch_bitmask)) {
     uint16_t ovc_data = (ovc_branch_bitmask << 8) | mppt;
-    event_raise(SOLAR_FAULT_EVENT_MPPT_OVERCURRENT, ovc_data);
+    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERCURRENT, ovc_data);
   }
   if (spv1020_is_overvoltage(status)) {
-    event_raise(SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE, mppt);
+    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE, mppt);
   }
   if (spv1020_is_overtemperature(status)) {
-    event_raise(SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE, mppt);
+    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE, mppt);
   }
+}
+
+static uint32_t prv_scale_raw(uint16_t raw, float scaling_factor) {
+  return (uint32_t)(raw * scaling_factor);
 }
 
 static void prv_sense_cycle_callback(void *context) {
@@ -34,13 +40,13 @@ static void prv_sense_cycle_callback(void *context) {
   uint8_t status;
 
   if (status_ok(mppt_read_current(s_spi_port, &current, mppt))) {
-    data_store_set(DATA_POINT_MPPT_CURRENT(mppt), current);
+    data_store_set(DATA_POINT_MPPT_CURRENT(mppt), prv_scale_raw(current, s_current_scaling_factor));
   } else {
     LOG_WARN("Error reading current from MPPT %d\n", mppt);
   }
 
   if (status_ok(mppt_read_voltage_in(s_spi_port, &vin, mppt))) {
-    data_store_set(DATA_POINT_MPPT_VOLTAGE(mppt), vin);
+    data_store_set(DATA_POINT_MPPT_VOLTAGE(mppt), prv_scale_raw(vin, s_vin_scaling_factor));
   } else {
     LOG_WARN("Error reading voltage from MPPT %d\n", mppt);
   }
@@ -65,6 +71,9 @@ StatusCode sense_mppt_init(SenseMpptSettings *settings) {
   }
 
   s_spi_port = settings->spi_port;
+  s_current_scaling_factor = settings->mppt_current_scaling_factor;
+  s_vin_scaling_factor = settings->mppt_vin_scaling_factor;
+
   for (Mppt mppt = 0; mppt < settings->mppt_count; mppt++) {
     s_indices[mppt] = mppt;
     status_ok_or_return(sense_register(prv_sense_cycle_callback, &s_indices[mppt]));

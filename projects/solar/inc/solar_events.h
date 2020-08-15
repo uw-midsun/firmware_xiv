@@ -23,15 +23,30 @@ typedef enum {
   NUM_SOLAR_DATA_EVENTS,
 } SolarDataEvent;
 
-// TODO(SOFT-215): Define more fault events
 typedef enum {
   // An MCP3427 is faulting too much, event data is the DataPoint associated with the faulty MCP3427
   SOLAR_FAULT_EVENT_MCP3427 = NUM_SOLAR_DATA_EVENTS + 1,
+
   // An MPPT had an overcurrent, the least significant byte of event data is the index of the MPPT
   // that faulted, the most significant byte is a 4-bit bitmask of which branches faulted.
   SOLAR_FAULT_EVENT_MPPT_OVERCURRENT,
+
   // An MPPT had an overvoltage or overtemperature, event data is the index of the MPPT that faulted
   SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE,
   SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE,
+
+  // The current from the whole array is over the threshold. No event data.
+  SOLAR_FAULT_EVENT_OVERCURRENT,
+
+  // The current from the whole array is negative, so we aren't charging. No event data.
+  SOLAR_FAULT_EVENT_NEGATIVE_CURRENT,
+
+  // The sum of the sensed voltages is over the threshold. No event data.
+  SOLAR_FAULT_EVENT_OVERVOLTAGE,
+
+  // The temperature of any array thermistor is over our threshold. Event data is the index of the
+  // too-hot thermistor.
+  SOLAR_FAULT_EVENT_OVERTEMPERATURE,
+
   NUM_SOLAR_FAULT_EVENTS,
 } SolarFaultEvent;

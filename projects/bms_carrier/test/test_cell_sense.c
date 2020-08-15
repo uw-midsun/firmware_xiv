@@ -180,7 +180,7 @@ void test_cell_undervoltage_fault_cell_sense(void) {
   Event e = { 0 };
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
 
-  s_expected_fault_bitset = EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_CELL;
+  s_expected_fault_bitset = EE_BPS_STATE_FAULT_AFE_CELL;
   prv_test_single_loop();
   // Verify loop is still occuring
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_TRIGGER_CELL_CONV);
@@ -195,7 +195,7 @@ void test_cell_overvoltage_fault_cell_sense(void) {
   };
   Event e = { 0 };
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
-  s_expected_fault_bitset = EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_CELL;
+  s_expected_fault_bitset = EE_BPS_STATE_FAULT_AFE_CELL;
   prv_test_single_loop();
   // Verify loop is still occuring
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_TRIGGER_CELL_CONV);
@@ -215,7 +215,7 @@ void test_temp_charging_fault_cell_sense(void) {
   s_expected_fault_bitset = EE_BPS_STATE_OK;
   prv_test_single_loop();
   s_is_charging = true;
-  s_expected_fault_bitset = EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_TEMP;
+  s_expected_fault_bitset = EE_BPS_STATE_FAULT_AFE_TEMP;
   prv_test_single_loop();
 
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_TRIGGER_CELL_CONV);
@@ -232,7 +232,7 @@ void test_temp_discharging_fault_cell_sense(void) {
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
 
   s_is_charging = false;
-  s_expected_fault_bitset = EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_TEMP;
+  s_expected_fault_bitset = EE_BPS_STATE_FAULT_AFE_TEMP;
   prv_test_single_loop();
   LOG_DEBUG("RUNNING SECOND TEST\n");
   s_is_charging = true;
@@ -258,7 +258,7 @@ void test_afe_fsm_fault_cell_sense(void) {
     prv_test_fsm_fault();
   }
 
-  s_expected_fault_bitset = EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM;
+  s_expected_fault_bitset = EE_BPS_STATE_FAULT_AFE_FSM;
   for (size_t i = 0; i < MAX_AFE_FAULTS; i++) {
     prv_test_fsm_fault();
   }
