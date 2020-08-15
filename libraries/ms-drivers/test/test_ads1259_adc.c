@@ -213,7 +213,7 @@ void test_ads1259_get_conversion_data() {
   delay_ms(TEST_DATA_SETTLING_TIME_MS);
   TEST_ASSERT_EQUAL(0xFF, s_storage.conv_data.LSB | s_storage.conv_data.MID);
   TEST_ASSERT_EQUAL(0x7F, s_storage.conv_data.MSB);
-  // NOTE: Math changed as a result of hardware testing, so assertions on s_storage.reading aren't accurate.
+  // Math changed as a result of hardware testing, so assertions on s_storage.reading are wrong.
   // TEST_ASSERT_EQUAL(test_raw, s_storage.conv_data.raw);
   // TEST_ASSERT_EQUAL((test_raw >> 4) * EXTERNAL_VREF_V / (pow(2, 19) - 1), s_storage.reading);
   // TEST_ASSERT_EQUAL(50, s_storage.reading);

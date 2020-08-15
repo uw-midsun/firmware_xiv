@@ -4,6 +4,7 @@
 // All require event_queue to be initialized.
 
 #include "can.h"
+#include "delay.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "status.h"
