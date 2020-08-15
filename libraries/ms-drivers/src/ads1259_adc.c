@@ -14,12 +14,6 @@ static const uint32_t s_conversion_time_ms_lookup[NUM_ADS1259_DATA_RATE] = {
   [ADS1259_DATA_RATE_3600] = 1, [ADS1259_DATA_RATE_14400] = 1,
 };
 
-static const uint32_t s_calibration_time_ms_lookup[NUM_ADS1259_DATA_RATE] = {
-  [ADS1259_DATA_RATE_10] = 1900, [ADS1259_DATA_RATE_17] = 1140, [ADS1259_DATA_RATE_50] = 380,
-  [ADS1259_DATA_RATE_60] = 318,  [ADS1259_DATA_RATE_400] = 49,  [ADS1259_DATA_RATE_1200] = 17,
-  [ADS1259_DATA_RATE_3600] = 7,  [ADS1259_DATA_RATE_14400] = 3,
-};
-
 // Number of noise free bits for each sampling rate
 static const uint8_t s_num_usable_bits[NUM_ADS1259_DATA_RATE] = {
   [ADS1259_DATA_RATE_10] = 21,   [ADS1259_DATA_RATE_17] = 21,    [ADS1259_DATA_RATE_50] = 20,
@@ -95,7 +89,7 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
   code = prv_checksum(storage);
   if (code) {
-    (*storage->handler)(code, NULL);
+    (*storage->handler)(code, storage->error_context);
   }
   storage->conv_data.MSB = storage->rx_data.MSB;
   storage->conv_data.MID = storage->rx_data.MID;
@@ -104,9 +98,10 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
 }
 
 // Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
-StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage) {
+StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings) {
   storage->spi_port = settings->spi_port;
   storage->handler = settings->handler;
+  storage->error_context = settings->error_context;
   const SpiSettings spi_settings = {
     .baudrate = settings->spi_baudrate,
     .mode = SPI_MODE_1,

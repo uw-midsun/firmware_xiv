@@ -16,8 +16,8 @@
 #define CONVERSION_TIME_MS 18
 #define READING_QUEUE_LENGTH READ_CYCLE_SIZE
 static Ads1259Storage s_storage;
-static int s_index;
-static int s_count = 1;
+static uint8_t s_index;
+static uint8_t s_count = 1;
 
 static void prv_rx_error_handler_cb(Ads1259StatusCode code, void *context) {
   if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) {
@@ -61,7 +61,7 @@ int main() {
   soft_timer_init();
   LOG_DEBUG("Smoke test initializing ads1259\n");
   delay_ms(100);
-  ads1259_init(&settings, &s_storage);
+  ads1259_init(&s_storage, &settings);
 
   s_index = 0;
   double reading_queue[READING_QUEUE_LENGTH];
