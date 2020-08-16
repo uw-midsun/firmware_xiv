@@ -1,5 +1,6 @@
 #include "solar_config.h"
 
+#include "can_msg_defs.h"
 #include "data_store.h"
 #include "exported_enums.h"
 #include "gpio.h"
@@ -7,6 +8,9 @@
 #include "solar_events.h"
 
 // TODO(SOFT-282): Calibrate scaling factors and thresholds.
+
+// Time between sense cycles (i.e. frequency of data update). 1 second.
+#define SENSE_CYCLE_PERIOD_US 1000000
 
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
 // Must be calibrated.
@@ -43,6 +47,69 @@
 
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
+
+#define SOLAR_I2C_SPEED I2C_SPEED_FAST
+
+#define I2C1_SDA \
+  { GPIO_PORT_B, 11 }
+#define I2C1_SCL \
+  { GPIO_PORT_B, 10 }
+#define I2C2_SDA \
+  { GPIO_PORT_B, 9 }
+#define I2C2_SCL \
+  { GPIO_PORT_B, 8 }
+
+#define SPI2_MOSI \
+  { GPIO_PORT_B, 15 }
+#define SPI2_MISO \
+  { GPIO_PORT_B, 14 }
+#define SPI2_SCLK \
+  { GPIO_PORT_B, 13 }
+#define CS_UNUSED \
+  { GPIO_PORT_B, 1 }
+
+#define CAN_RX_PIN \
+  { GPIO_PORT_A, 12 }
+#define CAN_TX_PIN \
+  { GPIO_PORT_A, 11 }
+
+const I2CSettings i2c1_settings = {
+  .speed = SOLAR_I2C_SPEED,
+  .sda = I2C1_SDA,
+  .scl = I2C1_SCL,
+};
+
+const I2CSettings i2c2_settings = {
+  .speed = SOLAR_I2C_SPEED,
+  .sda = I2C2_SDA,
+  .scl = I2C2_SCL,
+};
+
+const SpiSettings spi_settings = {
+  .baudrate = 60000,
+  .mode = SPI_MODE_3,
+  .mosi = SPI2_MOSI,
+  .miso = SPI2_MISO,
+  .sclk = SPI2_SCLK,
+  .cs = CS_UNUSED,
+};
+
+const CanSettings can_settings = {
+  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+  .bitrate = CAN_HW_BITRATE_500KBPS,
+  .rx_event = SOLAR_CAN_EVENT_RX,
+  .tx_event = SOLAR_CAN_EVENT_TX,
+  .fault_event = SOLAR_CAN_EVENT_FAULT,
+  .rx = CAN_RX_PIN,
+  .tx = CAN_TX_PIN,
+  .loopback = false,
+};
+
+const GpioAddress drv120_relay_pin = { GPIO_PORT_A, 8 };
+
+const SenseSettings sense_settings = {
+  .sense_period_us = SENSE_CYCLE_PERIOD_US,
+};
 
 const SolarFsmSettings solar_fsm_settings = {
   .relay_open_faults =
