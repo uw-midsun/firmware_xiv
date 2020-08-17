@@ -19,7 +19,7 @@
 #define UNRECOGNIZED_FAULT NUM_EE_SOLAR_FAULTS
 #define TEST_FAULT(n) (NUM_EE_SOLAR_FAULTS + 1 + (n))
 
-#define TEST_CAN_DELAY_US 10000
+#define TEST_CAN_DELAY_US 25000
 
 static void prv_set_fault_event(Event *e, EESolarFault fault) {
   e->id = SOLAR_FAULT_EVENT;
