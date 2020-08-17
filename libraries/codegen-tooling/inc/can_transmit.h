@@ -317,15 +317,6 @@
     status;                                                \
   })
 
-#define CAN_TRANSMIT_SOLAR_DATA_FRONT(module_id_u16, voltage_u16, current_u16, temperature_u16) \
-  ({                                                                                            \
-    CanMessage msg = { 0 };                                                                     \
-    CAN_PACK_SOLAR_DATA_FRONT(&msg, (module_id_u16), (voltage_u16), (current_u16),              \
-                              (temperature_u16));                                               \
-    StatusCode status = can_transmit(&msg, NULL);                                               \
-    status;                                                                                     \
-  })
-
 #define CAN_TRANSMIT_CHARGER_INFO(current_u16, voltage_u16, status_bitset_u16)      \
   ({                                                                                \
     CanMessage msg = { 0 };                                                         \

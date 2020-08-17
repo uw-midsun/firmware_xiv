@@ -155,11 +155,6 @@
   can_unpack_impl_u16((msg_ptr), 4, (temp_1_u16_ptr), (temp_2_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_SOLAR_DATA_FRONT(msg_ptr, module_id_u16_ptr, voltage_u16_ptr, current_u16_ptr, \
-                                    temperature_u16_ptr)                                          \
-  can_unpack_impl_u16((msg_ptr), 8, (module_id_u16_ptr), (voltage_u16_ptr), (current_u16_ptr),    \
-                      (temperature_u16_ptr))
-
 #define CAN_UNPACK_CHARGER_INFO(msg_ptr, current_u16_ptr, voltage_u16_ptr, status_bitset_u16_ptr)  \
   can_unpack_impl_u16((msg_ptr), 6, (current_u16_ptr), (voltage_u16_ptr), (status_bitset_u16_ptr), \
                       CAN_UNPACK_IMPL_EMPTY)
