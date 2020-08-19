@@ -7,7 +7,10 @@
 #include "sense_mppt.h"
 #include "sense_temperature.h"
 #include "solar_boards.h"
+#include "solar_fsm.h"
 #include "status.h"
+
+extern const SolarFsmSettings solar_fsm_settings;
 
 StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
                                                  SenseTemperatureSettings *settings);

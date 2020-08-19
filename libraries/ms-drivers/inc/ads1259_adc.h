@@ -41,6 +41,7 @@ typedef struct Ads1259Settings {
   GpioAddress sclk;
   GpioAddress cs;
   Ads1259ErrorHandlerCb handler;
+  void *error_context;
 } Ads1259Settings;
 
 // Static instance of Ads1259Storage must be declared
@@ -51,10 +52,11 @@ typedef struct Ads1259Storage {
   Ads1259ConversionData conv_data;
   double reading;
   Ads1259ErrorHandlerCb handler;
+  void *error_context;
 } Ads1259Storage;
 
 // Initializes ads1259 - soft-timers and spi must be initialized
-StatusCode ads1259_init(Ads1259Settings *settings, Ads1259Storage *storage);
+StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings);
 
 // Gets reading via single conversion mode
 StatusCode ads1259_get_conversion_data(Ads1259Storage *storage);
