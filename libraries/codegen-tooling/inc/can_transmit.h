@@ -317,15 +317,6 @@
     status;                                                \
   })
 
-#define CAN_TRANSMIT_SOLAR_DATA_FRONT(module_id_u16, voltage_u16, current_u16, temperature_u16) \
-  ({                                                                                            \
-    CanMessage msg = { 0 };                                                                     \
-    CAN_PACK_SOLAR_DATA_FRONT(&msg, (module_id_u16), (voltage_u16), (current_u16),              \
-                              (temperature_u16));                                               \
-    StatusCode status = can_transmit(&msg, NULL);                                               \
-    status;                                                                                     \
-  })
-
 #define CAN_TRANSMIT_CHARGER_INFO(current_u16, voltage_u16, status_bitset_u16)      \
   ({                                                                                \
     CanMessage msg = { 0 };                                                         \
@@ -422,4 +413,12 @@
     CAN_PACK_BATTERY_RELAY_STATE(&msg, (hv_u8), (gnd_u8)); \
     StatusCode status = can_transmit(&msg, NULL);          \
     status;                                                \
+  })
+
+#define CAN_TRANSMIT_SOLAR_FAULT(fault_u8, fault_data_u8)    \
+  ({                                                         \
+    CanMessage msg = { 0 };                                  \
+    CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);            \
+    status;                                                  \
   })

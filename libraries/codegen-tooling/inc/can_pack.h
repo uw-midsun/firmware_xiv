@@ -196,11 +196,6 @@
                     SYSTEM_CAN_MESSAGE_DCDC_TEMPS, 4, (temp_1_u16), (temp_2_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_SOLAR_DATA_FRONT(msg_ptr, module_id_u16, voltage_u16, current_u16,             \
-                                  temperature_u16)                                              \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_DATA_FRONT, 8, \
-                    (module_id_u16), (voltage_u16), (current_u16), (temperature_u16))
-
 #define CAN_PACK_CHARGER_INFO(msg_ptr, current_u16, voltage_u16, status_bitset_u16)           \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_INFO, 6, \
                     (current_u16), (voltage_u16), (status_bitset_u16), CAN_PACK_IMPL_EMPTY)
@@ -256,3 +251,9 @@
                    SYSTEM_CAN_MESSAGE_BATTERY_RELAY_STATE, 2, (hv_u8), (gnd_u8),  \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_SOLAR_FAULT(msg_ptr, fault_u8, fault_data_u8)                            \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_FAULT, 2, \
+                   (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
+                   CAN_PACK_IMPL_EMPTY)
