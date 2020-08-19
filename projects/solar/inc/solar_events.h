@@ -50,3 +50,10 @@ typedef enum {
 
   NUM_SOLAR_FAULT_EVENTS,
 } SolarFaultEvent;
+
+// Used by solar_fsm internally.
+typedef enum {
+  SOLAR_COMMAND_EVENT_CLOSE_RELAY = NUM_SOLAR_FAULT_EVENTS + 1,
+  SOLAR_COMMAND_EVENT_OPEN_RELAY,
+  NUM_SOLAR_EXTERNAL_COMMAND_EVENTS,
+} SolarExternalCommandEvent;
