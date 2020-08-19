@@ -29,7 +29,7 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
     }
   }
 
-  fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_CELL, !fault);
+  fault_bps(EE_BPS_STATE_FAULT_AFE_CELL, !fault);
 }
 
 static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *context) {
@@ -44,12 +44,12 @@ static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *conte
 
   for (size_t i = 0; i < len; ++i) {
     if (s_storage.readings->temps[i] > threshold) {
-      fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_TEMP, false);
+      fault_bps(EE_BPS_STATE_FAULT_AFE_TEMP, false);
       return;
     }
   }
 
-  fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_TEMP, true);
+  fault_bps(EE_BPS_STATE_FAULT_AFE_TEMP, true);
 }
 
 StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *afe_readings,
@@ -66,7 +66,7 @@ StatusCode cell_sense_process_event(const Event *e) {
   switch (e->id) {
     case BMS_AFE_EVENT_FAULT:
       if (s_storage.num_afe_faults > MAX_AFE_FAULTS) {
-        fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM, false);
+        fault_bps(EE_BPS_STATE_FAULT_AFE_FSM, false);
       } else {
         s_storage.num_afe_faults++;
       }
@@ -75,7 +75,7 @@ StatusCode cell_sense_process_event(const Event *e) {
 
     case BMS_AFE_EVENT_CALLBACK_RUN:
       s_storage.num_afe_faults = 0;
-      fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE_AFE_FSM, true);
+      fault_bps(EE_BPS_STATE_FAULT_AFE_FSM, true);
       break;
 
     default:
