@@ -13,6 +13,7 @@ $(T)_test_killswitch_MOCKS := gpio_get_state fault_bps
 $(T)_test_bps_heartbeat_MOCKS := fault_bps
 $(T)_test_relay_sequence_MOCKS := fault_bps gpio_set_state mcp23008_gpio_get_state
 $(T)_test_cell_sense_MOCKS := current_sense_is_charging ltc_afe_process_event
+$(T)_test_passive_balance_MOCKS := ltc_afe_toggle_cell_discharge
 endif
 # Uses mocked fault handling to verify internal logic
 # TODO(SOFT-61): Should allow modules to hook into internal fault state (or read can messages) so this isn't needed
