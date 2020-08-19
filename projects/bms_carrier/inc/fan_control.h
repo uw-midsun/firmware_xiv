@@ -2,7 +2,10 @@
 
 #include <stdint.h>
 
+#include "adt7476a_fan_controller.h"
+#include "adt7476a_fan_controller_defs.h"
 #include "i2c.h"
+#include "soft_timer.h"
 #include "status.h"
 
 #include "cell_sense.h"
