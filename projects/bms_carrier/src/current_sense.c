@@ -5,11 +5,6 @@
 #include "exported_enums.h"
 #include "soft_timer.h"
 
-// slightly larger than conversion time of adc
-#define CONVERSION_TIME_MS 18
-// placeholder - 100 amps
-#define OVERCURRENT_MA (100 * 1000)
-
 static CurrentReadings *s_readings;
 static Ads1259Storage s_storage;
 static uint16_t s_ring_idx = 0;
@@ -31,9 +26,10 @@ void prv_update_average(void) {
   s_readings->average = sum / NUM_STORED_CURRENT_READINGS;
 }
 
+// returns value in milliamps
 int16_t prv_voltage_to_current(double reading) {
-  // placeholder - to be filled in after calibration
-  return 0;
+  // 
+  return (int16_t)(100 * 1000 * reading);
 }
 
 void prv_periodic_ads_read(SoftTimerId id, void *context) {
@@ -48,7 +44,9 @@ void prv_periodic_ads_read(SoftTimerId id, void *context) {
   prv_update_average();
 
   // check faults
-  if (s_readings->average > OVERCURRENT_MA) {
+  if (s_readings->average > DISCHARGE_OVERCURRENT_MA) {
+    fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE, false);
+  } else if (s_readings->average < CHARGE_OVERCURRENT_MA) {
     fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE, false);
   } else {
     fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE, true);
@@ -56,7 +54,7 @@ void prv_periodic_ads_read(SoftTimerId id, void *context) {
 }
 
 bool current_sense_is_charging() {
-  return s_readings->average > 0;
+  return s_readings->average < 0;
 }
 
 StatusCode current_sense_init(CurrentReadings *readings, SpiSettings *settings) {
