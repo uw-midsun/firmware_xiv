@@ -16,17 +16,19 @@
 #include "spi.h"
 #include "status.h"
 
-extern const I2CSettings i2c1_settings;
-extern const I2CSettings i2c2_settings;
-extern const SpiSettings spi_settings;
+const I2CSettings *config_get_i2c1_settings(void);
 
-extern const CanSettings can_settings;
+const I2CSettings *config_get_i2c2_settings(void);
 
-extern const GpioAddress drv120_relay_pin;
+const SpiSettings *config_get_spi_settings(void);
 
-extern const SenseSettings sense_settings;
+const CanSettings *config_get_can_settings(void);
 
-extern const FaultHandlerSettings fault_handler_settings;
+const GpioAddress *config_get_drv120_relay_pin(void);
+
+const SenseSettings *config_get_sense_settings(void);
+
+const FaultHandlerSettings *config_get_fault_handler_settings(void);
 
 StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
                                                  SenseTemperatureSettings *settings);

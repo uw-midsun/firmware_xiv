@@ -44,12 +44,12 @@ static StatusCode prv_initialize_libraries(void) {
   status_ok_or_return(gpio_init());
   adc_init(ADC_MODE_SINGLE);
 
-  status_ok_or_return(i2c_init(I2C_PORT_1, &i2c1_settings));
-  status_ok_or_return(i2c_init(I2C_PORT_2, &i2c2_settings));
-  status_ok_or_return(spi_init(SPI_PORT_2, &spi_settings));
-  status_ok_or_return(can_init(&s_can_storage, &can_settings));
+  status_ok_or_return(i2c_init(I2C_PORT_1, config_get_i2c1_settings()));
+  status_ok_or_return(i2c_init(I2C_PORT_2, config_get_i2c2_settings()));
+  status_ok_or_return(spi_init(SPI_PORT_2, config_get_spi_settings()));
+  status_ok_or_return(can_init(&s_can_storage, config_get_can_settings()));
 
-  status_ok_or_return(drv120_relay_init(&drv120_relay_pin));
+  status_ok_or_return(drv120_relay_init(config_get_drv120_relay_pin()));
 
   return STATUS_CODE_OK;
 }
@@ -57,7 +57,7 @@ static StatusCode prv_initialize_libraries(void) {
 static StatusCode prv_initialize_sense_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(mppt_init());
 
-  status_ok_or_return(sense_init(&sense_settings));
+  status_ok_or_return(sense_init(config_get_sense_settings()));
 
   SenseMcp3427Settings sense_mcp3427_settings;
   status_ok_or_return(config_get_sense_mcp3427_settings(mppt_count, &sense_mcp3427_settings));
@@ -77,7 +77,7 @@ static StatusCode prv_initialize_sense_modules(SolarMpptCount mppt_count) {
 
 static StatusCode prv_initialize_action_modules(void) {
   status_ok_or_return(relay_fsm_init(&s_relay_fsm_storage));
-  status_ok_or_return(fault_handler_init(&fault_handler_settings));
+  status_ok_or_return(fault_handler_init(config_get_fault_handler_settings()));
   status_ok_or_return(command_rx_init());
   return STATUS_CODE_OK;
 }

@@ -73,19 +73,19 @@
 #define CAN_TX_PIN \
   { GPIO_PORT_A, 11 }
 
-const I2CSettings i2c1_settings = {
+static const I2CSettings s_i2c1_settings = {
   .speed = SOLAR_I2C_SPEED,
   .sda = I2C1_SDA,
   .scl = I2C1_SCL,
 };
 
-const I2CSettings i2c2_settings = {
+static const I2CSettings s_i2c2_settings = {
   .speed = SOLAR_I2C_SPEED,
   .sda = I2C2_SDA,
   .scl = I2C2_SCL,
 };
 
-const SpiSettings spi_settings = {
+static const SpiSettings s_spi_settings = {
   .baudrate = 60000,
   .mode = SPI_MODE_3,
   .mosi = SPI2_MOSI,
@@ -94,7 +94,7 @@ const SpiSettings spi_settings = {
   .cs = CS_UNUSED,
 };
 
-const CanSettings can_settings = {
+static const CanSettings s_can_settings = {
   .device_id = SYSTEM_CAN_DEVICE_SOLAR,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = SOLAR_CAN_EVENT_RX,
@@ -105,13 +105,13 @@ const CanSettings can_settings = {
   .loopback = false,
 };
 
-const GpioAddress drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
 
-const SenseSettings sense_settings = {
+static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
 };
 
-const FaultHandlerSettings fault_handler_settings = {
+static const FaultHandlerSettings s_fault_handler_settings = {
   .relay_open_faults =
       {
           EE_SOLAR_FAULT_OVERCURRENT,
@@ -120,6 +120,34 @@ const FaultHandlerSettings fault_handler_settings = {
       },
   .num_relay_open_faults = 3,
 };
+
+const I2CSettings *config_get_i2c1_settings(void) {
+  return &s_i2c1_settings;
+}
+
+const I2CSettings *config_get_i2c2_settings(void) {
+  return &s_i2c2_settings;
+}
+
+const SpiSettings *config_get_spi_settings(void) {
+  return &s_spi_settings;
+}
+
+const CanSettings *config_get_can_settings(void) {
+  return &s_can_settings;
+}
+
+const GpioAddress *config_get_drv120_relay_pin(void) {
+  return &s_drv120_relay_pin;
+}
+
+const SenseSettings *config_get_sense_settings(void) {
+  return &s_sense_settings;
+}
+
+const FaultHandlerSettings *config_get_fault_handler_settings(void) {
+  return &s_fault_handler_settings;
+}
 
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|
 static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
