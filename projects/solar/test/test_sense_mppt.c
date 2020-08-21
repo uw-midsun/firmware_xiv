@@ -1,6 +1,7 @@
 #include "sense_mppt.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "data_store.h"
 #include "event_queue.h"
@@ -11,7 +12,6 @@
 #include "ms_test_helpers.h"
 #include "sense.h"
 #include "solar_boards.h"
-#include "solar_events.h"
 #include "spv1020_mppt_defs.h"
 #include "status.h"
 #include "test_helpers.h"
@@ -26,6 +26,8 @@
 #define TEST_PWM 0xBEEF
 #define TEST_CR_BIT 1
 #define DEFAULT_STATUS TEST_CR_BIT  // other bits 0: OK
+
+#define MAX_FAULTS (2 * NUM_EE_SOLAR_FAULTS * MAX_SOLAR_BOARD_MPPTS)
 
 static SenseCallback s_sense_callbacks[MAX_SOLAR_BOARD_MPPTS];
 static void *s_sense_callback_contexts[MAX_SOLAR_BOARD_MPPTS];
@@ -72,6 +74,18 @@ StatusCode TEST_MOCK(mppt_read_status)(SpiPort port, uint16_t *status, uint8_t p
   return STATUS_CODE_OK;
 }
 
+static uint8_t s_num_faults_raised;
+static EESolarFault s_faults_raised[MAX_FAULTS];
+static uint8_t s_fault_data[MAX_FAULTS];
+
+StatusCode TEST_MOCK(fault_handler_raise_fault)(EESolarFault fault, uint8_t fault_data) {
+  TEST_ASSERT_MESSAGE(s_num_faults_raised < MAX_FAULTS, "Too many faults were raised to store!");
+  s_faults_raised[s_num_faults_raised] = fault;
+  s_fault_data[s_num_faults_raised] = fault_data;
+  s_num_faults_raised++;
+  return STATUS_CODE_OK;
+}
+
 static void prv_trigger_sense_cycle(void) {
   for (uint8_t i = 0; i < s_num_sense_callbacks; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
@@ -94,6 +108,8 @@ void setup_test(void) {
   s_mppt_voltage_pin = INVALID_MPPT;
   s_mppt_pwm_pin = INVALID_MPPT;
   s_mppt_status_pin = INVALID_MPPT;
+
+  s_num_faults_raised = 0;
 }
 void teardown_test(void) {}
 
@@ -203,7 +219,6 @@ void test_max_mppt_cycle_sets_values(void) {
 
 // Test that we can trigger each fault event for each MPPT with the correct data.
 void test_status_faults(void) {
-  Event e = { 0 };
   SenseMpptSettings settings = {
     .mppt_count = MAX_SOLAR_BOARD_MPPTS,
     .spi_port = TEST_SPI_PORT,
@@ -218,53 +233,50 @@ void test_status_faults(void) {
   // overvoltage fault event
   s_mppt_status_ret = SPV1020_OVV_MASK;
   prv_trigger_sense_cycle();
+  TEST_ASSERT_EQUAL(MAX_SOLAR_BOARD_MPPTS, s_num_faults_raised);
   for (Mppt i = 0; i < MAX_SOLAR_BOARD_MPPTS; i++) {
-    TEST_ASSERT_OK(event_process(&e));
-    TEST_ASSERT_EQUAL(SOLAR_FAULT_EVENT, e.id);
-    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MPPT_OVERVOLTAGE, GET_FAULT_FROM_EVENT(e));
-    TEST_ASSERT(GET_DATA_FROM_EVENT(e) < MAX_SOLAR_BOARD_MPPTS);
-    times_mppt_event_raised[GET_DATA_FROM_EVENT(e)]++;
+    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MPPT_OVERVOLTAGE, s_faults_raised[i]);
+    TEST_ASSERT(s_fault_data[i] < MAX_SOLAR_BOARD_MPPTS);
+    times_mppt_event_raised[s_fault_data[i]]++;
   }
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   // an event was raised for each MPPT
   for (Mppt mppt = 0; mppt < MAX_SOLAR_BOARD_MPPTS; mppt++) {
     TEST_ASSERT_EQUAL(1, times_mppt_event_raised[mppt]);
     times_mppt_event_raised[mppt] = 0;  // set up for the next fault
   }
+  s_num_faults_raised = 0;  // reset for easier testing
 
   // overtemperature fault event
   s_mppt_status_ret = SPV1020_OVT_MASK;
   prv_trigger_sense_cycle();
+  TEST_ASSERT_EQUAL(MAX_SOLAR_BOARD_MPPTS, s_num_faults_raised);
   for (Mppt i = 0; i < MAX_SOLAR_BOARD_MPPTS; i++) {
-    TEST_ASSERT_OK(event_process(&e));
-    TEST_ASSERT_EQUAL(SOLAR_FAULT_EVENT, e.id);
-    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MPPT_OVERTEMPERATURE, GET_FAULT_FROM_EVENT(e));
-    TEST_ASSERT(GET_DATA_FROM_EVENT(e) < MAX_SOLAR_BOARD_MPPTS);
-    times_mppt_event_raised[GET_DATA_FROM_EVENT(e)]++;
+    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MPPT_OVERTEMPERATURE, s_faults_raised[i]);
+    TEST_ASSERT(s_fault_data[i] < MAX_SOLAR_BOARD_MPPTS);
+    times_mppt_event_raised[s_fault_data[i]]++;
   }
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   for (Mppt mppt = 0; mppt < MAX_SOLAR_BOARD_MPPTS; mppt++) {
     TEST_ASSERT_EQUAL(1, times_mppt_event_raised[mppt]);
     times_mppt_event_raised[mppt] = 0;  // set up for the next fault
   }
+  s_num_faults_raised = 0;
 
   // overcurrent fault event
   s_mppt_status_ret = SPV1020_OVC_MASK;
   prv_trigger_sense_cycle();
+  TEST_ASSERT_EQUAL(MAX_SOLAR_BOARD_MPPTS, s_num_faults_raised);
   for (Mppt i = 0; i < MAX_SOLAR_BOARD_MPPTS; i++) {
-    TEST_ASSERT_OK(event_process(&e));
-    TEST_ASSERT_EQUAL(SOLAR_FAULT_EVENT, e.id);
-    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MPPT_OVERCURRENT, GET_FAULT_FROM_EVENT(e));
-    TEST_ASSERT_BITS_HIGH(0b11110000, GET_DATA_FROM_EVENT(e));  // all 4 branches set
-    Mppt mppt = GET_DATA_FROM_EVENT(e) & 0xF;
+    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MPPT_OVERCURRENT, s_faults_raised[i]);
+    TEST_ASSERT_BITS_HIGH(0b11110000, s_fault_data[i]);  // all 4 branches set
+    Mppt mppt = s_fault_data[i] & 0xF;
     TEST_ASSERT(mppt < MAX_SOLAR_BOARD_MPPTS);
     times_mppt_event_raised[mppt]++;
   }
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   for (Mppt mppt = 0; mppt < MAX_SOLAR_BOARD_MPPTS; mppt++) {
     TEST_ASSERT_EQUAL(1, times_mppt_event_raised[mppt]);
     times_mppt_event_raised[mppt] = 0;  // set up for the next fault
   }
+  s_num_faults_raised = 0;
 
   // all of them at the same time -  we check that the expected number of events per MPPT were
   // raised and that the expected number of each type of event was raised without checking order
@@ -273,24 +285,23 @@ void test_status_faults(void) {
   uint8_t num_ovc_events = 0;
   s_mppt_status_ret = SPV1020_OVV_MASK | SPV1020_OVT_MASK | SPV1020_OVC_MASK;
   prv_trigger_sense_cycle();
-  for (uint8_t i = 0; i < 3 * MAX_SOLAR_BOARD_MPPTS; i++) {
-    TEST_ASSERT_OK(event_process(&e));
-    TEST_ASSERT_EQUAL(SOLAR_FAULT_EVENT, e.id);
+  TEST_ASSERT_EQUAL(3 * MAX_SOLAR_BOARD_MPPTS, s_num_faults_raised);
 
+  for (uint8_t i = 0; i < 3 * MAX_SOLAR_BOARD_MPPTS; i++) {
     Mppt mppt = INVALID_MPPT;
-    switch (GET_FAULT_FROM_EVENT(e)) {
+    switch (s_faults_raised[i]) {
       case EE_SOLAR_FAULT_MPPT_OVERVOLTAGE:
         num_ovv_events++;
-        mppt = GET_DATA_FROM_EVENT(e);
+        mppt = s_fault_data[i];
         break;
       case EE_SOLAR_FAULT_MPPT_OVERTEMPERATURE:
         num_ovt_events++;
-        mppt = GET_DATA_FROM_EVENT(e);
+        mppt = s_fault_data[i];
         break;
       case EE_SOLAR_FAULT_MPPT_OVERCURRENT:
         num_ovc_events++;
-        TEST_ASSERT_BITS_HIGH(0b11110000, e.data);  // all 4 branches set
-        mppt = GET_DATA_FROM_EVENT(e) & 0xF;
+        TEST_ASSERT_BITS_HIGH(0b11110000, s_fault_data[i]);  // all 4 branches set
+        mppt = s_fault_data[i] & 0xF;
         break;
       default:
         TEST_FAIL_MESSAGE("Unknown fault event raised!\n");
@@ -300,7 +311,7 @@ void test_status_faults(void) {
     TEST_ASSERT(mppt < MAX_SOLAR_BOARD_MPPTS);
     times_mppt_event_raised[mppt]++;
   }
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  s_num_faults_raised = 0;
 
   for (Mppt mppt = 0; mppt < MAX_SOLAR_BOARD_MPPTS; mppt++) {
     TEST_ASSERT_EQUAL(3, times_mppt_event_raised[mppt]);  // 3 distinct fault events

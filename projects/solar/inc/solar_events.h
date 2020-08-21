@@ -5,7 +5,7 @@
 #include "event_queue.h"
 
 #define DATA_READY_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
-#define FAULT_EVENT_PRIORITY EVENT_PRIORITY_HIGH
+#define RELAY_EVENT_PRIORITY EVENT_PRIORITY_HIGH
 
 typedef enum {
   SOLAR_CAN_EVENT_RX = 0,
@@ -25,22 +25,9 @@ typedef enum {
   NUM_SOLAR_DATA_EVENTS,
 } SolarDataEvent;
 
-// The specific faults are from EESolarFault in the exported enums.
-// Use the macros below for handling fault events.
-typedef enum {
-  SOLAR_FAULT_EVENT = NUM_SOLAR_DATA_EVENTS + 1,
-  NUM_SOLAR_FAULT_EVENTS,
-} SolarFaultEvent;
-
-#define RAISE_FAULT_EVENT(fault, data) \
-  event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(fault, data))
-#define FAULT_EVENT_DATA(fault, data) (((fault) << 8) | (data))
-#define GET_FAULT_FROM_EVENT(e) ((e).data >> 8)
-#define GET_DATA_FROM_EVENT(e) ((e).data & 0xFF)
-
 // Used by solar_fsm internally.
 typedef enum {
-  SOLAR_COMMAND_EVENT_CLOSE_RELAY = NUM_SOLAR_FAULT_EVENTS + 1,
-  SOLAR_COMMAND_EVENT_OPEN_RELAY,
-  NUM_SOLAR_EXTERNAL_COMMAND_EVENTS,
-} SolarExternalCommandEvent;
+  SOLAR_RELAY_EVENT_CLOSE = NUM_SOLAR_DATA_EVENTS + 1,
+  SOLAR_RELAY_EVENT_OPEN,
+  NUM_SOLAR_RELAY_EVENTS,
+} SolarRelayEvent;

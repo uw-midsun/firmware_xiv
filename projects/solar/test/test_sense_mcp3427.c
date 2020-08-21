@@ -13,7 +13,6 @@
 #include "sense.h"
 #include "soft_timer.h"
 #include "solar_config.h"
-#include "solar_events.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -113,6 +112,17 @@ StatusCode TEST_MOCK(mcp3427_start)(Mcp3427Storage *storage) {
   return STATUS_CODE_OK;
 }
 
+static uint8_t s_num_faults_raised;
+static EESolarFault s_last_fault_raised;
+static uint8_t s_last_fault_data;
+
+StatusCode TEST_MOCK(fault_handler_raise_fault)(EESolarFault fault, uint8_t fault_data) {
+  s_num_faults_raised++;
+  s_last_fault_raised = fault;
+  s_last_fault_data = fault_data;
+  return STATUS_CODE_OK;
+}
+
 // Test that when all MCP3427 callbacks are passed |in|, |expected_out| is stored in the data store.
 static void prv_test_value_transform(SenseMcp3427Settings *settings, int16_t in,
                                      uint32_t expected_out, char *msg) {
@@ -137,6 +147,9 @@ void setup_test(void) {
   s_num_sense_callbacks = 0;
   s_num_mcp3427_callbacks = 0;
   s_times_mcp3427_start_called = 0;
+  s_num_faults_raised = 0;
+  s_last_fault_raised = NUM_EE_SOLAR_FAULTS;
+  s_last_fault_data = 0;
 }
 void teardown_test(void) {}
 
@@ -290,7 +303,7 @@ void test_sense_mcp3427_fault(void) {
   for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
     for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
       s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
-      MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+      TEST_ASSERT_EQUAL(0, s_num_faults_raised);
     }
   }
 
@@ -299,44 +312,47 @@ void test_sense_mcp3427_fault(void) {
   Event e = { 0 };
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
-    MS_TEST_HELPER_ASSERT_NEXT_EVENT(
-        e, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(EE_SOLAR_FAULT_MCP3427, prv_get_test_data_point(i)));
-    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+    TEST_ASSERT_EQUAL(1, s_num_faults_raised);
+    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MCP3427, s_last_fault_raised);
+    TEST_ASSERT_EQUAL(prv_get_test_data_point(i), s_last_fault_data);
+    s_num_faults_raised = 0;  // reset for easier testing
   }
 
   // do it again - fault events happen every MAX_CONSECUTIVE_MCP3427_FAULTS faults
   for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
     for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
       s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
-      MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+      TEST_ASSERT_EQUAL(0, s_num_faults_raised);
     }
   }
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_mcp3427_fault_callbacks[i](s_mcp3427_fault_callback_contexts[i]);
-    MS_TEST_HELPER_ASSERT_NEXT_EVENT(
-        e, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(EE_SOLAR_FAULT_MCP3427, prv_get_test_data_point(i)));
-    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+    TEST_ASSERT_EQUAL(1, s_num_faults_raised);
+    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MCP3427, s_last_fault_raised);
+    TEST_ASSERT_EQUAL(prv_get_test_data_point(i), s_last_fault_data);
+    s_num_faults_raised = 0;
   }
 
   // do it with a single MCP3427 so we know it doesn't have to be done collectively
   for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
     s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
-    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+    TEST_ASSERT_EQUAL(0, s_num_faults_raised);
   }
   s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(
-      e, SOLAR_FAULT_EVENT, FAULT_EVENT_DATA(EE_SOLAR_FAULT_MCP3427, prv_get_test_data_point(0)));
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_EQUAL(1, s_num_faults_raised);
+  TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_MCP3427, s_last_fault_raised);
+  TEST_ASSERT_EQUAL(prv_get_test_data_point(0), s_last_fault_data);
+  s_num_faults_raised = 0;
 
   // make sure that a successful callback resets the consecutive faults
   for (uint8_t fault = 0; fault < MAX_CONSECUTIVE_MCP3427_FAULTS - 1; fault++) {
     s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
-    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+    TEST_ASSERT_EQUAL(0, s_num_faults_raised);
   }
   s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
   s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_EQUAL(0, s_num_faults_raised);
 }
 
 // Test that negative ADC values are converted correctly to unsigned values in 2's complement.

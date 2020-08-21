@@ -111,7 +111,7 @@ const SenseSettings sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
 };
 
-const SolarFsmSettings solar_fsm_settings = {
+const FaultHandlerSettings fault_handler_settings = {
   .relay_open_faults =
       {
           EE_SOLAR_FAULT_OVERCURRENT,

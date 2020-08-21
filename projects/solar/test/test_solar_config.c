@@ -7,12 +7,12 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
+#include "relay_fsm.h"
 #include "sense.h"
 #include "sense_mcp3427.h"
 #include "sense_mppt.h"
 #include "sense_temperature.h"
 #include "soft_timer.h"
-#include "solar_fsm.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -77,10 +77,9 @@ void test_initializing_fault_monitor_config(void) {
   TEST_ASSERT_OK(fault_monitor_init(&settings));
 }
 
-// Test that we can initialize the solar_fsm config we provide.
-void test_initializing_solar_fsm_config(void) {
-  SolarFsmStorage storage;
-  TEST_ASSERT_OK(solar_fsm_init(&storage, &solar_fsm_settings));
+// Test that we can initialize the fault_handler config we return.
+void test_initializing_fault_handler_config(void) {
+  TEST_ASSERT_OK(fault_handler_init(&fault_handler_settings));
 }
 
 // Test that passing invalid arguments fails gracefully.

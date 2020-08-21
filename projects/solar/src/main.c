@@ -2,11 +2,12 @@
 
 #include "adc.h"
 #include "can.h"
+#include "command_rx.h"
 #include "data_store.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
+#include "fault_handler.h"
 #include "fault_monitor.h"
-#include "fault_tx.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "interrupt.h"
@@ -14,6 +15,7 @@
 #include "logger.h"
 #include "mcp3427_adc.h"
 #include "mppt.h"
+#include "relay_fsm.h"
 #include "sense.h"
 #include "sense_mcp3427.h"
 #include "sense_mppt.h"
@@ -21,7 +23,6 @@
 #include "soft_timer.h"
 #include "solar_boards.h"
 #include "solar_config.h"
-#include "solar_fsm.h"
 #include "spi.h"
 #include "status.h"
 #include "wait.h"
@@ -34,7 +35,7 @@
 #define SENSE_CYCLE_PERIOD_US 1000000  // 1 second
 
 static CanStorage s_can_storage;
-static SolarFsmStorage s_solar_fsm_storage = { 0 };
+static RelayFsmStorage s_relay_fsm_storage = { 0 };
 
 static StatusCode prv_initialize_libraries(void) {
   interrupt_init();
@@ -74,6 +75,13 @@ static StatusCode prv_initialize_sense_modules(SolarMpptCount mppt_count) {
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_initialize_action_modules(void) {
+  status_ok_or_return(relay_fsm_init(&s_relay_fsm_storage));
+  status_ok_or_return(fault_handler_init(&fault_handler_settings));
+  status_ok_or_return(command_rx_init());
+  return STATUS_CODE_OK;
+}
+
 static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(logger_init(mppt_count));
   // status_ok_or_return(data_tx_init(mppt_count));  // TODO(SOFT-214): data_tx
@@ -82,8 +90,6 @@ static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count
   status_ok_or_return(config_get_fault_monitor_settings(mppt_count, &fault_monitor_settings));
   status_ok_or_return(fault_monitor_init(&fault_monitor_settings));
 
-  status_ok_or_return(solar_fsm_init(&s_solar_fsm_storage, &solar_fsm_settings));
-
   return STATUS_CODE_OK;
 }
 
@@ -91,6 +97,7 @@ int main(void) {
   status_ok_or_return(prv_initialize_libraries());
 
   status_ok_or_return(data_store_init());
+  status_ok_or_return(prv_initialize_action_modules());
   status_ok_or_return(prv_initialize_sense_modules(MPPT_COUNT));
   status_ok_or_return(prv_initialize_data_consumer_modules(MPPT_COUNT));
 
@@ -106,9 +113,8 @@ int main(void) {
       mcp3427_process_event(&e);
       // data_tx_process_event(&e);  // TODO(SOFT-214): data_tx
       fault_monitor_process_event(&e);
-      fault_tx_process_event(&e);
       logger_process_event(&e);
-      solar_fsm_process_event(&s_solar_fsm_storage, &e);
+      relay_fsm_process_event(&s_relay_fsm_storage, &e);
     }
     wait();
   }
