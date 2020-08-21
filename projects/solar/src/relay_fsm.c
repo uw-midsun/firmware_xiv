@@ -35,7 +35,7 @@ StatusCode relay_fsm_init(RelayFsmStorage *storage) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  fsm_init(&storage->fsm, "Solar FSM", &state_relay_closed, storage);
+  fsm_init(&storage->fsm, "Relay FSM", &state_relay_closed, storage);
   fsm_state_init(state_relay_open, prv_open_relay);
   fsm_state_init(state_relay_closed, prv_close_relay);
 
