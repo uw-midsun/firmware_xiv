@@ -12,15 +12,16 @@
 // slightly larger than conversion time of adc
 #define CONVERSION_TIME_MS 18
 
-// see current sense on confluence for these values
-#define DISCHARGE_OVERCURRENT_MA (130000)  // 130 Amps
-#define CHARGE_OVERCURRENT_MA (-81600)  // -81.6 Amps
+// see current sense on confluence for these values (centimps)
+#define DISCHARGE_OVERCURRENT_CA (13000)  // 130 Amps
+#define CHARGE_OVERCURRENT_CA (-8160)     // -81.6 Amps
 
 typedef struct CurrentReadings {
   int16_t readings[NUM_STORED_CURRENT_READINGS];
   int16_t average;
 } CurrentReadings;
 
-bool current_sense_is_charging(readings);
+bool current_sense_is_charging();
 
-StatusCode current_sense_init(CurrentReadings *readings, SpiSettings *settings);
+StatusCode current_sense_init(CurrentReadings *readings, SpiSettings *settings,
+                              uint32_t conv_delay);
