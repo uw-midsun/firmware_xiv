@@ -41,3 +41,5 @@ StatusCode relay_sequence_init(RelayStorage *storage);
 StatusCode relay_open_sequence(RelayStorage *storage);
 
 StatusCode relay_close_sequence(RelayStorage *storage);
+
+StatusCode relay_fault(RelayStorage *storage);
