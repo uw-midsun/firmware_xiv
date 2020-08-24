@@ -17,6 +17,8 @@
   { GPIO_PORT_B, 11 }
 #define BMS_PERIPH_I2C_SCL_PIN \
   { GPIO_PORT_B, 10 }
+#define BMS_FAN_ALERT_PIN \
+  { GPIO_PORT_A, 9 }
 
 #define BMS_IO_EXPANDER_I2C_ADDR 0x40
 
