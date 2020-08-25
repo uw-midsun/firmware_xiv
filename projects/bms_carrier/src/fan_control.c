@@ -22,10 +22,8 @@ static void prv_measure_temps(SoftTimerId timer_id, void *context) {
   (max > MAX_BATTERY_TEMP) ? (fan_speed = MAX_FAN_SPEED)
                            : (fan_speed = floor(max * (MAX_FAN_SPEED / MAX_BATTERY_TEMP)));
 
-  status_ok_or_return(adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_1,
-                                         storage->i2c_write_addr));
-  status_ok_or_return(adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_2,
-                                         storage->i2c_write_addr));
+  adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_1, storage->i2c_write_addr);
+  adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_2, storage->i2c_write_addr);
 
   storage->speed = fan_speed;
   storage->status = STATUS_CODE_OK;
