@@ -43,6 +43,16 @@
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
 
+const SolarFsmSettings solar_fsm_settings = {
+  .relay_open_events =
+      {
+          SOLAR_FAULT_EVENT_OVERCURRENT,
+          SOLAR_FAULT_EVENT_NEGATIVE_CURRENT,
+          SOLAR_FAULT_EVENT_OVERVOLTAGE,
+      },
+  .num_relay_open_events = 3,
+};
+
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|
 static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
   .mcp3427s =

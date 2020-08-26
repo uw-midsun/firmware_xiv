@@ -1,7 +1,7 @@
 #pragma once
 
 // Voltage reference value
-#define EXTERNAL_VREF_V 50
+#define EXTERNAL_VREF_V 2.5
 
 // ADS1259 Configuration and control commands
 
@@ -57,7 +57,7 @@ typedef enum Ads1259DataRate {
 
 // CONFIG1
 #define ADS1259_CONVERSION_DELAY_MS 0x0  // Conversion delay not used -> if needed see datasheet
-#define ADS1259_VREF_EXTERNAL 0x04       // Enable external voltage reference
+#define ADS1259_VREF_EXTERNAL 0x08       // Enable external voltage reference
 #define ADS1259_DIGITAL_FILTER_2 0x10    // Enable SINC2 digital filter
 #define ADS1259_CHECK_SUM_ENABLE 0x40    // Enable check sum byte
 #define ADS1259_OUT_OF_RANGE_FLAG_ENABLE 0x80  // Enable out of range flag
