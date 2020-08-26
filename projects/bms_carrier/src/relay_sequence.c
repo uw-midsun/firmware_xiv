@@ -4,6 +4,7 @@
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "mcp23008_gpio_expander.h"
@@ -27,6 +28,7 @@ void prv_relay_fault(RelayStorage *storage, bool internal) {
     // fault bps
     fault_bps(EE_BPS_STATE_FAULT_RELAY, false);
   }
+  CAN_TRANSMIT_BATTERY_RELAY_STATE(storage->hv_enabled, storage->gnd_enabled);
 }
 
 void prv_assert_state(SoftTimerId timer_id, void *context) {

@@ -7,11 +7,11 @@
 #include "critical_section.h"
 #include "current_sense.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "ltc_afe.h"
+#include "passive_balance.h"
 #include "status.h"
 #include "thermistor.h"
-
-#include "passive_balance.h"
 
 static CellSenseStorage s_storage = { 0 };
 

@@ -1,6 +1,6 @@
 #include "bms.h"
-#include "relay_sequence.h"
 #include "exported_enums.h"
+#include "relay_sequence.h"
 
 static BmsStorage *s_storage;
 
