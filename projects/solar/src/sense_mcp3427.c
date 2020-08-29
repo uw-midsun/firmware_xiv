@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 #include "data_store.h"
-#include "event_queue.h"
+#include "exported_enums.h"
+#include "fault_handler.h"
 #include "log.h"
 #include "mcp3427_adc.h"
 #include "sense.h"
-#include "solar_events.h"
 
 // We register one sense callback per MCP3427 to take advantage of the sense loop, and so that the
 // entire MCP3427 sense operation doesn't stop if there is one fault in the sense cycle.
@@ -45,7 +45,7 @@ static void prv_mcp3427_fault_callback(void *context) {
     LOG_WARN(
         "sense_mcp3427 encountered too many MCP3427 faults on data point %d, raising fault event\n",
         data_point);
-    event_raise(SOLAR_FAULT_EVENT_MCP3427, data_point);
+    fault_handler_raise_fault(EE_SOLAR_FAULT_MCP3427, data_point);
     data->consecutive_faults = 0;
   }
 }

@@ -191,3 +191,31 @@ typedef enum EEChargerFault {
   EE_CHARGER_FAULT_CHARGER_OFF,
   NUM_EE_CHARGER_FAULTS,
 } EEChargerFault;
+
+typedef enum EESolarFault {
+  // An MCP3427 is faulting too much, data is the solar DataPoint associated with the faulty MCP3427
+  EE_SOLAR_FAULT_MCP3427 = 0,
+
+  // An MPPT had an overcurrent, the least significant 4 bits of data is the index of the MPPT
+  // that faulted, the most significant 4 bits is a 4-bit bitmask of which branches faulted.
+  EE_SOLAR_FAULT_MPPT_OVERCURRENT,
+
+  // An MPPT had an overvoltage or overtemperature, data is the index of the MPPT that faulted
+  EE_SOLAR_FAULT_MPPT_OVERVOLTAGE,
+  EE_SOLAR_FAULT_MPPT_OVERTEMPERATURE,
+
+  // The current from the whole array is over the threshold. No data.
+  EE_SOLAR_FAULT_OVERCURRENT,
+
+  // The current from the whole array is negative, so we aren't charging. No data.
+  EE_SOLAR_FAULT_NEGATIVE_CURRENT,
+
+  // The sum of the sensed voltages is over the threshold. No data.
+  EE_SOLAR_FAULT_OVERVOLTAGE,
+
+  // The temperature of any array thermistor is over our threshold. Data is the index of the too-hot
+  // thermistor.
+  EE_SOLAR_FAULT_OVERTEMPERATURE,
+
+  NUM_EE_SOLAR_FAULTS,
+} EESolarFault;
