@@ -198,10 +198,10 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
   //
   // Similarly, we do the opposite mapping for discharge.
   LtcAfeSettings *settings = &afe->settings;
-  size_t cell_index = 0;
-  size_t aux_index = 0;
+  uint16_t cell_index = 0;
+  uint16_t aux_index = 0;
   for (size_t device = 0; device < settings->num_devices; device++) {
-    for (size_t device_cell = 0; device_cell < LTC_AFE_MAX_CELLS_PER_DEVICE; device_cell++) {
+    for (uint16_t device_cell = 0; device_cell < LTC_AFE_MAX_CELLS_PER_DEVICE; device_cell++) {
       size_t cell = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
       if ((settings->cell_bitset[device] >> device_cell) & 0x1) {
@@ -221,12 +221,12 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
 
   if (aux_index != afe->settings.num_cells) {
     LOG_CRITICAL("Result array has max_index %d but should have max %d\n",
-                  aux_index, afe->settings.num_cells);
+                  aux_index, (uint16_t) afe->settings.num_cells);
   }
 
   if (cell_index != afe->settings.num_cells) {
     LOG_CRITICAL("Result array has max_index %d but should have max %d\n",
-                  cell_index, afe->settings.num_cells);
+                  cell_index, (uint16_t) afe->settings.num_cells);
     return;
   }
   LOG_DEBUG("calc_offsets is fine\n");
@@ -256,8 +256,8 @@ StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings)
   spi_init(settings->spi_port, &spi_config);
 
   // Use GPIO1 as analog input, GPIO 3-5 for SPI
-  uint8_t gpio_bits =
-      LTC6811_GPIO1_PD_OFF | LTC6811_GPIO3_PD_OFF | LTC6811_GPIO4_PD_OFF | LTC6811_GPIO5_PD_OFF;
+  uint8_t gpio_bits = LTC6811_GPIO1_PD_OFF | LTC6811_GPIO2_PD_ON | LTC6811_GPIO3_PD_ON |
+                      LTC6811_GPIO4_PD_ON | LTC6811_GPIO5_PD_ON;
   return prv_write_config(afe, gpio_bits);
 }
 
@@ -289,7 +289,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         uint16_t device_cell = cell + (cell_reg * LTC6811_CELLS_IN_REG);
         uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
 
-        if ((settings->cell_bitset[device] >> device_cell) & 0x1) {
+        if (((settings->cell_bitset[device] >> device_cell) & 0x1) == 0x1) {
           // Input enabled - store result
           afe->cell_voltages[afe->cell_result_lookup[index]] = voltage;
           LOG_DEBUG("CELL READING#%d is CELL#%d\n", afe->cell_result_lookup[index], index);
@@ -308,7 +308,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
   }
 
   if (num_readings != afe->settings.num_cells) {
-    LOG_CRITICAL("Read %d values instead of %d", num_readings, afe->settings.num_cells);
+    LOG_CRITICAL("Read %d values instead of %d", num_readings, (uint16_t)afe->settings.num_cells);
     return status_code(STATUS_CODE_INTERNAL_ERROR);
   }
   LOG_DEBUG("read_cells is fine\n");
