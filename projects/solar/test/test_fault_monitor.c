@@ -16,14 +16,14 @@
 #define TEST_OUTPUT_OVERVOLTAGE_THRESHOLD 1000000000uL
 #define TEST_TEMPERATURE_THRESHOLD 1000000000uL
 
-#define TEST_ASSERT_NO_FAULT() TEST_ASSERT_EQUAL(0, s_num_faults_raised)
+#define TEST_FAULT_MONITOR_ASSERT_NO_FAULT() TEST_ASSERT_EQUAL(0, s_num_faults_raised)
 
-#define TEST_ASSERT_SINGLE_FAULT(fault, data)       \
-  ({                                                \
-    TEST_ASSERT_EQUAL(1, s_num_faults_raised);      \
-    TEST_ASSERT_EQUAL((fault), s_faults_raised[0]); \
-    TEST_ASSERT_EQUAL((data), s_fault_data[0]);     \
-    s_num_faults_raised = 0;                        \
+#define TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(fault, data) \
+  ({                                                        \
+    TEST_ASSERT_EQUAL(1, s_num_faults_raised);              \
+    TEST_ASSERT_EQUAL((fault), s_faults_raised[0]);         \
+    TEST_ASSERT_EQUAL((data), s_fault_data[0]);             \
+    s_num_faults_raised = 0;                                \
   })
 
 static uint8_t s_num_faults_raised;
@@ -71,20 +71,20 @@ static void prv_test_basic_threshold_fault(DataPoint data_point, uint32_t thresh
 
   data_store_set(data_point, 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 
   data_store_set(data_point, threshold - 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 
   data_store_set(data_point, threshold + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(fault, fault_data);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(fault, fault_data);
 
   // fault must be tripped on the threshold
   data_store_set(data_point, threshold);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(fault, fault_data);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(fault, fault_data);
 }
 
 // OUTPUT CURRENT FAULTS
@@ -103,21 +103,21 @@ void test_output_current_negative_fault(void) {
   // we test again here
   data_store_set(DATA_POINT_CURRENT, 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 
   // if signed handling is incorrect, a EE_SOLAR_FAULT_OVERCURRENT will be raised here
   data_store_set(DATA_POINT_CURRENT, (uint32_t)-1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
 
   data_store_set(DATA_POINT_CURRENT, (uint32_t)-TEST_OUTPUT_OVERCURRENT_THRESHOLD);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_NEGATIVE_CURRENT, 0);
 
   // must be strictly negative
   data_store_set(DATA_POINT_CURRENT, 0);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 }
 
 // OUTPUT VOLTAGE FAULT
@@ -131,22 +131,22 @@ static void prv_test_overvoltage_fault_basic(SolarMpptCount mppt_count) {
     data_store_set(DATA_POINT_VOLTAGE(mppt), 1);
   }
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 
   // sum is TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - 1
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - mppt_count);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 
   // sum is TEST_OUTPUT_OVERVOLTAGE_THRESHOLD + 1
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - mppt_count + 2);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 
   // sum is TEST_OUTPUT_OVERVOLTAGE_THRESHOLD, must be tripped on threshold
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - mppt_count + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 }
 
 void test_overvoltage_fault_basic_6_mppt(void) {
@@ -163,7 +163,7 @@ void test_overvoltage_fault_basic_5_mppt(void) {
   data_store_set(DATA_POINT_VOLTAGE(SOLAR_BOARD_6_MPPTS - 1),
                  TEST_OUTPUT_OVERVOLTAGE_THRESHOLD + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 }
 
 // Test that the overvoltage fault is still triggered if some voltages are unset.
@@ -173,18 +173,18 @@ void test_overvoltage_fault_some_unset(void) {
   // only first set
   data_store_set(DATA_POINT_VOLTAGE(0), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 
   // only first and last set
   data_store_set(DATA_POINT_VOLTAGE(0), 0);
   data_store_set(DATA_POINT_VOLTAGE(SOLAR_BOARD_6_MPPTS - 1),
                  TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 
   data_store_set(DATA_POINT_VOLTAGE(0), 2);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 }
 
 // Test that the overvoltage fault is still triggered if adding the voltages would cause overflow.
@@ -196,18 +196,18 @@ void test_overvoltage_fault_overflow(void) {
   // the value would become -1 if signed ints are used
   data_store_set(DATA_POINT_VOLTAGE(0), max_uint32);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 
   // a naive sum would get 1 + max_uint32 == 0
   data_store_set(DATA_POINT_VOLTAGE(0), 1);
   data_store_set(DATA_POINT_VOLTAGE(1), max_uint32);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 
   data_store_set(DATA_POINT_VOLTAGE(1), TEST_OUTPUT_OVERVOLTAGE_THRESHOLD - 2);
   data_store_set(DATA_POINT_VOLTAGE(2), max_uint32);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
+  TEST_FAULT_MONITOR_ASSERT_SINGLE_FAULT(EE_SOLAR_FAULT_OVERVOLTAGE, 0);
 }
 
 // TEMPERATURE FAULT
@@ -228,7 +228,7 @@ void test_overtemperature_5_mppt_board(void) {
   prv_initialize(SOLAR_BOARD_5_MPPTS);
   data_store_set(DATA_POINT_TEMPERATURE(SOLAR_BOARD_6_MPPTS - 1), TEST_TEMPERATURE_THRESHOLD + 1);
   fault_monitor_process_event(&s_data_ready_event);
-  TEST_ASSERT_NO_FAULT();
+  TEST_FAULT_MONITOR_ASSERT_NO_FAULT();
 }
 
 // ALL OF THEM

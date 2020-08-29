@@ -47,21 +47,28 @@ void teardown_test(void) {}
 
 // Test that sending the CAN message results in the relay FSM being triggered to open/close.
 void test_open_close_can_commands(void) {
-  prv_transmit_command(EE_RELAY_STATE_CLOSE);
-  TEST_ASSERT_EQUAL(1, s_times_relay_closed);
-  TEST_ASSERT_EQUAL(0, s_times_relay_opened);
-
-  prv_transmit_command(EE_RELAY_STATE_OPEN);
-  TEST_ASSERT_EQUAL(1, s_times_relay_closed);
-  TEST_ASSERT_EQUAL(1, s_times_relay_opened);
-
-  prv_transmit_command(EE_RELAY_STATE_OPEN);
-  TEST_ASSERT_EQUAL(1, s_times_relay_closed);
-  TEST_ASSERT_EQUAL(2, s_times_relay_opened);
+  uint8_t expected_times_relay_closed = 0;
+  uint8_t expected_times_relay_opened = 0;
 
   prv_transmit_command(EE_RELAY_STATE_CLOSE);
-  TEST_ASSERT_EQUAL(2, s_times_relay_closed);
-  TEST_ASSERT_EQUAL(2, s_times_relay_opened);
+  expected_times_relay_closed++;
+  TEST_ASSERT_EQUAL(expected_times_relay_closed, s_times_relay_closed);
+  TEST_ASSERT_EQUAL(expected_times_relay_opened, s_times_relay_opened);
+
+  prv_transmit_command(EE_RELAY_STATE_OPEN);
+  expected_times_relay_opened++;
+  TEST_ASSERT_EQUAL(expected_times_relay_closed, s_times_relay_closed);
+  TEST_ASSERT_EQUAL(expected_times_relay_opened, s_times_relay_opened);
+
+  prv_transmit_command(EE_RELAY_STATE_OPEN);
+  expected_times_relay_opened++;
+  TEST_ASSERT_EQUAL(expected_times_relay_closed, s_times_relay_closed);
+  TEST_ASSERT_EQUAL(expected_times_relay_opened, s_times_relay_opened);
+
+  prv_transmit_command(EE_RELAY_STATE_CLOSE);
+  expected_times_relay_closed++;
+  TEST_ASSERT_EQUAL(expected_times_relay_closed, s_times_relay_closed);
+  TEST_ASSERT_EQUAL(expected_times_relay_opened, s_times_relay_opened);
 }
 
 // Test that non-relay state CAN messages or non-battery directed relay state messages are ignored.

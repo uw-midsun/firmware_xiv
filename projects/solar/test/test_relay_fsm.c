@@ -37,16 +37,19 @@ void setup_test(void) {
 }
 void teardown_test(void) {}
 
-// Test that the relay starts closed and is changed in response to command functions.
+// Test that the relay starts closed.
+void test_starts_closed(void) {
+  bool closed;
+  drv120_relay_get_is_closed(&closed);
+  TEST_ASSERT_TRUE(closed);
+}
+
+// Test that the relay can change in response to command functions.
 void test_relay_transitions(void) {
   Event e = { 0 };
   bool closed;
 
-  // starts closed
-  drv120_relay_get_is_closed(&closed);
-  TEST_ASSERT_TRUE(closed);
-
-  // closed -> open
+  // reset to open
   TEST_ASSERT_OK(relay_fsm_open());
   PROCESS_RELAY_FSM_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
@@ -64,7 +67,25 @@ void test_relay_transitions(void) {
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_FALSE(closed);
 
-  // open still (should be no-op)
+  // open -> closed
+  TEST_ASSERT_OK(relay_fsm_close());
+  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  drv120_relay_get_is_closed(&closed);
+  TEST_ASSERT_TRUE(closed);
+}
+
+// Test that trying to open or close the relay when it's already opened or closed does nothing.
+void test_noop_relay_transitions(void) {
+  Event e = { 0 };
+  bool closed;
+
+  // reset to open
+  TEST_ASSERT_OK(relay_fsm_open());
+  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  drv120_relay_get_is_closed(&closed);
+  TEST_ASSERT_FALSE(closed);
+
+  // open still (no-op)
   TEST_ASSERT_OK(relay_fsm_open());
   PROCESS_RELAY_FSM_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
@@ -76,7 +97,7 @@ void test_relay_transitions(void) {
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_TRUE(closed);
 
-  // closed still (should be no-op)
+  // closed still (no-op)
   TEST_ASSERT_OK(relay_fsm_close());
   PROCESS_RELAY_FSM_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);

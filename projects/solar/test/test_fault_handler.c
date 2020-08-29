@@ -83,15 +83,13 @@ void test_single_relay_open_fault(void) {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
-// Test all the valid faults, some set as relay open faults and some not.
+// Test all the valid fault, all set as relay open faults.
 void test_all_faults(void) {
-  // the first |num_relay_open_faults| faults will be set as relay open faults
-  const uint8_t num_relay_open_faults = MIN(MAX_RELAY_OPEN_FAULTS, NUM_EE_SOLAR_FAULTS) / 2;
   FaultHandlerSettings settings;
-  for (EESolarFault fault = 0; fault < num_relay_open_faults; fault++) {
+  for (EESolarFault fault = 0; fault < MAX_RELAY_OPEN_FAULTS; fault++) {
     settings.relay_open_faults[fault] = fault;
   }
-  settings.num_relay_open_faults = num_relay_open_faults;
+  settings.num_relay_open_faults = MAX_RELAY_OPEN_FAULTS;
   TEST_ASSERT_OK(fault_handler_init(&settings));
 
   for (EESolarFault fault = 0; fault < NUM_EE_SOLAR_FAULTS; fault++) {
@@ -103,7 +101,7 @@ void test_all_faults(void) {
     TEST_ASSERT_EQUAL(data, s_last_can_fault_data);
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   }
-  TEST_ASSERT_EQUAL(num_relay_open_faults, s_times_relay_opened);
+  TEST_ASSERT_EQUAL(MAX_RELAY_OPEN_FAULTS, s_times_relay_opened);
 }
 
 // Test that |fault_handler_raise_fault| forwards the status if opening the relay fails, but we

@@ -16,6 +16,8 @@
 #include "spi.h"
 #include "status.h"
 
+#define SOLAR_SPI_PORT SPI_PORT_2
+
 const I2CSettings *config_get_i2c1_settings(void);
 
 const I2CSettings *config_get_i2c2_settings(void);

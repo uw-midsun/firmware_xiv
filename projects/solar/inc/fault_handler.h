@@ -8,7 +8,7 @@
 #include "exported_enums.h"
 #include "status.h"
 
-#define MAX_RELAY_OPEN_FAULTS 8
+#define MAX_RELAY_OPEN_FAULTS NUM_EE_SOLAR_FAULTS
 
 typedef struct FaultHandlerSettings {
   // Faults which cause the relay to open.

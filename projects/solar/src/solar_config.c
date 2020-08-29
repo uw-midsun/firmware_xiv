@@ -5,6 +5,7 @@
 #include "exported_enums.h"
 #include "gpio.h"
 #include "mcp3427_adc.h"
+#include "pin_defs.h"
 #include "solar_events.h"
 
 // TODO(SOFT-282): Calibrate scaling factors and thresholds.
@@ -50,48 +51,25 @@
 
 #define SOLAR_I2C_SPEED I2C_SPEED_FAST
 
-#define I2C1_SDA \
-  { GPIO_PORT_B, 11 }
-#define I2C1_SCL \
-  { GPIO_PORT_B, 10 }
-#define I2C2_SDA \
-  { GPIO_PORT_B, 9 }
-#define I2C2_SCL \
-  { GPIO_PORT_B, 8 }
-
-#define SPI2_MOSI \
-  { GPIO_PORT_B, 15 }
-#define SPI2_MISO \
-  { GPIO_PORT_B, 14 }
-#define SPI2_SCLK \
-  { GPIO_PORT_B, 13 }
-#define CS_UNUSED \
-  { GPIO_PORT_B, 1 }
-
-#define CAN_RX_PIN \
-  { GPIO_PORT_A, 12 }
-#define CAN_TX_PIN \
-  { GPIO_PORT_A, 11 }
-
 static const I2CSettings s_i2c1_settings = {
   .speed = SOLAR_I2C_SPEED,
-  .sda = I2C1_SDA,
-  .scl = I2C1_SCL,
+  .sda = SOLAR_I2C1_SDA,
+  .scl = SOLAR_I2C1_SCL,
 };
 
 static const I2CSettings s_i2c2_settings = {
   .speed = SOLAR_I2C_SPEED,
-  .sda = I2C2_SDA,
-  .scl = I2C2_SCL,
+  .sda = SOLAR_I2C2_SDA,
+  .scl = SOLAR_I2C2_SCL,
 };
 
 static const SpiSettings s_spi_settings = {
   .baudrate = 60000,
   .mode = SPI_MODE_3,
-  .mosi = SPI2_MOSI,
-  .miso = SPI2_MISO,
-  .sclk = SPI2_SCLK,
-  .cs = CS_UNUSED,
+  .mosi = SOLAR_SPI2_MOSI,
+  .miso = SOLAR_SPI2_MISO,
+  .sclk = SOLAR_SPI2_SCLK,
+  .cs = SOLAR_UNUSED_PIN,
 };
 
 static const CanSettings s_can_settings = {
@@ -100,8 +78,8 @@ static const CanSettings s_can_settings = {
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,
   .fault_event = SOLAR_CAN_EVENT_FAULT,
-  .rx = CAN_RX_PIN,
-  .tx = CAN_TX_PIN,
+  .rx = SOLAR_CAN_RX_PIN,
+  .tx = SOLAR_CAN_TX_PIN,
   .loopback = false,
 };
 
