@@ -19,6 +19,8 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+#define INVALID_MPPT_COUNT (MAX_SOLAR_BOARD_MPPTS + 1)
+
 static CanStorage s_can_storage;
 
 void setup_test(void) {
@@ -53,49 +55,36 @@ void test_initializing_sense_config(void) {
 // Test that we can initialize the configs returned by |config_get_sense_temperature_settings|.
 // This is separated into two tests to avoid exhausting the sense callbacks.
 void test_initializing_sense_temperature_config_5_mppts(void) {
-  SenseTemperatureSettings settings;
-  TEST_ASSERT_OK(config_get_sense_temperature_settings(SOLAR_BOARD_5_MPPTS, &settings));
-  TEST_ASSERT_OK(sense_temperature_init(&settings));
+  TEST_ASSERT_OK(
+      sense_temperature_init(config_get_sense_temperature_settings(SOLAR_BOARD_5_MPPTS)));
 }
 void test_initializing_sense_temperature_config_6_mppts(void) {
-  SenseTemperatureSettings settings;
-  TEST_ASSERT_OK(config_get_sense_temperature_settings(SOLAR_BOARD_6_MPPTS, &settings));
-  TEST_ASSERT_OK(sense_temperature_init(&settings));
+  TEST_ASSERT_OK(
+      sense_temperature_init(config_get_sense_temperature_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_sense_mcp3427_settings|.
 // Again separate to avoid exhausting callbacks.
 void test_initializing_sense_mcp3427_config_5_mppts(void) {
-  SenseMcp3427Settings settings;
-  TEST_ASSERT_OK(config_get_sense_mcp3427_settings(SOLAR_BOARD_5_MPPTS, &settings));
-  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_init(config_get_sense_mcp3427_settings(SOLAR_BOARD_5_MPPTS)));
 }
 void test_initializing_sense_mcp3427_config_6_mppts(void) {
-  SenseMcp3427Settings settings;
-  TEST_ASSERT_OK(config_get_sense_mcp3427_settings(SOLAR_BOARD_6_MPPTS, &settings));
-  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_init(config_get_sense_mcp3427_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_sense_mppt_settings|.
 // Again separate to avoid exhausting callbacks.
 void test_initializing_sense_mppt_config_5_mppts(void) {
-  SenseMpptSettings settings;
-  TEST_ASSERT_OK(config_get_sense_mppt_settings(SOLAR_BOARD_5_MPPTS, &settings));
-  TEST_ASSERT_OK(sense_mppt_init(&settings));
+  TEST_ASSERT_OK(sense_mppt_init(config_get_sense_mppt_settings(SOLAR_BOARD_5_MPPTS)));
 }
 void test_initializing_sense_mppt_config_6_mppts(void) {
-  SenseMpptSettings settings;
-  TEST_ASSERT_OK(config_get_sense_mppt_settings(SOLAR_BOARD_6_MPPTS, &settings));
-  TEST_ASSERT_OK(sense_mppt_init(&settings));
+  TEST_ASSERT_OK(sense_mppt_init(config_get_sense_mppt_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the configs returned by |config_get_fault_monitor_settings|.
 void test_initializing_fault_monitor_config(void) {
-  FaultMonitorSettings settings;
-  TEST_ASSERT_OK(config_get_fault_monitor_settings(SOLAR_BOARD_5_MPPTS, &settings));
-  TEST_ASSERT_OK(fault_monitor_init(&settings));
-  TEST_ASSERT_OK(config_get_fault_monitor_settings(SOLAR_BOARD_6_MPPTS, &settings));
-  TEST_ASSERT_OK(fault_monitor_init(&settings));
+  TEST_ASSERT_OK(fault_monitor_init(config_get_fault_monitor_settings(SOLAR_BOARD_5_MPPTS)));
+  TEST_ASSERT_OK(fault_monitor_init(config_get_fault_monitor_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_fault_handler_settings|.
@@ -103,31 +92,10 @@ void test_initializing_fault_handler_config(void) {
   TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings()));
 }
 
-// Test that passing invalid arguments fails gracefully.
+// Test that passing an invalid MPPT count returns NULL.
 void test_invalid_args(void) {
-  StatusCode status;
-
-  SenseMcp3427Settings mcp3427_settings;
-  status = config_get_sense_mcp3427_settings(MAX_SOLAR_BOARD_MPPTS + 1, &mcp3427_settings);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-  status = config_get_sense_mcp3427_settings(SOLAR_BOARD_5_MPPTS, NULL);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-
-  SenseTemperatureSettings temp_settings;
-  status = config_get_sense_temperature_settings(MAX_SOLAR_BOARD_MPPTS + 1, &temp_settings);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-  status = config_get_sense_temperature_settings(SOLAR_BOARD_5_MPPTS, NULL);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-
-  SenseMpptSettings mppt_settings;
-  status = config_get_sense_mppt_settings(MAX_SOLAR_BOARD_MPPTS + 1, &mppt_settings);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-  status = config_get_sense_mppt_settings(SOLAR_BOARD_5_MPPTS, NULL);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-
-  FaultMonitorSettings fault_settings;
-  status = config_get_fault_monitor_settings(MAX_SOLAR_BOARD_MPPTS + 1, &fault_settings);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
-  status = config_get_fault_monitor_settings(SOLAR_BOARD_5_MPPTS, NULL);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, status);
+  TEST_ASSERT_NULL(config_get_sense_mcp3427_settings(INVALID_MPPT_COUNT));
+  TEST_ASSERT_NULL(config_get_sense_temperature_settings(INVALID_MPPT_COUNT));
+  TEST_ASSERT_NULL(config_get_sense_mppt_settings(INVALID_MPPT_COUNT));
+  TEST_ASSERT_NULL(config_get_fault_monitor_settings(INVALID_MPPT_COUNT));
 }

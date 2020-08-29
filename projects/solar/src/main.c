@@ -58,19 +58,9 @@ static StatusCode prv_initialize_sense_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(mppt_init());
 
   status_ok_or_return(sense_init(config_get_sense_settings()));
-
-  SenseMcp3427Settings sense_mcp3427_settings;
-  status_ok_or_return(config_get_sense_mcp3427_settings(mppt_count, &sense_mcp3427_settings));
-  status_ok_or_return(sense_mcp3427_init(&sense_mcp3427_settings));
-
-  SenseMpptSettings sense_mppt_settings;
-  status_ok_or_return(config_get_sense_mppt_settings(mppt_count, &sense_mppt_settings));
-  status_ok_or_return(sense_mppt_init(&sense_mppt_settings));
-
-  SenseTemperatureSettings sense_temperature_settings;
-  status_ok_or_return(
-      config_get_sense_temperature_settings(mppt_count, &sense_temperature_settings));
-  status_ok_or_return(sense_temperature_init(&sense_temperature_settings));
+  status_ok_or_return(sense_mcp3427_init(config_get_sense_mcp3427_settings(mppt_count)));
+  status_ok_or_return(sense_mppt_init(config_get_sense_mppt_settings(mppt_count)));
+  status_ok_or_return(sense_temperature_init(config_get_sense_temperature_settings(mppt_count)));
 
   return STATUS_CODE_OK;
 }
@@ -85,11 +75,7 @@ static StatusCode prv_initialize_action_modules(void) {
 static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(logger_init(mppt_count));
   // status_ok_or_return(data_tx_init(mppt_count));  // TODO(SOFT-214): data_tx
-
-  FaultMonitorSettings fault_monitor_settings;
-  status_ok_or_return(config_get_fault_monitor_settings(mppt_count, &fault_monitor_settings));
-  status_ok_or_return(fault_monitor_init(&fault_monitor_settings));
-
+  status_ok_or_return(fault_monitor_init(config_get_fault_monitor_settings(mppt_count)));
   return STATUS_CODE_OK;
 }
 

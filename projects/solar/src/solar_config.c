@@ -128,7 +128,7 @@ const FaultHandlerSettings *config_get_fault_handler_settings(void) {
 }
 
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|
-static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
+static SenseMcp3427Settings s_sense_mcp3427_settings = {
   .mcp3427s =
       {
           // current sense
@@ -242,18 +242,16 @@ static const SenseMcp3427Settings s_base_sense_mcp3427_settings = {
       },
 };
 
-StatusCode config_get_sense_mcp3427_settings(SolarMpptCount mppt_count,
-                                             SenseMcp3427Settings *settings) {
-  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
+const SenseMcp3427Settings *config_get_sense_mcp3427_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
   }
-  *settings = s_base_sense_mcp3427_settings;
-  settings->num_mcp3427s = mppt_count + NUM_EXTRA_NON_MPPT_MCP3427S;
-  return STATUS_CODE_OK;
+  s_sense_mcp3427_settings.num_mcp3427s = mppt_count + NUM_EXTRA_NON_MPPT_MCP3427S;
+  return &s_sense_mcp3427_settings;
 }
 
 // |num_thermistors| is set dynamically by |config_get_sense_temperature_settings|
-static const SenseTemperatureSettings s_base_sense_temperature_settings =
+static SenseTemperatureSettings s_sense_temperature_settings =
     { .thermistor_pins = {
           { GPIO_PORT_A, 0 },
           { GPIO_PORT_A, 1 },
@@ -263,45 +261,40 @@ static const SenseTemperatureSettings s_base_sense_temperature_settings =
           { GPIO_PORT_A, 5 },  // not used on 5 MPPT board
       } };
 
-StatusCode config_get_sense_temperature_settings(SolarMpptCount mppt_count,
-                                                 SenseTemperatureSettings *settings) {
-  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
+const SenseTemperatureSettings *config_get_sense_temperature_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
   }
-  *settings = s_base_sense_temperature_settings;
-  settings->num_thermistors = mppt_count;  // we have one thermistor per MPPT
-  return STATUS_CODE_OK;
+  s_sense_temperature_settings.num_thermistors = mppt_count;  // we have one thermistor per MPPT
+  return &s_sense_temperature_settings;
 }
 
 // |mppt_count| is set dynamically by |config_get_sense_mppt_settings|
-static const SenseMpptSettings s_base_sense_mppt_settings = {
+static SenseMpptSettings s_sense_mppt_settings = {
   .spi_port = SPI_PORT_2,
   .mppt_current_scaling_factor = SOLAR_MPPT_CURRENT_SCALING_FACTOR,
   .mppt_vin_scaling_factor = SOLAR_MPPT_VIN_SCALING_FACTOR,
 };
 
-StatusCode config_get_sense_mppt_settings(SolarMpptCount mppt_count, SenseMpptSettings *settings) {
-  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
+const SenseMpptSettings *config_get_sense_mppt_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
   }
-  *settings = s_base_sense_mppt_settings;
-  settings->mppt_count = mppt_count;
-  return STATUS_CODE_OK;
+  s_sense_mppt_settings.mppt_count = mppt_count;
+  return &s_sense_mppt_settings;
 }
 
 // |mppt_count| is set dynamically by |config_get_fault_monitor_settings|
-static const FaultMonitorSettings s_base_fault_monitor_settings = {
+static FaultMonitorSettings s_fault_monitor_settings = {
   .output_overcurrent_threshold_uA = SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA,
   .output_overvoltage_threshold_mV = SOLAR_OUTPUT_OVERVOLTAGE_THRESHOLD_mV,
   .overtemperature_threshold_dC = SOLAR_OVERTEMPERATURE_THRESHOLD_dC,
 };
 
-StatusCode config_get_fault_monitor_settings(SolarMpptCount mppt_count,
-                                             FaultMonitorSettings *settings) {
-  if (mppt_count > MAX_SOLAR_BOARD_MPPTS || settings == NULL) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
+const FaultMonitorSettings *config_get_fault_monitor_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
   }
-  *settings = s_base_fault_monitor_settings;
-  settings->mppt_count = mppt_count;
-  return STATUS_CODE_OK;
+  s_fault_monitor_settings.mppt_count = mppt_count;
+  return &s_fault_monitor_settings;
 }
