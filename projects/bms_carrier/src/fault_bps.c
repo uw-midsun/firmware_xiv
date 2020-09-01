@@ -1,3 +1,5 @@
+#include "fault_bps.h"
+
 #include "bms.h"
 #include "exported_enums.h"
 #include "relay_sequence.h"
@@ -16,7 +18,9 @@ StatusCode fault_bps(uint8_t fault_bitmask, bool clear) {
     s_storage->bps_storage.fault_bitset &= ~(fault_bitmask);
   } else {
     s_storage->bps_storage.fault_bitset |= fault_bitmask;
-    relay_fault(&s_storage->relay_storage);
+    if (fault_bitmask != EE_BPS_STATE_FAULT_RELAY) {
+      relay_fault(&s_storage->relay_storage);
+    }
   }
   return STATUS_CODE_OK;
 }
