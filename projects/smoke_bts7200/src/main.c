@@ -2,14 +2,16 @@
 
 // Periodically take reading from user selected channels and log the result
 // Configurable items: wait time, FRONT or REAR power distro selection, channels to be tested
+
+#include "adc.h"
 #include "bts_7200_current_sense.h"
 #include "current_measurement_config.h"
-#include "pca9539r_gpio_expander.h"
-
 #include "gpio.h"
+#include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
 #include "mux.h"
+#include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
 #include "wait.h"
 
@@ -24,6 +26,15 @@
 // config Details at
 // https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1419740028/BTS7200+smoke+test+user+guide
 static uint8_t s_test_channels[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+#define I2C_PORT I2C_PORT_2
+
+// I2C_PORT_1 has SDA on PB9 and SCL on PB8
+// I2C_PORT_2 has SDA on PB11 and SCL on PB10
+#define PIN_I2C_SCL \
+  { GPIO_PORT_B, 10 }
+#define PIN_I2C_SDA \
+  { GPIO_PORT_B, 11 }
 
 static Bts7200Storage s_bts7200_storages[MAX_TEST_CHANNELS];
 
@@ -45,6 +56,14 @@ int main() {
   gpio_init();
   interrupt_init();
   soft_timer_init();
+  adc_init(ADC_MODE_SINGLE);
+
+  I2CSettings i2c_settings = {
+    .speed = I2C_SPEED_FAST,
+    .sda = PIN_I2C_SDA,
+    .scl = PIN_I2C_SCL,
+  };
+  i2c_init(I2C_PORT, &i2c_settings);
 
   PowerDistributionCurrentHardwareConfig s_hw_config =
       IS_FRONT_POWER_DISTRO ? FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG
