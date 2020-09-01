@@ -2,7 +2,7 @@
 
 // Reads current values from 2 ADC pins on the BTS 7200 switched between with a selection pin.
 // Requires GPIO, interrupts, soft timers, and ADC to be initialized in ADC_MODE_SINGLE.
-// If using with MCP23008, requires I2C to be initialized.
+// If using with PCA9539R, requires I2C to be initialized.
 
 #include "adc.h"
 #include "gpio.h"
