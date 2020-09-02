@@ -1,9 +1,11 @@
+#include "fan_control.h"
+
 #include "bms.h"
+#include "log.h"
 #include "math.h"
 
-static Adt7476aStorage adt7476a_storage;
-static SoftTimerId s_timer_id;
-static uint32_t s_interval_us = FAN_TEMP_POLL_INTERVAL_US;
+static Adt7476aStorage s_adt7476a_storage;
+static uint32_t s_interval_ms;
 
 static void prv_measure_temps(SoftTimerId timer_id, void *context) {
   FanStorage *storage = (FanStorage *)context;
@@ -19,8 +21,9 @@ static void prv_measure_temps(SoftTimerId timer_id, void *context) {
 
   // calculate fan speed
 
-  (max > MAX_BATTERY_TEMP) ? (fan_speed = MAX_FAN_SPEED)
-                           : (fan_speed = floor(max * (MAX_FAN_SPEED / MAX_BATTERY_TEMP)));
+  (max > MAX_BATTERY_TEMP)
+      ? (fan_speed = MAX_FAN_SPEED)
+      : (fan_speed = (max * ((double)MAX_FAN_SPEED / (double)MAX_BATTERY_TEMP)));
 
   adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_1, storage->i2c_write_addr);
   adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_2, storage->i2c_write_addr);
@@ -28,7 +31,7 @@ static void prv_measure_temps(SoftTimerId timer_id, void *context) {
   storage->speed = fan_speed;
   storage->status = STATUS_CODE_OK;
 
-  soft_timer_start(s_interval_us, &prv_measure_temps, storage, &s_timer_id);
+  soft_timer_start_millis(s_interval_ms, &prv_measure_temps, storage, NULL);
 }
 
 StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage) {
@@ -42,7 +45,9 @@ StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage) {
     .i2c_settings = settings->i2c_settings,
   };
 
-  status_ok_or_return(adt7476a_init(&adt7476a_storage, &adt7476a_settings));
+  s_interval_ms = settings->poll_interval_ms;
+
+  status_ok_or_return(adt7476a_init(&s_adt7476a_storage, &adt7476a_settings));
 
   prv_measure_temps(SOFT_TIMER_INVALID_TIMER, storage);
 

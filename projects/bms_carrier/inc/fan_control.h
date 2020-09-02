@@ -14,7 +14,6 @@
 #define BMS_FAN_CTRL_I2C_PORT_2 TBD
 #define NUM_BMS_PORTS 2
 #define ADT_7476A_INTERRUPT_MASK_OFFSET 2
-#define FAN_TEMP_POLL_INTERVAL_US 500000
 #define MAX_BATTERY_TEMP 43
 #define MAX_FAN_SPEED 100
 
@@ -30,6 +29,7 @@ typedef struct FanControlSettings {
   I2CSettings i2c_settings;
   GpioItCallback callback;
   void *callback_context;
+  uint32_t poll_interval_ms;
 } FanControlSettings;
 
 StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage);
