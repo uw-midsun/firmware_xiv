@@ -1,10 +1,15 @@
 #include "bts_7200_current_sense.h"
+
 #include <stddef.h>
+
+#include "delay.h"
 
 #define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
 #define STM32_GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
 #define PCA9539R_GPIO_STATE_SELECT_OUT_0 PCA9539R_GPIO_STATE_LOW
 #define PCA9539R_GPIO_STATE_SELECT_OUT_1 PCA9539R_GPIO_STATE_HIGH
+
+#define DSEL_CHANGE_TO_MEASURE_DELAY_US 5000
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
@@ -87,6 +92,7 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
+  delay_us(DSEL_CHANGE_TO_MEASURE_DELAY_US);
   adc_read_raw(sense_channel, meas0);
 
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
@@ -94,6 +100,7 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
+  delay_us(DSEL_CHANGE_TO_MEASURE_DELAY_US);
   adc_read_raw(sense_channel, meas1);
 
   return STATUS_CODE_OK;

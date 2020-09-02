@@ -82,6 +82,10 @@ int main() {
     status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 
+  // enabling steering for convenience in smoke testing
+  Pca9539rGpioAddress steering_en = { .i2c_address = 0x76, .pin = PCA9539R_PIN_IO1_3 };
+  pca9539r_gpio_set_state(&steering_en, PCA9539R_GPIO_STATE_HIGH);
+
   soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, &s_hw_config, NULL);
   while (true) {
     wait();
