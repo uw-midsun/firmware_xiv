@@ -92,7 +92,6 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
-  delay_us(DSEL_CHANGE_TO_MEASURE_DELAY_US);
   adc_read_raw(sense_channel, meas0);
 
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
@@ -100,10 +99,43 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
-  delay_us(DSEL_CHANGE_TO_MEASURE_DELAY_US);
   adc_read_raw(sense_channel, meas1);
 
   return STATUS_CODE_OK;
+}
+
+// this should really be an FSM, and will be refactored to that in the future
+
+static void prv_delay_measurement_step_3(SoftTimerId timer, void *context) {
+  Bts7200Storage *storage = context;
+  AdcChannel sense_channel = NUM_ADC_CHANNELS;
+  adc_get_channel(*storage->sense_pin, &sense_channel);
+  adc_read_raw(sense_channel, &storage->reading_out_1);
+  if (storage->callback != NULL) {
+    storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
+  }
+}
+
+static void prv_delay_measurement_step_2(SoftTimerId timer, void *context) {
+  Bts7200Storage *storage = context;
+  AdcChannel sense_channel = NUM_ADC_CHANNELS;
+  adc_get_channel(*storage->sense_pin, &sense_channel);
+  adc_read_raw(sense_channel, &storage->reading_out_0);
+  if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
+    gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_1);
+  } else {
+    pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
+  }
+  soft_timer_start(DSEL_CHANGE_TO_MEASURE_DELAY_US, prv_delay_measurement_step_3, storage, NULL);
+}
+
+void bts_7200_get_measurement_with_delay(Bts7200Storage *storage) {
+  if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
+    gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_0);
+  } else {
+    pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  }
+  soft_timer_start(DSEL_CHANGE_TO_MEASURE_DELAY_US, prv_delay_measurement_step_2, storage, NULL);
 }
 
 StatusCode bts_7200_start(Bts7200Storage *storage) {

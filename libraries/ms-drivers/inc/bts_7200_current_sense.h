@@ -59,6 +59,11 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
 // reads them from the BTS7200 itself.
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
 
+// quick-n-dirty hack, to do: make it good
+// Get the measurements on the callback provided. It is NOT SAFE to call this again before the
+// callback is called.
+void bts_7200_get_measurement_with_delay(Bts7200Storage *storage);
+
 // Set up a soft timer which periodically updates the storage with the latest measurements.
 // DO NOT USE if you are reading with bts_7200_get_measurement.
 StatusCode bts_7200_start(Bts7200Storage *storage);
