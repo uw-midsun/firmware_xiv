@@ -32,9 +32,8 @@ static Adt7476aMockRegisters s_mock_registers;
 static Adt7476aStorage s_mock_storage;
 static Adt7476aStorage s_storage;
 
-StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
-                                    size_t tx_len) {
-  uint8_t cmd = reg;
+StatusCode TEST_MOCK(i2c_write)(I2CPort i2c, I2CAddress addr, uint8_t *tx_data, size_t tx_len) {
+  uint8_t cmd = addr;
 
   switch (cmd) {
     // Commands used in adt7476a_init()
@@ -57,9 +56,8 @@ StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, u
   return STATUS_CODE_OK;
 }
 
-StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *rx_data,
-                                   size_t rx_len) {
-  uint8_t cmd = reg;
+StatusCode TEST_MOCK(i2c_read)(I2CPort i2c, I2CAddress addr, uint8_t *rx_data, size_t rx_len) {
+  uint8_t cmd = addr;
 
   switch (cmd) {
     // Commands used in adt7476a_init()
