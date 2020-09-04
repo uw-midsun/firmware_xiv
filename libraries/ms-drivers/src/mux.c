@@ -31,7 +31,7 @@ StatusCode mux_init(MuxAddress *address) {
     .resistor = GPIO_RES_NONE,
     .alt_function = GPIO_ALTFN_NONE,
   };
-  status_ok_or_return(gpio_init_pin(&address->mux_enable_pin, &mux_output_settings));
+  status_ok_or_return(gpio_init_pin(&address->mux_enable_pin, &mux_enable_settings));
 
   return STATUS_CODE_OK;
 }
