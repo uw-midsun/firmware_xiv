@@ -28,7 +28,7 @@
 // modify if you want to read more or less
 #define SMOKETEST_WAIT_TIME_MS 1000
 
-#define BAUDRATE 60000
+#define BAUDRATE 6000000
 #define MOSI_PIN \
   { .port = GPIO_PORT_B, 15 }
 #define MISO_PIN \
