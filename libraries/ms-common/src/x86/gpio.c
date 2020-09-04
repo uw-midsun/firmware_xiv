@@ -85,6 +85,9 @@ StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
 #include "log.h"
 #include "status.h"
 #include "gpio.pb-c.h"
+#include "store.h"
+
+static MxGpioStore s_store;
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
 static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
@@ -94,13 +97,7 @@ static uint32_t prv_get_index(const GpioAddress *address) {
 }
 
 StatusCode gpio_init(void) {
-  LOG_DEBUG("gpio initializing...\n");
-  char gotten[100];
-  LOG_DEBUG("alloc gpio [%d]\n", getpid());
-  LOG_DEBUG("scanning!\n");
-  int status = scanf("%s\n", gotten);
-  LOG_DEBUG("finished scanning!\n");
-  LOG_DEBUG("gotten from gpio_init: %s\n", gotten);
+  s_store = store_alloc("gpio", NULL);
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,

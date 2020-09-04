@@ -11,6 +11,21 @@ proj_id = {}
 
 statuses = {}
 
+class Proj:
+    def __init__(self, name: str):
+        self.name = name
+        self.popen = None
+    def run(self):
+        popen(self.name)
+
+    def stop(self):
+        os.unlink
+
+def cleanup_proj(p: subprocess.Popen):
+    # Todo: close associated fifo
+    os.unlink('/tmp/{}_ctop'.format(p.pid))
+    p.kill()
+
 def del_proj(pid=None, fd=None):
     global proj_fd
     global proj_id
@@ -52,6 +67,7 @@ def poll_thread():
 def popen(cmd):
     p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE, universal_newlines=True)
+    os.mkfifo('/tmp/{}_ctop'.format(p.pid))
     return p
 
 def run(name):
@@ -83,8 +99,11 @@ def init():
     proj_name_list = os.listdir('/home/vagrant/shared/firmware_xiv/projects')
     for name in proj_name_list:
         statuses[name] = False
-    for name in os.listdir('/home/vagrant/shared/firmware_xiv/build/bin/x86'):
-        statuses[name] = True
+    try:
+        for name in os.listdir('/home/vagrant/shared/firmware_xiv/build/bin/x86'):
+            statuses[name] = True
+    except:
+        pass
     build('can_communication')
     build('can_dump')
     pt = threading.Thread(target=poll_thread)
