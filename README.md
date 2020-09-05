@@ -1,4 +1,4 @@
-# firmware
+# firmware_xiv
 [![Build Status](https://travis-ci.com/uw-midsun/firmware_xiv.svg?branch=master)](https://travis-ci.com/uw-midsun/firmware_xiv)
    
 This repository contains all firmware for the [University of Waterloo](https://uwaterloo.ca/)'s [Midnight Sun Solar Rayce Car](http://www.uwmidsun.com/) team's 14th car.
@@ -9,7 +9,7 @@ Assuming you have our [Vagrant box](https://github.com/uw-midsun/box) installed:
 
 ```bash
 # Clone the repo
-git clone https://github.com/uw-midsun/firmware.git firmware
+git clone https://github.com/uw-midsun/firmware_xiv.git firmware_xiv
 cd firmware
 
 # Basic commands to verify that building and testing work
