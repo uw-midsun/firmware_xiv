@@ -6,13 +6,13 @@
   { GPIO_PORT_B, 1 }
 
 #define SOLAR_I2C1_SDA \
-  { GPIO_PORT_B, 11 }
-#define SOLAR_I2C1_SCL \
-  { GPIO_PORT_B, 10 }
-#define SOLAR_I2C2_SDA \
   { GPIO_PORT_B, 9 }
-#define SOLAR_I2C2_SCL \
+#define SOLAR_I2C1_SCL \
   { GPIO_PORT_B, 8 }
+#define SOLAR_I2C2_SDA \
+  { GPIO_PORT_B, 11 }
+#define SOLAR_I2C2_SCL \
+  { GPIO_PORT_B, 10 }
 
 #define SOLAR_SPI2_MOSI \
   { GPIO_PORT_B, 15 }
