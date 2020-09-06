@@ -1,10 +1,6 @@
 syntax = "proto3";
 
-message MxGpioPin {
-  bool state = 1;
-  uint32 interrupt_id = 2;
-}
-
 message MxGpioStore {
-  repeated bool ports = 1;
+  repeated bool state = 1;
+  repeated uint32 interrupt_id = 2;
 }
