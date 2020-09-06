@@ -25,14 +25,14 @@
 
 // I2C settings
 #define I2C1_SDA \
-  { .port = GPIO_PORT_B, .pin = 11 }
+  { .port = GPIO_PORT_B, .pin = 9 }
 #define I2C1_SCL \
-  { .port = GPIO_PORT_B, .pin = 10 }
+  { .port = GPIO_PORT_B, .pin = 8 }
 
 #define I2C2_SDA \
-  { .port = GPIO_PORT_B, .pin = 9 }
+  { .port = GPIO_PORT_B, .pin = 11 }
 #define I2C2_SCL \
-  { .port = GPIO_PORT_B, .pin = 8 }
+  { .port = GPIO_PORT_B, .pin = 10 }
 
 // Unique ID of each MCP3427
 typedef enum {
@@ -65,7 +65,7 @@ static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427] = { 0 };
 // s_test_devices: hold the indices of specific mcp3427s being tested.
 // Voltage sense mcp3427 indices: 0 to 5.
 // Current sense mcp3427 indices: 6
-static uint8_t s_test_devices[] = { 0, 1, 2, 3, 4, 5, 6 };
+static uint8_t s_test_devices[] = { 5 };  // for testing currently
 
 // Store the settings of each MCP3427
 static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
@@ -183,6 +183,11 @@ int main() {
     .scl = I2C2_SCL,
   };
   i2c_init(I2C_PORT_2, &i2c2_settings);
+
+  // test: a "general call reset", will reset all MCP3427s and relatch all address pins
+  uint8_t general_call_reset = 0x06;
+  i2c_write(I2C_PORT_1, 0x00, &general_call_reset, 1);
+  i2c_write(I2C_PORT_2, 0x00, &general_call_reset, 1);
 
   for (size_t i = 0; i < SIZEOF_ARRAY(s_test_devices); i++) {
     SmokeMcp3427Data *data = &s_mcp3427_data[s_test_devices[i]];
