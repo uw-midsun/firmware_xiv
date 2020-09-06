@@ -1,5 +1,12 @@
 syntax = "proto3";
 
 enum EnumStoreType {
-    GPIO = 0;
+  GPIO = 0;
+  END = 1;
+}
+
+message MxStoreInfo {
+  uint64 key = 1;
+  EnumStoreType type = 2;
+  bytes msg = 3;
 }

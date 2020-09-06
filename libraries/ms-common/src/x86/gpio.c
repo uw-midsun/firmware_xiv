@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "status.h"
+#include "log.h"
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
 static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
@@ -13,6 +14,7 @@ static uint32_t prv_get_index(const GpioAddress *address) {
 }
 
 StatusCode gpio_init(void) {
+  LOG_DEBUG("gpio initing non mpxe\n");
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
@@ -78,6 +80,7 @@ StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
 }
 #else
 #include <stdbool.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -85,9 +88,10 @@ StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
 #include "log.h"
 #include "status.h"
 #include "gpio.pb-c.h"
+#include "stores.pb-c.h"
 #include "store.h"
 
-static MxGpioStore s_store;
+static MxGpioStore s_store = MX_GPIO_STORE__INIT;
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
 static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
@@ -96,8 +100,17 @@ static uint32_t prv_get_index(const GpioAddress *address) {
   return address->port * (uint32_t)NUM_GPIO_PORTS + address->pin;
 }
 
+static void prv_export() {
+  store_export(ENUM_STORE_TYPE__GPIO, &s_store, NULL);
+}
+
 StatusCode gpio_init(void) {
-  s_store = store_alloc("gpio", NULL);
+  store_init();
+  s_store.n_state = GPIO_TOTAL_PINS;
+  s_store.n_interrupt_id = GPIO_TOTAL_PINS;
+  s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
+  s_store.interrupt_id = malloc(GPIO_TOTAL_PINS * sizeof(uint32_t));
+  store_register(ENUM_STORE_TYPE__GPIO, &s_store, NULL);
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
@@ -106,8 +119,10 @@ StatusCode gpio_init(void) {
   };
   for (uint32_t i = 0; i < GPIO_TOTAL_PINS; i++) {
     s_pin_settings[i] = default_settings;
+    s_store.state[i] = default_settings.state;
     s_gpio_pin_input_value[i] = 0;
   }
+  // prv_export();
   return STATUS_CODE_OK;
 }
 
@@ -119,6 +134,8 @@ StatusCode gpio_init_pin(const GpioAddress *address, const GpioSettings *setting
   }
 
   s_pin_settings[prv_get_index(address)] = *settings;
+  s_store.state[prv_get_index(address)] = settings->state;
+  prv_export();
   return STATUS_CODE_OK;
 }
 
@@ -129,6 +146,8 @@ StatusCode gpio_set_state(const GpioAddress *address, GpioState state) {
   }
 
   s_pin_settings[prv_get_index(address)].state = state;
+  s_store.state[prv_get_index(address)] = state;
+  prv_export();
   return STATUS_CODE_OK;
 }
 
@@ -140,9 +159,12 @@ StatusCode gpio_toggle_state(const GpioAddress *address) {
   uint32_t index = prv_get_index(address);
   if (s_pin_settings[index].state == GPIO_STATE_LOW) {
     s_pin_settings[index].state = GPIO_STATE_HIGH;
+    s_store.state[prv_get_index(address)] = GPIO_STATE_HIGH;
   } else {
     s_pin_settings[index].state = GPIO_STATE_LOW;
+    s_store.state[prv_get_index(address)] = GPIO_STATE_LOW;
   }
+  prv_export();
   return STATUS_CODE_OK;
 }
 
@@ -156,6 +178,7 @@ StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
   // Behave how hardware does when the direction is set to out.
   if (s_pin_settings[index].direction != GPIO_DIR_IN) {
     *state = s_pin_settings[index].state;
+    *state = s_store.state[index];
   } else {
     *state = s_gpio_pin_input_value[index];
   }

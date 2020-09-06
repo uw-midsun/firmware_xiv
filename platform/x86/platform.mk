@@ -50,10 +50,10 @@ endif
 # Linker flags
 LDFLAGS := -lrt
 
-ifneq (,$(filter $(PIECE)$(LIBRARY),mpxe-gen harness))
+# ifneq (,$(filter $(PIECE)$(LIBRARY),mpxe-gen harness ms-common))
 CFLAGS += -I/usr/local/include
 LDFLAGS += -L/usr/local/lib -lprotobuf-c
-endif
+# endif
 
 # Shell environment variables
 FLASH_VAR := MIDSUN_X86_FLASH_FILE
