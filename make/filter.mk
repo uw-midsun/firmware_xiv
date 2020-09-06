@@ -1,5 +1,4 @@
 VALID_PROJECTS := $(patsubst $(PROJ_DIR)/%/rules.mk,%,$(wildcard $(PROJ_DIR)/*/rules.mk))
-VALID_PIECES += $(patsubst $(MPXE_DIR)/%/rules.mk,%,$(wildcard $(MPXE_DIR)/*/rules.mk))
 VALID_PLATFORMS := $(patsubst $(PLATFORMS_DIR)/%/platform.mk,%,$(wildcard $(PLATFORMS_DIR)/*/platform.mk))
 VALID_LIBRARIES := $(patsubst $(LIB_DIR)/%/rules.mk,%,$(wildcard $(LIB_DIR)/*/rules.mk))
 
@@ -10,11 +9,11 @@ VALID_LIBRARIES := $(patsubst $(LIB_DIR)/%/rules.mk,%,$(wildcard $(LIB_DIR)/*/ru
 # - For test, gdb, and program, check to see if PLATFORM and {PROJECT or {LIBRARY and TEST}} are valid
 # - For build, check if PLATFORM and {PROJECT or LIBRARY} are valid
 
-ifneq (,$(filter clean lint lint_quick pylint format format_quick build_all test_all test_format socketcan update_codegen babydriver,$(MAKECMDGOALS)))
+ifneq (,$(filter mpxe clean lint lint_quick pylint format format_quick build_all test_all test_format socketcan update_codegen babydriver,$(MAKECMDGOALS)))
   # Universal operation: do nothing - args are not used or only PLATFORM is checked
 else ifneq (,$(filter new,$(MAKECMDGOALS)))
   # New project: just make sure PROJECT or LIBRARY is defined
-  ifeq (,$(PROJECT)$(LIBRARY)$(PIECE))
+  ifeq (,$(PROJECT)$(LIBRARY))
     $(error Missing project or library name. Expected PROJECT=... or LIBRARY=...)
   endif
 
@@ -26,9 +25,8 @@ else
   # Test/GDB/program/build: check for valid PROJECT or LIBRARY
   override PROJECT := $(filter $(VALID_PROJECTS),$(PROJECT))
   override LIBRARY := $(filter $(VALID_LIBRARIES),$(LIBRARY))
-  override PIECE := $(filter $(VALID_PIECES),$(PIECE))
 
-  ifeq (,$(PROJECT)$(LIBRARY)$(PIECE))
+  ifeq (,$(PROJECT)$(LIBRARY))
     $(error Invalid project or library. Expected PROJECT=[$(VALID_PROJECTS)] or LIBRARY=[$(VALID_LIBRARIES)])
   endif
 endif

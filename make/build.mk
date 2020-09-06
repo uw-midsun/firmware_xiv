@@ -4,7 +4,7 @@
 
 # Alias target so we don't have super long variable names
 T := $(TARGET)
-ifeq (,$(filter LIB PROJ MPXE,$(TARGET_TYPE)))
+ifeq (,$(filter LIB PROJ,$(TARGET_TYPE)))
   $(error Invalid build target type for $(TARGET))
 endif
 
