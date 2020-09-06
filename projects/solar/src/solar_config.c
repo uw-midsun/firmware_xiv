@@ -199,8 +199,8 @@ static SenseMcp3427Settings s_sense_mcp3427_settings = {
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
-                      .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
-                      .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+                      .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
+                      .addr_pin_1 = MCP3427_PIN_STATE_FLOAT,
                       .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
                       .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
