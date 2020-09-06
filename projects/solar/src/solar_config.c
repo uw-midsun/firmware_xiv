@@ -26,9 +26,9 @@
 // Must be calibrated.
 #define SOLAR_MPPT_CURRENT_SCALING_FACTOR 1.0f
 
-// Scaling factor to convert SPV1020 VIN values from SPI to millivolts.
-// Must be calibrated.
-#define SOLAR_MPPT_VIN_SCALING_FACTOR 1.0f
+// Scaling factor to convert SPV1020 input voltage values from SPI to millivolts.
+// Experimentally determined to be ~26.1mV/LSB.
+#define SOLAR_MPPT_VIN_SCALING_FACTOR 26.1f
 
 // Overcurrent threshold for the output current of the array. 9A.
 #define SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA 9000000
