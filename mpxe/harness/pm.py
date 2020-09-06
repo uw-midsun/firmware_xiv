@@ -19,7 +19,7 @@ class ProjectManager:
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.Canio()
-        
+
     def start(self, name, sim=None):
         if name not in self.proj_name_list:
             raise Exception('invalid project')
@@ -32,7 +32,7 @@ class ProjectManager:
         del self.proj_fds[proj.ctop_fifo.fileno()]
         del self.proj_fds[proj.popen.stdout.fileno()]
         proj.stop()
-    
+
     def stop_all(self):
         for proj in list(self.proj_fds.values()):
             if not proj.killed:
