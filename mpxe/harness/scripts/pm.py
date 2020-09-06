@@ -6,6 +6,7 @@ import threading
 import select
 import fcntl
 import subprocess
+import ds
 
 proj_fd = {}
 proj_id = {}
@@ -78,16 +79,12 @@ def poll_thread():
         for res in res_list:
             proj = proj_fd[res[0]]
             if res[1] == select.POLLIN:
-                # check if the fd is for ctop_fifo or stdout
-                # s = proj.popen.stdout.readline().rstrip()
-                # print('[{}]'.format(proj.popen.pid), s.decode('utf-8'))
                 if res[0] == proj.popen.stdout.fileno():
                     s = proj.popen.stdout.readline().rstrip()
                     print('[{}]'.format(proj.popen.pid), s.decode('utf-8'))
                 elif res[0] == proj.ctop_fifo.fileno():
-                    temp = bytearray(4096)
-                    num_rxed = proj.ctop_fifo.readinto(temp)                    
-                    print('({})'.format(proj.popen.pid), temp[:num_rxed])
+                    msg = proj.ctop_fifo.read()
+                    ds.handle_store(msg)
             elif res[1] == select.POLLHUP:
                 del_proj(proj.popen.pid)
 

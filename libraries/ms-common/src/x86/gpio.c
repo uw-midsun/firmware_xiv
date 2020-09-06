@@ -104,8 +104,31 @@ static void prv_export() {
   store_export(ENUM_STORE_TYPE__GPIO, &s_store, NULL);
 }
 
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  // TODO: implement
+  MxGpioStore *msg = mx_gpio_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MxGpioStore *mask = mx_gpio_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  
+  for (uint16_t i = 0; i < mask->n_state; i++) {
+    if (mask->state[i] != 0) {
+      s_store.state[i] = msg->state[i];
+    }
+  }
+
+  mx_gpio_store__free_unpacked(msg, NULL);
+  mx_gpio_store__free_unpacked(mask, NULL);
+  prv_export();
+}
+
 StatusCode gpio_init(void) {
-  store_init();
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mx_gpio_store__get_packed_size,
+    (PackFunc)mx_gpio_store__pack,
+    (UnpackFunc)mx_gpio_store__unpack,
+    (FreeUnpackedFunc)mx_gpio_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  store_init(ENUM_STORE_TYPE__GPIO, funcs);
   s_store.n_state = GPIO_TOTAL_PINS;
   s_store.n_interrupt_id = GPIO_TOTAL_PINS;
   s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
