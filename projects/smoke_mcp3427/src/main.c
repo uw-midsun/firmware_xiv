@@ -61,7 +61,7 @@ typedef struct SmokeMcp3427Data {
 } SmokeMcp3427Data;
 
 #define MAX_NUM_MCP3427 7
-static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427];
+static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427] = { 0 };
 // s_test_devices: hold the indices of specific mcp3427s being tested.
 // Voltage sense mcp3427 indices: 0 to 5.
 // Current sense mcp3427 indices: 6
@@ -123,7 +123,7 @@ static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
   {
       .port = I2C_PORT_2,
       .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
-      .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+      .addr_pin_1 = MCP3427_PIN_STATE_LOW,
       .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
