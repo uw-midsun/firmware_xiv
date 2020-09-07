@@ -21,10 +21,12 @@ typedef struct Store {
   void *store;
 } Store;
 
+// Used to ensure this module is only initialized once
 static bool s_initialized = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
+// Child to parnet fifo - used to talk to harness
 static int s_ctop_fifo;
 
 static StoreFuncs s_func_table[ENUM_STORE_TYPE__END];
@@ -125,17 +127,19 @@ void *store_get(EnumStoreType type, void *key) {
 }
 
 void store_export(EnumStoreType type, void *store, void *key) {
-  // serialize to proto
+  // Serialize store to proto
   size_t packed_size = s_func_table[type].get_packed_size(store);
   uint8_t *store_buf = malloc(packed_size);
   s_func_table[type].pack(store, store_buf);
 
+  // Set up message sent to python
   MxStoreInfo msg = MX_STORE_INFO__INIT;
   msg.key = (uint64_t)key;
   msg.type = type;
   msg.msg.data = store_buf;
   msg.msg.len = packed_size;
 
+  // Serialize export message
   size_t export_size = mx_store_info__get_packed_size(&msg);
   uint8_t *export_buf = malloc(export_size);
   mx_store_info__pack(&msg, export_buf);
