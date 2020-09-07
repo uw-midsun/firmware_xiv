@@ -100,16 +100,18 @@ static uint32_t prv_get_index(const GpioAddress *address) {
   return address->port * (uint32_t)NUM_GPIO_PORTS + address->pin;
 }
 
+// Helper function to cut down clutter
 static void prv_export() {
   store_export(ENUM_STORE_TYPE__GPIO, &s_store, NULL);
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
-  // TODO: implement
   MxGpioStore *msg = mx_gpio_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxGpioStore *mask = mx_gpio_store__unpack(NULL, mask_buf.len, mask_buf.data);
   
+  // We'll never change interrupt ids, so only check for state updates
   for (uint16_t i = 0; i < mask->n_state; i++) {
+    // only update state if mask is set
     if (mask->state[i] != 0) {
       s_store.state[i] = msg->state[i];
     }
@@ -129,6 +131,7 @@ StatusCode gpio_init(void) {
     (UpdateStoreFunc)update_store,
   };
   store_init(ENUM_STORE_TYPE__GPIO, funcs);
+  // init the store to mimic the actual static gpio state
   s_store.n_state = GPIO_TOTAL_PINS;
   s_store.n_interrupt_id = GPIO_TOTAL_PINS;
   s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
@@ -145,7 +148,7 @@ StatusCode gpio_init(void) {
     s_store.state[i] = default_settings.state;
     s_gpio_pin_input_value[i] = 0;
   }
-  // prv_export();
+  prv_export();
   return STATUS_CODE_OK;
 }
 

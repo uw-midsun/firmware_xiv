@@ -31,6 +31,7 @@ typedef enum {
     }                                                                         \
   } while (0)
 #else
+// fflush necessary for printing through pipes
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
