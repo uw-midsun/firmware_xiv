@@ -3,82 +3,82 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "data_store.h"
 #include "delay.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
+#include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
 #include "solar_events.h"
 #include "test_helpers.h"
 #include "unity.h"
 
-static int16_t s_can_msg_count;
+static uint16_t s_can_msg_count;
 static uint16_t s_num_callbacks;
-static CanMessage s_can_msg;
+static uint32_t s_can_msg_values[2 * NUM_DATA_POINTS];
+static DataPoint s_can_msgs_data_points[2 * NUM_DATA_POINTS];
 static CanStorage s_can_storage = { 0 };
-
-typedef enum {
-  TEST_DATA_TX_EVENT_CAN_TX = 0,  //
-  TEST_DATA_TX_EVENT_CAN_RX,      //
-  TEST_DATA_TX_EVENT_CAN_FAULT,   //
-  NUM_TEST_DATA_TX_CAN_EVENTS     //
-} TestDataTxEvent;
+static DataTxSettings s_data_tx_settings = {
+  .msgs_per_tx_iteration = 1,
+  .wait_between_tx_in_millis = 350,
+};
 
 static StatusCode prv_test_data_tx_callback_handler(const CanMessage *msg, void *context,
                                                     CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_SOLAR_DATA, msg->msg_id);
-  s_can_msg = *msg;
-  s_can_msg_count++;
-  return STATUS_CODE_OK;
+  if (s_can_msg_count < 2 * NUM_DATA_POINTS) {
+    CAN_UNPACK_SOLAR_DATA(msg, (uint32_t *)&s_can_msgs_data_points[s_can_msg_count],
+                          &s_can_msg_values[s_can_msg_count]);
+    s_can_msg_count++;
+    return STATUS_CODE_OK;
+  }
+  return STATUS_CODE_RESOURCE_EXHAUSTED;
 }
 
-// Set every 8th data point starting at 0
+// Set every data point
 static void prv_test_data_tx_set_data_values(void) {
-  for (DataPoint data_point = 0; data_point < NUM_DATA_POINTS; data_point += 8) {
+  for (DataPoint data_point = 0; data_point < NUM_DATA_POINTS; data_point++) {
     TEST_ASSERT_OK(data_store_set(data_point, data_point));
   }
 }
 
-static void prv_process_can_events_and_verify_messages(SoftTimerId timer_id, void *context) {
-  MS_TEST_HELPER_CAN_TX(TEST_DATA_TX_EVENT_CAN_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_DATA_TX_EVENT_CAN_RX);
+static void prv_reset_arrays(void) {
+  for (uint16_t index = 0; index < 2 * NUM_DATA_POINTS; index++) {
+    s_can_msg_values[index] = 0;
+    s_can_msgs_data_points[index] = 0;
+  }
+}
 
-  TEST_ASSERT_EQUAL(s_can_msg_count, s_num_callbacks);
-  TEST_ASSERT_EQUAL(s_can_msg.data_u32[1], s_can_msg_count * 8);
-  TEST_ASSERT_EQUAL(s_can_msg.data_u32[0], s_can_msg.data_u32[1]);
-
+static void prv_process_can_events(SoftTimerId timer_id, void *context) {
+  for (uint16_t msg = 0; msg < s_data_tx_settings.msgs_per_tx_iteration; msg++) {
+    MS_TEST_HELPER_CAN_TX(SOLAR_CAN_EVENT_TX);
+  }
+  for (uint16_t msg = 0; msg < s_data_tx_settings.msgs_per_tx_iteration; msg++) {
+    MS_TEST_HELPER_CAN_RX(SOLAR_CAN_EVENT_RX);
+  }
   s_num_callbacks++;
-  if (s_can_msg_count < 6)
-    TEST_ASSERT_OK(soft_timer_start_millis(WAIT_BEFORE_TX_IN_MILLIS,
-                                           prv_process_can_events_and_verify_messages, NULL, NULL));
+  if (s_can_msg_count < NUM_DATA_POINTS)
+    TEST_ASSERT_OK(soft_timer_start_millis(s_data_tx_settings.wait_between_tx_in_millis,
+                                           prv_process_can_events, NULL, NULL));
 }
 
 void setup_test(void) {
-  gpio_init();
-  interrupt_init();
-  soft_timer_init();
-  event_queue_init();
-  data_store_init();
-
-  s_can_msg_count = -1;
-
-  const CanSettings can_settings = {
-    .device_id = SYSTEM_CAN_DEVICE_SOLAR,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = TEST_DATA_TX_EVENT_CAN_RX,
-    .tx_event = TEST_DATA_TX_EVENT_CAN_TX,
-    .fault_event = TEST_DATA_TX_EVENT_CAN_FAULT,
-    .tx = { GPIO_PORT_A, 12 },
-    .rx = { GPIO_PORT_A, 11 },
-    .loopback = true,
-  };
-  TEST_ASSERT_OK(can_init(&s_can_storage, &can_settings));
-
+  TEST_ASSERT_OK(initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR,
+                                                 SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX,
+                                                 SOLAR_CAN_EVENT_FAULT));
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_DATA,
                                          prv_test_data_tx_callback_handler, NULL));
+  TEST_ASSERT_OK(data_store_init());
+
+  TEST_ASSERT_OK(data_tx_init(&s_data_tx_settings));
+
+  s_can_msg_count = 0;
+  s_num_callbacks = 0;
+  prv_reset_arrays();
 }
 
 void teardown_test(void) {}
@@ -94,18 +94,27 @@ void test_data_tx_no_values_set(void) {
 // ensure data_tx_process_event can handle NULL events or irrelevant events
 void test_data_tx_invalid_event(void) {
   TEST_ASSERT_FALSE(data_tx_process_event(NULL));
-  Event e = { .id = SOLAR_FAULT_EVENT_MPPT_OVERCURRENT };
+  Event e = { .id = DATA_READY_EVENT + 1 };
   TEST_ASSERT_FALSE(data_tx_process_event(&e));
 }
 
+// set all data points, tx all data points, verify the values of the data point and value in the
+// expected order
 void test_data_tx(void) {
   prv_test_data_tx_set_data_values();
   Event e = { .id = DATA_READY_EVENT };
   TEST_ASSERT(data_tx_process_event(&e));
 
-  s_num_callbacks = 0;
-  TEST_ASSERT_OK(soft_timer_start_millis(WAIT_BEFORE_TX_IN_MILLIS,
-                                         prv_process_can_events_and_verify_messages, NULL, NULL));
-  delay_ms(2000);
-  TEST_ASSERT_EQUAL(s_num_callbacks, NUM_DATA_POINTS / MSG_PER_TX_ITERATION);
+  prv_process_can_events(SOFT_TIMER_INVALID_TIMER, NULL);
+  int32_t delay_time = (NUM_DATA_POINTS / (int32_t)s_data_tx_settings.msgs_per_tx_iteration + 1) *
+                       (int32_t)s_data_tx_settings.wait_between_tx_in_millis;
+  delay_ms((uint32_t)delay_time);
+  TEST_ASSERT_EQUAL(NUM_DATA_POINTS / s_data_tx_settings.msgs_per_tx_iteration, s_num_callbacks);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_EQUAL(NUM_DATA_POINTS, s_can_msg_count);
+
+  for (uint16_t msg = 0; msg < NUM_DATA_POINTS; msg++) {
+    TEST_ASSERT_EQUAL(msg, s_can_msg_values[msg]);
+    TEST_ASSERT_EQUAL(msg, s_can_msgs_data_points[msg]);
+  }
 }
