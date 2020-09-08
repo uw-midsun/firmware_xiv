@@ -1,7 +1,7 @@
 #pragma once
 
 // Detects faults in data and raises fault events. Encapsulates all the fault conditions.
-// Requires the event queue and the data store to be initialized.
+// Requires the data store and the fault handler to be initialized.
 
 // List of faults we detect here:
 // * overcurrent on output current (DATA_POINT_CURRENT)

@@ -9,7 +9,7 @@
 // For a more advanced simulation we could probabilistically call the fault callback, but that would
 // be hard to unit test.
 
-#define FIXED_RESULT 0
+#define FIXED_RESULT 20
 
 #define MCP3427_FSM_NAME "MCP3427 FSM on x86"
 
