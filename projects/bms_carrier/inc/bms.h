@@ -34,5 +34,3 @@ typedef struct BmsStorage {
   DebouncerStorage killswitch_storage;
   BpsStorage bps_storage;
 } BmsStorage;
-
-StatusCode fault_bps(uint8_t fault_bitmask, bool clear);
