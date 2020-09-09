@@ -1,8 +1,8 @@
 #pragma once
 
-// Recieves a DataReadyEvent
+// Receives a DataReadyEvent
 // Takes data from data_store and tx each data point in a CAN message
-// Requires CAN, event_queue, soft_timers, interrupts and the data store to be initiallized
+// Requires CAN, event_queue, soft_timers, interrupts and the data store to be initialized
 
 #include "event_queue.h"
 

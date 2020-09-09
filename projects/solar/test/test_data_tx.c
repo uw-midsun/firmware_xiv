@@ -10,6 +10,7 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
+#include "misc.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
@@ -54,16 +55,19 @@ static void prv_reset_arrays(void) {
 }
 
 static void prv_process_can_events(SoftTimerId timer_id, void *context) {
-  for (uint16_t msg = 0; msg < s_data_tx_settings.msgs_per_tx_iteration; msg++) {
+  uint16_t msgs_for_this_iteration =
+      MIN(s_data_tx_settings.msgs_per_tx_iteration, NUM_DATA_POINTS - s_can_msg_count);
+  for (uint16_t msg = 0; msg < msgs_for_this_iteration; msg++) {
     MS_TEST_HELPER_CAN_TX(SOLAR_CAN_EVENT_TX);
   }
-  for (uint16_t msg = 0; msg < s_data_tx_settings.msgs_per_tx_iteration; msg++) {
+  for (uint16_t msg = 0; msg < msgs_for_this_iteration; msg++) {
     MS_TEST_HELPER_CAN_RX(SOLAR_CAN_EVENT_RX);
   }
   s_num_callbacks++;
-  if (s_can_msg_count < NUM_DATA_POINTS)
+  if (s_can_msg_count < NUM_DATA_POINTS) {
     TEST_ASSERT_OK(soft_timer_start_millis(s_data_tx_settings.wait_between_tx_in_millis,
                                            prv_process_can_events, NULL, NULL));
+  }
 }
 
 void setup_test(void) {
@@ -106,9 +110,9 @@ void test_data_tx(void) {
   TEST_ASSERT(data_tx_process_event(&e));
 
   prv_process_can_events(SOFT_TIMER_INVALID_TIMER, NULL);
-  int32_t delay_time = (NUM_DATA_POINTS / (int32_t)s_data_tx_settings.msgs_per_tx_iteration + 1) *
-                       (int32_t)s_data_tx_settings.wait_between_tx_in_millis;
-  delay_ms((uint32_t)delay_time);
+  uint32_t delay_time = ((uint32_t)NUM_DATA_POINTS / s_data_tx_settings.msgs_per_tx_iteration + 1) *
+                        s_data_tx_settings.wait_between_tx_in_millis;
+  delay_ms(delay_time);
   TEST_ASSERT_EQUAL(NUM_DATA_POINTS / s_data_tx_settings.msgs_per_tx_iteration, s_num_callbacks);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_EQUAL(NUM_DATA_POINTS, s_can_msg_count);
