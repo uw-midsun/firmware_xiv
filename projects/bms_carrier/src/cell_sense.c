@@ -7,7 +7,9 @@
 #include "critical_section.h"
 #include "current_sense.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "ltc_afe.h"
+#include "passive_balance.h"
 #include "status.h"
 #include "thermistor.h"
 
@@ -28,6 +30,9 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
       fault = true;
     }
   }
+
+  // Balance cells if needed
+  passive_balance(s_storage.readings->voltages, len, s_storage.afe);
 
   fault_bps(EE_BPS_STATE_FAULT_AFE_CELL, !fault);
 }

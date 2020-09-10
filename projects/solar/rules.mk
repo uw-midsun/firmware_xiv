@@ -11,7 +11,12 @@ $(T)_DEPS := ms-common ms-drivers
 $(T)_test_mppt_MOCKS := mux_set
 
 $(T)_test_sense_MOCKS := data_store_done
-$(T)_test_sense_mcp3427_MOCKS := sense_register mcp3427_start
+$(T)_test_sense_mcp3427_MOCKS := sense_register mcp3427_start fault_handler_raise_fault
 $(T)_test_sense_mppt_MOCKS := sense_register mppt_read_current mppt_read_voltage_in mppt_read_pwm \
-	mppt_read_status
+	mppt_read_status fault_handler_raise_fault
 $(T)_test_sense_temperature_MOCKS := sense_register adc_read_raw
+
+$(T)_test_fault_monitor_MOCKS := fault_handler_raise_fault
+
+$(T)_test_command_rx_MOCKS := relay_fsm_close relay_fsm_open
+$(T)_test_fault_handler_MOCKS := relay_fsm_open

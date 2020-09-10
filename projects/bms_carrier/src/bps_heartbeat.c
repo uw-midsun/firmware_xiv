@@ -5,6 +5,7 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "soft_timer.h"
 
 static uint32_t s_hb_freq_ms = 0;

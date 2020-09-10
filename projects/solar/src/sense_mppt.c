@@ -1,12 +1,12 @@
 #include "sense_mppt.h"
 
 #include "data_store.h"
-#include "event_queue.h"
+#include "exported_enums.h"
+#include "fault_handler.h"
 #include "log.h"
 #include "mppt.h"
 #include "sense.h"
 #include "solar_boards.h"
-#include "solar_events.h"
 #include "spv1020_mppt.h"
 #include "status.h"
 
@@ -18,14 +18,14 @@ static float s_vin_scaling_factor;
 static void prv_check_status_for_faults(Mppt mppt, uint8_t status) {
   uint8_t ovc_branch_bitmask;
   if (spv1020_is_overcurrent(status, &ovc_branch_bitmask)) {
-    uint16_t ovc_data = (ovc_branch_bitmask << 8) | mppt;
-    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERCURRENT, ovc_data);
+    uint8_t ovc_data = (ovc_branch_bitmask << 4) | mppt;
+    fault_handler_raise_fault(EE_SOLAR_FAULT_MPPT_OVERCURRENT, ovc_data);
   }
   if (spv1020_is_overvoltage(status)) {
-    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERVOLTAGE, mppt);
+    fault_handler_raise_fault(EE_SOLAR_FAULT_MPPT_OVERVOLTAGE, mppt);
   }
   if (spv1020_is_overtemperature(status)) {
-    event_raise_priority(FAULT_EVENT_PRIORITY, SOLAR_FAULT_EVENT_MPPT_OVERTEMPERATURE, mppt);
+    fault_handler_raise_fault(EE_SOLAR_FAULT_MPPT_OVERTEMPERATURE, mppt);
   }
 }
 
