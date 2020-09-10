@@ -32,10 +32,44 @@ static uint16_t prv_get_vdda(uint16_t reading) {
   return ADC_VDDA_RETURN;
 }
 
+// ADC Channel to GPIO Address mapping found in table 13 of the specific device
+// datasheet. Channels 0 to 7 are occupied by port A, 8 to 9 by prt B, and 10 to
+// 15 by port C
+static StatusCode prv_adc_get_channel(GpioAddress address, uint8_t *adc_channel) {
+  *adc_channel = address.pin;
+  if (address.pin < ADC_CHANNEL_TEMP) {
+    switch (address.port) {
+      case GPIO_PORT_A:
+        if (address.pin > 7) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        break;
+      case GPIO_PORT_B:
+        if (address.pin > 1) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        *adc_channel += 8;
+        break;
+      case GPIO_PORT_C:
+        if (address.pin > 5) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        *adc_channel += 10;
+        break;
+    }
+  }
+  if (*adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  return STATUS_CODE_OK;
+}
+
 static void prv_periodic_continous_cb(SoftTimerId id, void *context) {
+  GpioAddress address;
   for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++) {
     if (s_adc_interrupts[i].callback != NULL) {
-      s_adc_interrupts[i].callback(i, s_adc_interrupts[i].context);
+      address.pin = i;
+      s_adc_interrupts[i].callback(address, s_adc_interrupts[i].context);
     }
   }
   soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
@@ -47,11 +81,13 @@ void adc_init(AdcMode adc_mode) {
   if (adc_mode == ADC_MODE_CONTINUOUS) {
     soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
   }
-
-  adc_set_channel(ADC_CHANNEL_REF, true);
+  GpioAddress ref_address = { .pin = ADC_CHANNEL_REF };
+  adc_set_channel(ref_address, true);
 }
 
-StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
+StatusCode adc_set_channel(GpioAddress address, bool new_state) {
+  uint8_t adc_channel;
+  prv_adc_get_channel(address, &adc_channel);
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -59,36 +95,9 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
-  *adc_channel = address.pin;
-
-  switch (address.port) {
-    case GPIO_PORT_A:
-      if (address.pin > 7) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      break;
-    case GPIO_PORT_B:
-      if (address.pin > 1) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      *adc_channel += 8;
-      break;
-    case GPIO_PORT_C:
-      if (address.pin > 5) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      *adc_channel += 10;
-      break;
-  }
-
-  if (*adc_channel > ADC_CHANNEL_15) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  return STATUS_CODE_OK;
-}
-
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
+StatusCode adc_register_callback(GpioAddress address, AdcCallback callback, void *context) {
+  uint8_t adc_channel;
+  prv_adc_get_channel(address, &adc_channel);
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -102,7 +111,9 @@ StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, v
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
+StatusCode adc_read_raw(GpioAddress address, uint16_t *reading) {
+  uint8_t adc_channel;
+  prv_adc_get_channel(address, &adc_channel);
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -115,13 +126,15 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
 
   // this section mimics the IRQ handler
   if (s_adc_interrupts[adc_channel].callback != NULL) {
-    s_adc_interrupts[adc_channel].callback(adc_channel, s_adc_interrupts[adc_channel].context);
+    s_adc_interrupts[adc_channel].callback(address, s_adc_interrupts[adc_channel].context);
   }
 
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
+StatusCode adc_read_converted(GpioAddress address, uint16_t *reading) {
+  uint8_t adc_channel;
+  prv_adc_get_channel(address, &adc_channel);
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -130,7 +143,7 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
   }
 
   uint16_t adc_reading = 0;
-  adc_read_raw(adc_channel, &adc_reading);
+  adc_read_raw(address, &adc_reading);
   switch (adc_channel) {
     case ADC_CHANNEL_TEMP:
       *reading = prv_get_temp(adc_reading);
@@ -149,7 +162,10 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
   }
 
   uint16_t vdda;
-  adc_read_converted(ADC_CHANNEL_REF, &vdda);
+  GpioAddress ref_address = {
+    .pin = ADC_CHANNEL_REF,
+  };
+  adc_read_converted(ref_address, &vdda);
   *reading = (adc_reading * vdda) / 4095;
 
   return STATUS_CODE_OK;

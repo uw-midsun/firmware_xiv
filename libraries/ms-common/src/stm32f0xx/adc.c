@@ -52,6 +52,38 @@ static uint16_t prv_get_vdda(uint16_t reading) {
   return reading;
 }
 
+// ADC Channel to GPIO Address mapping found in table 13 of the specific device
+// datasheet. Channels 0 to 7 are occupied by port A, 8 to 9 by prt B, and 10 to
+// 15 by port C
+static StatusCode prv_adc_get_channel(GpioAddress address, uint8_t *adc_channel) {
+  *adc_channel = address.pin;
+  if (address.pin < ADC_CHANNEL_TEMP) {
+    switch (address.port) {
+      case GPIO_PORT_A:
+        if (address.pin > 7) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        break;
+      case GPIO_PORT_B:
+        if (address.pin > 1) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        *adc_channel += 8;
+        break;
+      case GPIO_PORT_C:
+        if (address.pin > 5) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        *adc_channel += 10;
+        break;
+    }
+
+    if (*adc_channel >= NUM_ADC_CHANNELS) {
+      return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+    return STATUS_CODE_OK;
+}
+
 void adc_init(AdcMode adc_mode) {
   ADC_DeInit(ADC1);
 
@@ -104,10 +136,15 @@ void adc_init(AdcMode adc_mode) {
 
   // Configure internal reference channel to run by default for voltage
   // conversions
-  adc_set_channel(ADC_CHANNEL_REF, true);
+  GpioAddress ref_address = {
+    .pin = ADC_CHANNEL_REF,
+  };
+  adc_set_channel(ref_address, true);
 }
 
-StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
+StatusCode adc_set_channel(GpioAddress address, bool new_state) {
+  uint8_t adc_channel;
+  status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -140,124 +177,99 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
   return STATUS_CODE_OK;
 }
 
-// ADC Channel to GPIO Address mapping found in table 13 of the specific device
-// datasheet. Channels 0 to 7 are occupied by port A, 8 to 9 by prt B, and 10 to
-// 15 by port C
-StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
-  *adc_channel = address.pin;
+StatusCode adc_register_callback(GpioAddress address, AdcCallback callback, void *context) {
+    uint8_t adc_channel;
+    status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
+    if (adc_channel >= NUM_ADC_CHANNELS) {
+      return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+    if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+      return status_code(STATUS_CODE_EMPTY);
+    }
 
-  switch (address.port) {
-    case GPIO_PORT_A:
-      if (address.pin > 7) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
+    s_adc_interrupts[adc_channel].callback = callback;
+    s_adc_interrupts[adc_channel].context = context;
+
+    return STATUS_CODE_OK;
+  }
+
+  StatusCode adc_read_raw(GpioAddress address, uint16_t * reading) {
+    uint8_t adc_channel;
+    status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
+    if (adc_channel >= NUM_ADC_CHANNELS) {
+      return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+    if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+      return status_code(STATUS_CODE_EMPTY);
+    }
+
+    if (!s_adc_status.continuous) {
+      ADC_StartOfConversion(ADC1);
+      while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
       }
-      break;
-    case GPIO_PORT_B:
-      if (address.pin > 1) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+
+    *reading = s_adc_interrupts[adc_channel].reading;
+
+    return STATUS_CODE_OK;
+  }
+
+  StatusCode adc_read_converted(GpioAddress address, uint16_t * reading) {
+    uint8_t adc_channel;
+    status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
+    if (adc_channel >= NUM_ADC_CHANNELS) {
+      return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+    if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+      return status_code(STATUS_CODE_EMPTY);
+    }
+
+    uint16_t adc_reading = 0;
+    adc_read_raw(address, &adc_reading);
+
+    switch (adc_channel) {
+      case ADC_CHANNEL_TEMP:
+        *reading = prv_get_temp(adc_reading);
+        return STATUS_CODE_OK;
+
+      case ADC_CHANNEL_REF:
+        *reading = prv_get_vdda(adc_reading);
+        return STATUS_CODE_OK;
+
+      case ADC_CHANNEL_BAT:
+        adc_reading *= 2;
+        break;
+
+      default:
+        break;
+    }
+
+    uint16_t vdda;
+    GpioAddress ref_address = { .pin = ADC_CHANNEL_REF, };
+    adc_read_converted(ref_address, &vdda);
+    *reading = (adc_reading * vdda) / 4095;
+
+    return STATUS_CODE_OK;
+  }
+
+  void ADC1_COMP_IRQHandler() {
+    if (ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
+      uint16_t reading = ADC_GetConversionValue(ADC1);
+      if (s_adc_status.sequence != 0) {
+        uint8_t current_channel = __builtin_ctz(s_adc_status.sequence);
+
+        if (s_adc_interrupts[current_channel].callback != NULL) {
+          s_adc_interrupts[current_channel].callback(current_channel,
+                                                     s_adc_interrupts[current_channel].context);
+        }
+        
+        s_adc_interrupts[current_channel].reading = reading;
+        s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
       }
-      *adc_channel += 8;
-      break;
-    case GPIO_PORT_C:
-      if (address.pin > 5) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      *adc_channel += 10;
-      break;
-  }
+    }
 
-  if (*adc_channel > ADC_CHANNEL_15) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  return STATUS_CODE_OK;
-}
-
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
-  s_adc_interrupts[adc_channel].callback = callback;
-  s_adc_interrupts[adc_channel].context = context;
-
-  return STATUS_CODE_OK;
-}
-
-StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
-  if (!s_adc_status.continuous) {
-    ADC_StartOfConversion(ADC1);
-    while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
+    if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
+      s_adc_status.sequence = ADC1->CHSELR;
+      ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
     }
   }
-
-  *reading = s_adc_interrupts[adc_channel].reading;
-
-  return STATUS_CODE_OK;
-}
-
-StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
-  uint16_t adc_reading = 0;
-  adc_read_raw(adc_channel, &adc_reading);
-
-  switch (adc_channel) {
-    case ADC_CHANNEL_TEMP:
-      *reading = prv_get_temp(adc_reading);
-      return STATUS_CODE_OK;
-
-    case ADC_CHANNEL_REF:
-      *reading = prv_get_vdda(adc_reading);
-      return STATUS_CODE_OK;
-
-    case ADC_CHANNEL_BAT:
-      adc_reading *= 2;
-      break;
-
-    default:
-      break;
-  }
-
-  uint16_t vdda;
-  adc_read_converted(ADC_CHANNEL_REF, &vdda);
-  *reading = (adc_reading * vdda) / 4095;
-
-  return STATUS_CODE_OK;
-}
-
-void ADC1_COMP_IRQHandler() {
-  if (ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
-    uint16_t reading = ADC_GetConversionValue(ADC1);
-    if (s_adc_status.sequence != 0) {
-      AdcChannel current_channel = __builtin_ctz(s_adc_status.sequence);
-
-      if (s_adc_interrupts[current_channel].callback != NULL) {
-        s_adc_interrupts[current_channel].callback(current_channel,
-                                                   s_adc_interrupts[current_channel].context);
-      }
-
-      s_adc_interrupts[current_channel].reading = reading;
-      s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
-    }
-  }
-
-  if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
-    s_adc_status.sequence = ADC1->CHSELR;
-    ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
-  }
-}
