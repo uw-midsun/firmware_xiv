@@ -10,7 +10,7 @@ Assuming you have our [Vagrant box](https://github.com/uw-midsun/box) installed:
 ```bash
 # Clone the repo
 git clone https://github.com/uw-midsun/firmware_xiv.git firmware_xiv
-cd firmware
+cd firmware_xiv
 
 # Basic commands to verify that building and testing work
 make build_all PLATFORM=x86
