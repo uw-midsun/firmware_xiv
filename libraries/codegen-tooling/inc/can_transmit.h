@@ -422,3 +422,11 @@
     StatusCode status = can_transmit(&msg, NULL);            \
     status;                                                  \
   })
+
+#define CAN_TRANSMIT_SOLAR_DATA(data_point_type_u32, data_value_u32)    \
+  ({                                                                    \
+    CanMessage msg = { 0 };                                             \
+    CAN_PACK_SOLAR_DATA(&msg, (data_point_type_u32), (data_value_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                       \
+    status;                                                             \
+  })
