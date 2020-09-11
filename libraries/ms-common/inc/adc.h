@@ -24,8 +24,9 @@ typedef enum {
 typedef void (*AdcCallback)(GpioAddress address, void *context);
 
 // Initialize the ADC to the desired conversion mode
+// To access/set ADC_CHANNEL_TEMP, ADC_CHANNEL_REF, ADC_CHANNEL_BAT
+// create a GpioAddress, and set pin to requisite AdcChannel
 void adc_init(AdcMode adc_mode);
-// To access ADC_CHANNEL_TEMP, ADC_CHANNEL_REF, ADC_CHANNEL_BAT, initialize
 
 // Enable or disable a given channel.
 // A race condition may occur when setting a channel during a conversion.
