@@ -21,7 +21,13 @@
 #include "log.h"
 #include "soft_timer.h"
 
-#define CAN_BUS_OFF_RECOVERY_TIME_MS 500
+#define CAN_BUS_OFF_RECOVERY_TIME_MS 500  
+
+#ifdef X86
+  #define TX_CALLBACK_ENABLE 0
+#else 
+  #define TX_CALLBACK_ENABLE 1
+#endif
 
 // Attempts to transmit the specified message using the HW TX, overwriting the
 // source device.
@@ -145,14 +151,15 @@ bool can_process_event(const Event *e) {
 }
 
 void prv_tx_handler(void *context) {
-  CanStorage *can_storage = context;
-  CanMessage tx_msg;
-
-  // If we failed to TX some messages or aren't transmitting fast enough, those
-  // events were discarded. Raise a TX event to trigger a transmit attempt. We
-  // only raise one event since TX ready interrupts are 1-to-1.
-  if (can_fifo_size(&can_storage->tx_fifo) > 0) {
-    event_raise(can_storage->tx_event, 0);
+  if(TX_CALLBACK_ENABLE) {
+    CanStorage *can_storage = context;
+    CanMessage tx_msg;
+    // If we failed to TX some messages or aren't transmitting fast enough, those
+    // events were discarded. Raise a TX event to trigger a transmit attempt. We
+    // only raise one event since TX ready interrupts are 1-to-1.
+    if (can_fifo_size(&can_storage->tx_fifo) > 0) {
+      event_raise(can_storage->tx_event, 0);
+    }
   }
 }
 
