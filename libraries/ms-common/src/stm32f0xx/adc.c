@@ -77,11 +77,23 @@ static StatusCode prv_adc_get_channel(GpioAddress address, uint8_t *adc_channel)
         *adc_channel += 10;
         break;
     }
+  }
+  if (*adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  return STATUS_CODE_OK;
+}
 
-    if (*adc_channel >= NUM_ADC_CHANNELS) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    return STATUS_CODE_OK;
+static void prv_channel_to_gpio(GpioAddress *address, uint8_t adc_channel) {
+  if (adc_channel >= 8 && adc_channel < 10) {
+    address->port = GPIO_PORT_B;
+    address->pin = adc_channel - 8;
+  } else if (adc_channel >= 10 && adc_channel < ADC_CHANNEL_TEMP) {
+    address->port = GPIO_PORT_C;
+    address->pin = adc_channel - 10;
+  } else {
+    address->pin = adc_channel;
+  }
 }
 
 void adc_init(AdcMode adc_mode) {
@@ -178,98 +190,100 @@ StatusCode adc_set_channel(GpioAddress address, bool new_state) {
 }
 
 StatusCode adc_register_callback(GpioAddress address, AdcCallback callback, void *context) {
-    uint8_t adc_channel;
-    status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
-    if (adc_channel >= NUM_ADC_CHANNELS) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-      return status_code(STATUS_CODE_EMPTY);
-    }
-
-    s_adc_interrupts[adc_channel].callback = callback;
-    s_adc_interrupts[adc_channel].context = context;
-
-    return STATUS_CODE_OK;
+  uint8_t adc_channel;
+  status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
+  if (adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+    return status_code(STATUS_CODE_EMPTY);
   }
 
-  StatusCode adc_read_raw(GpioAddress address, uint16_t * reading) {
-    uint8_t adc_channel;
-    status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
-    if (adc_channel >= NUM_ADC_CHANNELS) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-      return status_code(STATUS_CODE_EMPTY);
-    }
+  s_adc_interrupts[adc_channel].callback = callback;
+  s_adc_interrupts[adc_channel].context = context;
 
-    if (!s_adc_status.continuous) {
-      ADC_StartOfConversion(ADC1);
-      while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
+  return STATUS_CODE_OK;
+}
+
+StatusCode adc_read_raw(GpioAddress address, uint16_t *reading) {
+  uint8_t adc_channel;
+  status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
+  if (adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+    return status_code(STATUS_CODE_EMPTY);
+  }
+
+  if (!s_adc_status.continuous) {
+    ADC_StartOfConversion(ADC1);
+    while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
+    }
+  }
+
+  *reading = s_adc_interrupts[adc_channel].reading;
+
+  return STATUS_CODE_OK;
+}
+
+StatusCode adc_read_converted(GpioAddress address, uint16_t *reading) {
+  uint8_t adc_channel;
+  status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
+  if (adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+    return status_code(STATUS_CODE_EMPTY);
+  }
+
+  uint16_t adc_reading = 0;
+  adc_read_raw(address, &adc_reading);
+
+  switch (adc_channel) {
+    case ADC_CHANNEL_TEMP:
+      *reading = prv_get_temp(adc_reading);
+      return STATUS_CODE_OK;
+
+    case ADC_CHANNEL_REF:
+      *reading = prv_get_vdda(adc_reading);
+      return STATUS_CODE_OK;
+
+    case ADC_CHANNEL_BAT:
+      adc_reading *= 2;
+      break;
+
+    default:
+      break;
+  }
+
+  uint16_t vdda;
+  GpioAddress ref_address = {
+    .pin = ADC_CHANNEL_REF,
+  };
+  adc_read_converted(ref_address, &vdda);
+  *reading = (adc_reading * vdda) / 4095;
+
+  return STATUS_CODE_OK;
+}
+
+void ADC1_COMP_IRQHandler() {
+  if (ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
+    uint16_t reading = ADC_GetConversionValue(ADC1);
+    if (s_adc_status.sequence != 0) {
+      uint8_t current_channel = __builtin_ctz(s_adc_status.sequence);
+      if (s_adc_interrupts[current_channel].callback != NULL) {
+        GpioAddress address;
+        prv_channel_to_gpio(&address, current_channel);
+        s_adc_interrupts[current_channel].callback(address,
+                                                   s_adc_interrupts[current_channel].context);
       }
-    }
-
-    *reading = s_adc_interrupts[adc_channel].reading;
-
-    return STATUS_CODE_OK;
-  }
-
-  StatusCode adc_read_converted(GpioAddress address, uint16_t * reading) {
-    uint8_t adc_channel;
-    status_ok_or_return(prv_adc_get_channel(address, &adc_channel));
-    if (adc_channel >= NUM_ADC_CHANNELS) {
-      return status_code(STATUS_CODE_INVALID_ARGS);
-    }
-    if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-      return status_code(STATUS_CODE_EMPTY);
-    }
-
-    uint16_t adc_reading = 0;
-    adc_read_raw(address, &adc_reading);
-
-    switch (adc_channel) {
-      case ADC_CHANNEL_TEMP:
-        *reading = prv_get_temp(adc_reading);
-        return STATUS_CODE_OK;
-
-      case ADC_CHANNEL_REF:
-        *reading = prv_get_vdda(adc_reading);
-        return STATUS_CODE_OK;
-
-      case ADC_CHANNEL_BAT:
-        adc_reading *= 2;
-        break;
-
-      default:
-        break;
-    }
-
-    uint16_t vdda;
-    GpioAddress ref_address = { .pin = ADC_CHANNEL_REF, };
-    adc_read_converted(ref_address, &vdda);
-    *reading = (adc_reading * vdda) / 4095;
-
-    return STATUS_CODE_OK;
-  }
-
-  void ADC1_COMP_IRQHandler() {
-    if (ADC_GetITStatus(ADC1, ADC_IT_EOC)) {
-      uint16_t reading = ADC_GetConversionValue(ADC1);
-      if (s_adc_status.sequence != 0) {
-        uint8_t current_channel = __builtin_ctz(s_adc_status.sequence);
-
-        if (s_adc_interrupts[current_channel].callback != NULL) {
-          s_adc_interrupts[current_channel].callback(current_channel,
-                                                     s_adc_interrupts[current_channel].context);
-        }
-        
-        s_adc_interrupts[current_channel].reading = reading;
-        s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
-      }
-    }
-
-    if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
-      s_adc_status.sequence = ADC1->CHSELR;
-      ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
+      s_adc_interrupts[current_channel].reading = reading;
+      s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
     }
   }
+
+  if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
+    s_adc_status.sequence = ADC1->CHSELR;
+    ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
+  }
+}

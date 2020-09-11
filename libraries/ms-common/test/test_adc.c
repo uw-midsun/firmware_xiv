@@ -16,7 +16,7 @@
 static volatile uint8_t s_callback_runs = 0;
 static volatile bool s_callback_ran = false;
 
-static GpioAddress s_address[] = {
+static const GpioAddress s_address[] = {
   {
       GPIO_PORT_A,
       0,
@@ -70,7 +70,6 @@ void setup_test() {
     GPIO_RES_NONE,      //
     GPIO_ALTFN_ANALOG,  //
   };
-
   gpio_init();
   interrupt_init();
 
@@ -99,10 +98,8 @@ void test_set_callback(void) {
   // arguments
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
                     adc_register_callback(s_address[3], prv_callback, NULL));
+  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_register_callback(s_address[4], prv_callback, NULL));
 
-  for (uint8_t i = 0; i < 2; i++) {
-    TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_register_callback(s_address[i], prv_callback, NULL));
-  }
   for (uint8_t i = 0; i < 2; i++) {
     adc_set_channel(s_address[i], true);
   }

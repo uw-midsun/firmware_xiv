@@ -20,6 +20,7 @@ typedef enum {
   NUM_ADC_CHANNELS,
 } AdcChannel;
 
+// Allows use of either channel or GpioAddress, if not using channel write null
 typedef void (*AdcCallback)(GpioAddress address, void *context);
 
 // Initialize the ADC to the desired conversion mode
