@@ -3,6 +3,7 @@
 #include "ads1259_adc.h"
 #include "bms.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "log.h"
 #include "soft_timer.h"
 
@@ -15,7 +16,12 @@ static void prv_ads_error_cb(Ads1259StatusCode code, void *context) {
   } else if (code == ADS1259_STATUS_CODE_CHECKSUM_FAULT) {
     LOG_WARN("ADS1259 ERROR: CHECKSUM FAULT\n");
   }
-  fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE, false);
+
+  if (code != ADS1259_STATUS_CODE_OK) {
+    fault_bps_set(EE_BPS_STATE_FAULT_CURRENT_SENSE);
+  } else {
+    fault_bps_clear(EE_BPS_STATE_FAULT_CURRENT_SENSE);
+  }
 }
 
 // returns value in centiamps
@@ -46,9 +52,9 @@ static void prv_periodic_ads_read(SoftTimerId id, void *context) {
 
   // check faults
   if (storage->average > DISCHARGE_OVERCURRENT_CA || storage->average < CHARGE_OVERCURRENT_CA) {
-    fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE, false);
+    fault_bps_set(EE_BPS_STATE_FAULT_CURRENT_SENSE);
   } else {
-    fault_bps(EE_BPS_STATE_FAULT_CURRENT_SENSE, true);
+    fault_bps_clear(EE_BPS_STATE_FAULT_CURRENT_SENSE);
   }
 }
 
