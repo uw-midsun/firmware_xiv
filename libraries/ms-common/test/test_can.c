@@ -104,7 +104,7 @@ void test_can_basic(void) {
   TEST_ASSERT_EQUAL(msg.msg_id, rx_msg.msg_id);
   TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
 }
-
+/*
 void test_can_filter(void) {
   volatile CanMessage rx_msg = { 0 };
   can_add_filter(0x2);
@@ -140,7 +140,7 @@ void test_can_filter(void) {
   TEST_ASSERT_EQUAL(msg.msg_id, rx_msg.msg_id);
   TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
 }
-
+*/
 void test_can_ack(void) {
   volatile CanMessage rx_msg = { 0 };
   volatile uint16_t device_acked = CAN_MSG_INVALID_DEVICE;
