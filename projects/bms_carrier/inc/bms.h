@@ -28,7 +28,7 @@
 
 typedef struct BmsStorage {
   RelayStorage relay_storage;
-  CurrentReadings current_readings;
+  CurrentStorage current_storage;
   AfeReadings afe_readings;
   FanStorage fan_storage;
   DebouncerStorage killswitch_storage;

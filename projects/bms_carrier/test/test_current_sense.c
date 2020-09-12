@@ -19,7 +19,7 @@ static SpiSettings s_spi_settings = {
   .cs = { .port = GPIO_PORT_B, 12 },
 };
 
-static CurrentReadings s_reads;
+static CurrentStorage s_storage;
 static uint8_t s_fault_bps_bitmask = 0;
 static bool s_fault_bps_clear = false;
 
@@ -45,7 +45,7 @@ StatusCode TEST_MOCK(ads1259_init)(Ads1259Storage *storage, Ads1259Settings *set
 void setup_test(void) {
   interrupt_init();
   soft_timer_init();
-  memset(&s_reads, 0, sizeof(s_reads));
+  memset(&s_storage, 0, sizeof(s_storage));
   s_fault_bps_bitmask = 0;
   s_fault_bps_clear = false;
 
@@ -55,16 +55,9 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-void print_reads() {
-  for (int i = 0; i < NUM_STORED_CURRENT_READINGS; i++) {
-    printf("%d: %d\n", i, s_reads.readings[i]);
-  }
-  printf("avg: %d\n", s_reads.average);
-}
-
 void test_is_charging(void) {
   s_ads_read = 0.5;
-  TEST_ASSERT_OK(current_sense_init(&s_reads, &s_spi_settings, TEST_CS_CONV_DELAY));
+  TEST_ASSERT_OK(current_sense_init(&s_storage, &s_spi_settings, TEST_CS_CONV_DELAY));
   delay_ms(TEST_CS_CONV_DELAY * NUM_STORED_CURRENT_READINGS);
   TEST_ASSERT_FALSE(current_sense_is_charging());
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_CURRENT_SENSE, s_fault_bps_bitmask);
@@ -79,7 +72,7 @@ void test_is_charging(void) {
 
 void test_oc_discharging(void) {
   s_ads_read = 1.5;
-  TEST_ASSERT_OK(current_sense_init(&s_reads, &s_spi_settings, TEST_CS_CONV_DELAY));
+  TEST_ASSERT_OK(current_sense_init(&s_storage, &s_spi_settings, TEST_CS_CONV_DELAY));
   delay_ms(TEST_CS_CONV_DELAY * NUM_STORED_CURRENT_READINGS);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_CURRENT_SENSE, s_fault_bps_bitmask);
   TEST_ASSERT_FALSE(s_fault_bps_clear);
@@ -88,7 +81,7 @@ void test_oc_discharging(void) {
 void test_oc_charging(void) {
   s_ads_read = -0.9;
   s_fault_bps_clear = true;
-  TEST_ASSERT_OK(current_sense_init(&s_reads, &s_spi_settings, TEST_CS_CONV_DELAY));
+  TEST_ASSERT_OK(current_sense_init(&s_storage, &s_spi_settings, TEST_CS_CONV_DELAY));
   delay_ms(TEST_CS_CONV_DELAY * NUM_STORED_CURRENT_READINGS);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_CURRENT_SENSE, s_fault_bps_bitmask);
   TEST_ASSERT_FALSE(s_fault_bps_clear);
@@ -96,17 +89,17 @@ void test_oc_charging(void) {
 
 void test_ring_no_segfault(void) {
   s_ads_read = 0.03;
-  TEST_ASSERT_OK(current_sense_init(&s_reads, &s_spi_settings, TEST_CS_CONV_DELAY));
+  TEST_ASSERT_OK(current_sense_init(&s_storage, &s_spi_settings, TEST_CS_CONV_DELAY));
   delay_ms(TEST_CS_CONV_DELAY * 5);
   s_ads_read = 0.01;
   delay_ms(TEST_CS_CONV_DELAY * (NUM_STORED_CURRENT_READINGS + 3));  // would segfault if incorrect
   // assert it's the calculated value based on 0.01, not 0.03
-  TEST_ASSERT_EQUAL(100, s_reads.average);
+  TEST_ASSERT_EQUAL(100, s_storage.average);
 }
 
 void test_error_cb(void) {
   s_fault_bps_clear = true;
-  TEST_ASSERT_OK(current_sense_init(&s_reads, &s_spi_settings, TEST_CS_CONV_DELAY));
+  TEST_ASSERT_OK(current_sense_init(&s_storage, &s_spi_settings, TEST_CS_CONV_DELAY));
   s_ads_cb(ADS1259_STATUS_CODE_CHECKSUM_FAULT, NULL);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_CURRENT_SENSE, s_fault_bps_bitmask);
   TEST_ASSERT_FALSE(s_fault_bps_clear);

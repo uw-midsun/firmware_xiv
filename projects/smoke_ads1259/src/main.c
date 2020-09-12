@@ -34,7 +34,7 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
               (int)(EXTERNAL_VREF_V * 1000));
     ads1259_get_conversion_data(&s_storage);
     queue[s_index] = s_storage.reading;
-    LOG_DEBUG("%d mV", (uint16_t)(s_storage.reading * 1000));
+    LOG_DEBUG("%d mV\n", (uint16_t)(s_storage.reading * 1000));
     s_index++;
     soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, queue, NULL);
   } else {
