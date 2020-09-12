@@ -90,7 +90,7 @@ static void *prv_rx_thread(void *arg) {
       }
 
       // Limit how often we can receive messages to simulate bus speed
-      usleep(s_socket_data.delay_us);
+      // usleep(s_socket_data.delay_us);
     }
   }
 
@@ -114,7 +114,7 @@ static void *prv_tx_thread(void *arg) {
     int bytes = write(s_socket_data.can_fd, &frame, sizeof(frame));
 
     // Delay to simulate bus speed
-    usleep(s_socket_data.delay_us);
+    // usleep(s_socket_data.delay_us);
 
     if (s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
       s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback(
