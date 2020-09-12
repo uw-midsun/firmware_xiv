@@ -21,7 +21,7 @@
 // ACK timeout: Should account for transit and computation time
 // Note that this timeout is currently an arbitrary value, but should be
 // minimized.
-#define CAN_ACK_TIMEOUT_MS 25
+#define CAN_ACK_TIMEOUT_MS 50
 #define CAN_ACK_MAX_REQUESTS 10
 
 // Converts devices IDs to their bitset form. Populate ACK request bitsets using
