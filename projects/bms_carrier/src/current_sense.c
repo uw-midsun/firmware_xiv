@@ -1,5 +1,7 @@
 #include "current_sense.h"
 
+#include <string.h>
+
 #include "ads1259_adc.h"
 #include "bms.h"
 #include "exported_enums.h"
@@ -7,7 +9,7 @@
 #include "log.h"
 #include "soft_timer.h"
 
-static Ads1259Storage s_storage;
+static Ads1259Storage s_ads1259_storage;
 static bool s_is_charging;
 
 static void prv_ads_error_cb(Ads1259StatusCode code, void *context) {
@@ -31,12 +33,12 @@ static int16_t prv_voltage_to_current(double reading) {
 }
 
 static void prv_periodic_ads_read(SoftTimerId id, void *context) {
-  double reading = s_storage.reading;
+  double reading = s_ads1259_storage.reading;
   int16_t val = prv_voltage_to_current(reading);
   CurrentStorage *storage = context;
   storage->readings_ring[storage->ring_idx] = val;
   storage->ring_idx = (storage->ring_idx + 1) % NUM_STORED_CURRENT_READINGS;
-  ads1259_get_conversion_data(&s_storage);
+  ads1259_get_conversion_data(&s_ads1259_storage);
   soft_timer_start_millis(storage->conv_period_ms, prv_periodic_ads_read, context, NULL);
 
   // update average
@@ -64,6 +66,7 @@ bool current_sense_is_charging() {
 
 StatusCode current_sense_init(CurrentStorage *storage, SpiSettings *settings,
                               uint32_t conv_period_ms) {
+  memset(storage, 0, sizeof(CurrentStorage));
   const Ads1259Settings ads_settings = {
     .spi_port = CURRENT_SENSE_SPI_PORT,
     .spi_baudrate = settings->baudrate,
@@ -75,8 +78,8 @@ StatusCode current_sense_init(CurrentStorage *storage, SpiSettings *settings,
     .error_context = NULL,
   };
   storage->conv_period_ms = conv_period_ms;
-  status_ok_or_return(ads1259_init(&s_storage, &ads_settings));
-  ads1259_get_conversion_data(&s_storage);
+  status_ok_or_return(ads1259_init(&s_ads1259_storage, &ads_settings));
+  ads1259_get_conversion_data(&s_ads1259_storage);
   soft_timer_start_millis(storage->conv_period_ms, prv_periodic_ads_read, storage, NULL);
   return STATUS_CODE_OK;
 }
