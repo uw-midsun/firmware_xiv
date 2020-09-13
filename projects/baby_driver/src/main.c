@@ -1,11 +1,8 @@
-#include <string.h>
-
 #include "can.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
-#include "soft_timer.h"
 
 #define CAN_DEVICE_ID 0x1
 
@@ -33,24 +30,21 @@ static GpioSettings s_led_settings = { .direction = GPIO_DIR_OUT,
                                        .alt_function = GPIO_ALTFN_NONE,
                                        .resistor = GPIO_RES_NONE };
 
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  LOG_DEBUG("Receive CAN Message\n");
+static StatusCode prv_default_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  LOG_DEBUG("Received CAN Message\n");
   return STATUS_CODE_OK;
 }
 
 int main() {
-  LOG_DEBUG("Welcome to BabyDrier!\n");
+  LOG_DEBUG("Welcome to BabyDriver!\n");
   gpio_init();
   event_queue_init();
   interrupt_init();
-  soft_timer_init();
 
   can_init(&s_can_storage, &s_can_settings);
-  can_register_rx_default_handler(prv_rx_callback, NULL);
+  can_register_rx_default_handler(prv_default_rx_callback, NULL);
 
   Event e = { 0 };
-  int i = 0;
-
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
     }

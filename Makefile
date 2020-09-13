@@ -135,7 +135,7 @@ ROOT := $(shell pwd)
 
 # Actually calls the make
 .PHONY: all
-all: build lint pylint
+all: build lint pylint babydriver
 
 # Includes platform-specific configurations
 include $(PLATFORMS_DIR)/$(PLATFORM)/platform.mk
@@ -246,3 +246,11 @@ update_codegen:
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
+
+#get rid of x86 later
+.PHONY: babydriver
+babydriver:
+	@make run PROJECT=baby_driver PLATFORM=x86
+	# @python3
+	# @from projects.baby_driver.scripts import can_message
+
