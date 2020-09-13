@@ -27,22 +27,22 @@ void teardown_test(void) {}
 
 void test_fault(void) {
   TEST_ASSERT_OK(fault_bps_init(&s_bms_storage));
-  fault_bps(EE_BPS_STATE_FAULT_AFE_CELL, false);
+  fault_bps_set(EE_BPS_STATE_FAULT_AFE_CELL);
   TEST_ASSERT_TRUE(s_relay_faulted);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_AFE_CELL, s_bms_storage.bps_storage.fault_bitset);
-  fault_bps(EE_BPS_STATE_FAULT_RELAY, false);
+  fault_bps_set(EE_BPS_STATE_FAULT_RELAY);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_AFE_CELL | EE_BPS_STATE_FAULT_RELAY,
                     s_bms_storage.bps_storage.fault_bitset);
 }
 
 void test_fault_clear(void) {
   TEST_ASSERT_OK(fault_bps_init(&s_bms_storage));
-  fault_bps(EE_BPS_STATE_FAULT_AFE_CELL, false);
-  fault_bps(EE_BPS_STATE_FAULT_RELAY, false);
+  fault_bps_set(EE_BPS_STATE_FAULT_AFE_CELL);
+  fault_bps_set(EE_BPS_STATE_FAULT_RELAY);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_AFE_CELL | EE_BPS_STATE_FAULT_RELAY,
                     s_bms_storage.bps_storage.fault_bitset);
-  fault_bps(EE_BPS_STATE_FAULT_RELAY, true);
+  fault_bps_clear(EE_BPS_STATE_FAULT_RELAY);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_AFE_CELL, s_bms_storage.bps_storage.fault_bitset);
-  fault_bps(EE_BPS_STATE_FAULT_AFE_CELL, true);
+  fault_bps_clear(EE_BPS_STATE_FAULT_AFE_CELL);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_OK, s_bms_storage.bps_storage.fault_bitset);
 }

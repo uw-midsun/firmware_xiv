@@ -5,4 +5,6 @@
 
 StatusCode fault_bps_init(BmsStorage *storage);
 
-StatusCode fault_bps(uint8_t fault_bitmask, bool clear);
+StatusCode fault_bps_set(uint8_t fault_bitmask);
+
+StatusCode fault_bps_clear(uint8_t fault_bitmask);

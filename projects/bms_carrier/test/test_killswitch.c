@@ -16,9 +16,16 @@ static GpioState s_gpio_state_get = NUM_GPIO_STATES;
 
 static DebouncerStorage s_killswitch_storage = { 0 };
 
-StatusCode TEST_MOCK(fault_bps)(uint8_t fault_bitmask, bool clear) {
+StatusCode TEST_MOCK(fault_bps_set)(uint8_t fault_bitmask) {
   s_bps_fault_mask = fault_bitmask;
-  s_bps_fault_clear = clear;
+  s_bps_fault_clear = false;
+  s_fault_bps_calls++;
+  return STATUS_CODE_OK;
+}
+
+StatusCode TEST_MOCK(fault_bps_clear)(uint8_t fault_bitmask) {
+  s_bps_fault_mask = fault_bitmask;
+  s_bps_fault_clear = true;
   s_fault_bps_calls++;
   return STATUS_CODE_OK;
 }

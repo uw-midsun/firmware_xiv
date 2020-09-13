@@ -26,7 +26,7 @@ void prv_relay_fault(RelayStorage *storage, bool internal) {
   soft_timer_cancel(storage->next_step_timer_id);
   if (internal) {
     // fault bps
-    fault_bps(EE_BPS_STATE_FAULT_RELAY, false);
+    fault_bps_set(EE_BPS_STATE_FAULT_RELAY);
   }
   CAN_TRANSMIT_BATTERY_RELAY_STATE(storage->hv_enabled, storage->gnd_enabled);
 }
