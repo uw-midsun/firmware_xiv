@@ -53,10 +53,16 @@ StatusCode TEST_MOCK(gpio_set_state)(const GpioAddress *address, GpioState state
 
 static uint8_t s_fault_bps_bitmask = 0;
 static uint8_t s_fault_bps_calls = 0;
-void TEST_MOCK(fault_bps)(uint8_t bitmask, bool clear) {
+void TEST_MOCK(fault_bps_set)(uint8_t bitmask) {
   s_fault_bps_bitmask = bitmask;
   s_fault_bps_calls++;
-  TEST_ASSERT_NOT_EQUAL((bool)bitmask, clear);
+  TEST_ASSERT_NOT_EQUAL((bool)bitmask, false);
+}
+
+void TEST_MOCK(fault_bps_clear)(uint8_t bitmask) {
+  s_fault_bps_bitmask = bitmask;
+  s_fault_bps_calls++;
+  TEST_ASSERT_NOT_EQUAL((bool)bitmask, true);
 }
 
 static RelayStorage s_storage = { 0 };
