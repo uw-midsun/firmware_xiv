@@ -2,6 +2,7 @@
 
 #include "bms.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "gpio_it.h"
 
 static void prv_killswitch_handler(const GpioAddress *address, void *context) {

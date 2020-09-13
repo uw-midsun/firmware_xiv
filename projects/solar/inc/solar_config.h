@@ -3,6 +3,7 @@
 // Provides all hardware settings and configuration for solar.
 
 #include "can.h"
+#include "data_tx.h"
 #include "fault_handler.h"
 #include "fault_monitor.h"
 #include "gpio.h"
@@ -31,6 +32,8 @@ const GpioAddress *config_get_drv120_relay_pin(void);
 const SenseSettings *config_get_sense_settings(void);
 
 const FaultHandlerSettings *config_get_fault_handler_settings(void);
+
+const DataTxSettings *config_get_data_tx_settings(void);
 
 const SenseTemperatureSettings *config_get_sense_temperature_settings(SolarMpptCount mppt_count);
 

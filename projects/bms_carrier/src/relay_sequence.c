@@ -4,6 +4,7 @@
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "mcp23008_gpio_expander.h"
@@ -14,7 +15,7 @@ static GpioAddress s_io_expander_int = BMS_IO_EXPANDER_INT_PIN;
 static Mcp23008GpioAddress s_mcp23008_hv = BMS_IO_EXPANDER_HV_SENSE_ADDR;
 static Mcp23008GpioAddress s_mcp23008_gnd = BMS_IO_EXPANDER_GND_SENSE_ADDR;
 
-void prv_relay_fault(RelayStorage *storage) {
+void prv_relay_fault(RelayStorage *storage, bool internal) {
   // cancel timers
   soft_timer_cancel(storage->assertion_timer_id);
   soft_timer_cancel(storage->next_step_timer_id);
@@ -23,16 +24,19 @@ void prv_relay_fault(RelayStorage *storage) {
   // skip assertion, we're already faulted
   soft_timer_cancel(storage->assertion_timer_id);
   soft_timer_cancel(storage->next_step_timer_id);
-  // fault bps
-  fault_bps(EE_BPS_STATE_FAULT_RELAY, false);
+  if (internal) {
+    // fault bps
+    fault_bps(EE_BPS_STATE_FAULT_RELAY, false);
+  }
+  CAN_TRANSMIT_BATTERY_RELAY_STATE(storage->hv_enabled, storage->gnd_enabled);
 }
 
 void prv_assert_state(SoftTimerId timer_id, void *context) {
   RelayStorage *storage = context;
   if (storage->hv_enabled != storage->hv_expected_state) {
-    prv_relay_fault(storage);
+    prv_relay_fault(storage, true);
   } else if (storage->gnd_enabled != storage->gnd_expected_state) {
-    prv_relay_fault(storage);
+    prv_relay_fault(storage, true);
   }
 }
 
@@ -145,5 +149,10 @@ void prv_relay_close_gnd(RelayStorage *storage) {
 
 StatusCode relay_close_sequence(RelayStorage *storage) {
   prv_relay_close_gnd(storage);
+  return STATUS_CODE_OK;
+}
+
+StatusCode relay_fault(RelayStorage *storage) {
+  prv_relay_fault(storage, false);
   return STATUS_CODE_OK;
 }

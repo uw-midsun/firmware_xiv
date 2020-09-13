@@ -2,6 +2,7 @@
 
 #include "can_msg_defs.h"
 #include "data_store.h"
+#include "data_tx.h"
 #include "exported_enums.h"
 #include "gpio.h"
 #include "mcp3427_adc.h"
@@ -12,6 +13,10 @@
 
 // Time between sense cycles (i.e. frequency of data update). 1 second.
 #define SENSE_CYCLE_PERIOD_US 1000000
+
+// Parameters for data_tx: we TX 8 messages at a time 100ms apart to avoid exhausting the CAN queue.
+#define DATA_TX_WAIT_TIME_MS 100
+#define DATA_TX_MSGS_PER_TX_ITERATION 8
 
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
 // Must be calibrated.
@@ -99,6 +104,11 @@ static const FaultHandlerSettings s_fault_handler_settings = {
   .num_relay_open_faults = 3,
 };
 
+static const DataTxSettings s_data_tx_settings = {
+  .wait_between_tx_in_millis = DATA_TX_WAIT_TIME_MS,
+  .msgs_per_tx_iteration = DATA_TX_MSGS_PER_TX_ITERATION,
+};
+
 const I2CSettings *config_get_i2c1_settings(void) {
   return &s_i2c1_settings;
 }
@@ -125,6 +135,10 @@ const SenseSettings *config_get_sense_settings(void) {
 
 const FaultHandlerSettings *config_get_fault_handler_settings(void) {
   return &s_fault_handler_settings;
+}
+
+const DataTxSettings *config_get_data_tx_settings(void) {
+  return &s_data_tx_settings;
 }
 
 // |num_mcp3427s| is set dynamically by |config_get_sense_mcp3427_settings|
