@@ -7,6 +7,12 @@
 #include "gpio.h"
 #include "status.h"
 
+//Following definitions allow ADC internal channels to be accessed
+//via compound literal GpioAddresses -> can be passed to new functions
+#define ADC_CHANNEL_TEMP_PIN ((GpioAddress){0,16})
+#define ADC_CHANNEL_REF_PIN ((GpioAddress){0,17})
+#define ADC_CHANNEL_BAT_PIN ((GpioAddress){0,18})
+
 typedef enum {
   ADC_MODE_SINGLE = 0,
   ADC_MODE_CONTINUOUS,
@@ -36,14 +42,33 @@ typedef enum {
   NUM_ADC_CHANNELS,
 } AdcChannel;
 
-typedef void (*AdcCallback)(AdcChannel adc_channel, void *context);
-
+typedef void (*AdcPinCallback)(GpioAddress address, void *context);
 // Initialize the ADC to the desired conversion mode
 void adc_init(AdcMode adc_mode);
 
-// Enable or disable a given channel.
-// A race condition may occur when setting a channel during a conversion.
+// Enable or disable a given pin.
+// A race condition may occur when setting a pin during a conversion.
 // However, it should not cause issues given the intended use cases
+StatusCode adc_set_channel_pin(GpioAddress address, bool new_state);
+
+// Register a callback function to be called when the specified pin
+// completes a conversion
+StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context);
+
+// Obtain the raw 12-bit value read by the specified pin
+StatusCode adc_read_raw_pin(GpioAddress address, uint16_t *reading);
+
+// Obtain the converted value at the specified pin
+StatusCode adc_read_converted_pin(GpioAddress address, uint16_t *reading);
+
+
+
+
+//Following functions use adc channels as seen above
+//but are now deprecated, they are still used in the current code base
+
+typedef void (*AdcCallback)(AdcChannel adc_channel, void *context);
+
 StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state);
 
 // Return a channel corresponding to the given GPIO address
@@ -58,3 +83,5 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading);
 
 // Obtain the converted value at the specified channel
 StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading);
+
+//Begin 

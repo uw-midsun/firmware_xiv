@@ -21,12 +21,27 @@ typedef struct AdcInterrupt {
   uint16_t reading;
 } AdcInterrupt;
 
+typedef struct AdcPinInterrupt {
+  AdcCallback callback;
+  void *context;
+  uint16_t reading;
+} AdcInterrupt;
+
 typedef struct AdcStatus {
   uint32_t sequence;
   bool continuous;
 } AdcStatus;
 
+typedef enum {
+  ADC_NONE,
+  ADC_CHANNEL,
+  ADC_GPIO,
+  NUM_ADC_INP,
+} AdcInputs;
+
 static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
+static AdcInterrupt s_adc_pin_interrupts[NUM_ADC_CHANNELS];
+static AdcInputs s_adc_inputs[NUM_ADC_CHANNELS];
 static AdcStatus s_adc_status;
 
 // Formula obtained from section 13.9 of the reference manual. Returns reading
@@ -145,28 +160,28 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
 // 15 by port C
 StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
   *adc_channel = address.pin;
-
-  switch (address.port) {
-    case GPIO_PORT_A:
-      if (address.pin > 7) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      break;
-    case GPIO_PORT_B:
-      if (address.pin > 1) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      *adc_channel += 8;
-      break;
-    case GPIO_PORT_C:
-      if (address.pin > 5) {
-        return status_code(STATUS_CODE_INVALID_ARGS);
-      }
-      *adc_channel += 10;
-      break;
+  if(address.pin < 16) {
+    switch (address.port) {
+      case GPIO_PORT_A:
+        if (address.pin > 7 ||) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        break;
+      case GPIO_PORT_B:
+        if (address.pin > 1) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        *adc_channel += 8;
+        break;
+      case GPIO_PORT_C:
+        if (address.pin > 5) {
+          return status_code(STATUS_CODE_INVALID_ARGS);
+        }
+        *adc_channel += 10;
+        break;
+    }
   }
-
-  if (*adc_channel > ADC_CHANNEL_15) {
+  if (*adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   return STATUS_CODE_OK;
@@ -182,6 +197,7 @@ StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, v
 
   s_adc_interrupts[adc_channel].callback = callback;
   s_adc_interrupts[adc_channel].context = context;
+  s_adc_inputs[adc_channel] = ADC_CHANNEL;
 
   return STATUS_CODE_OK;
 }
@@ -245,10 +261,16 @@ void ADC1_COMP_IRQHandler() {
     uint16_t reading = ADC_GetConversionValue(ADC1);
     if (s_adc_status.sequence != 0) {
       AdcChannel current_channel = __builtin_ctz(s_adc_status.sequence);
-
       if (s_adc_interrupts[current_channel].callback != NULL) {
-        s_adc_interrupts[current_channel].callback(current_channel,
-                                                   s_adc_interrupts[current_channel].context);
+        if(s_adc_type[current_channel] == ADC_CHANNEL) {
+          s_adc_interrupts[current_channel].callback(current_channel,
+                                                    s_adc_interrupts[current_channel].context);
+        } 
+        else if(s_adc_type[current_channel] == ADC_GPIO) {
+          s_adc_interrupts[current_channel].callback(current_channel,
+                                                    s_adc_interrupts[current_channel].context);
+        }
+
       }
 
       s_adc_interrupts[current_channel].reading = reading;
@@ -260,4 +282,31 @@ void ADC1_COMP_IRQHandler() {
     s_adc_status.sequence = ADC1->CHSELR;
     ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
   }
+}
+
+// Begin implementation of GpioAddress function definitions
+StatusCode adc_set_channel_pin(GpioAddress address, bool new_state) {
+  AdcChannel channel;
+  status_ok_or_return(adc_get_channel(address, &channel));
+  return adc_set_channel(channel, new_state);
+}
+
+StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context) {
+  AdcChannel channel;
+  GpioAddress in_ad = callback.address;
+  adc_get
+  status_ok_or_return(adc_get_channel(address, &channel));
+  return adc_register_callback(channel, callback, context);
+}
+
+StatusCode adc_read_raw_pin(GpioAddress address, uint16_t *reading) {
+  AdcChannel channel;
+  status_ok_or_return(adc_get_channel(address, &channel));
+  return adc_read_raw(channel, reading);
+}
+
+StatusCode adc_read_converted_pin(GpioAddress address, uint16_t *reading) {
+  AdcChannel channel;
+  status_ok_or_return(adc_get_channel(address, &channel));
+  return adc_read_converted(channel, reading)
 }
