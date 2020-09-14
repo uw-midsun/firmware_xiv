@@ -275,3 +275,35 @@ void test_can_default(void) {
   TEST_ASSERT_EQUAL(msg.msg_id, rx_msg.msg_id);
   TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
 }
+
+#if 1
+void test_can_x86_tx(void) {
+  volatile CanMessage rx_msg = { 0 };
+  can_register_rx_handler(0x6, prv_rx_callback, &rx_msg);
+  CanMessage msg = {
+    .msg_id = 0x1,              //
+    .type = CAN_MSG_TYPE_DATA,  //
+    .data = 0x1,                //
+    .dlc = 1,                   //
+  };
+
+  can_register_rx_default_handler(prv_rx_callback, &rx_msg);
+
+  for(uint8_t i = 0x1; i < 0xA; i++) {
+    msg.data = i;
+    StatusCode ret = can_transmit(&msg, NULL);
+    TEST_ASSERT_OK(ret);
+    prv_clock_tx();
+  }
+
+  Event e = { 0 };
+  // Handle message RX
+  for(uint8_t i = 0; i < 10; i++) {
+    event_process(&e);
+    bool processed = can_process_event(&e);
+    LOG_DEBUG("MSG ID IS: %x\n", e.data);
+    //TEST_ASSERT_TRUE(processed);
+  }
+  //TEST_ASSERT_FALSE(can_process_event(&e));
+}
+#endif
