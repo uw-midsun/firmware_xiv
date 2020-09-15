@@ -353,11 +353,11 @@ void test_pin_continuous() {
   }
 
   // Run a busy loop until a callback is triggered
-  while (!s_callback_runs) {
+  while (!s_pin_callback_ran) {
   }
 
-  TEST_ASSERT_TRUE(s_callback_ran);
-  TEST_ASSERT_TRUE(s_callback_runs > 0);
+  TEST_ASSERT_TRUE(s_pin_callback_ran);
+  TEST_ASSERT_TRUE(s_pin_callback_runs > 0);
 }
 
 void test_pin_read_single(void) {
