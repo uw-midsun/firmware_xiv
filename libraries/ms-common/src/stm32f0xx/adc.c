@@ -20,14 +20,6 @@ typedef struct AdcStatus {
   bool continuous;
 } AdcStatus;
 
-typedef enum {
-  ADC_NONE,
-  ADC_CHANNEL,
-  ADC_GPIO,
-  NUM_ADC_INP,
-} AdcInputs;
-
-static AdcInputs s_adc_inputs[NUM_ADC_CHANNELS];
 static AdcStatus s_adc_status;
 
 // Functionalities used by GpioAddress version of adc library
@@ -217,7 +209,9 @@ StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, v
 
   s_adc_interrupts[adc_channel].callback = callback;
   s_adc_interrupts[adc_channel].context = context;
-  s_adc_inputs[adc_channel] = ADC_CHANNEL;
+  // ensure only one callback is registered for a given channel
+  s_adc_pin_interrupts[adc_channel].callback = NULL;
+  s_adc_pin_interrupts[adc_channel].context = NULL;
 
   return STATUS_CODE_OK;
 }
@@ -281,24 +275,22 @@ void ADC1_COMP_IRQHandler() {
     uint16_t reading = ADC_GetConversionValue(ADC1);
     if (s_adc_status.sequence != 0) {
       AdcChannel current_channel = __builtin_ctz(s_adc_status.sequence);
-      if (s_adc_interrupts[current_channel].callback ||
-          s_adc_pin_interrupts[current_channel].callback) {
-        if (s_adc_inputs[current_channel] == ADC_CHANNEL) {
-          s_adc_interrupts[current_channel].callback(current_channel,
-                                                     s_adc_interrupts[current_channel].context);
-        } else if (s_adc_inputs[current_channel] == ADC_GPIO) {
-          s_adc_pin_interrupts[current_channel].callback(prv_channel_to_gpio(current_channel),
-                                                         s_adc_interrupts[current_channel].context);
-        }
+      if (s_adc_interrupts[current_channel].callback) {
+        s_adc_interrupts[current_channel].callback(current_channel,
+                                                   s_adc_interrupts[current_channel].context);
+      } else if (s_adc_pin_interrupts[current_channel].callback) {
+        s_adc_pin_interrupts[current_channel].callback(
+            prv_channel_to_gpio(current_channel), s_adc_pin_interrupts[current_channel].context);
       }
-      s_adc_interrupts[current_channel].reading = reading;
-      s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
     }
+    s_adc_interrupts[current_channel].reading = reading;
+    s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
   }
-  if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
-    s_adc_status.sequence = ADC1->CHSELR;
-    ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
-  }
+}
+if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
+  s_adc_status.sequence = ADC1->CHSELR;
+  ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
+}
 }
 
 // Begin implementation of GpioAddress function definitions
@@ -320,7 +312,9 @@ StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callbac
 
   s_adc_pin_interrupts[adc_channel].callback = callback;
   s_adc_pin_interrupts[adc_channel].context = context;
-  s_adc_inputs[adc_channel] = ADC_GPIO;
+  // ensure only one callback registered per channel
+  s_adc_interrupts[adc_channel].callback = NULL;
+  s_adc_interrupts[adc_channel].context = NULL;
 
   return STATUS_CODE_OK;
 }
