@@ -15,18 +15,6 @@
 // datasheet
 #define ADC_VREFINT_CAL 0x1FFFF7ba
 
-typedef struct AdcInterrupt {
-  AdcCallback callback;
-  void *context;
-  uint16_t reading;
-} AdcInterrupt;
-
-typedef struct AdcPinInterrupt {
-  AdcPinCallback callback;
-  void *context;
-  uint16_t reading;
-} AdcPinInterrupt;
-
 typedef struct AdcStatus {
   uint32_t sequence;
   bool continuous;
@@ -39,10 +27,26 @@ typedef enum {
   NUM_ADC_INP,
 } AdcInputs;
 
-static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
-static AdcPinInterrupt s_adc_pin_interrupts[NUM_ADC_CHANNELS];
 static AdcInputs s_adc_inputs[NUM_ADC_CHANNELS];
 static AdcStatus s_adc_status;
+
+// Functionalities used by GpioAddress version of adc library
+typedef struct AdcInterrupt {
+  AdcCallback callback;
+  void *context;
+  uint16_t reading;
+} AdcInterrupt;
+
+static AdcPinInterrupt s_adc_pin_interrupts[NUM_ADC_CHANNELS];
+
+// Functionalities used by AdcChannel version of adc library
+typedef struct AdcPinInterrupt {
+  AdcPinCallback callback;
+  void *context;
+  uint16_t reading;
+} AdcPinInterrupt;
+
+static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
 
 // Formula obtained from section 13.9 of the reference manual. Returns reading
 // in kelvin
