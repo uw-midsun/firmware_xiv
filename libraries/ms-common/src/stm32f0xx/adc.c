@@ -29,7 +29,7 @@ typedef struct AdcInterrupt {
   uint16_t reading;
 } AdcInterrupt;
 
-static AdcPinInterrupt s_adc_pin_interrupts[NUM_ADC_CHANNELS];
+static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
 
 // Functionalities used by AdcChannel version of adc library
 typedef struct AdcPinInterrupt {
@@ -38,7 +38,7 @@ typedef struct AdcPinInterrupt {
   uint16_t reading;
 } AdcPinInterrupt;
 
-static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
+static AdcPinInterrupt s_adc_pin_interrupts[NUM_ADC_CHANNELS];
 
 // Formula obtained from section 13.9 of the reference manual. Returns reading
 // in kelvin
@@ -284,15 +284,15 @@ void ADC1_COMP_IRQHandler() {
         s_adc_pin_interrupts[current_channel].callback(
             prv_channel_to_gpio(current_channel), s_adc_pin_interrupts[current_channel].context);
       }
+      s_adc_interrupts[current_channel].reading = reading;
+      s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
     }
-    s_adc_interrupts[current_channel].reading = reading;
-    s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
   }
-}
-if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
-  s_adc_status.sequence = ADC1->CHSELR;
-  ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
-}
+
+  if (ADC_GetITStatus(ADC1, ADC_IT_EOSEQ)) {
+    s_adc_status.sequence = ADC1->CHSELR;
+    ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
+  }
 }
 
 // Begin implementation of GpioAddress function definitions
