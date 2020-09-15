@@ -118,7 +118,7 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: driver display, steering, centre console, pedal, horn, speaker,
+                      // Turn on: driver display, steering, centre console, pedal, speaker,
                       // left display, right display, rear display, left camera, right camera, main
                       // rPi, rear rPi
                       {
@@ -138,10 +138,6 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
-                          .address = FRONT_PIN_HORN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
                           .address = FRONT_PIN_SPEAKER_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
@@ -174,13 +170,13 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                   },
-              .num_outputs = 13,
+              .num_outputs = 12,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: driver display, steering, centre console, pedal, horn, speaker,
+                      // Turn on: driver display, steering, centre console, pedal, speaker,
                       // left display, right display, rear display, main rPi, rear rPi
                       // Turn off: left camera, right camera (in case we go from on to aux)
                       {
@@ -200,10 +196,6 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
-                          .address = FRONT_PIN_HORN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
                           .address = FRONT_PIN_SPEAKER_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
@@ -236,13 +228,13 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
                       },
                   },
-              .num_outputs = 13,
+              .num_outputs = 12,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
-                      // Turn on (or keep on): centre console, pedal, horn
+                      // Turn on (or keep on): centre console, pedal
                       // Turn off: driver display, steering, speaker, left display, right display,
                       // rear display, main rPi, rear rPi, left camera, right camera, parking brake,
                       // daytime running lights, front left turn light, front right turn light
@@ -252,10 +244,6 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                       },
                       {
                           .address = FRONT_PIN_PEDAL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = FRONT_PIN_HORN_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
@@ -315,7 +303,7 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
                       },
                   },
-              .num_outputs = 17,
+              .num_outputs = 16,
           },
       },
   .num_events = 12,
