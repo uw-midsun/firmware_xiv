@@ -14,9 +14,25 @@
 static volatile uint8_t s_callback_runs = 0;
 static volatile bool s_callback_ran = false;
 
+static volatile uint8_t s_pin_callback_runs = 0;
+static volatile bool s_pin_callback_ran = false;
+
+static const GpioAddress s_address[] = {
+  { GPIO_PORT_A, 0 },
+  { GPIO_PORT_A, 1 },
+  { GPIO_PORT_A, 2 },
+  { GPIO_PORT_A, 3 },
+  { NUM_GPIO_PORTS, NUM_ADC_CHANNELS },
+};
+
 void prv_callback(AdcChannel adc_channel, void *context) {
   s_callback_runs++;
   s_callback_ran = true;
+}
+
+void prv_callback_pin(GpioAddress address, void *context) {
+  s_pin_callback_runs++;
+  s_pin_callback_ran = true;
 }
 
 void prv_mock_read_callback(AdcChannel adc_channel, void *context) {
@@ -34,6 +50,18 @@ void prv_adc_check_range(AdcChannel adc_channel) {
     TEST_ASSERT_TRUE(raw_reading <= 4095);
 
     adc_read_converted(adc_channel, &conv_reading);
+    TEST_ASSERT_TRUE(conv_reading <= 3000);
+  }
+}
+
+void prv_adc_check_range_pin(GpioAddress address) {
+  uint16_t raw_reading = 0;
+  uint16_t conv_reading = 0;
+
+  for (uint8_t i = 0; i < 12; i++) {
+    adc_read_raw_pin(address, &raw_reading);
+    TEST_ASSERT_TRUE(raw_reading <= 4095);
+    adc_read_converted_pin(address, &conv_reading);
     TEST_ASSERT_TRUE(conv_reading <= 3000);
   }
 }
@@ -64,6 +92,9 @@ void setup_test() {
 
   for (uint8_t i = ADC_CHANNEL_0; i < ADC_CHANNEL_2; i++) {
     gpio_init_pin(&address[i], &settings);
+  }
+  for (uint8_t i = 0; i < 2; i++) {
+    gpio_init_pin(&s_address[i], &settings);
   }
 
   adc_init(ADC_MODE_SINGLE);
@@ -210,6 +241,11 @@ void test_adc_get_channel() {
   TEST_ASSERT_OK(adc_get_channel(address[2], &adc_channel));
   address[2].pin = 6;
   TEST_ASSERT_NOT_OK(adc_get_channel(address[2], &adc_channel));
+
+  address[0].pin = 16;
+  TEST_ASSERT_OK(adc_get_channel(address[0], &adc_channel));
+  address[0].pin = 19;
+  TEST_ASSERT_NOT_OK(adc_get_channel(address[0], &adc_channel));
 }
 
 void test_adc_read_temp() {
@@ -238,4 +274,122 @@ void test_adc_mock_reading() {
 
   adc_read_raw(channel, &reading);
   TEST_ASSERT_TRUE(reading == ADC_MOCK_READING);
+}
+
+void test_pin_set_channel(void) {
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, adc_set_channel_pin(s_address[4], true));
+  for (uint8_t i = 0; i < 3; i++) {
+    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_set_channel_pin(s_address[i], true));
+  }
+  for (uint8_t i = 0; i < 3; i++) {
+    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_set_channel(ADC_CHANNEL_0, false));
+  }
+}
+
+void test_pin_set_callback(void) {
+  // Check that callbacks can only be registered with the correct channel
+  // arguments
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
+                    adc_register_callback_pin(s_address[4], prv_callback_pin, NULL));
+
+  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY,
+                    adc_register_callback_pin(s_address[3], prv_callback_pin, NULL));
+
+  for (uint8_t i = 0; i < 3; i++) {
+    adc_set_channel_pin(s_address[i], true);
+  }
+  for (uint8_t i = 0; i < 3; i++) {
+    TEST_ASSERT_EQUAL(STATUS_CODE_OK,
+                      adc_register_callback_pin(s_address[i], prv_callback_pin, NULL));
+  }
+}
+
+void test_pin_single(void) {
+  uint16_t reading;
+
+  // Initialize the ADC to single mode and configure the channels
+  adc_init(ADC_MODE_SINGLE);
+
+  for (uint8_t i = 0; i < 2; i++) {
+    adc_set_channel_pin(s_address[i], true);
+  }
+
+  for (uint8_t i = 0; i < 2; i++) {
+    adc_register_callback_pin(s_address[i], prv_callback_pin, NULL);
+  }
+
+  // Callbacks must not run in single mode unless a read occurs
+  TEST_ASSERT_FALSE(s_pin_callback_ran);
+  TEST_ASSERT_EQUAL(false, s_pin_callback_runs);
+
+  // Ensure that the conversions happen once adc_read_value is called
+  for (uint8_t i = 0; i < 2; i++) {
+    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_read_raw_pin(s_address[i], &reading));
+  }
+
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, adc_read_raw_pin(s_address[4], &reading));
+  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_read_raw_pin(s_address[3], &reading));
+
+  while (!s_callback_ran) {
+  }
+
+  TEST_ASSERT_TRUE(s_callback_ran);
+  TEST_ASSERT_TRUE(s_callback_runs > 0);
+  TEST_ASSERT_TRUE(reading < 4095);
+}
+
+void test_pin_continuous() {
+  s_callback_runs = 0;
+  s_callback_ran = false;
+
+  // Initialize ADC and check that adc_init() can properly reset the ADC
+  adc_init(ADC_MODE_CONTINUOUS);
+
+  for (uint8_t i = 0; i < 2; i++) {
+    adc_set_channel_pin(s_address[i], true);
+  }
+  for (uint8_t i = 0; i < 2; i++) {
+    adc_register_callback_pin(s_address[i], prv_callback_pin, NULL);
+  }
+
+  // Run a busy loop until a callback is triggered
+  while (!s_callback_runs) {
+  }
+
+  TEST_ASSERT_TRUE(s_callback_ran);
+  TEST_ASSERT_TRUE(s_callback_runs > 0);
+}
+
+void test_pin_read_single(void) {
+  // Check that both the raw readings and converted readings are within the
+  // expected range
+  adc_init(ADC_MODE_SINGLE);
+
+  adc_set_channel_pin(s_address[0], true);
+  adc_register_callback_pin(s_address[0], prv_callback_pin, NULL);
+
+  prv_adc_check_range_pin(s_address[0]);
+}
+
+void test_pin_read_continuous(void) {
+  // Check that both the raw readings and converted readings are within the
+  // expected range
+  adc_init(ADC_MODE_CONTINUOUS);
+
+  adc_set_channel_pin(s_address[0], true);
+  adc_register_callback_pin(s_address[0], prv_callback_pin, NULL);
+
+  prv_adc_check_range_pin(s_address[0]);
+}
+
+void test_pin_adc_read_temp() {
+  adc_init(ADC_MODE_SINGLE);
+  adc_set_channel_pin(ADC_CHANNEL_TEMP_PIN, true);
+
+  uint16_t reading;
+  adc_read_converted_pin(ADC_CHANNEL_TEMP_PIN, &reading);
+
+  // ensure value is within reason
+  TEST_ASSERT_TRUE(ADC_INVALID_UNDER_TEMP < reading);
+  TEST_ASSERT_TRUE(ADC_INVALID_OVER_TEMP > reading);
 }

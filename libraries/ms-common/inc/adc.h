@@ -7,11 +7,11 @@
 #include "gpio.h"
 #include "status.h"
 
-//Following definitions allow ADC internal channels to be accessed
-//via compound literal GpioAddresses -> can be passed to new functions
-#define ADC_CHANNEL_TEMP_PIN ((GpioAddress){0,16})
-#define ADC_CHANNEL_REF_PIN ((GpioAddress){0,17})
-#define ADC_CHANNEL_BAT_PIN ((GpioAddress){0,18})
+// Following definitions allow ADC internal channels to be accessed
+// via compound literal GpioAddresses -> can be passed to new functions
+#define ADC_CHANNEL_TEMP_PIN ((GpioAddress){ 0, 16 })
+#define ADC_CHANNEL_REF_PIN ((GpioAddress){ 0, 17 })
+#define ADC_CHANNEL_BAT_PIN ((GpioAddress){ 0, 18 })
 
 typedef enum {
   ADC_MODE_SINGLE = 0,
@@ -61,11 +61,8 @@ StatusCode adc_read_raw_pin(GpioAddress address, uint16_t *reading);
 // Obtain the converted value at the specified pin
 StatusCode adc_read_converted_pin(GpioAddress address, uint16_t *reading);
 
-
-
-
-//Following functions use adc channels as seen above
-//but are now deprecated, they are still used in the current code base
+// Following functions use adc channels as seen above
+// but are now deprecated, they are still used in the current code base
 
 typedef void (*AdcCallback)(AdcChannel adc_channel, void *context);
 
@@ -84,4 +81,4 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading);
 // Obtain the converted value at the specified channel
 StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading);
 
-//Begin 
+// Begin
