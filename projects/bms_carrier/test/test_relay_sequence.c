@@ -53,10 +53,16 @@ StatusCode TEST_MOCK(gpio_set_state)(const GpioAddress *address, GpioState state
 
 static uint8_t s_fault_bps_bitmask = 0;
 static uint8_t s_fault_bps_calls = 0;
-void TEST_MOCK(fault_bps)(uint8_t bitmask, bool clear) {
+void TEST_MOCK(fault_bps_set)(uint8_t bitmask) {
   s_fault_bps_bitmask = bitmask;
   s_fault_bps_calls++;
-  TEST_ASSERT_NOT_EQUAL((bool)bitmask, clear);
+  TEST_ASSERT_NOT_EQUAL((bool)bitmask, false);
+}
+
+void TEST_MOCK(fault_bps_clear)(uint8_t bitmask) {
+  s_fault_bps_bitmask = bitmask;
+  s_fault_bps_calls++;
+  TEST_ASSERT_NOT_EQUAL((bool)bitmask, true);
 }
 
 static RelayStorage s_storage = { 0 };
@@ -138,8 +144,6 @@ void test_open_bad(void) {
   // relay fault should have occured
   TEST_ASSERT_EQUAL(1, s_fault_bps_calls);
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_RELAY, s_fault_bps_bitmask);
-  // no can message should be sent
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
 void test_close_good(void) {
@@ -232,6 +236,8 @@ void test_centre_console_rx(void) {
   // should fault since we're not bothering to set hardware
   delay_ms(RELAY_SEQUENCE_ASSERTION_DELAY_MS + 5);
   TEST_ASSERT_EQUAL(1, s_fault_bps_calls);
+  // TX/RX transmit relay state for telemetry
+  MS_TEST_HELPER_CAN_TX_RX(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
   // test power off opens
   CAN_TRANSMIT_POWER_OFF_SEQUENCE(NULL, EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);

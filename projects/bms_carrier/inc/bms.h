@@ -17,6 +17,8 @@
   { GPIO_PORT_B, 11 }
 #define BMS_PERIPH_I2C_SCL_PIN \
   { GPIO_PORT_B, 10 }
+#define BMS_FAN_ALERT_PIN \
+  { GPIO_PORT_A, 9 }
 
 #define BMS_IO_EXPANDER_I2C_ADDR 0x40
 
@@ -26,11 +28,9 @@
 
 typedef struct BmsStorage {
   RelayStorage relay_storage;
-  CurrentReadings current_readings;
+  CurrentStorage current_storage;
   AfeReadings afe_readings;
   FanStorage fan_storage;
   DebouncerStorage killswitch_storage;
   BpsStorage bps_storage;
 } BmsStorage;
-
-StatusCode fault_bps(uint8_t fault_bitmask, bool clear);

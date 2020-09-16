@@ -5,6 +5,7 @@
 #include "can_msg_defs.h"
 #include "can_transmit.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "soft_timer.h"
 
 static uint32_t s_hb_freq_ms = 0;
@@ -16,11 +17,11 @@ static StatusCode prv_handle_ack(CanMessageId msg_id, uint16_t device, CanAckSta
     storage->ack_fail_count++;
 
     if (storage->ack_fail_count >= BPS_ACK_MAX_FAILS) {
-      fault_bps(EE_BPS_STATE_FAULT_ACK_TIMEOUT, false);
+      fault_bps_set(EE_BPS_STATE_FAULT_ACK_TIMEOUT);
     }
   } else if (num_remaining == 0) {
     storage->ack_fail_count = 0;
-    fault_bps(EE_BPS_STATE_FAULT_ACK_TIMEOUT, true);
+    fault_bps_clear(EE_BPS_STATE_FAULT_ACK_TIMEOUT);
   }
 
   return STATUS_CODE_OK;

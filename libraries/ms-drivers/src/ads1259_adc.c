@@ -88,9 +88,7 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   uint8_t payload[] = { ADS1259_READ_DATA_BY_OPCODE };
   spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
   code = prv_checksum(storage);
-  if (code) {
-    (*storage->handler)(code, storage->error_context);
-  }
+  (*storage->handler)(code, storage->error_context);
   storage->conv_data.MSB = storage->rx_data.MSB;
   storage->conv_data.MID = storage->rx_data.MID;
   storage->conv_data.LSB = storage->rx_data.LSB;

@@ -36,9 +36,15 @@ static StatusCode prv_hb_rx(const CanMessage *msg, void *context, CanAckStatus *
   return s_ack_status == CAN_ACK_STATUS_OK ? STATUS_CODE_OK : STATUS_CODE_TIMEOUT;
 }
 
-StatusCode TEST_MOCK(fault_bps)(uint8_t fault_bitmask, bool clear) {
+StatusCode TEST_MOCK(fault_bps_set)(uint8_t fault_bitmask) {
   s_fault_bps_bitmask = fault_bitmask;
-  s_fault_bps_clear = clear;
+  s_fault_bps_clear = false;
+  return STATUS_CODE_OK;
+}
+
+StatusCode TEST_MOCK(fault_bps_clear)(uint8_t fault_bitmask) {
+  s_fault_bps_bitmask = fault_bitmask;
+  s_fault_bps_clear = true;
   return STATUS_CODE_OK;
 }
 
