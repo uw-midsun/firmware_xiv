@@ -247,10 +247,13 @@ update_codegen:
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
 
-#get rid of x86 later
+#currently only for stm32
+#will need different bash window to run the python
+#to send CAN message write
+#can_message.send_message(1) to send can message
 .PHONY: babydriver
 babydriver:
-	@make run PROJECT=baby_driver PLATFORM=x86
-	# @python3
-	# @from projects.baby_driver.scripts import can_message
+	@make program PROJECT=baby_driver
+	@python3
+	@from projects.baby_driver.scripts import can_message
 
