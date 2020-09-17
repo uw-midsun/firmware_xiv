@@ -256,4 +256,3 @@ babydriver:
 	@make program PROJECT=baby_driver
 	@python3
 	@from projects.baby_driver.scripts import can_message
-

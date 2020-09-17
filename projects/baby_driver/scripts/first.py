@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-import can_message
-#this is just an example files
+"""thin wrapper over can_message"""
+from scripts import can_message
 
-if __name__ == "__main__":
-    #just sends specific can message
-    can_message.send_message(1)
+can_message.send_message(1)

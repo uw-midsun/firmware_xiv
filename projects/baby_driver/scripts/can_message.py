@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+"""python can message with 8 bytes"""
 from __future__ import print_function
 
 import can
