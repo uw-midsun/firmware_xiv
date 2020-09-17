@@ -118,7 +118,9 @@ void prv_send_messages() {
   s_loopback_msg.dlc = 0;
 
   LOG_DEBUG("Testing send extended id\n");
-  GenericCanMsg msg_extended = { .id = 0x19999999, .data = 0xBEEFDEADBEEFDEAD, .dlc = 8, .extended = true };
+  GenericCanMsg msg_extended = {
+    .id = 0x19999999, .data = 0xBEEFDEADBEEFDEAD, .dlc = 8, .extended = true
+  };
   generic_can_tx(&s_can_mcp2515.base, &msg_extended);
   delay_ms(50);
 
