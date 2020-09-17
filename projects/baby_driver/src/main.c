@@ -30,7 +30,8 @@ static GpioSettings s_led_settings = { .direction = GPIO_DIR_OUT,
                                        .alt_function = GPIO_ALTFN_NONE,
                                        .resistor = GPIO_RES_NONE };
 
-static StatusCode prv_default_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_default_rx_callback(const CanMessage *msg, void *context,
+                                          CanAckStatus *ack_reply) {
   LOG_DEBUG("Received CAN Message\n");
   return STATUS_CODE_OK;
 }
