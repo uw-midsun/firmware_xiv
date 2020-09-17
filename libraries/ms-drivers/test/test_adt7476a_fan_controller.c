@@ -19,6 +19,7 @@
   { GPIO_PORT_B, 11 }
 
 typedef struct Adt7476aMockRegisters {
+  uint8_t STRT_CONFIG;
   uint8_t PWM_CONFIG_1;
   uint8_t PWM_CONFIG_2;
   uint8_t SMBALERT_PIN;
@@ -32,26 +33,28 @@ static Adt7476aMockRegisters s_mock_registers;
 static Adt7476aStorage s_mock_storage;
 static Adt7476aStorage s_storage;
 
-StatusCode TEST_MOCK(i2c_write_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_data,
-                                    size_t tx_len) {
-  uint8_t cmd = reg;
+StatusCode TEST_MOCK(i2c_write)(I2CPort i2c, I2CAddress addr, uint8_t *tx_data, size_t tx_len) {
+  uint8_t cmd = tx_data[0];
 
   switch (cmd) {
     // Commands used in adt7476a_init()
     case ADT7476A_FAN_MODE_REGISTER_1:
-      s_mock_registers.PWM_CONFIG_1 = *tx_data;
+      s_mock_registers.PWM_CONFIG_1 = tx_data[1];
       break;
     case ADT7476A_FAN_MODE_REGISTER_3:
-      s_mock_registers.PWM_CONFIG_2 = *tx_data;
+      s_mock_registers.PWM_CONFIG_2 = tx_data[1];
+      break;
+    case ADT7476A_CONFIG_REGISTER_1:
+      s_mock_registers.STRT_CONFIG = tx_data[1];
       break;
     case ADT7476A_CONFIG_REGISTER_3:
-      s_mock_registers.SMBALERT_PIN = *tx_data;
+      s_mock_registers.SMBALERT_PIN = tx_data[1];
       break;
     case ADT7476A_PWM_1:
-      s_mock_registers.PWM_SPEED_1 = *tx_data;
+      s_mock_registers.PWM_SPEED_1 = tx_data[1];
       break;
     case ADT7476A_PWM_3:
-      s_mock_registers.PWM_SPEED_2 = *tx_data;
+      s_mock_registers.PWM_SPEED_2 = tx_data[1];
       break;
   }
   return STATUS_CODE_OK;
@@ -129,6 +132,7 @@ void test_adt7476a_init_works(void) {
   TEST_ASSERT_EQUAL(ADT7476A_MANUAL_MODE_MASK, s_mock_registers.PWM_CONFIG_1);
   TEST_ASSERT_EQUAL(ADT7476A_MANUAL_MODE_MASK, s_mock_registers.PWM_CONFIG_2);
   TEST_ASSERT_EQUAL(ADT7476A_CONFIG_REG_3_MASK, s_mock_registers.SMBALERT_PIN);
+  TEST_ASSERT_EQUAL(ADT7476A_CONFIG_REG_1_MASK, s_mock_registers.STRT_CONFIG);
 }
 
 // test that speeds are set correctly

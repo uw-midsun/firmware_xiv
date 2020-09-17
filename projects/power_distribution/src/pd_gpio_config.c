@@ -118,9 +118,9 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: driver display, steering, centre console, pedal, horn, speaker,
-                      // left display, right display, rear display, left camera, right camera, main
-                      // rPi, rear rPi
+                      // Turn on: driver display, steering, centre console, pedal, speaker,
+                      // left display, right display, main display, rear display, left camera, right
+                      // camera, main rPi, rear rPi
                       {
                           .address = FRONT_PIN_DVR_DISP_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
@@ -138,10 +138,6 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
-                          .address = FRONT_PIN_HORN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
                           .address = FRONT_PIN_SPEAKER_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
@@ -151,6 +147,10 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                       },
                       {
                           .address = FRONT_PIN_RIGHT_DISPLAY_EN,
+                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      },
+                      {
+                          .address = FRONT_PIN_MAIN_DISP_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
@@ -180,8 +180,8 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: driver display, steering, centre console, pedal, horn, speaker,
-                      // left display, right display, rear display, main rPi, rear rPi
+                      // Turn on: driver display, steering, centre console, pedal, speaker,
+                      // left display, right display, main display, rear display, main rPi, rear rPi
                       // Turn off: left camera, right camera (in case we go from on to aux)
                       {
                           .address = FRONT_PIN_DVR_DISP_EN,
@@ -200,10 +200,6 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
-                          .address = FRONT_PIN_HORN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
                           .address = FRONT_PIN_SPEAKER_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
@@ -213,6 +209,10 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                       },
                       {
                           .address = FRONT_PIN_RIGHT_DISPLAY_EN,
+                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      },
+                      {
+                          .address = FRONT_PIN_MAIN_DISP_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
@@ -242,20 +242,17 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
                   (PowerDistributionGpioOutputSpec[]){
-                      // Turn on (or keep on): centre console, pedal, horn
+                      // Turn on (or keep on): centre console, pedal
                       // Turn off: driver display, steering, speaker, left display, right display,
-                      // rear display, main rPi, rear rPi, left camera, right camera, parking brake,
-                      // daytime running lights, front left turn light, front right turn light
+                      // main display rear display, main rPi, rear rPi, left camera, right camera,
+                      // parking brake, daytime running lights, front left turn light, front right
+                      // turn light
                       {
                           .address = FRONT_PIN_CTR_CONSL_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
                           .address = FRONT_PIN_PEDAL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = FRONT_PIN_HORN_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
                       {
@@ -276,6 +273,10 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                       },
                       {
                           .address = FRONT_PIN_RIGHT_DISPLAY_EN,
+                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                      },
+                      {
+                          .address = FRONT_PIN_MAIN_DISP_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
                       },
                       {
