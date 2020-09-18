@@ -1,3 +1,7 @@
+// This project will 
+// to send CAN message write
+// can_message.send_message(1) to send can message
+
 #include "can.h"
 #include "event_queue.h"
 #include "gpio.h"
@@ -24,11 +28,6 @@ static CanSettings s_can_settings = {
   .rx = { GPIO_PORT_A, 11 },
   .loopback = false,
 };
-
-static GpioSettings s_led_settings = { .direction = GPIO_DIR_OUT,
-                                       .state = GPIO_STATE_HIGH,
-                                       .alt_function = GPIO_ALTFN_NONE,
-                                       .resistor = GPIO_RES_NONE };
 
 static StatusCode prv_default_rx_callback(const CanMessage *msg, void *context,
                                           CanAckStatus *ack_reply) {

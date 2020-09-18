@@ -1,17 +1,16 @@
-#!/usr/bin/env python
-# coding: utf-8
-"""python can message with 8 bytes"""
-from __future__ import print_function
+""" This module sends a CAN message for babydriver"""
 
 import can
 
-def send_message(msg):
+def send_message(message):
     """sends can message with 8 bytes. You can change the 2nd one"""
-    #change the channel later to can0 or vcan0
-    bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=250000)
+    # change the channel later to can0 or vcan0
+    bus = can.interface.Bus(bustype='socketcan', channel='can0', bitrate=500000)
 
     msg = can.Message(
-        arbitration_id=0xC0FFEE, data=[0, msg, 0, 0, 0, 0, 0, 0], is_extended_id=False
+        arbitration_id=0x2,
+        data=message,
+        is_extended_id=False
     )
 
     try:

@@ -135,7 +135,7 @@ ROOT := $(shell pwd)
 
 # Actually calls the make
 .PHONY: all
-all: build lint pylint babydriver
+all: build lint pylint
 
 # Includes platform-specific configurations
 include $(PLATFORMS_DIR)/$(PLATFORM)/platform.mk
@@ -247,12 +247,7 @@ update_codegen:
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
 
-#currently only for stm32
-#will need different bash window to run the python
-#to send CAN message write
-#can_message.send_message(1) to send can message
 .PHONY: babydriver
 babydriver:
 	@make program PROJECT=baby_driver
-	@python3
-	@from projects.baby_driver.scripts import can_message
+	@python3 -i projects/baby_driver/scripts/can_message.py
