@@ -9,43 +9,6 @@
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
 
-const uint8_t registers[] = { MCP2515_CTRL_REG_BFPCTRL,    // RX pins disabled by default
-                              MCP2515_CTRL_REG_TXRTSCTRL,  // TX pins input by default
-                              MCP2515_CTRL_REG_CANSTAT,
-                              MCP2515_CTRL_REG_CANCTRL,
-                              MCP2515_CTRL_REG_TEC,
-                              MCP2515_CTRL_REG_REC,
-                              MCP2515_CTRL_REG_CNF3,
-                              MCP2515_CTRL_REG_CNF2,
-                              MCP2515_CTRL_REG_CNF1,
-                              MCP2515_CTRL_REG_CANINTE,
-                              MCP2515_CTRL_REG_CANINTF,
-                              MCP2515_CTRL_REG_EFLG,
-                              MCP2515_CTRL_REG_TXB0CTRL,
-                              MCP2515_CTRL_REG_TXB1CTRL,
-                              MCP2515_CTRL_REG_TXB2CTRL,
-                              MCP2515_CTRL_REG_RXB0CTRL,
-                              MCP2515_CTRL_REG_RXB1CTRL };
-
-const char* names[] = {
-  "MCP2515_CTRL_REG_BFPCTRL",    
-  "MCP2515_CTRL_REG_TXRTSCTRL",  
-  "MCP2515_CTRL_REG_CANSTAT",
-  "MCP2515_CTRL_REG_CANCTRL",
-  "MCP2515_CTRL_REG_TEC",
-  "MCP2515_CTRL_REG_REC",
-  "MCP2515_CTRL_REG_CNF3",
-  "MCP2515_CTRL_REG_CNF2",
-  "MCP2515_CTRL_REG_CNF1",
-  "MCP2515_CTRL_REG_CANINTE",
-  "MCP2515_CTRL_REG_CANINTF",
-  "MCP2515_CTRL_REG_EFLG",
-  "MCP2515_CTRL_REG_TXB0CTRL",
-  "MCP2515_CTRL_REG_TXB1CTRL",
-  "MCP2515_CTRL_REG_TXB2CTRL",
-  "MCP2515_CTRL_REG_RXB0CTRL",
-  "MCP2515_CTRL_REG_RXB1CTRL" };
-
 typedef struct Mcp2515TxBuffer {
   uint8_t id;
   uint8_t data;
@@ -193,15 +156,6 @@ static void prv_handle_int(const GpioAddress *address, void *context) {
   critical_section_end(disabled);
 }
 
-// void check_regs(Mcp2515Storage *storage) {
-//   printf("reading registers:\n");
-//   for (uint32_t i = 0; i < sizeof(registers); i++) {
-//     uint8_t read = 0x00;
-//     prv_read(storage, registers[i], &read, 1);
-//     printf("0x%x = 0x%x  -  %s\n", registers[i], read, names[i]);
-//   }
-// }
-
 StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
   storage->spi_port = settings->spi_port;
   storage->rx_cb = settings->rx_cb;
@@ -220,8 +174,6 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
 
   prv_reset(storage);
-
-  // check_regs(storage);
 
   // Set to Config mode, CLKOUT /4
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
@@ -304,8 +256,6 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
-
-  // check_regs(storage);
   return gpio_it_register_interrupt(&settings->int_pin, &it_settings, INTERRUPT_EDGE_FALLING,
                                     prv_handle_int, storage);
 }
