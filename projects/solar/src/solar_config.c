@@ -19,8 +19,13 @@
 
 // Scaling factor from MCP3427 ADC values for current sense to microamps.
 // MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 0.264uV/uA.
-// (62.5uV/LSB)/(0.264uV/uA) = 236.74uA/LSB
-#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 236.74f
+// (62.5uV/LSB)/(0.264uV/uA) = 236.74uA/LSB. Experimental value is 228.25uA/LSB, which is close.
+#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 228.25f
+
+// Bias of MCP3427 ADC for current sense, in microamps.
+// ACS722LLCTR-10AU gives a bias of 0.33V, corresponding to 1.25A.
+// The experimental value of 1.2527A is close to this.
+#define SOLAR_MCP3427_CURRENT_SENSE_BIAS 1.2527e6f
 
 // Scaling factor to convert SPV1020 current values from SPI to microamps.
 // Must be calibrated.
@@ -135,6 +140,7 @@ static SenseMcp3427Settings s_sense_mcp3427_settings = {
           {
               .data_point = DATA_POINT_CURRENT,
               .scaling_factor = SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR,
+              .bias = SOLAR_MCP3427_CURRENT_SENSE_BIAS,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_1,
