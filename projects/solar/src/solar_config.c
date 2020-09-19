@@ -14,8 +14,8 @@
 #define SENSE_CYCLE_PERIOD_US 1000000
 
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
-// Must be calibrated.
-#define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
+// Experimentally determined to be ~1.184mV/LSB.
+#define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.184f
 
 // Scaling factor from MCP3427 ADC values for current sense to microamps.
 // MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 0.264uV/uA.
