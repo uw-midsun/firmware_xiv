@@ -1,6 +1,13 @@
-// This project will 
-// to send CAN message write
-// can_message.send_message(1) to send can message
+// This project will receive a CAN message
+// on the stm32 andperform specific callback
+// based on the message
+
+
+// To run this project, simply run
+// make babydriver
+// and that should program to the stm32
+// To send a CAN message write
+// can_message.send_message(<data>) to send can message
 
 #include "can.h"
 #include "event_queue.h"
@@ -29,11 +36,7 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
-static StatusCode prv_default_rx_callback(const CanMessage *msg, void *context,
-                                          CanAckStatus *ack_reply) {
-  LOG_DEBUG("Received CAN Message\n");
-  return STATUS_CODE_OK;
-}
+// define callback functions here
 
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
@@ -42,7 +45,6 @@ int main() {
   interrupt_init();
 
   can_init(&s_can_storage, &s_can_settings);
-  can_register_rx_default_handler(prv_default_rx_callback, NULL);
 
   Event e = { 0 };
   while (true) {
