@@ -7,13 +7,13 @@
 #include "status.h"
 
 static GpioAddress s_button_addresses[NUM_CENTRE_CONSOLE_BUTTONS] = {
-  [CENTRE_CONSOLE_BUTTON_DRIVE] = { .port = GPIO_PORT_A, .pin = 1 },
-  [CENTRE_CONSOLE_BUTTON_REVERSE] = { .port = GPIO_PORT_A, .pin = 2 },
-  [CENTRE_CONSOLE_BUTTON_POWER] = { .port = GPIO_PORT_A, .pin = 3 },
-  [CENTRE_CONSOLE_BUTTON_NEUTRAL] = { .port = GPIO_PORT_A, .pin = 4 },
-  [CENTRE_CONSOLE_BUTTON_PARKING] = { .port = GPIO_PORT_A, .pin = 4 },
-  [CENTRE_CONSOLE_BUTTON_HAZARD] = { .port = GPIO_PORT_A, .pin = 5 },
-  [CENTRE_CONSOLE_BUTTON_EMERGENCY_STOP] = { .port = GPIO_PORT_A, .pin = 6 },
+  [CENTRE_CONSOLE_BUTTON_DRIVE] = { .port = GPIO_PORT_A, .pin = 5 },
+  [CENTRE_CONSOLE_BUTTON_REVERSE] = { .port = GPIO_PORT_A, .pin = 7 },
+  [CENTRE_CONSOLE_BUTTON_POWER] = { .port = GPIO_PORT_B, .pin = 0 },
+  [CENTRE_CONSOLE_BUTTON_NEUTRAL] = { .port = GPIO_PORT_A, .pin = 6 },
+  [CENTRE_CONSOLE_BUTTON_HAZARD] = { .port = GPIO_PORT_A, .pin = 1 },
+  // TODO(SOFT-296): Remove ebrake
+  [CENTRE_CONSOLE_BUTTON_PARKING] = { .port = GPIO_PORT_A, .pin = 0 },
 };
 
 static CentreConsoleButtonPressEvent s_button_event_lookup[NUM_CENTRE_CONSOLE_BUTTONS] = {
@@ -23,7 +23,6 @@ static CentreConsoleButtonPressEvent s_button_event_lookup[NUM_CENTRE_CONSOLE_BU
   [CENTRE_CONSOLE_BUTTON_NEUTRAL] = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_NEUTRAL,
   [CENTRE_CONSOLE_BUTTON_PARKING] = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_PARKING,
   [CENTRE_CONSOLE_BUTTON_HAZARD] = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_HAZARD,
-  [CENTRE_CONSOLE_BUTTON_EMERGENCY_STOP] = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_EMERGENCY_STOP
 };
 
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
