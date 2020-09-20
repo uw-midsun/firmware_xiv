@@ -11,20 +11,20 @@
 
 #define ADC_MOCK_READING 999
 
-static volatile uint8_t s_callback_runs = 0;
-static volatile bool s_callback_ran = false;
+static volatile uint8_t s_callback_runs;
+static volatile bool s_callback_ran;
 
-static volatile uint8_t s_pin_callback_runs = 0;
-static volatile bool s_pin_callback_ran = false;
+static volatile uint8_t s_pin_callback_runs;
+static volatile bool s_pin_callback_ran;
 
 static const GpioAddress s_address[] = {
   { GPIO_PORT_A, 0 },
   { GPIO_PORT_A, 1 },
   { GPIO_PORT_A, 2 },
-  { GPIO_PORT_A, 3 },
 };
 
 static const GpioAddress s_invalid_pin = { NUM_GPIO_PORTS, NUM_ADC_CHANNELS };
+static const GpioAddress s_empty_pin = { GPIO_PORT_A, 3 };
 
 void prv_callback(AdcChannel adc_channel, void *context) {
   s_callback_runs++;
@@ -248,11 +248,11 @@ void test_pin_set_channel(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, adc_set_channel_pin(s_invalid_pin, true));
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_address); i++) {
-    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_set_channel_pin(s_address[i], true));
+    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_set_channel_pin(s_address[i], false));
   }
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_address); i++) {
-    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_set_channel_pin(s_address[i], false));
+    TEST_ASSERT_EQUAL(STATUS_CODE_OK, adc_set_channel_pin(s_address[i], true));
   }
 }
 
@@ -261,7 +261,7 @@ void test_pin_set_callback(void) {
                     adc_register_callback_pin(s_invalid_pin, prv_callback_pin, NULL));
 
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY,
-                    adc_register_callback_pin(s_address[3], prv_callback_pin, NULL));
+                    adc_register_callback_pin(s_empty_pin, prv_callback_pin, NULL));
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_address); i++) {
     TEST_ASSERT_EQUAL(STATUS_CODE_OK,
@@ -295,7 +295,7 @@ void test_pin_single(void) {
   }
 
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, adc_read_raw_pin(s_invalid_pin, &reading));
-  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_read_raw_pin(s_address[3], &reading));
+  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_read_raw_pin(s_empty_pin, &reading));
 
   while (!s_pin_callback_ran) {
   }

@@ -123,7 +123,7 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  if (s_active_channels[adc_channel]) {
+  if (!s_active_channels[adc_channel]) {
     return status_code(STATUS_CODE_EMPTY);
   }
 
