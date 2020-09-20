@@ -1,4 +1,4 @@
-#include <stdint.h>      // for integer types
+#include <stdint.h>  // for integer types
 
 #include "interrupt.h"   // interrupts are required for soft timers
 #include "log.h"         // for logging
@@ -18,7 +18,7 @@ typedef struct TimerData {
 
 static void prv_increment_and_print_counter(int counter_num, Counter *main_counter) {
   main_counter->counters[counter_num]++;
-  LOG_DEBUG("Counter %c: %d\n", counter_num+65, main_counter->counters[counter_num]);
+  LOG_DEBUG("Counter %c: %d\n", counter_num + 65, main_counter->counters[counter_num]);
 }
 
 static void prv_counter_callback(SoftTimerId timer_id, void *context) {
@@ -37,7 +37,7 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   Counter main_counter = { .counters = { 0 } };
-  TimerData timer_data = { .main_counter = main_counter, .incrementBoth = false};
+  TimerData timer_data = { .main_counter = main_counter, .incrementBoth = false };
 
   soft_timer_start_millis(COUNTER_DELAY_MS, prv_counter_callback, &timer_data, NULL);
 
