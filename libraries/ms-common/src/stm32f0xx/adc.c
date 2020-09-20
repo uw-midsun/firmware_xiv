@@ -24,21 +24,13 @@ static AdcStatus s_adc_status;
 
 // Functionalities used by GpioAddress version of adc library
 typedef struct AdcInterrupt {
+  AdcPinCallback pin_callback;
   AdcCallback callback;
   void *context;
   uint16_t reading;
 } AdcInterrupt;
 
 static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
-
-// Functionalities used by AdcChannel version of adc library
-typedef struct AdcPinInterrupt {
-  AdcPinCallback callback;
-  void *context;
-  uint16_t reading;
-} AdcPinInterrupt;
-
-static AdcPinInterrupt s_adc_pin_interrupts[NUM_ADC_CHANNELS];
 
 // Formula obtained from section 13.9 of the reference manual. Returns reading
 // in kelvin
@@ -126,9 +118,8 @@ void adc_init(AdcMode adc_mode) {
 
   for (size_t i = 0; i < NUM_ADC_CHANNELS; ++i) {
     s_adc_interrupts[i].callback = NULL;
+    s_adc_interrupts[i].pin_callback = NULL;
     s_adc_interrupts[i].context = NULL;
-    s_adc_pin_interrupts[i].callback = NULL;
-    s_adc_pin_interrupts[i].context = NULL;
   }
 
   // Configure internal reference channel to run by default for voltage
@@ -174,28 +165,26 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
 // 15 by port C
 StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
   *adc_channel = address.pin;
-  if (address.pin < 16) {
-    switch (address.port) {
-      case GPIO_PORT_A:
-        if (address.pin > 7) {
-          return status_code(STATUS_CODE_INVALID_ARGS);
-        }
-        break;
-      case GPIO_PORT_B:
-        if (address.pin > 1) {
-          return status_code(STATUS_CODE_INVALID_ARGS);
-        }
-        *adc_channel += 8;
-        break;
-      case GPIO_PORT_C:
-        if (address.pin > 5) {
-          return status_code(STATUS_CODE_INVALID_ARGS);
-        }
-        *adc_channel += 10;
-        break;
-    }
+  switch (address.port) {
+    case GPIO_PORT_A:
+      if (address.pin > 7) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+      break;
+    case GPIO_PORT_B:
+      if (address.pin > 1) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+      *adc_channel += 8;
+      break;
+    case GPIO_PORT_C:
+      if (address.pin > 5) {
+        return status_code(STATUS_CODE_INVALID_ARGS);
+      }
+      *adc_channel += 10;
+      break;
   }
-  if (*adc_channel >= NUM_ADC_CHANNELS) {
+  if (*adc_channel > ADC_CHANNEL_15) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   return STATUS_CODE_OK;
@@ -208,13 +197,10 @@ StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, v
   if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
     return status_code(STATUS_CODE_EMPTY);
   }
-
   s_adc_interrupts[adc_channel].callback = callback;
   s_adc_interrupts[adc_channel].context = context;
   // ensure only one callback is registered for a given channel
-  s_adc_pin_interrupts[adc_channel].callback = NULL;
-  s_adc_pin_interrupts[adc_channel].context = NULL;
-
+  s_adc_interrupts[adc_channel].pin_callback = NULL;
   return STATUS_CODE_OK;
 }
 
@@ -277,12 +263,12 @@ void ADC1_COMP_IRQHandler() {
     uint16_t reading = ADC_GetConversionValue(ADC1);
     if (s_adc_status.sequence != 0) {
       AdcChannel current_channel = __builtin_ctz(s_adc_status.sequence);
-      if (s_adc_interrupts[current_channel].callback) {
+      if (s_adc_interrupts[current_channel].callback != NULL) {
         s_adc_interrupts[current_channel].callback(current_channel,
                                                    s_adc_interrupts[current_channel].context);
-      } else if (s_adc_pin_interrupts[current_channel].callback) {
-        s_adc_pin_interrupts[current_channel].callback(
-            prv_channel_to_gpio(current_channel), s_adc_pin_interrupts[current_channel].context);
+      } else if (s_adc_interrupts[current_channel].pin_callback != NULL) {
+        s_adc_interrupts[current_channel].pin_callback(prv_channel_to_gpio(current_channel),
+                                                       s_adc_interrupts[current_channel].context);
       }
       s_adc_interrupts[current_channel].reading = reading;
       s_adc_status.sequence &= ~((uint32_t)1 << current_channel);
@@ -295,35 +281,25 @@ void ADC1_COMP_IRQHandler() {
   }
 }
 
-// Begin implementation of GpioAddress function definitions
+// the following functions are wrappers over the legacy AdcChannel API dealing with GpioAddresses
+// instead
 StatusCode adc_set_channel_pin(GpioAddress address, bool new_state) {
   AdcChannel channel;
-  status_ok_or_return(adc_get_channel(address, &channel));
+  adc_get_channel(address, &channel);
   return adc_set_channel(channel, new_state);
 }
 
 StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context) {
   AdcChannel adc_channel;
-  status_ok_or_return(adc_get_channel(address, &adc_channel));
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
-  s_adc_pin_interrupts[adc_channel].callback = callback;
-  s_adc_pin_interrupts[adc_channel].context = context;
-  // ensure only one callback registered per channel
-  s_adc_interrupts[adc_channel].callback = NULL;
-  s_adc_interrupts[adc_channel].context = NULL;
-
+  adc_get_channel(address, &adc_channel);
+  status_ok_or_return(adc_register_callback(adc_channel, NULL, context));
+  s_adc_interrupts[adc_channel].pin_callback = callback;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_raw_pin(GpioAddress address, uint16_t *reading) {
   AdcChannel channel;
-  status_ok_or_return(adc_get_channel(address, &channel));
+  adc_get_channel(address, &channel);
   return adc_read_raw(channel, reading);
 }
 
