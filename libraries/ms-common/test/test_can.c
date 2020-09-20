@@ -1,5 +1,6 @@
-#include "can.h"
 #include <inttypes.h>
+#include "can.h"
+#include "delay.h"
 #include "event_queue.h"
 #include "interrupt.h"
 #include "log.h"
@@ -10,7 +11,6 @@
 #define TEST_CAN_DEVICE_ID 0x1
 
 static uint8_t s_rx_cb_count;
-
 
 typedef enum {
   TEST_CAN_EVENT_RX = 10,
@@ -23,19 +23,10 @@ static CanStorage s_can_storage;
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   CanMessage *rx_msg = context;
   *rx_msg = *msg;
-
   if (msg->msg_id == TEST_CAN_UNKNOWN_MSG_ID) {
     *ack_reply = CAN_ACK_STATUS_UNKNOWN;
   }
-  LOG_DEBUG("CALLBACK CALLED\n");
-  return STATUS_CODE_OK;
-}
-
-static StatusCode prv_86_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  CanMessage *rx_msg = context;
-  *rx_msg = *msg;
   s_rx_cb_count++;
-  LOG_DEBUG("CALLBACK CALLED\n");
   return STATUS_CODE_OK;
 }
 
@@ -292,32 +283,44 @@ void test_can_default(void) {
 void test_can_x86_tx(void) {
   volatile CanMessage rx_msg = { 0 };
   CanMessage msg = {
-    .msg_id = 0x2,              //
+    .msg_id = 0xF,              //
     .type = CAN_MSG_TYPE_DATA,  //
     .data = 0x1,                //
     .dlc = 1,                   //
   };
 
-  can_register_rx_handler(0x2, prv_86_rx_callback, &rx_msg);
+  can_register_rx_handler(0xF, prv_rx_callback, &rx_msg);
   s_rx_cb_count = 0;
+
   for (uint8_t i = 0x0; i < 0xA; i++) {
     msg.data = i;
     can_transmit(&msg, NULL);
-    prv_clock_tx();
-    LOG_DEBUG("MESSAGE %" PRIu64 " Sent \n", msg.data);
   }
 
   Event e = { 0 };
-  // Handle message RX
-  uint8_t count = 0;
-  while (count < 20) {
-    while(event_process(&e) != STATUS_CODE_OK) {
+  uint8_t tx_msg_count = 0;
+  uint8_t rx_msg_count = 0;
+  uint8_t loop_count = 0;
+
+  while (rx_msg_count < 10 || tx_msg_count < 10) {
+    event_process(&e);
+    can_process_event(&e);
+    if (e.id == TEST_CAN_EVENT_TX) {
+      tx_msg_count++;
     }
-    if(can_process_event(&e)) {
-        count++;
-        LOG_DEBUG("MSG ID IS: %" PRIu64 "\n", rx_msg.data);
+    delay_ms(100);
+    if (e.id == TEST_CAN_EVENT_RX) {
+      rx_msg_count++;
     }
-  }  
-  LOG_DEBUG("COUNT: %d", s_rx_cb_count);
+    loop_count++;
+    if (loop_count > 30) {
+      TEST_FAIL();
+    }
+  }
+  TEST_ASSERT_EQUAL(10, rx_msg_count);
+  TEST_ASSERT_EQUAL(10, tx_msg_count);
+  TEST_ASSERT_EQUAL(10, s_rx_cb_count);
+  delay_ms(300);
+  TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
 }
 #endif

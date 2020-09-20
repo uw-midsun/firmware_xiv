@@ -23,7 +23,7 @@
 
 #define CAN_BUS_OFF_RECOVERY_TIME_MS 500
 
-//flag enabled if x86 passed as platform
+// flag enabled if x86 passed as platform
 #ifdef X86
 #define TX_CALLBACK_ENABLE 0
 #else
@@ -110,7 +110,7 @@ StatusCode can_register_rx_default_handler(CanRxHandlerCb handler, void *context
   return can_rx_register_default_handler(&s_can_storage->rx_handlers, handler, context);
 }
 
-StatusCode  can_register_rx_handler(CanMessageId msg_id, CanRxHandlerCb handler, void *context) {
+StatusCode can_register_rx_handler(CanMessageId msg_id, CanRxHandlerCb handler, void *context) {
   if (s_can_storage == NULL) {
     return status_code(STATUS_CODE_UNINITIALIZED);
   }

@@ -41,7 +41,7 @@ static void prv_can_transmit(SoftTimerId timer_id, void *context) {
                          .dlc = 8 };
   can_transmit(&message, NULL);
 
-  //soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
+  // soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
 }
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
@@ -83,7 +83,7 @@ int main() {
                          .data_u8 = DATA,
                          .type = CAN_MSG_TYPE_DATA,
                          .dlc = 8 };
-  for(int i = 0; i< 10 i++) {
+  for (int i = 0; i < 10 i++) {
     can_transmit(&message, NULL);
   }
 
