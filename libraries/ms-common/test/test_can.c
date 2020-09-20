@@ -1,3 +1,4 @@
+
 #include "can.h"
 #include "delay.h"
 #include "event_queue.h"
@@ -307,7 +308,7 @@ void test_can_x86_tx(void) {
     if (e.id == TEST_CAN_EVENT_TX) {
       tx_msg_count++;
     }
-    delay_ms(100);
+    delay_ms(10);
     if (e.id == TEST_CAN_EVENT_RX) {
       rx_msg_count++;
     }
