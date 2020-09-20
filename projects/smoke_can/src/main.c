@@ -18,7 +18,7 @@
 
 // this is how often the message will send
 // modify if you want to send more or less
-#define SMOKETEST_SEND_TIME_MS 10
+#define SMOKETEST_SEND_TIME_MS 1000
 // this is the data it'll send
 // this is an array of exactly 8 uint8_ts
 // change if you wish
@@ -41,7 +41,7 @@ static void prv_can_transmit(SoftTimerId timer_id, void *context) {
                          .dlc = 8 };
   can_transmit(&message, NULL);
 
-  // soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
+  soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
 }
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
@@ -78,14 +78,6 @@ int main() {
   LOG_DEBUG("Initializing smoke test can\n");
 
   soft_timer_start_millis(SMOKETEST_SEND_TIME_MS, prv_can_transmit, NULL, NULL);
-  CanMessage message = { .source_id = TEST_CAN_DEVICE_ID,
-                         .msg_id = TEST_CAN_MSG_ID,
-                         .data_u8 = DATA,
-                         .type = CAN_MSG_TYPE_DATA,
-                         .dlc = 8 };
-  for (int i = 0; i < 10 i++) {
-    can_transmit(&message, NULL);
-  }
 
   Event e = { 0 };
   while (true) {

@@ -1,4 +1,3 @@
-#include <inttypes.h>
 #include "can.h"
 #include "delay.h"
 #include "event_queue.h"
