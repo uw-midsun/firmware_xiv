@@ -25,9 +25,9 @@
 
 // flag enabled if x86 passed as platform
 #ifdef X86
-#define TX_CALLBACK_ENABLE 0
+#define TX_CALLBACK_ENABLE false
 #else
-#define TX_CALLBACK_ENABLE 1
+#define TX_CALLBACK_ENABLE true
 #endif
 
 // Attempts to transmit the specified message using the HW TX, overwriting the
@@ -152,6 +152,8 @@ bool can_process_event(const Event *e) {
 }
 
 void prv_tx_handler(void *context) {
+  // following condition used to disable tx events being re-raised on x86
+  // as this causes a race condition: see soft_301_race_condition_x86_can
   if (TX_CALLBACK_ENABLE) {
     CanStorage *can_storage = context;
     CanMessage tx_msg;

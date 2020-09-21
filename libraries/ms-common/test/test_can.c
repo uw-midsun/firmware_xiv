@@ -9,6 +9,7 @@
 
 #define TEST_CAN_UNKNOWN_MSG_ID 0xA
 #define TEST_CAN_DEVICE_ID 0x1
+#define NUM_MESSAGES_TXED 10
 
 static uint8_t s_rx_cb_count;
 
@@ -71,7 +72,7 @@ void setup_test(void) {
     .rx = { GPIO_PORT_A, 11 },
     .loopback = true,
   };
-
+  s_rx_cb_count = 0;
   StatusCode ret = can_init(&s_can_storage, &can_settings);
   TEST_ASSERT_OK(ret);
 }
@@ -279,20 +280,22 @@ void test_can_default(void) {
   TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
 }
 
-#ifdef X86
+// tests used to fix race condition caused on x86 builds
+// see ticket -> soft_301_race_condition_x86_can
+// txes and rxes 10 messages to make sure same number of each are created
 void test_can_x86_tx(void) {
   volatile CanMessage rx_msg = { 0 };
   CanMessage msg = {
-    .msg_id = 0xF,              //
+    .msg_id = 0x3F,              //
     .type = CAN_MSG_TYPE_DATA,  //
     .data = 0x1,                //
     .dlc = 1,                   //
   };
 
-  can_register_rx_handler(0xF, prv_rx_callback, &rx_msg);
+  can_register_rx_handler(0x3F, prv_rx_callback, &rx_msg);
   s_rx_cb_count = 0;
 
-  for (uint8_t i = 0x0; i < 0xA; i++) {
+  for (uint8_t i = 0x0; i < NUM_MESSAGES_TXED; i++) {
     msg.data = i;
     can_transmit(&msg, NULL);
   }
@@ -302,7 +305,7 @@ void test_can_x86_tx(void) {
   uint8_t rx_msg_count = 0;
   uint8_t loop_count = 0;
 
-  while (rx_msg_count < 10 || tx_msg_count < 10) {
+  while (rx_msg_count < NUM_MESSAGES_TXED || tx_msg_count < NUM_MESSAGES_TXED) {
     event_process(&e);
     can_process_event(&e);
     if (e.id == TEST_CAN_EVENT_TX) {
@@ -313,14 +316,11 @@ void test_can_x86_tx(void) {
       rx_msg_count++;
     }
     loop_count++;
-    if (loop_count > 30) {
-      TEST_FAIL();
-    }
+    TEST_ASSERT_TRUE(loop_count <= 3 * NUM_MESSAGES_TXED);
   }
-  TEST_ASSERT_EQUAL(10, rx_msg_count);
-  TEST_ASSERT_EQUAL(10, tx_msg_count);
-  TEST_ASSERT_EQUAL(10, s_rx_cb_count);
-  delay_ms(300);
+  TEST_ASSERT_EQUAL(NUM_MESSAGES_TXED, rx_msg_count);
+  TEST_ASSERT_EQUAL(NUM_MESSAGES_TXED, tx_msg_count);
+  TEST_ASSERT_EQUAL(NUM_MESSAGES_TXED, s_rx_cb_count);
+  delay_ms(100);
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, event_process(&e));
 }
-#endif
