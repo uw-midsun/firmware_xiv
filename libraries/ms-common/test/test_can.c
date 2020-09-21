@@ -286,7 +286,7 @@ void test_can_default(void) {
 void test_can_x86_tx(void) {
   volatile CanMessage rx_msg = { 0 };
   CanMessage msg = {
-    .msg_id = 0x3F,              //
+    .msg_id = 0x3F,             //
     .type = CAN_MSG_TYPE_DATA,  //
     .data = 0x1,                //
     .dlc = 1,                   //
