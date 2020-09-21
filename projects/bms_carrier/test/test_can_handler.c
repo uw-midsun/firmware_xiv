@@ -19,9 +19,7 @@
 #define TEST_CELL_VOLTAGE 5
 #define TEST_AVG_CURRENT 6
 #define TEST_RELAY_STATE 1
-#define TOTAL_CAN_MESSAGES (NUM_TOTAL_CELLS + 2)
-#define TIME_BETWEEN_TX_IN_MILLIS 100
-// #define TEST_FAN_STATUS STATUS_CODE_INTERNAL_ERROR
+#define TEST_FAN_STATUS STATUS_CODE_INTERNAL_ERROR
 
 static uint16_t s_can_msg_count;
 static uint16_t s_can_msg_voltage_values[NUM_TOTAL_CELLS];
@@ -72,23 +70,29 @@ static StatusCode prv_test_can_handler_relay_state_tx_callback_handler(const Can
   return STATUS_CODE_OK;
 }
 
-/*
-static StatusCode prv_test_can_handler_fan_status_tx_callback_handler(const CanMessage *msg, void
-*context, CanAckStatus *ack_reply) { TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE,
-msg->msg_id);
-  
-
-
+static StatusCode prv_test_can_handler_fan_status_tx_callback_handler(const CanMessage *msg,
+                                                                      void *context,
+                                                                      CanAckStatus *ack_reply) {
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE, msg->msg_id);
+  uint8_t statuses[8];
+  CAN_UNPACK_BATTERY_FAN_STATE(msg, &statuses[0], &statuses[1], &statuses[2], &statuses[3],
+                               &statuses[4], &statuses[5], &statuses[6], &statuses[7]);
+  for (uint8_t fan = 0; fan < 8; fan++) {
+    TEST_ASSERT_EQUAL(TEST_FAN_STATUS, statuses[fan]);
+  }
   s_can_msg_count++;
   return STATUS_CODE_OK;
 }
-*/
 
 static void prv_set_bms_storage(void) {
   s_bms_storage.current_storage.average = TEST_AVG_CURRENT;
   s_bms_storage.relay_storage.gnd_enabled = TEST_RELAY_STATE;
   s_bms_storage.relay_storage.hv_enabled = TEST_RELAY_STATE;
-  // s_bms_storage.fan_storage.status = TEST_FAN_STATUS;
+
+  for (uint8_t fan = 0; fan < 4; fan++) {
+    s_bms_storage.fan_storage.statuses[fan] = TEST_FAN_STATUS;
+    s_bms_storage.fan_storage_1.statuses[fan] = TEST_FAN_STATUS;
+  }
 
   for (uint8_t cell = 0; cell < NUM_TOTAL_CELLS; cell++) {
     s_bms_storage.afe_readings.voltages[cell] = TEST_CELL_VOLTAGE;
@@ -101,10 +105,8 @@ static void prv_set_bms_storage(void) {
 
 static void prv_process_can_events(SoftTimerId timer_id, void *context) {
   MS_TEST_HELPER_CAN_TX(BMS_CAN_EVENT_TX);
-  LOG_DEBUG("did a process tx \n");
   MS_TEST_HELPER_CAN_RX(BMS_CAN_EVENT_RX);
-  LOG_DEBUG("did a process rx \n");
-  if (s_can_msg_count < TOTAL_CAN_MESSAGES) {
+  if (s_can_msg_count < NUM_TOTAL_MESSAGES) {
     soft_timer_start_millis(TIME_BETWEEN_TX_IN_MILLIS, prv_process_can_events, NULL, NULL);
   }
 }
@@ -120,8 +122,9 @@ void setup_test(void) {
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_BATTERY_RELAY_STATE,
                                          prv_test_can_handler_relay_state_tx_callback_handler,
                                          NULL));
-  // TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE,
-  // prv_test_can_handler_fan_status_tx_callback_handler, NULL));
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE,
+                                         prv_test_can_handler_fan_status_tx_callback_handler,
+                                         NULL));
 
   prv_set_bms_storage();
 }
@@ -135,9 +138,9 @@ void test_can_handler_invalid_args(void) {
 void test_can_handler(void) {
   TEST_ASSERT_OK(can_handler_init(&s_bms_storage));
   prv_process_can_events(SOFT_TIMER_INVALID_TIMER, NULL);
-  delay_ms((TOTAL_CAN_MESSAGES + 2) * TIME_BETWEEN_TX_IN_MILLIS);
+  delay_ms((NUM_TOTAL_MESSAGES + 2) * TIME_BETWEEN_TX_IN_MILLIS);
 
-  TEST_ASSERT_EQUAL(TOTAL_CAN_MESSAGES, s_can_msg_count);
+  TEST_ASSERT_EQUAL(NUM_TOTAL_MESSAGES, s_can_msg_count);
   for (uint8_t cell = 0; cell < NUM_TOTAL_CELLS; cell++) {
     TEST_ASSERT_EQUAL(TEST_CELL_VOLTAGE, s_can_msg_voltage_values[cell]);
     TEST_ASSERT_EQUAL(1, s_can_msg_temp_values[cell] % 2);  // Ensure all temp values are odd
