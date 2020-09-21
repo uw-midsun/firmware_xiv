@@ -31,6 +31,7 @@ typedef struct BmsStorage {
   CurrentStorage current_storage;
   AfeReadings afe_readings;
   FanStorage fan_storage;
+  FanStorage fan_storage_1;
   DebouncerStorage killswitch_storage;
   BpsStorage bps_storage;
 } BmsStorage;
