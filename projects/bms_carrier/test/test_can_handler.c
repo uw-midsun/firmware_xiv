@@ -76,7 +76,7 @@ static StatusCode prv_test_can_handler_relay_state_tx_callback_handler(const Can
 static StatusCode prv_test_can_handler_fan_status_tx_callback_handler(const CanMessage *msg, void
 *context, CanAckStatus *ack_reply) { TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE,
 msg->msg_id);
-  
+  
 
 
   s_can_msg_count++;

@@ -399,12 +399,14 @@
     status;                                                                           \
   })
 
-#define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8)        \
-  ({                                                                                  \
-    CanMessage msg = { 0 };                                                           \
-    CAN_PACK_BATTERY_FAN_STATE(&msg, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);                                     \
-    status;                                                                           \
+#define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8, fan_6_u8, \
+                                       fan_7_u8, fan_8_u8)                                         \
+  ({                                                                                               \
+    CanMessage msg = { 0 };                                                                        \
+    CAN_PACK_BATTERY_FAN_STATE(&msg, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8), (fan_5_u8),   \
+                               (fan_6_u8), (fan_7_u8), (fan_8_u8));                                \
+    StatusCode status = can_transmit(&msg, NULL);                                                  \
+    status;                                                                                        \
   })
 
 #define CAN_TRANSMIT_BATTERY_RELAY_STATE(hv_u8, gnd_u8)    \
@@ -415,18 +417,18 @@
     status;                                                \
   })
 
-#define CAN_TRANSMIT_SOLAR_FAULT(fault_u8, fault_data_u8)    \
-  ({                                                         \
-    CanMessage msg = { 0 };                                  \
-    CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);            \
-    status;                                                  \
-  })
-
 #define CAN_TRANSMIT_SOLAR_DATA(data_point_type_u32, data_value_u32)    \
   ({                                                                    \
     CanMessage msg = { 0 };                                             \
     CAN_PACK_SOLAR_DATA(&msg, (data_point_type_u32), (data_value_u32)); \
     StatusCode status = can_transmit(&msg, NULL);                       \
     status;                                                             \
+  })
+
+#define CAN_TRANSMIT_SOLAR_FAULT(fault_u8, fault_data_u8)    \
+  ({                                                         \
+    CanMessage msg = { 0 };                                  \
+    CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);            \
+    status;                                                  \
   })
