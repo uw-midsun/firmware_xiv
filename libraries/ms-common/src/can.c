@@ -153,7 +153,7 @@ bool can_process_event(const Event *e) {
 
 void prv_tx_handler(void *context) {
   // following condition used to disable tx events being re-raised on x86
-  // as this causes a race condition: see soft_301_race_condition_x86_can
+  // as this causes a race condition: see SOFT-301
   if (TX_CALLBACK_ENABLE) {
     CanStorage *can_storage = context;
     CanMessage tx_msg;

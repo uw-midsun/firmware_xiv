@@ -281,7 +281,7 @@ void test_can_default(void) {
 }
 
 // tests used to fix race condition caused on x86 builds
-// see ticket -> soft_301_race_condition_x86_can
+// see ticket -> SOFT-301
 // txes and rxes 10 messages to make sure same number of each are created
 void test_can_x86_tx(void) {
   volatile CanMessage rx_msg = { 0 };
