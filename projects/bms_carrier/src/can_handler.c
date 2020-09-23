@@ -42,10 +42,10 @@ static void prv_relay_state_tx(BmsStorage *storage) {
 
 static void prv_fan_status_tx(BmsStorage *storage) {
   CAN_TRANSMIT_BATTERY_FAN_STATE(
-      storage->fan_storage.statuses[0], storage->fan_storage.statuses[1],
-      storage->fan_storage.statuses[2], storage->fan_storage.statuses[3],
       storage->fan_storage_1.statuses[0], storage->fan_storage_1.statuses[1],
-      storage->fan_storage_1.statuses[2], storage->fan_storage_1.statuses[3]);
+      storage->fan_storage_1.statuses[2], storage->fan_storage_1.statuses[3],
+      storage->fan_storage_2.statuses[0], storage->fan_storage_2.statuses[1],
+      storage->fan_storage_2.statuses[2], storage->fan_storage_2.statuses[3]);
   s_msgs_txed++;
 }
 

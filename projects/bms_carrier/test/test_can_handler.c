@@ -90,8 +90,8 @@ static void prv_set_bms_storage(void) {
   s_bms_storage.relay_storage.hv_enabled = TEST_RELAY_STATE;
 
   for (uint8_t fan = 0; fan < 4; fan++) {
-    s_bms_storage.fan_storage.statuses[fan] = TEST_FAN_STATUS;
     s_bms_storage.fan_storage_1.statuses[fan] = TEST_FAN_STATUS;
+    s_bms_storage.fan_storage_2.statuses[fan] = TEST_FAN_STATUS;
   }
 
   for (uint8_t cell = 0; cell < NUM_TOTAL_CELLS; cell++) {
