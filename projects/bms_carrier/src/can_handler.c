@@ -2,7 +2,6 @@
 
 #include "bms.h"
 #include "can_transmit.h"
-#include "delay.h"
 #include "log.h"
 #include "soft_timer.h"
 
@@ -47,6 +46,7 @@ static void prv_fan_status_tx(BmsStorage *storage) {
       storage->fan_storage_2.statuses[0], storage->fan_storage_2.statuses[1],
       storage->fan_storage_2.statuses[2], storage->fan_storage_2.statuses[3]);
   s_msgs_txed++;
+  soft_timer_start_millis(TIME_BETWEEN_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
 }
 
 // Periodically call appropriate tx function based on which messages have already been txed
@@ -72,6 +72,6 @@ StatusCode can_handler_init(BmsStorage *storage) {
   if (storage == NULL) {
     return STATUS_CODE_INVALID_ARGS;
   }
-  prv_periodic_tx(SOFT_TIMER_INVALID_TIMER, storage);
+  soft_timer_start_millis(WAIT_BEFORE_FIRST_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
   return STATUS_CODE_OK;
 }

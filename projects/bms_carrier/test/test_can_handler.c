@@ -137,8 +137,8 @@ void test_can_handler_invalid_args(void) {
 
 void test_can_handler(void) {
   TEST_ASSERT_OK(can_handler_init(&s_bms_storage));
-  prv_process_can_events(SOFT_TIMER_INVALID_TIMER, NULL);
-  delay_ms((NUM_TOTAL_MESSAGES + 2) * TIME_BETWEEN_TX_IN_MILLIS);
+  soft_timer_start_millis(WAIT_BEFORE_FIRST_TX_IN_MILLIS, prv_process_can_events, NULL, NULL);
+  delay_ms((NUM_TOTAL_MESSAGES + 2) * TIME_BETWEEN_TX_IN_MILLIS + WAIT_BEFORE_FIRST_TX_IN_MILLIS);
 
   TEST_ASSERT_EQUAL(NUM_TOTAL_MESSAGES, s_can_msg_count);
   for (uint8_t cell = 0; cell < NUM_TOTAL_CELLS; cell++) {
