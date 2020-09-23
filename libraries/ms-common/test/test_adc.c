@@ -159,7 +159,6 @@ void test_single(void) {
 }
 
 void test_continuous() {
-
   // Initialize ADC and check that adc_init() can properly reset the ADC
   adc_init(ADC_MODE_CONTINUOUS);
 
