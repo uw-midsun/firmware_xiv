@@ -55,6 +55,13 @@ static uint16_t prv_get_vdda(uint16_t reading) {
   return reading;
 }
 
+static void prv_reset_channel(AdcChannel channel) {
+  s_adc_interrupts[channel].callback = NULL;
+  s_adc_interrupts[channel].pin_callback = NULL;
+  s_adc_interrupts[channel].context = NULL;
+  s_adc_interrupts[channel].reading = 0;
+}
+
 // used in IRQhandler to get pin from
 static GpioAddress prv_channel_to_gpio(uint8_t adc_channel) {
   GpioAddress address;
@@ -69,6 +76,16 @@ static GpioAddress prv_channel_to_gpio(uint8_t adc_channel) {
     address.pin = adc_channel;
   }
   return address;
+}
+
+static StatusCode prv_channel_check(AdcChannel adc_channel) {
+  if (adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
+    return status_code(STATUS_CODE_EMPTY);
+  }
+  return STATUS_CODE_OK;
 }
 
 void adc_init(AdcMode adc_mode) {
@@ -191,27 +208,15 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
 }
 
 StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
+  status_ok_or_return(prv_channel_check(adc_channel));
+  prv_reset_channel(adc_channel);
   s_adc_interrupts[adc_channel].callback = callback;
   s_adc_interrupts[adc_channel].context = context;
-  // ensure only one callback is registered for a given channel
-  s_adc_interrupts[adc_channel].pin_callback = NULL;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
+  status_ok_or_return(prv_channel_check(adc_channel));
   if (!s_adc_status.continuous) {
     ADC_StartOfConversion(ADC1);
     while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
@@ -224,13 +229,7 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
 }
 
 StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!(ADC1->CHSELR & ((uint32_t)1 << adc_channel))) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
+  status_ok_or_return(prv_channel_check(adc_channel));
   uint16_t adc_reading = 0;
   adc_read_raw(adc_channel, &adc_reading);
 
@@ -285,21 +284,23 @@ void ADC1_COMP_IRQHandler() {
 // instead
 StatusCode adc_set_channel_pin(GpioAddress address, bool new_state) {
   AdcChannel channel;
-  adc_get_channel(address, &channel);
+  status_ok_or_return(adc_get_channel(address, &channel));
   return adc_set_channel(channel, new_state);
 }
 
 StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context) {
   AdcChannel adc_channel;
-  adc_get_channel(address, &adc_channel);
-  status_ok_or_return(adc_register_callback(adc_channel, NULL, context));
+  status_ok_or_return(adc_get_channel(address, &adc_channel));
+  status_ok_or_return(prv_channel_check(adc_channel));
+  prv_reset_channel(adc_channel);
   s_adc_interrupts[adc_channel].pin_callback = callback;
+  s_adc_interrupts[adc_channel].context = context;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_raw_pin(GpioAddress address, uint16_t *reading) {
   AdcChannel channel;
-  adc_get_channel(address, &channel);
+  status_ok_or_return(adc_get_channel(address, &channel));
   return adc_read_raw(channel, reading);
 }
 

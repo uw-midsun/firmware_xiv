@@ -155,11 +155,10 @@ void test_single(void) {
   TEST_ASSERT_TRUE(s_callback_ran);
   TEST_ASSERT_TRUE(s_callback_runs > 0);
   TEST_ASSERT_TRUE(reading < 4095);
+  TEST_ASSERT_FALSE(s_pin_callback_ran);
 }
 
 void test_continuous() {
-  s_callback_runs = 0;
-  s_callback_ran = false;
 
   // Initialize ADC and check that adc_init() can properly reset the ADC
   adc_init(ADC_MODE_CONTINUOUS);
@@ -270,9 +269,6 @@ void test_pin_set_callback(void) {
 }
 
 void test_pin_single(void) {
-  // ensure no more AdcCallbacks called, only AdcPinCallbacks
-  s_callback_ran = false;
-
   uint16_t reading;
   // Initialize the ADC to single mode and configure the channels
   adc_init(ADC_MODE_SINGLE);
@@ -308,8 +304,6 @@ void test_pin_single(void) {
 }
 
 void test_pin_continuous() {
-  s_callback_runs = 0;
-  s_callback_ran = false;
   // Initialize ADC and check that adc_init() can properly reset the ADC
   adc_init(ADC_MODE_CONTINUOUS);
 
@@ -349,4 +343,20 @@ void test_pin_read_continuous(void) {
   adc_register_callback_pin(s_address[0], prv_callback_pin, NULL);
 
   prv_adc_check_range_pin(s_address[0]);
+}
+
+// test to help with other tests
+void test_adc_mock_reading() {
+  adc_init(ADC_MODE_SINGLE);
+  GpioAddress address = { .port = GPIO_PORT_A, .pin = 0 };
+  AdcChannel channel;
+  adc_get_channel(address, &channel);
+  adc_set_channel(channel, true);
+
+  uint16_t reading;
+
+  adc_register_callback(channel, prv_mock_read_callback, &reading);
+
+  adc_read_raw(channel, &reading);
+  TEST_ASSERT_TRUE(reading == ADC_MOCK_READING);
 }

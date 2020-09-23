@@ -34,6 +34,23 @@ static uint16_t prv_get_vdda(uint16_t reading) {
   return ADC_VDDA_RETURN;
 }
 
+static void prv_reset_channel(AdcChannel channel) {
+  s_adc_interrupts[channel].callback = NULL;
+  s_adc_interrupts[channel].pin_callback = NULL;
+  s_adc_interrupts[channel].context = NULL;
+  s_adc_interrupts[channel].reading = 0;
+}
+
+static StatusCode prv_channel_check(AdcChannel adc_channel) {
+  if (adc_channel >= NUM_ADC_CHANNELS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+  if (!s_active_channels[adc_channel]) {
+    return status_code(STATUS_CODE_EMPTY);
+  }
+  return STATUS_CODE_OK;
+}
+
 static GpioAddress prv_channel_to_gpio(uint8_t adc_channel) {
   GpioAddress address;
   if (adc_channel >= 8 && adc_channel < 10) {
@@ -99,34 +116,22 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
       *adc_channel += 10;
       break;
   }
-  if (*adc_channel >= ADC_CHANNEL_15) {
+  if (*adc_channel > ADC_CHANNEL_15) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!s_active_channels[adc_channel]) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
+  status_ok_or_return(prv_channel_check(adc_channel));
+  prv_reset_channel(adc_channel);
   s_adc_interrupts[adc_channel].callback = callback;
   s_adc_interrupts[adc_channel].context = context;
-  s_adc_interrupts[adc_channel].pin_callback = NULL;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!s_active_channels[adc_channel]) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
+  status_ok_or_return(prv_channel_check(adc_channel));
   s_adc_interrupts[adc_channel].reading = ADC_RETURNED_VOLTAGE_RAW;
   *reading = s_adc_interrupts[adc_channel].reading;
 
@@ -142,13 +147,7 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
 }
 
 StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
-  if (adc_channel >= NUM_ADC_CHANNELS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-  if (!s_active_channels[adc_channel]) {
-    return status_code(STATUS_CODE_EMPTY);
-  }
-
+  status_ok_or_return(prv_channel_check(adc_channel));
   uint16_t adc_reading = 0;
   adc_read_raw(adc_channel, &adc_reading);
   switch (adc_channel) {
@@ -185,9 +184,11 @@ StatusCode adc_set_channel_pin(GpioAddress address, bool new_state) {
 
 StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context) {
   AdcChannel adc_channel;
-  adc_get_channel(address, &adc_channel);
-  status_ok_or_return(adc_register_callback(adc_channel, NULL, context));
+  status_ok_or_return(adc_get_channel(address, &adc_channel));
+  status_ok_or_return(prv_channel_check(adc_channel));
+  prv_reset_channel(adc_channel);
   s_adc_interrupts[adc_channel].pin_callback = callback;
+  s_adc_interrupts[adc_channel].context = context;
   return STATUS_CODE_OK;
 }
 
