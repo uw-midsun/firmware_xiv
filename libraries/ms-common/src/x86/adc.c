@@ -83,7 +83,9 @@ void adc_init(AdcMode adc_mode) {
   if (adc_mode == ADC_MODE_CONTINUOUS) {
     soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
   }
-
+  for (size_t i = 0; i < NUM_ADC_CHANNELS; ++i) {
+    prv_reset_channel(i);
+  }
   adc_set_channel(ADC_CHANNEL_REF, true);
 }
 

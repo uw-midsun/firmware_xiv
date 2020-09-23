@@ -134,9 +134,7 @@ void adc_init(AdcMode adc_mode) {
   }
 
   for (size_t i = 0; i < NUM_ADC_CHANNELS; ++i) {
-    s_adc_interrupts[i].callback = NULL;
-    s_adc_interrupts[i].pin_callback = NULL;
-    s_adc_interrupts[i].context = NULL;
+    prv_reset_channel(i);
   }
 
   // Configure internal reference channel to run by default for voltage
