@@ -55,7 +55,7 @@ static uint16_t prv_get_vdda(uint16_t reading) {
   return reading;
 }
 
-static void prv_check_channel_valid_and_enabled(AdcChannel channel) {
+static void prv_reset_channel(AdcChannel channel) {
   s_adc_interrupts[channel].callback = NULL;
   s_adc_interrupts[channel].pin_callback = NULL;
   s_adc_interrupts[channel].context = NULL;
@@ -78,7 +78,7 @@ static GpioAddress prv_channel_to_gpio(uint8_t adc_channel) {
   return address;
 }
 
-static StatusCode prv_channel_check(AdcChannel adc_channel) {
+static StatusCode prv_check_channel_valid_and_enabled(AdcChannel adc_channel) {
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -134,7 +134,7 @@ void adc_init(AdcMode adc_mode) {
   }
 
   for (size_t i = 0; i < NUM_ADC_CHANNELS; ++i) {
-    prv_check_channel_valid_and_enabled(i);
+    prv_reset_channel(i);
   }
 
   // Configure internal reference channel to run by default for voltage
@@ -206,15 +206,15 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {
 }
 
 StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {
-  status_ok_or_return(prv_channel_check(adc_channel));
-  prv_check_channel_valid_and_enabled(adc_channel);
+  status_ok_or_return(prv_check_channel_valid_and_enabled(adc_channel));
+  prv_reset_channel(adc_channel);
   s_adc_interrupts[adc_channel].callback = callback;
   s_adc_interrupts[adc_channel].context = context;
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
-  status_ok_or_return(prv_channel_check(adc_channel));
+  status_ok_or_return(prv_check_channel_valid_and_enabled(adc_channel));
   if (!s_adc_status.continuous) {
     ADC_StartOfConversion(ADC1);
     while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
@@ -227,7 +227,7 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
 }
 
 StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
-  status_ok_or_return(prv_channel_check(adc_channel));
+  status_ok_or_return(prv_check_channel_valid_and_enabled(adc_channel));
   uint16_t adc_reading = 0;
   adc_read_raw(adc_channel, &adc_reading);
 
@@ -289,8 +289,8 @@ StatusCode adc_set_channel_pin(GpioAddress address, bool new_state) {
 StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context) {
   AdcChannel adc_channel;
   status_ok_or_return(adc_get_channel(address, &adc_channel));
-  status_ok_or_return(prv_channel_check(adc_channel));
-  prv_check_channel_valid_and_enabled(adc_channel);
+  status_ok_or_return(prv_check_channel_valid_and_enabled(adc_channel));
+  prv_reset_channel(adc_channel);
   s_adc_interrupts[adc_channel].pin_callback = callback;
   s_adc_interrupts[adc_channel].context = context;
   return STATUS_CODE_OK;
