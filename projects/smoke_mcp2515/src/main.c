@@ -28,12 +28,11 @@ static GenericCanMsg s_loopback_msg;
 static Mcp2515Storage s_mcp2515;
 static GenericCanMcp2515 s_can_mcp2515;
 
-static void prv_rx_callback_loopback(uint32_t id, bool extended, uint64_t data, size_t dlc,
-                                     void *context) {
-  s_loopback_msg.id = id;
-  s_loopback_msg.extended = extended;
-  s_loopback_msg.data = data;
-  s_loopback_msg.dlc = dlc;
+static void prv_rx_callback_loopback(const GenericCanMsg *msg, void *context) {
+  s_loopback_msg.id = msg->id;
+  s_loopback_msg.extended = msg->extended;
+  s_loopback_msg.data = msg->data;
+  s_loopback_msg.dlc = msg->dlc;
 }
 
 static void prv_rx_callback(const GenericCanMsg *msg, void *context) {
@@ -63,8 +62,8 @@ static void prv_setup_mcp2515_loopback(void) {
   };
 
   LOG_DEBUG("Initializing mcp2515 with loopback\n");
-  mcp2515_init(&s_mcp2515, &mcp2515_settings);
-  mcp2515_register_cbs(&s_mcp2515, prv_rx_callback_loopback, NULL, NULL);
+  generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
+  generic_can_register_rx(&s_can_mcp2515.base, prv_rx_callback_loopback, 0x0, 0x0, false, NULL);
 }
 
 static void prv_setup_mcp2515(void) {
@@ -100,7 +99,8 @@ void prv_send_messages() {
   bool test_2_passed = false;
 
   LOG_DEBUG("Testing send standard id\n");
-  mcp2515_tx(&s_mcp2515, 0x246, false, 0x1122334455667788, 8);
+  GenericCanMsg msg = { .id = 0x246, .data = 0x1122334455667788, .dlc = 8, .extended = false };
+  generic_can_tx(&s_can_mcp2515.base, &msg);
   delay_ms(50);
 
   if ((s_loopback_msg.id == 0x246) && (s_loopback_msg.extended == false) &&
@@ -112,14 +112,17 @@ void prv_send_messages() {
     LOG_DEBUG("Standard message not received\n");
   }
 
-  LOG_DEBUG("Testing send extended id\n");
-  mcp2515_tx(&s_mcp2515, 0x19999999, true, 0xBEEFDEADBEEFDEAD, 8);
-  delay_ms(50);
-
   s_loopback_msg.id = 0;
   s_loopback_msg.extended = false;
   s_loopback_msg.data = 0;
   s_loopback_msg.dlc = 0;
+
+  LOG_DEBUG("Testing send extended id\n");
+  GenericCanMsg msg_extended = {
+    .id = 0x19999999, .data = 0xBEEFDEADBEEFDEAD, .dlc = 8, .extended = true
+  };
+  generic_can_tx(&s_can_mcp2515.base, &msg_extended);
+  delay_ms(50);
 
   if ((s_loopback_msg.id == 0x19999999) && (s_loopback_msg.extended == true) &&
       (s_loopback_msg.data == 0xBEEFDEADBEEFDEAD) && (s_loopback_msg.dlc == 8)) {
