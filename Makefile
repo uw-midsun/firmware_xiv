@@ -246,3 +246,8 @@ update_codegen:
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
+
+.PHONY: babydriver
+babydriver:
+	@make program PROJECT=baby_driver
+	@python3 -i projects/baby_driver/scripts/can_message.py
