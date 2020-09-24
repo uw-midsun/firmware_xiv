@@ -3,6 +3,9 @@
 // ADT4747A Configuration and control commands
 // Datasheet: https://www.onsemi.com/pub/Collateral/ADT7476A-D.PDF
 
+#define ADT7476A_CONFIG_REGISTER_1 \
+  0x40  // used for STRT reg
+        // default 0x00
 #define ADT7476A_CONFIG_REGISTER_3 \
   0x78  // used for pwm2 as SMBALERT
         // default 0x00
@@ -30,7 +33,7 @@
 #define ADT7476A_TACH_4_HIGH 0x2F  // default 0xFF
 
 #define ADT7476A_MANUAL_MODE_MASK 0b11100010
+#define ADT7476A_CONFIG_REG_1_MASK 0b00000101
 #define ADT7476A_CONFIG_REG_3_MASK 0b00000001
 
 #define ADT7476A_REG_SIZE 1
-#define SET_SPEED_NUM_BYTES 1
