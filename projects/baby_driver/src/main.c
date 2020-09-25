@@ -9,7 +9,6 @@
 // To send a CAN message write
 // can_message.send_message(<data>) to send can message
 
-#include "babydriver_msg_defs.h"
 #include "can.h"
 #include "can_msg_defs.h"
 #include "dispatcher.h"
@@ -38,13 +37,6 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
-static StatusCode prv_callback(uint8_t data[8], void *context, bool *tx_result) {
-  LOG_DEBUG("Received: id=%d, data: %d %d %d %d %d %d %d\n", data[0], data[1], data[2], data[3],
-            data[4], data[5], data[6], data[7]);
-  *tx_result = false;
-  return STATUS_CODE_OK;
-}
-
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
   gpio_init();
@@ -54,7 +46,6 @@ int main() {
   can_init(&s_can_storage, &s_can_settings);
 
   dispatcher_init();
-  dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_callback, NULL);
 
   Event e = { 0 };
   while (true) {
