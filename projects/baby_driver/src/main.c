@@ -10,12 +10,12 @@
 // can_message.send_message(<data>) to send can message
 
 #include "can.h"
+#include "can_msg_defs.h"
+#include "dispatcher.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
-
-#define CAN_DEVICE_ID 0x1
 
 typedef enum {
   CAN_EVENT_RX = 0,
@@ -26,7 +26,7 @@ typedef enum {
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
-  .device_id = CAN_DEVICE_ID,
+  .device_id = SYSTEM_CAN_DEVICE_BABYDRIVER,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = CAN_EVENT_RX,
   .tx_event = CAN_EVENT_TX,
@@ -36,8 +36,6 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
-// define callback functions here
-
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
   gpio_init();
@@ -45,6 +43,8 @@ int main() {
   interrupt_init();
 
   can_init(&s_can_storage, &s_can_settings);
+
+  dispatcher_init();
 
   Event e = { 0 };
   while (true) {

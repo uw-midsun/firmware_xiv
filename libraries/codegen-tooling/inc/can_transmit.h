@@ -423,10 +423,12 @@
     status;                                                  \
   })
 
-#define CAN_TRANSMIT_SOLAR_DATA(data_point_type_u32, data_value_u32)    \
-  ({                                                                    \
-    CanMessage msg = { 0 };                                             \
-    CAN_PACK_SOLAR_DATA(&msg, (data_point_type_u32), (data_value_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                       \
-    status;                                                             \
+#define CAN_TRANSMIT_BABYDRIVER(id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, data5_u8, \
+                                data6_u8)                                                          \
+  ({                                                                                               \
+    CanMessage msg = { 0 };                                                                        \
+    CAN_PACK_BABYDRIVER(&msg, (id_u8), (data0_u8), (data1_u8), (data2_u8), (data3_u8), (data4_u8), \
+                        (data5_u8), (data6_u8));                                                   \
+    StatusCode status = can_transmit(&msg, NULL);                                                  \
+    status;                                                                                        \
   })
