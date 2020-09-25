@@ -1,7 +1,7 @@
 #include "dispatcher.h"
 
 #include <stdint.h>
-#include <stdlib.h>
+#include <string.h>
 
 #include "babydriver_msg_defs.h"
 #include "can.h"
@@ -29,8 +29,8 @@ static StatusCode prv_dispatch(const CanMessage *msg, void *context, CanAckStatu
 
 StatusCode dispatcher_init(void) {
   // reset the callbacks and contexts - mostly for use in tests
-  memset(s_callback_map, NULL, sizeof(s_callback_map));
-  memset(s_context_map, NULL, sizeof(s_context_map));
+  memset(s_callback_map, 0, sizeof(s_callback_map));
+  memset(s_context_map, 0, sizeof(s_context_map));
 
   // register our callback
   return can_register_rx_handler(SYSTEM_CAN_MESSAGE_BABYDRIVER, prv_dispatch, NULL);
