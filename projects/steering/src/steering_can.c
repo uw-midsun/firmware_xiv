@@ -1,13 +1,18 @@
 #include "steering_can.h"
+
 #include "can.h"
 #include "can_transmit.h"
 #include "event_queue.h"
 #include "exported_enums.h"
+#include "log.h"
 #include "status.h"
 #include "steering_digital_input.h"
 #include "steering_events.h"
 
 StatusCode steering_can_process_event(Event *e) {
+  if (e->id < 11) {
+    printf("event id: %d, data: %d\n", e->id, e->data);
+  }
   switch (e->id) {
     case STEERING_INPUT_HORN_EVENT:
       CAN_TRANSMIT_HORN((EEHornState)e->data);
