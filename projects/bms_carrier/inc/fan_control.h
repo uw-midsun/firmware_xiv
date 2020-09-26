@@ -21,6 +21,7 @@ typedef struct FanStorage {
   uint16_t speed;
   AfeReadings *readings;
   StatusCode status;
+  StatusCode statuses[4];
   uint8_t i2c_write_addr;
   uint8_t i2c_read_addr;
 } FanStorage;
