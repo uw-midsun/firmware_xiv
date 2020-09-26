@@ -6,6 +6,7 @@
 #include "soft_timer.h"
 
 static uint8_t s_msgs_txed = 0;
+static uint32_t time_between_tx_in_millis;
 
 static void prv_periodic_tx(SoftTimerId timer_id, void *context);
 
@@ -18,7 +19,7 @@ static void prv_current_tx(BmsStorage *storage) {
   avg_voltage /= NUM_TOTAL_CELLS;
   CAN_TRANSMIT_BATTERY_AGGREGATE_VC(avg_voltage, (uint32_t)storage->current_storage.average);
   s_msgs_txed++;
-  soft_timer_start_millis(TIME_BETWEEN_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
+  soft_timer_start_millis(time_between_tx_in_millis, prv_periodic_tx, storage, NULL);
 }
 
 // Tx cell voltage and its higher temperature reading
@@ -29,14 +30,14 @@ static void prv_cell_voltage_and_temp_tx(BmsStorage *storage) {
                            : storage->afe_readings.temps[s_msgs_txed * 2 + 1];
   CAN_TRANSMIT_BATTERY_VT(s_msgs_txed, storage->afe_readings.voltages[s_msgs_txed], cell_temp);
   s_msgs_txed++;
-  soft_timer_start_millis(TIME_BETWEEN_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
+  soft_timer_start_millis(time_between_tx_in_millis, prv_periodic_tx, storage, NULL);
 }
 
 static void prv_relay_state_tx(BmsStorage *storage) {
   CAN_TRANSMIT_BATTERY_RELAY_STATE(storage->relay_storage.hv_enabled,
                                    storage->relay_storage.gnd_enabled);
   s_msgs_txed++;
-  soft_timer_start_millis(TIME_BETWEEN_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
+  soft_timer_start_millis(time_between_tx_in_millis, prv_periodic_tx, storage, NULL);
 }
 
 static void prv_fan_status_tx(BmsStorage *storage) {
@@ -46,7 +47,7 @@ static void prv_fan_status_tx(BmsStorage *storage) {
       storage->fan_storage_2.statuses[0], storage->fan_storage_2.statuses[1],
       storage->fan_storage_2.statuses[2], storage->fan_storage_2.statuses[3]);
   s_msgs_txed++;
-  soft_timer_start_millis(TIME_BETWEEN_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
+  soft_timer_start_millis(time_between_tx_in_millis, prv_periodic_tx, storage, NULL);
 }
 
 // Periodically call appropriate tx function based on which messages have already been txed
@@ -68,10 +69,11 @@ static void prv_periodic_tx(SoftTimerId timer_id, void *context) {
   }
 }
 
-StatusCode can_handler_init(BmsStorage *storage) {
+StatusCode can_handler_init(BmsStorage *storage, uint32_t period_in_ms) {
   if (storage == NULL) {
     return STATUS_CODE_INVALID_ARGS;
   }
+  time_between_tx_in_millis = period_in_ms;
   soft_timer_start_millis(WAIT_BEFORE_FIRST_TX_IN_MILLIS, prv_periodic_tx, storage, NULL);
   return STATUS_CODE_OK;
 }

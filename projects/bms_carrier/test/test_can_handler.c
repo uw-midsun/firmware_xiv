@@ -132,11 +132,12 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_can_handler_invalid_args(void) {
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, can_handler_init(NULL));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
+                    can_handler_init(NULL, WAIT_BEFORE_FIRST_TX_IN_MILLIS));
 }
 
 void test_can_handler(void) {
-  TEST_ASSERT_OK(can_handler_init(&s_bms_storage));
+  TEST_ASSERT_OK(can_handler_init(&s_bms_storage, TIME_BETWEEN_TX_IN_MILLIS));
   soft_timer_start_millis(WAIT_BEFORE_FIRST_TX_IN_MILLIS, prv_process_can_events, NULL, NULL);
   delay_ms((NUM_TOTAL_MESSAGES + 2) * TIME_BETWEEN_TX_IN_MILLIS + WAIT_BEFORE_FIRST_TX_IN_MILLIS);
 
