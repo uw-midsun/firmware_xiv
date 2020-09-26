@@ -62,6 +62,9 @@ else
   ENV_VARS := $(FLASH_VAR)=$(BIN_DIR)/$(PROJECT)$(LIBRARY)_flash
 endif
 
+# Default CAN channel for Babydriver
+CHANNEL ?= vcan0
+
 # Platform targets
 .PHONY: run gdb babydriver
 
@@ -76,7 +79,7 @@ test_all: socketcan
 test: socketcan
 
 babydriver: socketcan
-	@make run PROJECT=baby_driver & python3 -i projects/baby_driver/scripts/repl_setup.py --channel vcan0
+	@make run PROJECT=baby_driver & python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
 
 define session_wrapper
 $(ENV_VARS) $1

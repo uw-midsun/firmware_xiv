@@ -43,12 +43,15 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
                -f $(SCRIPT_DIR)/stm32f0-openocd.cfg \
                -c 'stm32f0x.cpu configure -rtos FreeRTOS'
 
+# Default CAN channel for Babydriver
+CHANNEL ?= can0
+
 # Platform targets
 .PHONY: program gdb target babydriver
 
 babydriver:
 	@make program PROJECT=baby_driver
-	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel can0
+	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
 
 ifeq (,$(MACOS_SSH_USERNAME))
 

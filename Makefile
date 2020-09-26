@@ -10,6 +10,7 @@
 #   CO: [COPTIONS=] - Specifies compiler options on x86 [asan | tsan].
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
+#   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
 #
 # Usage:
 #   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
@@ -21,7 +22,7 @@
 #   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
-#   make babydriver [PL] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
