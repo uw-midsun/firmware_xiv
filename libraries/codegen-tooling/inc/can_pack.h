@@ -252,6 +252,10 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_SOLAR_DATA(msg_ptr, data_point_type_u32, data_value_u32)                 \
+  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_DATA, 8, \
+                    (data_point_type_u32), (data_value_u32))
+
 #define CAN_PACK_SOLAR_FAULT(msg_ptr, fault_u8, fault_data_u8)                            \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_FAULT, 2, \
                    (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \

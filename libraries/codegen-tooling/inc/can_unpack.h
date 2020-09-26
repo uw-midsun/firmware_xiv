@@ -201,6 +201,9 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_SOLAR_DATA(msg_ptr, data_point_type_u32_ptr, data_value_u32_ptr) \
+  can_unpack_impl_u32((msg_ptr), 8, (data_point_type_u32_ptr), (data_value_u32_ptr))
+
 #define CAN_UNPACK_SOLAR_FAULT(msg_ptr, fault_u8_ptr, fault_data_u8_ptr)                       \
   can_unpack_impl_u8((msg_ptr), 2, (fault_u8_ptr), (fault_data_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,      \
