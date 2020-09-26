@@ -208,3 +208,8 @@
   can_unpack_impl_u8((msg_ptr), 2, (fault_u8_ptr), (fault_data_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,      \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_BABYDRIVER(msg_ptr, id_u8_ptr, data0_u8_ptr, data1_u8_ptr, data2_u8_ptr,     \
+                              data3_u8_ptr, data4_u8_ptr, data5_u8_ptr, data6_u8_ptr)           \
+  can_unpack_impl_u8((msg_ptr), 8, (id_u8_ptr), (data0_u8_ptr), (data1_u8_ptr), (data2_u8_ptr), \
+                     (data3_u8_ptr), (data4_u8_ptr), (data5_u8_ptr), (data6_u8_ptr))
