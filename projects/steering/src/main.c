@@ -15,9 +15,9 @@
 static CanStorage s_can_storage;
 
 int main() {
+  interrupt_init();
   adc_init(ADC_MODE_SINGLE);
   gpio_init();
-  interrupt_init();
   event_queue_init();
   gpio_it_init();
   soft_timer_init();
@@ -27,7 +27,7 @@ int main() {
 
   CanSettings can_settings = {
     .device_id = SYSTEM_CAN_DEVICE_STEERING,
-    .bitrate = CAN_HW_BITRATE_125KBPS,
+    .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = STEERING_CAN_EVENT_RX,
     .tx_event = STEERING_CAN_EVENT_TX,
     .fault_event = STEERING_CAN_FAULT,
