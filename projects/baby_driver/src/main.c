@@ -48,10 +48,10 @@ int main() {
 
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) != STATUS_CODE_OK) {
-      wait();
+    while (event_process(&e) == STATUS_CODE_OK) {
+      can_process_event(&e);
     }
-    can_process_event(&e);
+    wait();
   }
 
   return 0;
