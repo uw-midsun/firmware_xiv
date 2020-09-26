@@ -59,6 +59,7 @@ void test_dispatching_no_tx_result(void) {
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   // send CAN message with our message ID - should receive same data
+  s_should_tx_result = false;
   uint8_t data[7] = { 1, 2, 3, 4, 5, 6, 7 };
   CAN_TRANSMIT_BABYDRIVER(TEST_BABYDRIVER_MESSAGE_ID, data[0], data[1], data[2], data[3], data[4],
                           data[5], data[6]);

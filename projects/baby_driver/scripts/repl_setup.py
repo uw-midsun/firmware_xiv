@@ -1,11 +1,7 @@
 """
-This module is run just before the Python REPL opens when you run `make babydriver`.
+This script is run just before the Python REPL opens when you run `make babydriver`.
 It imports everything that's visible to the REPL by default and sets up the default CAN channel.
 """
-
-# pylint: disable=unused-import
-from can_util import get_bus, send_message, next_message
-from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
 
 
 def setup_default_channel():
@@ -23,6 +19,9 @@ def setup_default_channel():
 
     if args.channel is not None:
         can_util.default_channel = args.channel
+
+    print("Welcome to the Babydriver REPL!")
+    print("See https://uwmidsun.atlassian.net/l/c/XDCix3iH for details and usage.")
 
 
 if __name__ == "__main__":
