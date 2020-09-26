@@ -109,9 +109,9 @@ def next_message(
         rx_msg_id = arbitration_to_message_id(msg.arbitration_id)
         if rx_msg_id == msg_id:
             break
-        else:
-            # ignore messages that we aren't waiting for.
-            msg = None
+
+        # ignore messages that we aren't waiting for.
+        msg = None
 
         new_time = time.time()
         time_left -= new_time - current_time

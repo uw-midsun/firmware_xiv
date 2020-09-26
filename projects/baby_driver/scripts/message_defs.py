@@ -8,7 +8,7 @@ BABYDRIVER_DEVICE_ID = 15
 BABYDRIVER_CAN_MESSAGE_ID = 63
 
 
-class BabydriverMessageId(object):
+class BabydriverMessageId:
     """
     An enumeration of babydriver IDs, which go in the first uint8 in a babydriver CAN message.
 

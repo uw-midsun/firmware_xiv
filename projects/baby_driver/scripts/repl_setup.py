@@ -12,6 +12,7 @@ def setup_default_channel():
     """Set up the default CAN channel."""
 
     # We import these here so that they aren't imported for the REPL
+    # pylint: disable=import-outside-toplevel
     import argparse
     import can_util
 
