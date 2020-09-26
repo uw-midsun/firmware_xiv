@@ -44,7 +44,11 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
                -c 'stm32f0x.cpu configure -rtos FreeRTOS'
 
 # Platform targets
-.PHONY: program gdb target
+.PHONY: program gdb target babydriver
+
+babydriver:
+	@make program PROJECT=baby_driver
+	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel can0
 
 ifeq (,$(MACOS_SSH_USERNAME))
 

@@ -6,8 +6,16 @@ import time
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
 
-def get_bus(channel="can0"):
+# The default CAN channel to use for this module. Changed dynamically by cli_setup.
+default_channel = "can0"
+
+
+def get_bus(channel=None):
     """Returns a new Python-CAN Bus for sending/receiving messages."""
+
+    if channel is None:
+        channel = default_channel
+
     return can.interface.Bus(bustype="socketcan", channel=channel, bitrate=500000)
 
 
@@ -26,26 +34,36 @@ def extract_message_id_from_arbitration_id(arbitration_id):
 def send_message(
     babydriver_id,
     data,
-    # TODO(SOFT-317): dynamically change between can0 and vcan0
-    channel="can0",
+    channel=None,
     msg_id=BABYDRIVER_CAN_MESSAGE_ID,
     device_id=BABYDRIVER_DEVICE_ID,
 ):
-    """Sends a CAN message."""
+    """Sends a CAN message.
+    
+    Args:
+        babydriver_id: The babydriver ID (first byte of message data) of the message to send.
+        data: Up to 7 bytes (0-255) of data to send in the CAN message.
+        channel: The SocketCAN channel on which to send the message.
+        msg_id: The CAN message ID to use.
+        device_id: The device ID to use.
+    
+    Raises:
+        can.CanError: If there was an error in transmitting the message.
+    """
 
     if len(data) > 7:
         raise ValueError("Only 7 bytes of data may be sent")
+    if len(data) < 7:
+        # pad to 7 bytes so that the firmware project will accept it
+        data += [0] * (7 - len(data))
 
-    try:
-        message = bytearray([babydriver_id] + data)
-    except ValueError:
-        raise ValueError("ID and data must be bytes (between 0 and 255)")
+    message_data = bytearray([babydriver_id] + data)
 
     bus = get_bus(channel)
 
     msg = can.Message(
         arbitration_id=get_arbitration_id(msg_id, device_id),
-        data=[babydriver_id] + data,
+        data=message_data,
         is_extended_id=False
     )
 
@@ -57,7 +75,12 @@ class TimeoutError(Exception):
     pass
 
 
-def next_message(babydriver_id=None, channel="can0", timeout=1, msg_id=BABYDRIVER_CAN_MESSAGE_ID):
+def next_message(
+    babydriver_id=None,
+    channel=None,
+    timeout=1,
+    msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+):
     """Blocks until we receive a babydriver CAN message or we time out.
 
     Args:

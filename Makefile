@@ -21,6 +21,7 @@
 #   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
+#   make babydriver [PL] - Flash or run the Babydriver debug project and drop into its Python shell
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -246,8 +247,3 @@ update_codegen:
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
-
-.PHONY: babydriver
-babydriver:
-	@make program PROJECT=baby_driver
-	@python3 -i projects/baby_driver/scripts/can_message.py
