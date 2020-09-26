@@ -1,13 +1,13 @@
 """This module implements a low-level wrapper over Python-CAN's CAN API specific to Babydriver."""
 
-import can
 import time
+import can
 
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
 
 # The default CAN channel to use for this module. Changed dynamically by cli_setup.
-default_channel = "can0"
+default_channel = "can0" # pylint: disable=invalid-name
 
 
 def get_bus(channel=None):
@@ -25,28 +25,28 @@ def get_arbitration_id(msg_id, device_id):
     return (msg_id << 5) | device_id
 
 
-def extract_message_id_from_arbitration_id(arbitration_id):
+def arbitration_to_message_id(arbitration_id):
     """Extracts and returns the message ID from a CAN message's arbitration ID."""
     # message ID is bits 5-11
     return (arbitration_id >> 5) & 0b111111
 
 
 def send_message(
-    babydriver_id,
-    data,
-    channel=None,
-    msg_id=BABYDRIVER_CAN_MESSAGE_ID,
-    device_id=BABYDRIVER_DEVICE_ID,
+        babydriver_id,
+        data,
+        channel=None,
+        msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+        device_id=BABYDRIVER_DEVICE_ID,
 ):
     """Sends a CAN message.
-    
+
     Args:
         babydriver_id: The babydriver ID (first byte of message data) of the message to send.
         data: Up to 7 bytes (0-255) of data to send in the CAN message.
         channel: The SocketCAN channel on which to send the message.
         msg_id: The CAN message ID to use.
         device_id: The device ID to use.
-    
+
     Raises:
         can.CanError: If there was an error in transmitting the message.
     """
@@ -70,16 +70,11 @@ def send_message(
     bus.send(msg)
 
 
-class TimeoutError(Exception):
-    """An error raised by next_message when it times out."""
-    pass
-
-
 def next_message(
-    babydriver_id=None,
-    channel=None,
-    timeout=1,
-    msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+        babydriver_id=None,
+        channel=None,
+        timeout=1,
+        msg_id=BABYDRIVER_CAN_MESSAGE_ID,
 ):
     """Blocks until we receive a babydriver CAN message or we time out.
 
@@ -90,7 +85,7 @@ def next_message(
         timeout: Timeout to wait for a message before raising an exception, in seconds.
         msg_id: The CAN message ID to wait for, defaulting to the babydriver CAN message. All other
             CAN messages will be ignored.
-    
+
     Returns:
         A bytearray of data from the CAN message received.
 
@@ -111,7 +106,7 @@ def next_message(
             # bus.recv timed out
             break
 
-        rx_msg_id = extract_message_id_from_arbitration_id(msg.arbitration_id)
+        rx_msg_id = arbitration_to_message_id(msg.arbitration_id)
         if rx_msg_id == msg_id:
             break
         else:
@@ -125,10 +120,10 @@ def next_message(
     if msg is None:
         raise TimeoutError()
 
-    if babydriver_id is not None and (len(msg.data) == 0 or msg.data[0] != babydriver_id):
+    if babydriver_id is not None and (not msg.data or msg.data[0] != babydriver_id):
         raise ValueError("next_message expected babydriver ID {} but got {}".format(
             babydriver_id,
-            msg.data[0] if len(msg.data) > 0 else "empty message",
+            msg.data[0] if msg.data else "empty message",
         ))
 
     return msg.data

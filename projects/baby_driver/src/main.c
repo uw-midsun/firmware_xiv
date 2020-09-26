@@ -1,13 +1,12 @@
-
 // This project will receive a CAN message
-// on the stm32 andperform specific callback
+// on the stm32 and perform specific callback
 // based on the message
 
 // To run this project, simply run
 // make babydriver
-// and that should program to the stm32
-// To send a CAN message write
-// can_message.send_message(<data>) to send can message
+// and that should program to the stm32 / run on x86
+// To send a CAN message from Python write
+// can_util.send_message(<id>, <data>) to send can message
 
 #include "can.h"
 #include "can_msg_defs.h"
