@@ -3,14 +3,14 @@
 #include "soft_timer.h"  // for soft timers
 #include "wait.h"        // for wait function
 
-#define COUNTER_PERIOD 500
+#define COUNTER_PERIOD_MS 500
 
 typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-void prv_timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *storage = context;  // cast void* to our struct so we can use it
   storage->counter_a++;
   LOG_DEBUG("Counter A: %i\n", storage->counter_a);
@@ -28,7 +28,7 @@ int main(void) {
   interrupt_init();   // interrupts must be initialized for soft timers to work
   soft_timer_init();  // soft timers must be initialized before using them
 
-  Counters storage = { 0, 0 };  // we use this to initialize a struct to be all 0
+  Counters storage = { 0 };  // we use this to initialize a struct to be all 0
 
   soft_timer_start_millis(COUNTER_PERIOD,      // timer duration
                           prv_timer_callback,  // function to call after timer
