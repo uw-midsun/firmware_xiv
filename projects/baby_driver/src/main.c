@@ -1,21 +1,21 @@
-
 // This project will receive a CAN message
-// on the stm32 andperform specific callback
+// on the stm32 and perform specific callback
 // based on the message
 
 // To run this project, simply run
 // make babydriver
-// and that should program to the stm32
-// To send a CAN message write
-// can_message.send_message(<data>) to send can message
+// and that should program to the stm32 / run on x86
+// To send a CAN message from Python write
+// can_util.send_message(<id>, <data>) to send can message
 
 #include "can.h"
+#include "can_msg_defs.h"
+#include "dispatcher.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
-
-#define CAN_DEVICE_ID 0x1
+#include "wait.h"
 
 typedef enum {
   CAN_EVENT_RX = 0,
@@ -26,7 +26,7 @@ typedef enum {
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
-  .device_id = CAN_DEVICE_ID,
+  .device_id = SYSTEM_CAN_DEVICE_BABYDRIVER,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = CAN_EVENT_RX,
   .tx_event = CAN_EVENT_TX,
@@ -36,8 +36,6 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
-// define callback functions here
-
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
   gpio_init();
@@ -46,11 +44,14 @@ int main() {
 
   can_init(&s_can_storage, &s_can_settings);
 
+  dispatcher_init();
+
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) != STATUS_CODE_OK) {
+    while (event_process(&e) == STATUS_CODE_OK) {
+      can_process_event(&e);
     }
-    can_process_event(&e);
+    wait();
   }
 
   return 0;

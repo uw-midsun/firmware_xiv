@@ -262,3 +262,9 @@
                    (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
                    CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_BABYDRIVER(msg_ptr, id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, \
+                            data5_u8, data6_u8)                                               \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BABYDRIVER, SYSTEM_CAN_MESSAGE_BABYDRIVER, 8, \
+                   (id_u8), (data0_u8), (data1_u8), (data2_u8), (data3_u8), (data4_u8),       \
+                   (data5_u8), (data6_u8))
