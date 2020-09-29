@@ -91,10 +91,9 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
     .alt_function = GPIO_ALTFN_NONE,
   };
 
-  // Initializations for input pins commmented out for now to prevent segfaults
   status_ok_or_return(gpio_init_pin(storage->select_pin_stm32, &select_input_settings));
-  //status_ok_or_return(gpio_init_pin(storage->input_0_pin_stm32, &select_input_settings));
-  //status_ok_or_return(gpio_init_pin(storage->input_1_pin_stm32, &select_input_settings));
+  status_ok_or_return(gpio_init_pin(storage->input_0_pin_stm32, &select_input_settings));
+  status_ok_or_return(gpio_init_pin(storage->input_1_pin_stm32, &select_input_settings));
 
   return prv_init_common(storage);
 }
@@ -122,10 +121,9 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
     .state = PCA9539R_GPIO_STATE_LOW,
   };
 
-  // Initializations for input pins commmented out for now to prevent segfaults
   status_ok_or_return(pca9539r_gpio_init_pin(storage->select_pin_pca9539r, &select_input_settings));
-  //status_ok_or_return(pca9539r_gpio_init_pin(storage->input_0_pin_pca9539r, &select_input_settings));
-  //status_ok_or_return(pca9539r_gpio_init_pin(storage->input_1_pin_pca9539r, &select_input_settings));
+  status_ok_or_return(pca9539r_gpio_init_pin(storage->input_0_pin_pca9539r, &select_input_settings));
+  status_ok_or_return(pca9539r_gpio_init_pin(storage->input_1_pin_pca9539r, &select_input_settings));
 
   return prv_init_common(storage);
 }
@@ -173,11 +171,11 @@ bool bts_7200_get_output_0_enabled(Bts7200Storage *storage) {
 bool bts_7200_get_output_1_enabled(Bts7200Storage *storage) {
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     GpioState pin_state;
-    gpio_get_state(storage->input_0_pin_stm32, &pin_state);
+    gpio_get_state(storage->input_1_pin_stm32, &pin_state);
     return (pin_state == GPIO_STATE_HIGH);
   } else {
     Pca9539rGpioState pin_state;
-    pca9539r_gpio_get_state(storage->input_0_pin_pca9539r, &pin_state);
+    pca9539r_gpio_get_state(storage->input_1_pin_pca9539r, &pin_state);
     return (pin_state == PCA9539R_GPIO_STATE_HIGH);
   }
 }
