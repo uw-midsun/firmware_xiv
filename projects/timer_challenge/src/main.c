@@ -21,7 +21,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   }
 
   // start the timer again, so it keeps periodically incrementing every half a second
-  soft_timer_start_millis(COUNTER_PERIOD, prv_timer_callback, storage, NULL);
+  soft_timer_start_millis(COUNTER_PERIOD_MS, prv_timer_callback, storage, NULL);
 }
 
 int main(void) {
@@ -30,7 +30,7 @@ int main(void) {
 
   Counters storage = { 0 };  // we use this to initialize a struct to be all 0
 
-  soft_timer_start_millis(COUNTER_PERIOD,      // timer duration
+  soft_timer_start_millis(COUNTER_PERIOD_MS,      // timer duration
                           prv_timer_callback,  // function to call after timer
                           &storage,            // automatically gets cast to void*
                           NULL);               // timer id - not needed here
