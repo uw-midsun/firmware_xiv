@@ -36,7 +36,7 @@ void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
 
   uint16_t d = 0;
   adc_read_converted(chan, &d);
-  printf("reading: %d\n", d);
+  // printf("reading: %d\n", d);
 }
 
 StatusCode control_stalk_init() {
