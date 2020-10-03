@@ -100,9 +100,7 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
   while (times_callback_called == 1) {
   }
 
-  delay_ms(500);
   TEST_ASSERT_EQUAL(times_callback_called, 2);
-  delay_ms(500);
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
 
   // make sure that stop actually stops it
@@ -110,7 +108,7 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
 
   TEST_ASSERT_EQUAL(times_callback_called, 2);
 }
-/*
+
 // Same, but for pca9539r initialization.
 void test_bts_7200_current_sense_timer_pca9539r_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
@@ -455,7 +453,6 @@ void test_bts_7200_output_0_functions_work(void) {
 
   // Stop
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
-  delay_ms(3000);
 }
 
 // Same as previous test, but with IN1 pin
@@ -507,7 +504,6 @@ void test_bts_7200_output_1_functions_work(void) {
   TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&storage), false);
 
   // Stop
-  delay_ms(3000);
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&storage));
 }
 
@@ -543,9 +539,7 @@ void test_bts_7200_faults_within_fault_range(void) {
   TEST_ASSERT_EQUAL(s_times_fault_callback_called, 1);
 
   s_times_fault_callback_called = 0;
-  delay_ms(3000);
-  // WHY SEGFAULT??????????????
-  //delay_ms(30);
+
 }
 
 // Test that fault isn't called when voltage outside of fault range.
@@ -584,14 +578,12 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
   // Wait for soft_timers to expire before continuing 
   // Why does having this cause a segfault????????????
   delay_ms(BTS7200_FAULT_RESTART_DELAY_MS + 10);
-  delay_ms(3000);
 }
-*/
+
 // Test that the fault callback gets called when running bts_7200_start, and 
 // there's no segfault/stack overflow.
 // This test causes a segfault for some reason
 
-/*
 void test_bts7200_fault_cb_called_from_start(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
@@ -619,12 +611,10 @@ void test_bts7200_fault_cb_called_from_start(void) {
   s_times_fault_callback_called = 0;
   s_adc_measurement = ADC_TEST_FAULT_VOLTAGE;
   delay_us(2 * interval_us); // wait for 2* interval
-  //delay_ms(10000);
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
   TEST_ASSERT_TRUE(bts_7200_stop(&storage));
   s_times_fault_callback_called = 0;
-  delay_ms(3000);
-} */
+} 
 
 // Test that fault cleared correctly, and that the correct IN pin(s) are toggled
 // to clear the fault.

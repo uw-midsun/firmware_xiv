@@ -69,17 +69,21 @@ static void prv_bts_7200_fault_handler_enable_1_cb(SoftTimerId timer_id, void *c
 static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0, bool fault1) {
   //LOG_DEBUG("Handling fault\n");
   if (fault0) {
+    
     //LOG_DEBUG("gets into fault0\n");
     // Storage for previous state of IN pin
-    bool prev_gpio_state = 0;
-    prev_gpio_state = bts_7200_get_output_0_enabled(storage);
+    //bool prev_gpio_state = 0;
+    //prev_gpio_state = bts_7200_get_output_0_enabled(storage);
     // Pull IN0 low + wait for BTS7200_FAULT_RESTART_DELAY_US
-    status_ok_or_return(bts_7200_disable_output_0(storage));
+    //status_ok_or_return(bts_7200_disable_output_0(storage));
     //LOG_DEBUG("up to here\n");
     //LOG_DEBUG("prev_gpio_state: %d, s_handling_input_0_fault: %d\n", prev_gpio_state, s_handling_input_0_fault);
+    
+    
     // Only start a new soft timer if the timer doesn't currently exist
     if(soft_timer_remaining_time(BTS7200_FAULT_INPUT_0_TIMER) == 0) {
-      if(prev_gpio_state) {
+      if(bts_7200_get_output_0_enabled(storage)) {
+        status_ok_or_return(bts_7200_disable_output_0(storage));
         soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_0_cb, storage, BTS7200_FAULT_INPUT_0_TIMER);
       }
       else {
@@ -251,15 +255,19 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   }
   adc_read_raw(sense_channel, meas1);
 
-  // Check for faults, call callback and handle fault if faulted
-  //bool fault0 = BTS7200_IS_MEASUREMENT_FAULT(*meas0);
-  //bool fault1 = BTS7200_IS_MEASUREMENT_FAULT(*meas1);
-  /*
+  //Check for faults, call callback and handle fault if faulted
+  bool fault0 = BTS7200_IS_MEASUREMENT_FAULT(*meas0);
+  bool fault1 = BTS7200_IS_MEASUREMENT_FAULT(*meas1);
+  
   if (fault0 || fault1) {
     ////LOG_DEBUG("calling fault cb\n");
-    //storage->fault_callback(fault0, fault1, storage->fault_callback_context);
-    //prv_bts_7200_handle_fault(storage, fault0, fault1);
-  }*/
+    // Only call fault cb if it's not NULL
+    if(storage->fault_callback) {
+      storage->fault_callback(fault0, fault1, storage->fault_callback_context);
+    }
+    // Handle fault 
+    prv_bts_7200_handle_fault(storage, fault0, fault1);
+  }
 
   if(false) {
     prv_bts_7200_handle_fault(storage, false, false);
