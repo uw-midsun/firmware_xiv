@@ -183,3 +183,34 @@ def next_message(
         ))
 
     return msg
+
+def can_pack(data_list):
+    """
+    Converts list of tuples in form ((int) val, (int) len_in_bytes) and combines them into a bytearray rendition
+    Returns:
+        A bytearray object representing message components passed in
+    Raises:
+        ValueError: if tuple has more than 2 items
+        ValueError: if tuple value exceeds allotted length in bytes
+    """
+    to_bytes = ""
+    for item in data_list:
+        if len(item) > 2:
+            raise ValueError("Tuple length {}: expected 2".format(len(item)))
+        #store value and number of bytes allotted
+        val = item[0]
+        len_in_bytes = item[1]
+        #check that values are valid
+        if len_in_bytes < 1 or val < 0:
+            raise ValueError("len in bytes must be > 0; val must be non-negative")
+        if val >= pow(2, len_in_bytes * 8):
+            raise ValueError("Value {} exceeds allotted {} bytes. Max Val: {}".format(val,
+                                        len_in_bytes, pow(2,len_in_bytes * 8) - 1))
+        hex_len = 2 * len_in_bytes 
+        hex_str = '{0:x}'.format(val)
+        #prepend zeros to match number of bytes allotted
+        while(len(hex_str) < hex_len):
+            hex_str = '0' + hex_str
+        to_bytes += hex_str    
+    return bytearray.fromhex(to_bytes)
+
