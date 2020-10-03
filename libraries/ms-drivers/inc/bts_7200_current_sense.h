@@ -8,7 +8,7 @@
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
-#include "delay.h"
+//#include "delay.h"
 
 // Current provided at IS pin during fault conditions.
 // Max input current where k(ILIS) operates is 1.44 A (see p.g. 48 of datasheet);
@@ -79,6 +79,12 @@ typedef struct {
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
 } Bts7200Storage;
+
+typedef enum {
+  BTS7200_FAULT_INPUT_0_TIMER = 0, 
+  BTS7200_FAULT_INPUT_1_TIMER, 
+  NUM_BTS7200_FAULT_TIMERS, 
+} Bts7200FaultTimer;
 
 // Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
 StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);
