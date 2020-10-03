@@ -14,17 +14,30 @@
 
 static PrechargeControlStorage s_precharge_storage = { 0 };
 
+void check_state() {
+  GpioState state = GPIO_STATE_LOW;
+  gpio_get_state(&s_precharge_storage.precharge_control, &state);
+  printf("control: %d\n", state);
+  gpio_get_state(&s_precharge_storage.precharge_monitor, &state);
+  printf("monitor PB0: %d\n", state);
+  gpio_get_state(&s_precharge_storage.precharge_monitor2, &state);
+  printf("monitor2 PA10: %d\n", state);
+}
+
 PrechargeControlStorage *test_get_storage(void) {
   return &s_precharge_storage;
 }
 
 StatusCode prv_set_precharge_control(PrechargeControlStorage *storage, const GpioState state) {
+  printf("%s set control %d\n", __func__, state);
+  check_state();
   gpio_set_state(&storage->precharge_control, state);
   return STATUS_CODE_OK;
 }
 
 void prv_precharge_monitor(const GpioAddress *address, void *context) {
   PrechargeControlStorage *storage = context;
+  printf("precharge monitor interrupt! state: %d port: %d pin: %d\n", storage->state, address->port, address->pin);
   if (storage->state == MCI_PRECHARGE_DISCHARGED) {
     // inconsistent until second precharge result
     storage->state = MCI_PRECHARGE_INCONSISTENT;
@@ -33,16 +46,21 @@ void prv_precharge_monitor(const GpioAddress *address, void *context) {
     storage->state = MCI_PRECHARGE_CHARGED;
     CAN_TRANSMIT_PRECHARGE_COMPLETED();
   }
+  check_state();
 }
 
 StatusCode prv_discharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   PrechargeControlStorage *storage = context;
+  printf("%s\n", __func__);
+  check_state();
   storage->state = MCI_PRECHARGE_DISCHARGED;
   return prv_set_precharge_control(storage, GPIO_STATE_LOW);
 }
 
 StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   PrechargeControlStorage *storage = context;
+  printf("%s\n", __func__);
+  check_state();
   return prv_set_precharge_control(storage, GPIO_STATE_HIGH);
 }
 
@@ -85,5 +103,6 @@ StatusCode precharge_control_init(const PrechargeControlSettings *settings) {
                                               &s_precharge_storage));
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_DISCHARGE_PRECHARGE,
                                               prv_discharge_rx, &s_precharge_storage));
+  check_state();
   return STATUS_CODE_OK;
 }
