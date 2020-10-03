@@ -74,6 +74,8 @@ typedef struct {
   Pca9539rGpioAddress *input_1_pin_pca9539r;
   uint32_t interval_us;
   SoftTimerId timer_id;
+  SoftTimerId fault_timer_0;
+  SoftTimerId fault_timer_1;
   Bts7200DataCallback callback;
   void *callback_context;
   Bts7200FaultCallback fault_callback;
