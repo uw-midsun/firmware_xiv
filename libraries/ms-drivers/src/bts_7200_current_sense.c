@@ -1,6 +1,5 @@
 #include "bts_7200_current_sense.h"
 #include <stddef.h>
-#include "log.h"
 
 #define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
 #define STM32_GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
@@ -59,11 +58,10 @@ static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0
     // Only start a new soft timer if the timer doesn't currently exist
     // (e.g. only handle fault if fault not currently being handled)
     if(soft_timer_remaining_time(storage->fault_timer_0) == 0) {
-      if(bts_7200_get_output_0_enabled(storage)) {
+      if(bts_7200_get_output_0_enabled(storage) == true) {
         status_ok_or_return(bts_7200_disable_output_0(storage));
         soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_0_cb, storage, &storage->fault_timer_0);
-      }
-      else {
+      } else {
         soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, NULL, storage, &storage->fault_timer_0);
       }
     }
@@ -226,10 +224,6 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
     }
     // Handle fault 
     prv_bts_7200_handle_fault(storage, fault0, fault1);
-  }
-
-  if(false) {
-    prv_bts_7200_handle_fault(storage, false, false);
   }
 
   return STATUS_CODE_OK;

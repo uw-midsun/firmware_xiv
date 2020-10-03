@@ -83,9 +83,9 @@ typedef struct {
 } Bts7200Storage;
 
 typedef enum {
-  BTS7200_FAULT_INPUT_0_TIMER = 0, 
+  BTS7200_FAULT_INPUT_0_TIMER = 1, 
   BTS7200_FAULT_INPUT_1_TIMER, 
-  NUM_BTS7200_FAULT_TIMERS, 
+  NUM_BTS7200_FAULT_TIMERS = 2, 
 } Bts7200FaultTimer;
 
 // Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
