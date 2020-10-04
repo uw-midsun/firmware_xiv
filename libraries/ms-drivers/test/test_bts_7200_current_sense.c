@@ -16,8 +16,10 @@
 #define ADC_EXPECTED_OK_VOLTAGE 1000
 #define ADC_TEST_FAULT_VOLTAGE 5000
 
-static uint16_t s_adc_measurement = ADC_DEFAULT_RETURNED_VOLTAGE_RAW;
-//static uint16_t s_adc_measurement_1 = ADC_DEFAULT_RETURNED_VOLTAGE_RAW;
+static uint16_t s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
+static uint16_t s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
+// To give different measurements between adc readings in bts_7200_get_measurement
+static bool s_adc_measurement_number = 0;
 
 static volatile uint16_t times_callback_called = 0;
 static void *received_context;
@@ -41,8 +43,15 @@ static void prv_fault_callback_increment(bool fault0, bool fault1, void *context
 // Note that this removes some of the interrupt functionality of the x86 adc implementation,
 // but this shouldn't matter in this case.
 StatusCode TEST_MOCK(adc_read_raw) (AdcChannel adc_channel, uint16_t *reading) {
-  *reading = s_adc_measurement;
-    
+  // Return reading based on pin it should corrsepond to.
+  if(s_adc_measurement_number == 0) {
+    *reading = s_adc_measurement_0;
+  } else {
+    *reading = s_adc_measurement_1;
+  }
+
+  s_adc_measurement_number = !s_adc_measurement_number;
+
   return STATUS_CODE_OK;
 }
 
@@ -62,7 +71,8 @@ void setup_test(void) {
   times_callback_called = 0;
   s_times_fault_callback_called = 0;
 
-  s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 }
 
 void teardown_test(void) {}
@@ -534,7 +544,8 @@ void test_bts_7200_faults_within_fault_range(void) {
   TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
   
   s_times_fault_callback_called = 0;
-  s_adc_measurement = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
 
   uint16_t meas0 = 0, meas1 = 0;
   bts_7200_get_measurement(&storage, &meas0, &meas1);
@@ -569,7 +580,8 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
   TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
   
   s_times_fault_callback_called = 0;
-  s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
   uint16_t meas0 = 0, meas1 = 0;
   bts_7200_get_measurement(&storage, &meas0, &meas1);
@@ -611,7 +623,8 @@ void test_bts7200_fault_cb_called_from_start(void) {
   TEST_ASSERT_OK(bts_7200_start(&storage));
   
   s_times_fault_callback_called = 0;
-  s_adc_measurement = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
   delay_us(2 * interval_us); // wait for 2* interval
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
   TEST_ASSERT_TRUE(bts_7200_stop(&storage));
@@ -653,13 +666,15 @@ void test_bts_7200_handle_fault_clears_fault(void) {
   TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&storage));
 
   // Fault 
-  s_adc_measurement = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
   delay_us(2*interval_us);
   TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&storage));
   TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&storage));
   
   // Set voltage back to normal so fault doesn't occur again
-  s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
   // Make sure fault doesn't clear early
   delay_ms(80);
@@ -675,7 +690,35 @@ void test_bts_7200_handle_fault_clears_fault(void) {
 
 // Test that fault context is passed on correctly on fault.
 void test_bts_7200_fault_context_passed_on_fault(void) {
+   // these don't matter (adc isn't reading anything) but can't be null
+  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  // EN0 and EN1 pins
+  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  uint32_t interval_us = 500;  // 0.5 ms
+  void *context_pointer = &interval_us;
+  Bts7200Stm32Settings settings = {
+    .select_pin = &test_select_pin,
+    .sense_pin = &test_sense_pin,
+    .input_0_pin = &test_input_0_pin, 
+    .input_1_pin = &test_input_1_pin,
+    .interval_us = interval_us,
+    .callback = &prv_callback_increment,
+    .fault_callback = &prv_fault_callback_increment,
+    .fault_callback_context = context_pointer,
+  };
+  Bts7200Storage storage = { 0 };
+  uint16_t meas0 = 0, meas1 = 0;
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
 
+  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+
+  // Measure to trigger fault, make sure context is passed okay
+  TEST_ASSERT_OK(bts_7200_get_measurement(&storage, &meas0, &meas1));
+  TEST_ASSERT_EQUAL(s_times_fault_callback_called, 1);
+  TEST_ASSERT_EQUAL(fault_received_context, context_pointer);
 }
 
 // Test that trying to enable a pin during fault doesn't work.
@@ -708,7 +751,8 @@ void test_bts_7200_enable_fails_during_fault(void) {
 
   // Start fault, make sure fault handling works ok
   s_times_fault_callback_called = 0;
-  s_adc_measurement = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
   delay_us(2*interval_us);
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
 
@@ -722,7 +766,8 @@ void test_bts_7200_enable_fails_during_fault(void) {
   TEST_ASSERT_EQUAL(bts_7200_enable_output_1(&storage), STATUS_CODE_INTERNAL_ERROR);
 
   // Change ADC voltage back to OK so that fault doesn't get called after complete
-  s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
   // Wait another 80 ms for fault handling to finish; should be able to enable outputs again.
   delay_ms(80);
@@ -739,6 +784,58 @@ void test_bts_7200_enable_fails_during_fault(void) {
 }
 
 // Test handling of a fault on only one input.
+// Same as bts_7200_handle_fault_clears_fault, but with only IN1 fault.
 void test_bts_7200_single_input_faults(void) {
+   // these don't matter (adc isn't reading anything) but can't be null
+  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  // EN0 and EN1 pins
+  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  uint32_t interval_us = 500;  // 0.5 ms
+  void *context_pointer = &interval_us;
+  Bts7200Stm32Settings settings = {
+    .select_pin = &test_select_pin,
+    .sense_pin = &test_sense_pin,
+    .input_0_pin = &test_input_0_pin, 
+    .input_1_pin = &test_input_1_pin,
+    .interval_us = interval_us,
+    .callback = &prv_callback_increment,
+    .fault_callback = &prv_fault_callback_increment,
+  };
+  Bts7200Storage storage = { 0 };
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
+  delay_us(2*interval_us);
+  TEST_ASSERT_OK(bts_7200_start(&storage));
 
+  //enable outputs
+  TEST_ASSERT_OK(bts_7200_enable_output_0(&storage));
+  TEST_ASSERT_OK(bts_7200_enable_output_1(&storage));
+
+  // Make sure not called early when ADC voltage normal
+  delay_us(2*interval_us);
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&storage));
+  TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&storage));
+
+  // Fault, but only on IN1.
+  s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  delay_us(2*interval_us);
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&storage));
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&storage));
+  
+  // Set voltage back to normal so fault doesn't get called again.
+  s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
+
+  // Make sure fault doesn't clear early
+  delay_ms(80);
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&storage));
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&storage));
+  
+  // Make sure fault clears after time elapsed and values return to normal
+  delay_ms(40);
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&storage));
+  TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&storage));
+
+  TEST_ASSERT_TRUE(bts_7200_stop(&storage));
 }
