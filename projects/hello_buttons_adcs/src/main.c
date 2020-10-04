@@ -34,7 +34,7 @@ static void prv_button_interrupt_handler(const GpioAddress *address, void *conte
 
 static void prv_register_interrupts(void) {
   gpio_it_register_interrupt(&button_addr, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
-                             prv_button_interrupt_handler, (void*)0);
+                             prv_button_interrupt_handler, (void *)0);
 }
 
 int main(void) {
