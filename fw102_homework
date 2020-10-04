@@ -1,0 +1,48 @@
+#include <stdlib.h>
+#include <stdint.h>
+#include "interrupt.h" 
+#include "soft_timer.h" 
+#include "log.h" 
+#include "wait.h" 
+
+//define counters struct
+typedef struct Counters {
+    uint8_t counter_a;
+    uint8_t counter_b;
+    
+} Counters;
+
+void prv_timer_callback(SoftTimerId timer_id, void *context) {
+    Counters *counter = context; //cast struct to void*
+    
+    if (counter_a % 2 != 0) {
+        counter->counter_b++;
+        LOG_DEBUG("Counter B: %i\n", counter->counter_b);
+    } //increment counter_b every two interrupts
+    
+    counter->counter_a++; //increment counter_a every interrupt
+    LOG_DEBUG("Counter A: %i\n", counter->counter_a);
+    
+    soft_timer_start_millis(500, prv_timer_callback, counter, NULL); //start timer again
+    
+}
+
+
+int main()
+{
+    //initialize interrupt and soft timer
+    interrupt_init();
+    soft_timer_init();
+
+    Counters counter = {0,0}; //set counter_a and counter_b to 0
+    
+    //start timer to call prv_timer_callback every 500ms
+    soft_timer_start_millis(500, prv_timer_callback, &counter, NULL); 
+    
+    while (true) {
+        wait(); //wait until an interrupt is triggered
+    }
+
+    return 0;
+}
+
