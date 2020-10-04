@@ -43,11 +43,12 @@ int main(void) {
   adc_init(ADC_MODE_SINGLE);
 
   adc_set_channel_pin(analog_pin, true);
-  LOG_DEBUG("Analog Pin: %c%d\n", analog_pin.port+65, analog_pin.pin);
-  LOG_DEBUG("Button Pin: %c%d\n", button.port+65, button.pin);
-
-  gpio_it_register_interrupt(&button, &it_setting, INTERRUPT_EDGE_FALLING, prv_button_press_callback,
-                             &analog_pin);
+  // not sure if this broke travis.ci, runs on local machine
+  //   LOG_DEBUG("Analog Pin: %c%d\n", analog_pin.port+65, analog_pin.pin);
+  //   LOG_DEBUG("Button Pin: %c%d\n", button.port+65, button.pin);
+  LOG_DEBUG("Analog Pin: A6, Button Pin: B2\n");
+  gpio_it_register_interrupt(&button, &it_setting, INTERRUPT_EDGE_FALLING,
+                             prv_button_press_callback, &analog_pin);
 
   while (true) {
     wait();
