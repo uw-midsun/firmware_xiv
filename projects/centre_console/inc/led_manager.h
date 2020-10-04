@@ -8,18 +8,16 @@
 #include "event_queue.h"
 #include "status.h"
 
-// TODO(SOFT-296): make this accurate to reality whenever CC rev 2 gets uploaded to A365
 typedef enum {
   CENTRE_CONSOLE_LED_BPS = 0,
   CENTRE_CONSOLE_LED_POWER,
   CENTRE_CONSOLE_LED_REVERSE,
   CENTRE_CONSOLE_LED_NEUTRAL,
   CENTRE_CONSOLE_LED_DRIVE,
-  CENTRE_CONSOLE_LED_DRL,       // this doesn't exist in rev 2?
-  CENTRE_CONSOLE_LED_LOW_BEAM,  // neither does this?
+  CENTRE_CONSOLE_LED_FAULT,
+  CENTRE_CONSOLE_LED_PARKING,
   CENTRE_CONSOLE_LED_HAZARDS,
-  // I think there's a parking one in rev 2?
-  NUM_CENTRE_CONSOLE_LEDS,
+  NUM_CENTRE_CONSOLE_LEDS
 } CentreConsoleLed;
 
 // Initialize the module.
