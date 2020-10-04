@@ -7,11 +7,6 @@
 #define PCA9539R_GPIO_STATE_SELECT_OUT_0 PCA9539R_GPIO_STATE_LOW
 #define PCA9539R_GPIO_STATE_SELECT_OUT_1 PCA9539R_GPIO_STATE_HIGH
 
-// Track whether faults are in progress 
-// (just using this to see if it fixes issues with soft timers)
-static bool s_enable_0_fault_in_progress = false;
-static bool s_enable_1_fault_in_progress = false;
-
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
   bts_7200_get_measurement(storage, &storage->reading_out_0, &storage->reading_out_1);
@@ -22,7 +17,6 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
 
   soft_timer_start(storage->interval_us, &prv_measure_current, storage, &storage->timer_id);
 }
-
 
 static StatusCode prv_init_common(Bts7200Storage *storage) {
   // make sure that if the user calls stop() it doesn't cancel some other timer
@@ -112,12 +106,6 @@ static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0
     }
   }
   return STATUS_CODE_OK;
-}
-
-bool bts_7200_get_fault_in_progress(Bts7200Storage *storage, bool *fault0, bool *fault1) {
-  *fault0 = storage->fault_0_in_progress; 
-  *fault1 = storage->fault_1_in_progress;
-  return (fault0 || fault1); 
 }
 
 StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings) {
@@ -271,7 +259,6 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   
   if (fault0 || fault1) {
     LOG_DEBUG("FAULT0: %d\n FAULT1: %d\n", fault0, fault1);
-    ////LOG_DEBUG("calling fault cb\n");
     // Only call fault cb if it's not NULL
     if(storage->fault_callback) {
       storage->fault_callback(fault0, fault1, storage->fault_callback_context);
@@ -292,6 +279,8 @@ StatusCode bts_7200_start(Bts7200Storage *storage) {
 
 bool bts_7200_stop(Bts7200Storage *storage) {
   bool result = soft_timer_cancel(storage->timer_id);
+  soft_timer_cancel(storage->fault_timer_0);
+  soft_timer_cancel(storage->fault_timer_1);
   // make sure calling stop twice doesn't cancel an unrelated timer
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
   return result;

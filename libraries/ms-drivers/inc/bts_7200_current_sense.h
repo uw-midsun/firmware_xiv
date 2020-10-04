@@ -8,7 +8,6 @@
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
-//#include "delay.h"
 
 // Current provided at IS pin during fault conditions.
 // Max input current where k(ILIS) operates is 1.44 A (see p.g. 48 of datasheet);
@@ -117,10 +116,6 @@ bool bts_7200_get_output_0_enabled(Bts7200Storage *storage);
 
 // Return whether output 1 is enabled or disabled
 bool bts_7200_get_output_1_enabled(Bts7200Storage *storage);
-
-// Return whether a fault is in progress; set fault0 and fault1 equal to whether
-// the respective IN pins represent a fault.
-bool bts_7200_get_fault_in_progress(Bts7200Storage *storage, bool *fault0, bool *fault1);
 
 // Set up a soft timer which periodically updates the storage with the latest measurements.
 // DO NOT USE if you are reading with bts_7200_get_measurement.
