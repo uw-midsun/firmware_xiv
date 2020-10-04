@@ -38,14 +38,17 @@ StatusCode prv_set_precharge_control(PrechargeControlStorage *storage, const Gpi
 void prv_precharge_monitor(const GpioAddress *address, void *context) {
   PrechargeControlStorage *storage = context;
   printf("precharge monitor interrupt! state: %d port: %d pin: %d\n", storage->state, address->port, address->pin);
-  if (storage->state == MCI_PRECHARGE_DISCHARGED) {
-    // inconsistent until second precharge result
-    storage->state = MCI_PRECHARGE_INCONSISTENT;
-  } else {
-    // both pins are in sync
-    storage->state = MCI_PRECHARGE_CHARGED;
-    CAN_TRANSMIT_PRECHARGE_COMPLETED();
-  }
+  // if (storage->state == MCI_PRECHARGE_DISCHARGED) {
+  //   // inconsistent until second precharge result
+  //   storage->state = MCI_PRECHARGE_INCONSISTENT;
+  // } else {
+  //   // both pins are in sync
+  //   storage->state = MCI_PRECHARGE_CHARGED;
+  //   CAN_TRANSMIT_PRECHARGE_COMPLETED();
+  // }
+  storage->state = MCI_PRECHARGE_CHARGED;
+  CAN_TRANSMIT_PRECHARGE_COMPLETED();
+
   check_state();
 }
 
@@ -104,5 +107,8 @@ StatusCode precharge_control_init(const PrechargeControlSettings *settings) {
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_DISCHARGE_PRECHARGE,
                                               prv_discharge_rx, &s_precharge_storage));
   check_state();
+
+  uint8_t *x = NULL;
+  uint8_t y = *x;
   return STATUS_CODE_OK;
 }

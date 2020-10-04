@@ -77,16 +77,16 @@ int main(void) {
   gpio_it_init();
   interrupt_init();
   soft_timer_init();
-  drive_fsm_init();
 
   prv_setup_system_can();
   prv_setup_motor_can();
 
   prv_mci_storage_init(&s_mci_storage);
+  drive_fsm_init();
 
   Event e = { 0 };
   while (true) {
-    while (event_process(&e) == STATUS_CODE_OK) {
+    while (event_process(&e) != STATUS_CODE_OK) {
       can_process_event(&e);
     }
   }
