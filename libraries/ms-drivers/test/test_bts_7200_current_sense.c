@@ -665,7 +665,6 @@ void test_bts_7200_handle_fault_clears_fault(void) {
   delay_ms(80);
   TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&storage));
   TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&storage));
-
   // Make sure fault clears after time elapsed and values return to normal
   delay_ms(40);
   TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&storage));
@@ -679,17 +678,64 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
 
 }
 
-// Test that fault handler gets called when operating normally by calling
-// bts_7200_start, and it doesn't toggle pins early.
-// This is functionally a full test of the fault handling functionality.
-void test_bts_7200_fault_handler_called_from_start(void) {
-
-}
-
 // Test that trying to enable a pin during fault doesn't work.
-// (need to implement this)
-void test_bts_7200_enable_fails_on_fault(void) {
+void test_bts_7200_enable_fails_during_fault(void) {
+   // these don't matter (adc isn't reading anything) but can't be null
+  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  // EN0 and EN1 pins
+  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  uint32_t interval_us = 500;  // 0.5 ms
+  void *context_pointer = &interval_us;
+  Bts7200Stm32Settings settings = {
+    .select_pin = &test_select_pin,
+    .sense_pin = &test_sense_pin,
+    .input_0_pin = &test_input_0_pin, 
+    .input_1_pin = &test_input_1_pin,
+    .interval_us = interval_us,
+    .callback = &prv_callback_increment,
+    .fault_callback = &prv_fault_callback_increment,
+  };
+  Bts7200Storage storage = { 0 };
+  TEST_ASSERT_OK(bts_7200_init_stm32(&storage, &settings));
+  delay_us(2*interval_us);
+  TEST_ASSERT_OK(bts_7200_start(&storage));
 
+  // Make sure outputs are off
+  TEST_ASSERT_OK(bts_7200_disable_output_0(&storage));
+  TEST_ASSERT_OK(bts_7200_disable_output_1(&storage));
+
+  // Start fault, make sure fault handling works ok
+  s_times_fault_callback_called = 0;
+  s_adc_measurement = ADC_TEST_FAULT_VOLTAGE;
+  delay_us(2*interval_us);
+  TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
+
+  // Wait 40 ms; fault still in progress, shouldn't be possible to enable outputs.
+  delay_ms(40);
+  bool test = storage.fault_0_in_progress;
+  LOG_DEBUG("fault 0 in progress %d\n", test);
+  LOG_DEBUG("first assert\n");
+  TEST_ASSERT_EQUAL(bts_7200_enable_output_0(&storage), STATUS_CODE_INTERNAL_ERROR);
+  LOG_DEBUG("second assert\n");
+  TEST_ASSERT_EQUAL(bts_7200_enable_output_1(&storage), STATUS_CODE_INTERNAL_ERROR);
+
+  // Change ADC voltage back to OK so that fault doesn't get called after complete
+  s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
+
+  // Wait another 80 ms for fault handling to finish; should be able to enable outputs again.
+  delay_ms(80);
+  TEST_ASSERT_OK(bts_7200_enable_output_0(&storage));
+  TEST_ASSERT_OK(bts_7200_enable_output_1(&storage));
+
+
+  // Make sure outputs were actually enabled.
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&storage));
+  TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&storage));
+
+  // Stop
+  TEST_ASSERT_TRUE(bts_7200_stop(&storage));
 }
 
 // Test handling of a fault on only one input.

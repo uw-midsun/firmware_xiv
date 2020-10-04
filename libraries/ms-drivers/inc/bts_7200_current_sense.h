@@ -76,6 +76,8 @@ typedef struct {
   SoftTimerId timer_id;
   SoftTimerId fault_timer_0;
   SoftTimerId fault_timer_1;
+  bool fault_0_in_progress;
+  bool  fault_1_in_progress;
   Bts7200DataCallback callback;
   void *callback_context;
   Bts7200FaultCallback fault_callback;
@@ -115,6 +117,10 @@ bool bts_7200_get_output_0_enabled(Bts7200Storage *storage);
 
 // Return whether output 1 is enabled or disabled
 bool bts_7200_get_output_1_enabled(Bts7200Storage *storage);
+
+// Return whether a fault is in progress; set fault0 and fault1 equal to whether
+// the respective IN pins represent a fault.
+bool bts_7200_get_fault_in_progress(Bts7200Storage *storage, bool *fault0, bool *fault1);
 
 // Set up a soft timer which periodically updates the storage with the latest measurements.
 // DO NOT USE if you are reading with bts_7200_get_measurement.
