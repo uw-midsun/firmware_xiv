@@ -69,7 +69,10 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 
+    // Add DSEL, EN0, EN1 pins
     bts_7200_settings.select_pin = &s_hw_config.bts7200s[i].dsel_pin;
+    bts_7200_settings.input_0_pin = &s_hw_config.bts7200s[i].en0_pin;
+    bts_7200_settings.input_1_pin = &s_hw_config.bts7200s[i].en1_pin;
     status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 

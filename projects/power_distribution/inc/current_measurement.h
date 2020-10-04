@@ -17,6 +17,8 @@ typedef void (*PowerDistributionCurrentMeasurementCallback)(void *context);
 
 typedef struct {
   Pca9539rGpioAddress dsel_pin;
+  Pca9539rGpioAddress en0_pin;
+  Pca9539rGpioAddress en1_pin;
   PowerDistributionCurrent current_0;
   PowerDistributionCurrent current_1;
   uint8_t mux_selection;
