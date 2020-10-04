@@ -3,8 +3,8 @@
 #include "adc.h"
 #include "gpio.h"
 #include "gpio_it.h"
-#include "log.h"
 #include "interrupt.h"
+#include "log.h"
 #include "soft_timer.h"
 
 static GpioAddress adc_pin_addr = { .port = GPIO_PORT_A, .pin = 6 };
