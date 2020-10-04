@@ -17,7 +17,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
       (PowerDistributionBts7200Data[]){
           {
               .dsel_pin = FRONT_PIN_LEFT_RIGHT_CAM_DSEL,
-              .en0_pin = FRONT_PIN_LEFT_CAMERA_EN, 
+              .en0_pin = FRONT_PIN_LEFT_CAMERA_EN,
               .en1_pin = FRONT_PIN_RIGHT_CAMERA_EN,
               .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_LEFT_CAMERA,
               .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_RIGHT_CAMERA,
@@ -41,7 +41,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           },
           {
               .dsel_pin = FRONT_PIN_FRONT_TURN_LIGHT_DSEL,
-              .en0_pin = FRONT_PIN_FRONT_LEFT_TURN_EN, 
+              .en0_pin = FRONT_PIN_FRONT_LEFT_TURN_EN,
               .en1_pin = FRONT_PIN_FRONT_RIGHT_TURN_EN,
               .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_LEFT_FRONT_TURN_LIGHT,
               .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_RIGHT_FRONT_TURN_LIGHT,
@@ -49,7 +49,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           },
           {
               .dsel_pin = FRONT_PIN_MAIN_REAR_PI_DSEL,
-              .en0_pin = FRONT_PIN_MAIN_PI_B_EN, 
+              .en0_pin = FRONT_PIN_MAIN_PI_B_EN,
               .en1_pin = FRONT_PIN_REAR_PI_EN,
               .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_MAIN_PI,
               .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_REAR_PI,
@@ -57,7 +57,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           },
           {
               .dsel_pin = FRONT_PIN_5V_SPARE_DSEL,
-              .en0_pin = FRONT_PIN_5V_SPARE_1_EN, 
+              .en0_pin = FRONT_PIN_5V_SPARE_1_EN,
               .en1_pin = FRONT_PIN_5V_SPARE_2_EN,
               .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_5V_SPARE_1,
               .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_5V_SPARE_2,
@@ -73,7 +73,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           },
           {
               .dsel_pin = FRONT_PIN_STR_PDL_DSEL,
-              .en0_pin = FRONT_PIN_STEERING_EN, 
+              .en0_pin = FRONT_PIN_STEERING_EN,
               .en1_pin = FRONT_PIN_CTR_CONSL_EN,
               .current_0 = FRONT_POWER_DISTRIBUTION_CURRENT_STEERING,
               .current_1 = FRONT_POWER_DISTRIBUTION_CURRENT_PEDAL,
@@ -136,7 +136,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
       (PowerDistributionBts7200Data[]){
           {
               .dsel_pin = REAR_PIN_SOLAR_TELEMETRY_DSEL,
-              .en0_pin = REAR_PIN_SOLAR_SENSE_EN, 
+              .en0_pin = REAR_PIN_SOLAR_SENSE_EN,
               .en1_pin = REAR_PIN_TELEMETRY_EN,
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SOLAR_SENSE,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_TELEMETRY,
@@ -144,7 +144,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           },
           {
               .dsel_pin = REAR_PIN_STROBE_CTR_BRK_DSEL,
-              .en0_pin = REAR_PIN_STROBE_LIGHT_EN, 
+              .en0_pin = REAR_PIN_STROBE_LIGHT_EN,
               .en1_pin = REAR_PIN_CENTER_BRAKE_LIGHT_EN,
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_STROBE,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_CENTRE_BRAKE_LIGHT,
@@ -160,7 +160,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           },
           {
               .dsel_pin = REAR_PIN_REAR_BRAKE_LIGHT_DSEL,
-              .en0_pin = REAR_PIN_REAR_LEFT_BRAKEL_EN, 
+              .en0_pin = REAR_PIN_REAR_LEFT_BRAKEL_EN,
               .en1_pin = REAR_PIN_REAR_RIGHT_BRAKEL_EN,
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_LEFT_BRAKE_LIGHT,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_RIGHT_BRAKE_LIGHT,
@@ -168,7 +168,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           },
           {
               .dsel_pin = REAR_PIN_CAM_SPARE_10_DSEL,
-              .en0_pin = REAR_PIN_REAR_CAMERA_EN, 
+              .en0_pin = REAR_PIN_REAR_CAMERA_EN,
               .en1_pin = REAR_PIN_SPARE_10_EN,
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_REAR_CAMERA,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_10,
@@ -184,7 +184,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           },
           {
               .dsel_pin = REAR_PIN_SPARE_3_4_DSEL,
-              .en0_pin = REAR_PIN_SPARE_3_EN, 
+              .en0_pin = REAR_PIN_SPARE_3_EN,
               .en1_pin = REAR_PIN_SPARE_4_EN,
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_3,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_4,
@@ -192,7 +192,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           },
           {
               .dsel_pin = REAR_PIN_SPARE_8_9_DSEL,
-              .en0_pin = REAR_PIN_SPARE_8_EN, 
+              .en0_pin = REAR_PIN_SPARE_8_EN,
               .en1_pin = REAR_PIN_SPARE_9_EN,
               .current_0 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_8,
               .current_1 = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_9,

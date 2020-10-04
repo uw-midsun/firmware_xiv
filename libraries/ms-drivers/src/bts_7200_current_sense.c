@@ -1,6 +1,5 @@
 #include "bts_7200_current_sense.h"
 #include <stddef.h>
-#include "log.h"
 
 #define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
 #define STM32_GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
@@ -26,8 +25,8 @@ static StatusCode prv_init_common(Bts7200Storage *storage) {
   storage->fault_timer_0 = BTS7200_FAULT_INPUT_0_TIMER;
   storage->fault_timer_1 = BTS7200_FAULT_INPUT_1_TIMER;
 
-  storage->fault_0_in_progress = false; 
-  storage->fault_1_in_progress = false; 
+  storage->fault_0_in_progress = false;
+  storage->fault_1_in_progress = false;
 
   // initialize the sense pin
   GpioSettings sense_settings = {
@@ -46,7 +45,7 @@ static StatusCode prv_init_common(Bts7200Storage *storage) {
 // Callback for soft timer in prv_bts_7200_handle_fault to re-enable IN0
 static void prv_bts_7200_fault_handler_enable_0_cb(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
-  storage->fault_0_in_progress = false; 
+  storage->fault_0_in_progress = false;
   bts_7200_enable_output_0(storage);
 }
 
@@ -60,48 +59,44 @@ static void prv_bts_7200_fault_handler_enable_1_cb(SoftTimerId timer_id, void *c
 // Callback for soft timer in fault handler to leave IN0 disabled
 static void prv_bts_7200_fault_handler_0_default_cb(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
-  storage->fault_0_in_progress = false; 
+  storage->fault_0_in_progress = false;
 }
 
 // Callback for soft timer in fault handler to leave IN1 disabled
 static void prv_bts_7200_fault_handler_1_default_cb(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
-  storage->fault_1_in_progress = false;  
+  storage->fault_1_in_progress = false;
 }
 
 // Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
 static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0, bool fault1) {
-  LOG_DEBUG("FAULT CALLED\n");
-  //LOG_DEBUG("Handling fault\n");
   if (fault0) {
-    LOG_DEBUG("FAULT0\n");
     // Only start a new soft timer if the timer doesn't currently exist
     // (e.g. only handle fault if fault not currently being handled)
-    if(!storage->fault_0_in_progress) {
-      LOG_DEBUG("FAULT NOT IN PROGRESS\n");
-      storage->fault_0_in_progress = true; 
-      if(bts_7200_get_output_0_enabled(storage) == true) {
-        LOG_DEBUG("OUTPUT 0 ENABLED, DISABLING\n");
+    if (!storage->fault_0_in_progress) {
+      storage->fault_0_in_progress = true;
+      if (bts_7200_get_output_0_enabled(storage) == true) {
         status_ok_or_return(bts_7200_disable_output_0(storage));
-        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_0_cb, storage, &storage->fault_timer_0);
+        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_0_cb,
+                         storage, &storage->fault_timer_0);
       } else {
-        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_0_default_cb, storage, &storage->fault_timer_0);
+        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_0_default_cb,
+                         storage, &storage->fault_timer_0);
       }
     }
   }
   if (fault1) {
-    LOG_DEBUG("FAULT1\n");
     // Only start a new soft timer if the timer doesn't currently exist
     // (e.g. only handle fault if fault not currently being handled)
-    if(!storage->fault_1_in_progress) {
-      LOG_DEBUG("FAULT1 not in PROGRESS\n");
+    if (!storage->fault_1_in_progress) {
       storage->fault_1_in_progress = true;
-      if(bts_7200_get_output_1_enabled(storage)) {
-        LOG_DEBUG("OUTPUT 1 ENABLED, DISABLING\n");
+      if (bts_7200_get_output_1_enabled(storage)) {
         status_ok_or_return(bts_7200_disable_output_1(storage));
-        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_1_cb, storage, &storage->fault_timer_1);
+        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_1_cb,
+                         storage, &storage->fault_timer_1);
       } else {
-        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_1_default_cb, storage, &storage->fault_timer_1);
+        soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_1_default_cb,
+                         storage, &storage->fault_timer_1);
       }
     }
   }
@@ -161,37 +156,33 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
   };
 
   status_ok_or_return(pca9539r_gpio_init_pin(storage->select_pin_pca9539r, &select_input_settings));
-  status_ok_or_return(pca9539r_gpio_init_pin(storage->input_0_pin_pca9539r, &select_input_settings));
-  status_ok_or_return(pca9539r_gpio_init_pin(storage->input_1_pin_pca9539r, &select_input_settings));
+  status_ok_or_return(
+      pca9539r_gpio_init_pin(storage->input_0_pin_pca9539r, &select_input_settings));
+  status_ok_or_return(
+      pca9539r_gpio_init_pin(storage->input_1_pin_pca9539r, &select_input_settings));
 
   return prv_init_common(storage);
 }
 
 StatusCode bts_7200_enable_output_0(Bts7200Storage *storage) {
-  LOG_DEBUG("ENABLE OUTPUT 0\n");
-  if(!storage->fault_0_in_progress) {
-    LOG_DEBUG("FAULT 0 NOT IN PROGRESS\n");
+  if (!storage->fault_0_in_progress) {
     bool test = storage->fault_0_in_progress;
     if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
       return gpio_set_state(storage->input_0_pin_stm32, GPIO_STATE_HIGH);
     }
     return pca9539r_gpio_set_state(storage->input_0_pin_pca9539r, PCA9539R_GPIO_STATE_HIGH);
   } else {
-    LOG_DEBUG("returning internal error\n");
     return STATUS_CODE_INTERNAL_ERROR;
   }
 }
 
 StatusCode bts_7200_enable_output_1(Bts7200Storage *storage) {
-  LOG_DEBUG("ENABLE OUTPUT 1\n");
-  if(!storage->fault_1_in_progress) {
-    LOG_DEBUG("FAULT 1 NOT IN PROGRESS\n");
+  if (!storage->fault_1_in_progress) {
     if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
       return gpio_set_state(storage->input_1_pin_stm32, GPIO_STATE_HIGH);
     }
     return pca9539r_gpio_set_state(storage->input_1_pin_pca9539r, PCA9539R_GPIO_STATE_HIGH);
   } else {
-    LOG_DEBUG("returning internal error 1\n");
     return STATUS_CODE_INTERNAL_ERROR;
   }
 }
@@ -235,7 +226,6 @@ bool bts_7200_get_output_1_enabled(Bts7200Storage *storage) {
 }
 
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
-  LOG_DEBUG("Getting measurement\n");
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
 
@@ -253,17 +243,16 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   }
   adc_read_raw(sense_channel, meas1);
 
-  //Check for faults, call callback and handle fault if faulted
+  // Check for faults, call callback and handle fault if faulted
   bool fault0 = BTS7200_IS_MEASUREMENT_FAULT(*meas0);
   bool fault1 = BTS7200_IS_MEASUREMENT_FAULT(*meas1);
-  
+
   if (fault0 || fault1) {
-    LOG_DEBUG("FAULT0: %d\n FAULT1: %d\n", fault0, fault1);
     // Only call fault cb if it's not NULL
-    if(storage->fault_callback) {
+    if (storage->fault_callback) {
       storage->fault_callback(fault0, fault1, storage->fault_callback_context);
     }
-    // Handle fault 
+    // Handle fault
     prv_bts_7200_handle_fault(storage, fault0, fault1);
   }
 

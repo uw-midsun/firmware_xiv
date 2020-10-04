@@ -25,7 +25,7 @@ static volatile uint16_t times_callback_called = 0;
 static void *received_context;
 
 static volatile uint16_t s_times_fault_callback_called = 0;
-static void* fault_received_context;
+static void *fault_received_context;
 
 static void prv_callback_increment(uint16_t reading0, uint16_t reading1, void *context) {
   times_callback_called++;
@@ -43,9 +43,9 @@ static Bts7200Storage s_storage = { 0 };
 // Mocks adc_read_raw to allow for changing the reading during testing.
 // Note that this removes some of the interrupt functionality of the x86 adc implementation,
 // but this shouldn't matter in this case.
-StatusCode TEST_MOCK(adc_read_raw) (AdcChannel adc_channel, uint16_t *reading) {
+StatusCode TEST_MOCK(adc_read_raw)(AdcChannel adc_channel, uint16_t *reading) {
   // Return reading based on pin it should corrsepond to.
-  if(s_adc_measurement_number == 0) {
+  if (s_adc_measurement_number == 0) {
     *reading = s_adc_measurement_0;
   } else {
     *reading = s_adc_measurement_1;
@@ -92,7 +92,7 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -137,7 +137,7 @@ void test_bts_7200_current_sense_timer_pca9539r_works(void) {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -181,7 +181,7 @@ void test_bts_7200_current_sense_restart(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -230,13 +230,13 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   GpioAddress select_pin = { .port = NUM_GPIO_PORTS, .pin = 0 };  // invalid
   GpioAddress sense_pin = { .port = 0, .pin = 0 };                // valid
   // EN0 and EN1 pins (both valid for now)
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 }; 
+  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
   GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -267,7 +267,7 @@ void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -297,7 +297,7 @@ void test_bts_7200_current_sense_null_callback(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = NULL,
@@ -320,7 +320,7 @@ void test_bts_7200_current_sense_get_measurement_stm32_valid(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -345,7 +345,7 @@ void test_bts_7200_current_sense_get_measurement_pca9539r_valid(void) {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -370,7 +370,7 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -391,12 +391,12 @@ void test_bts_7200_current_sense_context_passed(void) {
   // EN0 and EN1 pins
   GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
   GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
-  uint32_t interval_us = 500;  // 0.5 ms
+  uint32_t interval_us = 500;            // 0.5 ms
   void *context_pointer = &interval_us;  // arbitrary pointer
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -407,7 +407,6 @@ void test_bts_7200_current_sense_context_passed(void) {
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
   TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
   TEST_ASSERT_EQUAL(received_context, context_pointer);
-
 }
 
 // Test enabling/disabling/getting value works with IN0 pin
@@ -422,7 +421,7 @@ void test_bts_7200_output_0_functions_work(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -462,7 +461,7 @@ void test_bts_7200_output_0_functions_work(void) {
 
 // Same as previous test, but with IN1 pin
 void test_bts_7200_output_1_functions_work(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -472,7 +471,7 @@ void test_bts_7200_output_1_functions_work(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -513,7 +512,7 @@ void test_bts_7200_output_1_functions_work(void) {
 
 // Test that fault callback called when voltage within fault range.
 void test_bts_7200_faults_within_fault_range(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -524,31 +523,30 @@ void test_bts_7200_faults_within_fault_range(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
-    .fault_callback_context = context_pointer, //pass in random variable
+    .fault_callback_context = context_pointer,  // pass in random variable
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  
+
   s_times_fault_callback_called = 0;
   s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
   s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
 
   uint16_t meas0 = 0, meas1 = 0;
   bts_7200_get_measurement(&s_storage, &meas0, &meas1);
-  
+
   TEST_ASSERT_EQUAL(s_times_fault_callback_called, 1);
 
   s_times_fault_callback_called = 0;
-
 }
 
 // Test that fault isn't called when voltage outside of fault range.
 void test_bts_7200_no_fault_outside_of_fault_range(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -559,32 +557,32 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
-    .fault_callback_context = context_pointer, //pass in random variable
+    .fault_callback_context = context_pointer,  // pass in random variable
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  
+
   s_times_fault_callback_called = 0;
   s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
   s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
   uint16_t meas0 = 0, meas1 = 0;
   bts_7200_get_measurement(&s_storage, &meas0, &meas1);
-  
+
   TEST_ASSERT_EQUAL(s_times_fault_callback_called, 0);
 
   s_times_fault_callback_called = 0;
-  
-  // Wait for soft_timers to expire before continuing 
+
+  // Wait for soft_timers to expire before continuing
   // Why does having this cause a segfault????????????
   delay_ms(BTS7200_FAULT_RESTART_DELAY_MS + 10);
 }
 
-// Test that the fault callback gets called when running bts_7200_start, and 
+// Test that the fault callback gets called when running bts_7200_start, and
 // there's no segfault/stack overflow.
 // This test causes a segfault for some reason
 
@@ -600,29 +598,29 @@ void test_bts7200_fault_cb_called_from_start(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
-  
+
   s_times_fault_callback_called = 0;
   s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
   s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
-  delay_us(2 * interval_us); // wait for 2* interval
+  delay_us(2 * interval_us);  // wait for 2* interval
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
   TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
   s_times_fault_callback_called = 0;
-} 
+}
 
 // Test that fault cleared correctly, and that the correct IN pin(s) are toggled
 // to clear the fault.
 void test_bts_7200_handle_fault_clears_fault(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -633,32 +631,32 @@ void test_bts_7200_handle_fault_clears_fault(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
-  //enable outputs
+  // enable outputs
   TEST_ASSERT_OK(bts_7200_enable_output_0(&s_storage));
   TEST_ASSERT_OK(bts_7200_enable_output_1(&s_storage));
 
   // Make sure not called early when ADC voltage normal
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&s_storage));
 
-  // Fault 
+  // Fault
   s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
   s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
-  
+
   // Set voltage back to normal so fault doesn't occur again
   s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
   s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
@@ -673,11 +671,11 @@ void test_bts_7200_handle_fault_clears_fault(void) {
   TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&s_storage));
 
   TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
-} 
+}
 
 // Test that fault context is passed on correctly on fault.
 void test_bts_7200_fault_context_passed_on_fault(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -688,7 +686,7 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
@@ -709,7 +707,7 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
 
 // Test that trying to enable a pin during fault doesn't work.
 void test_bts_7200_enable_fails_during_fault(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -720,14 +718,14 @@ void test_bts_7200_enable_fails_during_fault(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // Make sure outputs are off
@@ -738,14 +736,12 @@ void test_bts_7200_enable_fails_during_fault(void) {
   s_times_fault_callback_called = 0;
   s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
   s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
 
   // Wait 40 ms; fault still in progress, shouldn't be possible to enable outputs.
   delay_ms(40);
-  LOG_DEBUG("first assert\n");
   TEST_ASSERT_EQUAL(bts_7200_enable_output_0(&s_storage), STATUS_CODE_INTERNAL_ERROR);
-  LOG_DEBUG("second assert\n");
   TEST_ASSERT_EQUAL(bts_7200_enable_output_1(&s_storage), STATUS_CODE_INTERNAL_ERROR);
 
   // Change ADC voltage back to OK so that fault doesn't get called after complete
@@ -756,7 +752,6 @@ void test_bts_7200_enable_fails_during_fault(void) {
   delay_ms(80);
   TEST_ASSERT_OK(bts_7200_enable_output_0(&s_storage));
   TEST_ASSERT_OK(bts_7200_enable_output_1(&s_storage));
-
 
   // Make sure outputs were actually enabled.
   TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
@@ -769,7 +764,7 @@ void test_bts_7200_enable_fails_during_fault(void) {
 // Test handling of a fault on only one input.
 // Same as bts_7200_handle_fault_clears_fault, but with only IN1 fault.
 void test_bts_7200_single_input_faults(void) {
-   // these don't matter (adc isn't reading anything) but can't be null
+  // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -780,32 +775,32 @@ void test_bts_7200_single_input_faults(void) {
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin, 
+    .input_0_pin = &test_input_0_pin,
     .input_1_pin = &test_input_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
-  //enable outputs
+  // enable outputs
   TEST_ASSERT_OK(bts_7200_enable_output_0(&s_storage));
   TEST_ASSERT_OK(bts_7200_enable_output_1(&s_storage));
 
   // Make sure not called early when ADC voltage normal
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Fault, but only on IN1.
   s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
   s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
-  delay_us(2*interval_us);
+  delay_us(2 * interval_us);
   TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
-  
+
   // Set voltage back to normal so fault doesn't get called again.
   s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
