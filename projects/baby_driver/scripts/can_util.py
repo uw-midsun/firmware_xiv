@@ -188,7 +188,7 @@ def can_pack(data_list):
     """
     Converts list of tuples and combines them into a little-endian
     bytearray rendition. List is traversed in reverse order, each val
-    is broken into bytes and appended to bytearr output
+    is broken into bytes and appended to bytearr output (LSB first)
     Args:
         List of tuples in form ((int) val, (int) len_in_bytes). val must be
         in range [0, 2**len_in_bytes - 1]
