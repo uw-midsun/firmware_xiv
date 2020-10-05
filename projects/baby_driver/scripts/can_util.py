@@ -197,7 +197,6 @@ def can_pack(data_list):
         message components input
     Raises:
         ValueError: if invalid values for val, len_in_bytes input
-        ValueError: if tuple value exceeds allotted length in bytes
     """
     bytearr = bytearray()
     # Traverse list in reverse order
