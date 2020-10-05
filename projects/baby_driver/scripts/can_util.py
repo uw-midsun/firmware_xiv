@@ -186,32 +186,31 @@ def next_message(
 
 def can_pack(data_list):
     """
-    Converts list of tuples in form ((int) val, (int) len_in_bytes)
-            and combines them into a bytearray rendition
+    Converts list of tuples and combines them into a little-endian
+    bytearray rendition. List is traversed in reverse order, each val
+    is broken into bytes and appended to bytearr output
+    Args:
+        List of tuples in form ((int) val, (int) len_in_bytes). val must be
+        in range [0, 2**len_in_bytes - 1]
     Returns:
-        A bytearray object representing message components passed in
+        A bytearray object in little endian format, representing
+        message components input
     Raises:
-        ValueError: if tuple has more than 2 items
+        ValueError: if invalid values for val, len_in_bytes input
         ValueError: if tuple value exceeds allotted length in bytes
     """
-    to_bytes = ""
-    for item in data_list:
-        if len(item) > 2:
-            raise ValueError("Tuple length {}: expected 2".format(len(item)))
-        #store value and number of bytes allotted
-        val = item[0]
-        len_in_bytes = item[1]
-        #check that values are valid
+    bytearr = bytearray()
+    # Traverse list in reverse order
+    for val, len_in_bytes in reversed(data_list):
+        # Error check input vals
         if len_in_bytes < 1 or val < 0:
             raise ValueError("len in bytes must be > 0; val must be non-negative")
-        if val >= pow(2, len_in_bytes * 8):
+        if val >= 1 << (len_in_bytes * 8):
             raise ValueError("Value {} exceeds allotted {} bytes. Max Val: {}".format(
-                val, len_in_bytes, pow(2, len_in_bytes * 8) - 1))
-        hex_len = 2 * len_in_bytes
-        hex_str = '{0:x}'.format(val)
-        #prepend zeros to match number of bytes allotted
-        while len(hex_str) < hex_len:
-            hex_str = '0' + hex_str
-        to_bytes += hex_str
-    return bytearray.fromhex(to_bytes)
-    
+                val, len_in_bytes, 1 << (len_in_bytes * 8) - 1))
+        # Split val into bytes rendition, re-pack in little-endian
+        for _ in range(len_in_bytes):
+            int_out = val & 0xFF
+            bytearr.append(int_out)
+            val = val>>8
+    return bytearr
