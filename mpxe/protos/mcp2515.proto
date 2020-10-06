@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message MxMcp2515Store {
+  uint32 tx_id = 1;
+  uint64 tx_data = 2;
+  uint32 rx_id = 3;
+  uint64 rx_data = 4;
+}

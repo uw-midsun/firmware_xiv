@@ -23,7 +23,6 @@ static void prv_pedal_timeout(SoftTimerId timer_id, void *context) {
   get_brake_data(&brake_position);
   get_throttle_data(&throttle_position);
   // SENDING POSITIONS THROUGH CAN MESSAGES
-  LOG_DEBUG("throttle: %d, brake; %d\n", throttle_position, brake_position);
   CAN_TRANSMIT_PEDAL_OUTPUT((uint32_t)throttle_position, (uint32_t)brake_position);
   soft_timer_start_millis(TIMER_TIMEOUT_IN_MILLIS, prv_pedal_timeout, context, NULL);
 }

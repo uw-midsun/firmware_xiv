@@ -256,7 +256,7 @@ mpxegen:
 
 .PHONY: mpxe
 mpxe: mpxegen socketcan
-	@python3 $(MPXE_DIR)/integration_tests/$(INT_TEST).py
+	@python3 -m unittest discover $(MPXE_DIR)/integration_tests -p "test_*$(INT_TEST).py"
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

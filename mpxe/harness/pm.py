@@ -4,6 +4,7 @@ import select
 import subprocess
 
 from . import project
+from . import canio
 
 class ProjectManager:
     def __init__(self):
@@ -12,8 +13,10 @@ class ProjectManager:
         proj_name_list = os.listdir('/home/vagrant/shared/firmware_xiv/projects')
         for name in proj_name_list:
             self.statuses[name] = False
+        self.killed = False
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
+        self.can = canio.Canio()
     def build(self, name):
         # check if already built or project doesn't exist
         if self.statuses[name] is None or self.statuses[name] is True:
@@ -63,11 +66,11 @@ class ProjectManager:
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
         try:
-            while True:
+            while not self.killed:
                 if len(self.proj_fds) == 0:
                     continue
                 p = prep_poll()
-                res_list = p.poll()
+                res_list = p.poll(0.5)
                 for res in res_list:
                     handle_poll_res(res)
         except Exception as e:
@@ -75,4 +78,6 @@ class ProjectManager:
                 return
             raise e
     def end(self):
+        self.killed = True
+        self.can.stop()
         self.poll_thread.join()

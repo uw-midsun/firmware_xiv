@@ -57,8 +57,6 @@ static void *prv_poll_update(void *arg) {
   while (true) {
     int res = poll(&pfd, 1, -1);
     if (res == -1) {
-      // LOG_DEBUG("polling error\n");
-      // perror(__func__);
       // interrupted
       continue;
     } else if (res == 0) {
@@ -70,7 +68,6 @@ static void *prv_poll_update(void *arg) {
         if (len == -1) {
           // TODO: handle read error case
         }
-        LOG_DEBUG("store got buffer with len %ld\n", len);
         prv_handle_store_update(buf, len);
       } else {
         // TODO: handle POLLHUP case
