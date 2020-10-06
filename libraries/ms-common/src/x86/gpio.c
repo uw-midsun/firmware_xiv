@@ -102,7 +102,7 @@ static uint32_t prv_get_index(const GpioAddress *address) {
 
 // Helper function to cut down clutter
 static void prv_export() {
-  store_export(ENUM_STORE_TYPE__GPIO, &s_store, NULL);
+  store_export(MX_STORE_TYPE__GPIO, &s_store, NULL);
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
@@ -130,13 +130,13 @@ StatusCode gpio_init(void) {
     (FreeUnpackedFunc)mx_gpio_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  store_init(ENUM_STORE_TYPE__GPIO, funcs);
+  store_init(MX_STORE_TYPE__GPIO, funcs);
   // init the store to mimic the actual static gpio state
   s_store.n_state = GPIO_TOTAL_PINS;
   s_store.n_interrupt_id = GPIO_TOTAL_PINS;
   s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
   s_store.interrupt_id = malloc(GPIO_TOTAL_PINS * sizeof(uint32_t));
-  store_register(ENUM_STORE_TYPE__GPIO, &s_store, NULL);
+  store_register(MX_STORE_TYPE__GPIO, &s_store, NULL);
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,

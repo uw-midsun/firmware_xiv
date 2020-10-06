@@ -249,7 +249,7 @@ update_codegen:
 mpxegen:
 	@echo "running mpxegen"
 	@cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *
-	@cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/harness/ *
+	@cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/harness/protogen *
 	@mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src
 	@rm -r -f $(LIB_DIR)/mpxe-gen/inc/mpxe
 

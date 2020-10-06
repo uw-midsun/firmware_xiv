@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +17,7 @@
 #define INVALID_STORE_ID MAX_STORE_COUNT
 
 typedef struct Store {
-  EnumStoreType type;
+  MxStoreType type;
   void *key;
   void *store;
 } Store;
@@ -29,7 +30,7 @@ static Store s_stores[MAX_STORE_COUNT];
 // Child to parnet fifo - used to talk to harness
 static int s_ctop_fifo;
 
-static StoreFuncs s_func_table[ENUM_STORE_TYPE__END];
+static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 Store *prv_get_first_empty() {
   for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
@@ -77,7 +78,7 @@ static void *prv_poll_update(void *arg) {
   return NULL;
 }
 
-void store_init(EnumStoreType type, StoreFuncs funcs) {
+void store_init(MxStoreType type, StoreFuncs funcs) {
   LOG_DEBUG("initializing store\n");
   s_func_table[type] = funcs;
   if (s_initialized) {
@@ -100,7 +101,7 @@ void store_init(EnumStoreType type, StoreFuncs funcs) {
   s_initialized = true;
 }
 
-void store_register(EnumStoreType type, void *store, void *key) {
+void store_register(MxStoreType type, void *store, void *key) {
   // malloc a proto as a store and return a pointer to it
   Store *local_store = prv_get_first_empty();
   if (store == NULL) {
@@ -111,7 +112,7 @@ void store_register(EnumStoreType type, void *store, void *key) {
   local_store->key = key;
 }
 
-void *store_get(EnumStoreType type, void *key) {
+void *store_get(MxStoreType type, void *key) {
   // just linear search for it
   // if key is NULL just get first one with right type
   for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
@@ -126,7 +127,7 @@ void *store_get(EnumStoreType type, void *key) {
   return NULL;
 }
 
-void store_export(EnumStoreType type, void *store, void *key) {
+void store_export(MxStoreType type, void *store, void *key) {
   // Serialize store to proto
   size_t packed_size = s_func_table[type].get_packed_size(store);
   uint8_t *store_buf = malloc(packed_size);
