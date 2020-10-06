@@ -27,7 +27,7 @@ static bool s_initialized = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
-// Child to parnet fifo - used to talk to harness
+// Child to parent fifo - used to talk to harness
 static int s_ctop_fifo;
 
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
@@ -78,9 +78,8 @@ static void *prv_poll_update(void *arg) {
   return NULL;
 }
 
-void store_init(MxStoreType type, StoreFuncs funcs) {
-  LOG_DEBUG("initializing store\n");
-  s_func_table[type] = funcs;
+void store_config(void) {
+  // do nothing after the first call
   if (s_initialized) {
     return;
   }
@@ -101,7 +100,8 @@ void store_init(MxStoreType type, StoreFuncs funcs) {
   s_initialized = true;
 }
 
-void store_register(MxStoreType type, void *store, void *key) {
+void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) {
+  s_func_table[type] = funcs;
   // malloc a proto as a store and return a pointer to it
   Store *local_store = prv_get_first_empty();
   if (store == NULL) {

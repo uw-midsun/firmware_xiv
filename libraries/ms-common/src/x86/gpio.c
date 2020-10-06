@@ -100,8 +100,10 @@ static uint32_t prv_get_index(const GpioAddress *address) {
   return address->port * (uint32_t)NUM_GPIO_PORTS + address->pin;
 }
 
-// Helper function to cut down clutter
 static void prv_export() {
+  for (uint16_t i = 0; i < GPIO_TOTAL_PINS; i++) {
+    s_store.state[i] = s_pin_settings[i].state;
+  }
   store_export(MX_STORE_TYPE__GPIO, &s_store, NULL);
 }
 
@@ -122,7 +124,8 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
   prv_export();
 }
 
-StatusCode gpio_init(void) {
+static void prv_init_store(void) {
+  store_config();
   StoreFuncs funcs = {
     (GetPackedSizeFunc)mx_gpio_store__get_packed_size,
     (PackFunc)mx_gpio_store__pack,
@@ -130,13 +133,16 @@ StatusCode gpio_init(void) {
     (FreeUnpackedFunc)mx_gpio_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  store_init(MX_STORE_TYPE__GPIO, funcs);
   // init the store to mimic the actual static gpio state
   s_store.n_state = GPIO_TOTAL_PINS;
   s_store.n_interrupt_id = GPIO_TOTAL_PINS;
   s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
   s_store.interrupt_id = malloc(GPIO_TOTAL_PINS * sizeof(uint32_t));
-  store_register(MX_STORE_TYPE__GPIO, &s_store, NULL);
+  store_register(MX_STORE_TYPE__GPIO, funcs, &s_store, NULL);
+}
+
+StatusCode gpio_init(void) {
+  prv_init_store();
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
@@ -145,7 +151,6 @@ StatusCode gpio_init(void) {
   };
   for (uint32_t i = 0; i < GPIO_TOTAL_PINS; i++) {
     s_pin_settings[i] = default_settings;
-    s_store.state[i] = default_settings.state;
     s_gpio_pin_input_value[i] = 0;
   }
   prv_export();
