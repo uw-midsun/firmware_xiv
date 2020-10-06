@@ -2,7 +2,8 @@ syntax = "proto3";
 
 enum MxStoreType {
   GPIO = 0;
-  END = 1;
+  ADS1015 = 1;
+  END = 2;
 }
 
 message MxStoreInfo {

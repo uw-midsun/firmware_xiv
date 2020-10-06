@@ -2,7 +2,8 @@ import os
 import threading
 import select
 import subprocess
-import project
+
+from . import project
 
 class ProjectManager:
     def __init__(self):
@@ -36,12 +37,11 @@ class ProjectManager:
         proj = project.Project(name)
         self.proj_fds[proj.ctop_fifo.fileno()] = proj
         self.proj_fds[proj.popen.stdout.fileno()] = proj
-        return proj.ctop_fifo.fileno()
-    def stop(self, fd):
-        p = self.proj_fds[fd]
-        p.stop()
-        del self.proj_fds[p.ctop_fifo.fileno()]
-        del self.proj_fds[p.popen.stdout.fileno()]
+        return proj
+    def stop(self, proj):
+        proj.stop()
+        del self.proj_fds[proj.ctop_fifo.fileno()]
+        del self.proj_fds[proj.popen.stdout.fileno()]
     def poll(self):
         def prep_poll():
             poll = select.poll()
@@ -55,9 +55,8 @@ class ProjectManager:
             proj = self.proj_fds[res[0]]
             # Check if we should check stdout or ctop
             if res[0] == proj.popen.stdout.fileno():
-                # Just print logs for now
                 s = proj.popen.stdout.readline().rstrip()
-                print('[{}]'.format(proj.popen.pid), s.decode('utf-8'))
+                proj.handle_log(self, s.decode('utf-8'))
             elif res[0] == proj.ctop_fifo.fileno():
                 # Currently assume all messages are storeinfo,
                 # will need other message types
