@@ -97,6 +97,9 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
 
 // Read the latest measurements. This does not get measurements from the storage but instead
 // reads them from the BTS7200 itself.
+// Note that, due to the fault handling implementation, the pointer to storage has to be 
+// valid for BTS7200_FAULT_RESTART_DELAY_MS. Otherwise, bts_7200_stop must be called
+// before the pointer is freed to prevent segfaults.
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
 
 // Enable output 0 by pulling the IN0 pin high.
