@@ -138,7 +138,6 @@ static void prv_init_store(void) {
     (FreeUnpackedFunc)mx_gpio_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  // init the store to mimic the actual static gpio state
   s_store.n_state = GPIO_TOTAL_PINS;
   s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
   store_register(MX_STORE_TYPE__GPIO, funcs, &s_store, NULL);
