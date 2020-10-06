@@ -31,8 +31,8 @@ typedef void (*Bts7200FaultCallback)(bool fault0, bool fault1, void *context);
 typedef struct {
   GpioAddress *select_pin;
   GpioAddress *sense_pin;
-  GpioAddress *input_0_pin;
-  GpioAddress *input_1_pin;
+  GpioAddress *enable_0_pin;
+  GpioAddress *enable_1_pin;
   uint32_t interval_us;
   Bts7200DataCallback callback;  // set to NULL for no callback
   void *callback_context;
@@ -45,8 +45,8 @@ typedef struct {
   I2CPort i2c_port;
   Pca9539rGpioAddress *select_pin;
   GpioAddress *sense_pin;
-  Pca9539rGpioAddress *input_0_pin;
-  Pca9539rGpioAddress *input_1_pin;
+  Pca9539rGpioAddress *enable_0_pin;
+  Pca9539rGpioAddress *enable_1_pin;
   uint32_t interval_us;
   Bts7200DataCallback callback;  // set to NULL for no callback
   void *callback_context;
@@ -67,10 +67,10 @@ typedef struct {
   Pca9539rGpioAddress *select_pin_pca9539r;
   Bts7200SelectPinType select_pin_type;
   GpioAddress *sense_pin;
-  GpioAddress *input_0_pin_stm32;
-  GpioAddress *input_1_pin_stm32;
-  Pca9539rGpioAddress *input_0_pin_pca9539r;
-  Pca9539rGpioAddress *input_1_pin_pca9539r;
+  GpioAddress *enable_0_pin_stm32;
+  GpioAddress *enable_1_pin_stm32;
+  Pca9539rGpioAddress *enable_0_pin_pca9539r;
+  Pca9539rGpioAddress *enable_1_pin_pca9539r;
   uint32_t interval_us;
   SoftTimerId timer_id;
   SoftTimerId fault_timer_0;

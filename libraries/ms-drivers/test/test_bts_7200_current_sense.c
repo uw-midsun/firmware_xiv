@@ -86,14 +86,14 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -130,15 +130,15 @@ void test_bts_7200_current_sense_timer_pca9539r_works(void) {
   Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  Pca9539rGpioAddress test_input_0_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
-  Pca9539rGpioAddress test_input_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
+  Pca9539rGpioAddress test_enable_0_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
+  Pca9539rGpioAddress test_enable_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -175,14 +175,14 @@ void test_bts_7200_current_sense_restart(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -230,14 +230,14 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   GpioAddress select_pin = { .port = NUM_GPIO_PORTS, .pin = 0 };  // invalid
   GpioAddress sense_pin = { .port = 0, .pin = 0 };                // valid
   // EN0 and EN1 pins (both valid for now)
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -260,15 +260,15 @@ void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
   Pca9539rGpioAddress select_pin = { .i2c_address = 0, .pin = NUM_PCA9539R_GPIO_PINS };  // invalid
   GpioAddress sense_pin = { .port = GPIO_PORT_A, .pin = 0 };                             // valid
   // EN0 and EN1 pins
-  Pca9539rGpioAddress test_input_0_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
-  Pca9539rGpioAddress test_input_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
+  Pca9539rGpioAddress test_enable_0_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
+  Pca9539rGpioAddress test_enable_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &select_pin,
     .sense_pin = &sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -291,14 +291,14 @@ void test_bts_7200_current_sense_null_callback(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = NULL,
   };
@@ -314,14 +314,14 @@ void test_bts_7200_current_sense_get_measurement_stm32_valid(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -338,15 +338,15 @@ void test_bts_7200_current_sense_get_measurement_pca9539r_valid(void) {
   Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  Pca9539rGpioAddress test_input_0_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
-  Pca9539rGpioAddress test_input_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
+  Pca9539rGpioAddress test_enable_0_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
+  Pca9539rGpioAddress test_enable_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -364,14 +364,14 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -389,15 +389,15 @@ void test_bts_7200_current_sense_context_passed(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;            // 0.5 ms
   void *context_pointer = &interval_us;  // arbitrary pointer
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .callback_context = context_pointer,
@@ -415,14 +415,14 @@ void test_bts_7200_output_0_functions_work(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
   };
@@ -465,14 +465,14 @@ void test_bts_7200_output_1_functions_work(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -516,15 +516,15 @@ void test_bts_7200_faults_within_fault_range(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -550,15 +550,15 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -591,15 +591,15 @@ void test_bts7200_fault_cb_called_from_start(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -624,15 +624,15 @@ void test_bts_7200_handle_fault_clears_fault(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -679,15 +679,15 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -711,15 +711,15 @@ void test_bts_7200_enable_fails_during_fault(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
@@ -768,15 +768,15 @@ void test_bts_7200_single_input_faults(void) {
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
-  GpioAddress test_input_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress test_input_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7200Stm32Settings settings = {
     .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
-    .input_0_pin = &test_input_0_pin,
-    .input_1_pin = &test_input_1_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
