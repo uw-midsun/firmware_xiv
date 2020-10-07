@@ -21,6 +21,8 @@
 #define MCP23008_I2C_PORT I2C_PORT_2
 #define MCP23008_I2C_ADDR 0x27
 
+typedef void (*EventHandler)(Event *e);
+
 static const Mcp23008GpioAddress s_led_to_address[NUM_CENTRE_CONSOLE_LEDS] = {
   [CENTRE_CONSOLE_LED_BPS] = { MCP23008_I2C_ADDR, 0 },
   [CENTRE_CONSOLE_LED_POWER] = { MCP23008_I2C_ADDR, 1 },
@@ -46,67 +48,50 @@ static const CentreConsoleLed s_drive_fsm_output_events_to_leds[] = {
   [DRIVE_FSM_OUTPUT_EVENT_PARKING] = CENTRE_CONSOLE_LED_PARKING,
 };
 
-static const DriveFsmOutputEvent s_handled_drive_fsm_output_events[] = {
-  DRIVE_FSM_OUTPUT_EVENT_DRIVE,
-  DRIVE_FSM_OUTPUT_EVENT_REVERSE,
-  DRIVE_FSM_OUTPUT_EVENT_NEUTRAL,
-  DRIVE_FSM_OUTPUT_EVENT_PARKING,
-};
-
 static void prv_set_led(CentreConsoleLed led, Mcp23008GpioState state) {
   mcp23008_gpio_set_state(&s_led_to_address[led], state);
 }
 
-static bool prv_try_bps_led(Event *e) {
-  if (e->id != CENTRE_CONSOLE_POWER_EVENT_FAULT) return false;
+static void prv_set_bps_led(Event *e) {
   FaultReason reason = { .raw = e->data };
   if (reason.fields.area == EE_CONSOLE_FAULT_AREA_BPS_HEARTBEAT) {
     prv_set_led(CENTRE_CONSOLE_LED_BPS, MCP23008_GPIO_STATE_HIGH);
-    return true;
   }
-  return false;
 }
 
-static bool prv_try_hazards_led(Event *e) {
-  if (e->id == HAZARD_EVENT_ON) {
-    prv_set_led(CENTRE_CONSOLE_LED_HAZARDS, MCP23008_GPIO_STATE_HIGH);
-    return true;
-  } else if (e->id == HAZARD_EVENT_OFF) {
-    prv_set_led(CENTRE_CONSOLE_LED_HAZARDS, MCP23008_GPIO_STATE_LOW);
-    return true;
-  }
-  return false;
+static void prv_set_hazards_led(Event *e) {
+  prv_set_led(CENTRE_CONSOLE_LED_HAZARDS,
+              e->id == HAZARD_EVENT_ON ? MCP23008_GPIO_STATE_HIGH : MCP23008_GPIO_STATE_LOW);
 }
 
-static bool prv_try_power_led(Event *e) {
+static void prv_set_power_led(Event *e) {
   if (e->id == POWER_MAIN_SEQUENCE_EVENT_COMPLETE || e->id == POWER_AUX_SEQUENCE_EVENT_COMPLETE) {
     prv_set_led(CENTRE_CONSOLE_LED_POWER, MCP23008_GPIO_STATE_HIGH);
-    return true;
   } else if (e->id == POWER_OFF_SEQUENCE_EVENT_COMPLETE) {
     prv_set_led(CENTRE_CONSOLE_LED_POWER, MCP23008_GPIO_STATE_LOW);
-    return true;
   }
-  return false;
 }
 
-static bool prv_try_drive_state_leds(Event *e) {
-  CentreConsoleLed led_to_enable;
-  bool found = false;
-  for (size_t i = 0; i < SIZEOF_ARRAY(s_handled_drive_fsm_output_events); i++) {
-    if (e->id == s_handled_drive_fsm_output_events[i]) {
-      led_to_enable = s_drive_fsm_output_events_to_leds[e->id];
-      found = true;
-      break;
-    }
-  }
-  if (!found) return false;
-
+static void prv_set_drive_state_leds(Event *e) {
+  CentreConsoleLed led_to_enable = s_drive_fsm_output_events_to_leds[e->id];
   for (size_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
     CentreConsoleLed led = s_drive_state_leds[i];
     prv_set_led(led, led == led_to_enable ? MCP23008_GPIO_STATE_HIGH : MCP23008_GPIO_STATE_LOW);
   }
-  return true;
 }
+
+static const EventHandler s_event_to_handler[NUM_CENTRE_CONSOLE_EVENTS] = {
+  [CENTRE_CONSOLE_POWER_EVENT_FAULT] = prv_set_bps_led,
+  [HAZARD_EVENT_ON] = prv_set_hazards_led,
+  [HAZARD_EVENT_OFF] = prv_set_hazards_led,
+  [POWER_MAIN_SEQUENCE_EVENT_COMPLETE] = prv_set_power_led,
+  [POWER_AUX_SEQUENCE_EVENT_COMPLETE] = prv_set_power_led,
+  [POWER_OFF_SEQUENCE_EVENT_COMPLETE] = prv_set_power_led,
+  [DRIVE_FSM_OUTPUT_EVENT_DRIVE] = prv_set_drive_state_leds,
+  [DRIVE_FSM_OUTPUT_EVENT_REVERSE] = prv_set_drive_state_leds,
+  [DRIVE_FSM_OUTPUT_EVENT_NEUTRAL] = prv_set_drive_state_leds,
+  [DRIVE_FSM_OUTPUT_EVENT_PARKING] = prv_set_drive_state_leds,
+};
 
 StatusCode led_manager_init(void) {
   status_ok_or_return(mcp23008_gpio_init(MCP23008_I2C_PORT, MCP23008_I2C_ADDR));
@@ -121,7 +106,11 @@ StatusCode led_manager_init(void) {
 }
 
 bool led_manager_process_event(Event *e) {
-  if (e == NULL) return false;
-  return prv_try_bps_led(e) || prv_try_hazards_led(e) || prv_try_power_led(e) ||
-         prv_try_drive_state_leds(e);
+  if (e == NULL || e->id >= NUM_CENTRE_CONSOLE_EVENTS) return false;
+  EventHandler handler = s_event_to_handler[e->id];
+  if (handler != NULL) {
+    handler(e);
+    return true;
+  }
+  return false;
 }
