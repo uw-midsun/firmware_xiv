@@ -29,18 +29,22 @@ class Project:
         handler_class_name = ''.join(s.capitalize() for s in name.split('_'))
         self.handler = getattr(sys.modules['harness.mocks.' + name], handler_class_name)()
         print('started', self.name)
+
     def stop(self):
         self.popen.kill()
         ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
         os.unlink(ctop_fifo_path)
         print('stopped', self.name)
+
     def write(self, msg):
         self.popen.stdin.write(msg)
         self.popen.stdin.flush()
+
     def handle_store(self, pm, msg):
         store_info = decoder.decode_store_info(msg)
         key = (store_info.type, store_info.key)
         self.stores[key] = decoder.decode_store(store_info)
         self.handler.handle_update(pm, self)
+
     def handle_log(self, pm, log):
         self.handler.handle_log(pm, self, log)

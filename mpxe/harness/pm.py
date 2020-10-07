@@ -20,6 +20,7 @@ class ProjectManager:
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.Canio()
+
     def build(self, name):
         # check if already built or project doesn't exist
         if self.statuses[name] is None or self.statuses[name] is True:
@@ -36,6 +37,7 @@ class ProjectManager:
             raise Exception('build failed')
         self.statuses[name] = True
         return True
+        
     def start(self, name):
         if name not in self.statuses:
             raise Exception('invalid project')
@@ -45,16 +47,19 @@ class ProjectManager:
         self.proj_fds[proj.ctop_fifo.fileno()] = proj
         self.proj_fds[proj.popen.stdout.fileno()] = proj
         return proj
+
     def stop(self, proj):
         proj.stop()
         del self.proj_fds[proj.ctop_fifo.fileno()]
         del self.proj_fds[proj.popen.stdout.fileno()]
+
     def poll(self):
         def prep_poll():
             poll = select.poll()
             for fd in self.proj_fds.keys():
                 poll.register(fd, select.POLLIN)
             return poll
+
         def handle_poll_res(res):
             if res[1] != select.POLLIN:
                 raise Exception('done')
@@ -70,6 +75,7 @@ class ProjectManager:
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
                 proj.popen.send_signal(signal.SIGUSR1)
+
         try:
             while not self.killed:
                 if len(self.proj_fds) == 0:
@@ -82,6 +88,7 @@ class ProjectManager:
             if str(e) == 'done':
                 return
             raise e
+
     def end(self):
         self.killed = True
         self.can.stop()
