@@ -21,20 +21,18 @@ typedef struct StoreFuncs {
   UpdateStoreFunc update_store;
 } StoreFuncs;
 
-// Initialize the store. The first call registers funcs and sets up
-// communication with parent; subsequent calls only register funcs.
-// The intention is to call this from every 'driver'.
-void store_init(EnumStoreType type, StoreFuncs funcs);
+// Set up communication with parent the first call, otherwise do nothing
+void store_config(void);
 
 // Drivers allocate their own stores, then register them here. The
 // key is a pointer to the associated 'storage' struct, since some
 // drivers may be used with multiple storages. If the storage is
 // unique, key should be NULL.
-void store_register(EnumStoreType type, void *store, void *key);
+void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key);
 
 // Gets the matching pointer for the type.
 // If key is NULL, it's assumed the store is unique.
-void *store_get(EnumStoreType type, void *key);
+void *store_get(MxStoreType type, void *key);
 
 // Call at every store update to export store to parent.
-void store_export(EnumStoreType type, void *store, void *key);
+void store_export(MxStoreType type, void *store, void *key);

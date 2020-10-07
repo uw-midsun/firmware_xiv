@@ -2,5 +2,4 @@ syntax = "proto3";
 
 message MxGpioStore {
   repeated bool state = 1;
-  repeated uint32 interrupt_id = 2;
 }
