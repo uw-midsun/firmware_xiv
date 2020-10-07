@@ -7,6 +7,9 @@ libraries/version/inc/git_version_impl.h.tmp
 *pb-c.c
 *_pb2.py
 
+# Flash file
+x86_flash
+
 # Object files
 *.o
 *.ko

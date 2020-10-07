@@ -6,7 +6,7 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common
+$(T)_DEPS := ms-common mpxe-gen
 
 ifeq (x86,$(PLATFORM))
 $(T)_EXCLUDE_TESTS := mcp2515 adc_periodic_reader

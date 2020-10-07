@@ -10,6 +10,7 @@
 #   CO: [COPTIONS=] - Specifies compiler options on x86 [asan | tsan].
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
+#   IT: [INT_TEST=] - Specifies the target integration test (only for mpxe)
 #
 # Usage:
 #   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
@@ -249,13 +250,13 @@ update_codegen:
 mpxegen:
 	@echo "running mpxegen"
 	@cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *
-	@cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/harness/ *
+	@cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/harness/protogen *
 	@mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src
 	@rm -r -f $(LIB_DIR)/mpxe-gen/inc/mpxe
 
 .PHONY: mpxe
-mpxe: mpxegen
-	@python3 $(MPXE_DIR)/harness/main.py
+mpxe: mpxegen socketcan
+	@python3 -m unittest discover $(MPXE_DIR)/integration_tests -p "test_*$(INT_TEST).py"
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
