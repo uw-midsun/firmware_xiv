@@ -4,10 +4,11 @@ from os.path import dirname
 sys.path.append(dirname(sys.path[0]))
 
 import unittest
-import warnings
 import time
 from harness import pm
 from harness import project
+
+# pm.ProjectManager().build('pedal_board')
 
 class TestPedal(unittest.TestCase):
     def setUp(self):
@@ -31,6 +32,4 @@ class TestPedal(unittest.TestCase):
         assert(msg.data['throttle_output'] == 50)
 
 if __name__ == '__main__':
-    warnings.filterwarnings(action='ignore', message='unclosed', category=ResourceWarning)
-    # pm.ProjectManager().build('pedal_board')
     unittest.main()
