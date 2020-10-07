@@ -5,7 +5,9 @@
 #include "log.h"
 #include "soft_timer.h"
 
-#define READ_DATA "raw"  // "raw" or "converted"
+// Toggle the following to select which data is logged
+#define READ_DATA_RAW 1
+#define READ_DATA_CONVERTED 0
 
 int main(void) {
   interrupt_init();
@@ -66,32 +68,33 @@ int main(void) {
 
   while (true) {
     uint16_t temp_data = 0;
-    if (READ_DATA == "raw") {
+    if (READ_DATA_RAW) {
       adc_read_raw(temp1_channel, &temp_data);
-      LOG_DEBUG("Temp1 data: %d\n", temp_data);
+      LOG_DEBUG("Temp1 raw data: %d\n", temp_data);
       adc_read_raw(temp2_channel, &temp_data);
-      LOG_DEBUG("Temp2 data: %d\n", temp_data);
+      LOG_DEBUG("Temp2 raw data: %d\n", temp_data);
       adc_read_raw(temp3_channel, &temp_data);
-      LOG_DEBUG("Temp3 data: %d\n", temp_data);
+      LOG_DEBUG("Temp3 raw data: %d\n", temp_data);
       adc_read_raw(temp4_channel, &temp_data);
-      LOG_DEBUG("Temp4 data: %d\n", temp_data);
+      LOG_DEBUG("Temp4 raw data: %d\n", temp_data);
       adc_read_raw(temp5_channel, &temp_data);
-      LOG_DEBUG("Temp5 data: %d\n", temp_data);
+      LOG_DEBUG("Temp5 raw data: %d\n", temp_data);
       adc_read_raw(temp6_channel, &temp_data);
-      LOG_DEBUG("Temp6 data: %d\n", temp_data);
-    } else if (READ_DATA == "converted") {
+      LOG_DEBUG("Temp6 raw data: %d\n", temp_data);
+    }
+    if (READ_DATA_CONVERTED) {
       adc_read_converted(temp1_channel, &temp_data);
-      LOG_DEBUG("Temp1 data: %d\n", temp_data);
+      LOG_DEBUG("Temp1 converted data: %d\n", temp_data);
       adc_read_converted(temp2_channel, &temp_data);
-      LOG_DEBUG("Temp2 data: %d\n", temp_data);
+      LOG_DEBUG("Temp2 converted ddata: %d\n", temp_data);
       adc_read_converted(temp3_channel, &temp_data);
-      LOG_DEBUG("Temp3 data: %d\n", temp_data);
+      LOG_DEBUG("Temp3 converted ddata: %d\n", temp_data);
       adc_read_converted(temp4_channel, &temp_data);
-      LOG_DEBUG("Temp4 data: %d\n", temp_data);
+      LOG_DEBUG("Temp4 converted ddata: %d\n", temp_data);
       adc_read_converted(temp5_channel, &temp_data);
-      LOG_DEBUG("Temp5 data: %d\n", temp_data);
+      LOG_DEBUG("Temp5 converted ddata: %d\n", temp_data);
       adc_read_converted(temp6_channel, &temp_data);
-      LOG_DEBUG("Temp6 data: %d\n", temp_data);
+      LOG_DEBUG("Temp6 converted ddata: %d\n", temp_data);
     }
     delay_ms(200);
   }
