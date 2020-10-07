@@ -2,6 +2,7 @@ import os
 import threading
 import select
 import subprocess
+import signal
 
 from . import project
 from . import canio
@@ -65,6 +66,7 @@ class ProjectManager:
                 # will need other message types
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
+                proj.popen.send_signal(signal.SIGUSR1)
         try:
             while not self.killed:
                 if len(self.proj_fds) == 0:

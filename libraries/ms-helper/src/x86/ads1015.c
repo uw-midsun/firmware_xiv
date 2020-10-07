@@ -7,6 +7,7 @@
 #include "ads1015.h"
 #ifndef MPXE
 #include <string.h>
+
 #include "ads1015_def.h"
 #include "soft_timer.h"
 
@@ -120,12 +121,13 @@ StatusCode ads1015_read_converted(Ads1015Storage *storage, Ads1015Channel channe
 #else
 #include <stdlib.h>
 #include <string.h>
-#include "ads1015_def.h"
-#include "soft_timer.h"
-#include "log.h"
+
 #include "ads1015.pb-c.h"
-#include "stores.pb-c.h"
+#include "ads1015_def.h"
+#include "log.h"
+#include "soft_timer.h"
 #include "store.h"
+#include "stores.pb-c.h"
 
 #define ADS1015_CHANNEL_UPDATE_PERIOD_US ADS1015_CONVERSION_TIME_US_1600_SPS
 

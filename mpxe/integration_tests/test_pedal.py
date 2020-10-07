@@ -9,8 +9,6 @@ import time
 from harness import pm
 from harness import project
 
-# pm.ProjectManager().build('pedal_board')
-
 class TestPedal(unittest.TestCase):
     def setUp(self):
         self.manager = pm.ProjectManager()
@@ -24,14 +22,15 @@ class TestPedal(unittest.TestCase):
     def test_pedal(self):
         time.sleep(0.5)
 
-        msg = self.manager.can.get_msg_by_name('PEDAL_OUTPUT')
-        assert(msg['throttle_output'] == 0)
+        msg = self.manager.can.get_latest_by_name('PEDAL_OUTPUT')
+        assert(msg.data['throttle_output'] == 0)
 
         self.pedal.handler.update_ads_reading(self.pedal, 50, 1)
         time.sleep(0.5)
-        msg = self.manager.can.get_msg_by_name('PEDAL_OUTPUT')
-        assert(msg['throttle_output'] == 50)
+        msg = self.manager.can.get_latest_by_name('PEDAL_OUTPUT')
+        assert(msg.data['throttle_output'] == 50)
 
 if __name__ == '__main__':
     warnings.filterwarnings(action='ignore', message='unclosed', category=ResourceWarning)
+    # pm.ProjectManager().build('pedal_board')
     unittest.main()

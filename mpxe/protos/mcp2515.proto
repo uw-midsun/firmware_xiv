@@ -2,7 +2,11 @@ syntax = "proto3";
 
 message MxMcp2515Store {
   uint32 tx_id = 1;
-  uint64 tx_data = 2;
-  uint32 rx_id = 3;
-  uint64 rx_data = 4;
+  bool tx_extended = 2;
+  uint32 tx_dlc = 3;
+  uint64 tx_data = 4;
+  uint32 rx_id = 5;
+  bool rx_extended = 6;
+  uint32 rx_dlc = 7;
+  uint64 rx_data = 8;
 }

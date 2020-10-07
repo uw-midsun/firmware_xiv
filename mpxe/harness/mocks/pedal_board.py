@@ -1,5 +1,6 @@
 from ..protogen import stores_pb2
 from ..protogen import ads1015_pb2
+from .mock_helpers import write_proj
 
 class PedalBoard:
     def handle_update(self, pm, proj):
@@ -15,9 +16,4 @@ class PedalBoard:
         ads1015_mask.readings.extend([0] * 4)
         ads1015_mask.readings[channel] = 1
 
-        update = stores_pb2.MxStoreUpdate()
-        update.key = 0
-        update.type = stores_pb2.MxStoreType.ADS1015
-        update.msg = ads1015_msg.SerializeToString()
-        update.mask = ads1015_mask.SerializeToString()
-        proj.write(update.SerializeToString())
+        write_proj(proj, stores_pb2.MxStoreType.ADS1015, ads1015_msg, ads1015_mask)

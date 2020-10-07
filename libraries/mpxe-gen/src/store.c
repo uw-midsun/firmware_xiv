@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "critical_section.h"
 #include "gpio.pb-c.h"
 #include "log.h"
 
@@ -31,6 +32,14 @@ static Store s_stores[MAX_STORE_COUNT];
 static int s_ctop_fifo;
 
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
+
+static pthread_mutex_t s_sig_lock;
+
+// signal handler for catching parent
+static void prv_sigusr(int signo) {
+  pthread_mutex_unlock(&s_sig_lock);
+  return;
+}
 
 Store *prv_get_first_empty() {
   for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
@@ -82,6 +91,10 @@ void store_config(void) {
   if (s_initialized) {
     return;
   }
+
+  // set up signal handler
+  signal(SIGUSR1, prv_sigusr);
+  pthread_mutex_init(&s_sig_lock, NULL);
 
   // set up polling thread
   pthread_t poll_thread;
@@ -144,8 +157,13 @@ void store_export(MxStoreType type, void *store, void *key) {
   uint8_t *export_buf = malloc(export_size);
   mx_store_info__pack(&msg, export_buf);
 
+  pthread_mutex_lock(&s_sig_lock);
   // write proto to fifo
   ssize_t written = write(s_ctop_fifo, export_buf, export_size);
+  // wait for signal that parent got message
+  pthread_mutex_lock(&s_sig_lock);
+  pthread_mutex_unlock(&s_sig_lock);
+  
   if (written == -1) {
     // TODO: handle error
   }

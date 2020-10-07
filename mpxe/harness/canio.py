@@ -16,14 +16,15 @@ class Canio:
         self.killed = False
         self.listen_thread = threading.Thread(target=self.listener)
         self.listen_thread.start()
-    def get_msg_by_name(self, name):
+    def get_latest_by_name(self, name):
         for msg in self.messages:
             if msg.metadata.name == name:
-                return msg.data
+                return msg
     def send(self, name, data):
         msg_type = self.db.get_message_by_name(name)
         encoded_data = msg_type.encode(data)
-        msg = can.Message(arbitration_id=msg_type.frame_id, data=encoded_data)
+        msg = can.Message(arbitration_id=msg_type.frame_id, 
+            is_extended_id=False, data=encoded_data)
         self.bus.send(msg)
     def stop(self):
         self.killed = True
@@ -33,9 +34,12 @@ class Canio:
             raw_msg = self.bus.recv(timeout=0.5)
             if raw_msg == None:
                 continue
-            msg_data = self.db.decode_message(raw_msg.arbitration_id, raw_msg.data)
-            metadata = self.db.get_message_by_frame_id(raw_msg.arbitration_id)
-            print('[CAN] {}: {}'.format(metadata.name, msg_data))
-            if len(self.messages)  == self.messages.maxlen:
-                self.messages.pop()
-            self.messages.appendleft(Msg(metadata, msg_data))
+            try:
+                msg_data = self.db.decode_message(raw_msg.arbitration_id, raw_msg.data)
+                metadata = self.db.get_message_by_frame_id(raw_msg.arbitration_id)
+                print('[CAN] {}: {}'.format(metadata.name, msg_data))
+                if len(self.messages)  == self.messages.maxlen:
+                    self.messages.pop()
+                self.messages.appendleft(Msg(metadata, msg_data))
+            except KeyError as e:
+                print('[CAN] UNKNOWN {}#{}'.format(e, list(raw_msg.data)))
