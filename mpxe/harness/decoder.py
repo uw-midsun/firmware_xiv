@@ -9,7 +9,9 @@ def decode_store_info(msg):
     return store_info
 
 def decode_store(store_info):
+    # grab enum name from enum value for introspection
     type_str = protogen.stores_pb2.MxStoreType.Name(store_info.type).lower()
+    # get class from module via introspection
     type_module = sys.modules['harness.protogen.' + type_str + '_pb2']
     store = getattr(type_module, 'Mx' + type_str.capitalize() + 'Store')()
     store.ParseFromString(store_info.msg)

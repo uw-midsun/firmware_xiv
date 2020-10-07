@@ -12,6 +12,7 @@ from harness import project
 class TestLeds(unittest.TestCase):
     def setUp(self):
         self.manager = pm.ProjectManager()
+        # skip build
         self.manager.statuses['controller_board_blinking_leds'] = True
         self.leds = self.manager.start('controller_board_blinking_leds')
     

@@ -13,6 +13,7 @@ from harness import project
 class TestPedal(unittest.TestCase):
     def setUp(self):
         self.manager = pm.ProjectManager()
+        # skip build
         self.manager.statuses['pedal_board'] = True
         self.pedal = self.manager.start('pedal_board')
 
@@ -22,12 +23,14 @@ class TestPedal(unittest.TestCase):
 
     def test_pedal(self):
         time.sleep(0.5)
-
+        # ads1015 reading is zero so throttle should be zero
         msg = self.manager.can.get_latest_by_name('PEDAL_OUTPUT')
         assert(msg.data['throttle_output'] == 0)
 
+        # set throttle channel to 50
         self.pedal.handler.update_ads_reading(self.pedal, 50, 1)
         time.sleep(0.5)
+        # ads1015 reading is nonzero so throttle should be nonzero
         msg = self.manager.can.get_latest_by_name('PEDAL_OUTPUT')
         assert(msg.data['throttle_output'] == 50)
 

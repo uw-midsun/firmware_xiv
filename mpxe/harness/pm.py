@@ -9,12 +9,14 @@ from . import canio
 
 class ProjectManager:
     def __init__(self):
+        # index projects by stdout and ctop_fifo fd
         self.proj_fds = {}
         self.statuses = {}
         proj_name_list = os.listdir('/home/vagrant/shared/firmware_xiv/projects')
         for name in proj_name_list:
             self.statuses[name] = False
         self.killed = False
+        # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.Canio()
@@ -23,12 +25,13 @@ class ProjectManager:
         if self.statuses[name] is None or self.statuses[name] is True:
             raise Exception('invalid project')
         cmd = 'make build PROJECT={} PIECE= PLATFORM=x86 DEFINE=MPXE; exit'.format(name)
-        print('making', name)
+        print('[make] making', name)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+        # block while making
         for line in iter(p.stdout.readline, ''):
-            print('make', line.rstrip())
+            print('[make]', line.rstrip())
         p.wait()
-        print('make', name, 'exited with code', p.returncode)
+        print('[make]', name, 'exited with code', p.returncode)
         if p.returncode != 0:
             raise Exception('build failed')
         self.statuses[name] = True
