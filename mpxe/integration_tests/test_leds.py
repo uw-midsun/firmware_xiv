@@ -3,12 +3,10 @@ from os.path import dirname
 sys.path.append(dirname(sys.path[0]))
 
 import unittest
-import warnings
 import time
 from harness import pm
 from harness import project
 
-warnings.simplefilter(action='ignore', category=ResourceWarning)
 # pm.ProjectManager().build('controller_board_blinking_leds')
 
 class TestLeds(unittest.TestCase):
