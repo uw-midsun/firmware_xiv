@@ -76,7 +76,7 @@ static void prv_set_drive_state_leds(Event *e, uint16_t context) {
 }
 
 static const EventHandlerAndContext s_event_to_handler[NUM_CENTRE_CONSOLE_EVENTS] = {
-  [CENTRE_CONSOLE_POWER_EVENT_FAULT] = { prv_set_bps_led },
+  [CENTRE_CONSOLE_POWER_EVENT_FAULT] = { prv_set_bps_led, 0 },
   [HAZARD_EVENT_ON] = { prv_set_hazards_led, MCP23008_GPIO_STATE_HIGH },
   [HAZARD_EVENT_OFF] = { prv_set_hazards_led, MCP23008_GPIO_STATE_LOW },
   [POWER_MAIN_SEQUENCE_EVENT_COMPLETE] = { prv_set_power_led, MCP23008_GPIO_STATE_HIGH },
@@ -108,4 +108,8 @@ bool led_manager_process_event(Event *e) {
     return true;
   }
   return false;
+}
+
+const Mcp23008GpioAddress *test_led_manager_provide_led_to_address(void) {
+  return s_led_to_address;
 }

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #include "event_queue.h"
+#include "mcp23008_gpio_expander.h"
 #include "status.h"
 
 typedef enum {
@@ -23,5 +24,7 @@ typedef enum {
 // Initialize the module.
 StatusCode led_manager_init(void);
 
-// Process the given event and return whether the event was processed (i.e. an LED was toggled).
+// Process the given event and return whether the event was processed (i.e. an LED was set).
 bool led_manager_process_event(Event *e);
+
+const Mcp23008GpioAddress *test_led_manager_provide_led_to_address(void);
