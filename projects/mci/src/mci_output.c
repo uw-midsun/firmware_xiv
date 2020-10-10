@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+#include "cruise_rx.h"
 #include "drive_fsm.h"
 #include "mci_events.h"
 #include "motor_can.h"
@@ -55,6 +56,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   PedalValues pedal_values = pedal_rx_get_pedal_values(&storage->pedal_storage);
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
+  bool is_cruise = drive_fsm_is_cruise();
   // TODO(SOFT-122): Make sure test ensures that maps are continues
   if (drive_state == EE_DRIVE_OUTPUT_OFF) {
     drive_command.motor_current = 0.0f;
@@ -63,13 +65,15 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
     // Regen Braking along with brake being pressed
     drive_command.motor_current = prv_brake_to_regen_map(pedal_values.brake);
     drive_command.motor_velocity = 0.0f;
-  } else if (pedal_values.throttle < s_regen_threshold) {
+    // disable cruise when brake is pressed
+    if (is_cruise) drive_fsm_toggle_cruise();
+  } else if (!is_cruise && pedal_values.throttle < s_regen_threshold) {
     // Regen Braking along if throttle is pressed a little
     drive_command.motor_current = prv_throttle_to_regen_map(pedal_values.throttle);
     drive_command.motor_velocity = 0.0f;
   } else {
     drive_command.motor_current = prv_throttle_to_accel_map(pedal_values.throttle);
-    drive_command.motor_velocity = s_velocity_lookup[drive_state];
+    drive_command.motor_velocity = is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[drive_state];
   }
   /** Handling message **/
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
