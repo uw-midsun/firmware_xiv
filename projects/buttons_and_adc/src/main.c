@@ -15,7 +15,7 @@ static GpioSettings s_button_settings = {
 };
 
 static GpioSettings s_adc_pin_settings = {
-  .direction GPIO_DIR_IN,             //
+  .direction = GPIO_DIR_IN,           //
   .resistor = GPIO_RES_NONE,          //
   .alt_function = GPIO_ALTFN_ANALOG,  //
 };
