@@ -4,6 +4,9 @@
 // Requires GPIO, interrupts, soft timers, and ADC to be initialized in ADC_MODE_SINGLE.
 // If using with MCP23008, requires I2C to be initialized.
 
+// Due to the fault handling procedures for the BTS7200, all BTS7200 pins should 
+// only be manipulated through this driver.
+
 #include "adc.h"
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
@@ -21,7 +24,7 @@
 
 // Check if measurement is in the range representing a fault.
 #define BTS7200_IS_MEASUREMENT_FAULT(meas) \
-  ((meas > BTS7200_FAULT_CURRENT_MIN_UA) && (meas < BTS7200_FAULT_CURRENT_MAX_UA))
+  (((meas) > BTS7200_FAULT_CURRENT_MIN_UA) && ((meas) < BTS7200_FAULT_CURRENT_MAX_UA))
 
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
 
@@ -72,7 +75,7 @@ typedef struct {
   Pca9539rGpioAddress *enable_0_pin_pca9539r;
   Pca9539rGpioAddress *enable_1_pin_pca9539r;
   uint32_t interval_us;
-  SoftTimerId timer_id;
+  SoftTimerId measurement_timer_id;
   SoftTimerId fault_timer_0;
   SoftTimerId fault_timer_1;
   bool fault_0_in_progress;
@@ -82,12 +85,6 @@ typedef struct {
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
 } Bts7200Storage;
-
-typedef enum {
-  BTS7200_FAULT_INPUT_0_TIMER = 1,
-  BTS7200_FAULT_INPUT_1_TIMER,
-  NUM_BTS7200_FAULT_TIMERS = 2,
-} Bts7200FaultTimer;
 
 // Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
 StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);

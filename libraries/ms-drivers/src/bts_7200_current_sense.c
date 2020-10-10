@@ -14,16 +14,16 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
   }
 
-  soft_timer_start(storage->interval_us, &prv_measure_current, storage, &storage->timer_id);
+  soft_timer_start(storage->interval_us, &prv_measure_current, storage, &storage->measurement_timer_id);
 }
 
 static StatusCode prv_init_common(Bts7200Storage *storage) {
   // make sure that if the user calls stop() it doesn't cancel some other timer
-  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->measurement_timer_id = SOFT_TIMER_INVALID_TIMER;
 
   // Timers for fault handling
-  storage->fault_timer_0 = BTS7200_FAULT_INPUT_0_TIMER;
-  storage->fault_timer_1 = BTS7200_FAULT_INPUT_1_TIMER;
+  storage->fault_timer_0 = SOFT_TIMER_INVALID_TIMER;
+  storage->fault_timer_1 = SOFT_TIMER_INVALID_TIMER;
 
   storage->fault_0_in_progress = false;
   storage->fault_1_in_progress = false;
@@ -42,40 +42,44 @@ static StatusCode prv_init_common(Bts7200Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-// Callback for soft timer in prv_bts_7200_handle_fault to re-enable IN0
-static void prv_bts_7200_fault_handler_enable_0_cb(SoftTimerId timer_id, void *context) {
-  Bts7200Storage *storage = context;
-  storage->fault_0_in_progress = false;
-  bts_7200_enable_output_0(storage);
-}
-
-// Callback for soft timer in prv_bts_7200_handle_fault to re-enable IN1
-static void prv_bts_7200_fault_handler_enable_1_cb(SoftTimerId timer_id, void *context) {
-  Bts7200Storage *storage = context;
-  storage->fault_1_in_progress = false;
-  bts_7200_enable_output_1(storage);
-}
-
 // Callback for soft timer in fault handler to leave IN0 disabled
 static void prv_bts_7200_fault_handler_0_cb(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
   storage->fault_0_in_progress = false;
+  storage->fault_timer_0 = SOFT_TIMER_INVALID_TIMER;
+}
+
+// Callback for soft timer in prv_bts_7200_handle_fault to re-enable IN0
+static void prv_bts_7200_fault_handler_enable_0_cb(SoftTimerId timer_id, void *context) {
+  Bts7200Storage *storage = context;
+  prv_bts_7200_fault_handler_0_cb(timer_id, context);
+  bts_7200_enable_output_0(storage);
 }
 
 // Callback for soft timer in fault handler to leave IN1 disabled
 static void prv_bts_7200_fault_handler_1_cb(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
   storage->fault_1_in_progress = false;
+  storage->fault_timer_1 = SOFT_TIMER_INVALID_TIMER;
+}
+
+// Callback for soft timer in prv_bts_7200_handle_fault to re-enable IN1
+static void prv_bts_7200_fault_handler_enable_1_cb(SoftTimerId timer_id, void *context) {
+  Bts7200Storage *storage = context;
+  prv_bts_7200_fault_handler_1_cb(timer_id, context);
+  bts_7200_enable_output_1(storage);
 }
 
 // Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
+// Faults are cleared following the retry strategy on pg. 34 of the BTS7200 datasheet, 
+// assuming a worst-case t(DELAY(CR)) of BTS7200_FAULT_RESTART_DELAY_MS (pg. 38)
 static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0, bool fault1) {
   if (fault0) {
     // Only start a new soft timer if the timer doesn't currently exist
     // (e.g. only handle fault if fault not currently being handled)
     if (!storage->fault_0_in_progress) {
       storage->fault_0_in_progress = true;
-      if (bts_7200_get_output_0_enabled(storage) == true) {
+      if (bts_7200_get_output_0_enabled(storage)) {
         status_ok_or_return(bts_7200_disable_output_0(storage));
         soft_timer_start(BTS7200_FAULT_RESTART_DELAY_US, prv_bts_7200_fault_handler_enable_0_cb,
                          storage, &storage->fault_timer_0);
@@ -166,25 +170,24 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
 }
 
 StatusCode bts_7200_enable_output_0(Bts7200Storage *storage) {
-  if (!storage->fault_0_in_progress) {
-    bool test = storage->fault_0_in_progress;
-    if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
-      return gpio_set_state(storage->enable_0_pin_stm32, GPIO_STATE_HIGH);
-    }
-    return pca9539r_gpio_set_state(storage->enable_0_pin_pca9539r, PCA9539R_GPIO_STATE_HIGH);
-  } else {
+  if (storage->fault_0_in_progress) {
     return STATUS_CODE_INTERNAL_ERROR;
   }
+  if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
+    return gpio_set_state(storage->enable_0_pin_stm32, GPIO_STATE_HIGH);
+  } else {
+  return pca9539r_gpio_set_state(storage->enable_0_pin_pca9539r, PCA9539R_GPIO_STATE_HIGH);
+  } 
 }
 
 StatusCode bts_7200_enable_output_1(Bts7200Storage *storage) {
-  if (!storage->fault_1_in_progress) {
-    if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
-      return gpio_set_state(storage->enable_1_pin_stm32, GPIO_STATE_HIGH);
-    }
-    return pca9539r_gpio_set_state(storage->enable_1_pin_pca9539r, PCA9539R_GPIO_STATE_HIGH);
-  } else {
+  if (storage->fault_1_in_progress) {
     return STATUS_CODE_INTERNAL_ERROR;
+  }
+  if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
+    return gpio_set_state(storage->enable_1_pin_stm32, GPIO_STATE_HIGH);
+  } else {
+    return pca9539r_gpio_set_state(storage->enable_1_pin_pca9539r, PCA9539R_GPIO_STATE_HIGH);
   }
 }
 
@@ -221,28 +224,28 @@ bool bts_7200_get_output_1_enabled(Bts7200Storage *storage) {
     return (pin_state == GPIO_STATE_HIGH);
   } else {
     Pca9539rGpioState pin_state;
-    pca9539r_gpio_get_state(storage->enable_1_pin_pca9539r, &pin_state);
+  pca9539r_gpio_get_state(storage->enable_1_pin_pca9539r, &pin_state);
     return (pin_state == PCA9539R_GPIO_STATE_HIGH);
   }
 }
 
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  adc_get_channel(*storage->sense_pin, &sense_channel);
+  status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
 
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_0);
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
-  adc_read_raw(sense_channel, meas0);
+  status_ok_or_return(adc_read_raw(sense_channel, meas0));
 
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_1);
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
-  adc_read_raw(sense_channel, meas1);
+  status_ok_or_return(adc_read_raw(sense_channel, meas1));
 
   // Check for faults, call callback and handle fault if faulted
   bool fault0 = BTS7200_IS_MEASUREMENT_FAULT(*meas0);
@@ -250,11 +253,12 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
 
   if (fault0 || fault1) {
     // Only call fault cb if it's not NULL
-    if (storage->fault_callback) {
+    if (storage->fault_callback != NULL) {
       storage->fault_callback(fault0, fault1, storage->fault_callback_context);
     }
     // Handle fault
     prv_bts_7200_handle_fault(storage, fault0, fault1);
+    return STATUS_CODE_INTERNAL_ERROR; 
   }
 
   return STATUS_CODE_OK;
@@ -268,10 +272,17 @@ StatusCode bts_7200_start(Bts7200Storage *storage) {
 }
 
 bool bts_7200_stop(Bts7200Storage *storage) {
-  bool result = soft_timer_cancel(storage->timer_id);
+  bool result = soft_timer_cancel(storage->measurement_timer_id);
   soft_timer_cancel(storage->fault_timer_0);
   soft_timer_cancel(storage->fault_timer_1);
   // make sure calling stop twice doesn't cancel an unrelated timer
-  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->measurement_timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->fault_timer_0 = SOFT_TIMER_INVALID_TIMER;
+  storage->fault_timer_1 = SOFT_TIMER_INVALID_TIMER;
+
+  // Fault handling no longer in progress
+  storage->fault_0_in_progress = false;
+  storage->fault_1_in_progress = false;
+
   return result;
 }
