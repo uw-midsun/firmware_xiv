@@ -699,7 +699,7 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
   s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
   s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
 
-  // Measure to trigger fault, make sure context is passed okay.  
+  // Measure to trigger fault, make sure context is passed okay.
   // Measurement should return STATUS_CODE_INTERNAL_ERROR since a fault is detected
   TEST_ASSERT_NOT_OK(bts_7200_get_measurement(&s_storage, &meas0, &meas1));
   TEST_ASSERT_EQUAL(s_times_fault_callback_called, 1);
