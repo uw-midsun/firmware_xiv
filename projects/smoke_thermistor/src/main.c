@@ -19,7 +19,8 @@ int main(void) {
   GpioAddress pin_addresses[NUM_ADC_PINS];
 
   for (uint8_t pin = 0; pin < NUM_ADC_PINS; pin++) {
-    pin_addresses[pin] = {.port = GPIO_PORT_A, .pin = pin }
+    pin_addresses[pin].port = GPIO_PORT_A;
+    pin_addresses[pin].pin = pin;
   }
 
   GpioSettings settings = {
@@ -44,13 +45,13 @@ int main(void) {
     if (READ_DATA_RAW) {
       for (uint8_t reading = 0; reading < NUM_ADC_PINS; reading++) {
         adc_read_raw_pin(pin_addresses[reading], &temp_data);
-        LOG_DEBUG("Temp %d raw data: %d\n", reading, temp_data)
+        LOG_DEBUG("Temp %d raw data: %d\n", reading, temp_data);
       }
     }
     if (READ_DATA_CONVERTED) {
       for (uint8_t reading = 0; reading < NUM_ADC_PINS; reading++) {
         adc_read_converted_pin(pin_addresses[reading], &temp_data);
-        LOG_DEBUG("Temp %d converted data: %d\n", reading, temp_data)
+        LOG_DEBUG("Temp %d converted data: %d\n", reading, temp_data);
       }
     }
     delay_ms(TIME_BETWEEN_READS_IN_MILLIS);
