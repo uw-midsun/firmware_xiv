@@ -16,7 +16,7 @@ static StatusCode prv_callback(uint8_t data[8], void *context, bool *tx_result) 
     .direction = GPIO_DIR_OUT,
     .state = state,
     .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_ANALOG,
+    .alt_function = GPIO_ALTFN_NONE,
   };
   return gpio_init_pin(&address, &settings);
 }
