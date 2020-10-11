@@ -186,14 +186,14 @@ def next_message(
 
 def can_pack(data_list):
     """
-    Converts list of tuples and combines them into a little-endian
-    bytearray rendition. Each val is broken into bytes and appended
-    to bytearr output (LSB first)
+    Converts list of tuples and combines them into an array
+    rendition. Each val is broken into individual byte values
+    and appended to bytearr output (LSB first)
     Args:
         List of tuples in form ((int) val, (int) len_in_bytes). val must be
         in range [0, 2**len_in_bytes - 1]
     Returns:
-        A bytearray object in little endian format, representing
+        An array of byte values in little endian format, representing
         message components input
     Raises:
         ValueError: if invalid values for val, len_in_bytes input
