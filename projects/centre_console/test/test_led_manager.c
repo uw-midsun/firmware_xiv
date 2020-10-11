@@ -12,6 +12,9 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+// an event that led_manager does not respond to
+#define IRRELEVANT_EVENT CENTRE_CONSOLE_EVENT_CAN_RX
+
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_SCL CONTROLLER_BOARD_ADDR_I2C2_SCL
 #define TEST_SDA CONTROLLER_BOARD_ADDR_I2C2_SDA
@@ -121,6 +124,50 @@ void test_power_led(void) {
   TEST_ASSERT_LED_STATE(CENTRE_CONSOLE_LED_POWER, MCP23008_GPIO_STATE_LOW);
 }
 
+// These arrays are essentially used as parameters to test_drive_state_leds.
+static const CentreConsoleLed s_drive_state_leds[] = {
+  CENTRE_CONSOLE_LED_DRIVE,
+  CENTRE_CONSOLE_LED_REVERSE,
+  CENTRE_CONSOLE_LED_NEUTRAL,
+  CENTRE_CONSOLE_LED_PARKING,
+};
+
+static const EventId s_drive_state_triggering_events[] = {
+  DRIVE_FSM_OUTPUT_EVENT_DRIVE,
+  DRIVE_FSM_OUTPUT_EVENT_REVERSE,
+  DRIVE_FSM_OUTPUT_EVENT_NEUTRAL,
+  DRIVE_FSM_OUTPUT_EVENT_PARKING,
+};
+
+// Test that the drive state LEDs (drive, reverse, neutral, parking) can be toggled by the
+// appropriate drive FSM events and are mutually exclusive.
 void test_drive_state_leds(void) {
-  // TODO(SOFT-296)
+  Event e = { 0 };
+
+  // for each drive state LED, we send an event to enable it, then check that it's the only one on
+  for (uint8_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
+    e.id = s_drive_state_triggering_events[i];
+    TEST_ASSERT_TRUE(led_manager_process_event(&e));
+
+    // make sure the corresponding LED is the only one on
+    CentreConsoleLed on_led = s_drive_state_leds[i];
+    for (uint8_t j = 0; j < SIZEOF_ARRAY(s_drive_state_leds); j++) {
+      CentreConsoleLed led = s_drive_state_leds[j];
+      Mcp23008GpioState expected_state =
+          (led == on_led) ? MCP23008_GPIO_STATE_HIGH : MCP23008_GPIO_STATE_LOW;
+      TEST_ASSERT_LED_STATE(led, expected_state);
+    }
+  }
+}
+
+// Test that |led_manager_process_event| returns false on valid inputs it doesn't process, and
+// handles invalid (null/out of range) inputs gracefully.
+void test_irrelevant_invalid_events(void) {
+  Event irrelevant_event = { .id = IRRELEVANT_EVENT };
+  TEST_ASSERT_FALSE(led_manager_process_event(&irrelevant_event));
+
+  Event out_of_range_event = { .id = NUM_CENTRE_CONSOLE_EVENTS };
+  TEST_ASSERT_FALSE(led_manager_process_event(&out_of_range_event));
+
+  TEST_ASSERT_FALSE(led_manager_process_event(NULL));
 }
