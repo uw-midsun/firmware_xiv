@@ -10,7 +10,7 @@ static GpioAddress s_button_addresses[NUM_CENTRE_CONSOLE_BUTTONS] = {
   [CENTRE_CONSOLE_BUTTON_POWER] = { .port = GPIO_PORT_B, .pin = 0 },
   [CENTRE_CONSOLE_BUTTON_PARKING] = { .port = GPIO_PORT_A, .pin = 0 },
   [CENTRE_CONSOLE_BUTTON_HAZARDS] = { .port = GPIO_PORT_A, .pin = 1 },
-  [CENTRE_CONSOLE_BUTTON_DRIVE] = { .port = GPIO_PORT_A, .pin = 5 },
+  [CENTRE_CONSOLE_BUTTON_DRIVE] = { .port = GPIO_PORT_B, .pin = 1 },
   [CENTRE_CONSOLE_BUTTON_NEUTRAL] = { .port = GPIO_PORT_A, .pin = 6 },
   [CENTRE_CONSOLE_BUTTON_REVERSE] = { .port = GPIO_PORT_A, .pin = 7 },
 };
