@@ -7,5 +7,7 @@ typedef enum {
   // Message data: uint8 status.
   BABYDRIVER_MESSAGE_STATUS = 0,
 
+  BABYDRIVER_MESSAGE_GPIO_SET,
+
   NUM_BABYDRIVER_MESSAGES,
 } BabydriverMessageId;
