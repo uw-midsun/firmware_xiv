@@ -21,4 +21,4 @@ def gpio_set(port, pin, state):
     if status:
         raise Exception("gpio_set failed with status code {}; see status.h".format(status))
     
-    print('OK')
+    # print('OK')
