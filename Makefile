@@ -11,6 +11,7 @@
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
+#   SC: [SCRIPT=] - Specifies a script for Babydriver to run, else it'll drop into a REPL.
 #
 # Usage:
 #   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
@@ -22,7 +23,7 @@
 #   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
-#   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make babydriver [PL] [CH] [SC] - Flash or run the Babydriver debug project and drop into its Python shell or run the script
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -77,6 +78,14 @@ endif
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
+
+# Babydriver only drops into interactive shell if no script is specified
+ifeq (,$(SCRIPT))
+BABYDRIVER_PYTHON_ARGS := -i
+endif
+
+# Default Babydriver script
+SCRIPT ?= projects/baby_driver/scripts/repl_setup.py
 
 # Please don't touch anything below this line
 ###################################################################################################

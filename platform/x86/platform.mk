@@ -79,7 +79,7 @@ test_all: socketcan
 test: socketcan
 
 babydriver: socketcan
-	@make run PROJECT=baby_driver & python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
+	@make run PROJECT=baby_driver & python3 $(BABYDRIVER_PYTHON_ARGS) $(SCRIPT) --channel $(CHANNEL)
 
 define session_wrapper
 $(ENV_VARS) $1

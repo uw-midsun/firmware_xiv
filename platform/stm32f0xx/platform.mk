@@ -51,7 +51,7 @@ CHANNEL ?= can0
 
 babydriver:
 	@make program PROJECT=baby_driver
-	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
+	@python3 $(BABYDRIVER_PYTHON_ARGS) $(SCRIPT) --channel $(CHANNEL)
 
 ifeq (,$(MACOS_SSH_USERNAME))
 
