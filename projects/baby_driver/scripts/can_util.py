@@ -84,9 +84,7 @@ def send_message(
             None, the first byte of message data isn't overwritten.
         data: The data to send in the CAN message. Must be a list of bytes (0-255). If babydriver_id
             is None, this can be up to 8 bytes; otherwise, it can only be up to 7 bytes since the
-            first byte is the babydriver ID.
-        channel: The SocketCAN channel on which to send the message.
-        msg_id: The CAN message ID to use.
+            first byte is the babydriver ID.  channel: The SocketCAN channel on which to send the message.  msg_id: The CAN message ID to use.
         device_id: The device ID to use.
 
     Raises:
@@ -187,8 +185,8 @@ def next_message(
 def can_pack(data_list):
     """
     Converts list of tuples and combines them into a little-endian
-    bytearray rendition. List is traversed in reverse order, each val
-    is broken into bytes and appended to bytearr output (LSB first)
+    bytearray rendition. Each val is broken into bytes and appended 
+    to bytearr output (LSB first)
     Args:
         List of tuples in form ((int) val, (int) len_in_bytes). val must be
         in range [0, 2**len_in_bytes - 1]
@@ -198,9 +196,9 @@ def can_pack(data_list):
     Raises:
         ValueError: if invalid values for val, len_in_bytes input
     """
-    bytearr = bytearray()
-    # Traverse list in reverse order
-    for val, len_in_bytes in reversed(data_list):
+    bytearr = []
+    # Traverse list
+    for val, len_in_bytes in data_list:
         # Error check input vals
         if len_in_bytes < 1 or val < 0:
             raise ValueError("len in bytes must be > 0; val must be non-negative")
