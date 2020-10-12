@@ -73,10 +73,10 @@ void prv_mci_storage_init(void *context) {
 
 int main(void) {
   event_queue_init();
-  gpio_init();
-  gpio_it_init();
   interrupt_init();
   soft_timer_init();
+  gpio_init();
+  gpio_it_init();
 
   prv_setup_system_can();
   prv_setup_motor_can();
