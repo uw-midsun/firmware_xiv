@@ -13,12 +13,19 @@
 #define MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS 16  // max BTS7200s per board
 #define MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS 16  // max BTS7040s per board
 
+// All BTS7200s use a 1.6k resistor to convert sense current
+#define POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR 1600
+
+// All BTS7040s use a 1.21k resistor to convert sense current
+#define POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR 1210
+
 typedef void (*PowerDistributionCurrentMeasurementCallback)(void *context);
 
 typedef struct {
   Pca9539rGpioAddress dsel_pin;
   Pca9539rGpioAddress en0_pin;
   Pca9539rGpioAddress en1_pin;
+  int resistor;
   PowerDistributionCurrent current_0;
   PowerDistributionCurrent current_1;
   uint8_t mux_selection;
