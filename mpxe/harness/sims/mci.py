@@ -24,15 +24,9 @@ class Mci(sim.Sim):
             time.sleep(0.1)
             store_gpio_ab()
             # update precharge monitor and latch out
-            gpio_msg = gpio_pb2.MxGpioStore()
-            gpio_msg.state.extend([0] * 6 * 16)
-            gpio_msg.state[16] = True
-            gpio_msg.state[10] = True
-            gpio_mask = gpio_pb2.MxGpioStore()
-            gpio_mask.state.extend([0] * 6 * 16)
-            gpio_mask.state[16] = True
-            gpio_mask.state[10] = True
-            proj.write_store(stores_pb2.MxStoreType.GPIO, gpio_msg, gpio_mask)
+            self.set_gpio(proj, 'b', 0, True)
+            time.sleep(0.1)
+            self.set_gpio(proj, 'a', 10, True)
         else:
             store_gpio_ab()
         # grab mcp2515 outbound messages

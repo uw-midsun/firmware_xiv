@@ -4,21 +4,13 @@ sys.path.append(dirname(sys.path[0]))
 
 import unittest
 import time
-from harness import pm
-from harness import project
 
-# pm.ProjectManager().build('controller_board_blinking_leds')
+import int_test
 
-class TestLeds(unittest.TestCase):
+class TestLeds(int_test.IntTest):
     def setUp(self):
-        self.manager = pm.ProjectManager()
-        # skip build
-        self.manager.statuses['controller_board_blinking_leds'] = True
+        super(TestLeds, self).setUp()
         self.leds = self.manager.start('controller_board_blinking_leds')
-    
-    def tearDown(self):
-        self.manager.stop(self.leds)
-        self.manager.end()
 
     def test_leds(self):
         time.sleep(1)

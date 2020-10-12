@@ -12,18 +12,17 @@ class ProjectManager:
         # index projects by stdout and ctop_fifo fd
         self.proj_fds = {}
         self.statuses = {}
-        proj_name_list = os.listdir('/home/vagrant/shared/firmware_xiv/projects')
-        for name in proj_name_list:
-            self.statuses[name] = False
+        self.proj_name_list = os.listdir('/home/vagrant/shared/firmware_xiv/projects')
         self.killed = False
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.Canio()
 
+    # DEPRECATED
     def build(self, name):
         # check if already built or project doesn't exist
-        if self.statuses[name] is None or self.statuses[name] is True:
+        if name not in self.proj_name_list:
             raise Exception('invalid project')
         cmd = 'make build PROJECT={} PIECE= PLATFORM=x86 DEFINE=MPXE; exit'.format(name)
         print('[make] making', name)
@@ -39,10 +38,8 @@ class ProjectManager:
         return True
         
     def start(self, name):
-        if name not in self.statuses:
+        if name not in self.proj_name_list:
             raise Exception('invalid project')
-        if self.statuses[name] is False:
-            raise Exception('unbuilt project')
         proj = project.Project(name)
         self.proj_fds[proj.ctop_fifo.fileno()] = proj
         self.proj_fds[proj.popen.stdout.fileno()] = proj
@@ -52,6 +49,11 @@ class ProjectManager:
         proj.stop()
         del self.proj_fds[proj.ctop_fifo.fileno()]
         del self.proj_fds[proj.popen.stdout.fileno()]
+    
+    def stop_all(self):
+        for proj in list(self.proj_fds.values()):
+            if not proj.killed:
+                self.stop(proj)
 
     def poll(self):
         def prep_poll():
@@ -93,3 +95,4 @@ class ProjectManager:
         self.killed = True
         self.can.stop()
         self.poll_thread.join()
+        self.stop_all()

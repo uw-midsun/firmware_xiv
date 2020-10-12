@@ -12,6 +12,7 @@ from .sims import sim
 class Project:
     def __init__(self, name):
         self.name = name
+        self.killed = False
         self.stores = {}
         cmd = 'build/bin/x86/{}'.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
@@ -36,9 +37,12 @@ class Project:
         print('started', self.name)
 
     def stop(self):
+        if self.killed:
+            return
         self.popen.kill()
         ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
         os.unlink(ctop_fifo_path)
+        self.killed = True
         print('stopped', self.name)
 
     def write_store(self, store_type, msg, mask):
