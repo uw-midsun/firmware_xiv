@@ -18,13 +18,28 @@ PrechargeControlStorage *test_get_storage(void) {
   return &s_precharge_storage;
 }
 
+static void prv_check_state() {
+  uint8_t a10 = 0, b0 = 0;
+  GpioAddress a_a10 = { .port = GPIO_PORT_A, .pin = 10 };
+  GpioAddress a_b0 = { .port = GPIO_PORT_B, .pin = 0 };
+  gpio_get_state(&a_a10, &a10);
+  gpio_get_state(&a_b0, &b0);
+  printf("precharge state - A10: %d, B0: %d\n", a10, b0);
+}
+
 StatusCode prv_set_precharge_control(PrechargeControlStorage *storage, const GpioState state) {
+  printf("%s\n", __func__);
+  prv_check_state();
   gpio_set_state(&storage->precharge_control, state);
+  printf("%s\n", __func__);
+  prv_check_state();
   return STATUS_CODE_OK;
 }
 
 void prv_precharge_monitor(const GpioAddress *address, void *context) {
   PrechargeControlStorage *storage = context;
+  printf("%s\n", __func__);
+  prv_check_state();
   if (storage->state == MCI_PRECHARGE_DISCHARGED) {
     // inconsistent until second precharge result
     storage->state = MCI_PRECHARGE_INCONSISTENT;
@@ -42,7 +57,11 @@ StatusCode prv_discharge_rx(const CanMessage *msg, void *context, CanAckStatus *
 }
 
 StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  printf("%s\n", __func__);
+  prv_check_state();
   PrechargeControlStorage *storage = context;
+  storage->state = MCI_PRECHARGE_CHARGED;
+  // CAN_TRANSMIT_PRECHARGE_COMPLETED();
   return prv_set_precharge_control(storage, GPIO_STATE_HIGH);
 }
 
