@@ -70,7 +70,6 @@ StatusCode drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *a
   uint16_t drive_output = 0;
   bool expect_transition = true;
   CAN_UNPACK_DRIVE_OUTPUT(msg, &drive_output);
-  printf("%s, state: %d\n", __func__, drive_output);
   Event e = { 0 };
   e.id = s_drive_output_fsm_map[drive_output];
   expect_transition = drive_output != s_current_drive_state;
@@ -91,7 +90,6 @@ EEDriveOutput drive_fsm_get_drive_state() {
 }
 
 StatusCode drive_fsm_init() {
-  printf("%s\n", __func__);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_DRIVE_OUTPUT, drive_output_rx, NULL);
 
   prv_init_drive_fsm();

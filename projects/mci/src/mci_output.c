@@ -9,7 +9,6 @@
 
 #include "exported_enums.h"
 #include "generic_can.h"
-#include "log.h"
 #include "pedal_rx.h"
 #include "soft_timer.h"
 #include "status.h"
@@ -52,36 +51,30 @@ static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
 }
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {
-  printf("handling drive\n");
   MotorControllerOutputStorage *storage = context;
   PedalValues pedal_values = pedal_rx_get_pedal_values(&storage->pedal_storage);
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
   // TODO(SOFT-122): Make sure test ensures that maps are continues
   if (drive_state == EE_DRIVE_OUTPUT_OFF) {
-    // printf("drive output off\n");
     drive_command.motor_current = 0.0f;
     drive_command.motor_velocity = 0.0f;
   } else if (pedal_values.brake > MOTOR_CONTROLLER_BRAKE_THRESHOLD) {
     // Regen Braking along with brake being pressed
-    // printf("brake thresh\n");
     drive_command.motor_current = prv_brake_to_regen_map(pedal_values.brake);
     drive_command.motor_velocity = 0.0f;
   } else if (pedal_values.throttle < s_regen_threshold) {
-    // printf("regen\n");
     // Regen Braking along if throttle is pressed a little
     drive_command.motor_current = prv_throttle_to_regen_map(pedal_values.throttle);
     drive_command.motor_velocity = 0.0f;
   } else {
-    // printf("accel\n");
     drive_command.motor_current = prv_throttle_to_accel_map(pedal_values.throttle);
     drive_command.motor_velocity = s_velocity_lookup[drive_state];
   }
   /** Handling message **/
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
   prv_send_wavesculptor_message(storage, MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID, drive_command);
-  StatusCode status = soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
-  // printf("status of soft timer start: %d\n", status);
+  soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
 }
 
 StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan *motor_can_settings) {
