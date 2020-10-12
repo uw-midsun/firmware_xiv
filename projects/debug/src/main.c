@@ -3,9 +3,11 @@
 #include "adc.h"
 #include "delay.h"
 #include "gpio.h"
+#include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "wait.h"
 
 #define HORN_GPIO_ADDR \
   { .port = GPIO_PORT_B, .pin = 1 }
@@ -23,7 +25,6 @@
   { .port = GPIO_PORT_A, .pin = 2 }
 #define CC_DECREASE_SPEED_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 1 }
-
 
 #define TEST_1 \
   { .port = GPIO_PORT_A, .pin = 3 }
@@ -61,34 +62,61 @@ static GpioAddress lookup[NUM_STEERING_DIGITAL_INPUTS] = {
   [S_TEST_3] = TEST_3,
 };
 
+static void prv_int(const GpioAddress *addr, void *context) {
+  uint8_t state = 0;
+  gpio_get_state(addr, &state);
+  printf("========INT========\n");
+  printf("==========================port: %d, pin: %d, state: %d\n", addr->port, addr->pin, state);
+  printf("========INT========\n");
+}
+
 int main() {
   interrupt_init();
   soft_timer_init();
   gpio_init();
+  gpio_it_init();
   adc_init(ADC_MODE_SINGLE);
 
   GpioSettings sets = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
     .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_ANALOG,
+    .alt_function = GPIO_ALTFN_NONE,
   };
+  InterruptSettings int_sets = {
+    .priority = INTERRUPT_PRIORITY_HIGH,
+    .type = INTERRUPT_TYPE_INTERRUPT,
+  };
+
+  // GpioSettings sets = {
+  //   .direction = GPIO_DIR_IN,
+  //   .state = GPIO_STATE_LOW,
+  //   .resistor = GPIO_RES_NONE,
+  //   .alt_function = GPIO_ALTFN_ANALOG,
+  // };
   AdcChannel chan;
 
   for (int i = 0; i < NUM_STEERING_DIGITAL_INPUTS; i++) {
     gpio_init_pin(&lookup[i], &sets);
     adc_get_channel(lookup[i], &chan);
     adc_set_channel(chan, true);
+
+    uint8_t s = gpio_it_register_interrupt(&lookup[i], &int_sets, INTERRUPT_EDGE_RISING_FALLING, prv_int, NULL);
+    printf("reg int port %d pin %d status %d\n", lookup[i].port, lookup[i].pin, s);
   }
 
-  while (1) {
-    printf("=======reading %d=======\n", rand() % 10000);
-    for (int i = 0; i < NUM_STEERING_DIGITAL_INPUTS; i++) {
-      adc_get_channel(lookup[i], &chan);
-      uint16_t d;
-      adc_read_converted(chan, &d);
-      printf("Port: %d, Pin: %d, Data: %d\n", lookup[i].port, lookup[i].pin, d);
+    while (1) {
+      uint16_t readings[NUM_STEERING_DIGITAL_INPUTS] = { 0 };
+      for (int i = 0; i < NUM_STEERING_DIGITAL_INPUTS; i++) {
+        adc_get_channel(lookup[i], &chan);
+        uint16_t d = 0;
+        adc_read_converted(chan, &d);
+        readings[i] = d;
+      }
+      printf("=======reading %d=======\n", rand() % 10000);
+      for (int i = 0; i < NUM_STEERING_DIGITAL_INPUTS; i++) {
+        printf("Port: %d, Pin: %d, Data: %d\n", lookup[i].port, lookup[i].pin, readings[i]);
+      }
+      delay_ms(1000);
     }
-    delay_ms(500);
   }
-}
