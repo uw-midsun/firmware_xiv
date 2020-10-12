@@ -12,9 +12,16 @@
 #define TEST_CONFIG_PIN_I2C_SDA \
   { GPIO_PORT_B, 11 }
 
-#define ADC_DEFAULT_RETURNED_VOLTAGE_RAW 2500
-#define ADC_EXPECTED_OK_VOLTAGE 1000
-#define ADC_TEST_FAULT_VOLTAGE 5000
+// 1.6k resistor
+#define BTS7200_TEST_RESISTOR 1600
+
+// 1 mA * BTS7200_TEST_RESISTOR
+#define ADC_EXPECTED_OK_VOLTAGE 1600
+// See bts_7200_current_sense.h for an explanation of this value
+#define ADC_TEST_FAULT_VOLTAGE 3300
+
+// Return ADC_EXPECTED_OK_VOLTAGE by default
+#define ADC_DEFAULT_RETURNED_VOLTAGE_RAW ADC_EXPECTED_OK_VOLTAGE
 
 static uint16_t s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
 static uint16_t s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
@@ -40,10 +47,10 @@ static void prv_fault_callback_increment(bool fault0, bool fault1, void *context
 // Storage is global so we can call bts_7200_stop to stop soft timers and avoid segfaults
 static Bts7200Storage s_storage = { 0 };
 
-// Mocks adc_read_raw to allow for changing the reading during testing.
+// Mocks adc_read_converted to allow for changing the reading during testing.
 // Note that this removes some of the interrupt functionality of the x86 adc implementation,
 // but this shouldn't matter in this case.
-StatusCode TEST_MOCK(adc_read_raw)(AdcChannel adc_channel, uint16_t *reading) {
+StatusCode TEST_MOCK(adc_read_converted)(AdcChannel adc_channel, uint16_t *reading) {
   // Return reading based on pin it should corrsepond to.
   if (s_adc_measurement_number == 0) {
     *reading = s_adc_measurement_0;
@@ -95,6 +102,7 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -140,6 +148,7 @@ void test_bts_7200_current_sense_timer_pca9539r_works(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -184,6 +193,7 @@ void test_bts_7200_current_sense_restart(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -239,6 +249,7 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -270,6 +281,7 @@ void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -300,6 +312,7 @@ void test_bts_7200_current_sense_null_callback(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = NULL,
   };
 
@@ -323,6 +336,7 @@ void test_bts_7200_current_sense_get_measurement_stm32_valid(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -348,6 +362,7 @@ void test_bts_7200_current_sense_get_measurement_pca9539r_valid(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -373,6 +388,7 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
 
@@ -399,6 +415,7 @@ void test_bts_7200_current_sense_context_passed(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .callback_context = context_pointer,
   };
@@ -424,6 +441,7 @@ void test_bts_7200_output_0_functions_work(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
@@ -474,6 +492,7 @@ void test_bts_7200_output_1_functions_work(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -526,6 +545,7 @@ void test_bts_7200_faults_within_fault_range(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,  // pass in random variable
@@ -560,6 +580,7 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,  // pass in random variable
@@ -601,6 +622,7 @@ void test_bts7200_fault_cb_called_from_start(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -634,6 +656,7 @@ void test_bts_7200_handle_fault_clears_fault(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -689,6 +712,7 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
@@ -722,6 +746,7 @@ void test_bts_7200_enable_fails_during_fault(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -779,6 +804,7 @@ void test_bts_7200_single_input_faults(void) {
     .enable_0_pin = &test_enable_0_pin,
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };

@@ -12,19 +12,24 @@
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
 
-// Current provided at IS pin during fault conditions.
-// Max input current where k(ILIS) operates is 1.44 A (see p.g. 48 of datasheet);
-// with current sense ratio of k(ILIS) = 670, these values should never overlap.
-#define BTS7200_FAULT_CURRENT_MIN_UA 4400
-#define BTS7200_FAULT_CURRENT_MAX_UA 10000
+// Upper maximum for the possible leakage voltage that may be read from the SENSE pin at
+// T(env) < 80 C (see p.g. 27 of BTS7200 datasheet)
+#define BTS7200_MAX_LEAKAGE_VOLTAGE_MV 2
+
+// Nominal scaling factor k(ILIS) for current output at the SENSE pin in normal operation.
+#define BTS7200_IS_SCALING_NOMINAL 670
+
+// Voltage at the SENSE pin is limited to a max of 3.3V by a diode.
+// Due to to this function, since any fault current will be at least 4.4 mA * 1.6 kOhm = ~7 V,
+// voltages approaching 3.3V represent a fault, and should be treated as such.
+#define BTS7200_MAX_VALID_SENSE_VOLTAGE_MV 3200
+
+// Check if measurement is a fault.
+#define BTS7200_IS_MEASUREMENT_FAULT_MV(meas) ((meas) > BTS7200_MAX_VALID_SENSE_VOLTAGE_MV)
 
 // Max possible delay after input pin pulled low on fault, + 10 ms for buffer
 #define BTS7200_FAULT_RESTART_DELAY_MS 110
 #define BTS7200_FAULT_RESTART_DELAY_US (BTS7200_FAULT_RESTART_DELAY_MS * 1000)
-
-// Check if measurement is in the range representing a fault.
-#define BTS7200_IS_MEASUREMENT_FAULT(meas) \
-  (((meas) > BTS7200_FAULT_CURRENT_MIN_UA) && ((meas) < BTS7200_FAULT_CURRENT_MAX_UA))
 
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
 
@@ -64,6 +69,7 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
+  int resistor;  // scaling performed by resistor at SENSE pin
 } Bts7200Stm32Settings;
 
 // Use when the select pin is through a PCA9539R GPIO expander
@@ -78,6 +84,7 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
+  int resistor;  // scaling performed by resistor at SENSE pin
 } Bts7200Pca9539rSettings;
 
 typedef struct {
@@ -93,6 +100,7 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
+  int resistor;  // scaling performed by resistor at SENSE pin
 } Bts7200Storage;
 
 // Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
