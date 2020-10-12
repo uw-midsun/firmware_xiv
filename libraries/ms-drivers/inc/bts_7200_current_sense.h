@@ -20,7 +20,8 @@
 #define BTS7200_IS_SCALING_NOMINAL 670
 
 // Voltage at the SENSE pin is limited to a max of 3.3V by a diode.
-// Due to to this function, since any fault current will be at least 4.4 mA * 1.6 kOhm = ~7 V,
+// Due to to this function, since any fault current will be at least 4.4 mA (see p.g. 49)
+// the resulting voltage will be 4.4 mA * 1.6 kOhm = ~7 V. Due to this,
 // voltages approaching 3.3V represent a fault, and should be treated as such.
 #define BTS7200_MAX_VALID_SENSE_VOLTAGE_MV 3200
 

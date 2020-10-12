@@ -263,6 +263,14 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
   // otherwise valid
   sense_pin.port = 0;
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
+
+  // invalid enable pin
+  test_enable_0_pin.port = NUM_GPIO_PORTS;
+  TEST_ASSERT_NOT_OK(bts_7200_init_stm32(&s_storage, &settings));
+
+  // change back to valid
+  test_enable_0_pin.port = GPIO_PORT_A;
+  TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
 }
 
 // Same, but for pca9539r.
@@ -294,6 +302,14 @@ void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
 
   // otherwise valid
   sense_pin.port = GPIO_PORT_A;
+  TEST_ASSERT_OK(bts_7200_init_pca9539r(&s_storage, &settings));
+
+  // invalid enable pin
+  test_enable_0_pin.pin = NUM_PCA9539R_GPIO_PINS;
+  TEST_ASSERT_NOT_OK(bts_7200_init_pca9539r(&s_storage, &settings));
+
+  // change back to valid
+  test_enable_0_pin.pin = PCA9539R_PIN_IO0_0;
   TEST_ASSERT_OK(bts_7200_init_pca9539r(&s_storage, &settings));
 }
 
@@ -842,4 +858,52 @@ void test_bts_7200_single_input_faults(void) {
   TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&s_storage));
 
   TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
+}
+
+// Make sure that bts_7200_stop stops all soft timers and sets
+// fault_in_progress to false for both pins.
+void test_bts_7200_stop_works(void) {
+  // these don't matter (adc isn't reading anything) but can't be null
+  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  // EN0 and EN1 pins
+  GpioAddress test_enable_0_pin = { .port = GPIO_PORT_A, .pin = 1 };
+  GpioAddress test_enable_1_pin = { .port = GPIO_PORT_A, .pin = 2 };
+  uint32_t interval_us = 500;  // 0.5 ms
+  void *context_pointer = &interval_us;
+  Bts7200Stm32Settings settings = {
+    .select_pin = &test_select_pin,
+    .sense_pin = &test_sense_pin,
+    .enable_0_pin = &test_enable_0_pin,
+    .enable_1_pin = &test_enable_1_pin,
+    .interval_us = interval_us,
+    .resistor = BTS7200_TEST_RESISTOR,
+    .callback = &prv_callback_increment,
+    .fault_callback = &prv_fault_callback_increment,
+  };
+
+  TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts_7200_start(&s_storage));
+  TEST_ASSERT_EQUAL(s_times_fault_callback_called, 0);
+  // Cause fault
+  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+
+  // Make sure fault happens
+  delay_us(interval_us * 2);
+  TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
+
+  // Soft timers for fault should be in progress
+  TEST_ASSERT_TRUE(soft_timer_remaining_time(s_storage.enable_pin_0.fault_timer_id) > 0);
+  TEST_ASSERT_TRUE(soft_timer_remaining_time(s_storage.enable_pin_1.fault_timer_id) > 0);
+
+  // Stop
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
+
+  // Verify
+  TEST_ASSERT_EQUAL(s_storage.measurement_timer_id, SOFT_TIMER_INVALID_TIMER);
+  TEST_ASSERT_EQUAL(s_storage.enable_pin_0.fault_timer_id, SOFT_TIMER_INVALID_TIMER);
+  TEST_ASSERT_EQUAL(s_storage.enable_pin_1.fault_timer_id, SOFT_TIMER_INVALID_TIMER);
+  TEST_ASSERT_FALSE(s_storage.enable_pin_0.fault_in_progress);
+  TEST_ASSERT_FALSE(s_storage.enable_pin_1.fault_in_progress);
 }

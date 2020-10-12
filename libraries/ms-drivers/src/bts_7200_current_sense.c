@@ -103,6 +103,7 @@ static StatusCode prv_bts_7200_handle_fault_pin(Bts7200EnablePin *pin) {
   }
   return STATUS_CODE_OK;
 }
+
 // Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
 // Faults are cleared following the retry strategy on pg. 34 of the BTS7200 datasheet,
 // assuming a worst-case t(DELAY(CR)) of BTS7200_FAULT_RESTART_DELAY_MS (pg. 38)
@@ -118,7 +119,7 @@ static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0
     status1 = prv_bts_7200_handle_fault_pin(&storage->enable_pin_1);
   }
 
-  // Only return on non-OK statuscodes after trying to clear faults on both pins
+  // Only return on non-OK status codes after trying to clear faults on both pins
   status_ok_or_return(status0);
   status_ok_or_return(status1);
   return STATUS_CODE_OK;
