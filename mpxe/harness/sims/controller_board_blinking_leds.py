@@ -1,6 +1,8 @@
 from ..protogen import stores_pb2
 
-class ControllerBoardBlinkingLeds:
+from . import sim
+
+class ControllerBoardBlinkingLeds(sim.Sim):
     def handle_update(self, pm, proj):
         stores = proj.stores
         gpio = stores[(stores_pb2.MxStoreType.GPIO, 0)]

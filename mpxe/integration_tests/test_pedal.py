@@ -28,7 +28,7 @@ class TestPedal(unittest.TestCase):
         assert(msg.data['throttle_output'] == 0)
 
         # set throttle channel to 50
-        self.pedal.handler.update_ads_reading(self.pedal, 50, 1)
+        self.pedal.sim.update_ads_reading(self.pedal, 50, 1)
         time.sleep(0.5)
         # ads1015 reading is nonzero so throttle should be nonzero
         msg = self.manager.can.get_latest_by_name('PEDAL_OUTPUT')

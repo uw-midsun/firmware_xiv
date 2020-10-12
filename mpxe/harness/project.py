@@ -6,6 +6,8 @@ import importlib
 import sys
 
 from . import decoder
+from .protogen import stores_pb2
+from .sims import sim
 
 class Project:
     def __init__(self, name):
@@ -24,10 +26,13 @@ class Project:
         ctop_fd = self.ctop_fifo.fileno()
         ctop_fl = fcntl.fcntl(ctop_fd, fcntl.F_GETFL)
         fcntl.fcntl(ctop_fd, fcntl.F_SETFL, ctop_fl | os.O_NONBLOCK)
-        # set up project handler
-        importlib.import_module('harness.mocks.' + name)
-        handler_class_name = ''.join(s.capitalize() for s in name.split('_'))
-        self.handler = getattr(sys.modules['harness.mocks.' + name], handler_class_name)()
+        # set up project sim, or use generic
+        if os.path.exists(os.path.dirname(__file__) + '/sims/{}.py'.format(name)):
+            importlib.import_module('harness.sims.' + name)
+            sim_class_name = ''.join(s.capitalize() for s in name.split('_'))
+            self.sim = getattr(sys.modules['harness.sims.' + name], sim_class_name)()
+        else:
+            self.sim = sim.Sim()
         print('started', self.name)
 
     def stop(self):
@@ -35,6 +40,14 @@ class Project:
         ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
         os.unlink(ctop_fifo_path)
         print('stopped', self.name)
+
+    def write_store(self, store_type, msg, mask):
+        update = stores_pb2.MxStoreUpdate()
+        update.key = 0
+        update.type = store_type
+        update.msg = msg.SerializeToString()
+        update.mask = mask.SerializeToString()
+        self.write(update.SerializeToString())
 
     def write(self, msg):
         self.popen.stdin.write(msg)
@@ -44,7 +57,7 @@ class Project:
         store_info = decoder.decode_store_info(msg)
         key = (store_info.type, store_info.key)
         self.stores[key] = decoder.decode_store(store_info)
-        self.handler.handle_update(pm, self)
+        self.sim.handle_update(pm, self)
 
     def handle_log(self, pm, log):
-        self.handler.handle_log(pm, self, log)
+        self.sim.handle_log(pm, self, log)
