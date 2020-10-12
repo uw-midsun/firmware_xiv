@@ -27,7 +27,7 @@ static AdcChannel s_adc_pin_channel = NUM_ADC_CHANNELS;
 
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
   AdcChannel *s_adc_pin_channel = context;
-  
+
   uint16_t adc_pin_data = 0;
 
   adc_read_converted(*s_adc_pin_channel, &adc_pin_data);
