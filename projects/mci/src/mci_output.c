@@ -9,7 +9,6 @@
 
 #include "exported_enums.h"
 #include "generic_can.h"
-#include "log.h"
 #include "pedal_rx.h"
 #include "soft_timer.h"
 #include "status.h"
