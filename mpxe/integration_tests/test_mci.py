@@ -33,9 +33,9 @@ class TestMci(unittest.TestCase):
         assert(self.mci.handler.tx_data == 0)
 
         self.manager.can.send('DRIVE_OUTPUT', {'drive_output': 1})
-        time.sleep(0.1)
+        time.sleep(1)
         self.manager.can.send('PEDAL_OUTPUT', {'throttle_output': 50, 'brake_output': 0})
-        time.sleep(0.1)
+        time.sleep(1)
         assert(self.mci.handler.tx_data != 0)
 
 if __name__ == '__main__':

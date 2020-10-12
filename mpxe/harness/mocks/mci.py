@@ -37,7 +37,7 @@ class Mci:
         if MCP2515_KEY in proj.stores:
             self.tx_id = proj.stores[MCP2515_KEY].tx_id
             self.tx_data = proj.stores[MCP2515_KEY].tx_data
-            print('self.tx data {}'.format(self.tx_data))
+            print('MCP2515 Output: {}'.format(self.tx_data))
     def handle_log(self, pm, proj, log):
         print('[{}]'.format(proj.name), log)
     def update_mcp2515_rx(self, proj, id, data):
