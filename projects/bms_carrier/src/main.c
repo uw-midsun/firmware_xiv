@@ -7,6 +7,7 @@
 #include "fault_bps.h"
 #include "interrupt.h"
 #include "killswitch.h"
+#include "mcp23008_gpio_expander.h"
 #include "soft_timer.h"
 
 static CanStorage s_can_storage = { 0 };
@@ -47,8 +48,8 @@ int main(void) {
   can_handler_init(&s_bms_storage, TIME_BETWEEN_TX_IN_MILLIS);
   // TODO(SOFT-61): fill in these values from hardware
   CellSenseSettings cell_settings = {
-    .undervoltage_dmv = 0,
-    .overvoltage_dmv = 0,
+    .undervoltage_dmv = 25000,
+    .overvoltage_dmv = 42000,
     .charge_overtemp_dmv = 0,
     .discharge_overtemp_dmv = 0,
   };
@@ -75,6 +76,7 @@ int main(void) {
   fan_control_init(&fan_settings, &s_bms_storage.fan_storage_2);
   fault_bps_init(&s_bms_storage);
   killswitch_init(&s_bms_storage.killswitch_storage);
+  mcp23008_gpio_init(BMS_PERIPH_I2C_PORT, BMS_IO_EXPANDER_I2C_ADDR);
   relay_sequence_init(&s_bms_storage.relay_storage);
 
   Event e = { 0 };
@@ -83,6 +85,7 @@ int main(void) {
       can_process_event(&e);
       cell_sense_process_event(&e);
     }
+    wait();
   }
 
   return 0;
