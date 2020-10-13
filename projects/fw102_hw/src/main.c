@@ -12,20 +12,20 @@ typedef struct {
 } Counters;
 
 void prv_timer_callback(SoftTimerId timer_id, void *context) {
-  Counters *myCounters = context;  // cast void* to our struct so we can use it
+  Counters *counters = context;  // cast void* to our struct so we can use it
 
   // always increment and log counter_a
-  myCounters->counter_a++;
-  LOG_DEBUG("Counter A: %i\n", myCounters->counter_a);
+  counters->counter_a++;
+  LOG_DEBUG("Counter A: %i\n", counters->counter_a);
 
   // increment and log counter_b every other call
-  if (myCounters->counter_a % 2 == 0) {
-    myCounters->counter_b++;
-    LOG_DEBUG("Counter B: %i\n", myCounters->counter_b);
+  if (counters->counter_a % 2 == 0) {
+    counters->counter_b++;
+    LOG_DEBUG("Counter B: %i\n", counters->counter_b);
   }
 
   // start the timer again
-  soft_timer_start_millis(500, prv_timer_callback, myCounters, NULL);
+  soft_timer_start_millis(500, prv_timer_callback, counters, NULL);
 }
 
 int main(void) {
@@ -33,12 +33,12 @@ int main(void) {
   soft_timer_init();  // soft timers must be initialized before using them
 
   // initialize the Counters struct
-  Counters myCounters = { .counter_a = 0, .counter_b = 0 };
+  Counters counters = { .counter_a = 0, .counter_b = 0 };
 
   // start counting
   soft_timer_start_millis(500,                 // half-second duration
                           prv_timer_callback,  // function to call after timer
-                          &myCounters,         // automatically gets cast to void*
+                          &counters,           // automatically gets cast to void*
                           NULL);               // timer id - not needed here
 
   while (true) {
