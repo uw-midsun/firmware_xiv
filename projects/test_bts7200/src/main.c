@@ -11,9 +11,13 @@
 #include "interrupt.h"
 #include "log.h"
 #include "mux.h"
+#include "delay.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
 #include "wait.h"
+
+#define PCA9539R_GPIO_STATE_SELECT_OUT_0 PCA9539R_GPIO_STATE_LOW
+#define PCA9539R_GPIO_STATE_SELECT_OUT_1 PCA9539R_GPIO_STATE_HIGH
 
 // Smoke test settings. Can be modified to fit testing purpose.
 #define CURRENT_MEASURE_INTERVAL_MS 500  // Set wait time between each set of readings
@@ -41,7 +45,7 @@
 static Bts7200Storage s_bts7200_storage;
 static PowerDistributionCurrentHardwareConfig *s_hw_config;
 
-static void prv_start_read(SoftTimerId, void *);
+// static void prv_start_read(SoftTimerId, void *);
 
 // static void prv_log(uint16_t meas0, uint16_t meas1, void *context) {
 //   uintptr_t i = (uintptr_t)context;
@@ -64,6 +68,15 @@ static void prv_start_read(SoftTimerId, void *);
 
 static void prv_callback(uint16_t meas0, uint16_t meas1, void *context) {
   LOG_DEBUG("meas0=%d, meas1=%d\n", meas0, meas1);
+}
+
+static void prv_adc(SoftTimerId id, void *context) {
+  GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
+  adc_set_channel_pin(&a, true);
+  uint16_t read = 0;
+  adc_read_converted_pin(&a, &read);
+  LOG_DEBUG("reading: %d\n", read);
+  soft_timer_start_millis(50, prv_adc, NULL, NULL);
 }
 
 int main() {
@@ -108,7 +121,12 @@ int main() {
   pca9539r_gpio_set_state(&steering_en, PCA9539R_GPIO_STATE_HIGH);
   mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[CHANNEL].mux_selection);
 
-  bts_7200_get_measurement_with_delay(&s_bts7200_storage);
+  prv_adc(SOFT_TIMER_INVALID_TIMER, NULL);
+
+  // bts_7200_get_measurement_with_delay(&s_bts7200_storage);
+  delay_ms(1000);
+  LOG_DEBUG("setting state!\n");
+  pca9539r_gpio_set_state(&s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
 
   // soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_start_read, (void *)0, NULL);
   while (true) {

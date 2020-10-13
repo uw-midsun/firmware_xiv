@@ -16,8 +16,8 @@
 #include "wait.h"
 
 // Smoke test settings. Can be modified to fit testing purpose.
-#define CURRENT_MEASURE_INTERVAL_MS 500  // Set wait time between each set of readings
-#define IS_FRONT_POWER_DISTRO true       // Set whether to test FRONT or REAR power distro
+#define CURRENT_MEASURE_INTERVAL_MS 1000  // Set wait time between each set of readings
+#define IS_FRONT_POWER_DISTRO true        // Set whether to test FRONT or REAR power distro
 
 // Maximum number of channels that can be tested,
 // which is the same number of bts7200 used in front/rear power distribution
@@ -25,7 +25,7 @@
 // Set of channels to be tested, the array contains the indices of the BTS7200 in the front/rear HW
 // config Details at
 // https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1419740028/BTS7200+smoke+test+user+guide
-static uint8_t s_test_channels[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+static uint8_t s_test_channels[] = { 7 };
 
 #define I2C_PORT I2C_PORT_2
 
@@ -52,12 +52,17 @@ static void prv_log(uint16_t meas0, uint16_t meas1, void *context) {
   }
 }
 
-static void prv_start_read(SoftTimerId timer_id, void *context) {
+static void prv_start_read2(SoftTimerId timer_id, void *context) {
   uintptr_t i = (uintptr_t)context;
-  mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
   s_bts7200_storages[i].callback = prv_log;
   s_bts7200_storages[i].callback_context = (void *)i;
   bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
+}
+
+static void prv_start_read(SoftTimerId timer_id, void *context) {
+  uintptr_t i = (uintptr_t)context;
+  mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
+  soft_timer_start_millis(50, prv_start_read2, (void *)i, NULL);
 }
 
 int main() {
