@@ -15,7 +15,7 @@
 // dcdc address if on. Pull Down is means it's on
 static GpioAddress s_dcdc_address = { .port = GPIO_PORT_A, .pin = 9 };
 static GpioAddress s_aux_status_addresses[3] = {
-  { .port = GPIO_PORT_A, .pin = 0 },  // aux voltage sense
+  { .port = GPIO_PORT_A, .pin = 4 },  // aux voltage sense
   { .port = GPIO_PORT_A, .pin = 3 },  // aux temp sense
   { .port = GPIO_PORT_A, .pin = 5 }   // aux current sense  //not needed in the module currently
 };
@@ -26,9 +26,6 @@ static GpioSettings s_gpio_settings = {
   GPIO_RES_NONE,      //
   GPIO_ALTFN_ANALOG,  //
 };
-// the first is voltage, the second is temp, last is current sense
-AdcChannel aux_channels[AUX_ADC_CURRENT_CHANNEL] = { [AUX_ADC_VOLT_CHANNEL] = ADC_CHANNEL_0,
-                                                     [AUX_ADC_TEMP_CHANNEL] = ADC_CHANNEL_1 };
 
 static uint16_t s_status = 0;
 static uint16_t s_aux_volt = 0;
@@ -42,15 +39,20 @@ static uint16_t s_aux_temp = 0;
 // [0] projects/power_selection/src/power_selection.c:43: AUX Temp Data in C: 53
 
 void smoke_test(uint16_t s_aux_volt, uint16_t s_aux_temp, double resistance, uint16_t s_aux_tempC) {
-  LOG_DEBUG("AUX Volatge Data: %d\n", s_aux_volt);
-  LOG_DEBUG("AUX Temp Voltage Data: %d\n", s_aux_temp);
-  LOG_DEBUG("AUX Temp Resistance Value: %f\n", resistance);
-  LOG_DEBUG("AUX Temp Data in C: %d\n", s_aux_tempC);
+  // LOG_DEBUG("AUX Volatge Data: %d\n", s_aux_volt);
+  // LOG_DEBUG("AUX Temp Voltage Data: %d\n", s_aux_temp);
+  // // Format as milliohms because this STM doesn't support printing floats
+  // int res_int = (int)(resistance * 1000);
+  // LOG_DEBUG("AUX Temp Resistance Value: %d\n", res_int);
+  // LOG_DEBUG("AUX Temp Data in C: %d\n", s_aux_tempC);
 }
 
 uint16_t prv_status_checker() {
-  adc_read_raw(aux_channels[AUX_ADC_VOLT_CHANNEL], &s_aux_volt);
-  adc_read_raw(aux_channels[AUX_ADC_TEMP_CHANNEL], &s_aux_temp);
+  adc_read_converted_pin(s_aux_status_addresses[AUX_ADC_VOLT_CHANNEL], &s_aux_volt);
+  adc_read_converted_pin(s_aux_status_addresses[AUX_ADC_TEMP_CHANNEL], &s_aux_temp);
+
+  LOG_DEBUG("voltage reading: %d\n", s_aux_volt);
+  LOG_DEBUG("temp reading: %d\n", s_aux_temp);
 
   double resistance = temp_to_res(s_aux_temp);
 
@@ -118,9 +120,7 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 StatusCode aux_dcdc_monitor_init() {
   for (int i = 0; i < AUX_ADC_CURRENT_CHANNEL; ++i) {
     gpio_init_pin(&s_aux_status_addresses[i], &s_gpio_settings);
-
-    adc_get_channel(s_aux_status_addresses[i], &aux_channels[i]);
-    adc_set_channel(aux_channels[i], true);
+    adc_set_channel_pin(s_aux_status_addresses[i], true);
   }
 
   status_ok_or_return(

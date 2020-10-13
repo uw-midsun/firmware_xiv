@@ -1,4 +1,5 @@
 #include "can.h"
+#include "can_msg_defs.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -7,11 +8,9 @@
 #include "power_selection_events.h"
 #include "soft_timer.h"
 
-#define POWER_SELECTION_CAN_DEVICE_ID 0x1
-
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
-  .device_id = POWER_SELECTION_CAN_DEVICE_ID,
+  .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = POWER_SELECTION_CAN_EVENT_RX,
   .tx_event = POWER_SELECTION_CAN_EVENT_TX,
@@ -30,6 +29,14 @@ int main() {
 
   can_init(&s_can_storage, &s_can_settings);
   aux_dcdc_monitor_init();
+
+  // Hardware requirement to set PB8 to high before anything works
+  GpioAddress enable_pin = { .port = GPIO_PORT_B, .pin = 8 };
+  GpioSettings enable_settings = { .direction = GPIO_DIR_OUT,
+                                   .state = GPIO_STATE_HIGH,
+                                   .alt_function = GPIO_ALTFN_NONE,
+                                   .resistor = GPIO_RES_NONE };
+  gpio_init_pin(&enable_pin, &enable_settings);
 
   LOG_DEBUG("Working!\n");
   Event e = { 0 };
