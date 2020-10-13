@@ -110,7 +110,7 @@ static void prv_delay_measurement_step_3(SoftTimerId timer, void *context) {
   Bts7200Storage *storage = context;
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
-  adc_read_raw(sense_channel, &storage->reading_out_1);
+  adc_read_converted(sense_channel, &storage->reading_out_1);
   if (storage->callback != NULL) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
   }
@@ -120,7 +120,7 @@ static void prv_delay_measurement_step_2(SoftTimerId timer, void *context) {
   Bts7200Storage *storage = context;
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
-  adc_read_raw(sense_channel, &storage->reading_out_0);
+  adc_read_converted(sense_channel, &storage->reading_out_0);
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_1);
   } else {
