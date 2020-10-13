@@ -52,17 +52,25 @@ static void prv_log(uint16_t meas0, uint16_t meas1, void *context) {
   }
 }
 
-static void prv_start_read2(SoftTimerId timer_id, void *context) {
-  uintptr_t i = (uintptr_t)context;
-  s_bts7200_storages[i].callback = prv_log;
-  s_bts7200_storages[i].callback_context = (void *)i;
-  bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
-}
+// static void prv_start_read2(SoftTimerId timer_id, void *context) {
+//   uintptr_t i = (uintptr_t)context;
+//   s_bts7200_storages[i].callback = prv_log;
+//   s_bts7200_storages[i].callback_context = (void *)i;
+//   bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
+// }
+
+// static void prv_start_read(SoftTimerId timer_id, void *context) {
+//   uintptr_t i = (uintptr_t)context;
+//   mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
+//   soft_timer_start_millis(50, prv_start_read2, (void *)i, NULL);
+// }
 
 static void prv_start_read(SoftTimerId timer_id, void *context) {
   uintptr_t i = (uintptr_t)context;
   mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
-  soft_timer_start_millis(50, prv_start_read2, (void *)i, NULL);
+  s_bts7200_storages[i].callback = prv_log;
+  s_bts7200_storages[i].callback_context = (void *)i;
+  bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
 }
 
 int main() {

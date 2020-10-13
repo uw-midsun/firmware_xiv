@@ -72,11 +72,11 @@ static void prv_callback(uint16_t meas0, uint16_t meas1, void *context) {
 
 static void prv_adc(SoftTimerId id, void *context) {
   GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
-  adc_set_channel_pin(&a, true);
+  adc_set_channel_pin(a, true);
   uint16_t read = 0;
-  adc_read_converted_pin(&a, &read);
+  adc_read_converted_pin(a, &read);
   LOG_DEBUG("reading: %d\n", read);
-  soft_timer_start_millis(50, prv_adc, NULL, NULL);
+  soft_timer_start_millis(250, prv_adc, NULL, NULL);
 }
 
 int main() {
@@ -126,7 +126,13 @@ int main() {
   // bts_7200_get_measurement_with_delay(&s_bts7200_storage);
   delay_ms(1000);
   LOG_DEBUG("setting state!\n");
-  pca9539r_gpio_set_state(&s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  delay_ms(1000);
+  LOG_DEBUG("setting state again\n");
+  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
+  delay_ms(1000);
+  LOG_DEBUG("setting state 3\n");
+  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
 
   // soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_start_read, (void *)0, NULL);
   while (true) {
