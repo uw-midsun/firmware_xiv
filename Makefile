@@ -41,7 +41,14 @@ LIB_DIR := libraries
 MAKE_DIR := make
 MPXE_DIR := mpxe
 
+ifeq ($(MAKECMDGOALS),mpxe)
+PLATFORM ?= x86
+DEFINE += MPXE
+IS_MPXE := TRUE
+$(call mpxe-gen_func)
+else
 PLATFORM ?= stm32f0xx
+endif
 
 # Include argument filters
 include $(MAKE_DIR)/filter.mk
@@ -84,6 +91,14 @@ COMMA := ,
 ###################################################################################################
 
 # AUTOMATED ACTIONS
+
+# $(call gen_mpxe)
+define gen_mpxe
+$(shell cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *)
+$(shell cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/harness/protogen *)
+$(shell mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src)
+$(shell rm -r -f $(LIB_DIR)/mpxe-gen/inc/mpxe)
+endef
 
 # $(call include_lib,libname)
 define include_lib
@@ -149,6 +164,10 @@ CFLAGS += $(addprefix -D,$(DEFINE))
 
 # Allow depending on the value of DEFINE so we rebuild after changing defines
 $(eval $(call dependable_var,DEFINE))
+
+ifneq (,$(IS_MPXE))
+$(eval $(call gen_mpxe))
+endif
 
 # Includes all libraries so make can find their targets
 $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
@@ -230,7 +249,11 @@ new:
 
 .PHONY: clean
 clean:
+	@echo cleaning
 	@rm -rf $(BUILD_DIR)
+	@rm -f $(LIB_DIR)/mpxe-gen/inc/*.pb-c.h
+	@rm -f $(LIB_DIR)/mpxe-gen/src/*.pb-c.c
+	@rm -f $(MPXE_DIR)/harness/protogen/*_pb2.py
 
 .PHONY: remake
 remake: clean all
@@ -248,16 +271,12 @@ socketcan:
 update_codegen:
 	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
 
-.PHONY: mpxegen
-mpxegen:
-	@echo "running mpxegen"
-	@cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *
-	@cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/harness/protogen *
-	@mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src
-	@rm -r -f $(LIB_DIR)/mpxe-gen/inc/mpxe
+MPXE_PROJS := 
+MPXE_LIBS :=
+-include $(MPXE_DIR)/integration_tests/deps.mk
 
 .PHONY: mpxe
-mpxe: mpxegen socketcan
+mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan
 	@python3 -m unittest discover $(MPXE_DIR)/integration_tests -p "test_*$(INT_TEST).py"
 
 # Dummy force target for pre-build steps

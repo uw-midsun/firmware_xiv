@@ -5,7 +5,10 @@
 # $(T)_INC_DIRS: $(T)_DIR/inc{/$(PLATFORM)}
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
-$(T)_DEPS := $(PLATFORM_LIB) libcore mpxe-gen
+$(T)_DEPS := $(PLATFORM_LIB) libcore
+ifneq (,$(IS_MPXE))
+$(T)_DEPS += mpxe-gen
+endif
 
 ifeq (x86,$(PLATFORM))
 $(T)_EXCLUDE_TESTS := pwm pwm_input
