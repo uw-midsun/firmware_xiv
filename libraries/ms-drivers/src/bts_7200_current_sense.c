@@ -10,7 +10,7 @@
 #define PCA9539R_GPIO_STATE_SELECT_OUT_0 PCA9539R_GPIO_STATE_LOW
 #define PCA9539R_GPIO_STATE_SELECT_OUT_1 PCA9539R_GPIO_STATE_HIGH
 
-#define DSEL_CHANGE_TO_MEASURE_DELAY_US 5000
+#define DSEL_CHANGE_TO_MEASURE_DELAY_US 10000
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
@@ -129,6 +129,9 @@ static void prv_delay_measurement_step_2(SoftTimerId timer, void *context) {
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
+  // uint16_t throwaway;
+  // adc_read_converted_pin(*storage->sense_pin, &throwaway);
+  // LOG_DEBUG("throwaway: %d\n", throwaway);
   soft_timer_start(DSEL_CHANGE_TO_MEASURE_DELAY_US, prv_delay_measurement_step_3, storage, NULL);
 }
 
@@ -138,6 +141,9 @@ void bts_7200_get_measurement_with_delay(Bts7200Storage *storage) {
   } else {
     pca9539r_gpio_set_state(storage->select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
+  uint16_t throwaway;
+  adc_read_converted_pin(*storage->sense_pin, &throwaway);
+  // LOG_DEBUG("throwaway: %d\n", throwaway);
   soft_timer_start(DSEL_CHANGE_TO_MEASURE_DELAY_US, prv_delay_measurement_step_2, storage, NULL);
 }
 

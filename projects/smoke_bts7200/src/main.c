@@ -25,7 +25,7 @@
 // Set of channels to be tested, the array contains the indices of the BTS7200 in the front/rear HW
 // config Details at
 // https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1419740028/BTS7200+smoke+test+user+guide
-static uint8_t s_test_channels[] = { 7 };
+static uint8_t s_test_channels[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
 #define I2C_PORT I2C_PORT_2
 
@@ -52,26 +52,26 @@ static void prv_log(uint16_t meas0, uint16_t meas1, void *context) {
   }
 }
 
-// static void prv_start_read2(SoftTimerId timer_id, void *context) {
-//   uintptr_t i = (uintptr_t)context;
-//   s_bts7200_storages[i].callback = prv_log;
-//   s_bts7200_storages[i].callback_context = (void *)i;
-//   bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
-// }
-
-// static void prv_start_read(SoftTimerId timer_id, void *context) {
-//   uintptr_t i = (uintptr_t)context;
-//   mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
-//   soft_timer_start_millis(50, prv_start_read2, (void *)i, NULL);
-// }
-
-static void prv_start_read(SoftTimerId timer_id, void *context) {
+static void prv_start_read2(SoftTimerId timer_id, void *context) {
   uintptr_t i = (uintptr_t)context;
-  mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
   s_bts7200_storages[i].callback = prv_log;
   s_bts7200_storages[i].callback_context = (void *)i;
   bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
 }
+
+static void prv_start_read(SoftTimerId timer_id, void *context) {
+  uintptr_t i = (uintptr_t)context;
+  mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
+  soft_timer_start_millis(50, prv_start_read2, (void *)i, NULL);
+}
+
+// static void prv_start_read(SoftTimerId timer_id, void *context) {
+//   uintptr_t i = (uintptr_t)context;
+//   mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
+//   s_bts7200_storages[i].callback = prv_log;
+//   s_bts7200_storages[i].callback_context = (void *)i;
+//   bts_7200_get_measurement_with_delay(&s_bts7200_storages[i]);
+// }
 
 int main() {
   gpio_init();
@@ -104,7 +104,13 @@ int main() {
 
   // enabling steering for convenience in smoke testing
   Pca9539rGpioAddress steering_en = { .i2c_address = 0x76, .pin = PCA9539R_PIN_IO1_3 };
-  pca9539r_gpio_set_state(&steering_en, PCA9539R_GPIO_STATE_HIGH);
+  Pca9539rGpioAddress front_left_light_en = { .i2c_address = 0x76, .pin = PCA9539R_PIN_IO0_4 };
+  Pca9539rGpioSettings pca9539r_settings = {
+    .direction = PCA9539R_GPIO_DIR_OUT,
+    .state = PCA9539R_GPIO_STATE_HIGH,
+  };
+  pca9539r_gpio_init_pin(&steering_en, &pca9539r_settings);
+  pca9539r_gpio_init_pin(&front_left_light_en, &pca9539r_settings);
 
   soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_start_read, (void *)0, NULL);
   while (true) {

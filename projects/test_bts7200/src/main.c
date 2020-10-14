@@ -6,12 +6,12 @@
 #include "adc.h"
 #include "bts_7200_current_sense.h"
 #include "current_measurement_config.h"
+#include "delay.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "interrupt.h"
 #include "log.h"
 #include "mux.h"
-#include "delay.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
 #include "wait.h"
@@ -70,13 +70,50 @@ static void prv_callback(uint16_t meas0, uint16_t meas1, void *context) {
   LOG_DEBUG("meas0=%d, meas1=%d\n", meas0, meas1);
 }
 
-static void prv_adc(SoftTimerId id, void *context) {
+// static void prv_adc(SoftTimerId id, void *context);
+
+// static void prv_adc2(SoftTimerId id, void *context) {
+//   GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
+//   adc_set_channel_pin(a, true);
+//   uint16_t read = 0;
+//   adc_read_converted_pin(a, &read);
+//   LOG_DEBUG("reading 2: %d\n", read);
+//   soft_timer_start_millis(50, prv_adc, NULL, NULL);
+// }
+
+// static void prv_adc(SoftTimerId id, void *context) {
+//   GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
+//   adc_set_channel_pin(a, true);
+//   uint16_t read = 0;
+//   adc_read_converted_pin(a, &read);
+//   LOG_DEBUG("reading 1: %d\n", read);
+//   soft_timer_start(1000, prv_adc2, NULL, NULL);
+// }
+
+static void prv_do_thing() {
   GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
   adc_set_channel_pin(a, true);
   uint16_t read = 0;
+
+  // delay_ms(1000);
+  // adc_read_converted_pin(a, &read);
+  LOG_DEBUG("read: %d\n", read);
+  LOG_DEBUG("setting state on\n");
+  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
+  // delay_ms(1000);
   adc_read_converted_pin(a, &read);
-  LOG_DEBUG("reading: %d\n", read);
-  soft_timer_start_millis(250, prv_adc, NULL, NULL);
+  LOG_DEBUG("read: %d\n", read);
+  delay_ms(1);
+  adc_read_converted_pin(a, &read);
+  LOG_DEBUG("read: %d\n", read);
+  LOG_DEBUG("setting state off\n");
+  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  // delay_ms(1000);
+  adc_read_converted_pin(a, &read);
+  LOG_DEBUG("read: %d\n", read);
+  delay_ms(1);
+  adc_read_converted_pin(a, &read);
+  LOG_DEBUG("read: %d\n", read);
 }
 
 int main() {
@@ -117,22 +154,29 @@ int main() {
   status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storage, &bts_7200_settings));
 
   // enabling steering for convenience in smoke testing
-  Pca9539rGpioAddress steering_en = { .i2c_address = 0x76, .pin = PCA9539R_PIN_IO1_3 };
+  Pca9539rGpioAddress steering_en = { .i2c_address = 0x74, .pin = PCA9539R_PIN_IO1_3 };
   pca9539r_gpio_set_state(&steering_en, PCA9539R_GPIO_STATE_HIGH);
   mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[CHANNEL].mux_selection);
 
-  prv_adc(SOFT_TIMER_INVALID_TIMER, NULL);
+  // prv_adc(SOFT_TIMER_INVALID_TIMER, NULL);
 
   // bts_7200_get_measurement_with_delay(&s_bts7200_storage);
-  delay_ms(1000);
-  LOG_DEBUG("setting state!\n");
-  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
-  delay_ms(1000);
-  LOG_DEBUG("setting state again\n");
-  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
-  delay_ms(1000);
-  LOG_DEBUG("setting state 3\n");
-  pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  // delay_ms(1000);
+  // LOG_DEBUG("setting state!\n");
+  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  // delay_ms(1000);
+  // LOG_DEBUG("setting state again\n");
+  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
+  // delay_ms(1000);
+  // LOG_DEBUG("setting state 3\n");
+  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+
+  GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
+  adc_set_channel_pin(a, true);
+  uint16_t read = 0;
+
+  // for (int i = 0; i < )
+  prv_do_thing();
 
   // soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_start_read, (void *)0, NULL);
   while (true) {

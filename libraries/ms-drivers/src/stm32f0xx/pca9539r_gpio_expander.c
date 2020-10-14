@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "pca9539r_gpio_expander_defs.h"
+#include "log.h"
 
 // The I2C port used for all operations - won't change on each board
 static I2CPort s_i2c_port = NUM_I2C_PORTS;
@@ -36,6 +37,10 @@ static void prv_write_reg(const Pca9539rGpioAddress *address, uint8_t reg0, uint
   // PCA9539R expects the register ("command byte") as just a data byte (see figs 10, 11)
   uint8_t reg = prv_select_reg(address->pin, reg0, reg1);
   uint8_t data[] = { reg, tx_data };
+  // printf("PCA write:\n");
+  // for (uint16_t i = 0; i < SIZEOF_ARRAY(data); i++) {
+  //   printf("data[%u]: 0x%x\n", i, data[i]);
+  // }
   i2c_write(s_i2c_port, address->i2c_address, data, SIZEOF_ARRAY(data));
 }
 
