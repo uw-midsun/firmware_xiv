@@ -11,8 +11,10 @@ static bool s_hazard_on = false;
 
 static void toggle_hazard(void) {
   s_hazard_on = !s_hazard_on;
-  CAN_TRANSMIT_HAZARD(s_hazard_on ? EE_LIGHT_STATE_ON : EE_LIGHT_STATE_OFF);
+  // Raising CAN event last for ease of testing, so that the loopback event sequence is
+  // hazard event -> TX event -> RX event instead of TX event -> hazard event -> RX event
   event_raise_no_data(s_hazard_on ? HAZARD_EVENT_ON : HAZARD_EVENT_OFF);
+  CAN_TRANSMIT_HAZARD(s_hazard_on ? EE_LIGHT_STATE_ON : EE_LIGHT_STATE_OFF);
 }
 
 void hazard_tx_init(void) {

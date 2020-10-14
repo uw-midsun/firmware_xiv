@@ -39,26 +39,32 @@ void teardown_test(void) {}
 
 // Test that hazard initializes to low and sends CAN messages each change.
 void test_hazard_happy_path(void) {
+  Event e = { 0 };
+
   // no TX of initial state upon initialization
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // starts low => transitions to high on first
   hazard_tx_process_event(&s_hazard_event);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_ON);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_ON, s_rx_state);
 
   // then transitions to low
   hazard_tx_process_event(&s_hazard_event);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_OFF);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_OFF, s_rx_state);
 
   // then high again
   hazard_tx_process_event(&s_hazard_event);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_ON);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_ON, s_rx_state);
 
   // then low again
   hazard_tx_process_event(&s_hazard_event);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_OFF);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_OFF, s_rx_state);
 
