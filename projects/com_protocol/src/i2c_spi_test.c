@@ -1,20 +1,20 @@
 #include <stdbool.h>
-#include "i2c.h"
-#include "spi.h"
 #include "gpio.h"
+#include "i2c.h"
 #include "log.h"
+#include "spi.h"
 
-//Part 1: I2C
+// Part 1: I2C
 
 // Set this to true to perform an I2C write.
 #define SHOULD_WRITE true
 #define WRITE_I2C_PORT I2C_PORT_1  // or I2C_PORT_2
 #define WRITE_I2C_ADDRESS 0x48
 
-//write 0b0010010010100110 split into 0b00100100, 0b10100110
+// write 0b0010010010100110 split into 0b00100100, 0b10100110
 static const uint8_t bytes_to_write[] = { 0b00100100, 0b10100110 };
 
-//Write to Config register 0b10010000
+// Write to Config register 0b10010000
 #define SHOULD_WRITE_REGISTER true
 #define REGISTER_TO_WRITE 0b10010000
 
@@ -28,7 +28,7 @@ static const uint8_t bytes_to_write[] = { 0b00100100, 0b10100110 };
 // Fill in this variable with the number of bytes to read.
 #define NUM_BYTES_TO_READ 1
 
-//Read Conversion register 0b10010001
+// Read Conversion register 0b10010001
 #define SHOULD_READ_REGISTER true
 #define REGISTER_TO_READ 0b10010001
 
@@ -60,8 +60,8 @@ static void prv_initialize(void) {
   i2c_init(I2C_PORT_2, &i2c2_settings);
 }
 static void prv_write_read_i2c(void) {
-    prv_initialize();
-    if (SHOULD_WRITE) {
+  prv_initialize();
+  if (SHOULD_WRITE) {
     // Calculate the write length
     uint16_t tx_len = SIZEOF_ARRAY(bytes_to_write);
 
@@ -128,11 +128,11 @@ static void prv_write_read_i2c(void) {
     }
   }
 }
-//Part 2: SPI
-//first byte writes info to CANCTRL, second sends READ STATUS instruction
+// Part 2: SPI
+// first byte writes info to CANCTRL, second sends READ STATUS instruction
 static uint8_t tx_bytes[] = { 0b01001001, 0b10100000 };
 
-//respose is repeated twice, only need to look at first one
+// respose is repeated twice, only need to look at first one
 #define EXPECTED_RESPONSE_LENGTH 2
 
 static SpiPort port_to_use = SPI_PORT_2;
@@ -148,7 +148,7 @@ const SpiSettings settings_to_use = {
 };
 
 static void prv_write_read_spi(void) {
-    gpio_init();
+  gpio_init();
   spi_init(port_to_use, &settings_to_use);
 
   // Calculate transmission length
@@ -161,9 +161,9 @@ static void prv_write_read_spi(void) {
   spi_exchange(port_to_use, tx_bytes, tx_len, response, EXPECTED_RESPONSE_LENGTH);
 
   // print the TXB1CNTRL[3] bit from the return.
-    if ((response[0] & 0b00001000) == 0b00001000) {
-        LOG_DEBUG("TXB1CNTRL[3] bit: 1\n");
-    } else {
-        LOG_DEBUG("TXB1CNTRL[3] bit: 0\n");
-    }
+  if ((response[0] & 0b00001000) == 0b00001000) {
+    LOG_DEBUG("TXB1CNTRL[3] bit: 1\n");
+  } else {
+    LOG_DEBUG("TXB1CNTRL[3] bit: 0\n");
+  }
 }
