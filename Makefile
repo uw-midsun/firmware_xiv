@@ -24,6 +24,8 @@
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make mpxe [TE] - Build and run the specified MPXE integration test, or all integration tests if TE is not defined
+#   make fastmpxe [TE] - Don't build and just run the MPXE integration test, or all if TE is not defined.
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -275,9 +277,12 @@ MPXE_PROJS :=
 MPXE_LIBS :=
 -include $(MPXE_DIR)/integration_tests/deps.mk
 
+.PHONY: fastmpxe
+fastmpxe:
+	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(TEST).py"
+
 .PHONY: mpxe
-mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan
-	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(INT_TEST).py"
+mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
