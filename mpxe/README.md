@@ -36,12 +36,12 @@ There aren't any instances of both the harness and the library writing to the sa
 Because C provides no runtime type information, stores (e.g. GPIO, ADC) are encapsulated in a `StoreInfo` protobuf message whenever they're passed between the library and the harness, which includes some type information. To allow for polymorphism between message types, each driver registers a set of generically-typed function pointers with the library to handle each store type.
 
 ## Usage
-Protobuf-c must be installed.
+A number of requirements must be installed, check [this confluence page] for details
+
+[this confluence page]: https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1713471489/MPXE+requirements+installation
 
 Run `make mpxe`.
 
 ## Future Enhancements:
-- Implement CAN bus logging to allow for assertions on CAN messages
-- Create an ergonomic API for managing projects, to be called by test scripts
 - Add support for the rest of the `libraries/ms-common` APIs
 - Build out a webapp interface to facilitate prototyping / experimentation
