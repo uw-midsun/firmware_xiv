@@ -18,24 +18,6 @@ class ProjectManager:
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.Canio()
-
-    # DEPRECATED
-    def build(self, name):
-        # check if already built or project doesn't exist
-        if name not in self.proj_name_list:
-            raise Exception('invalid project')
-        cmd = 'make build PROJECT={} PIECE= PLATFORM=x86 DEFINE=MPXE; exit'.format(name)
-        print('[make] making', name)
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-        # block while making
-        for line in iter(p.stdout.readline, ''):
-            print('[make]', line.rstrip())
-        p.wait()
-        print('[make]', name, 'exited with code', p.returncode)
-        if p.returncode != 0:
-            raise Exception('build failed')
-        self.statuses[name] = True
-        return True
         
     def start(self, name):
         if name not in self.proj_name_list:

@@ -3,8 +3,6 @@ import time
 
 from mpxe.integration_tests import int_test
 
-# pm.ProjectManager().build('can_dump')
-
 class TestCanDump(int_test.IntTest):
     def setUp(self):
         super(TestCanDump, self).setUp()
