@@ -45,7 +45,7 @@ ifeq ($(MAKECMDGOALS),mpxe)
 PLATFORM ?= x86
 DEFINE += MPXE
 IS_MPXE := TRUE
-# $(call mpxe-gen_func)
+$(call mpxe-gen_func)
 else
 PLATFORM ?= stm32f0xx
 endif
