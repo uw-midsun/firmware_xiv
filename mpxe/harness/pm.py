@@ -6,6 +6,7 @@ import signal
 
 from mpxe.harness import project
 from mpxe.harness import canio
+from mpxe.sims.sim import Sim
 
 class ProjectManager:
     def __init__(self):
@@ -19,10 +20,10 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.Canio()
         
-    def start(self, name):
+    def start(self, name, sim=None):
         if name not in self.proj_name_list:
             raise Exception('invalid project')
-        proj = project.Project(name)
+        proj = project.Project(name, sim or Sim())
         self.proj_fds[proj.ctop_fifo.fileno()] = proj
         self.proj_fds[proj.popen.stdout.fileno()] = proj
         return proj

@@ -1,8 +1,8 @@
-from mpxe.harness.protogen import stores_pb2
+from mpxe.protogen import stores_pb2
 
-from mpxe.harness.sims import sim
+from mpxe.sims import sim
 
-class ControllerBoardBlinkingLeds(sim.Sim):
+class Leds(sim.Sim):
     def handle_update(self, pm, proj):
         stores = proj.stores
         gpio = stores[(stores_pb2.MxStoreType.GPIO, 0)]

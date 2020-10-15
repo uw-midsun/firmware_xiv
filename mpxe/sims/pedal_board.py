@@ -1,7 +1,7 @@
-from mpxe.harness.protogen import stores_pb2
-from mpxe.harness.protogen import ads1015_pb2
+from mpxe.protogen import stores_pb2
+from mpxe.protogen import ads1015_pb2
 
-from mpxe.harness.sims import sim
+from mpxe.sims import sim
 
 class PedalBoard(sim.Sim):
     def update_ads_reading(self, proj, val, channel):

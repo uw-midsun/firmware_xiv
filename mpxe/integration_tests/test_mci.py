@@ -2,12 +2,13 @@ import unittest
 import time
 
 from mpxe.integration_tests import int_test
+from mpxe.sims.mci import Mci
 
 class TestMci(int_test.IntTest):
     def setUp(self):
         super(TestMci, self).setUp()
-        self.mci = self.manager.start('mci')
-    
+        self.mci = self.manager.start('mci', Mci())
+
     def test_mci(self):
         time.sleep(1)
         self.assertNotEqual(self.mci.sim.tx_id, 0)
