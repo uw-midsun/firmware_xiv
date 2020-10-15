@@ -164,6 +164,12 @@ void test_soft_timer_remaining(void) {
   TEST_ASSERT_FALSE(soft_timer_inuse());
 }
 
+// Make sure passing in an invalid timer id to soft_timer_remaining_time doesn't cause a segfault
+void test_soft_timer_remaining_invalid_id(void) {
+  SoftTimerId test_timer_id = SOFT_TIMER_INVALID_TIMER;
+  TEST_ASSERT_EQUAL(0, soft_timer_remaining_time(test_timer_id));
+}
+
 void test_soft_timer_exhausted(void) {
   volatile SoftTimerId cb_ids[SOFT_TIMER_MAX_TIMERS] = { 0 };
   volatile SoftTimerId cb_id_single = SOFT_TIMER_INVALID_TIMER;
