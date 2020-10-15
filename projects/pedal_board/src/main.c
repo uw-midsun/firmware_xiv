@@ -16,8 +16,6 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define CAN_DEVICE_ID 0x1
-
 static Ads1015Storage s_ads1015_storage = { 0 };
 static PedalCalibBlob s_calib_blob = { 0 };
 
