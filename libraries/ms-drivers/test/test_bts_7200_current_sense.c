@@ -17,31 +17,36 @@
 
 // 1 mA * BTS7200_TEST_RESISTOR
 #define ADC_EXPECTED_OK_VOLTAGE 1600
-// See bts_7200_current_sense.h for an explanation of this value
-#define ADC_TEST_FAULT_VOLTAGE 3300
+// Values are capped at this on power_distribution boards
+#define ADC_MIN_FAULT_VOLTAGE 3200
+#define ADC_MAX_FAULT_VOLTAGE 3300
+
+// Within fault range given
+#define ADC_FAULT_VOLTAGE 3250
 
 // Return ADC_EXPECTED_OK_VOLTAGE by default
 #define ADC_DEFAULT_RETURNED_VOLTAGE_RAW ADC_EXPECTED_OK_VOLTAGE
 
 static uint16_t s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
 static uint16_t s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
-// To give different measurements between adc readings in bts_7200_get_measurement
-static bool s_adc_measurement_number = 0;
 
-static volatile uint16_t times_callback_called = 0;
-static void *received_context;
+// To give different measurements between adc readings in bts_7200_get_measurement
+static bool s_adc_measurement_second_read = false;
+
+static volatile uint16_t s_times_callback_called = 0;
+static void *s_received_context;
 
 static volatile uint16_t s_times_fault_callback_called = 0;
-static void *fault_received_context;
+static void *s_fault_received_context;
 
 static void prv_callback_increment(uint16_t reading0, uint16_t reading1, void *context) {
-  times_callback_called++;
-  received_context = context;
+  s_times_callback_called++;
+  s_received_context = context;
 }
 
 static void prv_fault_callback_increment(bool fault0, bool fault1, void *context) {
   s_times_fault_callback_called++;
-  fault_received_context = context;
+  s_fault_received_context = context;
 }
 
 // Storage is global so we can call bts_7200_stop to stop soft timers and avoid segfaults
@@ -51,14 +56,14 @@ static Bts7200Storage s_storage = { 0 };
 // Note that this removes some of the interrupt functionality of the x86 adc implementation,
 // but this shouldn't matter in this case.
 StatusCode TEST_MOCK(adc_read_converted)(AdcChannel adc_channel, uint16_t *reading) {
-  // Return reading based on pin it should corrsepond to.
-  if (s_adc_measurement_number == 0) {
+  // Return reading based on pin it should correspond to.
+  if (s_adc_measurement_second_read == false) {
     *reading = s_adc_measurement_0;
   } else {
     *reading = s_adc_measurement_1;
   }
 
-  s_adc_measurement_number = !s_adc_measurement_number;
+  s_adc_measurement_second_read = !s_adc_measurement_second_read;
 
   return STATUS_CODE_OK;
 }
@@ -76,11 +81,16 @@ void setup_test(void) {
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
 
-  times_callback_called = 0;
+  s_times_callback_called = 0;
   s_times_fault_callback_called = 0;
 
   s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
   s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
+
+  s_received_context = NULL;
+  s_fault_received_context = NULL;
+
+  s_adc_measurement_second_read = false;
 }
 
 void teardown_test(void) {
@@ -103,6 +113,8 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -110,26 +122,26 @@ void test_bts_7200_current_sense_timer_stm32_works(void) {
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
 
   // make sure we don't start anything in init
-  TEST_ASSERT_EQUAL(times_callback_called, 0);
+  TEST_ASSERT_EQUAL(0, s_times_callback_called);
   delay_us(2 * interval_us);
-  TEST_ASSERT_EQUAL(times_callback_called, 0);
+  TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
-  TEST_ASSERT_EQUAL(times_callback_called, 1);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
 
   // wait in a busy loop for the callback to be called
-  while (times_callback_called == 1) {
+  while (s_times_callback_called == 1) {
   }
 
-  TEST_ASSERT_EQUAL(times_callback_called, 2);
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 
   // make sure that stop actually stops it
   delay_us(2 * interval_us);
 
-  TEST_ASSERT_EQUAL(times_callback_called, 2);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
 
 // Same, but for pca9539r initialization.
@@ -149,32 +161,34 @@ void test_bts_7200_current_sense_timer_pca9539r_works(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
   TEST_ASSERT_OK(bts_7200_init_pca9539r(&s_storage, &settings));
 
   // make sure we don't start anything in init
-  TEST_ASSERT_EQUAL(times_callback_called, 0);
+  TEST_ASSERT_EQUAL(0, s_times_callback_called);
   delay_us(2 * interval_us);
-  TEST_ASSERT_EQUAL(times_callback_called, 0);
+  TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
-  TEST_ASSERT_EQUAL(times_callback_called, 1);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
 
   // wait in a busy loop for the callback to be called
-  while (times_callback_called == 1) {
+  while (s_times_callback_called == 1) {
   }
 
-  TEST_ASSERT_EQUAL(times_callback_called, 2);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 
   // make sure that stop actually stops it
   delay_us(2 * interval_us);
-  TEST_ASSERT_EQUAL(times_callback_called, 2);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
 
 // Test that we can init, start, stop, and start again and it works.
@@ -194,6 +208,8 @@ void test_bts_7200_current_sense_restart(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -201,37 +217,37 @@ void test_bts_7200_current_sense_restart(void) {
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
-  TEST_ASSERT_EQUAL(times_callback_called, 1);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
 
   // wait in a busy loop for the callback to be called
-  while (times_callback_called == 1) {
+  while (s_times_callback_called == 1) {
   }
 
-  TEST_ASSERT_EQUAL(times_callback_called, 2);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 
   // make sure it's stopped
   delay_us(2 * interval_us);
-  TEST_ASSERT_EQUAL(times_callback_called, 2);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // start again
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
-  TEST_ASSERT_EQUAL(times_callback_called, 3);
+  TEST_ASSERT_EQUAL(3, s_times_callback_called);
 
   // wait in a busy loop for the callback to be called
-  while (times_callback_called == 3) {
+  while (s_times_callback_called == 3) {
   }
 
-  TEST_ASSERT_EQUAL(times_callback_called, 4);
+  TEST_ASSERT_EQUAL(4, s_times_callback_called);
 
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 
   // make sure it's stopped
   delay_us(2 * interval_us);
-  TEST_ASSERT_EQUAL(times_callback_called, 4);
+  TEST_ASSERT_EQUAL(4, s_times_callback_called);
 }
 
 // Test init failure when the settings are invalid for stm32.
@@ -250,6 +266,8 @@ void test_bts_7200_current_sense_stm32_init_invalid_settings(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -290,6 +308,8 @@ void test_bts_7200_current_sense_pca9539r_init_invalid_settings(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -329,12 +349,14 @@ void test_bts_7200_current_sense_null_callback(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = NULL,
   };
 
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 }
 
 // Test that bts_7200_get_measurement returns ok.
@@ -353,6 +375,8 @@ void test_bts_7200_current_sense_get_measurement_stm32_valid(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -379,6 +403,8 @@ void test_bts_7200_current_sense_get_measurement_pca9539r_valid(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -405,14 +431,16 @@ void test_bts_7200_current_sense_stop_return_behaviour(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_EQUAL(false, bts_7200_stop(&s_storage));
+  TEST_ASSERT_FALSE(bts_7200_stop(&s_storage));
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
-  TEST_ASSERT_EQUAL(false, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
+  TEST_ASSERT_FALSE(bts_7200_stop(&s_storage));
 }
 
 // Test that the context is actually passed to the function
@@ -432,14 +460,16 @@ void test_bts_7200_current_sense_context_passed(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .callback_context = context_pointer,
   };
 
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
-  TEST_ASSERT_EQUAL(received_context, context_pointer);
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
+  TEST_ASSERT_EQUAL(context_pointer, s_received_context);
 }
 
 // Test enabling/disabling/getting value works with IN0 pin
@@ -458,39 +488,41 @@ void test_bts_7200_output_0_functions_work(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
 
   // Should initialize open
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
 
   // Close, then check
   TEST_ASSERT_OK(bts_7200_enable_output_0(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), true);
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
 
   // Open, then check
   TEST_ASSERT_OK(bts_7200_disable_output_0(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
 
   // Make sure possible to open while already open
   TEST_ASSERT_OK(bts_7200_disable_output_0(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
 
   // Make sure starting current sense doesn't cause issues
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // Same tests as above:
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_OK(bts_7200_enable_output_0(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), true);
+  TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_OK(bts_7200_disable_output_0(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_OK(bts_7200_disable_output_0(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_0_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
 
   // Stop
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 }
 
 // Same as previous test, but with IN1 pin
@@ -509,40 +541,42 @@ void test_bts_7200_output_1_functions_work(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
 
   // Should initialize open
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Close, then check
   TEST_ASSERT_OK(bts_7200_enable_output_1(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), true);
+  TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Open, then check
   TEST_ASSERT_OK(bts_7200_disable_output_1(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Make sure possible to open while already open
   TEST_ASSERT_OK(bts_7200_disable_output_1(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Make sure starting current sense doesn't cause issues
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   // Same tests as above:
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
   TEST_ASSERT_OK(bts_7200_enable_output_1(&s_storage));
   TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), true);
   TEST_ASSERT_OK(bts_7200_disable_output_1(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
   TEST_ASSERT_OK(bts_7200_disable_output_1(&s_storage));
-  TEST_ASSERT_EQUAL(bts_7200_get_output_1_enabled(&s_storage), false);
+  TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Stop
-  TEST_ASSERT_EQUAL(true, bts_7200_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 }
 
 // Test that fault callback called when voltage within fault range.
@@ -562,6 +596,8 @@ void test_bts_7200_faults_within_fault_range(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,  // pass in random variable
@@ -569,15 +605,13 @@ void test_bts_7200_faults_within_fault_range(void) {
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
 
   s_times_fault_callback_called = 0;
-  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
 
   uint16_t meas0 = 0, meas1 = 0;
   bts_7200_get_measurement(&s_storage, &meas0, &meas1);
 
-  TEST_ASSERT_EQUAL(s_times_fault_callback_called, 1);
-
-  s_times_fault_callback_called = 0;
+  TEST_ASSERT_EQUAL(1, s_times_fault_callback_called);
 }
 
 // Test that fault isn't called when voltage outside of fault range.
@@ -597,6 +631,8 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,  // pass in random variable
@@ -610,19 +646,13 @@ void test_bts_7200_no_fault_outside_of_fault_range(void) {
   uint16_t meas0 = 0, meas1 = 0;
   bts_7200_get_measurement(&s_storage, &meas0, &meas1);
 
-  TEST_ASSERT_EQUAL(s_times_fault_callback_called, 0);
+  TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
 
   s_times_fault_callback_called = 0;
-
-  // Wait for soft_timers to expire before continuing
-  // Why does having this cause a segfault????????????
-  delay_ms(BTS7200_FAULT_RESTART_DELAY_MS + 10);
 }
 
 // Test that the fault callback gets called when running bts_7200_start, and
 // there's no segfault/stack overflow.
-// This test causes a segfault for some reason
-
 void test_bts7200_fault_cb_called_from_start(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
@@ -639,6 +669,8 @@ void test_bts7200_fault_cb_called_from_start(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -647,8 +679,8 @@ void test_bts7200_fault_cb_called_from_start(void) {
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
 
   s_times_fault_callback_called = 0;
-  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);  // wait for 2* interval
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
   TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
@@ -673,6 +705,8 @@ void test_bts_7200_handle_fault_clears_fault(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -690,8 +724,8 @@ void test_bts_7200_handle_fault_clears_fault(void) {
   TEST_ASSERT_TRUE(bts_7200_get_output_1_enabled(&s_storage));
 
   // Fault
-  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);
   TEST_ASSERT_FALSE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
@@ -729,6 +763,8 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
@@ -736,14 +772,14 @@ void test_bts_7200_fault_context_passed_on_fault(void) {
   uint16_t meas0 = 0, meas1 = 0;
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
 
-  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
 
   // Measure to trigger fault, make sure context is passed okay.
   // Measurement should return STATUS_CODE_INTERNAL_ERROR since a fault is detected
   TEST_ASSERT_NOT_OK(bts_7200_get_measurement(&s_storage, &meas0, &meas1));
-  TEST_ASSERT_EQUAL(s_times_fault_callback_called, 1);
-  TEST_ASSERT_EQUAL(fault_received_context, context_pointer);
+  TEST_ASSERT_EQUAL(1, s_times_fault_callback_called);
+  TEST_ASSERT_EQUAL(context_pointer, s_fault_received_context);
 }
 
 // Test that trying to enable a pin during fault doesn't work.
@@ -763,6 +799,8 @@ void test_bts_7200_enable_fails_during_fault(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -776,15 +814,15 @@ void test_bts_7200_enable_fails_during_fault(void) {
 
   // Start fault, make sure fault handling works ok
   s_times_fault_callback_called = 0;
-  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
 
   // Wait 40 ms; fault still in progress, shouldn't be possible to enable outputs.
   delay_ms(40);
-  TEST_ASSERT_EQUAL(bts_7200_enable_output_0(&s_storage), STATUS_CODE_INTERNAL_ERROR);
-  TEST_ASSERT_EQUAL(bts_7200_enable_output_1(&s_storage), STATUS_CODE_INTERNAL_ERROR);
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, bts_7200_enable_output_0(&s_storage));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, bts_7200_enable_output_1(&s_storage));
 
   // Change ADC voltage back to OK so that fault doesn't get called after complete
   s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
@@ -821,6 +859,8 @@ void test_bts_7200_single_input_faults(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -839,7 +879,7 @@ void test_bts_7200_single_input_faults(void) {
 
   // Fault, but only on IN1.
   s_adc_measurement_0 = ADC_EXPECTED_OK_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);
   TEST_ASSERT_TRUE(bts_7200_get_output_0_enabled(&s_storage));
   TEST_ASSERT_FALSE(bts_7200_get_output_1_enabled(&s_storage));
@@ -878,16 +918,18 @@ void test_bts_7200_stop_works(void) {
     .enable_1_pin = &test_enable_1_pin,
     .interval_us = interval_us,
     .resistor = BTS7200_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
 
   TEST_ASSERT_OK(bts_7200_init_stm32(&s_storage, &settings));
   TEST_ASSERT_OK(bts_7200_start(&s_storage));
-  TEST_ASSERT_EQUAL(s_times_fault_callback_called, 0);
+  TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
   // Cause fault
-  s_adc_measurement_0 = ADC_TEST_FAULT_VOLTAGE;
-  s_adc_measurement_1 = ADC_TEST_FAULT_VOLTAGE;
+  s_adc_measurement_0 = ADC_FAULT_VOLTAGE;
+  s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
 
   // Make sure fault happens
   delay_us(interval_us * 2);
@@ -901,9 +943,9 @@ void test_bts_7200_stop_works(void) {
   TEST_ASSERT_TRUE(bts_7200_stop(&s_storage));
 
   // Verify
-  TEST_ASSERT_EQUAL(s_storage.measurement_timer_id, SOFT_TIMER_INVALID_TIMER);
-  TEST_ASSERT_EQUAL(s_storage.enable_pin_0.fault_timer_id, SOFT_TIMER_INVALID_TIMER);
-  TEST_ASSERT_EQUAL(s_storage.enable_pin_1.fault_timer_id, SOFT_TIMER_INVALID_TIMER);
+  TEST_ASSERT_EQUAL(SOFT_TIMER_INVALID_TIMER, s_storage.measurement_timer_id);
+  TEST_ASSERT_EQUAL(SOFT_TIMER_INVALID_TIMER, s_storage.enable_pin_0.fault_timer_id);
+  TEST_ASSERT_EQUAL(SOFT_TIMER_INVALID_TIMER, s_storage.enable_pin_1.fault_timer_id);
   TEST_ASSERT_FALSE(s_storage.enable_pin_0.fault_in_progress);
   TEST_ASSERT_FALSE(s_storage.enable_pin_1.fault_in_progress);
 }

@@ -19,15 +19,6 @@
 // Nominal scaling factor k(ILIS) for current output at the SENSE pin in normal operation.
 #define BTS7200_IS_SCALING_NOMINAL 670
 
-// Voltage at the SENSE pin is limited to a max of 3.3V by a diode.
-// Due to to this function, since any fault current will be at least 4.4 mA (see p.g. 49)
-// the resulting voltage will be 4.4 mA * 1.6 kOhm = ~7 V. Due to this,
-// voltages approaching 3.3V represent a fault, and should be treated as such.
-#define BTS7200_MAX_VALID_SENSE_VOLTAGE_MV 3200
-
-// Check if measurement is a fault.
-#define BTS7200_IS_MEASUREMENT_FAULT_MV(meas) ((meas) > BTS7200_MAX_VALID_SENSE_VOLTAGE_MV)
-
 // Max possible delay after input pin pulled low on fault, + 10 ms for buffer
 #define BTS7200_FAULT_RESTART_DELAY_MS 110
 #define BTS7200_FAULT_RESTART_DELAY_US (BTS7200_FAULT_RESTART_DELAY_MS * 1000)
@@ -70,7 +61,9 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
-  int resistor;  // scaling performed by resistor at SENSE pin
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Stm32Settings;
 
 // Use when the select pin is through a PCA9539R GPIO expander
@@ -85,7 +78,9 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
-  int resistor;  // scaling performed by resistor at SENSE pin
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Pca9539rSettings;
 
 typedef struct {
@@ -101,7 +96,9 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
-  int resistor;  // scaling performed by resistor at SENSE pin
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
 
 // Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.

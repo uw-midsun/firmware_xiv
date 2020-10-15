@@ -148,6 +148,9 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
 
   storage->resistor = settings->resistor;
 
+  storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
+  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
+
   // initialize the select and input pins
   GpioSettings select_enable_settings = {
     .direction = GPIO_DIR_OUT,
@@ -187,6 +190,9 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
   storage->fault_callback_context = settings->fault_callback_context;
 
   storage->resistor = settings->resistor;
+
+  storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
+  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->select_pin.select_pin_pca9539r->i2c_address);
@@ -239,6 +245,16 @@ bool bts_7200_get_output_1_enabled(Bts7200Storage *storage) {
   return prv_bts_7200_get_pin_enabled(&storage->enable_pin_1);
 }
 
+// Convert voltage measurements to current
+static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *meas) {
+  if (*meas <= BTS7200_MAX_LEAKAGE_VOLTAGE_MV) {
+    *meas = 0;
+  } else {
+    *meas *= BTS7200_IS_SCALING_NOMINAL;
+    *meas /= storage->resistor;
+  }
+}
+
 StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
@@ -259,22 +275,14 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   }
   status_ok_or_return(adc_read_converted(sense_channel, meas1));
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
-  // Check for faults, call callback and handle fault if faulted
-  bool fault0 = BTS7200_IS_MEASUREMENT_FAULT_MV(*meas0);
-  bool fault1 = BTS7200_IS_MEASUREMENT_FAULT_MV(*meas1);
+  // Check for faults, call callback and handle fault if voltage is within fault range
+  bool fault0 =
+      (storage->min_fault_voltage_mv <= *meas0) && (*meas0 <= storage->max_fault_voltage_mv);
+  bool fault1 =
+      (storage->min_fault_voltage_mv <= *meas1) && (*meas1 <= storage->max_fault_voltage_mv);
 
-  if (*meas0 <= BTS7200_MAX_LEAKAGE_VOLTAGE_MV) {
-    *meas0 = 0;
-  } else {
-    (*meas0) *= BTS7200_IS_SCALING_NOMINAL;
-    (*meas0) /= storage->resistor;
-  }
-  if (*meas1 <= BTS7200_MAX_LEAKAGE_VOLTAGE_MV) {
-    *meas1 = 0;
-  } else {
-    (*meas1) *= BTS7200_IS_SCALING_NOMINAL;
-    (*meas1) /= storage->resistor;
-  }
+  prv_convert_voltage_to_current(storage, meas0);
+  prv_convert_voltage_to_current(storage, meas1);
 
   if (fault0 || fault1) {
     // Only call fault cb if it's not NULL
