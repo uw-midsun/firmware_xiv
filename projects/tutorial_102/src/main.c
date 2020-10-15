@@ -1,23 +1,22 @@
 #include "interrupt.h"
-#include "soft_timer.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "wait.h"
-
 
 typedef struct Counters {
         uint8_t counter_a;
         uint8_t counter_b;
     } Counters;
 
-void prv_timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
     Counters *storage = context;
     storage->counter_a++;
 
-    LOG_DEBUG("Counter A: %d \n", storage->counter_a);
+    LOG_DEBUG("Counter A: %d\n", storage->counter_a);
     
     if (storage->counter_a == (storage->counter_b)*2 + 2) {
         storage->counter_b++;
-        LOG_DEBUG("Counter B: %d \n", storage->counter_b);
+        LOG_DEBUG("Counter B: %d\n", storage->counter_b);
     }
 
     soft_timer_start_millis(500,
