@@ -397,8 +397,8 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     s_store.rx_dlc = msg->rx_dlc;
     s_store.rx_data = msg->rx_data;
     if (s_mpxe_storage->rx_cb != NULL) {
-      s_mpxe_storage->rx_cb(msg->rx_id, msg->rx_extended, msg->rx_data,
-                            msg->rx_dlc, s_mpxe_storage->context);
+      s_mpxe_storage->rx_cb(msg->rx_id, msg->rx_extended, msg->rx_data, msg->rx_dlc,
+                            s_mpxe_storage->context);
     }
   }
 

@@ -29,9 +29,9 @@ class ProjectManager:
         return proj
 
     def stop(self, proj):
-        proj.stop()
         del self.proj_fds[proj.ctop_fifo.fileno()]
         del self.proj_fds[proj.popen.stdout.fileno()]
+        proj.stop()
     
     def stop_all(self):
         for proj in list(self.proj_fds.values()):

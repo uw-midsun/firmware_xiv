@@ -163,7 +163,7 @@ void store_export(MxStoreType type, void *store, void *key) {
   // wait for signal that parent got message
   pthread_mutex_lock(&s_sig_lock);
   pthread_mutex_unlock(&s_sig_lock);
-  
+
   if (written == -1) {
     // TODO: handle error
   }

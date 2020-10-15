@@ -32,6 +32,7 @@ class Canio:
     def stop(self):
         self.killed = True
         self.listen_thread.join()
+        self.bus.shutdown()
 
     def listener(self):
         while not self.killed:

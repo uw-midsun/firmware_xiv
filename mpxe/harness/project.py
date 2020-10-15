@@ -36,7 +36,11 @@ class Project:
     def stop(self):
         if self.killed:
             return
-        self.popen.kill()
+        self.popen.terminate()
+        self.popen.wait()
+        self.popen.stdout.close()
+        self.popen.stdin.close()
+        self.ctop_fifo.close()
         ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
         os.unlink(ctop_fifo_path)
         self.killed = True
