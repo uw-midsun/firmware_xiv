@@ -1,10 +1,9 @@
-#include <stdint.h>  // for integer types
-
-#include "delay.h"       // for delays
 #include "interrupt.h"   // interrupts are required for soft timers
 #include "log.h"         // for printing
 #include "soft_timer.h"  // for soft timers
 #include "wait.h"        // for wait function
+
+#define TIMER_PERIOD_MS 500
 
 typedef struct Counters {
   uint8_t counter_a;
@@ -20,7 +19,7 @@ void prv_timer_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %i\n", storage->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_timer_callback, storage, NULL);  // restart timer
+  soft_timer_start_millis(TIMER_PERIOD_MS, prv_timer_callback, storage, NULL);  // restart timer
 }
 
 int main() {
@@ -29,7 +28,7 @@ int main() {
 
   Counters storage = { 0 };  // initialize struct to be all 0
 
-  soft_timer_start_millis(500, prv_timer_callback, &storage, NULL);
+  soft_timer_start_millis(TIMER_PERIOD_MS, prv_timer_callback, &storage, NULL);
 
   while (true) {
     wait();
