@@ -84,8 +84,8 @@ typedef struct {
 } Bts7200Pca9539rSettings;
 
 typedef struct {
-  uint16_t reading_out_0; // Reading from IN0, in mA
-  uint16_t reading_out_1; // Reading from IN1, in mA
+  uint16_t reading_out_0;  // Reading from IN0, in mA
+  uint16_t reading_out_1;  // Reading from IN1, in mA
   Bts7200SelectPin select_pin;
   GpioAddress *sense_pin;
   Bts7200EnablePin enable_pin_0;
