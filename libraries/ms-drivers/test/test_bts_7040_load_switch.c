@@ -1,5 +1,5 @@
 #include "adc.h"
-#include "bts_7040_7008_current_sense.h"
+#include "bts_7040_load_switch.h"
 #include "interrupt.h"
 #include "log.h"
 #include "test_helpers.h"

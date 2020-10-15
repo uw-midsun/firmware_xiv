@@ -1,4 +1,4 @@
-#include "bts_7200_current_sense.h"
+#include "bts_7200_load_switch.h"
 #include <stddef.h>
 
 #define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW

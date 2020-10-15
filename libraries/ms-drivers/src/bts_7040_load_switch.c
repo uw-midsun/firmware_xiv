@@ -1,4 +1,4 @@
-#include "bts_7040_7008_current_sense.h"
+#include "bts_7040_load_switch.h"
 #include "adc.h"
 
 StatusCode bts_7040_init(Bts7040Storage *storage, Bts7040Settings *settings) {

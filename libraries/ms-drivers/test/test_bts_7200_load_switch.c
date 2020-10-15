@@ -1,4 +1,4 @@
-#include "bts_7200_current_sense.h"
+#include "bts_7200_load_switch.h"
 #include "delay.h"
 #include "interrupt.h"
 #include "log.h"

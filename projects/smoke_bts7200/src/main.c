@@ -2,7 +2,7 @@
 
 // Periodically take reading from user selected channels and log the result
 // Configurable items: wait time, FRONT or REAR power distro selection, channels to be tested
-#include "bts_7200_current_sense.h"
+#include "bts_7200_load_switch.h"
 #include "current_measurement_config.h"
 #include "pca9539r_gpio_expander.h"
 

@@ -1,8 +1,8 @@
 #include "current_measurement.h"
 
 #include <stddef.h>
-#include "bts_7040_7008_current_sense.h"
-#include "bts_7200_current_sense.h"
+#include "bts_7040_load_switch.h"
+#include "bts_7200_load_switch.h"
 
 static PowerDistributionCurrentHardwareConfig s_hw_config;
 static PowerDistributionCurrentStorage s_storage = { 0 };
