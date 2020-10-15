@@ -255,7 +255,7 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -f $(LIB_DIR)/mpxe-gen/inc/*.pb-c.h
 	@rm -f $(LIB_DIR)/mpxe-gen/src/*.pb-c.c
-	@rm -f $(MPXE_DIR)/harness/protogen/*_pb2.py
+	@rm -f $(MPXE_DIR)/protogen/*_pb2.py
 
 .PHONY: remake
 remake: clean all
