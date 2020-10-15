@@ -1,11 +1,7 @@
-import sys
-from os.path import dirname
-sys.path.append(dirname(sys.path[0]))
-
 import unittest
 import time
 
-import int_test
+from mpxe.integration_tests import int_test
 
 class TestLeds(int_test.IntTest):
     def setUp(self):

@@ -1,10 +1,10 @@
-from ..protogen import stores_pb2
-from ..protogen import mcp2515_pb2
-from ..protogen import gpio_pb2
+from mpxe.harness.protogen import stores_pb2
+from mpxe.harness.protogen import mcp2515_pb2
+from mpxe.harness.protogen import gpio_pb2
 
 import time
 
-from . import sim
+from mpxe.harness.sims import sim
 
 GPIO_KEY = (stores_pb2.MxStoreType.GPIO, 0)
 MCP2515_KEY = (stores_pb2.MxStoreType.MCP2515, 0)

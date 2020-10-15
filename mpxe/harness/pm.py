@@ -4,8 +4,8 @@ import select
 import subprocess
 import signal
 
-from . import project
-from . import canio
+from mpxe.harness import project
+from mpxe.harness import canio
 
 class ProjectManager:
     def __init__(self):

@@ -1,6 +1,6 @@
-from ..protogen import stores_pb2
+from mpxe.harness.protogen import stores_pb2
 
-from . import sim
+from mpxe.harness.sims import sim
 
 class ControllerBoardBlinkingLeds(sim.Sim):
     def handle_update(self, pm, proj):

@@ -5,9 +5,9 @@ import signal
 import importlib
 import sys
 
-from . import decoder
-from .protogen import stores_pb2
-from .sims import sim
+from mpxe.harness import decoder
+from mpxe.harness.protogen import stores_pb2
+from mpxe.harness.sims import sim
 
 class Project:
     def __init__(self, name):
@@ -29,9 +29,9 @@ class Project:
         fcntl.fcntl(ctop_fd, fcntl.F_SETFL, ctop_fl | os.O_NONBLOCK)
         # set up project sim, or use generic
         if os.path.exists(os.path.dirname(__file__) + '/sims/{}.py'.format(name)):
-            importlib.import_module('harness.sims.' + name)
+            importlib.import_module('mpxe.harness.sims.' + name)
             sim_class_name = ''.join(s.capitalize() for s in name.split('_'))
-            self.sim = getattr(sys.modules['harness.sims.' + name], sim_class_name)()
+            self.sim = getattr(sys.modules['mpxe.harness.sims.' + name], sim_class_name)()
         else:
             self.sim = sim.Sim()
         print('started', self.name)

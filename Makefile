@@ -45,7 +45,7 @@ ifeq ($(MAKECMDGOALS),mpxe)
 PLATFORM ?= x86
 DEFINE += MPXE
 IS_MPXE := TRUE
-$(call mpxe-gen_func)
+# $(call mpxe-gen_func)
 else
 PLATFORM ?= stm32f0xx
 endif
@@ -277,7 +277,7 @@ MPXE_LIBS :=
 
 .PHONY: mpxe
 mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan
-	@python3 -m unittest discover $(MPXE_DIR)/integration_tests -p "test_*$(INT_TEST).py"
+	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(INT_TEST).py"
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

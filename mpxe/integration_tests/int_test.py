@@ -1,12 +1,7 @@
-import sys
-import os
-from os.path import dirname
-sys.path.append(dirname(sys.path[0]))
-
 import unittest
 import time
-from harness import pm
-from harness import project
+from mpxe.harness import pm
+from mpxe.harness import project
 
 class IntTest(unittest.TestCase):
     def setUp(self):
