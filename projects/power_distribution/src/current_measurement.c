@@ -69,7 +69,15 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
 
+    // Add DSEL, EN0, EN1 pins
+    // TODO(SOFT-336): Convert power distribution to use the enable functions for these in the
+    // driver instead of toggling them directly
     bts_7200_settings.select_pin = &s_hw_config.bts7200s[i].dsel_pin;
+    bts_7200_settings.enable_0_pin = &s_hw_config.bts7200s[i].en0_pin;
+    bts_7200_settings.enable_1_pin = &s_hw_config.bts7200s[i].en1_pin;
+    bts_7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
+    bts_7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
+    bts_7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
     status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 
@@ -99,5 +107,6 @@ PowerDistributionCurrentStorage *power_distribution_current_measurement_get_stor
 StatusCode power_distribution_current_measurement_stop(void) {
   soft_timer_cancel(s_timer_id);
   s_timer_id = SOFT_TIMER_INVALID_TIMER;
+
   return STATUS_CODE_OK;
 }
