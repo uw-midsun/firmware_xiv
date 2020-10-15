@@ -5,10 +5,12 @@ from mpxe.harness import project
 
 class IntTest(unittest.TestCase):
     def setUp(self):
+        print("Running test", self._testMethodName)
         self.manager = pm.ProjectManager()
     
     def tearDown(self):
         self.manager.end()
+        print("======", "PASS", self._testMethodName, "======")
 
     def assert_can_data(self, name, field, val):
         msg = self.manager.can.get_latest_by_name(name)
