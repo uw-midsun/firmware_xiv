@@ -9,7 +9,7 @@ from mpxe.harness import canio
 from mpxe.sims.sim import Sim
 
 class ProjectManager:
-    def __init__(self):
+    def __init__(self, can_bus_name='vcan0'):
         # index projects by stdout and ctop_fifo fd
         self.proj_fds = {}
         self.statuses = {}
@@ -18,7 +18,7 @@ class ProjectManager:
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
-        self.can = canio.Canio()
+        self.can = canio.Canio(can_bus_name)
         
     def start(self, name, sim=None):
         if name not in self.proj_name_list:

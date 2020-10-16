@@ -9,10 +9,10 @@ class Msg:
         self.data = data
 
 class Canio:
-    def __init__(self, max_msgs=10):
+    def __init__(self, bus_name, max_msgs=10):
         self.messages = deque(maxlen=max_msgs)
         self.db = cantools.database.load_file('../system_can.dbc')
-        self.bus = can.interface.Bus('vcan0', receive_own_messages=True, bustype='socketcan')
+        self.bus = can.interface.Bus(bus_name, receive_own_messages=True, bustype='socketcan')
         self.killed = False
         self.listen_thread = threading.Thread(target=self.listener)
         self.listen_thread.start()

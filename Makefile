@@ -279,7 +279,12 @@ MPXE_LIBS :=
 
 .PHONY: fastmpxe
 fastmpxe:
+ifeq (,$(SCRIPT))
 	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(TEST).py"
+else
+	$(eval ROOT=$(shell pwd))
+	@export PYTHONPATH='$(ROOT)'; python3 $(MPXE_DIR)/scripts/$(SCRIPT).py $(CHANNEL)
+endif
 
 .PHONY: mpxe
 mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
