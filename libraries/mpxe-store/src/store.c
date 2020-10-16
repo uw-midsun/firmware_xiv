@@ -75,11 +75,11 @@ static void *prv_poll_update(void *arg) {
         static uint8_t buf[4096];  // store may be bigger than this?
         int64_t len = read(STDIN_FILENO, buf, sizeof(buf));
         if (len == -1) {
-          // TODO: handle read error case
+          LOG_DEBUG("read error while polling\n");
         }
         prv_handle_store_update(buf, len);
       } else {
-        // TODO: handle POLLHUP case
+        LOG_DEBUG("pollhup\n");
       }
     }
   }
@@ -165,7 +165,7 @@ void store_export(MxStoreType type, void *store, void *key) {
   pthread_mutex_unlock(&s_sig_lock);
 
   if (written == -1) {
-    // TODO: handle error
+    LOG_DEBUG("write error while exporting\n");
   }
 
   // free memory
