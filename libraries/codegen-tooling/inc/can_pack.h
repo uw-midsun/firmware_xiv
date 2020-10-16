@@ -241,10 +241,11 @@
                     SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 6, (aux_battery_volt_u16),    \
                     (aux_battery_temp_u16), (dcdc_status_u16), CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8)                \
+#define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8,      \
+                                   fan_6_u8, fan_7_u8, fan_8_u8)                                   \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER, SYSTEM_CAN_MESSAGE_BATTERY_FAN_STATE, \
-                   4, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8), CAN_PACK_IMPL_EMPTY,         \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+                   8, (fan_1_u8), (fan_2_u8), (fan_3_u8), (fan_4_u8), (fan_5_u8), (fan_6_u8),      \
+                   (fan_7_u8), (fan_8_u8))
 
 #define CAN_PACK_BATTERY_RELAY_STATE(msg_ptr, hv_u8, gnd_u8)                      \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BMS_CARRIER,                      \
@@ -252,12 +253,18 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_SOLAR_DATA(msg_ptr, data_point_type_u32, data_value_u32)                 \
+  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_DATA, 8, \
+                    (data_point_type_u32), (data_value_u32))
+
 #define CAN_PACK_SOLAR_FAULT(msg_ptr, fault_u8, fault_data_u8)                            \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_FAULT, 2, \
                    (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
                    CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_SOLAR_DATA(msg_ptr, data_point_type_u32, data_value_u32)                 \
-  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_DATA, 8, \
-                    (data_point_type_u32), (data_value_u32))
+#define CAN_PACK_BABYDRIVER(msg_ptr, id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, \
+                            data5_u8, data6_u8)                                               \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_BABYDRIVER, SYSTEM_CAN_MESSAGE_BABYDRIVER, 8, \
+                   (id_u8), (data0_u8), (data1_u8), (data2_u8), (data3_u8), (data4_u8),       \
+                   (data5_u8), (data6_u8))
