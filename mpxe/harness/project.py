@@ -58,11 +58,11 @@ class Project:
         self.popen.stdin.write(msg)
         self.popen.stdin.flush()
 
-    def handle_store(self, pm, msg):
-        store_info = decoder.decode_store_info(msg)
+    def handle_store(self, proj, pm, store_info):
         key = (store_info.type, store_info.key)
         self.stores[key] = decoder.decode_store(store_info)
         self.sim.handle_update(pm, self)
+        self.popen.send_signal(signal.SIGUSR1)
 
-    def handle_log(self, pm, log):
+    def handle_log(self, proj, pm, log):
         self.sim.handle_log(pm, self, log)
