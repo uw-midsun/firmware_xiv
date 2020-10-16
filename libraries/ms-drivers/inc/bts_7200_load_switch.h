@@ -1,4 +1,5 @@
 #pragma once
+// Driver for the BTS7200-2EPA load switch.
 
 // Reads current values from 2 ADC pins on the BTS 7200 switched between with a selection pin.
 // Requires GPIO, interrupts, soft timers, and ADC to be initialized in ADC_MODE_SINGLE.

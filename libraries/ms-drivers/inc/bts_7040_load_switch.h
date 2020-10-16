@@ -1,7 +1,79 @@
 #pragma once
 // Driver for the BTS7040-1EPA and BTS7008-1EPP (and probably more) input switches.
-// Requires GPIO and ADC (in ADC_MODE_SINGLE) to be initialized.
+// Requires GPIO, interrupts, soft timers, and ADC (in ADC_MODE_SINGLE) to be initialized.
+
+// If using with MCP23008, required I2C to be initialized
+
+#include "bts7xxx_common.h"
 #include "gpio.h"
+#include "adc.h"
+#include "soft_timer.h"
+#include "pca9539r_gpio_expander.h"
+
+// Upper maximum for the possible leakage voltage that may be read from the SENSE pin at
+// T(env) < 80 C (see p.g. 27 of BTS7040 datasheet)
+#define BTS7040_MAX_LEAKAGE_VOLTAGE_MV 2
+
+// Nominal scaling factor k(ILIS) for current output at the SENSE pin in normal operation.
+// This is the average of two nominal values given: 1700 with I(load) <= 0.25 A, 
+// and 1800 with I(load) >= 1A.
+#define BTS7040_IS_SCALING_NOMINAL 1775
+
+// Max possible delay after input pin pulled low on fault, + 10 ms for buffer
+// (see p.g. 39 of datasheet)
+#define BTS7040_FAULT_RESTART_DELAY_MS 110
+#define BTS7040_FAULT_RESTART_DELAY_US (BTS7040_FAULT_RESTART_DELAY_MS * 1000)
+
+typedef void (*Bts7040DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
+
+typedef void (*Bts7040FaultCallback)(bool fault0, bool fault1, void *context);
+
+// Use when the select pin is an STM32 GPIO pin
+typedef struct {
+  GpioAddress *select_pin;
+  GpioAddress *sense_pin;
+  GpioAddress *enable_pin;
+  uint32_t interval_us;
+  Bts7040DataCallback callback;  // set to NULL for no callback
+  void *callback_context;
+  Bts7040FaultCallback fault_callback;
+  void *fault_callback_context;
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
+} Bts7040Stm32Settings;
+
+// Use when the select pin is through a PCA9539R GPIO expander
+typedef struct {
+  I2CPort i2c_port;
+  Pca9539rGpioAddress *select_pin;
+  GpioAddress *sense_pin;
+  Pca9539rGpioAddress *enable_pin;
+  uint32_t interval_us;
+  Bts7040DataCallback callback;  // set to NULL for no callback
+  void *callback_context;
+  Bts7040FaultCallback fault_callback;
+  void *fault_callback_context;
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
+} Bts7040Pca9539rSettings;
+
+typedef struct {
+  uint16_t reading_out;  // Reading from IN pin, in mA
+  Bts7xxxSelectPin select_pin;
+  GpioAddress *sense_pin;
+  Bts7xxxEnablePin enable_pin;
+  uint32_t interval_us;
+  SoftTimerId measurement_timer_id;
+  Bts7040DataCallback callback;
+  void *callback_context;
+  Bts7040FaultCallback fault_callback;
+  void *fault_callback_context;
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
+} Bts7040Storage;
 
 typedef struct {
   GpioAddress *sense_pin;
@@ -11,6 +83,33 @@ typedef struct {
   GpioAddress *sense_pin;
 } Bts7040Storage;
 
-StatusCode bts_7040_init(Bts7040Storage *storage, Bts7040Settings *settings);
+// Initialize the BTS7040 with the given settings; the select and enable
+// pins are STM32 GPIO pins.
+StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings);
 
-StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *measured);
+// Initialize the BTS7040 with the given settings; the select and enable 
+// pins are through a PCA9539R.
+StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings);
+
+// Read the latest measurements. This does not get measurements from the storage but instead
+// reads them from the BTS7040 itself.
+// Note that, due to the fault handling implementation, the pointer to storage has to be
+// valid for BTS7040_FAULT_RESTART_DELAY_MS. Otherwise, bts_7040_stop must be called
+// before the pointer is freed to prevent segfaults.
+StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas0);
+
+// Enable output 0 by pulling the IN0 pin high.
+StatusCode bts_7040_enable_output(Bts7040Storage *storage);
+
+// Disable output 0 by pulling the IN0 pin low.
+StatusCode bts_7040_disable_output(Bts7040Storage *storage);
+
+// Return whether output 0 is enabled or disabled
+bool bts_7040_get_output_enabled(Bts7040Storage *storage);
+
+// Set up a soft timer which periodically updates the storage with the latest measurements.
+// DO NOT USE if you are reading with bts_7040_get_measurement.
+StatusCode bts_7040_start(Bts7040Storage *storage);
+
+// Stop the timer associated with the storage and return whether it was successful.
+bool bts_7040_stop(Bts7040Storage *storage);
