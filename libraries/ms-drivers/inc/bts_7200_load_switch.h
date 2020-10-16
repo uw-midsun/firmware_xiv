@@ -22,7 +22,7 @@
 #define BTS7200_IS_SCALING_NOMINAL 670
 
 // Max possible delay after input pin pulled low on fault, + 10 ms for buffer
-#define BTS7200_FAULT_RESTART_DELAY_MS 110
+#define BTS7200_FAULT_RESTART_DELAY_MS BTS7XXX_FAULT_RESTART_DELAY_MS
 #define BTS7200_FAULT_RESTART_DELAY_US (BTS7200_FAULT_RESTART_DELAY_MS * 1000)
 
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);

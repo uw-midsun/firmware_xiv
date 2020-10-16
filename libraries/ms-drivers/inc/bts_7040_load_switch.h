@@ -24,7 +24,7 @@
 
 // Max possible delay after input pin pulled low on fault, + 10 ms for buffer
 // (see p.g. 39 of datasheet)
-#define BTS7040_FAULT_RESTART_DELAY_MS 110
+#define BTS7040_FAULT_RESTART_DELAY_MS BTS7XXX_FAULT_RESTART_DELAY_MS
 #define BTS7040_FAULT_RESTART_DELAY_US (BTS7040_FAULT_RESTART_DELAY_MS * 1000)
 
 typedef void (*Bts7040DataCallback)(uint16_t reading_out, void *context);
@@ -83,25 +83,25 @@ StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *se
 // pins are through a PCA9539R.
 StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings);
 
-// Enable output 0 by pulling the IN0 pin high.
+// Enable output by pulling the IN pin high.
 StatusCode bts_7040_enable_output(Bts7040Storage *storage);
 
-// Disable output 0 by pulling the IN0 pin low.
+// Disable output by pulling the IN pin low.
 StatusCode bts_7040_disable_output(Bts7040Storage *storage);
 
-// Return whether output 0 is enabled or disabled
+// Returns whether the output is enabled or disabled.
 bool bts_7040_get_output_enabled(Bts7040Storage *storage);
 
-// Read the latest measurements. This does not get measurements from the storage but instead
-// reads them from the BTS7040 itself.
+// Read the latest measurement. This does not get the measurement from the storage but instead
+// reads it from the BTS7040 itself.
 // Note that, due to the fault handling implementation, the pointer to storage has to be
 // valid for BTS7040_FAULT_RESTART_DELAY_MS. Otherwise, bts_7040_stop must be called
 // before the pointer is freed to prevent segfaults.
 StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas);
 
-// Set up a soft timer which periodically updates the storage with the latest measurements.
+// Set up a soft timer which periodically updates the storage with the latest measurement.
 // DO NOT USE if you are reading with bts_7040_get_measurement.
 StatusCode bts_7040_start(Bts7040Storage *storage);
 
-// Stop the timer associated with the storage and return whether it was successful.
+// Stop the timer associated with the storage and return whether stopping it was successful.
 bool bts_7040_stop(Bts7040Storage *storage);

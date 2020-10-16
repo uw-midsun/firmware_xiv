@@ -4,7 +4,7 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7040Storage *storage = context;
   bts_7040_get_measurement(storage, &storage->reading_out);
 
-  if (storage->callback) {
+  if (storage->callback != NULL) {
     storage->callback(storage->reading_out, storage->callback_context);
   }
 
@@ -17,7 +17,7 @@ static StatusCode prv_init_common(Bts7040Storage *storage) {
   // make sure that if the user calls stop() it doesn't cancel some other timer
   storage->measurement_timer_id = SOFT_TIMER_INVALID_TIMER;
 
-  // Timers for fault handling
+  // Timer for fault handling
   storage->enable_pin.fault_timer_id = SOFT_TIMER_INVALID_TIMER;
 
   storage->enable_pin.fault_in_progress = false;
@@ -85,8 +85,8 @@ StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettin
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
-  // initialize PCA9539R on the relevant port
 
+  // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->enable_pin.enable_pin_pca9539r->i2c_address);
   // initialize the enable pin
   Pca9539rGpioSettings enable_settings = {
@@ -135,8 +135,8 @@ StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
   // Check for faults, call callback and handle fault if voltage is within fault range
   if ((storage->min_fault_voltage_mv <= *meas) && (*meas <= storage->max_fault_voltage_mv)) {
-    // We don't really need to do this, but we shouldn't leave the reading unchanged during a fault
-    // and this is consistent with the BTS7200 driver's behaviour.
+    // We don't really need to convert the voltage here, but this is consistent with the BTS7200
+    // driver's behaviour.
     prv_convert_voltage_to_current(storage, meas);
 
     // Only call fault cb if it's not NULL

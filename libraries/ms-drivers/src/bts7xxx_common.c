@@ -1,10 +1,8 @@
 // Common helper functions for BTS7XXX-series load switches
-// TODO(SOFT-323) update the functions in bts7xxx_load_switch.c to use these
 
 #include "bts7xxx_common.h"
 
-// put these into the storage or something. could define it in the header as well since they're
-// the same, just need to have a way to access them both from this module
+// Fault restart delay is the same across both the BTS7040 and the BTS7200
 #define BTS7XXX_FAULT_RESTART_DELAY_MS 110
 #define BTS7XXX_FAULT_RESTART_DELAY_US (BTS7XXX_FAULT_RESTART_DELAY_MS * 1000)
 

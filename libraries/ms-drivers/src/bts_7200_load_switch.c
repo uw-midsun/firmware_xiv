@@ -4,7 +4,7 @@ static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
   bts_7200_get_measurement(storage, &storage->reading_out_0, &storage->reading_out_1);
 
-  if (storage->callback) {
+  if (storage->callback != NULL) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
   }
 
