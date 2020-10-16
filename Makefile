@@ -47,7 +47,7 @@ ifeq ($(MAKECMDGOALS),mpxe)
 PLATFORM ?= x86
 DEFINE += MPXE
 IS_MPXE := TRUE
-$(call mpxe-gen_func)
+$(call gen_mpxe)
 else
 PLATFORM ?= stm32f0xx
 endif
@@ -177,7 +177,7 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
-IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
+IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mpxe-gen
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \

@@ -7,7 +7,7 @@
 
 $(T)_DEPS := $(PLATFORM_LIB) libcore
 ifneq (,$(IS_MPXE))
-$(T)_DEPS += mpxe-gen
+$(T)_DEPS += mpxe-gen mpxe-store
 endif
 
 ifeq (x86,$(PLATFORM))
