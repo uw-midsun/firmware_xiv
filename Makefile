@@ -289,5 +289,9 @@ endif
 .PHONY: mpxe
 mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
 
+.PHONY: mpxei
+mpxei:
+	@export PYTHONPATH='$(eval ROOT=$(shell pwd))'; python3 $(MPXE_DIR)/iface/server.py $(CHANNEL)
+
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

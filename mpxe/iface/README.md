@@ -22,3 +22,22 @@ The outputs MPXEI should display are:
 - CAN bus output
 - log output per sim
 - field output per sim (e.g. current GPIO state, or last message out of an MCP2515)
+
+### Steps
+To get log output to js:
+- add 'log_callbacks' and 'store_callbacks' attributes to ProjectManager that's a list of callbacks to call per log and per store
+- have a global queue in server.py that take input from registering a log callback in pm, and have tx_handler consume that queue to send to js
+To get input from js, these procedures are required. Can be implemented by the data model:
+
+js sends: `{command: cmd, arguments: {...}}`, python returns: `{data: {...}}`
+
+js needs to keep a map of all running projects, key: `fd`, val: `{name, fields, controls}`
+
+Procedures:
+- cmd: `'init'`, args: `{}`, ret: `{['proj_names'], [sim: {name, [field: {name, control_type}]}], [can_msg: {name, [fields]}]}`
+- cmd: `'start'`, args: `{'name', 'sim'}`, ret: `{proj_fd}`
+- cmd: `'stop'`, args: `{fd}`, ret: `{success}`
+- cmd: `'set'`, args: `{fd, field, value}`, ret: `{}`
+- cmd: `'send_raw'`, args: `{id, data, dlc}`, ret: `{}`
+    - radio button for choosing size of each field?
+- cmd: `'send_msg'`, args: `{name, [{field: value}]}`
