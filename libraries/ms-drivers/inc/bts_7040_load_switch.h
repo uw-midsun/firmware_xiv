@@ -1,8 +1,11 @@
 #pragma once
-// Driver for the BTS7040-1EPA and BTS7008-1EPP (and probably more) input switches.
+// Driver for the BTS7040-1EPA load switch.
 // Requires GPIO, interrupts, soft timers, and ADC (in ADC_MODE_SINGLE) to be initialized.
 
-// If using with MCP23008, required I2C to be initialized
+// If using with PCA9539R, required I2C to be initialized.
+
+// Due to fault handling procedures for the BTS7040, all BTS7040 pins should only be manipulated
+// through this driver.
 
 #include "adc.h"
 #include "bts7xxx_common.h"
@@ -30,7 +33,6 @@ typedef void (*Bts7040FaultCallback)(void *context);
 
 // Use when the select pin is an STM32 GPIO pin
 typedef struct {
-  GpioAddress *select_pin;
   GpioAddress *sense_pin;
   GpioAddress *enable_pin;
   uint32_t interval_us;
@@ -46,7 +48,6 @@ typedef struct {
 // Use when the select pin is through a PCA9539R GPIO expander
 typedef struct {
   I2CPort i2c_port;
-  Pca9539rGpioAddress *select_pin;
   GpioAddress *sense_pin;
   Pca9539rGpioAddress *enable_pin;
   uint32_t interval_us;
@@ -61,7 +62,6 @@ typedef struct {
 
 typedef struct {
   uint16_t reading_out;  // Reading from IN pin, in mA
-  Bts7xxxSelectPin select_pin;
   GpioAddress *sense_pin;
   Bts7xxxEnablePin enable_pin;
   uint32_t interval_us;

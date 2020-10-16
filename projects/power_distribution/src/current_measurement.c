@@ -62,6 +62,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   Bts7200Pca9539rSettings bts_7200_settings = {
     .sense_pin = &s_hw_config.mux_address.mux_output_pin,
   };
+
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
     // check that the currents are valid
     if (s_hw_config.bts7200s[i].current_0 >= NUM_POWER_DISTRIBUTION_CURRENTS ||
@@ -75,6 +76,8 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     bts_7200_settings.select_pin = &s_hw_config.bts7200s[i].dsel_pin;
     bts_7200_settings.enable_0_pin = &s_hw_config.bts7200s[i].en0_pin;
     bts_7200_settings.enable_1_pin = &s_hw_config.bts7200s[i].en1_pin;
+
+    // Add reistor, min/max fault voltages
     bts_7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
     bts_7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
     bts_7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
@@ -82,7 +85,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   }
 
   // initialize all BTS7040/7008s
-  Bts7040Settings bts_7040_settings = {
+  Bts7040Pca9539rSettings bts_7040_settings = {
     .sense_pin = &s_hw_config.mux_address.mux_output_pin,
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
@@ -90,8 +93,17 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     if (s_hw_config.bts7040s[i].current >= NUM_POWER_DISTRIBUTION_CURRENTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
+    // Add EN pin
+    // TODO(SOFT-336): Convert power distribution to use the enable functions for this in the
+    // driver instead of toggling it directly
+    bts_7040_settings.enable_pin = &s_hw_config.bts7040s[i].en_pin;
 
-    status_ok_or_return(bts_7040_init(&s_bts7040_storages[i], &bts_7040_settings));
+    // Add reistor, min/max fault voltages
+    bts_7040_settings.resistor = POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR;
+    bts_7040_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV;
+    bts_7040_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV;
+
+    status_ok_or_return(bts_7040_init_pca9539r(&s_bts7040_storages[i], &bts_7040_settings));
   }
 
   // measure the currents immediately; the callback doesn't use the timer id it's passed

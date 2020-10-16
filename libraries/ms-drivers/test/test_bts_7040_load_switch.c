@@ -89,13 +89,11 @@ void teardown_test(void) {
 // Comprehensive happy-path test for STM32 initialization.
 void test_bts_7040_current_sense_timer_stm32_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -133,16 +131,12 @@ void test_bts_7040_current_sense_timer_stm32_works(void) {
 
 // Same, but for pca9539r initialization.
 void test_bts_7040_current_sense_timer_pca9539r_works(void) {
-  // these don't matter (adc isn't reading anything) but can't be null
-  Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
-  Pca9539rGpioAddress test_enable_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -181,13 +175,11 @@ void test_bts_7040_current_sense_timer_pca9539r_works(void) {
 // Essentially the previous test done twice.
 void test_bts_7040_current_sense_restart(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -236,14 +228,11 @@ void test_bts_7040_current_sense_restart(void) {
 
 // Test init failure when the settings are invalid for stm32.
 void test_bts_7040_current_sense_stm32_init_invalid_settings(void) {
-  // start with invalid select pin
-  GpioAddress select_pin = { .port = NUM_GPIO_PORTS, .pin = 0 };  // invalid
-  GpioAddress sense_pin = { .port = 0, .pin = 0 };                // valid
+  GpioAddress sense_pin = { .port = 0, .pin = 0 };  // valid
   // EN0 and EN1 pins (both valid for now)
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &select_pin,
     .sense_pin = &sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -253,10 +242,7 @@ void test_bts_7040_current_sense_stm32_init_invalid_settings(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_NOT_OK(bts_7040_init_stm32(&s_storage, &settings));
-
   // invalid sense pin
-  select_pin.port = 0;
   sense_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(bts_7040_init_stm32(&s_storage, &settings));
 
@@ -275,16 +261,12 @@ void test_bts_7040_current_sense_stm32_init_invalid_settings(void) {
 
 // Same, but for pca9539r.
 void test_bts_7040_current_sense_pca9539r_init_invalid_settings(void) {
-  // start with invalid select pin
-  Pca9539rGpioAddress select_pin = { .i2c_address = 0, .pin = NUM_PCA9539R_GPIO_PINS };  // invalid
-  GpioAddress sense_pin = { .port = GPIO_PORT_A, .pin = 0 };                             // valid
+  GpioAddress sense_pin = { .port = GPIO_PORT_A, .pin = 0 };  // valid
   // EN0 and EN1 pins
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
-  Pca9539rGpioAddress test_enable_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
-    .select_pin = &select_pin,
     .sense_pin = &sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -294,10 +276,7 @@ void test_bts_7040_current_sense_pca9539r_init_invalid_settings(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_NOT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
-
   // invalid sense pin
-  select_pin.pin = 0;
   sense_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
 
@@ -317,13 +296,11 @@ void test_bts_7040_current_sense_pca9539r_init_invalid_settings(void) {
 // Test that having a NULL callback works and we don't segfault.
 void test_bts_7040_current_sense_null_callback(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -341,13 +318,11 @@ void test_bts_7040_current_sense_null_callback(void) {
 // Test that bts_7040_get_measurement returns ok.
 void test_bts_7040_current_sense_get_measurement_stm32_valid(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -366,15 +341,12 @@ void test_bts_7040_current_sense_get_measurement_stm32_valid(void) {
 
 // Same, but with pca9539r initialization.
 void test_bts_7040_current_sense_get_measurement_pca9539r_valid(void) {
-  Pca9539rGpioAddress test_select_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
-  Pca9539rGpioAddress test_enable_1_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_2 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Pca9539rSettings settings = {
     .i2c_port = TEST_I2C_PORT,
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -394,13 +366,11 @@ void test_bts_7040_current_sense_get_measurement_pca9539r_valid(void) {
 // Test that bts_7040_stop returns true only when it stops a timer
 void test_bts_7040_current_sense_stop_return_behaviour(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -420,14 +390,12 @@ void test_bts_7040_current_sense_stop_return_behaviour(void) {
 // Test that the context is actually passed to the function
 void test_bts_7040_current_sense_context_passed(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;            // 0.5 ms
   void *context_pointer = &interval_us;  // arbitrary pointer
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -447,13 +415,11 @@ void test_bts_7040_current_sense_context_passed(void) {
 // Test enabling/disabling/getting value works with IN0 pin
 void test_bts_7040_output_0_functions_work(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -498,14 +464,12 @@ void test_bts_7040_output_0_functions_work(void) {
 // Test that fault callback called when voltage within fault range.
 void test_bts_7040_faults_within_fault_range(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -530,14 +494,12 @@ void test_bts_7040_faults_within_fault_range(void) {
 // Test that fault isn't called when voltage outside of fault range.
 void test_bts_7040_no_fault_outside_of_fault_range(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -565,14 +527,12 @@ void test_bts_7040_no_fault_outside_of_fault_range(void) {
 // there's no segfault/stack overflow.
 void test_bts_7040_fault_cb_called_from_start(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -598,14 +558,12 @@ void test_bts_7040_fault_cb_called_from_start(void) {
 // to clear the fault.
 void test_bts_7040_handle_fault_clears_fault(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -647,14 +605,12 @@ void test_bts_7040_handle_fault_clears_fault(void) {
 // Test that fault context is passed on correctly on fault.
 void test_bts_7040_fault_context_passed_on_fault(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -680,14 +636,12 @@ void test_bts_7040_fault_context_passed_on_fault(void) {
 // Test that trying to enable a pin during fault doesn't work.
 void test_bts_7040_enable_fails_during_fault(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -732,14 +686,12 @@ void test_bts_7040_enable_fails_during_fault(void) {
 // fault_in_progress to false for both pins.
 void test_bts_7040_stop_works(void) {
   // these don't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_select_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
   uint32_t interval_us = 500;  // 0.5 ms
   void *context_pointer = &interval_us;
   Bts7040Stm32Settings settings = {
-    .select_pin = &test_select_pin,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,

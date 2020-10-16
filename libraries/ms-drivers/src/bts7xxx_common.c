@@ -67,6 +67,3 @@ StatusCode bts7xxx_handle_fault_pin(Bts7xxxEnablePin *pin) {
   }
   return STATUS_CODE_OK;
 }
-
-// TODO(SOFT-323) look into feasability of refactoring parts of init functions into common
-// helper functions for the most part

@@ -1,9 +1,9 @@
 #pragma once
 // Driver for the BTS7200-2EPA load switch.
 
-// Reads current values from 2 ADC pins on the BTS 7200 switched between with a selection pin.
+// Reads current values from 2 ADC pins on the BTS7200 switched between with a selection pin.
 // Requires GPIO, interrupts, soft timers, and ADC to be initialized in ADC_MODE_SINGLE.
-// If using with MCP23008, requires I2C to be initialized.
+// If using with PCA9539R, requires I2C to be initialized.
 
 // Due to the fault handling procedures for the BTS7200, all BTS7200 pins should
 // only be manipulated through this driver.

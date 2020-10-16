@@ -126,7 +126,6 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
-
   // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->select_pin.select_pin_pca9539r->i2c_address);
 
