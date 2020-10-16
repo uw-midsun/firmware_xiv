@@ -36,28 +36,6 @@ static StatusCode prv_init_common(Bts7040Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-// PRETTY SURE WE DONT NEED THIS HERE, CAN JUST DO FAULT HANDLING DIRECTLY SINCE 1 PIN ONLY
-// Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
-// Faults are cleared following the retry strategy on pg. 34 of the BTS7040 datasheet,
-// assuming a worst-case t(DELAY(CR)) of BTS7040_FAULT_RESTART_DELAY_MS (pg. 38)
-/*
-static StatusCode prv_bts_7200_handle_fault(Bts7040Storage *storage, bool fault0, bool fault1) {
-  StatusCode status = STATUS_CODE_OK;
-
-  if (fault0) {
-    status0 = prv_bts_7200_handle_fault_pin(&storage->enable_pin);
-  }
-
-  if (fault1) {
-    status1 = prv_bts_7200_handle_fault_pin(&storage->enable_pin_1);
-  }
-
-  // Only return on non-OK status codes after trying to clear faults on both pins
-  status_ok_or_return(status0);
-  status_ok_or_return(status1);
-  return STATUS_CODE_OK;
-} */
-
 StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings) {
   storage->select_pin.select_pin_stm32 = settings->select_pin;
   storage->select_pin.select_pin_pca9539r = NULL;
@@ -68,7 +46,7 @@ StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *se
   storage->enable_pin.enable_pin_stm32 = settings->enable_pin;
   storage->enable_pin.enable_pin_pca9539r = NULL;
 
-  storage->enable_pin.pin_type =  BTS7XXX_PIN_STM32;
+  storage->enable_pin.pin_type = BTS7XXX_PIN_STM32;
 
   storage->interval_us = settings->interval_us;
   storage->callback = settings->callback;
@@ -90,8 +68,7 @@ StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *se
   };
 
   status_ok_or_return(gpio_init_pin(storage->select_pin.select_pin_stm32, &select_enable_settings));
-  status_ok_or_return(
-      gpio_init_pin(storage->enable_pin.enable_pin_stm32, &select_enable_settings));
+  status_ok_or_return(gpio_init_pin(storage->enable_pin.enable_pin_stm32, &select_enable_settings));
 
   return prv_init_common(storage);
 }
@@ -140,15 +117,15 @@ StatusCode bts_7040_enable_output(Bts7040Storage *storage) {
   if (storage->enable_pin.fault_in_progress) {
     return STATUS_CODE_INTERNAL_ERROR;
   } else {
-    return bts_7xxx_enable_pin(&storage->enable_pin);
+    return bts7xxx_enable_pin(&storage->enable_pin);
   }
 }
 
-StatusCode bts_7200_disable_output_0(Bts7040Storage *storage) {
+StatusCode bts_7040_disable_output(Bts7040Storage *storage) {
   return bts7xxx_disable_pin(&storage->enable_pin);
 }
 
-bool bts_7200_get_output_0_enabled(Bts7040Storage *storage) {
+bool bts_7040_get_output_enabled(Bts7040Storage *storage) {
   return bts7xxx_get_pin_enabled(&storage->enable_pin);
 }
 
@@ -170,7 +147,7 @@ StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
 
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
   // Check for faults, call callback and handle fault if voltage is within fault range
-  if((storage->min_fault_voltage_mv <= *meas) && (*meas <= storage->max_fault_voltage_mv)) {
+  if ((storage->min_fault_voltage_mv <= *meas) && (*meas <= storage->max_fault_voltage_mv)) {
     // We don't really need to do this, but we shouldn't leave the reading unchanged during a fault
     // and this is consistent with the BTS7200 driver's behaviour.
     prv_convert_voltage_to_current(storage, meas);
@@ -179,9 +156,11 @@ StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
     if (storage->fault_callback != NULL) {
       storage->fault_callback(storage->fault_callback_context);
     }
-    
-    // Handle fault
-    return bts7xxx_handle_fault_pin(&storage->enable_pin);
+
+    // Handle fault, return either the error from the fault handling
+    // or STATUS_CODE_INTERNAL_ERROR if the fault pin process works OK
+    status_ok_or_return(bts7xxx_handle_fault_pin(&storage->enable_pin));
+    return STATUS_CODE_INTERNAL_ERROR;
   }
 
   prv_convert_voltage_to_current(storage, meas);
@@ -209,4 +188,3 @@ bool bts_7040_stop(Bts7040Storage *storage) {
 
   return result;
 }
-

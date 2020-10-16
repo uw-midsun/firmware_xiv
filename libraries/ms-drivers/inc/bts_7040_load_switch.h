@@ -4,18 +4,18 @@
 
 // If using with MCP23008, required I2C to be initialized
 
+#include "adc.h"
 #include "bts7xxx_common.h"
 #include "gpio.h"
-#include "adc.h"
-#include "soft_timer.h"
 #include "pca9539r_gpio_expander.h"
+#include "soft_timer.h"
 
 // Upper maximum for the possible leakage voltage that may be read from the SENSE pin at
 // T(env) < 80 C (see p.g. 27 of BTS7040 datasheet)
 #define BTS7040_MAX_LEAKAGE_VOLTAGE_MV 2
 
 // Nominal scaling factor k(ILIS) for current output at the SENSE pin in normal operation.
-// This is the average of two nominal values given: 1700 with I(load) <= 0.25 A, 
+// This is the average of two nominal values given: 1700 with I(load) <= 0.25 A,
 // and 1800 with I(load) >= 1A.
 #define BTS7040_IS_SCALING_NOMINAL 1775
 
@@ -79,7 +79,7 @@ typedef struct {
 // pins are STM32 GPIO pins.
 StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings);
 
-// Initialize the BTS7040 with the given settings; the select and enable 
+// Initialize the BTS7040 with the given settings; the select and enable
 // pins are through a PCA9539R.
 StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings);
 

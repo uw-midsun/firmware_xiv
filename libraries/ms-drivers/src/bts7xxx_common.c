@@ -3,7 +3,7 @@
 
 #include "bts7xxx_common.h"
 
-// put these into the storage or something. could define it in the header as well since they're 
+// put these into the storage or something. could define it in the header as well since they're
 // the same, just need to have a way to access them both from this module
 #define BTS7XXX_FAULT_RESTART_DELAY_MS 110
 #define BTS7XXX_FAULT_RESTART_DELAY_US (BTS7XXX_FAULT_RESTART_DELAY_MS * 1000)

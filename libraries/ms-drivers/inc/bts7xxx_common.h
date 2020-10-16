@@ -1,6 +1,6 @@
 #pragma once
-// Common definitions for BTS7XXX-series load switches. 
-// Most of the functions in this file allow for a common API to easily interact with the 
+// Common definitions for BTS7XXX-series load switches.
+// Most of the functions in this file allow for a common API to easily interact with the
 // EN/SEL pins on the load switches, abstracting the specific method oif accessing the pin.
 
 #include "gpio.h"
@@ -36,7 +36,7 @@ typedef struct {
 } Bts7xxxSelectPin;
 
 // Broad function to enable the pin passed in.
-StatusCode bts_7xxx_enable_pin(Bts7xxxEnablePin *pin);
+StatusCode bts7xxx_enable_pin(Bts7xxxEnablePin *pin);
 
 // Broad function to disable the pin passed in.
 StatusCode bts7xxx_disable_pin(Bts7xxxEnablePin *pin);
