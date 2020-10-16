@@ -1,25 +1,212 @@
 #include "bts_7040_load_switch.h"
-#include "adc.h"
 
-StatusCode bts_7040_init(Bts7040Storage *storage, Bts7040Settings *settings) {
-  storage->sense_pin = settings->sense_pin;
+static void prv_measure_current(SoftTimerId timer_id, void *context) {
+  Bts7040Storage *storage = context;
+  bts_7040_get_measurement(storage, &storage->reading_out);
 
-  // initialize the sense pin as ADC
+  if (storage->callback) {
+    storage->callback(storage->reading_out, storage->callback_context);
+  }
+
+  soft_timer_start(storage->interval_us, &prv_measure_current, storage,
+                   &storage->measurement_timer_id);
+}
+
+// Init common elements of the load switch to STM32, PCA9539R implementations.
+static StatusCode prv_init_common(Bts7040Storage *storage) {
+  // make sure that if the user calls stop() it doesn't cancel some other timer
+  storage->measurement_timer_id = SOFT_TIMER_INVALID_TIMER;
+
+  // Timers for fault handling
+  storage->enable_pin.fault_timer_id = SOFT_TIMER_INVALID_TIMER;
+
+  storage->enable_pin.fault_in_progress = false;
+
+  // initialize the sense pin
   GpioSettings sense_settings = {
     .direction = GPIO_DIR_IN,
     .alt_function = GPIO_ALTFN_ANALOG,
   };
   status_ok_or_return(gpio_init_pin(storage->sense_pin, &sense_settings));
 
+  // initialize the sense pin as ADC
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
   adc_set_channel(sense_channel, true);
   return STATUS_CODE_OK;
 }
 
-StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *measured) {
+// PRETTY SURE WE DONT NEED THIS HERE, CAN JUST DO FAULT HANDLING DIRECTLY SINCE 1 PIN ONLY
+// Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
+// Faults are cleared following the retry strategy on pg. 34 of the BTS7040 datasheet,
+// assuming a worst-case t(DELAY(CR)) of BTS7040_FAULT_RESTART_DELAY_MS (pg. 38)
+/*
+static StatusCode prv_bts_7200_handle_fault(Bts7040Storage *storage, bool fault0, bool fault1) {
+  StatusCode status = STATUS_CODE_OK;
+
+  if (fault0) {
+    status0 = prv_bts_7200_handle_fault_pin(&storage->enable_pin);
+  }
+
+  if (fault1) {
+    status1 = prv_bts_7200_handle_fault_pin(&storage->enable_pin_1);
+  }
+
+  // Only return on non-OK status codes after trying to clear faults on both pins
+  status_ok_or_return(status0);
+  status_ok_or_return(status1);
+  return STATUS_CODE_OK;
+} */
+
+StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings) {
+  storage->select_pin.select_pin_stm32 = settings->select_pin;
+  storage->select_pin.select_pin_pca9539r = NULL;
+  storage->select_pin.pin_type = BTS7XXX_PIN_STM32;
+
+  storage->sense_pin = settings->sense_pin;
+
+  storage->enable_pin.enable_pin_stm32 = settings->enable_pin;
+  storage->enable_pin.enable_pin_pca9539r = NULL;
+
+  storage->enable_pin.pin_type =  BTS7XXX_PIN_STM32;
+
+  storage->interval_us = settings->interval_us;
+  storage->callback = settings->callback;
+  storage->callback_context = settings->callback_context;
+  storage->fault_callback = settings->fault_callback;
+  storage->fault_callback_context = settings->fault_callback_context;
+
+  storage->resistor = settings->resistor;
+
+  storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
+  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
+
+  // initialize the select and input pins
+  GpioSettings select_enable_settings = {
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_LOW,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
+  };
+
+  status_ok_or_return(gpio_init_pin(storage->select_pin.select_pin_stm32, &select_enable_settings));
+  status_ok_or_return(
+      gpio_init_pin(storage->enable_pin.enable_pin_stm32, &select_enable_settings));
+
+  return prv_init_common(storage);
+}
+
+StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings) {
+  storage->select_pin.select_pin_pca9539r = settings->select_pin;
+  storage->select_pin.select_pin_stm32 = NULL;
+  storage->select_pin.pin_type = BTS7XXX_PIN_PCA9539R;
+
+  storage->sense_pin = settings->sense_pin;
+
+  storage->enable_pin.enable_pin_pca9539r = settings->enable_pin;
+  storage->enable_pin.enable_pin_stm32 = NULL;
+
+  storage->enable_pin.pin_type = BTS7XXX_PIN_PCA9539R;
+
+  storage->interval_us = settings->interval_us;
+  storage->callback = settings->callback;
+  storage->callback_context = settings->callback_context;
+  storage->fault_callback = settings->fault_callback;
+  storage->fault_callback_context = settings->fault_callback_context;
+
+  storage->resistor = settings->resistor;
+
+  storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
+  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
+
+  // initialize PCA9539R on the relevant port
+  pca9539r_gpio_init(settings->i2c_port, storage->select_pin.select_pin_pca9539r->i2c_address);
+
+  // initialize the select and input pins
+  Pca9539rGpioSettings select_enable_settings = {
+    .direction = PCA9539R_GPIO_DIR_OUT,
+    .state = PCA9539R_GPIO_STATE_LOW,
+  };
+
+  status_ok_or_return(
+      pca9539r_gpio_init_pin(storage->select_pin.select_pin_pca9539r, &select_enable_settings));
+  status_ok_or_return(
+      pca9539r_gpio_init_pin(storage->enable_pin.enable_pin_pca9539r, &select_enable_settings));
+
+  return prv_init_common(storage);
+}
+
+StatusCode bts_7040_enable_output(Bts7040Storage *storage) {
+  if (storage->enable_pin.fault_in_progress) {
+    return STATUS_CODE_INTERNAL_ERROR;
+  } else {
+    return bts_7xxx_enable_pin(&storage->enable_pin);
+  }
+}
+
+StatusCode bts_7200_disable_output_0(Bts7040Storage *storage) {
+  return bts7xxx_disable_pin(&storage->enable_pin);
+}
+
+bool bts_7200_get_output_0_enabled(Bts7040Storage *storage) {
+  return bts7xxx_get_pin_enabled(&storage->enable_pin);
+}
+
+// Convert voltage measurements to current
+static void prv_convert_voltage_to_current(Bts7040Storage *storage, uint16_t *meas) {
+  if (*meas <= BTS7040_MAX_LEAKAGE_VOLTAGE_MV) {
+    *meas = 0;
+  } else {
+    *meas *= BTS7040_IS_SCALING_NOMINAL;
+    *meas /= storage->resistor;
+  }
+}
+
+StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  adc_get_channel(*storage->sense_pin, &sense_channel);
-  adc_read_raw(sense_channel, measured);
+  status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
+
+  status_ok_or_return(adc_read_converted(sense_channel, meas));
+
+  // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
+  // Check for faults, call callback and handle fault if voltage is within fault range
+  if((storage->min_fault_voltage_mv <= *meas) && (*meas <= storage->max_fault_voltage_mv)) {
+    // We don't really need to do this, but we shouldn't leave the reading unchanged during a fault
+    // and this is consistent with the BTS7200 driver's behaviour.
+    prv_convert_voltage_to_current(storage, meas);
+
+    // Only call fault cb if it's not NULL
+    if (storage->fault_callback != NULL) {
+      storage->fault_callback(storage->fault_callback_context);
+    }
+    
+    // Handle fault
+    return bts7xxx_handle_fault_pin(&storage->enable_pin);
+  }
+
+  prv_convert_voltage_to_current(storage, meas);
+
   return STATUS_CODE_OK;
 }
+
+StatusCode bts_7040_start(Bts7040Storage *storage) {
+  // |prv_measure_current| will set up a soft timer to call itself repeatedly
+  // by calling this now there's no period with invalid measurements
+  prv_measure_current(SOFT_TIMER_INVALID_TIMER, storage);
+  return STATUS_CODE_OK;
+}
+
+bool bts_7040_stop(Bts7040Storage *storage) {
+  bool result = soft_timer_cancel(storage->measurement_timer_id);
+  soft_timer_cancel(storage->enable_pin.fault_timer_id);
+
+  // make sure calling stop twice doesn't cancel an unrelated timer
+  storage->measurement_timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->enable_pin.fault_timer_id = SOFT_TIMER_INVALID_TIMER;
+
+  // Fault handling no longer in progress
+  storage->enable_pin.fault_in_progress = false;
+
+  return result;
+}
+

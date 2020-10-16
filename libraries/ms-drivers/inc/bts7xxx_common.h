@@ -7,6 +7,11 @@
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
 
+#define STM32_GPIO_STATE_SELECT_OUT_0 GPIO_STATE_LOW
+#define STM32_GPIO_STATE_SELECT_OUT_1 GPIO_STATE_HIGH
+#define PCA9539R_GPIO_STATE_SELECT_OUT_0 PCA9539R_GPIO_STATE_LOW
+#define PCA9539R_GPIO_STATE_SELECT_OUT_1 PCA9539R_GPIO_STATE_HIGH
+
 // Represents whether SEL/EN pins are accessed through STM32 or a Pca9539R
 typedef enum {
   BTS7XXX_PIN_STM32 = 0,
@@ -31,19 +36,19 @@ typedef struct {
 } Bts7xxxSelectPin;
 
 // Broad function to enable the pin passed in.
-StatusCode prv_bts_7xxx_enable_pin(Bts7xxxEnablePin *pin);
+StatusCode bts_7xxx_enable_pin(Bts7xxxEnablePin *pin);
 
 // Broad function to disable the pin passed in.
-StatusCode prv_bts7xxx_disable_pin(Bts7xxxEnablePin *pin);
+StatusCode bts7xxx_disable_pin(Bts7xxxEnablePin *pin);
 
 // Broad function to get whether the pin passed in is enabled.
-StatusCode prv_bts7xxx_get_pin_enabled(Bts7xxxEnablePin *pin);
+StatusCode bts7xxx_get_pin_enabled(Bts7xxxEnablePin *pin);
 
 // Broad pin soft timer cb without re-enabling the pin
-void prv_bts7xxx_fault_handler_cb(SoftTimerId timer_id, void *context);
+void bts7xxx_fault_handler_cb(SoftTimerId timer_id, void *context);
 
 // Broad pin re-enable soft timer cb
-void prv_bts7xxx_fault_handler_enable_cb(SoftTimerId timer_id, void *context);
+void bts7xxx_fault_handler_enable_cb(SoftTimerId timer_id, void *context);
 
 // Helper function to clear fault on a given pin
-StatusCode prv_bts7xxx_handle_fault_pin(Bts7xxxEnablePin *pin);
+StatusCode bts7xxx_handle_fault_pin(Bts7xxxEnablePin *pin);

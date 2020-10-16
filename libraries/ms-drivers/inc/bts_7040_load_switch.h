@@ -24,9 +24,9 @@
 #define BTS7040_FAULT_RESTART_DELAY_MS 110
 #define BTS7040_FAULT_RESTART_DELAY_US (BTS7040_FAULT_RESTART_DELAY_MS * 1000)
 
-typedef void (*Bts7040DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
+typedef void (*Bts7040DataCallback)(uint16_t reading_out, void *context);
 
-typedef void (*Bts7040FaultCallback)(bool fault0, bool fault1, void *context);
+typedef void (*Bts7040FaultCallback)(void *context);
 
 // Use when the select pin is an STM32 GPIO pin
 typedef struct {
@@ -75,14 +75,6 @@ typedef struct {
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7040Storage;
 
-typedef struct {
-  GpioAddress *sense_pin;
-} Bts7040Settings;
-
-typedef struct {
-  GpioAddress *sense_pin;
-} Bts7040Storage;
-
 // Initialize the BTS7040 with the given settings; the select and enable
 // pins are STM32 GPIO pins.
 StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings);
@@ -90,13 +82,6 @@ StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *se
 // Initialize the BTS7040 with the given settings; the select and enable 
 // pins are through a PCA9539R.
 StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings);
-
-// Read the latest measurements. This does not get measurements from the storage but instead
-// reads them from the BTS7040 itself.
-// Note that, due to the fault handling implementation, the pointer to storage has to be
-// valid for BTS7040_FAULT_RESTART_DELAY_MS. Otherwise, bts_7040_stop must be called
-// before the pointer is freed to prevent segfaults.
-StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas0);
 
 // Enable output 0 by pulling the IN0 pin high.
 StatusCode bts_7040_enable_output(Bts7040Storage *storage);
@@ -106,6 +91,13 @@ StatusCode bts_7040_disable_output(Bts7040Storage *storage);
 
 // Return whether output 0 is enabled or disabled
 bool bts_7040_get_output_enabled(Bts7040Storage *storage);
+
+// Read the latest measurements. This does not get measurements from the storage but instead
+// reads them from the BTS7040 itself.
+// Note that, due to the fault handling implementation, the pointer to storage has to be
+// valid for BTS7040_FAULT_RESTART_DELAY_MS. Otherwise, bts_7040_stop must be called
+// before the pointer is freed to prevent segfaults.
+StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas);
 
 // Set up a soft timer which periodically updates the storage with the latest measurements.
 // DO NOT USE if you are reading with bts_7040_get_measurement.
