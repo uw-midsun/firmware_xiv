@@ -9,6 +9,7 @@
 // only be manipulated through this driver.
 
 #include "adc.h"
+#include "bts7xxx_common.h"
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
@@ -27,29 +28,6 @@
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
 
 typedef void (*Bts7200FaultCallback)(bool fault0, bool fault1, void *context);
-
-// Represents whether SEL/EN pins are accessed through STM32 or a Pca9539R
-typedef enum {
-  BTS7200_PIN_STM32 = 0,
-  BTS7200_PIN_PCA9539R,
-  NUM_BTS7200_PIN_TYPES,
-} Bts7200PinType;
-
-// Holds pin-specific info for EN pins
-typedef struct {
-  GpioAddress *enable_pin_stm32;
-  Pca9539rGpioAddress *enable_pin_pca9539r;
-  SoftTimerId fault_timer_id;
-  bool fault_in_progress;
-  Bts7200PinType pin_type;
-} Bts7200EnablePin;
-
-// Holds pin-specific info for SEL pins
-typedef struct {
-  GpioAddress *select_pin_stm32;
-  Pca9539rGpioAddress *select_pin_pca9539r;
-  Bts7200PinType pin_type;
-} Bts7200SelectPin;
 
 // Use when the select pin is an STM32 GPIO pin
 typedef struct {
@@ -87,10 +65,10 @@ typedef struct {
 typedef struct {
   uint16_t reading_out_0;  // Reading from IN0, in mA
   uint16_t reading_out_1;  // Reading from IN1, in mA
-  Bts7200SelectPin select_pin;
+  Bts7xxxSelectPin select_pin;
   GpioAddress *sense_pin;
-  Bts7200EnablePin enable_pin_0;
-  Bts7200EnablePin enable_pin_1;
+  Bts7xxxEnablePin enable_pin_0;
+  Bts7xxxEnablePin enable_pin_1;
   uint32_t interval_us;
   SoftTimerId measurement_timer_id;
   Bts7200DataCallback callback;
