@@ -34,10 +34,10 @@ js sends: `{command: cmd, arguments: {...}}`, python returns: `{data: {...}}`
 js needs to keep a map of all running projects, key: `fd`, val: `{name, fields, controls}`
 
 Procedures:
-- cmd: `'init'`, args: `{}`, ret: `{['proj_names'], [sim: {name, [field: {name, control_type}]}], [can_msg: {name, [fields]}]}`
-- cmd: `'start'`, args: `{'name', 'sim'}`, ret: `{proj_fd}`
-- cmd: `'stop'`, args: `{fd}`, ret: `{success}`
-- cmd: `'set'`, args: `{fd, field, value}`, ret: `{}`
-- cmd: `'send_raw'`, args: `{id, data, dlc}`, ret: `{}`
+- cmd: `'init'`, args: `{}`, ret: `{init, ['proj_names'], [sim: {name, [field: {name, control_type}]}], [can_msg: {name, [fields]}]}`
+- cmd: `'start'`, args: `{'name', 'sim'}`, ret: `{start, proj_fd, name, sim}`
+- cmd: `'stop'`, args: `{fd}`, ret: `{stop, proj, success}`
+- cmd: `'set'`, args: `{fd, field, value}`
+- cmd: `'send_raw'`, args: `{id, data, dlc}`
     - radio button for choosing size of each field?
 - cmd: `'send_msg'`, args: `{name, [{field: value}]}`
