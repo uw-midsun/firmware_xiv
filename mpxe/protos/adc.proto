@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message MxAdcStore {
+  repeated bool state = 1;
+  repeated uint32 val = 2;
+}
