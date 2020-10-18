@@ -1,18 +1,13 @@
-from enum import Enum
-
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import gpio_pb2
 
-class ControlType(Enum):
-    SLIDER = 'slider'
-    TOGGLE = 'toggle'
-    NUMBER = 'number'
+SLIDER = 'slider'
+TOGGLE = 'toggle'
+NUMBER = 'number'
 
-class DisplayType(Enum):
-    BOOLEAN = 'boolean'
-    TEXT = 'text'
-    NUMBER = 'number'
-
+BOOLEAN = 'boolean'
+TEXT = 'text'
+NUMBER = 'number'
 
 class Sim:
     def __init__(self):

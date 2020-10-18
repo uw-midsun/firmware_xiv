@@ -17,7 +17,7 @@ class Project:
         self.store_callbacks = []
         self.log_callbacks = []
 
-        cmd = 'build/bin/x86/{}'.format(self.name)
+        cmd = '/home/vagrant/shared/firmware_xiv/build/bin/x86/{}'.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=False)
         ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)

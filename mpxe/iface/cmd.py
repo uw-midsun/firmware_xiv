@@ -27,11 +27,11 @@ cr = CmdRouter()
 @cr.route('init')
 def init_handler(mpxei, args):
     print('handling init, args:', args)
-    await mpxei.update_q.put({
+    mpxei.loop.call_soon_threadsafe(mpxei.update_q.put_nowait, {
         'update_type': 'init_ret', 'data': {
-            'sims': mpxei.pm.sim_classes.key(),
+            'sims': list(mpxei.pm.sim_classes.keys()),
             'projs': mpxei.pm.proj_name_list,
-            'can_msgs': mpxei.can.msg_dict
+            'can_msgs': mpxei.pm.can.msg_dict
         }
     })
 
@@ -39,14 +39,18 @@ def init_handler(mpxei, args):
 def start_handler(mpxei, args):
     print('handling start, args:', args)
     proj_name = args['name']
-    sim_name = args['sim']
-    sim = mpxei.pm.sim_classes['sim_name']()
-    proj = mpxei.pm.start('proj_name', sim)
+    sim_name = args['sim_name']
+    sim = mpxei.pm.sim_classes[sim_name]()
+    proj = mpxei.pm.start(proj_name, sim)
     proj.log_callbacks.append(mpxei.log_callback)
-    proj.store_callbacks.append(mpxei.store_callbacks)
-    await mpxei.update_q.put({
+    proj.store_callbacks.append(mpxei.store_callback)
+    mpxei.loop.call_soon_threadsafe(mpxei.update_q.put_nowait, {
         'update_type': 'start_ret', 'data': {
-            'fd': proj.ctop_fifo.fileno()
+            'fd': proj.ctop_fifo.fileno(),
+            'name': proj_name,
+            'sim_name': sim_name,
+            'controls': proj.sim.controls,
+            'displays': proj.sim.displays,
         },
     })
 
@@ -55,7 +59,7 @@ def stop_handler(mpxei, args):
     print('handling stop, args:', args)
     proj = mpxei.pm.proj_fds[args['fd']]
     mpxei.pm.stop(proj)
-    await mpxei.update_q.put({
+    mpxei.loop.call_soon_threadsafe(mpxei.update_q.put_nowait, {
         'update_type': 'stop_ret', 'data': {
             'fd': args['fd']
         }
