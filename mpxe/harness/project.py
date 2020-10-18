@@ -14,6 +14,8 @@ class Project:
         self.name = name
         self.killed = False
         self.stores = {}
+        self.store_callbacks = []
+        self.log_callbacks = []
 
         cmd = 'build/bin/x86/{}'.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
@@ -61,8 +63,12 @@ class Project:
     def handle_store(self, proj, pm, store_info):
         key = (store_info.type, store_info.key)
         self.stores[key] = decoder.decode_store(store_info)
-        self.sim.handle_update(pm, self)
         self.popen.send_signal(signal.SIGUSR1)
+        self.sim.handle_update(pm, self)
+        for cb in self.store_callbacks:
+            cb(self, pm, store_info)
 
     def handle_log(self, proj, pm, log):
         self.sim.handle_log(pm, self, log)
+        for cb in self.log_callbacks:
+            cb(self, pm, log)

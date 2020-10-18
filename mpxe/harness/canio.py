@@ -10,12 +10,18 @@ class Msg:
         self.data = data
 
 class Canio:
-    def __init__(self, bus_name, max_msgs=10, callbacks):
+    def __init__(self, bus_name, max_msgs=10):
         self.messages = deque(maxlen=max_msgs)
-        self.db = cantools.database.load_file('../system_can.dbc')
+        self.db = cantools.database.load_file('/home/vagrant/shared/system_can.dbc')
+        self.msg_dict = {}
+        for m in self.db.messages:
+            self.msg_dict[m.name] = {
+                'frame_id': m.frame_id,
+                'signals': [s.name for s in m.signals],
+            }
         self.bus = can.interface.Bus(bus_name, receive_own_messages=True, bustype='socketcan')
         self.killed = False
-        self.callbacks = callbacks
+        self.callbacks = [self.listener_callback]
         self.listen_thread = threading.Thread(target=self.listener)
         self.listen_thread.start()
 
@@ -46,11 +52,10 @@ class Canio:
                 continue
             msg = Msg('UNKOWN', raw_msg.arbitration_id, raw_msg.data)
             try:
-                msg.name = self.db.get_message_by_frame_id(raw_msg.arbitration_id)
+                msg.name = self.db.get_message_by_frame_id(raw_msg.arbitration_id).name
                 msg.data = self.db.decode_message(raw_msg.arbitration_id, raw_msg.data)
                 if len(self.messages)  == self.messages.maxlen:
                     self.messages.pop()
-                self.messages.appendleft()
             except KeyError as e:
                 pass
             self.messages.appendleft(msg)

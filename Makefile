@@ -278,20 +278,20 @@ MPXE_LIBS :=
 -include $(MPXE_DIR)/integration_tests/deps.mk
 
 .PHONY: fastmpxe
-fastmpxe:
+fastmpxe: socketcan
 ifeq (,$(SCRIPT))
 	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(TEST).py"
 else
-	$(eval ROOT=$(shell pwd))
 	@export PYTHONPATH='$(ROOT)'; python3 $(MPXE_DIR)/scripts/$(SCRIPT).py $(CHANNEL)
 endif
 
 .PHONY: mpxe
-mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
+mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) fastmpxe
 
 .PHONY: mpxei
-mpxei:
-	@export PYTHONPATH='$(eval ROOT=$(shell pwd))'; python3 $(MPXE_DIR)/iface/server.py $(CHANNEL)
+mpxei: socketcan
+	$(eval ROOT=$(shell pwd))
+	@export PYTHONPATH='$(ROOT)'; python3 $(MPXE_DIR)/iface/mpxei.py $(MPXE_CHANNEL)
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

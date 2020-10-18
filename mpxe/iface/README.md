@@ -36,8 +36,8 @@ js needs to keep a map of all running projects, key: `fd`, val: `{name, fields, 
 Procedures:
 - cmd: `'init'`, args: `{}`, ret: `{init, ['proj_names'], [sim: {name, [field: {name, control_type}]}], [can_msg: {name, [fields]}]}`
 - cmd: `'start'`, args: `{'name', 'sim'}`, ret: `{start, proj_fd, name, sim}`
-- cmd: `'stop'`, args: `{fd}`, ret: `{stop, proj, success}`
-- cmd: `'set'`, args: `{fd, field, value}`
+- cmd: `'stop'`, args: `{fd}`, ret: `{stop, proj}`
+- cmd: `'set_field'`, args: `{fd, field, value}`
 - cmd: `'send_raw'`, args: `{id, data, dlc}`
     - radio button for choosing size of each field?
 - cmd: `'send_msg'`, args: `{name, [{field: value}]}`

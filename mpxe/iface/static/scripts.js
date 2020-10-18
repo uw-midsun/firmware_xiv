@@ -1,15 +1,20 @@
 var projects = {}
 var options = {} // hold return value of init call
 
-var ws = new WebSocket("ws://192.168.24.24:8082/");
+var ws = new WebSocket("ws://192.168.24.24:8081/");
 ws.onmessage = function (event) {
-    console.log("data:", event.data)
+    console.log("data:", event.data);
 };
 
-function send() {
-    ws.send("js->python");
+function send_cmd(cmd, args) {
+    ws.send(JSON.stringify({
+        cmd: cmd,
+        args: args,
+    }));
 }
 
 function init() {
-    ws.send({cmd: "init", args: {}})
+    send_cmd("init", {});
 }
+
+

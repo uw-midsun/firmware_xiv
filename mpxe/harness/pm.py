@@ -2,6 +2,8 @@ import os
 import threading
 import select
 import subprocess
+import inspect
+import sys
 
 from mpxe.harness import project
 from mpxe.harness import canio
@@ -13,12 +15,18 @@ class ProjectManager:
         # index projects by stdout and ctop_fifo fd
         self.proj_fds = {}
         self.statuses = {}
-        self.log_callbacks = []
-        self.store_callbacks = []
-        self.can_callbacks = []
         self.proj_name_list = os.listdir('/home/vagrant/shared/firmware_xiv/projects')
-        self.killed = False
+        # import all sims
+        for mod in os.listdir('/home/vagrant/shared/firmware_xiv/mpxe/sims'):
+            if mod[-3:] == '.py':
+                __import__('mpxe.sims.' + mod[:-3], locals(), globals())
+        self.sim_classes = {}
+        sim_mods = inspect.getmembers(sys.modules['mpxe.sims'], inspect.ismodule)
+        for m in sim_mods:
+            meta = inspect.getmembers(m[1], inspect.isclass)[0]
+            self.sim_classes[meta[0]] = meta[1]
         # run listener threads
+        self.killed = False
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.Canio(can_bus_name)
@@ -27,8 +35,6 @@ class ProjectManager:
         if name not in self.proj_name_list:
             raise Exception('invalid project')
         proj = project.Project(name, sim or Sim())
-        self.log_callbacks.append(proj.handle_log)
-        self.store_callbacks.append(proj.handle_store)
         self.proj_fds[proj.ctop_fifo.fileno()] = proj
         self.proj_fds[proj.popen.stdout.fileno()] = proj
         return proj
@@ -59,16 +65,13 @@ class ProjectManager:
             if res[0] == proj.popen.stdout.fileno():
                 s = proj.popen.stdout.readline().rstrip()
                 decoded_log = s.decode('utf-8')
-                for cb in self.log_callbacks:
-                    cb(proj, self, decoded_log)
+                proj.handle_log(proj, self, decoded_log)
             elif res[0] == proj.ctop_fifo.fileno():
                 # Currently assume all messages are storeinfo,
                 # will need other message types
                 msg = proj.ctop_fifo.read()
-                for cb in self.store_callbacks:
-                    store_info = decoder.decode_store_info(msg)
-                    cb(proj, self, store_info)
-
+                store_info = decoder.decode_store_info(msg)
+                proj.handle_store(proj, self, store_info)
         try:
             while not self.killed:
                 if len(self.proj_fds) == 0:
