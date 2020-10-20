@@ -51,5 +51,5 @@ static void prv_adc_read_callback(BabydriverMessageId id, uint8_t data[8],
 }
 
 StatusCode adc_read_init(void) {
-  dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, prv_adc_read_callback, NULL)
+  dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, prv_adc_read_callback, NULL);
 }
