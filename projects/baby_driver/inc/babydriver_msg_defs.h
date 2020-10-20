@@ -7,5 +7,11 @@ typedef enum {
   // Message data: uint8 status.
   BABYDRIVER_MESSAGE_STATUS = 0,
 
+  // Raiyan: TODO
+  BABYDRIVER_MESSAGE_ADC_READ_COMMAND = 4,
+
+  // Raiyan: TODO
+  BABYDRIVER_MESSAGE_ADC_READ_DATA = 5,
+
   NUM_BABYDRIVER_MESSAGES,
 } BabydriverMessageId;
