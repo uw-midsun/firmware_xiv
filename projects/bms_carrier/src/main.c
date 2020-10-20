@@ -9,6 +9,7 @@
 #include "killswitch.h"
 #include "mcp23008_gpio_expander.h"
 #include "soft_timer.h"
+#include "wait.h"
 
 static CanStorage s_can_storage = { 0 };
 static BmsStorage s_bms_storage = { 0 };
@@ -50,7 +51,7 @@ int main(void) {
   CellSenseSettings cell_settings = {
     .undervoltage_dmv = 25000,
     .overvoltage_dmv = 42000,
-    .charge_overtemp_dmv = 0,
+    .charge_overtemp_dmv = 0,  // These values will be tested in hardware eventually
     .discharge_overtemp_dmv = 0,
   };
   cell_sense_init(&cell_settings, &s_bms_storage.afe_readings, &s_bms_storage.ltc_afe_storage);
@@ -83,6 +84,7 @@ int main(void) {
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
       can_process_event(&e);
+      ltc_afe_process_event(&s_bms_storage.ltc_afe_storage, &e);
       cell_sense_process_event(&e);
     }
     wait();
