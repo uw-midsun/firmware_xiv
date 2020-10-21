@@ -9,7 +9,7 @@ def setup_default_channel():
 
     # We import these here so that they aren't imported for the REPL
     import argparse # pylint: disable=import-outside-toplevel
-    import can_util 
+    import can_util # pylint: disable=import-outside-toplevel
 
     parser = argparse.ArgumentParser(description="Setup the Babydriver REPL")
     parser.add_argument("--channel", default=None, help="Default CAN channel to use")
