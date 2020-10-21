@@ -82,14 +82,15 @@ StatusCode cell_sense_init(const CellSenseSettings *settings, AfeReadings *afe_r
     .num_cells = NUM_CELL_MODULES_PER_AFE,
     .num_thermistors = NUM_CELL_MODULES_PER_AFE,
 
-    .ltc_events = { 
-      .trigger_cell_conv_event = BMS_AFE_EVENT_TRIGGER_CELL_CONV,    //
-      .cell_conv_complete_event = BMS_AFE_EVENT_CELL_CONV_COMPLETE,  //
-      .trigger_aux_conv_event = BMS_AFE_EVENT_TRIGGER_AUX_CONV,      //
-      .aux_conv_complete_event = BMS_AFE_EVENT_AUX_CONV_COMPLETE,    //
-      .callback_run_event = BMS_AFE_EVENT_CALLBACK_RUN,              //
-      .fault_event = BMS_AFE_EVENT_FAULT                             //
-    },
+    .ltc_events =
+        {
+            .trigger_cell_conv_event = BMS_AFE_EVENT_TRIGGER_CELL_CONV,    //
+            .cell_conv_complete_event = BMS_AFE_EVENT_CELL_CONV_COMPLETE,  //
+            .trigger_aux_conv_event = BMS_AFE_EVENT_TRIGGER_AUX_CONV,      //
+            .aux_conv_complete_event = BMS_AFE_EVENT_AUX_CONV_COMPLETE,    //
+            .callback_run_event = BMS_AFE_EVENT_CALLBACK_RUN,              //
+            .fault_event = BMS_AFE_EVENT_FAULT                             //
+        },
 
     .cell_result_cb = prv_extract_cell_result,
     .aux_result_cb = prv_extract_aux_result,

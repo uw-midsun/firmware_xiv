@@ -15,7 +15,7 @@
 
 #define AFE_SPI_PORT SPI_PORT_1
 #define AFE_SPI_SS \
-  { .port = GPIO_PORT_A, .pin = 4}
+  { .port = GPIO_PORT_A, .pin = 4 }
 #define AFE_SPI_SCK \
   { .port = GPIO_PORT_A, .pin = 5 }
 #define AFE_SPI_MISO \
