@@ -48,6 +48,7 @@ static void prv_adc_read_callback(BabydriverMessageId id, uint8_t data[8],
   uint8_t high = (adc_pin_data >> 8) & 0xff;
 
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_DATA, low, high, 0, 0, 0, 0, 0);
+  return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_init(void) {
