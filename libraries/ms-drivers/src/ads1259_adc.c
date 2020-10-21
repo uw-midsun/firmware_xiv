@@ -140,11 +140,14 @@ static MxAds1259Store s_store = MX_ADS1259_STORE__INIT;
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
   MxAds1259Store *msg = mx_ads1259_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxAds1259Store *mask = mx_ads1259_store__unpack(NULL, mask_buf.len, mask_buf.data);
-  if (mask->rx_data_RAW != 0) {
+  if (mask->rx_data_LSB != 0) {
     s_store.rx_data_LSB = msg->rx_data_LSB;
+  }
+  if (mask->rx_data_MID != 0) {
     s_store.rx_data_MID = msg->rx_data_MID;
+  }
+  if (mask->rx_data_MSB != 0) {
     s_store.rx_data_MSB = msg->rx_data_MSB;
-    s_store.rx_data_RAW = msg->rx_data_RAW;
   }
   mx_ads1259_store__free_unpacked(msg, NULL);
   mx_ads1259_store__free_unpacked(mask, NULL);
