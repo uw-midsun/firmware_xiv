@@ -28,8 +28,10 @@
 #define SOLAR_MCP3427_CURRENT_SENSE_BIAS 1.2527e6f
 
 // Scaling factor to convert SPV1020 current values from SPI to microamps.
-// Must be calibrated.
-#define SOLAR_MPPT_CURRENT_SCALING_FACTOR 1.0f
+// This is based on ONE data point: reading 46 for a current of 600-800mA, so call it 700mA.
+// 700mA/46LSB ~ 15220uA/LSB.
+// TODO(SOFT-282): get more data points to calibrate this.
+#define SOLAR_MPPT_CURRENT_SCALING_FACTOR 15220.0f
 
 // Scaling factor to convert SPV1020 input voltage values from SPI to millivolts.
 // Experimentally determined to be ~26.1mV/LSB.
