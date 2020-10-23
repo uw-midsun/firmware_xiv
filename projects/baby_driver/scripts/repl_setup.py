@@ -13,8 +13,7 @@ def setup_default_channel():
     import can_util
 
     parser = argparse.ArgumentParser(description="Setup the Babydriver REPL")
-    parser.add_argument("--channel", default=None,
-                        help="Default CAN channel to use")
+    parser.add_argument("--channel", default=None, help="Default CAN channel to use")
 
     args = parser.parse_args()
 
