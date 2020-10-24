@@ -47,6 +47,39 @@ int main(void) {
   // initialize modules
   bps_heartbeat_init(&s_bms_storage.bps_storage, BPS_HB_FREQ_MS);
   can_handler_init(&s_bms_storage, TIME_BETWEEN_TX_IN_MILLIS);
+    LtcAfeSettings afe_settings = {
+    // Settings pending hardware validation
+    .cs = AFE_SPI_SS,
+    .mosi = AFE_SPI_MOSI,
+    .miso = AFE_SPI_MISO,
+    .sclk = AFE_SPI_SCK,
+
+    .spi_port = AFE_SPI_PORT,
+    .spi_baudrate = 750000,
+
+    .adc_mode = LTC_AFE_ADC_MODE_7KHZ,
+
+    .cell_bitset = { 0 },
+    .aux_bitset = { 0 },
+
+    .num_devices = NUM_AFES,
+    .num_cells = NUM_CELL_MODULES_PER_AFE,
+    .num_thermistors = NUM_CELL_MODULES_PER_AFE,
+
+    .ltc_events =
+        {
+            .trigger_cell_conv_event = BMS_AFE_EVENT_TRIGGER_CELL_CONV,    //
+            .cell_conv_complete_event = BMS_AFE_EVENT_CELL_CONV_COMPLETE,  //
+            .trigger_aux_conv_event = BMS_AFE_EVENT_TRIGGER_AUX_CONV,      //
+            .aux_conv_complete_event = BMS_AFE_EVENT_AUX_CONV_COMPLETE,    //
+            .callback_run_event = BMS_AFE_EVENT_CALLBACK_RUN,              //
+            .fault_event = BMS_AFE_EVENT_FAULT                             //
+        },
+
+    .cell_result_cb = NULL,  // These callbacks are set later on by cell sense
+    .aux_result_cb = NULL,
+  };
+  ltc_afe_init(&s_bms_storage.ltc_afe_storage, &afe_settings);
   // TODO(SOFT-61): fill in these values from hardware
   CellSenseSettings cell_settings = {
     .undervoltage_dmv = 25000,
