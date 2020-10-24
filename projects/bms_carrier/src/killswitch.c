@@ -2,13 +2,18 @@
 
 #include "bms.h"
 #include "exported_enums.h"
+#include "fault_bps.h"
 #include "gpio_it.h"
 
 static void prv_killswitch_handler(const GpioAddress *address, void *context) {
   GpioState state = NUM_GPIO_STATES;
   gpio_get_state(address, &state);
   bool clear = state == GPIO_STATE_LOW;
-  fault_bps(EE_BPS_STATE_FAULT_KILLSWITCH, clear);
+  if (state == GPIO_STATE_HIGH) {
+    fault_bps_set(EE_BPS_STATE_FAULT_KILLSWITCH);
+  } else {
+    fault_bps_clear(EE_BPS_STATE_FAULT_KILLSWITCH);
+  }
 }
 
 StatusCode killswitch_init(DebouncerStorage *storage) {

@@ -4,6 +4,7 @@
 #include "can.h"
 #include "command_rx.h"
 #include "data_store.h"
+#include "data_tx.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
 #include "fault_handler.h"
@@ -15,6 +16,7 @@
 #include "logger.h"
 #include "mcp3427_adc.h"
 #include "mppt.h"
+#include "pin_defs.h"
 #include "relay_fsm.h"
 #include "sense.h"
 #include "sense_mcp3427.h"
@@ -27,15 +29,39 @@
 #include "status.h"
 #include "wait.h"
 
-// TODO(SOFT-293): get hardware to solder something so we can detect MPPT counts instead of this
-#ifndef MPPT_COUNT
-#define MPPT_COUNT SOLAR_BOARD_6_MPPTS
-#endif
+// Uncomment to force firmware to detect the 5 or 6 MPPT board.
+// #define MPPT_COUNT SOLAR_BOARD_5_MPPTS
 
 #define SENSE_CYCLE_PERIOD_US 1000000  // 1 second
 
+// In rev 2, MPPT_COUNT_DETECTION_PIN is high on the 6 MPPT board and low on the 5 MPPT board
+#define MPPT_COUNT_ON_HIGH_DETECT_PIN SOLAR_BOARD_6_MPPTS
+#define MPPT_COUNT_ON_LOW_DETECT_PIN SOLAR_BOARD_5_MPPTS
+
 static CanStorage s_can_storage;
 static RelayFsmStorage s_relay_fsm_storage = { 0 };
+
+static StatusCode prv_get_mppt_count(SolarMpptCount *mppt_count) {
+#ifdef MPPT_COUNT
+  *mppt_count = MPPT_COUNT;
+  return STATUS_CODE_OK;
+#else
+  // Detect the board from the state of the MPPT_COUNT_DETECTION_PIN on rev 2
+  GpioAddress detection_pin = MPPT_COUNT_DETECTION_PIN;
+  GpioSettings detection_pin_settings = {
+    .direction = GPIO_DIR_IN,
+    .alt_function = GPIO_ALTFN_NONE,
+    .resistor = GPIO_RES_NONE,
+  };
+  status_ok_or_return(gpio_init_pin(&detection_pin, &detection_pin_settings));
+
+  GpioState detection_state = NUM_GPIO_STATES;
+  status_ok_or_return(gpio_get_state(&detection_pin, &detection_state));
+  *mppt_count = (detection_state == GPIO_STATE_HIGH) ? MPPT_COUNT_ON_HIGH_DETECT_PIN
+                                                     : MPPT_COUNT_ON_LOW_DETECT_PIN;
+  return STATUS_CODE_OK;
+#endif
+}
 
 static StatusCode prv_initialize_libraries(void) {
   interrupt_init();
@@ -74,7 +100,7 @@ static StatusCode prv_initialize_action_modules(void) {
 
 static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(logger_init(mppt_count));
-  // status_ok_or_return(data_tx_init(mppt_count));  // TODO(SOFT-214): data_tx
+  status_ok_or_return(data_tx_init(config_get_data_tx_settings()));
   status_ok_or_return(fault_monitor_init(config_get_fault_monitor_settings(mppt_count)));
   return STATUS_CODE_OK;
 }
@@ -82,12 +108,15 @@ static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count
 int main(void) {
   status_ok_or_return(prv_initialize_libraries());
 
+  SolarMpptCount mppt_count;
+  status_ok_or_return(prv_get_mppt_count(&mppt_count));
+
   status_ok_or_return(data_store_init());
   status_ok_or_return(prv_initialize_action_modules());
-  status_ok_or_return(prv_initialize_sense_modules(MPPT_COUNT));
-  status_ok_or_return(prv_initialize_data_consumer_modules(MPPT_COUNT));
+  status_ok_or_return(prv_initialize_sense_modules(mppt_count));
+  status_ok_or_return(prv_initialize_data_consumer_modules(mppt_count));
 
-  LOG_DEBUG("Hello from solar, initialized with %d MPPTs\n", MPPT_COUNT);
+  LOG_DEBUG("Hello from solar, initialized with %d MPPTs\n", mppt_count);
 
   sense_mcp3427_start();
   sense_start();
@@ -95,12 +124,12 @@ int main(void) {
   Event e = { 0 };
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
+      relay_fsm_process_event(&s_relay_fsm_storage, &e);
       can_process_event(&e);
       mcp3427_process_event(&e);
-      // data_tx_process_event(&e);  // TODO(SOFT-214): data_tx
       fault_monitor_process_event(&e);
+      data_tx_process_event(&e);
       logger_process_event(&e);
-      relay_fsm_process_event(&s_relay_fsm_storage, &e);
     }
     wait();
   }

@@ -23,12 +23,17 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
   // determine which PWM output to change
   uint8_t real_speed = (speed_percent / 0.39);
   if (pwm_port == ADT_PWM_PORT_1) {
-    status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_1, &real_speed,
-                                      SET_SPEED_NUM_BYTES));
+    uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_1, real_speed };
+
+    status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
+                                  SIZEOF_ARRAY(adt7476a_speed_register)));
 
   } else if (pwm_port == ADT_PWM_PORT_2) {
-    status_ok_or_return(i2c_write_reg(port, adt7476a_i2c_address, ADT7476A_PWM_3, &real_speed,
-                                      SET_SPEED_NUM_BYTES));
+    uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_3, real_speed };
+
+    status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
+                                  SIZEOF_ARRAY(adt7476a_speed_register)));
+
   } else if (pwm_port == ADT_PWM_PORT_3) {
     return STATUS_CODE_UNIMPLEMENTED;
   } else {
@@ -70,21 +75,26 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
 
   status_ok_or_return(i2c_init(settings->i2c, &settings->i2c_settings));
 
-  uint8_t fan_config_data = ADT7476A_MANUAL_MODE_MASK;
-  uint8_t smbalert_config_data = ADT7476A_CONFIG_REG_3_MASK;
+  uint8_t fan_config_data_register_1[] = { ADT7476A_FAN_MODE_REGISTER_1,
+                                           ADT7476A_MANUAL_MODE_MASK };
+  uint8_t fan_config_data_register_3[] = { ADT7476A_FAN_MODE_REGISTER_3,
+                                           ADT7476A_MANUAL_MODE_MASK };
+  uint8_t strt_config_data[] = { ADT7476A_CONFIG_REGISTER_1, ADT7476A_CONFIG_REG_1_MASK };
+  uint8_t smbalert_config_data[] = { ADT7476A_CONFIG_REGISTER_3, ADT7476A_CONFIG_REG_3_MASK };
+
+  // set STRT bit to on
+  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, strt_config_data,
+                                SIZEOF_ARRAY(strt_config_data)));
 
   // configure pwm to manual mode
-  status_ok_or_return(i2c_write_reg(settings->i2c, settings->i2c_write_addr,
-                                    ADT7476A_FAN_MODE_REGISTER_1, &fan_config_data,
-                                    ADT7476A_REG_SIZE));
-  status_ok_or_return(i2c_write_reg(settings->i2c, settings->i2c_write_addr,
-                                    ADT7476A_FAN_MODE_REGISTER_3, &fan_config_data,
-                                    ADT7476A_REG_SIZE));
+  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, fan_config_data_register_1,
+                                SIZEOF_ARRAY(fan_config_data_register_1)));
+  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, fan_config_data_register_3,
+                                SIZEOF_ARRAY(fan_config_data_register_3)));
 
   // set pin 10 to SMBALERT rather than pwm output
-  status_ok_or_return(i2c_write_reg(settings->i2c, settings->i2c_write_addr,
-                                    ADT7476A_CONFIG_REGISTER_3, &smbalert_config_data,
-                                    ADT7476A_REG_SIZE));
+  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, smbalert_config_data,
+                                SIZEOF_ARRAY(smbalert_config_data)));
 
   gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              storage->callback, storage->callback_context);
