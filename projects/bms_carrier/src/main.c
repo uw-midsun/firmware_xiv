@@ -47,7 +47,7 @@ int main(void) {
   // initialize modules
   bps_heartbeat_init(&s_bms_storage.bps_storage, BPS_HB_FREQ_MS);
   can_handler_init(&s_bms_storage, TIME_BETWEEN_TX_IN_MILLIS);
-    LtcAfeSettings afe_settings = {
+  LtcAfeSettings afe_settings = {
     // Settings pending hardware validation
     .cs = AFE_SPI_SS,
     .mosi = AFE_SPI_MOSI,
