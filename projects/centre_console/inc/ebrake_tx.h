@@ -1,5 +1,7 @@
 #pragma once
 
+// TODO(SOFT-296): Remove ebrake
+
 // Module for controlling ebrake state, it uses can_tx_retry_wrapper to send ebrake state messages.
 // in case of a fail, raises a fault event passed via the RelayTxRequest. When successful, raises a
 // completion event.
