@@ -5,6 +5,10 @@
 #define SOLAR_UNUSED_PIN \
   { GPIO_PORT_B, 1 }
 
+// High on one board, low on the other.
+#define MPPT_COUNT_DETECTION_PIN \
+  { GPIO_PORT_A, 7 }
+
 #define SOLAR_I2C1_SDA \
   { GPIO_PORT_B, 11 }
 #define SOLAR_I2C1_SCL \
