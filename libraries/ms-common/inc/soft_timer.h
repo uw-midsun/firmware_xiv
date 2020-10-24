@@ -43,6 +43,6 @@ bool soft_timer_cancel(SoftTimerId timer_id);
 bool soft_timer_inuse(void);
 
 // Checks the time left on a particular timer. Returns a 0 if the timer has
-// expired and is no longer in use. Note that since timer ids are re-used this
-// could return false values once the timer has expired or if it is cancelled.
+// expired and is no longer in use, or if timer_id is invalid. Note that since timer ids are re-used
+// this could return false values once the timer has expired or if it is cancelled.
 uint32_t soft_timer_remaining_time(SoftTimerId timer_id);
