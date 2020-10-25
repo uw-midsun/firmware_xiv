@@ -24,14 +24,14 @@ StatusCode mux_init(MuxAddress *address) {
   };
   status_ok_or_return(gpio_init_pin(&address->mux_output_pin, &mux_output_settings));
 
-  // initialize the enable pin to high
+  // initialize the enable pin to low
   GpioSettings mux_enable_settings = {
     .direction = GPIO_DIR_OUT,
-    .state = GPIO_STATE_HIGH,
+    .state = GPIO_STATE_LOW,
     .resistor = GPIO_RES_NONE,
     .alt_function = GPIO_ALTFN_NONE,
   };
-  status_ok_or_return(gpio_init_pin(&address->mux_enable_pin, &mux_output_settings));
+  status_ok_or_return(gpio_init_pin(&address->mux_enable_pin, &mux_enable_settings));
 
   return STATUS_CODE_OK;
 }
