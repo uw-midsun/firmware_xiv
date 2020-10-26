@@ -17,3 +17,5 @@ class BabydriverMessageId:
     """
 
     STATUS = 0
+    ADC_READ_COMMAND = 4
+    ADC_READ_DATA = 5
