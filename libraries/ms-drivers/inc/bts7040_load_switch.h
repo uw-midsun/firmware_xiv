@@ -76,12 +76,10 @@ typedef struct {
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7040Storage;
 
-// Initialize the BTS7040 with the given settings; the select and enable
-// pins are STM32 GPIO pins.
+// Initialize the BTS7040 with the given settings; the enable pin is a STM32 GPIO pins.
 StatusCode bts7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings);
 
-// Initialize the BTS7040 with the given settings; the select and enable
-// pins are through a PCA9539R.
+// Initialize the BTS7040 with the given settings; the enable pin is through a PCA9539R.
 StatusCode bts7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings);
 
 // Enable output by pulling the IN pin high.

@@ -81,10 +81,12 @@ typedef struct {
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
 
-// Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
+// Initialize the BTS7200 with the given settings; the select and enable
+// pins are STM32 GPIO pins.
 StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);
 
-// Initialize the BTS7200 with the given settings; the select pin is through a PCA9539R.
+// Initialize the BTS7200 with the given settings; the select pin and enable
+// pins are through a PCA9539R.
 StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings);
 
 // Read the latest input current measurements, in mA. This does not get measurements from the
@@ -93,22 +95,22 @@ StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSetting
 // Otherwise, bts7200_stop must be called before the pointer is freed to prevent segfaults.
 StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
 
-// Enable output 0 by pulling the IN0 pin high.
+// Enable output 0.
 StatusCode bts7200_enable_output_0(Bts7200Storage *storage);
 
-// Disable output 0 by pulling the IN0 pin low.
+// Disable output 0.
 StatusCode bts7200_disable_output_0(Bts7200Storage *storage);
 
-// Enable output 1 by pulling the IN1 pin high.
+// Enable output 1.
 StatusCode bts7200_enable_output_1(Bts7200Storage *storage);
 
-// Disable output 1 by pulling the IN1 pin low.
+// Disable output 1.
 StatusCode bts7200_disable_output_1(Bts7200Storage *storage);
 
-// Return whether output 0 is enabled or disabled
+// Return whether output 0 is enabled or disabled.
 bool bts7200_get_output_0_enabled(Bts7200Storage *storage);
 
-// Return whether output 1 is enabled or disabled
+// Return whether output 1 is enabled or disabled.
 bool bts7200_get_output_1_enabled(Bts7200Storage *storage);
 
 // Set up a soft timer which periodically updates the storage with the latest measurements.
