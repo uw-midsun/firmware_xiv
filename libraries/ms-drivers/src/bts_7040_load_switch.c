@@ -101,11 +101,7 @@ StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettin
 }
 
 StatusCode bts_7040_enable_output(Bts7040Storage *storage) {
-  if (storage->enable_pin.fault_in_progress) {
-    return STATUS_CODE_INTERNAL_ERROR;
-  } else {
-    return bts7xxx_enable_pin(&storage->enable_pin);
-  }
+  return bts7xxx_enable_pin(&storage->enable_pin);
 }
 
 StatusCode bts_7040_disable_output(Bts7040Storage *storage) {

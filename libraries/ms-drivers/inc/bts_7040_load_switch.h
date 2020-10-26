@@ -9,6 +9,7 @@
 
 #include "adc.h"
 #include "bts7xxx_common.h"
+#include "bts7xxx_common_impl.h"
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
@@ -18,7 +19,7 @@
 #define BTS7040_MAX_LEAKAGE_VOLTAGE_MV 2
 
 // Nominal scaling factor k(ILIS) for current output at the SENSE pin in normal operation.
-// This is the average of two nominal values given: 1700 with I(load) <= 0.25 A,
+// This is the average of two nominal values given: 1750 with I(load) <= 0.25 A,
 // and 1800 with I(load) >= 1A.
 #define BTS7040_IS_SCALING_NOMINAL 1775
 
@@ -92,11 +93,10 @@ StatusCode bts_7040_disable_output(Bts7040Storage *storage);
 // Returns whether the output is enabled or disabled.
 bool bts_7040_get_output_enabled(Bts7040Storage *storage);
 
-// Read the latest measurement. This does not get the measurement from the storage but instead
-// reads it from the BTS7040 itself.
-// Note that, due to the fault handling implementation, the pointer to storage has to be
-// valid for BTS7040_FAULT_RESTART_DELAY_MS. Otherwise, bts_7040_stop must be called
-// before the pointer is freed to prevent segfaults.
+// Read the latest measurement, in mA. This does not get the measurement from the storage but
+// instead reads it from the BTS7040 itself. Note that, due to the fault handling implementation,
+// the pointer to storage has to be valid for BTS7040_FAULT_RESTART_DELAY_MS. Otherwise,
+// bts_7040_stop must be called before the pointer is freed to prevent segfaults.
 StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas);
 
 // Set up a soft timer which periodically updates the storage with the latest measurement.

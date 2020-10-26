@@ -10,6 +10,7 @@
 
 #include "adc.h"
 #include "bts7xxx_common.h"
+#include "bts7xxx_common_impl.h"
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
@@ -86,7 +87,7 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
 // Initialize the BTS7200 with the given settings; the select pin is through a PCA9539R.
 StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings);
 
-// Read the latest measurements. This does not get measurements from the storage but instead
+// Read the latest measurements, in mA. This does not get measurements from the storage but instead
 // reads them from the BTS7200 itself.
 // Note that, due to the fault handling implementation, the pointer to storage has to be
 // valid for BTS7200_FAULT_RESTART_DELAY_MS. Otherwise, bts_7200_stop must be called

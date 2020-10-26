@@ -1,7 +1,7 @@
 #pragma once
 // Common definitions for BTS7XXX-series load switches.
 // Most of the functions in this file allow for a common API to easily interact with the
-// EN/SEL pins on the load switches, abstracting the specific method oif accessing the pin.
+// EN/SEL pins on the load switches, abstracting the specific method of accessing the pin.
 
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
@@ -43,12 +43,3 @@ StatusCode bts7xxx_disable_pin(Bts7xxxEnablePin *pin);
 
 // Broad function to get whether the pin passed in is enabled.
 StatusCode bts7xxx_get_pin_enabled(Bts7xxxEnablePin *pin);
-
-// Broad pin soft timer cb without re-enabling the pin
-void bts7xxx_fault_handler_cb(SoftTimerId timer_id, void *context);
-
-// Broad pin re-enable soft timer cb
-void bts7xxx_fault_handler_enable_cb(SoftTimerId timer_id, void *context);
-
-// Helper function to clear fault on a given pin
-StatusCode bts7xxx_handle_fault_pin(Bts7xxxEnablePin *pin);

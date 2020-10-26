@@ -146,19 +146,11 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
 }
 
 StatusCode bts_7200_enable_output_0(Bts7200Storage *storage) {
-  if (storage->enable_pin_0.fault_in_progress) {
-    return STATUS_CODE_INTERNAL_ERROR;
-  } else {
-    return bts7xxx_enable_pin(&storage->enable_pin_0);
-  }
+  return bts7xxx_enable_pin(&storage->enable_pin_0);
 }
 
 StatusCode bts_7200_enable_output_1(Bts7200Storage *storage) {
-  if (storage->enable_pin_1.fault_in_progress) {
-    return STATUS_CODE_INTERNAL_ERROR;
-  } else {
-    return bts7xxx_enable_pin(&storage->enable_pin_1);
-  }
+  return bts7xxx_enable_pin(&storage->enable_pin_1);
 }
 
 StatusCode bts_7200_disable_output_0(Bts7200Storage *storage) {

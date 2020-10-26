@@ -1,5 +1,6 @@
 #include "adc.h"
 #include "bts_7040_load_switch.h"
+#include "controller_board_pins.h"
 #include "delay.h"
 #include "interrupt.h"
 #include "log.h"
@@ -8,11 +9,6 @@
 
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_I2C_ADDRESS 0x74
-
-#define TEST_CONFIG_PIN_I2C_SCL \
-  { GPIO_PORT_B, 10 }
-#define TEST_CONFIG_PIN_I2C_SDA \
-  { GPIO_PORT_B, 11 }
 
 // 1.21k resistor
 #define BTS7040_TEST_RESISTOR 1210
@@ -68,9 +64,9 @@ void setup_test(void) {
   adc_init(ADC_MODE_SINGLE);
 
   I2CSettings i2c_settings = {
-    .speed = I2C_SPEED_FAST,         //
-    .sda = TEST_CONFIG_PIN_I2C_SDA,  //
-    .scl = TEST_CONFIG_PIN_I2C_SCL,  //
+    .speed = I2C_SPEED_FAST,                //
+    .sda = CONTROLLER_BOARD_ADDR_I2C2_SDA,  //
+    .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,  //
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
 
@@ -338,7 +334,7 @@ void test_bts_7040_current_sense_get_measurement_stm32_valid(void) {
 
   uint16_t reading = 0;
   TEST_ASSERT_OK(bts_7040_get_measurement(&s_storage, &reading));
-  LOG_DEBUG("STM32 readings: %d\r\n", reading);
+  LOG_DEBUG("STM32 reading: %d\n", reading);
 }
 
 // Same, but with pca9539r initialization.
@@ -362,7 +358,7 @@ void test_bts_7040_current_sense_get_measurement_pca9539r_valid(void) {
 
   uint16_t reading = 0;
   TEST_ASSERT_OK(bts_7040_get_measurement(&s_storage, &reading));
-  LOG_DEBUG("PCA9539R readings: %d\r\n", reading);
+  LOG_DEBUG("PCA9539R reading: %d\n", reading);
 }
 
 // Test that bts_7040_stop returns true only when it stops a timer

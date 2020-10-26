@@ -77,10 +77,11 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     bts_7200_settings.enable_0_pin = &s_hw_config.bts7200s[i].en0_pin;
     bts_7200_settings.enable_1_pin = &s_hw_config.bts7200s[i].en1_pin;
 
-    // Add reistor, min/max fault voltages
+    // Add resistor, min/max fault voltages
     bts_7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
     bts_7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
     bts_7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
+    
     status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 
@@ -98,7 +99,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     // driver instead of toggling it directly
     bts_7040_settings.enable_pin = &s_hw_config.bts7040s[i].en_pin;
 
-    // Add reistor, min/max fault voltages
+    // Add resistor, min/max fault voltages
     bts_7040_settings.resistor = POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR;
     bts_7040_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV;
     bts_7040_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV;
