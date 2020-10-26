@@ -93,10 +93,9 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
   };
 
   status_ok_or_return(gpio_init_pin(storage->select_pin.select_pin_stm32, &select_enable_settings));
-  status_ok_or_return(
-      gpio_init_pin(storage->enable_pin_0.enable_pin_stm32, &select_enable_settings));
-  status_ok_or_return(
-      gpio_init_pin(storage->enable_pin_1.enable_pin_stm32, &select_enable_settings));
+
+  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_0));
+  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_1));
 
   return prv_init_common(storage);
 }
@@ -126,21 +125,25 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
-  // initialize PCA9539R on the relevant port
-  pca9539r_gpio_init(settings->i2c_port, storage->select_pin.select_pin_pca9539r->i2c_address);
+  // initialize PCA9539R on the relevant ports
+  status_ok_or_return(
+      pca9539r_gpio_init(settings->i2c_port, storage->select_pin.select_pin_pca9539r->i2c_address));
+  status_ok_or_return(pca9539r_gpio_init(settings->i2c_port,
+                                         storage->enable_pin_0.enable_pin_pca9539r->i2c_address));
+  status_ok_or_return(pca9539r_gpio_init(settings->i2c_port,
+                                         storage->enable_pin_1.enable_pin_pca9539r->i2c_address));
 
-  // initialize the select and input pins
-  Pca9539rGpioSettings select_enable_settings = {
+  // initialize the select pin
+  Pca9539rGpioSettings select_settings = {
     .direction = PCA9539R_GPIO_DIR_OUT,
     .state = PCA9539R_GPIO_STATE_LOW,
   };
 
   status_ok_or_return(
-      pca9539r_gpio_init_pin(storage->select_pin.select_pin_pca9539r, &select_enable_settings));
-  status_ok_or_return(
-      pca9539r_gpio_init_pin(storage->enable_pin_0.enable_pin_pca9539r, &select_enable_settings));
-  status_ok_or_return(
-      pca9539r_gpio_init_pin(storage->enable_pin_1.enable_pin_pca9539r, &select_enable_settings));
+      pca9539r_gpio_init_pin(storage->select_pin.select_pin_pca9539r, &select_settings));
+
+  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_0));
+  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_1));
 
   return prv_init_common(storage);
 }

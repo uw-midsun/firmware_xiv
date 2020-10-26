@@ -55,15 +55,8 @@ StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *se
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
-  // initialize the enable pin
-  GpioSettings enable_settings = {
-    .direction = GPIO_DIR_OUT,
-    .state = GPIO_STATE_LOW,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_NONE,
-  };
-
-  status_ok_or_return(gpio_init_pin(storage->enable_pin.enable_pin_stm32, &enable_settings));
+  // Initialize the enable pin
+  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin));
 
   return prv_init_common(storage);
 }
@@ -88,14 +81,9 @@ StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettin
 
   // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->enable_pin.enable_pin_pca9539r->i2c_address);
-  // initialize the enable pin
-  Pca9539rGpioSettings enable_settings = {
-    .direction = PCA9539R_GPIO_DIR_OUT,
-    .state = PCA9539R_GPIO_STATE_LOW,
-  };
 
-  status_ok_or_return(
-      pca9539r_gpio_init_pin(storage->enable_pin.enable_pin_pca9539r, &enable_settings));
+  // initialize the enable pin
+  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin));
 
   return prv_init_common(storage);
 }

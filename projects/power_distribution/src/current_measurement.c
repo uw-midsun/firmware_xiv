@@ -81,7 +81,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     bts_7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
     bts_7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
     bts_7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
-    
+
     status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
   }
 

@@ -35,6 +35,11 @@ typedef struct {
   Bts7xxxPinType pin_type;
 } Bts7xxxSelectPin;
 
+// Broad function to initialize the pin passed in.
+// If using with PCA9539R, pca9539r_gpio_init must be called on the i2c port and address of this pin
+// prior to calling this function.
+StatusCode bts7xxx_init_enable_pin(Bts7xxxEnablePin *pin);
+
 // Broad function to enable the pin passed in.
 StatusCode bts7xxx_enable_pin(Bts7xxxEnablePin *pin);
 
