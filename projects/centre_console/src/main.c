@@ -9,7 +9,9 @@
 #include "fault_monitor.h"
 #include "gpio.h"
 #include "gpio_it.h"
+#include "hazard_tx.h"
 #include "interrupt.h"
+#include "led_manager.h"
 #include "log.h"
 #include "main_event_generator.h"
 #include "pedal_monitor.h"
@@ -67,6 +69,8 @@ int main(void) {
 
   pedal_monitor_init();
   button_press_init();
+  hazard_tx_init();
+  led_manager_init();
   prv_init_fsms();
   init_charging_manager(&s_drive_fsm_storage.current_state);
   speed_monitor_init(SPEED_MONITOR_WATCHDOG_TIMEOUT);
@@ -89,6 +93,8 @@ int main(void) {
       power_fsm_process_event(&s_power_fsm_storage, &e);
       drive_fsm_process_event(&s_drive_fsm_storage, &e);
       main_event_generator_process_event(&s_main_event_generator, &e);
+      hazard_tx_process_event(&e);
+      led_manager_process_event(&e);
     }
     wait();
   }
