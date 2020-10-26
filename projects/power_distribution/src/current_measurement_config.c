@@ -83,26 +83,32 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
   .bts7040s =
       (PowerDistributionBts7040Data[]){
           {
+              .en_pin = FRONT_PIN_MAIN_DISP_EN,
               .current = FRONT_POWER_DISTRIBUTION_CURRENT_MAIN_DISPLAY,
               .mux_selection = 13,
           },
           {
+              .en_pin = FRONT_PIN_DAYTIME_EN,
               .current = FRONT_POWER_DISTRIBUTION_CURRENT_DAYTIME_RUNNING_LIGHTS,
               .mux_selection = 8,
           },
           {
+              .en_pin = FRONT_PIN_PARKING_BRAKE_EN,
               .current = FRONT_POWER_DISTRIBUTION_CURRENT_PARKING_BRAKE,
               .mux_selection = 10,
           },
           {
+              .en_pin = FRONT_PIN_SPARE_1_EN,
               .current = FRONT_POWER_DISTRIBUTION_CURRENT_SPARE_1,
               .mux_selection = 11,
           },
           {
+              .en_pin = FRONT_PIN_HORN_EN,
               .current = FRONT_POWER_DISTRIBUTION_CURRENT_HORN,
               .mux_selection = 3,
           },
           {
+              .en_pin = FRONT_PIN_SPEAKER_EN,
               .current = FRONT_POWER_DISTRIBUTION_CURRENT_SPEAKER,
               .mux_selection = 5,
           } },
@@ -203,26 +209,32 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
   .bts7040s =
       (PowerDistributionBts7040Data[]){
           {
+              .en_pin = REAR_PIN_BMS_CARRIER_EN,
               .current = REAR_POWER_DISTRIBUTION_CURRENT_BMS_CARRIER,
               .mux_selection = 8,
           },
           {
+              .en_pin = REAR_PIN_MOTOR_INTERFACE_EN,
               .current = REAR_POWER_DISTRIBUTION_CURRENT_MCI,
               .mux_selection = 13,
           },
           {
+              .en_pin = REAR_PIN_CHARGER_EN,
               .current = REAR_POWER_DISTRIBUTION_CURRENT_CHARGER,
               .mux_selection = 11,
           },
           {
+              .en_pin = REAR_PIN_SPARE_5_EN,
               .current = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_5,
               .mux_selection = 10,
           },
           {
+              .en_pin = REAR_PIN_SPARE_6_EN,
               .current = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_6,
               .mux_selection = 3,
           },
           {
+              .en_pin = REAR_PIN_SPARE_7_EN,
               .current = REAR_POWER_DISTRIBUTION_CURRENT_SPARE_7,
               .mux_selection = 5,
           },
