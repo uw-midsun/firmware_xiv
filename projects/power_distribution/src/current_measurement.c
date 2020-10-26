@@ -1,8 +1,8 @@
 #include "current_measurement.h"
 
 #include <stddef.h>
-#include "bts_7040_load_switch.h"
-#include "bts_7200_load_switch.h"
+#include "bts7040_load_switch.h"
+#include "bts7200_load_switch.h"
 
 static PowerDistributionCurrentHardwareConfig s_hw_config;
 static PowerDistributionCurrentStorage s_storage = { 0 };
@@ -18,16 +18,16 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   // read from all the BTS7200s
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
     mux_set(&s_hw_config.mux_address, s_hw_config.bts7200s[i].mux_selection);
-    bts_7200_get_measurement(&s_bts7200_storages[i],
-                             &s_storage.measurements[s_hw_config.bts7200s[i].current_0],
-                             &s_storage.measurements[s_hw_config.bts7200s[i].current_1]);
+    bts7200_get_measurement(&s_bts7200_storages[i],
+                            &s_storage.measurements[s_hw_config.bts7200s[i].current_0],
+                            &s_storage.measurements[s_hw_config.bts7200s[i].current_1]);
   }
 
   // read from all the BTS7040s
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     mux_set(&s_hw_config.mux_address, s_hw_config.bts7040s[i].mux_selection);
-    bts_7040_get_measurement(&s_bts7040_storages[i],
-                             &s_storage.measurements[s_hw_config.bts7040s[i].current]);
+    bts7040_get_measurement(&s_bts7040_storages[i],
+                            &s_storage.measurements[s_hw_config.bts7040s[i].current]);
   }
 
   if (s_callback) {
@@ -56,10 +56,10 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   status_ok_or_return(mux_init(&s_hw_config.mux_address));
 
   // note: we don't have to initialize the mux_output_pin as ADC because
-  // bts_7200_init_pca9539r and bts_7040_init do it for us
+  // bts7200_init_pca9539r and bts7040_init do it for us
 
   // initialize and start the BTS7200s
-  Bts7200Pca9539rSettings bts_7200_settings = {
+  Bts7200Pca9539rSettings bts7200_settings = {
     .sense_pin = &s_hw_config.mux_address.mux_output_pin,
   };
 
@@ -73,20 +73,20 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     // Add DSEL, EN0, EN1 pins
     // TODO(SOFT-336): Convert power distribution to use the enable functions for these in the
     // driver instead of toggling them directly
-    bts_7200_settings.select_pin = &s_hw_config.bts7200s[i].dsel_pin;
-    bts_7200_settings.enable_0_pin = &s_hw_config.bts7200s[i].en0_pin;
-    bts_7200_settings.enable_1_pin = &s_hw_config.bts7200s[i].en1_pin;
+    bts7200_settings.select_pin = &s_hw_config.bts7200s[i].dsel_pin;
+    bts7200_settings.enable_0_pin = &s_hw_config.bts7200s[i].en0_pin;
+    bts7200_settings.enable_1_pin = &s_hw_config.bts7200s[i].en1_pin;
 
     // Add resistor, min/max fault voltages
-    bts_7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
-    bts_7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
-    bts_7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
+    bts7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
+    bts7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
+    bts7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
 
-    status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
+    status_ok_or_return(bts7200_init_pca9539r(&s_bts7200_storages[i], &bts7200_settings));
   }
 
   // initialize all BTS7040/7008s
-  Bts7040Pca9539rSettings bts_7040_settings = {
+  Bts7040Pca9539rSettings bts7040_settings = {
     .sense_pin = &s_hw_config.mux_address.mux_output_pin,
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
@@ -97,14 +97,14 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     // Add EN pin
     // TODO(SOFT-336): Convert power distribution to use the enable functions for this in the
     // driver instead of toggling it directly
-    bts_7040_settings.enable_pin = &s_hw_config.bts7040s[i].en_pin;
+    bts7040_settings.enable_pin = &s_hw_config.bts7040s[i].en_pin;
 
     // Add resistor, min/max fault voltages
-    bts_7040_settings.resistor = POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR;
-    bts_7040_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV;
-    bts_7040_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV;
+    bts7040_settings.resistor = POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR;
+    bts7040_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV;
+    bts7040_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV;
 
-    status_ok_or_return(bts_7040_init_pca9539r(&s_bts7040_storages[i], &bts_7040_settings));
+    status_ok_or_return(bts7040_init_pca9539r(&s_bts7040_storages[i], &bts7040_settings));
   }
 
   // measure the currents immediately; the callback doesn't use the timer id it's passed

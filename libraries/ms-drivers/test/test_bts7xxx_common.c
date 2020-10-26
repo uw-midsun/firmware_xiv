@@ -1,4 +1,4 @@
-// Short test sequence for functions used (mostly) on BTS7xxx pins
+// Short test sequence for functions used on BTS7xxx pins
 
 #include "bts7xxx_common.h"
 
@@ -34,7 +34,7 @@ void test_bts7xxx_init_pin_stm32() {
     .enable_pin_stm32 = &test_pin_stm32,
     .pin_type = BTS7XXX_PIN_STM32,
   };
-  TEST_ASSERT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_OK(bts7xxx_init_pin(&pin));
 }
 
 // Same, but for PCA9539R.
@@ -44,7 +44,7 @@ void test_bts7xxx_init_pin_pca9539r() {
     .pin_type = BTS7XXX_PIN_PCA9539R,
   };
   TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, pin.enable_pin_pca9539r->i2c_address));
-  TEST_ASSERT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_OK(bts7xxx_init_pin(&pin));
 }
 
 // Same two tests as above, but with pin settings that should fail.
@@ -54,7 +54,7 @@ void test_bts7xxx_init_pin_fails_bad_settings_stm32() {
     .enable_pin_stm32 = &test_invalid_pin,
     .pin_type = BTS7XXX_PIN_STM32,
   };
-  TEST_ASSERT_NOT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_NOT_OK(bts7xxx_init_pin(&pin));
   // Change to valid settings
   test_invalid_pin.port = GPIO_PORT_A;
   TEST_ASSERT_OK(bts7xxx_enable_pin(&pin));
@@ -70,7 +70,7 @@ void test_bts7xxx_init_pin_fails_bad_settings_pca9539r() {
     .pin_type = BTS7XXX_PIN_PCA9539R,
   };
   TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, pin.enable_pin_pca9539r->i2c_address));
-  TEST_ASSERT_NOT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_NOT_OK(bts7xxx_init_pin(&pin));
   // Change to valid settings
   test_invalid_pin.pin = PCA9539R_PIN_IO0_0;
   TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, pin.enable_pin_pca9539r->i2c_address));
@@ -83,7 +83,7 @@ void test_bts7xxx_enable_pin_stm32() {
     .pin_type = BTS7XXX_PIN_STM32,
   };
 
-  TEST_ASSERT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_OK(bts7xxx_init_pin(&pin));
   // Should init low
   TEST_ASSERT_FALSE(bts7xxx_get_pin_enabled(&pin));
   TEST_ASSERT_OK(bts7xxx_enable_pin(&pin));
@@ -108,9 +108,9 @@ void test_bts7xxx_enable_pin_pca9539r() {
     .pin_type = BTS7XXX_PIN_PCA9539R,
   };
   TEST_ASSERT_OK(pca9539r_gpio_init(TEST_I2C_PORT, pin.enable_pin_pca9539r->i2c_address));
-  TEST_ASSERT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_OK(bts7xxx_init_pin(&pin));
 
-  TEST_ASSERT_OK(bts7xxx_init_enable_pin(&pin));
+  TEST_ASSERT_OK(bts7xxx_init_pin(&pin));
   // Should init low
   TEST_ASSERT_FALSE(bts7xxx_get_pin_enabled(&pin));
   TEST_ASSERT_OK(bts7xxx_enable_pin(&pin));
@@ -126,4 +126,23 @@ void test_bts7xxx_enable_pin_pca9539r() {
 
   TEST_ASSERT_OK(bts7xxx_disable_pin(&pin));
   TEST_ASSERT_FALSE(bts7xxx_get_pin_enabled(&pin));
+}
+
+void test_bts7xxx_enable_fails_during_fault() {
+  Bts7xxxEnablePin pin = {
+    .enable_pin_stm32 = &test_pin_stm32,
+    .pin_type = BTS7XXX_PIN_STM32,
+  };
+
+  TEST_ASSERT_OK(bts7xxx_init_pin(&pin));
+  // Simulate fault -- shouldn't be able to enable pin
+  pin.fault_in_progress = true;
+  TEST_ASSERT_NOT_OK(bts7xxx_enable_pin(&pin));
+  TEST_ASSERT_TRUE(pin.fault_in_progress);
+  TEST_ASSERT_FALSE(bts7xxx_get_pin_enabled(&pin));
+
+  // Should be able to enable pin after fault clears
+  pin.fault_in_progress = false;
+  TEST_ASSERT_OK(bts7xxx_enable_pin(&pin));
+  TEST_ASSERT_TRUE(bts7xxx_get_pin_enabled(&pin));
 }

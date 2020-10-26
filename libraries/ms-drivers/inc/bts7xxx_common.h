@@ -1,7 +1,7 @@
 #pragma once
 // Common definitions for BTS7XXX-series load switches.
 // Most of the functions in this file allow for a common API to easily interact with the
-// EN/SEL pins on the load switches, abstracting the specific method of accessing the pin.
+// EN pin(s) on the load switches, abstracting the specific method of accessing the pin.
 
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
@@ -38,7 +38,7 @@ typedef struct {
 // Broad function to initialize the pin passed in.
 // If using with PCA9539R, pca9539r_gpio_init must be called on the i2c port and address of this pin
 // prior to calling this function.
-StatusCode bts7xxx_init_enable_pin(Bts7xxxEnablePin *pin);
+StatusCode bts7xxx_init_pin(Bts7xxxEnablePin *pin);
 
 // Broad function to enable the pin passed in.
 StatusCode bts7xxx_enable_pin(Bts7xxxEnablePin *pin);

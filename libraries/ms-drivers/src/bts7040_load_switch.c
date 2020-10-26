@@ -1,8 +1,8 @@
-#include "bts_7040_load_switch.h"
+#include "bts7040_load_switch.h"
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7040Storage *storage = context;
-  bts_7040_get_measurement(storage, &storage->reading_out);
+  bts7040_get_measurement(storage, &storage->reading_out);
 
   if (storage->callback != NULL) {
     storage->callback(storage->reading_out, storage->callback_context);
@@ -36,7 +36,7 @@ static StatusCode prv_init_common(Bts7040Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings) {
+StatusCode bts7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *settings) {
   storage->sense_pin = settings->sense_pin;
 
   storage->enable_pin.enable_pin_stm32 = settings->enable_pin;
@@ -56,12 +56,12 @@ StatusCode bts_7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *se
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // Initialize the enable pin
-  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin));
+  status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin));
 
   return prv_init_common(storage);
 }
 
-StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings) {
+StatusCode bts7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettings *settings) {
   storage->sense_pin = settings->sense_pin;
   storage->enable_pin.enable_pin_pca9539r = settings->enable_pin;
   storage->enable_pin.enable_pin_stm32 = NULL;
@@ -83,20 +83,20 @@ StatusCode bts_7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSettin
   pca9539r_gpio_init(settings->i2c_port, storage->enable_pin.enable_pin_pca9539r->i2c_address);
 
   // initialize the enable pin
-  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin));
+  status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin));
 
   return prv_init_common(storage);
 }
 
-StatusCode bts_7040_enable_output(Bts7040Storage *storage) {
+StatusCode bts7040_enable_output(Bts7040Storage *storage) {
   return bts7xxx_enable_pin(&storage->enable_pin);
 }
 
-StatusCode bts_7040_disable_output(Bts7040Storage *storage) {
+StatusCode bts7040_disable_output(Bts7040Storage *storage) {
   return bts7xxx_disable_pin(&storage->enable_pin);
 }
 
-bool bts_7040_get_output_enabled(Bts7040Storage *storage) {
+bool bts7040_get_output_enabled(Bts7040Storage *storage) {
   return bts7xxx_get_pin_enabled(&storage->enable_pin);
 }
 
@@ -110,7 +110,7 @@ static void prv_convert_voltage_to_current(Bts7040Storage *storage, uint16_t *me
   }
 }
 
-StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
+StatusCode bts7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
 
@@ -139,14 +139,14 @@ StatusCode bts_7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
   return STATUS_CODE_OK;
 }
 
-StatusCode bts_7040_start(Bts7040Storage *storage) {
+StatusCode bts7040_start(Bts7040Storage *storage) {
   // |prv_measure_current| will set up a soft timer to call itself repeatedly
   // by calling this now there's no period with invalid measurements
   prv_measure_current(SOFT_TIMER_INVALID_TIMER, storage);
   return STATUS_CODE_OK;
 }
 
-bool bts_7040_stop(Bts7040Storage *storage) {
+bool bts7040_stop(Bts7040Storage *storage) {
   bool result = soft_timer_cancel(storage->measurement_timer_id);
   soft_timer_cancel(storage->enable_pin.fault_timer_id);
 

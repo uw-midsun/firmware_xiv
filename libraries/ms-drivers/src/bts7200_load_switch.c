@@ -1,8 +1,8 @@
-#include "bts_7200_load_switch.h"
+#include "bts7200_load_switch.h"
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
-  bts_7200_get_measurement(storage, &storage->reading_out_0, &storage->reading_out_1);
+  bts7200_get_measurement(storage, &storage->reading_out_0, &storage->reading_out_1);
 
   if (storage->callback != NULL) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
@@ -40,7 +40,7 @@ static StatusCode prv_init_common(Bts7200Storage *storage) {
 // Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
 // Faults are cleared following the retry strategy on pg. 34 of the BTS7200 datasheet,
 // assuming a worst-case t(DELAY(CR)) of BTS7200_FAULT_RESTART_DELAY_MS (pg. 38)
-static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0, bool fault1) {
+static StatusCode prv_bts7200_handle_fault(Bts7200Storage *storage, bool fault0, bool fault1) {
   StatusCode status0 = STATUS_CODE_OK;
   StatusCode status1 = STATUS_CODE_OK;
 
@@ -58,7 +58,7 @@ static StatusCode prv_bts_7200_handle_fault(Bts7200Storage *storage, bool fault0
   return STATUS_CODE_OK;
 }
 
-StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings) {
+StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings) {
   storage->select_pin.select_pin_stm32 = settings->select_pin;
   storage->select_pin.select_pin_pca9539r = NULL;
   storage->select_pin.pin_type = BTS7XXX_PIN_STM32;
@@ -94,13 +94,13 @@ StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *se
 
   status_ok_or_return(gpio_init_pin(storage->select_pin.select_pin_stm32, &select_enable_settings));
 
-  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_0));
-  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_1));
+  status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin_0));
+  status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin_1));
 
   return prv_init_common(storage);
 }
 
-StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings) {
+StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings) {
   storage->select_pin.select_pin_pca9539r = settings->select_pin;
   storage->select_pin.select_pin_stm32 = NULL;
   storage->select_pin.pin_type = BTS7XXX_PIN_PCA9539R;
@@ -142,33 +142,33 @@ StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettin
   status_ok_or_return(
       pca9539r_gpio_init_pin(storage->select_pin.select_pin_pca9539r, &select_settings));
 
-  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_0));
-  status_ok_or_return(bts7xxx_init_enable_pin(&storage->enable_pin_1));
+  status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin_0));
+  status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin_1));
 
   return prv_init_common(storage);
 }
 
-StatusCode bts_7200_enable_output_0(Bts7200Storage *storage) {
+StatusCode bts7200_enable_output_0(Bts7200Storage *storage) {
   return bts7xxx_enable_pin(&storage->enable_pin_0);
 }
 
-StatusCode bts_7200_enable_output_1(Bts7200Storage *storage) {
+StatusCode bts7200_enable_output_1(Bts7200Storage *storage) {
   return bts7xxx_enable_pin(&storage->enable_pin_1);
 }
 
-StatusCode bts_7200_disable_output_0(Bts7200Storage *storage) {
+StatusCode bts7200_disable_output_0(Bts7200Storage *storage) {
   return bts7xxx_disable_pin(&storage->enable_pin_0);
 }
 
-StatusCode bts_7200_disable_output_1(Bts7200Storage *storage) {
+StatusCode bts7200_disable_output_1(Bts7200Storage *storage) {
   return bts7xxx_disable_pin(&storage->enable_pin_1);
 }
 
-bool bts_7200_get_output_0_enabled(Bts7200Storage *storage) {
+bool bts7200_get_output_0_enabled(Bts7200Storage *storage) {
   return bts7xxx_get_pin_enabled(&storage->enable_pin_0);
 }
 
-bool bts_7200_get_output_1_enabled(Bts7200Storage *storage) {
+bool bts7200_get_output_1_enabled(Bts7200Storage *storage) {
   return bts7xxx_get_pin_enabled(&storage->enable_pin_1);
 }
 
@@ -182,7 +182,7 @@ static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *me
   }
 }
 
-StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
+StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
 
@@ -217,7 +217,7 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
       storage->fault_callback(fault0, fault1, storage->fault_callback_context);
     }
     // Handle fault
-    prv_bts_7200_handle_fault(storage, fault0, fault1);
+    prv_bts7200_handle_fault(storage, fault0, fault1);
 
     // Return internal error on fault
     return STATUS_CODE_INTERNAL_ERROR;
@@ -226,14 +226,14 @@ StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, ui
   return STATUS_CODE_OK;
 }
 
-StatusCode bts_7200_start(Bts7200Storage *storage) {
+StatusCode bts7200_start(Bts7200Storage *storage) {
   // |prv_measure_current| will set up a soft timer to call itself repeatedly
   // by calling this now there's no period with invalid measurements
   prv_measure_current(SOFT_TIMER_INVALID_TIMER, storage);
   return STATUS_CODE_OK;
 }
 
-bool bts_7200_stop(Bts7200Storage *storage) {
+bool bts7200_stop(Bts7200Storage *storage) {
   bool result = soft_timer_cancel(storage->measurement_timer_id);
   soft_timer_cancel(storage->enable_pin_0.fault_timer_id);
   soft_timer_cancel(storage->enable_pin_1.fault_timer_id);

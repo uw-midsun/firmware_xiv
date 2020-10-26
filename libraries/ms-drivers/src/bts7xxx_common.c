@@ -14,7 +14,7 @@ const GpioSettings ENABLE_PIN_SETTINGS_STM32 = {
   .alt_function = GPIO_ALTFN_NONE,
 };
 
-StatusCode bts7xxx_init_enable_pin(Bts7xxxEnablePin *pin) {
+StatusCode bts7xxx_init_pin(Bts7xxxEnablePin *pin) {
   if (pin->pin_type == BTS7XXX_PIN_STM32) {
     return gpio_init_pin(pin->enable_pin_stm32, &ENABLE_PIN_SETTINGS_STM32);
   } else {

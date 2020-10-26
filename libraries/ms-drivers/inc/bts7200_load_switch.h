@@ -6,7 +6,7 @@
 // If using with PCA9539R, requires I2C to be initialized.
 
 // Due to the fault handling procedures for the BTS7200, all BTS7200 pins should
-// only be manipulated through this driver.
+// only be manipulated through this driver and bts7xxx_common.
 
 #include "adc.h"
 #include "bts7xxx_common.h"
@@ -82,39 +82,38 @@ typedef struct {
 } Bts7200Storage;
 
 // Initialize the BTS7200 with the given settings; the select pin is an STM32 GPIO pin.
-StatusCode bts_7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);
+StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);
 
 // Initialize the BTS7200 with the given settings; the select pin is through a PCA9539R.
-StatusCode bts_7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings);
+StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings);
 
-// Read the latest measurements, in mA. This does not get measurements from the storage but instead
-// reads them from the BTS7200 itself.
-// Note that, due to the fault handling implementation, the pointer to storage has to be
-// valid for BTS7200_FAULT_RESTART_DELAY_MS. Otherwise, bts_7200_stop must be called
-// before the pointer is freed to prevent segfaults.
-StatusCode bts_7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
+// Read the latest input current measurements, in mA. This does not get measurements from the
+// storage but instead reads them from the BTS7200 itself. Note that, due to the fault handling
+// implementation, the pointer to storage has to be valid for BTS7200_FAULT_RESTART_DELAY_MS.
+// Otherwise, bts7200_stop must be called before the pointer is freed to prevent segfaults.
+StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
 
 // Enable output 0 by pulling the IN0 pin high.
-StatusCode bts_7200_enable_output_0(Bts7200Storage *storage);
+StatusCode bts7200_enable_output_0(Bts7200Storage *storage);
 
 // Disable output 0 by pulling the IN0 pin low.
-StatusCode bts_7200_disable_output_0(Bts7200Storage *storage);
+StatusCode bts7200_disable_output_0(Bts7200Storage *storage);
 
 // Enable output 1 by pulling the IN1 pin high.
-StatusCode bts_7200_enable_output_1(Bts7200Storage *storage);
+StatusCode bts7200_enable_output_1(Bts7200Storage *storage);
 
 // Disable output 1 by pulling the IN1 pin low.
-StatusCode bts_7200_disable_output_1(Bts7200Storage *storage);
+StatusCode bts7200_disable_output_1(Bts7200Storage *storage);
 
 // Return whether output 0 is enabled or disabled
-bool bts_7200_get_output_0_enabled(Bts7200Storage *storage);
+bool bts7200_get_output_0_enabled(Bts7200Storage *storage);
 
 // Return whether output 1 is enabled or disabled
-bool bts_7200_get_output_1_enabled(Bts7200Storage *storage);
+bool bts7200_get_output_1_enabled(Bts7200Storage *storage);
 
 // Set up a soft timer which periodically updates the storage with the latest measurements.
-// DO NOT USE if you are reading with bts_7200_get_measurement.
-StatusCode bts_7200_start(Bts7200Storage *storage);
+// DO NOT USE if you are reading with bts7200_get_measurement.
+StatusCode bts7200_start(Bts7200Storage *storage);
 
 // Stop the timer associated with the storage and return whether it was successful.
-bool bts_7200_stop(Bts7200Storage *storage);
+bool bts7200_stop(Bts7200Storage *storage);

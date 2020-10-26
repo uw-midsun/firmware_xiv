@@ -2,7 +2,7 @@
 
 // Periodically take reading from user selected channels and log the result
 // Configurable items: wait time, FRONT or REAR power distro selection, channels to be tested
-#include "bts_7200_load_switch.h"
+#include "bts7200_load_switch.h"
 #include "current_measurement_config.h"
 #include "pca9539r_gpio_expander.h"
 
@@ -33,7 +33,7 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
     mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
-    bts_7200_get_measurement(&s_bts7200_storages[i], &current_0, &current_1);
+    bts7200_get_measurement(&s_bts7200_storages[i], &current_0, &current_1);
 
     LOG_DEBUG("Channel: %d; current_0: %d, current_1: %d\n", s_test_channels[i], current_0,
               current_1);
@@ -53,14 +53,14 @@ int main() {
   status_ok_or_return(mux_init(&s_hw_config.mux_address));
 
   // Initialize and start the BTS7200s
-  Bts7200Pca9539rSettings bts_7200_settings = {
+  Bts7200Pca9539rSettings bts7200_settings = {
     .sense_pin = &s_hw_config.mux_address.mux_output_pin,
     .i2c_port = s_hw_config.i2c_port,
   };
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
-    bts_7200_settings.select_pin = &s_hw_config.bts7200s[s_test_channels[i]].dsel_pin;
-    status_ok_or_return(bts_7200_init_pca9539r(&s_bts7200_storages[i], &bts_7200_settings));
+    bts7200_settings.select_pin = &s_hw_config.bts7200s[s_test_channels[i]].dsel_pin;
+    status_ok_or_return(bts7200_init_pca9539r(&s_bts7200_storages[i], &bts7200_settings));
   }
 
   soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, &s_hw_config, NULL);

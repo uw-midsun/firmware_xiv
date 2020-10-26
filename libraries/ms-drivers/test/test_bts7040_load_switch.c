@@ -1,5 +1,5 @@
 #include "adc.h"
-#include "bts_7040_load_switch.h"
+#include "bts7040_load_switch.h"
 #include "controller_board_pins.h"
 #include "delay.h"
 #include "interrupt.h"
@@ -45,7 +45,7 @@ static void prv_fault_callback_increment(void *context) {
   s_fault_received_context = context;
 }
 
-// Storage is global so we can call bts_7040_stop to stop soft timers and avoid segfaults
+// Storage is global so we can call bts7040_stop to stop soft timers and avoid segfaults
 static Bts7040Storage s_storage = { 0 };
 
 // Mocks adc_read_converted to allow for changing the reading during testing.
@@ -81,11 +81,11 @@ void setup_test(void) {
 
 void teardown_test(void) {
   // Stop so we don't segfault if an assert fails while the fault soft timer is in progress.
-  bts_7040_stop(&s_storage);
+  bts7040_stop(&s_storage);
 }
 
 // Comprehensive happy-path test for STM32 initialization.
-void test_bts_7040_current_sense_timer_stm32_works(void) {
+void test_bts7040_current_sense_timer_stm32_works(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
 
@@ -103,14 +103,14 @@ void test_bts_7040_current_sense_timer_stm32_works(void) {
     .fault_callback = &prv_fault_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   // make sure we don't start anything in init
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
   delay_us(2 * interval_us);
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -120,7 +120,7 @@ void test_bts_7040_current_sense_timer_stm32_works(void) {
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 
   // make sure that stop actually stops it
   delay_us(2 * interval_us);
@@ -129,7 +129,7 @@ void test_bts_7040_current_sense_timer_stm32_works(void) {
 }
 
 // Same, but for pca9539r initialization.
-void test_bts_7040_current_sense_timer_pca9539r_works(void) {
+void test_bts7040_current_sense_timer_pca9539r_works(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN pin
@@ -146,14 +146,14 @@ void test_bts_7040_current_sense_timer_pca9539r_works(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &settings));
 
   // make sure we don't start anything in init
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
   delay_us(2 * interval_us);
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -164,7 +164,7 @@ void test_bts_7040_current_sense_timer_pca9539r_works(void) {
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 
   // make sure that stop actually stops it
   delay_us(2 * interval_us);
@@ -173,7 +173,7 @@ void test_bts_7040_current_sense_timer_pca9539r_works(void) {
 
 // Test that we can init, start, stop, and start again and it works.
 // Essentially the previous test done twice.
-void test_bts_7040_current_sense_restart(void) {
+void test_bts7040_current_sense_restart(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -189,8 +189,8 @@ void test_bts_7040_current_sense_restart(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -201,14 +201,14 @@ void test_bts_7040_current_sense_restart(void) {
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 
   // make sure it's stopped
   delay_us(2 * interval_us);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // start again
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // we call the callback and get good values before setting the timer
   TEST_ASSERT_EQUAL(3, s_times_callback_called);
@@ -219,7 +219,7 @@ void test_bts_7040_current_sense_restart(void) {
 
   TEST_ASSERT_EQUAL(4, s_times_callback_called);
 
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 
   // make sure it's stopped
   delay_us(2 * interval_us);
@@ -227,7 +227,7 @@ void test_bts_7040_current_sense_restart(void) {
 }
 
 // Test init failure when the settings are invalid for stm32.
-void test_bts_7040_current_sense_stm32_init_invalid_settings(void) {
+void test_bts7040_current_sense_stm32_init_invalid_settings(void) {
   GpioAddress sense_pin = { .port = 0, .pin = 0 };  // valid
   // EN0 and EN1 pins (both valid for now)
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };
@@ -244,23 +244,23 @@ void test_bts_7040_current_sense_stm32_init_invalid_settings(void) {
 
   // invalid sense pin
   sense_pin.port = NUM_GPIO_PORTS;
-  TEST_ASSERT_NOT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_NOT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   // otherwise valid
   sense_pin.port = 0;
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   // invalid enable pin
   test_enable_pin.port = NUM_GPIO_PORTS;
-  TEST_ASSERT_NOT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_NOT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   // change back to valid
   test_enable_pin.port = GPIO_PORT_A;
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 }
 
 // Same, but for pca9539r.
-void test_bts_7040_current_sense_pca9539r_init_invalid_settings(void) {
+void test_bts7040_current_sense_pca9539r_init_invalid_settings(void) {
   GpioAddress sense_pin = { .port = GPIO_PORT_A, .pin = 0 };  // valid
   // EN0 and EN1 pins
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };
@@ -278,23 +278,23 @@ void test_bts_7040_current_sense_pca9539r_init_invalid_settings(void) {
 
   // invalid sense pin
   sense_pin.port = NUM_GPIO_PORTS;
-  TEST_ASSERT_NOT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
+  TEST_ASSERT_NOT_OK(bts7040_init_pca9539r(&s_storage, &settings));
 
   // otherwise valid
   sense_pin.port = GPIO_PORT_A;
-  TEST_ASSERT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &settings));
 
   // invalid enable pin
   test_enable_pin.pin = NUM_PCA9539R_GPIO_PINS;
-  TEST_ASSERT_NOT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
+  TEST_ASSERT_NOT_OK(bts7040_init_pca9539r(&s_storage, &settings));
 
   // change back to valid
   test_enable_pin.pin = PCA9539R_PIN_IO0_0;
-  TEST_ASSERT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &settings));
 }
 
 // Test that having a NULL callback works and we don't segfault.
-void test_bts_7040_current_sense_null_callback(void) {
+void test_bts7040_current_sense_null_callback(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -309,13 +309,13 @@ void test_bts_7040_current_sense_null_callback(void) {
     .callback = NULL,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 }
 
-// Test that bts_7040_get_measurement returns ok.
-void test_bts_7040_current_sense_get_measurement_stm32_valid(void) {
+// Test that bts7040_get_measurement returns ok.
+void test_bts7040_current_sense_get_measurement_stm32_valid(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -330,15 +330,15 @@ void test_bts_7040_current_sense_get_measurement_stm32_valid(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   uint16_t reading = 0;
-  TEST_ASSERT_OK(bts_7040_get_measurement(&s_storage, &reading));
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &reading));
   LOG_DEBUG("STM32 reading: %d\n", reading);
 }
 
 // Same, but with pca9539r initialization.
-void test_bts_7040_current_sense_get_measurement_pca9539r_valid(void) {
+void test_bts7040_current_sense_get_measurement_pca9539r_valid(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };  // EN pin
@@ -354,15 +354,15 @@ void test_bts_7040_current_sense_get_measurement_pca9539r_valid(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_pca9539r(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &settings));
 
   uint16_t reading = 0;
-  TEST_ASSERT_OK(bts_7040_get_measurement(&s_storage, &reading));
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &reading));
   LOG_DEBUG("PCA9539R reading: %d\n", reading);
 }
 
-// Test that bts_7040_stop returns true only when it stops a timer
-void test_bts_7040_current_sense_stop_return_behaviour(void) {
+// Test that bts7040_stop returns true only when it stops a timer
+void test_bts7040_current_sense_stop_return_behaviour(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -377,15 +377,15 @@ void test_bts_7040_current_sense_stop_return_behaviour(void) {
     .callback = &prv_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_FALSE(bts_7040_stop(&s_storage));
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
-  TEST_ASSERT_FALSE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_FALSE(bts7040_stop(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_stop(&s_storage));
 }
 
 // Test that the context is actually passed to the function
-void test_bts_7040_current_sense_context_passed(void) {
+void test_bts7040_current_sense_context_passed(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN pin
@@ -403,14 +403,14 @@ void test_bts_7040_current_sense_context_passed(void) {
     .callback_context = context_pointer,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
   TEST_ASSERT_EQUAL(context_pointer, s_received_context);
 }
 
 // Test enabling/disabling/getting value works with IN pin
-void test_bts_7040_output_functions_work(void) {
+void test_bts7040_output_functions_work(void) {
   // these don't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   // EN0 and EN1 pins
@@ -425,41 +425,41 @@ void test_bts_7040_output_functions_work(void) {
     .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   // Should initialize open
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
 
   // Close, then check
-  TEST_ASSERT_OK(bts_7040_enable_output(&s_storage));
-  TEST_ASSERT_TRUE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_OK(bts7040_enable_output(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
 
   // Open, then check
-  TEST_ASSERT_OK(bts_7040_disable_output(&s_storage));
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_OK(bts7040_disable_output(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
 
   // Make sure possible to open while already open
-  TEST_ASSERT_OK(bts_7040_disable_output(&s_storage));
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_OK(bts7040_disable_output(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
 
   // Make sure starting current sense doesn't cause issues
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // Same tests as above:
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
-  TEST_ASSERT_OK(bts_7040_enable_output(&s_storage));
-  TEST_ASSERT_TRUE(bts_7040_get_output_enabled(&s_storage));
-  TEST_ASSERT_OK(bts_7040_disable_output(&s_storage));
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
-  TEST_ASSERT_OK(bts_7040_disable_output(&s_storage));
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_OK(bts7040_enable_output(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_OK(bts7040_disable_output(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_OK(bts7040_disable_output(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
 
   // Stop
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 }
 
 // Test that fault callback gets called when measurement is within fault range.
-void test_bts_7040_faults_within_fault_range(void) {
+void test_bts7040_faults_within_fault_range(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -476,19 +476,19 @@ void test_bts_7040_faults_within_fault_range(void) {
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
   };
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   s_times_fault_callback_called = 0;
   s_adc_measurement = ADC_FAULT_VOLTAGE;
 
   uint16_t meas = 0;
-  bts_7040_get_measurement(&s_storage, &meas);
+  bts7040_get_measurement(&s_storage, &meas);
 
   TEST_ASSERT_EQUAL(1, s_times_fault_callback_called);
 }
 
 // Test that fault isn't called when voltage outside of fault range.
-void test_bts_7040_no_fault_outside_of_fault_range(void) {
+void test_bts7040_no_fault_outside_of_fault_range(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -505,22 +505,22 @@ void test_bts_7040_no_fault_outside_of_fault_range(void) {
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
   };
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   s_times_fault_callback_called = 0;
   s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
 
   uint16_t meas = 0;
-  bts_7040_get_measurement(&s_storage, &meas);
+  bts7040_get_measurement(&s_storage, &meas);
 
   TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
 
   s_times_fault_callback_called = 0;
 }
 
-// Test that the fault callback gets called when running bts_7040_start, and
+// Test that the fault callback gets called when running bts7040_start, and
 // there's no segfault/stack overflow.
-void test_bts_7040_fault_cb_called_from_start(void) {
+void test_bts7040_fault_cb_called_from_start(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -536,21 +536,21 @@ void test_bts_7040_fault_cb_called_from_start(void) {
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
   delay_us(2 * interval_us);
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   s_times_fault_callback_called = 0;
   s_adc_measurement = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);  // wait for 2* interval
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
   s_times_fault_callback_called = 0;
 }
 
 // Test that fault cleared correctly, and that the IN pin is toggled
 // to clear the fault as required by the retry strategy.
-void test_bts_7040_handle_fault_clears_fault(void) {
+void test_bts7040_handle_fault_clears_fault(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -566,37 +566,37 @@ void test_bts_7040_handle_fault_clears_fault(void) {
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
   delay_us(2 * interval_us);
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // Enable output
-  TEST_ASSERT_OK(bts_7040_enable_output(&s_storage));
+  TEST_ASSERT_OK(bts7040_enable_output(&s_storage));
 
   // Make sure not called early when ADC voltage normal
   delay_us(2 * interval_us);
-  TEST_ASSERT_TRUE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
 
   // Fault
   s_adc_measurement = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
 
   // Set voltage back to normal so fault doesn't occur again
   s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
 
   // Make sure fault doesn't clear early
   delay_ms(80);
-  TEST_ASSERT_FALSE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
   // Make sure fault clears after time elapsed and values return to normal
   delay_ms(40);
-  TEST_ASSERT_TRUE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
 
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 }
 
 // Test that fault context is passed on correctly on fault.
-void test_bts_7040_fault_context_passed_on_fault(void) {
+void test_bts7040_fault_context_passed_on_fault(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -615,19 +615,19 @@ void test_bts_7040_fault_context_passed_on_fault(void) {
   };
 
   uint16_t meas = 0;
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
 
   s_adc_measurement = ADC_FAULT_VOLTAGE;
 
   // Measure to trigger fault, make sure context is passed okay.
   // Measurement should return STATUS_CODE_INTERNAL_ERROR since a fault is detected
-  TEST_ASSERT_NOT_OK(bts_7040_get_measurement(&s_storage, &meas));
+  TEST_ASSERT_NOT_OK(bts7040_get_measurement(&s_storage, &meas));
   TEST_ASSERT_EQUAL(1, s_times_fault_callback_called);
   TEST_ASSERT_EQUAL(context_pointer, s_fault_received_context);
 }
 
 // Test that trying to enable a pin during fault doesn't work.
-void test_bts_7040_enable_fails_during_fault(void) {
+void test_bts7040_enable_fails_during_fault(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -644,12 +644,12 @@ void test_bts_7040_enable_fails_during_fault(void) {
     .fault_callback = &prv_fault_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
   delay_us(2 * interval_us);
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
 
   // Make sure outputs are off
-  TEST_ASSERT_OK(bts_7040_disable_output(&s_storage));
+  TEST_ASSERT_OK(bts7040_disable_output(&s_storage));
 
   // Start fault, make sure fault handling works ok
   s_times_fault_callback_called = 0;
@@ -659,25 +659,25 @@ void test_bts_7040_enable_fails_during_fault(void) {
 
   // Wait 40 ms; fault still in progress, shouldn't be possible to enable outputs.
   delay_ms(40);
-  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, bts_7040_enable_output(&s_storage));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, bts7040_enable_output(&s_storage));
 
   // Change ADC voltage back to OK so that fault doesn't get called after complete
   s_adc_measurement = ADC_EXPECTED_OK_VOLTAGE;
 
   // Wait another 80 ms for fault handling to finish; should be able to enable output again.
   delay_ms(80);
-  TEST_ASSERT_OK(bts_7040_enable_output(&s_storage));
+  TEST_ASSERT_OK(bts7040_enable_output(&s_storage));
 
   // Make sure output was actually enabled.
-  TEST_ASSERT_TRUE(bts_7040_get_output_enabled(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
 
   // Stop
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 }
 
-// Make sure that bts_7040_stop stops all soft timers and sets
+// Make sure that bts7040_stop stops all soft timers and sets
 // fault_in_progress to false for both pins.
-void test_bts_7040_stop_works(void) {
+void test_bts7040_stop_works(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -694,8 +694,8 @@ void test_bts_7040_stop_works(void) {
     .fault_callback = &prv_fault_callback_increment,
   };
 
-  TEST_ASSERT_OK(bts_7040_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_OK(bts_7040_start(&s_storage));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
+  TEST_ASSERT_OK(bts7040_start(&s_storage));
   TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
   // Cause fault
   s_adc_measurement = ADC_FAULT_VOLTAGE;
@@ -708,7 +708,7 @@ void test_bts_7040_stop_works(void) {
   TEST_ASSERT_TRUE(soft_timer_remaining_time(s_storage.enable_pin.fault_timer_id) > 0);
 
   // Stop
-  TEST_ASSERT_TRUE(bts_7040_stop(&s_storage));
+  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
 
   // Verify
   TEST_ASSERT_EQUAL(SOFT_TIMER_INVALID_TIMER, s_storage.measurement_timer_id);
