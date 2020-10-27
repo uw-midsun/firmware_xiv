@@ -1,6 +1,8 @@
 """Constants for identifying GPIO ports."""
 
-class GpioPort:
+import enum
+
+class GpioPort(enum.Enum):
     """
     An enumeration to specify GPIO ports by name (e.g. GpioPort.A instead of 0).
     """
