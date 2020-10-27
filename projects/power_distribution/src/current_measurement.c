@@ -64,14 +64,6 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   };
   status_ok_or_return(gpio_init_pin(&s_hw_config.mux_enable_pin, &mux_enable_pin_settings));
 
-  // initialize the mux output pin as an ADC input
-  GpioSettings mux_output_pin_settings = {
-    .direction = GPIO_DIR_IN,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_ANALOG,
-  };
-  status_ok_or_return(gpio_init_pin(&s_hw_config.mux_output_pin, &mux_output_pin_settings));
-
   // note: we don't have to initialize the mux_output_pin as ADC because
   // bts7200_init_pca9539r and bts7040_init do it for us
 
