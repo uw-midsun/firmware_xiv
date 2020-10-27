@@ -24,6 +24,7 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
                                    (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a);
 }
 
+/*
 static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
   MotorControllerBroadcastStorage *storage = context;
   float *measurements = storage->measurements.vehicle_velocity;
@@ -41,7 +42,8 @@ static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
     }
   }
 }
-
+*/
+/*
 static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *context) {
   MotorControllerBroadcastStorage *storage = context;
   WaveSculptorBusMeasurement *measurements = storage->measurements.bus_measurements;
@@ -58,6 +60,7 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
     }
   }
 }
+*/
 
 static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
   MotorControllerBroadcastStorage *storage = context;
@@ -83,6 +86,7 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
 
+  /*
   // Velocity Measurements
   status_ok_or_return(
       generic_can_register_rx(settings->motor_can, prv_handle_speed_rx, GENERIC_CAN_EMPTY_MASK,
@@ -100,6 +104,7 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   status_ok_or_return(generic_can_register_rx(
       settings->motor_can, prv_handle_bus_measurement_rx, GENERIC_CAN_EMPTY_MASK,
       MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID, false, storage));
+  */
 
   return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                                  storage, NULL);
