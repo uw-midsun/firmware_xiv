@@ -16,9 +16,19 @@
 #include "motor_controller.h"
 #include "precharge_control.h"
 
+#include "log.h"
+
 static CanStorage s_can_storage;
 static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
+
+static Mcp2515Storage s_test_can_mcp2515;
+
+// CB for rx received
+static void prv_test_receive_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  LOG_DEBUG("received rx from id: %d\n", (int)id);
+  LOG_DEBUG("Data: 0x%x\n", (int)data);
+}
 
 void prv_setup_system_can() {
   CanSettings can_settings = {
@@ -47,9 +57,16 @@ static void prv_setup_motor_can(void) {
 
     .can_bitrate = MCP2515_BITRATE_500KBPS,
     .loopback = false,
+    // filter at MCP2515 instead of through SW
+    .filters = {
+      [MCP2515_FILTER_ID_RXF0] = {.raw = 0x1},
+      [MCP2515_FILTER_ID_RXF1] = {.raw = 0x402},
+    },
   };
-
-  generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
+  // debug stuff to apply filters directly to mcp2515
+  //generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
+  mcp2515_init(&s_test_can_mcp2515, &mcp2515_settings);
+  mcp2515_register_cbs(&s_test_can_mcp2515, prv_test_receive_rx, NULL, NULL);
 }
 
 void prv_mci_storage_init(void *context) {
@@ -78,16 +95,16 @@ int main(void) {
   gpio_init();
   gpio_it_init();
 
-  prv_setup_system_can();
+  //prv_setup_system_can();
   prv_setup_motor_can();
 
-  prv_mci_storage_init(&s_mci_storage);
-  drive_fsm_init();
+  //prv_mci_storage_init(&s_mci_storage);
+  //drive_fsm_init();
 
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
-      can_process_event(&e);
+      //can_process_event(&e);
     }
   }
 
