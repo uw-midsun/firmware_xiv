@@ -11,7 +11,6 @@
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
-#   IT: [INT_TEST=] - Specifies the target integration test (only for mpxe)
 #
 # Usage:
 #   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
