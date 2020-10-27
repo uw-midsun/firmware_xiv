@@ -52,8 +52,8 @@ LDFLAGS := -lrt
 
 CFLAGS += -I/usr/local/include
 
-ifneq (,IS_MPXE)
-LDFLAGS += -L/usr/local/lib -lprotobuf-c
+ifneq (,$(IS_MPXE))
+  LDFLAGS += -L/usr/local/lib -lprotobuf-c
 endif
 
 # Shell environment variables
