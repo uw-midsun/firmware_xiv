@@ -16,9 +16,11 @@ class Project:
         self.stores = {}
 
         cmd = 'build/bin/x86/{}'.format(self.name)
+        print('command', cmd)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=False)
         ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
+        print('ctop_fifo_path', ctop_fifo_path)
         while not os.path.exists(ctop_fifo_path):
             pass
 

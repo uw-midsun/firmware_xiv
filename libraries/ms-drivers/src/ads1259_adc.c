@@ -138,17 +138,20 @@ StatusCode ads1259_get_conversion_data(Ads1259Storage *storage) {
 static MxAds1259Store s_store = MX_ADS1259_STORE__INIT;
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  LOG_DEBUG("UPDATING STORE:\n");
   MxAds1259Store *msg = mx_ads1259_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxAds1259Store *mask = mx_ads1259_store__unpack(NULL, mask_buf.len, mask_buf.data);
-  if (mask->rx_data_LSB != 0) {
-    s_store.rx_data_LSB = msg->rx_data_LSB;
+  if (mask->rx_data_lsb != 0) {
+    s_store.rx_data_lsb = msg->rx_data_lsb;
   }
-  if (mask->rx_data_MID != 0) {
-    s_store.rx_data_MID = msg->rx_data_MID;
+  if (mask->rx_data_mid != 0) {
+    s_store.rx_data_mid = msg->rx_data_mid;
   }
-  if (mask->rx_data_MSB != 0) {
-    s_store.rx_data_MSB = msg->rx_data_MSB;
+  if (mask->rx_data_msb != 0) {
+    s_store.rx_data_msb = msg->rx_data_msb;
   }
+  s_store.chk_sum = (uint8_t)(s_store.rx_data_lsb + s_store.rx_data_mid + s_store.rx_data_msb +
+                              ADS1259_CHECKSUM_OFFSET);
   mx_ads1259_store__free_unpacked(msg, NULL);
   mx_ads1259_store__free_unpacked(mask, NULL);
 }
@@ -215,12 +218,14 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
 
 // calculate check-sum based on page 29 of datasheet
 static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
-  uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID + storage->rx_data.MSB +
+  uint8_t sum = (uint8_t)(s_store.rx_data_lsb + s_store.rx_data_mid + s_store.rx_data_msb +
                           ADS1259_CHECKSUM_OFFSET);
-  if (storage->rx_data.CHK_SUM & CHK_SUM_FLAG_BIT) {
+  LOG_DEBUG("STORAGE CHK_SUM: %x\n", (uint8_t)s_store.chk_sum);
+  LOG_DEBUG("CALCULATED SUM %x\n", sum);
+  if ((uint8_t)s_store.chk_sum & CHK_SUM_FLAG_BIT) {
     return ADS1259_STATUS_CODE_OUT_OF_RANGE;
   }
-  if ((sum & ~(CHK_SUM_FLAG_BIT)) != (storage->rx_data.CHK_SUM & ~(CHK_SUM_FLAG_BIT))) {
+  if ((sum & ~(CHK_SUM_FLAG_BIT)) != ((uint8_t)s_store.chk_sum & ~(CHK_SUM_FLAG_BIT))) {
     return ADS1259_STATUS_CODE_CHECKSUM_FAULT;
   }
   return ADS1259_STATUS_CODE_OK;
@@ -247,14 +252,22 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
   code = prv_checksum(storage);
   (*storage->handler)(code, storage->error_context);
-  storage->conv_data.MSB = (uint8_t)s_store.rx_data_MSB;
-  storage->conv_data.MID = (uint8_t)s_store.rx_data_MID;
-  storage->conv_data.LSB = (uint8_t)s_store.rx_data_LSB;
+  // LOG_DEBUG("msb data %u \n", s_store.rx_data_msb);
+  // LOG_DEBUG("mid data %u \n", s_store.rx_data_mid);
+  // LOG_DEBUG("lsb data %u \n", s_store.rx_data_lsb);
+
+  storage->conv_data.MSB = (uint8_t)s_store.rx_data_msb;
+  storage->conv_data.MID = (uint8_t)s_store.rx_data_mid;
+  storage->conv_data.LSB = (uint8_t)s_store.rx_data_lsb;
+  LOG_DEBUG("msb data %u \n", storage->conv_data.MSB);
+  LOG_DEBUG("mid data %u \n", storage->conv_data.MID);
+  LOG_DEBUG("lsb data %u \n", storage->conv_data.LSB);
   prv_convert_data(storage);
 }
 
 // Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
 StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings) {
+  LOG_DEBUG("ads1259 initing on MPXE\n");
   prv_init_store();
   storage->spi_port = settings->spi_port;
   storage->handler = settings->handler;

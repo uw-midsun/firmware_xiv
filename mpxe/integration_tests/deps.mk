@@ -7,4 +7,4 @@ MPXE_PROJS += can_dump
 MPXE_PROJS += controller_board_blinking_leds
 MPXE_PROJS += mci
 MPXE_PROJS += pedal_board
-MPXE_PROJS += bms_carrier
+MPXE_PROJS += smoke_ads1259
