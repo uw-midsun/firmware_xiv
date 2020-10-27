@@ -55,12 +55,21 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   }
   status_ok_or_return(mux_init(&s_hw_config.mux_address));
 
+  // initialize the mux enable pin to low - CD74HC4067M96's enable pin is active-low
+  GpioSettings mux_enable_pin_settings = {
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_LOW,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
+  };
+  status_ok_or_return(gpio_init_pin(&s_hw_config.mux_enable_pin, &mux_enable_pin_settings));
+
   // note: we don't have to initialize the mux_output_pin as ADC because
   // bts7200_init_pca9539r and bts7040_init do it for us
 
   // initialize and start the BTS7200s
   Bts7200Pca9539rSettings bts7200_settings = {
-    .sense_pin = &s_hw_config.mux_address.mux_output_pin,
+    .sense_pin = &s_hw_config.mux_output_pin,
   };
 
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
@@ -87,7 +96,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
 
   // initialize all BTS7040/7008s
   Bts7040Pca9539rSettings bts7040_settings = {
-    .sense_pin = &s_hw_config.mux_address.mux_output_pin,
+    .sense_pin = &s_hw_config.mux_output_pin,
   };
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     // check that the current is valid

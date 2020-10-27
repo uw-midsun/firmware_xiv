@@ -38,17 +38,7 @@
 #define CS_PIN \
   { .port = GPIO_PORT_B, 12 }
 
-// these are for setting the demux enable, outputs, and inputs
-#define MUX_ENABLE                \
-  {                               \
-    .port = GPIO_PORT_B, .pin = 1 \
-  }  // need to check hardward for correct pin
-     // this pin is unused
-#define MUX_OUTPUT                \
-  {                               \
-    .port = GPIO_PORT_B, .pin = 1 \
-  }  // need to check hardward for correct pin
-     // this pin is unused
+// these are for setting the demux inputs
 #define SEL_PIN_0 \
   { .port = GPIO_PORT_B, .pin = 3 }
 #define SEL_PIN_1 \
@@ -64,8 +54,6 @@ static MuxAddress s_mux_address = {
   .sel_pins[0] = SEL_PIN_0,
   .sel_pins[1] = SEL_PIN_1,
   .sel_pins[2] = SEL_PIN_2,
-  .mux_enable_pin = MUX_ENABLE,
-  .mux_output_pin = MUX_OUTPUT,
 };
 
 // this checks the sepcific spv1020

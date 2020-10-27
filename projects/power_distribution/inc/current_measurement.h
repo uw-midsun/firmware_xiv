@@ -64,6 +64,8 @@ typedef struct {
   uint8_t num_bts7040_channels;  // length of preceding array
 
   MuxAddress mux_address;
+  GpioAddress mux_output_pin;
+  GpioAddress mux_enable_pin;
 } PowerDistributionCurrentHardwareConfig;
 
 typedef struct {
