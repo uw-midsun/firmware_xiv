@@ -1,12 +1,19 @@
+"""Python implementation of the adc_read function for Babydriver."""
+
 import can_util
 from gpio_port import GpioPort
 from message_defs import BabydriverMessageId
 
-# Port number can be entered as either an int or str
 def adc_read(port, pin, raw):
+    """
+    Returns a raw or converted ADC reading on a specific port and pin from the firmware project. 
+
+    The port can be entered as either a string or int value (e.g. 'A' or 0).
+    The pin is an int value, and raw is a bool value. 
+    """
 
     # If port is entered as a str, convert to int
-    if isinstance(port, str): 
+    if isinstance(port, str):
         port = getattr(GpioPort, port.capitalize())
 
     # Data as a list of tuples, all 1 byte in length
@@ -19,8 +26,8 @@ def adc_read(port, pin, raw):
 
     # Pack data into a list of bytes
     data = can_util.can_pack(data)
-    
-    # Send CAN message 
+
+    # Send CAN message
     can_util.send_message(data)
 
     # Wait to receive the first CAN message with data
@@ -28,7 +35,7 @@ def adc_read(port, pin, raw):
 
     # Check if received message is an adc_read
     if data_mssg.data[0] != BabydriverMessageId.ADC_READ_DATA:
-        raise Exception("ERROR: did not receive adc read data") 
+        raise Exception("ERROR: did not receive adc read data")
 
     # Extract the low and high bytes of the ADC conversion
     result_low = data_mssg.data[1]

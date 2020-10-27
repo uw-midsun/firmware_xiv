@@ -1,5 +1,10 @@
-class GpioPort: 
-    A = 0 
+"""Constants for identifying GPIO ports."""
+
+class GpioPort:
+    """
+    An enumeration to specify GPIO ports by name (e.g. GpioPort.A instead of 0).
+    """
+    A = 0
     B = 1
     C = 2
     D = 3
