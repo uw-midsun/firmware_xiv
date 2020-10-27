@@ -1,7 +1,7 @@
 """This Module Tests methods in adc_read.py"""
 import unittest
 
-from adc_read import adc_read
+# from adc_read import adc_read
 
 class TestADCRead(unittest.TestCase):
     """Test Babydriver's adc_read function"""

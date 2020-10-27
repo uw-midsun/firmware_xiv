@@ -6,10 +6,10 @@ from message_defs import BabydriverMessageId
 
 def adc_read(port, pin, raw):
     """
-    Returns a raw or converted ADC reading on a specific port and pin from the firmware project. 
+    Returns a raw or converted ADC reading on a specific port and pin from the firmware project.
 
     The port can be entered as either a string or int value (e.g. 'A' or 0).
-    The pin is an int value, and raw is a bool value. 
+    The pin is an int value, and raw is a bool value.
     """
 
     # If port is entered as a str, convert to int
