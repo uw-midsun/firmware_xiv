@@ -2,7 +2,7 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
-#include "soft+timer.h"
+#include "soft_timer.h"
 #include "wait.h"
 
 #define DEBUG_TEST_TIMEOUT_MS 50
