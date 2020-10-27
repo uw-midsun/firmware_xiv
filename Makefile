@@ -96,6 +96,7 @@ COMMA := ,
 
 # $(call gen_mpxe)
 define gen_mpxe
+$(shell mkdir -p $(ROOT)/$(LIB_DIR)/mpxe-gen/inc $(ROOT)/$(LIB_DIR)/mpxe-gen/src $(ROOT)/$(MPXE_DIR)/protogen)
 $(shell cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *)
 $(shell cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/protogen *)
 $(shell mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src)
