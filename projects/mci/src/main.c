@@ -24,6 +24,7 @@ static MotorControllerStorage s_mci_storage;
 
 static Mcp2515Storage s_test_can_mcp2515;
 
+/*
 // For alternating filter IDs
 static bool s_filter_id = false;
 
@@ -49,6 +50,7 @@ static void prv_test_receive_rx(uint32_t id, bool extended, uint64_t data, size_
   s_filter_id ^= 1;
   prv_change_filter();
 }
+*/
 
 void prv_setup_system_can() {
   CanSettings can_settings = {
@@ -65,7 +67,7 @@ void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
 }
 
-
+/*
 static void prv_setup_motor_can(void) {
   Mcp2515Settings mcp2515_settings = {
     .spi_port = SPI_PORT_2,
@@ -89,7 +91,7 @@ static void prv_setup_motor_can(void) {
   mcp2515_init(&s_test_can_mcp2515, &mcp2515_settings);
   mcp2515_register_cbs(&s_test_can_mcp2515, prv_test_receive_rx, NULL, NULL);
 }
-
+*/
 
 
 void prv_mci_storage_init(void *context) {
@@ -119,10 +121,9 @@ int main(void) {
   gpio_it_init();
 
   //prv_setup_system_can();
-  prv_setup_motor_can();
+  //prv_setup_motor_can();
 
-  //prv_test_change_filter();
-  //prv_mci_storage_init(&s_mci_storage);
+  prv_mci_storage_init(&s_mci_storage);
   //drive_fsm_init();
 
   Event e = { 0 };

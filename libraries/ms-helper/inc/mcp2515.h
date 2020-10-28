@@ -87,8 +87,3 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
 // Note: sizeof(filters) must equal NUM_MCP2515_FILTER_IDs
 // todo: look at removing mask config from this (I think we're always masking for 0xFF)
 StatusCode mcp2515_set_filter(Mcp2515Storage *storage, uint32_t *filters);
-
-// Send an empty CAN message, with the RTR bit set (todo)
-StatusCode mcp2515_tx_rtr(Mcp2515Storage *storage, uint32_t id);
-
-
