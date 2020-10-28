@@ -8,6 +8,7 @@
 #include "pedal_rx.h"
 #include "soft_timer.h"
 
+#include "cruise_rx.h"
 #include "drive_fsm.h"
 #include "mci_broadcast.h"
 #include "mci_events.h"
@@ -65,6 +66,8 @@ void prv_setup_system_can() {
   };
 
   can_init(&s_can_storage, &can_settings);
+  drive_fsm_init();
+  cruise_rx_init();
 }
 
 /*
