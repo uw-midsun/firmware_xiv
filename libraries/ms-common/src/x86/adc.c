@@ -178,7 +178,7 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
   return STATUS_CODE_OK;
 }
 
-// #else  // #ifndef MPXE
+#else  // #ifndef MPXE
 #include <stddef.h>
 
 #include "adc.pb-c.h"
