@@ -52,7 +52,6 @@ void prv_init_fsms() {
   power_off_sequence_init(&s_off_sequence_storage);
   power_fsm_init(&s_power_fsm_storage);
   drive_fsm_init(&s_drive_fsm_storage);
-  cruise_rx_init();
 }
 
 static MainEventGeneratorStorage s_main_event_generator = { 0 };
