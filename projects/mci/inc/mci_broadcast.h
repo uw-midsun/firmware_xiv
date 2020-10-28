@@ -7,11 +7,28 @@
 
 #define MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS 400
 
+
+
+// This is replicated to some degree in motor_can.h, just using here for testing stuff
+// using 6 IDs to replicate how we'd take in 6 IDs across two WaveSculptors, 
+// but this should only have the first 3 when actually implemented 
+typedef enum {
+  MCI_BROADCAST_STATUS = 1, 
+  MCI_BROADCAST_BUS, 
+  MCI_BROADCAST_VELOCITY,
+  MCI_BROADCAST_PHASE_CURRENT,
+  MCI_BROADCAST_VOLTAGE_VECTOR,
+  MCI_BROADCAST_CURRENT_VECTOR,
+  NUM_MCI_BROADCAST_MEASUREMENTS = 6,
+} MciBroadcastMeasurement;
+
 typedef enum {
   LEFT_MOTOR_CONTROLLER = 0,
   RIGHT_MOTOR_CONTROLLER,
   NUM_MOTOR_CONTROLLERS,
 } MotorController;
+
+#define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
 
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
