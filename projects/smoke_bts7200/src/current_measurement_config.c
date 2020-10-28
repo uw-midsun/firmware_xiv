@@ -59,9 +59,9 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
                   { .port = GPIO_PORT_A, .pin = 4 },  //
                   { .port = GPIO_PORT_A, .pin = 3 },  //
               },
-          .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
-          .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
       },
+  .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
+  .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
 };
 
 // This is based on https://uwmidsun.atlassian.net/wiki/x/GgODP, assuming that the currents in
@@ -120,7 +120,7 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
                   { .port = GPIO_PORT_A, .pin = 4 },  //
                   { .port = GPIO_PORT_A, .pin = 3 },  //
               },
-          .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
-          .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
       },
+  .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
+  .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
 };

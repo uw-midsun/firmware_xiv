@@ -8,6 +8,7 @@
 static void prv_pedal_watchdog(SoftTimerId timer_id, void *context) {
   PedalRxStorage *storage = context;
   PedalValues *pedal_values = &storage->pedal_values;
+  storage->watchdog_id = SOFT_TIMER_INVALID_TIMER;
   pedal_values->throttle = 0.0f;
   pedal_values->brake = 0.0f;
   event_raise(storage->timeout_event, 0);
