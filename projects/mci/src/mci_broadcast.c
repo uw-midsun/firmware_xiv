@@ -10,6 +10,10 @@
 #include "mcp2515.h"
 
 #include "log.h"
+#include "cruise_rx.h"
+#include "motor_can.h"
+#include "motor_controller.h"
+#include "soft_timer.h"
 
 #define M_TO_CM_CONV 100
 
