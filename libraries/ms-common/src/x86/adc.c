@@ -180,9 +180,12 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
 
 #else  // #ifndef MPXE
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "adc.pb-c.h"
+#include "interrupt.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "status.h"
 #include "store.h"
 #include "stores.pb-c.h"
@@ -205,7 +208,7 @@ static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
 static bool s_active_channels[NUM_ADC_CHANNELS];
 
 static void prv_export() {
-  store_export(ENUM_STORE_TYPE__ADC, &s_store, NULL)
+  store_export(MX_STORE_TYPE__ADC, &s_store, NULL);
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
@@ -239,22 +242,19 @@ static void prv_periodic_continous_cb(SoftTimerId id, void *context) {
 }
 
 void adc_init(AdcMode adc_mode) {
-  StoreFuncs funcs =
-    {
-      (GetPackedSizeFunc)mx_adc_store__get_packed_size,
-      (PackFunc)mx_adc_store__pack,
-      (UnpackFunc)mx_adc_store__unpack,
-      (FreeUnpackedFunc)mx_adc_store__free_unpacked,
-      (UpdateStoreFunc)update_store,
-    }
-  store_init(ENUM_STORE_TYPE__ADC, funcs);
-
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mx_adc_store__get_packed_size,
+    (PackFunc)mx_adc_store__pack,
+    (UnpackFunc)mx_adc_store__unpack,
+    (FreeUnpackedFunc)mx_adc_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
   s_store.n_state = NUM_ADC_CHANNELS;
   s_store.state = malloc(NUM_ADC_CHANNELS * sizeof(protobuf_c_boolean));
   s_store.n_val = NUM_ADC_CHANNELS;
   s_store.val = malloc(NUM_ADC_CHANNELS * sizeof(uint32_t));
 
-  store_register(ENUM_STORE_TYPE__ADC, &s_store, NULL);
+  store_register(MX_STORE_TYPE__ADC, funcs, &s_store, NULL);
 
   interrupt_init();
   soft_timer_init();
@@ -275,7 +275,7 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) { //no change?
+StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) {  // no change?
   *adc_channel = address.pin;
 
   switch (address.port) {
@@ -304,7 +304,8 @@ StatusCode adc_get_channel(GpioAddress address, AdcChannel *adc_channel) { //no 
   return STATUS_CODE_OK;
 }
 
-StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, void *context) {// no change?
+StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback,
+                                 void *context) {  // no change?
   if (adc_channel >= NUM_ADC_CHANNELS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -374,6 +375,5 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
 
   return STATUS_CODE_OK;
 }
-
 
 #endif  // #ifndef MPXE

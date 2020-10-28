@@ -58,7 +58,8 @@ void log_pstart(char *command, bool is_make) {
     if (read_buf[strlen(read_buf) - 1] == '\n') {
       printf("(pid %i) - %s", pid, read_buf);
       if (is_make) {
-        int same = strcmp(read_buf, "make[1]: Leaving directory '/home/vagrant/shared/firmware_xiv'\n");
+        int same =
+            strcmp(read_buf, "make[1]: Leaving directory '/home/vagrant/shared/firmware_xiv'\n");
         if (same == 0) {
           int killed = kill(-pid, 9);
           return;

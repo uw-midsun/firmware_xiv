@@ -1,9 +1,9 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdint.h>
 
 #include "log.h"
 
@@ -18,7 +18,8 @@ int main(void) {
   bool closed = false;
 
   char cmd[MAX_CMD_LEN];
-  snprintf(cmd, sizeof(cmd), "make build PROJECT=can_communication PLATFORM=x86; build/bin/x86/can_communication");
+  snprintf(cmd, sizeof(cmd),
+           "make build PROJECT=can_communication PLATFORM=x86; build/bin/x86/can_communication");
   snprintf(cmd, sizeof(cmd), "make run PROJECT=%s PLATFORM=x86 DEFINE=MPXE", PROJ);
 
   FILE *proj_fp = popen(cmd, "r");
