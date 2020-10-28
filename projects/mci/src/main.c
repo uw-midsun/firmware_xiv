@@ -25,10 +25,30 @@ static MotorControllerStorage s_mci_storage;
 
 static Mcp2515Storage s_test_can_mcp2515;
 
+// For alternating filter IDs
+static bool s_filter_id = false;
+
+static void prv_change_filter(void) {
+  // Testing with voltage vector measurements instead of speed since they give values
+  LOG_DEBUG("Changing filter ID to %d\n", (s_filter_id ? 0x405 : 0x402));
+  uint32_t filters[2];
+  filters[0] = 0x1;
+  if(!s_filter_id) {
+    filters[1] = 0x402;
+  } else {
+    filters[1] = 0x405;
+  }
+
+  LOG_DEBUG("Change filter result %d\n", mcp2515_set_filter(&s_test_can_mcp2515, filters));
+}
+
 // CB for rx received
 static void prv_test_receive_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
   LOG_DEBUG("received rx from id: %d\n", (int)id);
   LOG_DEBUG("Data: 0x%x\n", (int)data);
+  // Change to other filter and re-init
+  s_filter_id ^= 1;
+  prv_change_filter();
 }
 
 void prv_setup_system_can() {
@@ -47,6 +67,7 @@ void prv_setup_system_can() {
   drive_fsm_init();
   cruise_rx_init();
 }
+
 
 static void prv_setup_motor_can(void) {
   Mcp2515Settings mcp2515_settings = {
@@ -71,6 +92,8 @@ static void prv_setup_motor_can(void) {
   mcp2515_init(&s_test_can_mcp2515, &mcp2515_settings);
   mcp2515_register_cbs(&s_test_can_mcp2515, prv_test_receive_rx, NULL, NULL);
 }
+
+
 
 void prv_mci_storage_init(void *context) {
   PrechargeControlSettings precharge_settings = {
@@ -101,6 +124,7 @@ int main(void) {
   //prv_setup_system_can();
   prv_setup_motor_can();
 
+  //prv_test_change_filter();
   //prv_mci_storage_init(&s_mci_storage);
   //drive_fsm_init();
 
