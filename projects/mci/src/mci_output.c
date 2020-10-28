@@ -73,7 +73,8 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
     drive_command.motor_velocity = 0.0f;
   } else {
     drive_command.motor_current = prv_throttle_to_accel_map(pedal_values.throttle);
-    drive_command.motor_velocity = is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[drive_state];
+    drive_command.motor_velocity =
+        is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[drive_state];
   }
   /** Handling message **/
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);

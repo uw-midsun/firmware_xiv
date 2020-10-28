@@ -1,9 +1,9 @@
 #include "mci_broadcast.h"
 
-#include "cruise_rx.h"
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "critical_section.h"
+#include "cruise_rx.h"
 #include "motor_can.h"
 #include "motor_controller.h"
 #include "soft_timer.h"

@@ -198,36 +198,34 @@ void test_cruise_velocity(void) {
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(EE_DRIVE_OUTPUT_DRIVE, drive_fsm_get_drive_state());
   TEST_ASSERT_TRUE(drive_fsm_is_cruise());
-  TEST_ASSERT_EQUAL(expected_cruise_velocity,  cruise_rx_get_target_velocity());
-  
+  TEST_ASSERT_EQUAL(expected_cruise_velocity, cruise_rx_get_target_velocity());
+
   CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_INCREASE);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   expected_cruise_velocity += MCI_CRUISE_CHANGE_AMOUNT_MS;
-  TEST_ASSERT_EQUAL(expected_cruise_velocity,  cruise_rx_get_target_velocity());
-  
-  
+  TEST_ASSERT_EQUAL(expected_cruise_velocity, cruise_rx_get_target_velocity());
+
   CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_DECREASE);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  expected_cruise_velocity -=  MCI_CRUISE_CHANGE_AMOUNT_MS;
-  TEST_ASSERT_EQUAL(expected_cruise_velocity,  cruise_rx_get_target_velocity());
-  
+  expected_cruise_velocity -= MCI_CRUISE_CHANGE_AMOUNT_MS;
+  TEST_ASSERT_EQUAL(expected_cruise_velocity, cruise_rx_get_target_velocity());
+
   CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_DECREASE);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  expected_cruise_velocity -=  MCI_CRUISE_CHANGE_AMOUNT_MS;
-  TEST_ASSERT_EQUAL(expected_cruise_velocity,  cruise_rx_get_target_velocity());
+  expected_cruise_velocity -= MCI_CRUISE_CHANGE_AMOUNT_MS;
+  TEST_ASSERT_EQUAL(expected_cruise_velocity, cruise_rx_get_target_velocity());
 }
 
 void test_cruise_velocity_fail(void) {
   MotorControllerStorage *storage = &s_mci_storage;
   float expected_cruise_velocity = MCI_MIN_CRUISE_VELOCITY_MS + 2.0f;
   cruise_rx_update_velocity(expected_cruise_velocity);
-  
+
   CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_INCREASE);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(expected_cruise_velocity,  cruise_rx_get_target_velocity());
-  
-  
+  TEST_ASSERT_EQUAL(expected_cruise_velocity, cruise_rx_get_target_velocity());
+
   CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_DECREASE);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(expected_cruise_velocity,  cruise_rx_get_target_velocity());
+  TEST_ASSERT_EQUAL(expected_cruise_velocity, cruise_rx_get_target_velocity());
 }

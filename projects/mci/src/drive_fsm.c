@@ -12,7 +12,6 @@
 #include "precharge_control.h"
 #include "status.h"
 
-
 static MciDriveFsmEvent s_drive_output_fsm_map[] = {
   [EE_DRIVE_OUTPUT_OFF] = MCI_DRIVE_FSM_EVENT_OFF,
   [EE_DRIVE_OUTPUT_DRIVE] = MCI_DRIVE_FSM_EVENT_DRIVE,
@@ -84,7 +83,8 @@ bool drive_fsm_process_event(const Event *e) {
   return fsm_process_event(&s_drive_fsm, e);
 }
 
-static StatusCode prv_drive_output_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_drive_output_rx(const CanMessage *msg, void *context,
+                                      CanAckStatus *ack_reply) {
   (void)context;
   uint16_t drive_output = 0;
   bool expect_transition = true;
