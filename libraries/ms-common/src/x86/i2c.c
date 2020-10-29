@@ -28,12 +28,12 @@ StatusCode i2c_write(I2CPort i2c, I2CAddress addr, uint8_t *tx_data, size_t tx_l
   if (i2c >= NUM_I2C_PORTS) {
     return status_msg(STATUS_CODE_INVALID_ARGS, "Invalid I2C port.");
   }
-  LOG_DEBUG("Sending %ld bytes over I2C: ", tx_len);
+  LOG_DEBUG("Sending %ld bytes over I2C: \n", tx_len);
   if (LOG_LEVEL_DEBUG >= LOG_LEVEL_VERBOSITY) {
     for (size_t i = 0; i < tx_len; i++) {
-      printf("0x%x ", tx_data[i]);
+      // printf("0x%x ", tx_data[i]);
     }
-    printf("\n");
+    // printf("\n");
   }
   return STATUS_CODE_OK;
 }
@@ -56,12 +56,12 @@ StatusCode i2c_write_reg(I2CPort i2c, I2CAddress addr, uint8_t reg, uint8_t *tx_
   if (i2c >= NUM_I2C_PORTS) {
     return status_msg(STATUS_CODE_INVALID_ARGS, "Invalid I2C port.");
   }
-  LOG_DEBUG("Writing %ld bytes to register %d over I2C: ", tx_len, reg);
+  LOG_DEBUG("Writing %ld bytes to register %d over I2C: \n", tx_len, reg);
   if (LOG_LEVEL_DEBUG >= LOG_LEVEL_VERBOSITY) {
     for (size_t i = 0; i < tx_len; i++) {
-      printf("0x%x ", tx_data[i]);
+      // printf("0x%x ", tx_data[i]);
     }
-    printf("\n");
+    // printf("\n");
   }
   return STATUS_CODE_OK;
 }
