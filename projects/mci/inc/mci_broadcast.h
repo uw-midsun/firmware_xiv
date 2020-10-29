@@ -60,6 +60,7 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t velocity_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
+  MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS]; // exposing this for testing purposes
 } MotorControllerBroadcastStorage;
 
 StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,

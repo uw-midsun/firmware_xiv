@@ -129,15 +129,20 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
 
 static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
   // Set up callback storage
-  if(s_cb_storage.callbacks[MCI_BROADCAST_STATUS - MCI_BROADCAST_MEASUREMENT_OFFSET] == NULL) {
+  //if(s_cb_storage.callbacks[MCI_BROADCAST_STATUS - MCI_BROADCAST_MEASUREMENT_OFFSET] == NULL) {
     s_cb_storage.callbacks[MCI_BROADCAST_STATUS - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_handle_status_rx;
-  }
-  if(s_cb_storage.callbacks[MCI_BROADCAST_BUS - MCI_BROADCAST_MEASUREMENT_OFFSET] == NULL) {
+    storage->callbacks[MCI_BROADCAST_STATUS - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_handle_status_rx;
+  //}
+  //if(s_cb_storage.callbacks[MCI_BROADCAST_BUS - MCI_BROADCAST_MEASUREMENT_OFFSET] == NULL) {
     s_cb_storage.callbacks[MCI_BROADCAST_BUS - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_handle_bus_measurement_rx; 
-  }
-  if(s_cb_storage.callbacks[MCI_BROADCAST_VELOCITY - MCI_BROADCAST_MEASUREMENT_OFFSET] == NULL) {
+    storage->callbacks[MCI_BROADCAST_BUS - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_handle_bus_measurement_rx; 
+    LOG_DEBUG("gets into bus cb setup\n");
+  //}
+  //if(s_cb_storage.callbacks[MCI_BROADCAST_VELOCITY - MCI_BROADCAST_MEASUREMENT_OFFSET] == NULL) {
+    LOG_DEBUG("gets into velocity cb setup\n");
     s_cb_storage.callbacks[MCI_BROADCAST_VELOCITY - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_handle_speed_rx; 
-  }
+    storage->callbacks[MCI_BROADCAST_VELOCITY - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_handle_speed_rx; 
+  //}
 
   s_cb_storage.offset = MCI_BROADCAST_STATUS;
   s_cb_storage.motor_controller = LEFT_MOTOR_CONTROLLER;
@@ -159,8 +164,8 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
     },
   };
 
-  mcp2515_init(&s_mcp2515_storage, &mcp2515_settings);
-  mcp2515_register_cbs(&s_mcp2515_storage, prv_process_rx, NULL, storage);
+  LOG_DEBUG("mcp2515 init %d\n", mcp2515_init(&s_mcp2515_storage, &mcp2515_settings));
+  LOG_DEBUG("mcp2515 register cb %d\n", mcp2515_register_cbs(&s_mcp2515_storage, prv_process_rx, NULL, storage));
 }
 #endif
 
@@ -168,11 +173,14 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
   MotorControllerBroadcastStorage *storage = context;
   LOG_DEBUG("in here\n");
   if (storage->velocity_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
+    LOG_DEBUG("bus measurement broadcast\n");
     // Received speed from all motor controllers - clear bitset and broadcast
     storage->velocity_rx_bitset = 0;
     prv_broadcast_speed(storage);
   }
+  LOG_DEBUG("bus: want %d, have %d\n", (1 << NUM_MOTOR_CONTROLLERS) -1, storage->bus_rx_bitset);
   if (storage->bus_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
+    LOG_DEBUG("bus measurement broadcast\n");
     // Received bus measurements from all motor controllers - clear bitset and broadcast
     storage->bus_rx_bitset = 0;
     prv_broadcast_bus_measurement(storage);

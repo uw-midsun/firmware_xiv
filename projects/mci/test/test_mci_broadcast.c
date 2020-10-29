@@ -37,9 +37,12 @@ typedef enum {
 
 static GenericCanMcp2515 s_motor_can;
 static CanStorage s_can_storage;
+static MotorControllerBroadcastStorage s_broadcast_storage;
 
 static bool s_recieved_velocity = false;
 static bool s_recieved_bus_measurement = false;
+
+
 
 /*
 static MotorControllerBroadcastSettings s_broadcast_settings =
@@ -158,8 +161,22 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
                                  size_t dlc) {
   LOG_DEBUG("generic can tx should get here\n");
   if (storage->rx_cb != NULL) {
-    LOG_DEBUG("and here\n");
-    storage->rx_cb(id, extended, data, dlc, storage->context);
+    LOG_DEBUG("and here\n");\
+    GenericCanMsg msg = {
+      .id = id, 
+      .data = data, 
+      .extended = extended, 
+      .dlc = dlc,
+    };
+    //storage->rx_cb(id, extended, data, dlc, storage->context);
+    LOG_DEBUG("calling callback\n");
+    if(id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
+      LOG_DEBUG("velocity\n");
+      s_broadcast_storage.callbacks[MCI_BROADCAST_VELOCITY - MCI_BROADCAST_MEASUREMENT_OFFSET](&msg, &s_broadcast_storage);
+    } else if(id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
+      LOG_DEBUG("bus measurement\n");
+      s_broadcast_storage.callbacks[MCI_BROADCAST_BUS - MCI_BROADCAST_MEASUREMENT_OFFSET](&msg, &s_broadcast_storage);
+    }
   }
   return STATUS_CODE_OK;
 }
@@ -280,8 +297,9 @@ void teardown_test(void) {
 
 // Test 1: lb rv lv rb (check 2 output)
 void test_all_measurements_lb_rv_lv_rb() {
+  LOG_DEBUG("START TEST 1\n");
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
   LOG_DEBUG("after broadcast init\n");
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -327,12 +345,13 @@ void test_all_measurements_lb_rv_lv_rb() {
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
   }
+  LOG_DEBUG("END TEST 1\n");
 }
 
 // Test 2: lb rb lv rv (check 2 output)
 void test_all_measurements_lb_rb_lv_rv() {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -380,7 +399,7 @@ void test_all_measurements_lb_rb_lv_rv() {
 // Test 3: rb lb lv rv (check 2 output)
 void test_all_measurements_rb_lb_lv_rv() {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -430,7 +449,7 @@ void test_no_measurements_rb() {
   // motor_can tx and rx should happen immedietly
 
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -479,7 +498,7 @@ void test_bus_measurements_rb_lb() {
   // motor_can tx and rx should happen immedietly
 
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -527,7 +546,7 @@ void test_velocity_measurements_rv_lv() {
   // motor_can tx and rx should happen immedietly
 
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -573,7 +592,7 @@ void test_no_measurements_rb_lv() {
   // motor_can tx and rx should happen immedietly
 
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
@@ -624,7 +643,7 @@ void test_all_measurements_rv_lv_then_rb_lb() {
   // motor_can tx and rx should happen immedietly
 
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
   MotorControllerMeasurements expected_first_measurements = {
     .bus_measurements =
