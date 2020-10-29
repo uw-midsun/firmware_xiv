@@ -4,6 +4,8 @@ import can_util
 from gpio_port import GpioPort
 from message_defs import BabydriverMessageId
 
+NUM_PINS_PER_PORT = 16
+
 def adc_read(port, pin, raw):
     """
     Returns a raw or converted ADC reading on a specific port and pin from the firmware project.
@@ -16,18 +18,22 @@ def adc_read(port, pin, raw):
     if isinstance(port, str):
         port = getattr(GpioPort, port.capitalize())
 
-    # Data as a list of tuples, all 1 byte in length
+    # Check the ranges of input args
+    if port < 0 or port >= GpioPort.NUM_GPIO_PORTS: 
+        raise ValueError("ERROR: invalid GPIO port")
+    if pin < 0 or pin >= NUM_PINS_PER_PORT: 
+        raise ValueError("ERROR: invalid GPIO pin number")
+    if raw != True and raw != False:
+        raise ValueError("ERROR: raw must be a bool value")
+
+    # Send CAN message
     data = [
         (BabydriverMessageId.ADC_READ_COMMAND, 1),
         (port, 1),
         (pin, 1),
         (raw, 1),
     ]
-
-    # Pack data into a list of bytes
     data = can_util.can_pack(data)
-
-    # Send CAN message
     can_util.send_message(data)
 
     # Wait to receive the first CAN message with data
@@ -46,7 +52,7 @@ def adc_read(port, pin, raw):
 
     # Check if status is not ok (if it's nonzero)
     if status_mssg.data[1] != BabydriverMessageId.STATUS:
-        raise Exception("ERROR: received STATUS_CODE {}".format(status_mssg.data[1]))
+        raise Exception("ERROR: received a nonzero STATUS_CODE: {}".format(status_mssg.data[1]))
 
     # Return ADC reading as a 16-bit int
     return (result_high << 8) | result_low
