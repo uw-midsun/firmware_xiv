@@ -197,6 +197,7 @@ StatusCode gpio_toggle_state(const GpioAddress *address) {
     s_pin_settings[index].state = GPIO_STATE_LOW;
     s_store.state[prv_get_index(address)] = GPIO_STATE_LOW;
   }
+  LOG_DEBUG("HEREHEHREHRHE\n");
   prv_export();
   return STATUS_CODE_OK;
 }

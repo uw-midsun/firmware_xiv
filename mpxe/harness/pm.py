@@ -54,6 +54,7 @@ class ProjectManager:
             if res[0] == proj.popen.stdout.fileno():
                 s = proj.popen.stdout.readline().rstrip()
                 proj.handle_log(self, s.decode('utf-8'))
+                proj.popen.send_signal(signal.SIGUSR2)
             elif res[0] == proj.ctop_fifo.fileno():
                 # Currently assume all messages are storeinfo,
                 # will need other message types

@@ -34,10 +34,16 @@ static int s_ctop_fifo;
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock;
+pthread_mutex_t s_sig_lock2;
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
   pthread_mutex_unlock(&s_sig_lock);
+  return;
+}
+
+static void prv_sigusr2(int signo) {
+  pthread_mutex_unlock(&s_sig_lock2);
   return;
 }
 
@@ -62,7 +68,7 @@ static void *prv_poll_update(void *arg) {
   // compare using second proto as 'mask'
   // trigger gpio interrupt as necessary
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
-  LOG_DEBUG("starting to poll\n");
+  // LOG_DEBUG("starting to poll\n");
   while (true) {
     int res = poll(&pfd, 1, -1);
     if (res == -1) {
@@ -94,7 +100,9 @@ void store_config(void) {
 
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
+  signal(SIGUSR2, prv_sigusr2);
   pthread_mutex_init(&s_sig_lock, NULL);
+  pthread_mutex_init(&s_sig_lock2, NULL);
 
   // set up polling thread
   pthread_t poll_thread;
