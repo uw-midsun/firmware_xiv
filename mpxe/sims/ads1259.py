@@ -20,8 +20,8 @@ class Ads1259(sim.Sim):
         ads1259_msg.rx_data_msb = val
 
         ads1259_mask = ads1259_pb2.MxAds1259Store()
-        ads1259_mask.rx_data_lsb = val
-        ads1259_mask.rx_data_mid = val
-        ads1259_mask.rx_data_msb = val
+        ads1259_mask.rx_data_lsb = 1
+        ads1259_mask.rx_data_mid = 1
+        ads1259_mask.rx_data_msb = 1
 
         proj.write_store(stores_pb2.MxStoreType.ADS1259, ads1259_msg, ads1259_mask)
