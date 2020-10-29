@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from adc_read import adc_read, NUM_PINS_PER_PORT
+from can_util import Message
 from gpio_port import GpioPort
 
 RAW_MAX = 4095
@@ -13,7 +14,7 @@ class TestADCRead(unittest.TestCase):
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
-    def test_check_range_pin(self, mock_send_message, mock_next_message):
+    def test_check_range_pin(self):
         """Tests Maximum values"""
         self.assertLessEqual(adc_read(GpioPort.A, 0, True), RAW_MAX)
         self.assertLessEqual(adc_read(GpioPort.A, 1, True), RAW_MAX)
@@ -35,6 +36,14 @@ class TestADCRead(unittest.TestCase):
         self.assertRaises(ValueError, adc_read, GpioPort.A, -1, 0)
         # Tests fail conditions for raw parameter
         self.assertRaises(ValueError, adc_read, GpioPort.A, 1, -1)
+
+        # Tests fail conditions for can_util.send_message, in index 0
+        mock_send_message.side_effect = Message([-1])
+        self.assertRaises(Exception, adc_read, GpioPort.A, 0, 0)
+
+        # Tests fail condition for can_util.next_message, in index 1
+        mock_next_message.side_effect = Message([0, -1])
+        self.assertRaises(Exception, adc_read, GpioPort.A, 0, 0)
 
 if __name__ == '__main__':
     unittest.main()

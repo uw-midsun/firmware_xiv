@@ -19,11 +19,11 @@ def adc_read(port, pin, raw):
         port = getattr(GpioPort, port.capitalize())
 
     # Check the ranges of input args
-    if port < 0 or port >= GpioPort.NUM_GPIO_PORTS: 
+    if port < 0 or port >= GpioPort.NUM_GPIO_PORTS:
         raise ValueError("ERROR: invalid GPIO port")
-    if pin < 0 or pin >= NUM_PINS_PER_PORT: 
+    if pin < 0 or pin >= NUM_PINS_PER_PORT:
         raise ValueError("ERROR: invalid GPIO pin number")
-    if raw != True and raw != False:
+    if raw not in (True, False):
         raise ValueError("ERROR: raw must be a bool value")
 
     # Send CAN message
