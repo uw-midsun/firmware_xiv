@@ -215,9 +215,9 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
   MxAdcStore *msg = mx_adc_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxAdcStore *mask = mx_adc_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
-  for (uint16_t i = 0; i < mask->n_state; i++) {
-    if (mask->state[i] != 0) {
-      s_store.state[i] = msg->state[i];
+  for (uint16_t i = 0; i < mask->n_reading; i++) {
+    if (mask->reading[i] != 0) {
+      s_store.reading[i] = msg->reading[i];
     }
   }
   mx_adc_store__free_unpacked(msg, NULL);
@@ -249,10 +249,8 @@ void adc_init(AdcMode adc_mode) {
     (FreeUnpackedFunc)mx_adc_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  s_store.n_state = NUM_ADC_CHANNELS;
-  s_store.state = malloc(NUM_ADC_CHANNELS * sizeof(protobuf_c_boolean));
-  s_store.n_val = NUM_ADC_CHANNELS;
-  s_store.val = malloc(NUM_ADC_CHANNELS * sizeof(uint32_t));
+  s_store.n_reading = NUM_ADC_CHANNELS;
+  s_store.reading = malloc(NUM_ADC_CHANNELS * sizeof(uint32_t));
 
   store_register(MX_STORE_TYPE__ADC, funcs, &s_store, NULL);
 
@@ -270,7 +268,7 @@ StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   s_active_channels[adc_channel] = new_state;
-  s_store.state[adc_channel] = new_state;
+
   prv_export();
   return STATUS_CODE_OK;
 }
@@ -328,7 +326,7 @@ StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
   }
 
   s_adc_interrupts[adc_channel].reading = ADC_RETURNED_VOLTAGE_RAW;
-  s_store.val[adc_channel] = ADC_RETURNED_VOLTAGE_RAW;
+  s_store.reading[adc_channel] = ADC_RETURNED_VOLTAGE_RAW;
   *reading = s_adc_interrupts[adc_channel].reading;
 
   if (s_adc_interrupts[adc_channel].callback != NULL) {
@@ -370,7 +368,7 @@ StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading) {
   adc_read_converted(ADC_CHANNEL_REF, &vdda);
   *reading = (adc_reading * vdda) / 4095;
 
-  s_store.val[adc_channel] = *reading;
+  s_store.reading[adc_channel] = *reading;
   prv_export();
 
   return STATUS_CODE_OK;
