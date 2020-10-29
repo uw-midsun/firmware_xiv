@@ -53,11 +53,14 @@ StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage) {
     .smbalert_pin = BMS_FAN_ALERT_PIN,
     .callback = (GpioItCallback)settings->callback,  // set to NULL for no callback
     .callback_context = settings->callback_context,
-    .i2c_write_addr = storage->i2c_write_addr,
-    .i2c_read_addr = storage->i2c_read_addr,
+    .i2c_write_addr = settings->i2c_write_addr,
+    .i2c_read_addr = settings->i2c_read_addr,
     .i2c = BMS_FAN_CTRL_I2C_PORT_1,
     .i2c_settings = settings->i2c_settings,
   };
+
+  storage->i2c_write_addr = settings->i2c_write_addr;
+  storage->i2c_read_addr = settings->i2c_read_addr;
 
   s_interval_ms = settings->poll_interval_ms;
 

@@ -1,15 +1,15 @@
 #include "mci_broadcast.h"
 
-#include "motor_can.h"
-#include "motor_controller.h"
-#include "soft_timer.h"
-
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "critical_section.h"
 #include "mcp2515.h"
 
 #include "log.h"
+#include "cruise_rx.h"
+#include "motor_can.h"
+#include "motor_controller.h"
+#include "soft_timer.h"
 
 #define M_TO_CM_CONV 100
 
@@ -91,6 +91,9 @@ static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
       measurements[motor_id] = can_data.velocity_measurement.vehicle_velocity_ms * M_TO_CM_CONV;
       storage->velocity_rx_bitset |= 1 << motor_id;
       critical_section_end(disabled);
+      if (motor_id == LEFT_MOTOR_CONTROLLER) {
+        cruise_rx_update_velocity(can_data.velocity_measurement.vehicle_velocity_ms);
+      }
       break;
     }
   }

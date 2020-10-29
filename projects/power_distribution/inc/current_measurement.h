@@ -27,19 +27,23 @@
 #define POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV 3200
 #define POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV 10000
 
+// Apply similar logic for the BTS7040s (see p.g. 49 of BTS7040 datasheet):
+#define POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV 3200
+#define POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV 10000
+
 typedef void (*PowerDistributionCurrentMeasurementCallback)(void *context);
 
 typedef struct {
   Pca9539rGpioAddress dsel_pin;
   Pca9539rGpioAddress en0_pin;
   Pca9539rGpioAddress en1_pin;
-  int resistor;
   PowerDistributionCurrent current_0;
   PowerDistributionCurrent current_1;
   uint8_t mux_selection;
 } PowerDistributionBts7200Data;
 
 typedef struct {
+  Pca9539rGpioAddress en_pin;
   PowerDistributionCurrent current;
   uint8_t mux_selection;
 } PowerDistributionBts7040Data;
@@ -60,6 +64,8 @@ typedef struct {
   uint8_t num_bts7040_channels;  // length of preceding array
 
   MuxAddress mux_address;
+  GpioAddress mux_output_pin;
+  GpioAddress mux_enable_pin;
 } PowerDistributionCurrentHardwareConfig;
 
 typedef struct {

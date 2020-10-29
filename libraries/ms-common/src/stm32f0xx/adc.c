@@ -18,6 +18,7 @@
 typedef struct AdcStatus {
   uint32_t sequence;
   bool continuous;
+  volatile bool converting;
 } AdcStatus;
 
 static AdcStatus s_adc_status;
@@ -121,13 +122,14 @@ void adc_init(AdcMode adc_mode) {
   ADC_AutoPowerOffCmd(ADC1, !adc_mode);
 
   // Enable interrupts for the end of each conversion
-  stm32f0xx_interrupt_nvic_enable(ADC1_COMP_IRQn, INTERRUPT_PRIORITY_NORMAL);
+  stm32f0xx_interrupt_nvic_enable(ADC1_COMP_IRQn, INTERRUPT_PRIORITY_HIGH);
   ADC_ITConfig(ADC1, ADC_IER_EOCIE, true);
   ADC_ITConfig(ADC1, ADC_IER_EOSEQIE, true);
 
   // Initialize static variables
   s_adc_status.continuous = adc_mode;
   s_adc_status.sequence = 0;
+  s_adc_status.converting = false;
 
   if (adc_mode) {
     ADC_StartOfConversion(ADC1);
@@ -215,9 +217,20 @@ StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, v
 
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading) {
   status_ok_or_return(prv_check_channel_valid_and_enabled(adc_channel));
+
   if (!s_adc_status.continuous) {
+    // SOFT-347: We previously waited while |ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)| was true.
+    // But the EOSEQ flag is normally 0 and is set to 1 at the end of conversion, but reset by
+    // |ADC1_COMP_IRQHandler| before the interrupt finishes. So this loop always sees it as 0. Thus
+    // we weren't waiting at all and just returning the old s_adc_interrupts[adc_channel].reading.
+    // Fix: track whether we're converting with a volatile bool which is reset in the IRQHandler.
+    // The ADC interrupt has INTERRUPT_PRIORITY_HIGH so it can interrupt soft timer callbacks and
+    // other INTERRUPT_PRIORITY_NORMAL interrupts, but if this is called from another interrupt with
+    // INTERRUPT_PRIORITY_HIGH, the NVIC will queue the ADC interrupt until the calling interrupt
+    // returns and this loop will deadlock.
+    s_adc_status.converting = true;
     ADC_StartOfConversion(ADC1);
-    while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOSEQ)) {
+    while (s_adc_status.converting) {
     }
   }
 
@@ -276,6 +289,8 @@ void ADC1_COMP_IRQHandler() {
     s_adc_status.sequence = ADC1->CHSELR;
     ADC_ClearITPendingBit(ADC1, ADC_IT_EOSEQ);
   }
+
+  s_adc_status.converting = false;
 }
 
 // the following functions are wrappers over the legacy AdcChannel API dealing with GpioAddresses

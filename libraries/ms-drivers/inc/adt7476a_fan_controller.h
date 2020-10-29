@@ -4,7 +4,7 @@
 #include "i2c.h"
 #include "i2c_mcu.h"
 
-// Requires interrupts, soft timers, GPIO, and GPIO interrupts to be initialized
+// Requires I2C, interrupts, soft timers, GPIO, and GPIO interrupts to be initialized
 
 typedef struct {
   GpioAddress smbalert_pin;
