@@ -52,7 +52,6 @@ typedef struct MotorControllerMeasurements {
 typedef struct MotorControllerBroadcastSettings {
   GenericCan *motor_can;
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
-  MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS]; // can define cbs here as well
 } MotorControllerBroadcastSettings;
 
 typedef struct MotorControllerBroadcastStorage {
@@ -60,7 +59,7 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t velocity_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
-  MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS]; // exposing this for testing purposes
+  MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS]; // Callbacks exposed so we can unit test more easily
 } MotorControllerBroadcastStorage;
 
 StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
