@@ -146,8 +146,8 @@ StatusCode bts7040_start(Bts7040Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-bool bts7040_stop(Bts7040Storage *storage) {
-  bool result = soft_timer_cancel(storage->measurement_timer_id);
+void bts7040_stop(Bts7040Storage *storage) {
+  soft_timer_cancel(storage->measurement_timer_id);
   soft_timer_cancel(storage->enable_pin.fault_timer_id);
 
   // make sure calling stop twice doesn't cancel an unrelated timer
@@ -156,6 +156,4 @@ bool bts7040_stop(Bts7040Storage *storage) {
 
   // Fault handling no longer in progress
   storage->enable_pin.fault_in_progress = false;
-
-  return result;
 }
