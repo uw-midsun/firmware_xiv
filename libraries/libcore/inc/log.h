@@ -40,11 +40,6 @@ typedef enum {
 #include <unistd.h>
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
-// signal handler for catching parent
-static void prv_sigusr2(int signo) {
-  pthread_mutex_unlock(&s_sig_lock);
-  return;
-}
 // fflush necessary for printing through pipes
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \

@@ -94,7 +94,6 @@ void store_config(void) {
 
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
-  signal(SIGUSR2, prv_sigusr2);
   pthread_mutex_init(&s_sig_lock, NULL);
 
   // set up polling thread
