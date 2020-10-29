@@ -41,12 +41,14 @@ static CanStorage s_can_storage;
 static bool s_recieved_velocity = false;
 static bool s_recieved_bus_measurement = false;
 
+/*
 static MotorControllerBroadcastSettings s_broadcast_settings =
     { .motor_can = (GenericCan *)&s_motor_can,
       .device_ids = {
           [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
           [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
       } };
+*/
 
 typedef struct TestWaveSculptorBusMeasurement {
   uint16_t bus_voltage_v;
@@ -73,6 +75,7 @@ static MotorCanFrameId s_frame_id_map[] = {
 
 static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
                                       CanAckStatus *ack_reply) {
+  LOG_DEBUG("prv handle velocity, test side\n");
   uint16_t left_velocity, right_velocity;
   CAN_UNPACK_MOTOR_VELOCITY(msg, &left_velocity, &right_velocity);
   s_test_measurements.vehicle_velocity[LEFT_MOTOR_CONTROLLER] = left_velocity;
@@ -83,6 +86,7 @@ static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
 
 static StatusCode prv_handle_bus_measurement(const CanMessage *msg, void *context,
                                              CanAckStatus *ack_reply) {
+  LOG_DEBUG("prv handle bus measurement, test side\n");                                               
   uint16_t left_voltage, left_current, right_voltage, right_current;
   CAN_UNPACK_MOTOR_CONTROLLER_VC(msg, &left_voltage, &left_current, &right_voltage, &right_current);
   s_test_measurements.bus_measurements[LEFT_MOTOR_CONTROLLER].bus_voltage_v = left_voltage;
@@ -92,6 +96,40 @@ static StatusCode prv_handle_bus_measurement(const CanMessage *msg, void *contex
   s_recieved_bus_measurement = true;
   return STATUS_CODE_OK;
 }
+
+static void prv_test_hbm(const GenericCanMsg *msg, void *context) {
+  CanMessage msg_converted = {
+    .msg_id = msg->id, 
+    .source_id = 0, 
+    .data = msg->data, 
+    .type = CAN_MSG_TYPE_DATA, 
+    .dlc = msg->dlc,
+  };
+  prv_handle_bus_measurement(&msg_converted, context, NULL);
+}
+
+static void prv_test_hv(const GenericCanMsg *msg, void *context) {
+  CanMessage msg_converted = {
+    .msg_id = msg->id, 
+    .source_id = 0, 
+    .data = msg->data, 
+    .type = CAN_MSG_TYPE_DATA, 
+    .dlc = msg->dlc,
+  };
+   prv_handle_velocity(&msg_converted, context, NULL);
+}
+
+static MotorControllerBroadcastSettings s_broadcast_settings =
+    { .motor_can = (GenericCan *)&s_motor_can,
+      .device_ids = {
+          [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
+          [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
+      },
+      .callbacks = {
+        [MCI_BROADCAST_BUS - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_test_hbm,
+        [MCI_BROADCAST_VELOCITY - MCI_BROADCAST_MEASUREMENT_OFFSET] = prv_test_hv,
+      }, 
+      };
 
 static void prv_send_measurements(MotorController controller, TestMciMessage message_type,
                                   MotorControllerMeasurements *measurements) {
@@ -112,18 +150,21 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
     .extended = false,
   };
   memcpy(&msg.data, &can_data, sizeof(can_data));
-
+  LOG_DEBUG("generic can tx\n");
   generic_can_tx((GenericCan *)&s_motor_can, &msg);
 }
 
 StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                                  size_t dlc) {
+  LOG_DEBUG("generic can tx should get here\n");
   if (storage->rx_cb != NULL) {
+    LOG_DEBUG("and here\n");
     storage->rx_cb(id, extended, data, dlc, storage->context);
   }
   return STATUS_CODE_OK;
 }
 
+/*
 static void prv_rx_handler(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
   GenericCanMcp2515 *gcmcp = context;
   for (size_t i = 0; i < NUM_GENERIC_CAN_RX_HANDLERS; i++) {
@@ -138,6 +179,23 @@ static void prv_rx_handler(uint32_t id, bool extended, uint64_t data, size_t dlc
       gcmcp->base.rx_storage[i].rx_handler(&msg, gcmcp->base.rx_storage[i].context);
       break;
     }
+  }
+}
+*/
+
+// CB for rx received. (kind of) mocks the implementation in mci_broadcast.c.
+static void prv_rx_handler(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  CanMessage msg_converted = {
+    .msg_id = id, 
+    .source_id = 0, 
+    .data = data, 
+    .type = CAN_MSG_TYPE_DATA, 
+    .dlc = dlc,
+  };
+  if(id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
+    prv_handle_velocity(&msg_converted, context, NULL);
+  } else if(id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
+    prv_handle_bus_measurement(&msg_converted, context, NULL);
   }
 }
 
@@ -159,6 +217,7 @@ static void prv_setup_motor_can(void) {
   generic_can_mcp2515_init(&s_motor_can, &mcp2515_settings);
   // On x86 the rx handler doesn't get registered either :|
   mcp2515_register_cbs(s_motor_can.mcp2515, prv_rx_handler, NULL, &s_motor_can);
+  LOG_DEBUG("end of setup motor can\n");
 }
 
 static void prv_setup_system_can() {
@@ -177,10 +236,13 @@ static void prv_setup_system_can() {
 }
 
 static void prv_assert_double_broadcast() {
+  LOG_DEBUG("before tx\n");
   MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
+  LOG_DEBUG("after tx\n");
   MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
   MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
+  LOG_DEBUG("after rx\n");
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -201,6 +263,8 @@ void setup_test(void) {
                                          prv_handle_bus_measurement, NULL));
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, prv_handle_velocity, NULL));
+
+  LOG_DEBUG("end of setup test\n");
 }
 
 void teardown_test(void) {
@@ -218,6 +282,7 @@ void teardown_test(void) {
 void test_all_measurements_lb_rv_lv_rb() {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
   mci_broadcast_init(&broadcast_storage, &s_broadcast_settings);
+  LOG_DEBUG("after broadcast init\n");
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
         {
@@ -238,19 +303,22 @@ void test_all_measurements_lb_rv_lv_rb() {
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
   };
-
+  LOG_DEBUG("prv send measurements\n");
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
+  LOG_DEBUG("prv send measurements\n");                  
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
-
+  LOG_DEBUG("after first prv send\n");
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  LOG_DEBUG("after delay\n");
   prv_assert_double_broadcast();
-
+  LOG_DEBUG("after double broadcast\n");
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
+  LOG_DEBUG("after asserts\n");
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);

@@ -52,6 +52,7 @@ typedef struct MotorControllerMeasurements {
 typedef struct MotorControllerBroadcastSettings {
   GenericCan *motor_can;
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
+  MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS]; // can define cbs here as well
 } MotorControllerBroadcastSettings;
 
 typedef struct MotorControllerBroadcastStorage {
