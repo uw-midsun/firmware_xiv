@@ -101,5 +101,5 @@ StatusCode bts7040_get_measurement(Bts7040Storage *storage, uint16_t *meas);
 // DO NOT USE if you are reading with bts7040_get_measurement.
 StatusCode bts7040_start(Bts7040Storage *storage);
 
-// Stop the timer associated with the storage and return whether stopping it was successful.
-bool bts7040_stop(Bts7040Storage *storage);
+// Stop the measurement and fault timers associated with the storage.
+void bts7040_stop(Bts7040Storage *storage);

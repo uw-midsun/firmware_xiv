@@ -117,5 +117,5 @@ bool bts7200_get_output_1_enabled(Bts7200Storage *storage);
 // DO NOT USE if you are reading with bts7200_get_measurement.
 StatusCode bts7200_start(Bts7200Storage *storage);
 
-// Stop the timer associated with the storage and return whether it was successful.
-bool bts7200_stop(Bts7200Storage *storage);
+// Stop the timer and any active fault timers associated with the storage.
+void bts7200_stop(Bts7200Storage *storage);

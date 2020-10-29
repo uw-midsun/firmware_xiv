@@ -233,8 +233,8 @@ StatusCode bts7200_start(Bts7200Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-bool bts7200_stop(Bts7200Storage *storage) {
-  bool result = soft_timer_cancel(storage->measurement_timer_id);
+void bts7200_stop(Bts7200Storage *storage) {
+  soft_timer_cancel(storage->measurement_timer_id);
   soft_timer_cancel(storage->enable_pin_0.fault_timer_id);
   soft_timer_cancel(storage->enable_pin_1.fault_timer_id);
   // make sure calling stop twice doesn't cancel an unrelated timer
@@ -245,6 +245,4 @@ bool bts7200_stop(Bts7200Storage *storage) {
   // Fault handling no longer in progress
   storage->enable_pin_0.fault_in_progress = false;
   storage->enable_pin_1.fault_in_progress = false;
-
-  return result;
 }
