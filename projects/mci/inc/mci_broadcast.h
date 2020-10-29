@@ -7,7 +7,7 @@
 
 #define MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS 400
 
-
+typedef void (*MotorControllerMeasurementCallback)(const GenericCanMsg *msg, void *context);
 
 // This is replicated to some degree in motor_can.h, just using here for testing stuff
 // using 6 IDs to replicate how we'd take in 6 IDs across two WaveSculptors, 
@@ -20,8 +20,11 @@ typedef enum {
   MCI_BROADCAST_VOLTAGE_VECTOR,
   MCI_BROADCAST_CURRENT_VECTOR,
   NUM_MCI_BROADCAST_MEASUREMENTS = 6,
-} MciBroadcastMeasurement;
+} MciBroadcastMeasurementOffset;
 
+// really really bad way to convert offset -> index, 
+// should work out a better way/name to do this 
+#define MCI_BROADCAST_MEASUREMENT_OFFSET 1
 typedef enum {
   LEFT_MOTOR_CONTROLLER = 0,
   RIGHT_MOTOR_CONTROLLER,
@@ -29,6 +32,17 @@ typedef enum {
 } MotorController;
 
 #define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
+#define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200 // idk what this actually should be 
+#define MCI_ID_UNUSED 0x1 
+
+#define motor_controller_base_addr_lookup(controller) (((controller) == LEFT_MOTOR_CONTROLLER) ? LEFT_MOTOR_CONTROLLER_BASE_ADDR : RIGHT_MOTOR_CONTROLLER_BASE_ADDR)
+
+// Stores callbacks when processing MCP2515 messages
+typedef struct {
+  MotorController motor_controller;
+  MciBroadcastMeasurementOffset offset;
+  MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS];
+} MotorControllerCallbackStorage;
 
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
