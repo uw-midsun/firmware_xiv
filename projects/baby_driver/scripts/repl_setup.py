@@ -2,7 +2,8 @@
 This script is run just before the Python REPL opens when you run `make babydriver`.
 It imports everything that's visible to the REPL by default and sets up the default CAN channel.
 """
-
+from adc_read import adc_read
+from gpio_port import GpioPort
 
 def setup_default_channel():
     """Set up the default CAN channel."""
