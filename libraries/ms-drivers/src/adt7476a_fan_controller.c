@@ -128,12 +128,12 @@ static void prv_update_speed() {
   store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
 }
 
-// static void prv_update_status() {
-//   for (AdtPwmPort i = 0; i < NUM_ADT_PWM_PORTS; i++) {
-//     s_store.status[i] = status[i];
-//   }
-//   store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
-// }
+static void prv_update_status() {
+  for (AdtPwmPort i = 0; i < NUM_ADT_PWM_PORTS; i++) {
+    s_store.status[i] = status[i];
+  }
+  store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
+}
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
   MxAdt7476aStore *msg = mx_adt7476a_store__unpack(NULL, msg_buf.len, msg_buf.data);
@@ -150,7 +150,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
   mx_adt7476a_store__free_unpacked(msg, NULL);
   mx_adt7476a_store__free_unpacked(mask, NULL);
   prv_update_speed();
-  // prv_update_status();
+  prv_update_status();
 }
 
 static void prv_init_store(void) {
@@ -201,7 +201,7 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
     return STATUS_CODE_INVALID_ARGS;
   }
 
-  // prv_update_speed();
+  prv_update_speed();
   return STATUS_CODE_OK;
 }
 
@@ -218,7 +218,7 @@ StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
   status[0] = reg1 ? true : false;
   status[1] = reg2 ? true : false;
 
-  // prv_update_status();
+  prv_update_status();
   return (reg1 || reg2) ? STATUS_CODE_UNKNOWN : STATUS_CODE_OK;
 }
 
@@ -267,7 +267,7 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
                              storage->callback, storage->callback_context);
 
   prv_update_speed();
-  // prv_update_status();
+  prv_update_status();
 
   return STATUS_CODE_OK;
 }
