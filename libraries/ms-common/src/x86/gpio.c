@@ -45,7 +45,14 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
         s_pin_settings[i].state = msg->state[i];
         // Note that interrupts are ID'd based on pin only, not port.
         GpioAddress address = { .port = 0, .pin = i % 16 };
-        gpio_it_trigger_interrupt(&address);
+        InterruptEdge edge;
+        if (status_ok(gpio_it_get_edge(&address, &edge))) {
+          if ((msg->state[i] == 1 && edge == INTERRUPT_EDGE_RISING) ||
+              (msg->state[i] == 0 && edge == INTERRUPT_EDGE_FALLING) ||
+              edge == INTERRUPT_EDGE_RISING_FALLING) {
+            gpio_it_trigger_interrupt(&address);
+          }
+        }
       }
     }
   }
