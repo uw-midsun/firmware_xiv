@@ -24,7 +24,7 @@ typedef struct Store {
 } Store;
 
 // Used to ensure this module is only initialized once
-static bool s_initialized = false;
+bool store_lib_inited = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
@@ -90,7 +90,7 @@ static void *prv_poll_update(void *arg) {
 
 void store_config(void) {
   // do nothing after the first call
-  if (s_initialized) {
+  if (store_lib_inited) {
     return;
   }
 
@@ -111,7 +111,7 @@ void store_config(void) {
   mkfifo(fifo_path, 0666);
   s_ctop_fifo = open(fifo_path, O_WRONLY);
 
-  s_initialized = true;
+  store_lib_inited = true;
 }
 
 void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) {
