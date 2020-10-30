@@ -10,7 +10,7 @@ static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
 static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
 
 static uint32_t prv_get_index(const GpioAddress *address) {
-  return address->port * (uint32_t)NUM_GPIO_PORTS + address->pin;
+  return address->port * (uint32_t)GPIO_PINS_PER_PORT + address->pin;
 }
 
 StatusCode gpio_init(void) {
@@ -98,7 +98,7 @@ static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
 static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
 
 static uint32_t prv_get_index(const GpioAddress *address) {
-  return address->port * (uint32_t)NUM_GPIO_PORTS + address->pin;
+  return address->port * (uint32_t)GPIO_PINS_PER_PORT + address->pin;
 }
 
 static void prv_export() {
@@ -118,6 +118,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
       s_store.state[i] = msg->state[i];
       if (s_pin_settings[i].state != (uint8_t)msg->state[i]) {
         s_pin_settings[i].state = msg->state[i];
+        // Note that interrupts are ID'd based on pin only, not port.
         GpioAddress address = { .port = 0, .pin = i % 16 };
         gpio_it_trigger_interrupt(&address);
       }
@@ -167,7 +168,6 @@ StatusCode gpio_init_pin(const GpioAddress *address, const GpioSettings *setting
   }
 
   s_pin_settings[prv_get_index(address)] = *settings;
-  s_store.state[prv_get_index(address)] = settings->state;
   prv_export();
   return STATUS_CODE_OK;
 }
@@ -179,7 +179,6 @@ StatusCode gpio_set_state(const GpioAddress *address, GpioState state) {
   }
 
   s_pin_settings[prv_get_index(address)].state = state;
-  s_store.state[prv_get_index(address)] = state;
   prv_export();
   return STATUS_CODE_OK;
 }
@@ -192,10 +191,8 @@ StatusCode gpio_toggle_state(const GpioAddress *address) {
   uint32_t index = prv_get_index(address);
   if (s_pin_settings[index].state == GPIO_STATE_LOW) {
     s_pin_settings[index].state = GPIO_STATE_HIGH;
-    s_store.state[prv_get_index(address)] = GPIO_STATE_HIGH;
   } else {
     s_pin_settings[index].state = GPIO_STATE_LOW;
-    s_store.state[prv_get_index(address)] = GPIO_STATE_LOW;
   }
   prv_export();
   return STATUS_CODE_OK;
@@ -211,7 +208,6 @@ StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
   // Behave how hardware does when the direction is set to out.
   if (s_pin_settings[index].direction != GPIO_DIR_IN) {
     *state = s_pin_settings[index].state;
-    *state = s_store.state[index];
   } else {
     *state = s_gpio_pin_input_value[index];
   }

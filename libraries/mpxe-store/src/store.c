@@ -11,8 +11,8 @@
 #include <unistd.h>
 
 #include "critical_section.h"
-#include "gpio.pb-c.h"
 #include "log.h"
+#include "stores.pb-c.h"
 
 #define MAX_STORE_COUNT 64
 #define INVALID_STORE_ID MAX_STORE_COUNT
@@ -64,9 +64,7 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
 static void *prv_poll_update(void *arg) {
   // read protos from stdin
   // compare using second proto as 'mask'
-  // trigger gpio interrupt as necessary
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
-  // LOG_DEBUG("starting to poll\n");
   while (true) {
     int res = poll(&pfd, 1, -1);
     if (res == -1) {
@@ -76,8 +74,8 @@ static void *prv_poll_update(void *arg) {
       continue;  // nothing to read
     } else {
       if (pfd.revents & POLLIN) {
-        static uint8_t buf[4096];  // store may be bigger than this?
-        int64_t len = read(STDIN_FILENO, buf, sizeof(buf));
+        static uint8_t buf[MAX_STORE_SIZE_BYTES];
+        ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
         if (len == -1) {
           LOG_DEBUG("read error while polling\n");
         }
@@ -117,12 +115,13 @@ void store_config(void) {
 }
 
 void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) {
+  if (store == NULL) {
+    LOG_DEBUG("invalid store\n");
+    return;
+  }
   s_func_table[type] = funcs;
   // malloc a proto as a store and return a pointer to it
   Store *local_store = prv_get_first_empty();
-  if (store == NULL) {
-    return;
-  }
   local_store->type = type;
   local_store->store = store;
   local_store->key = key;
@@ -132,12 +131,8 @@ void *store_get(MxStoreType type, void *key) {
   // just linear search for it
   // if key is NULL just get first one with right type
   for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
-    if (key == NULL && s_stores[i].type == type) {
+    if (s_stores[i].type == type && (key == NULL || s_stores[i].key == key)) {
       return s_stores[i].store;
-    } else if (key != NULL && s_stores[i].type == type) {
-      if (s_stores[i].key == key) {
-        return s_stores[i].store;
-      }
     }
   }
   return NULL;

@@ -5,7 +5,6 @@
 
 #include "gpio.h"
 #include "interrupt_def.h"
-#include "log.h"
 #include "status.h"
 #include "x86_interrupt.h"
 
