@@ -130,10 +130,10 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
 
     if(id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
   
-      s_broadcast_storage.callbacks[MCI_BROADCAST_VELOCITY](&msg, &s_broadcast_storage);
+      s_broadcast_storage.cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY](&msg, &s_broadcast_storage);
     } else if(id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
   
-      s_broadcast_storage.callbacks[MCI_BROADCAST_BUS](&msg, &s_broadcast_storage);
+      s_broadcast_storage.cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS](&msg, &s_broadcast_storage);
     }
   }
   return STATUS_CODE_OK;
