@@ -5,7 +5,6 @@
 // rotation of the channels is implemented using bitsets. The readings are just
 // a arbitrary value.
 #include "ads1015.h"
-// #ifndef MPXE
 #include <string.h>
 
 #include "ads1015_def.h"

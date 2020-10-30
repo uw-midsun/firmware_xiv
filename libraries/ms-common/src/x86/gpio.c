@@ -1,98 +1,22 @@
 #include "gpio.h"
-#ifndef MPXE
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "log.h"
 #include "status.h"
 
-static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
-static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
-
-static uint32_t prv_get_index(const GpioAddress *address) {
-  return address->port * (uint32_t)GPIO_PINS_PER_PORT + address->pin;
-}
-
-StatusCode gpio_init(void) {
-  LOG_DEBUG("gpio initing non mpxe\n");
-  GpioSettings default_settings = {
-    .direction = GPIO_DIR_IN,
-    .state = GPIO_STATE_LOW,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_NONE,
-  };
-  for (uint32_t i = 0; i < GPIO_TOTAL_PINS; i++) {
-    s_pin_settings[i] = default_settings;
-    s_gpio_pin_input_value[i] = 0;
-  }
-  return STATUS_CODE_OK;
-}
-
-StatusCode gpio_init_pin(const GpioAddress *address, const GpioSettings *settings) {
-  if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT ||
-      settings->direction >= NUM_GPIO_DIRS || settings->state >= NUM_GPIO_STATES ||
-      settings->resistor >= NUM_GPIO_RESES || settings->alt_function >= NUM_GPIO_ALTFNS) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-
-  s_pin_settings[prv_get_index(address)] = *settings;
-  return STATUS_CODE_OK;
-}
-
-StatusCode gpio_set_state(const GpioAddress *address, GpioState state) {
-  if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT ||
-      state >= NUM_GPIO_STATES) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-
-  s_pin_settings[prv_get_index(address)].state = state;
-  return STATUS_CODE_OK;
-}
-
-StatusCode gpio_toggle_state(const GpioAddress *address) {
-  if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-
-  uint32_t index = prv_get_index(address);
-  if (s_pin_settings[index].state == GPIO_STATE_LOW) {
-    s_pin_settings[index].state = GPIO_STATE_HIGH;
-  } else {
-    s_pin_settings[index].state = GPIO_STATE_LOW;
-  }
-  return STATUS_CODE_OK;
-}
-
-StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
-  if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-
-  uint32_t index = prv_get_index(address);
-
-  // Behave how hardware does when the direction is set to out.
-  if (s_pin_settings[index].direction != GPIO_DIR_IN) {
-    *state = s_pin_settings[index].state;
-  } else {
-    *state = s_gpio_pin_input_value[index];
-  }
-  return STATUS_CODE_OK;
-}
-#else
-#include <stdbool.h>
-#include <stdint.h>
+#ifdef MPXE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "gpio.pb-c.h"
 #include "gpio_it.h"
-#include "log.h"
-#include "status.h"
 #include "store.h"
 #include "stores.pb-c.h"
 
 static MxGpioStore s_store = MX_GPIO_STORE__INIT;
+#endif
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
 static uint8_t s_gpio_pin_input_value[GPIO_TOTAL_PINS];
@@ -101,6 +25,7 @@ static uint32_t prv_get_index(const GpioAddress *address) {
   return address->port * (uint32_t)GPIO_PINS_PER_PORT + address->pin;
 }
 
+#ifdef MPXE
 static void prv_export() {
   for (uint16_t i = 0; i < GPIO_TOTAL_PINS; i++) {
     s_store.state[i] = s_pin_settings[i].state;
@@ -143,9 +68,12 @@ static void prv_init_store(void) {
   s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
   store_register(MX_STORE_TYPE__GPIO, funcs, &s_store, NULL);
 }
+#endif
 
 StatusCode gpio_init(void) {
+#ifdef MPXE
   prv_init_store();
+#endif
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
@@ -156,7 +84,9 @@ StatusCode gpio_init(void) {
     s_pin_settings[i] = default_settings;
     s_gpio_pin_input_value[i] = 0;
   }
+#ifdef MPXE
   prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -168,7 +98,9 @@ StatusCode gpio_init_pin(const GpioAddress *address, const GpioSettings *setting
   }
 
   s_pin_settings[prv_get_index(address)] = *settings;
+#ifdef MPXE
   prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -179,7 +111,9 @@ StatusCode gpio_set_state(const GpioAddress *address, GpioState state) {
   }
 
   s_pin_settings[prv_get_index(address)].state = state;
+#ifdef MPXE
   prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -194,7 +128,9 @@ StatusCode gpio_toggle_state(const GpioAddress *address) {
   } else {
     s_pin_settings[index].state = GPIO_STATE_LOW;
   }
+#ifdef MPXE
   prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -213,4 +149,3 @@ StatusCode gpio_get_state(const GpioAddress *address, GpioState *state) {
   }
   return STATUS_CODE_OK;
 }
-#endif
