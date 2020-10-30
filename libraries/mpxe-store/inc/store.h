@@ -2,7 +2,7 @@
 
 #include "stores.pb-c.h"
 
-#define MAX_STORE_SIZE_BYTES 4096 // Stores shouldn't need to be larger than this
+#define MAX_STORE_SIZE_BYTES 4096  // Stores shouldn't need to be larger than this
 
 // Protoc generates versions of these for each message type, so we define generic
 // versions to simplify passing messages around
