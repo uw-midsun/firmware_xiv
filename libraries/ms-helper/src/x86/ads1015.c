@@ -14,9 +14,7 @@
 #include <stdlib.h>
 
 #include "ads1015.pb-c.h"
-#include "ads1015_def.h"
 #include "log.h"
-#include "soft_timer.h"
 #include "store.h"
 #include "stores.pb-c.h"
 #endif
@@ -114,7 +112,6 @@ static void prv_timer_callback(SoftTimerId id, void *context) {
 // Inits the storage for ADS1015 and starts the soft timer.
 StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port, Ads1015Address i2c_addr,
                         GpioAddress *ready_pin) {
-
 #ifdef MPXE
   prv_init_store();
 #endif

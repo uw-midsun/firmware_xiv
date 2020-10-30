@@ -44,7 +44,7 @@ extern bool store_lib_inited;
       pthread_mutex_lock(&log_lock);                                          \
       printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
       fflush(stdout);                                                         \
-      if (store_lib_inited) {                                                \
+      if (store_lib_inited) {                                                 \
         pthread_mutex_lock(&log_lock);                                        \
       }                                                                       \
       pthread_mutex_unlock(&log_lock);                                        \
