@@ -13,18 +13,21 @@ typedef void (*MotorControllerMeasurementCallback)(const GenericCanMsg *msg, voi
 // using 6 IDs to replicate how we'd take in 6 IDs across two WaveSculptors, 
 // but this should only have the first 3 when actually implemented 
 typedef enum {
-  MCI_BROADCAST_STATUS = 1, 
+  MCI_BROADCAST_STATUS = 0, 
   MCI_BROADCAST_BUS, 
   MCI_BROADCAST_VELOCITY,
-  MCI_BROADCAST_PHASE_CURRENT,
-  MCI_BROADCAST_VOLTAGE_VECTOR,
-  MCI_BROADCAST_CURRENT_VECTOR,
-  NUM_MCI_BROADCAST_MEASUREMENTS = 6,
-} MciBroadcastMeasurementOffset;
+  MCI_BROADCAST_MOTOR_TEMP,
+  MCI_BROADCAST_DSP_TEMP,
+  NUM_MCI_BROADCAST_MEASUREMENTS,
+} MciBroadcastMeasurementType;
 
-// really really bad way to convert offset -> index, 
-// should work out a better way/name to do this 
-#define MCI_BROADCAST_MEASUREMENT_OFFSET 1
+// Message offsets from motor controller base address
+#define MCI_BROADCAST_STATUS_OFFSET 0x1
+#define MCI_BROADCAST_BUS_OFFSET 0x2
+#define MCI_BROADCAST_VELOCITY_OFFSET 0x3
+#define MCI_BROADCAST_MOTOR_TEMP_OFFSET 0xB
+#define MCI_BROADCAST_DSP_TEMP_OFFSET 0xC
+
 typedef enum {
   LEFT_MOTOR_CONTROLLER = 0,
   RIGHT_MOTOR_CONTROLLER,
@@ -33,14 +36,15 @@ typedef enum {
 
 #define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
 #define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200 // idk what this actually should be 
+
 #define MCI_ID_UNUSED 0x1 
 
-#define motor_controller_base_addr_lookup(controller) (((controller) == LEFT_MOTOR_CONTROLLER) ? LEFT_MOTOR_CONTROLLER_BASE_ADDR : RIGHT_MOTOR_CONTROLLER_BASE_ADDR)
+#define MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(controller) (((controller) == LEFT_MOTOR_CONTROLLER) ? LEFT_MOTOR_CONTROLLER_BASE_ADDR : RIGHT_MOTOR_CONTROLLER_BASE_ADDR)
 
 // Stores callbacks when processing MCP2515 messages
 typedef struct {
   MotorController motor_controller;
-  MciBroadcastMeasurementOffset offset;
+  MciBroadcastMeasurementType cur_measurement;
   MotorControllerMeasurementCallback callbacks[NUM_MCI_BROADCAST_MEASUREMENTS];
 } MotorControllerCallbackStorage;
 
