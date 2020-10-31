@@ -13,7 +13,9 @@
 #define MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS 16  // max BTS7200s per board
 #define MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS 16  // max BTS7040s per board
 
-// Experimentally determined, more accurate resistor value to convert sense current for the BTS7200s
+// Experimentally determined, more accurate resistor value to convert BTS7200 sensed current
+// (note that there are 1.6k resistors on the current rev as of 2020-10-31, but the scaling factor
+// was experimentally determined to imply this resistor value)
 #define POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR 1160
 
 // Experimentally determined bias in the BTS7200 sensed output
