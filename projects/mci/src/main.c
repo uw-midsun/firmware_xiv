@@ -20,10 +20,10 @@
 #include "log.h"
 
 static CanStorage s_can_storage;
-static GenericCanMcp2515 s_can_mcp2515;
+//static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
 
-static Mcp2515Storage s_test_can_mcp2515;
+static Mcp2515Storage s_can_mcp2515;
 
 /*
 // For alternating filter IDs
@@ -106,7 +106,7 @@ void prv_mci_storage_init(void *context) {
   precharge_control_init(&precharge_settings);
 
   MotorControllerBroadcastSettings broadcast_settings =
-      { .motor_can = (GenericCan *)&s_can_mcp2515,
+      { .motor_can = &s_can_mcp2515,
         .device_ids = {
             [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
             [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
@@ -122,13 +122,15 @@ int main(void) {
   soft_timer_init();
   gpio_init();
   gpio_it_init();
+  LOG_DEBUG("here 1\n");
 
   prv_setup_system_can();
   //prv_setup_motor_can();
 
+  LOG_DEBUG("before storage init\n"); 
   prv_mci_storage_init(&s_mci_storage);
   //drive_fsm_init(); // why do we call this here after calling it in prv_setup_system_can? 
-
+  LOG_DEBUG("after storage init\n"); 
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
