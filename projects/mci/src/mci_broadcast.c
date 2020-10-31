@@ -30,7 +30,7 @@ static const MciBroadcastMeasurementType MCI_BROADCAST_MEASUREMENT_OFFSET_LOOKUP
 };
 
 // Uncomment when using with only the left motor controller
-//#define RIGHT_MOTOR_CONTROLLER_UNUSED
+#define RIGHT_MOTOR_CONTROLLER_UNUSED
 
 static void prv_broadcast_speed(MotorControllerBroadcastStorage *storage) {
   float *measurements = storage->measurements.vehicle_velocity;

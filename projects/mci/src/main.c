@@ -67,7 +67,7 @@ void prv_setup_system_can() {
 
   can_init(&s_can_storage, &can_settings);
   drive_fsm_init();
-  cruise_rx_init();
+  //cruise_rx_init();
 }
 
 /*
@@ -123,16 +123,16 @@ int main(void) {
   gpio_init();
   gpio_it_init();
 
-  //prv_setup_system_can();
+  prv_setup_system_can();
   //prv_setup_motor_can();
 
   prv_mci_storage_init(&s_mci_storage);
-  //drive_fsm_init();
+  //drive_fsm_init(); // why do we call this here after calling it in prv_setup_system_can? 
 
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
-      //can_process_event(&e);
+      can_process_event(&e);
     }
   }
 
