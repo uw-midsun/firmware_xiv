@@ -67,7 +67,7 @@ void prv_setup_system_can() {
 
   can_init(&s_can_storage, &can_settings);
   drive_fsm_init();
-  //cruise_rx_init();
+  cruise_rx_init();
 }
 
 /*
@@ -129,7 +129,7 @@ int main(void) {
 
   LOG_DEBUG("before storage init\n"); 
   prv_mci_storage_init(&s_mci_storage);
-  //drive_fsm_init(); // why do we call this here after calling it in prv_setup_system_can? 
+  drive_fsm_init(); // why do we call this here after calling it in prv_setup_system_can? 
   LOG_DEBUG("after storage init\n"); 
   Event e = { 0 };
   while (true) {
