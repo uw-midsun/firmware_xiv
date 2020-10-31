@@ -20,10 +20,10 @@
 #include "log.h"
 
 static CanStorage s_can_storage;
-static GenericCanMcp2515 s_can_mcp2515;
+//static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
 
-static Mcp2515Storage s_test_can_mcp2515;
+static Mcp2515Storage s_mcp2515_storage;
 
 /*
 // For alternating filter IDs
@@ -106,14 +106,14 @@ void prv_mci_storage_init(void *context) {
   precharge_control_init(&precharge_settings);
 
   MotorControllerBroadcastSettings broadcast_settings =
-      { .motor_can = (GenericCan *)&s_can_mcp2515,
+      { .motor_can = &s_mcp2515_storage,
         .device_ids = {
             [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
             [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
         } };
   mci_broadcast_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
 
-  mci_output_init(&s_mci_storage.mci_output_storage, (GenericCan *)&s_can_mcp2515);
+  mci_output_init(&s_mci_storage.mci_output_storage, &s_mcp2515_storage);
 }
 
 int main(void) {
@@ -123,16 +123,16 @@ int main(void) {
   gpio_init();
   gpio_it_init();
 
-  //prv_setup_system_can();
-  //prv_setup_motor_can();
+  prv_setup_system_can();
 
   prv_mci_storage_init(&s_mci_storage);
-  //drive_fsm_init();
+  drive_fsm_init();
 
   Event e = { 0 };
+  LOG_DEBUG("worked\n");
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
-      //can_process_event(&e);
+      can_process_event(&e);
     }
   }
 

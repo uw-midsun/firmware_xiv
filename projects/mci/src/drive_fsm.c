@@ -85,6 +85,7 @@ bool drive_fsm_process_event(const Event *e) {
 
 static StatusCode prv_drive_output_rx(const CanMessage *msg, void *context,
                                       CanAckStatus *ack_reply) {
+                                        LOG_DEBUG("drive output rx\n");
   (void)context;
   uint16_t drive_output = 0;
   bool expect_transition = true;
@@ -101,6 +102,7 @@ static StatusCode prv_drive_output_rx(const CanMessage *msg, void *context,
     return STATUS_CODE_INTERNAL_ERROR;
   }
   *ack_reply = CAN_ACK_STATUS_OK;
+  LOG_DEBUG("end\n");
   return STATUS_CODE_OK;
 }
 

@@ -13,6 +13,9 @@
 #include "pedal_rx.h"
 #include "soft_timer.h"
 #include "status.h"
+#include "mcp2515.h"
+
+#include "log.h"
 
 static float s_velocity_lookup[] = {
   [EE_DRIVE_OUTPUT_OFF] = 0.0f,
@@ -44,11 +47,13 @@ static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
     .dlc = MOTOR_CAN_DRIVE_COMMAND_LENGTH,
     .extended = MOTOR_CAN_DRIVE_COMMAND_IS_EXTENDED,
   };
+  LOG_DEBUG("sending wavesculptor message with id 0x%x\n", (int)msg.id);
 
   uint8_t data[MOTOR_CAN_DRIVE_COMMAND_LENGTH] = { 0 };
   motor_can_drive_command_pack(data, &command, sizeof(data));
   memcpy(&msg.data, data, sizeof(data));
-  generic_can_tx(storage->motor_can, &msg);
+  //mcp2515_tx(storage->motor_can, msg.id, msg.extended, msg.data, msg.dlc);
+  //generic_can_tx(storage->motor_can, &msg);
 }
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {
@@ -82,12 +87,12 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_output_init(MotorControllerOutputStorage *storage, GenericCan *motor_can_settings) {
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can) {
   PedalRxSettings pedal_settings = {
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
     .timeout_ms = MCI_PEDAL_RX_TIMEOUT_MS,
   };
-  storage->motor_can = motor_can_settings;
+  storage->motor_can = motor_can; //make this an mcp2515 thing + fix
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
                                  NULL);

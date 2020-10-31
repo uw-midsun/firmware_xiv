@@ -4,6 +4,7 @@
 #include "can_unpack.h"
 #include "critical_section.h"
 #include "mcp2515.h"
+#include "string.h"
 
 #include "log.h"
 #include "cruise_rx.h"
@@ -24,7 +25,7 @@ static const MotorControllerBroadcastMeasurement MOTOR_CONTROLLER_BROADCAST_MEAS
 };
 
 // Uncomment when using with only the left motor controller
-// #define RIGHT_MOTOR_CONTROLLER_UNUSED
+#define RIGHT_MOTOR_CONTROLLER_UNUSED
 
 static void prv_broadcast_speed(MotorControllerBroadcastStorage *storage) {
   float *measurements = storage->measurements.vehicle_velocity;
@@ -52,14 +53,15 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   }
   uint32_t filter = (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
   (uint32_t)MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
-  LOG_DEBUG("Changing filter to %x\n", (int)filter);
+  LOG_DEBUG("Changing filter to 0x%x\n", (int)filter);
   uint32_t filters[2] = {MOTOR_CONTROLLER_ID_UNUSED, filter};
 }
 
 // CB for rx received
 static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
+  LOG_DEBUG("start process rx\n");
   MotorControllerBroadcastStorage *storage = context;
-  LOG_DEBUG("Eeceived rx from id: %d\n", (int)id);
+  LOG_DEBUG("Received rx from id: 0x%x\n", (int)id);
   LOG_DEBUG("Data: 0x%x%x\n", (int)data, (int)(data >> 32));
 
   uint32_t cb_offset = (uint32_t)(storage->cb_storage.cur_measurement);
@@ -76,6 +78,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   }
   // Change filter for next message
   prv_change_filter(storage);
+  LOG_DEBUG("end\n");
 }
 
 // TODO(SOFT-139): implement status message handling + broadcast
@@ -183,13 +186,16 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
 
 StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
                               MotorControllerBroadcastSettings *settings) {
+  LOG_DEBUG("in init\n");
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     storage->ids[motor_id] = settings->device_ids[motor_id];
   }
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
+
   prv_setup_motor_can(storage);
+  memcpy(settings->motor_can, &s_mcp2515_storage , sizeof(s_mcp2515_storage));
+  LOG_DEBUG("end of init\n");
   return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                                  storage, NULL);
-  return STATUS_CODE_OK;
 }
