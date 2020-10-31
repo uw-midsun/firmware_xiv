@@ -113,7 +113,7 @@ void prv_mci_storage_init(void *context) {
         } };
   mci_broadcast_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
 
-  mci_output_init(&s_mci_storage.mci_output_storage, (GenericCan *)&s_can_mcp2515);
+  mci_output_init(&s_mci_storage.mci_output_storage, &s_can_mcp2515);
 }
 
 int main(void) {
