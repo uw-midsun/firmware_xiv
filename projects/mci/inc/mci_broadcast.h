@@ -5,6 +5,8 @@
 #include "motor_can.h"
 #include "wavesculptor.h"
 
+#include "mcp2515.h"
+
 #define MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS 400
 
 typedef void (*MotorControllerMeasurementCallback)(const GenericCanMsg *msg, void *context);
@@ -54,11 +56,12 @@ typedef struct MotorControllerMeasurements {
 } MotorControllerMeasurements;
 
 typedef struct MotorControllerBroadcastSettings {
-  GenericCan *motor_can;
+  Mcp2515Storage *motor_can;
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
 } MotorControllerBroadcastSettings;
 
 typedef struct MotorControllerBroadcastStorage {
+  Mcp2515Storage *motor_can;
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
   MotorControllerMeasurements measurements;
