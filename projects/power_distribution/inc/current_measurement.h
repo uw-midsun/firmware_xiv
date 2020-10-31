@@ -13,11 +13,17 @@
 #define MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS 16  // max BTS7200s per board
 #define MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS 16  // max BTS7040s per board
 
-// All BTS7200s use a 1.6k resistor to convert sense current
-#define POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR 1600
+// Experimentally determined, more accurate resistor value to convert sense current for the BTS7200s
+#define POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR 1160
+
+// Experimentally determined bias in the BTS7200 sensed output
+#define POWER_DISTRIBUTION_BTS7200_BIAS (-8)
 
 // All BTS7040s use a 1.21k resistor to convert sense current
 #define POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR 1210
+
+// To be calibrated - bias in the BTS7040 sensed output
+#define POWER_DISTRIBUTION_BTS7040_BIAS 0
 
 // Voltage at the SENSE pin is limited to a max of 3.3V by a diode.
 // Due to to this function, since any fault current will be at least 4.4 mA (see p.g. 49)

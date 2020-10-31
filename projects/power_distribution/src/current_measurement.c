@@ -88,6 +88,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
 
     // Add resistor, min/max fault voltages
     bts7200_settings.resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR;
+    bts7200_settings.bias = POWER_DISTRIBUTION_BTS7200_BIAS;
     bts7200_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV;
     bts7200_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV;
 
@@ -110,6 +111,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
 
     // Add resistor, min/max fault voltages
     bts7040_settings.resistor = POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR;
+    bts7040_settings.bias = POWER_DISTRIBUTION_BTS7040_BIAS;
     bts7040_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV;
     bts7040_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV;
 
