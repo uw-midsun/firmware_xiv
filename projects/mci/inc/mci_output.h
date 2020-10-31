@@ -3,7 +3,6 @@
 #include "generic_can.h"
 #include "pedal_rx.h"
 #include "mcp2515.h"
-
 #define MOTOR_CONTROLLER_BRAKE_THRESHOLD 0.0f
 #define MOTOR_CONTROLLER_PEDAL_MAX 100.0f
 

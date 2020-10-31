@@ -23,7 +23,7 @@ static CanStorage s_can_storage;
 //static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
 
-static Mcp2515Storage s_mcp2515_storage;
+static Mcp2515Storage s_can_mcp2515;
 
 /*
 // For alternating filter IDs
@@ -106,14 +106,14 @@ void prv_mci_storage_init(void *context) {
   precharge_control_init(&precharge_settings);
 
   MotorControllerBroadcastSettings broadcast_settings =
-      { .motor_can = &s_mcp2515_storage,
+      { .motor_can = &s_can_mcp2515,
         .device_ids = {
             [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
             [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
         } };
   mci_broadcast_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
 
-  mci_output_init(&s_mci_storage.mci_output_storage, &s_mcp2515_storage);
+  mci_output_init(&s_mci_storage.mci_output_storage, &s_can_mcp2515);
 }
 
 int main(void) {
@@ -122,9 +122,12 @@ int main(void) {
   soft_timer_init();
   gpio_init();
   gpio_it_init();
+  LOG_DEBUG("here 1\n");
 
   prv_setup_system_can();
+  //prv_setup_motor_can();
 
+  LOG_DEBUG("before storage init\n"); 
   prv_mci_storage_init(&s_mci_storage);
   drive_fsm_init();
 

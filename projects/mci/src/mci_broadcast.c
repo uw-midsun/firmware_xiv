@@ -14,7 +14,7 @@
 
 #define M_TO_CM_CONV 100
 
-static Mcp2515Storage s_mcp2515_storage;
+//static Mcp2515Storage s_mcp2515_storage;
 
 static const MotorControllerBroadcastMeasurement MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
   [MOTOR_CONTROLLER_BROADCAST_STATUS] = MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
@@ -55,7 +55,7 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   (uint32_t)MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
   LOG_DEBUG("Changing filter to 0x%x\n", (int)filter);
   uint32_t filters[2] = {MOTOR_CONTROLLER_ID_UNUSED, filter};
-  LOG_DEBUG("change filter result %d\n", mcp2515_set_filter(&s_mcp2515_storage, filters));
+  LOG_DEBUG("change filter result %d\n", mcp2515_set_filter(storage->motor_can, filters));
 }
 
 // CB for rx received
@@ -161,8 +161,8 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
       [MCP2515_FILTER_ID_RXF1] = {.raw = (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement])},
     },
   };
-  mcp2515_init(&s_mcp2515_storage, &mcp2515_settings);
-  mcp2515_register_cbs(&s_mcp2515_storage, prv_process_rx, NULL, storage);
+  mcp2515_init(storage->motor_can, &mcp2515_settings);
+  mcp2515_register_cbs(storage->motor_can, prv_process_rx, NULL, storage);
 }
 
 static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
@@ -193,9 +193,10 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   }
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
-
+  storage->motor_can = settings->motor_can;
+  //memset(storage->motor_can, 0, sizeof(*storage->motor_can));
   prv_setup_motor_can(storage);
-  memcpy(settings->motor_can, &s_mcp2515_storage , sizeof(s_mcp2515_storage));
+  //memcpy(settings->motor_can, &s_mcp2515_storage , sizeof(s_mcp2515_storage));
   LOG_DEBUG("end of init\n");
   return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                                  storage, NULL);

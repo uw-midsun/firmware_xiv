@@ -61,6 +61,7 @@ typedef struct MotorControllerBroadcastSettings {
 } MotorControllerBroadcastSettings;
 
 typedef struct MotorControllerBroadcastStorage {
+  Mcp2515Storage *motor_can;
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
   MotorControllerMeasurements measurements;

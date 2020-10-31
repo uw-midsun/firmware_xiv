@@ -92,7 +92,7 @@ StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
     .timeout_ms = MCI_PEDAL_RX_TIMEOUT_MS,
   };
-  storage->motor_can = motor_can; //make this an mcp2515 thing + fix
+  storage->motor_can = motor_can;
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
                                  NULL);
