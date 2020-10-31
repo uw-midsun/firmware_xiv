@@ -134,7 +134,6 @@ StatusCode ads1015_read_converted(Ads1015Storage *storage, Ads1015Channel channe
 static MxAds1015Store s_store = MX_ADS1015_STORE__INIT;
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
-  LOG_DEBUG("UPDATING STORE:\n");
   MxAds1015Store *msg = mx_ads1015_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxAds1015Store *mask = mx_ads1015_store__unpack(NULL, mask_buf.len, mask_buf.data);
 

@@ -23,7 +23,6 @@ class ProjectManager:
     def start(self, name, sim=None):
         if name not in self.proj_name_list:
             raise Exception('invalid project')
-        print('starting', name)
         proj = project.Project(name, sim or Sim())
         self.proj_fds[proj.ctop_fifo.fileno()] = proj
         self.proj_fds[proj.popen.stdout.fileno()] = proj
