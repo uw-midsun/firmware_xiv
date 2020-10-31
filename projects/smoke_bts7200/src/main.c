@@ -48,6 +48,10 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, s_hw_config, NULL);
 }
 
+static void prv_fault_callback(bool fault0, bool fault1, void *context) {
+  LOG_DEBUG("Fault! channel 0=%d, channel 1=%d\n", fault0, fault1);
+}
+
 int main() {
   gpio_init();
   interrupt_init();
@@ -79,6 +83,7 @@ int main() {
   Bts7200Pca9539rSettings bts7200_settings = {
     .sense_pin = &s_hw_config.mux_output_pin,
     .i2c_port = s_hw_config.i2c_port,
+    .fault_callback = prv_fault_callback,
     .resistor = 1600,
     .min_fault_voltage_mv = 3300,
     .max_fault_voltage_mv = 10000,
