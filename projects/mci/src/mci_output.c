@@ -48,7 +48,7 @@ static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
   uint8_t data[MOTOR_CAN_DRIVE_COMMAND_LENGTH] = { 0 };
   motor_can_drive_command_pack(data, &command, sizeof(data));
   memcpy(&msg.data, data, sizeof(data));
-  generic_can_tx(storage->motor_can, &msg);
+  //generic_can_tx(storage->motor_can, &msg);
 }
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {
