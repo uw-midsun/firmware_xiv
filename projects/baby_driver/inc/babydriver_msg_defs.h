@@ -7,5 +7,13 @@ typedef enum {
   // Message data: uint8 status.
   BABYDRIVER_MESSAGE_STATUS = 0,
 
+  // The gpio_get command message, sent whenever gpio_get() is called in Python.
+  // Message data: unit8 port, unit8 pin.
+  BABYDRIVER_MESSAGE_GPIO_GET_COMMAND = 2,
+
+  // The gpio_get data message, sent from firmware when it gets the state of the pin requested
+  // Message data: unit8 state
+  BABYDRIVER_MESSAGE_GPIO_GET_DATA = 3,
+
   NUM_BABYDRIVER_MESSAGES,
 } BabydriverMessageId;
