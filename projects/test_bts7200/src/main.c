@@ -163,13 +163,12 @@ int main() {
   // bts_7200_get_measurement_with_delay(&s_bts7200_storage);
   // delay_ms(1000);
   // LOG_DEBUG("setting state!\n");
-  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
-  // delay_ms(1000);
-  // LOG_DEBUG("setting state again\n");
-  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_1);
-  // delay_ms(1000);
-  // LOG_DEBUG("setting state 3\n");
-  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r, PCA9539R_GPIO_STATE_SELECT_OUT_0);
+  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r,
+  // PCA9539R_GPIO_STATE_SELECT_OUT_0); delay_ms(1000); LOG_DEBUG("setting state again\n");
+  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r,
+  // PCA9539R_GPIO_STATE_SELECT_OUT_1); delay_ms(1000); LOG_DEBUG("setting state 3\n");
+  // pca9539r_gpio_set_state(s_bts7200_storage.select_pin_pca9539r,
+  // PCA9539R_GPIO_STATE_SELECT_OUT_0);
 
   GpioAddress a = { .port = GPIO_PORT_A, .pin = 7 };
   adc_set_channel_pin(a, true);

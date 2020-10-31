@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#include "pca9539r_gpio_expander_defs.h"
 #include "log.h"
+#include "pca9539r_gpio_expander_defs.h"
 
 // The I2C port used for all operations - won't change on each board
 static I2CPort s_i2c_port = NUM_I2C_PORTS;

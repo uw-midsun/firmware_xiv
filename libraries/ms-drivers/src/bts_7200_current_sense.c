@@ -112,7 +112,8 @@ static void prv_delay_measurement_step_3(SoftTimerId timer, void *context) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
   adc_read_converted(sense_channel, &storage->reading_out_1);
-  // LOG_DEBUG("step3 read: %d, pin: %d\n", storage->reading_out_1, storage->select_pin_pca9539r->pin);
+  // LOG_DEBUG("step3 read: %d, pin: %d\n", storage->reading_out_1,
+  // storage->select_pin_pca9539r->pin);
   if (storage->callback != NULL) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
   }
@@ -123,7 +124,8 @@ static void prv_delay_measurement_step_2(SoftTimerId timer, void *context) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
   adc_read_converted(sense_channel, &storage->reading_out_0);
-  // LOG_DEBUG("step2 read: %d, pin: %d\n", storage->reading_out_0, storage->select_pin_pca9539r->pin);
+  // LOG_DEBUG("step2 read: %d, pin: %d\n", storage->reading_out_0,
+  // storage->select_pin_pca9539r->pin);
   if (storage->select_pin_type == BTS7200_SELECT_PIN_STM32) {
     gpio_set_state(storage->select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_1);
   } else {

@@ -43,7 +43,9 @@ static void prv_start_read(SoftTimerId, void *);
 
 static void prv_log(uint16_t meas0, uint16_t meas1, void *context) {
   uintptr_t i = (uintptr_t)context;
-  LOG_DEBUG("Channel: %d; current_0: %d, current_1: %d\n", s_test_channels[i], meas0, meas1);
+  uint16_t m0 = meas0 * 670 / 1600;
+  uint16_t m1 = meas1 * 670 / 1600;
+  LOG_DEBUG("Channel: %d; current_0: %d, current_1: %d\n", s_test_channels[i], m0, m1);
   i++;
   if (i == SIZEOF_ARRAY(s_test_channels)) {
     soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_start_read, (void *)0, NULL);
