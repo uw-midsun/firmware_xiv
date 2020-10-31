@@ -4,10 +4,11 @@ from mpxe.sims import sim
 
 class Leds(sim.Sim):
     def handle_update(self, pm, proj):
-        states = [int(i) for i in proj.stores[(stores_pb2.MxStoreType.GPIO, 0)].state]
-        # use addution to indicate port - 16 = GPIO_PORT_B, 0 = GPIO_PORT_A
-        leds = [states[16+5], states[16+4], states[16+3], states[0+15]]
-        print('LEDs:', leds)
+        stores = proj.stores
+        gpio = stores[(stores_pb2.MxStoreType.GPIO, 0)]
+        port_a = [int(gpio.state[i]) for i in range(len(gpio.state)) if i < 16]
+        led_states = [port_a[9], port_a[10], port_a[11], port_a[15]]
+        print('LEDs:', led_states)
 
     def handle_log(self, pm, proj, log):
         print('[{}]'.format(proj.name), log)

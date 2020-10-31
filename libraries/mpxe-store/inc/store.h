@@ -2,8 +2,6 @@
 
 #include "stores.pb-c.h"
 
-#define MAX_STORE_SIZE_BYTES 4096  // Stores shouldn't need to be larger than this
-
 // Protoc generates versions of these for each message type, so we define generic
 // versions to simplify passing messages around
 typedef size_t (*GetPackedSizeFunc)(const void *msg);
@@ -30,8 +28,6 @@ void store_config(void);
 // key is a pointer to the associated 'storage' struct, since some
 // drivers may be used with multiple storages. If the storage is
 // unique, key should be NULL.
-// Stores allocated here should never be freed, since their lifetime
-// should be the lifetime of the process.
 void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key);
 
 // Gets the matching pointer for the type.

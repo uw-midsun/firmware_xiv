@@ -32,22 +32,22 @@ typedef enum {
   } while (0)
 #else
 #include <pthread.h>
-#include <stdbool.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-extern pthread_mutex_t log_lock;
-extern bool store_lib_inited;
+extern pthread_mutex_t s_sig_lock2;
 
 // fflush necessary for printing through pipes
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
-      pthread_mutex_lock(&log_lock);                                          \
+      pthread_mutex_lock(&s_sig_lock2);                                        \
       printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
       fflush(stdout);                                                         \
-      if (store_lib_inited) {                                                 \
-        pthread_mutex_lock(&log_lock);                                        \
-      }                                                                       \
-      pthread_mutex_unlock(&log_lock);                                        \
+      pthread_mutex_lock(&s_sig_lock2);                                        \
+      pthread_mutex_unlock(&s_sig_lock2);                                      \
     }                                                                         \
   } while (0)
 #endif
