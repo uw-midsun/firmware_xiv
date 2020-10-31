@@ -177,8 +177,9 @@ static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *me
   if (*meas <= BTS7200_MAX_LEAKAGE_VOLTAGE_MV) {
     *meas = 0;
   } else {
-    *meas *= BTS7200_IS_SCALING_NOMINAL;
-    *meas /= storage->resistor;
+    uint32_t meas32 = (uint32_t)*meas;
+    meas32 = ((578 * meas32)) / 1000 - 7;
+    *meas = (uint16_t)meas32;
   }
 }
 
@@ -193,7 +194,7 @@ StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uin
                             PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
 
-  for (volatile uint32_t i = 0; i < 1000000000LL; i++);
+  // for (volatile uint32_t i = 0; i < 100000LL; i++);
 
   status_ok_or_return(adc_read_converted(sense_channel, meas0));
 
@@ -204,7 +205,7 @@ StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uin
                             PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
 
-  for (volatile uint32_t i = 0; i < 1000000000LL; i++);
+  // for (volatile uint32_t i = 0; i < 100000LL; i++);
 
   status_ok_or_return(adc_read_converted(sense_channel, meas1));
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
