@@ -55,6 +55,7 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   (uint32_t)MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
   LOG_DEBUG("Changing filter to 0x%x\n", (int)filter);
   uint32_t filters[2] = {MOTOR_CONTROLLER_ID_UNUSED, filter};
+  LOG_DEBUG("change filter result %d\n", mcp2515_set_filter(&s_mcp2515_storage, filters));
 }
 
 // CB for rx received
@@ -157,7 +158,7 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
     .loopback = false,
     .filters = {
       [MCP2515_FILTER_ID_RXF0] = {.raw = MOTOR_CONTROLLER_ID_UNUSED}, // only want to use one filter
-      [MCP2515_FILTER_ID_RXF1] = {.raw = (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR + storage->cb_storage.cur_measurement)},
+      [MCP2515_FILTER_ID_RXF1] = {.raw = (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement])},
     },
   };
   mcp2515_init(&s_mcp2515_storage, &mcp2515_settings);
