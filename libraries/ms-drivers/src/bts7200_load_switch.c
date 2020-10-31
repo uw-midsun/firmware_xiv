@@ -192,6 +192,9 @@ StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uin
     pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r,
                             PCA9539R_GPIO_STATE_SELECT_OUT_0);
   }
+
+  for (volatile uint32_t i = 0; i < 1000000000LL; i++);
+
   status_ok_or_return(adc_read_converted(sense_channel, meas0));
 
   if (storage->select_pin.pin_type == BTS7XXX_PIN_STM32) {
@@ -200,6 +203,9 @@ StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uin
     pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r,
                             PCA9539R_GPIO_STATE_SELECT_OUT_1);
   }
+
+  for (volatile uint32_t i = 0; i < 1000000000LL; i++);
+
   status_ok_or_return(adc_read_converted(sense_channel, meas1));
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
   // Check for faults, call callback and handle fault if voltage is within fault range
