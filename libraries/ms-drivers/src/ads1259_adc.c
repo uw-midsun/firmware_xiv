@@ -252,9 +252,6 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
   code = prv_checksum(storage);
   (*storage->handler)(code, storage->error_context);
-  // LOG_DEBUG("msb data %u \n", s_store.rx_data_msb);
-  // LOG_DEBUG("mid data %u \n", s_store.rx_data_mid);
-  // LOG_DEBUG("lsb data %u \n", s_store.rx_data_lsb);
 
   storage->conv_data.MSB = (uint8_t)s_store.rx_data_msb;
   storage->conv_data.MID = (uint8_t)s_store.rx_data_mid;
