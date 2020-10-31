@@ -8,13 +8,15 @@
 
 // A6 input, B2 input, log output
 
+typedef enum { ADC_IN = 0, BTN_IN, NUM_ADDRESSES } Addresses;
+
 // callback func, takes in the channel and reads ADC data from channel into local var
 // then logs the var data
 static void prv_btn_interrupt_handler(const GpioAddress *address, void *context) {
   AdcChannel *in_channel = (AdcChannel *)context;
   uint16_t in_data = 0;
 
-  adc_read_raw(*in_channel, &in_data);
+  adc_read_converted(*in_channel, &in_data);
   LOG_DEBUG("Input ADC Data: %d\n", in_data);
 }
 
@@ -40,14 +42,13 @@ int main(void) {
   };
 
   // initialize settings for button interrupt
-  InterruptSettings btn_interrupt_settings =
-      {
-        .type = INTERRUPT_TYPE_INTERRUPT,       //
-        .priotity = INTERRUPT_PRIORITY_NORMAL,  //
-      }
+  InterruptSettings btn_interrupt_settings = {
+    .type = INTERRUPT_TYPE_INTERRUPT,       //
+    .priority = INTERRUPT_PRIORITY_NORMAL,  //
+  };
 
   // initialize adc
-  gpio_init_pin(&adc_button_addresses[0], &adc_settings);
+  gpio_init_pin(&adc_button_addresses[ADC_IN], &adc_settings);
 
   adc_init(ADC_MODE_SINGLE);
 
@@ -55,11 +56,12 @@ int main(void) {
   // set input cahnnel to true, enable it
   AdcChannel in_channel = NUM_ADC_CHANNELS;
 
-  adc_get_channel(adc_button_addresses[0], &in_channel) adc_set_channel(in_channel, true);
+  adc_get_channel(adc_button_addresses[ADC_IN], &in_channel);
+  adc_set_channel(in_channel, true);
 
   // initialize the button interrupt with btn info and callback func
-  gpio_it_register_interrupt(&adc_button_addresses[1], &btn_interrupt_settings,
-                             INTERRUPT_EDGE_RISING, prv_btn_interrupt_handler, &in_channel);
+  gpio_it_register_interrupt(&adc_button_addresses[BTN_IN], &btn_interrupt_settings,
+                             INTERRUPT_EDGE_FALLING, prv_btn_interrupt_handler, &in_channel);
 
   while (true) {
   }
