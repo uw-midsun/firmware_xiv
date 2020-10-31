@@ -80,6 +80,7 @@ StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *set
   storage->fault_callback_context = settings->fault_callback_context;
 
   storage->resistor = settings->resistor;
+  storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
@@ -122,6 +123,7 @@ StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSetting
   storage->fault_callback_context = settings->fault_callback_context;
 
   storage->resistor = settings->resistor;
+  storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
   storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
@@ -177,8 +179,11 @@ static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *me
   if (*meas <= BTS7200_MAX_LEAKAGE_VOLTAGE_MV) {
     *meas = 0;
   } else {
+    // using uint32_t to avoid overflow when multiplying by nominal scaling factor
     uint32_t meas32 = (uint32_t)*meas;
-    meas32 = ((578 * meas32)) / 1000 - 7;
+    meas32 *= BTS7200_IS_SCALING_NOMINAL;
+    meas32 /= storage->resistor;
+    meas32 -= storage->bias;
     *meas = (uint16_t)meas32;
   }
 }

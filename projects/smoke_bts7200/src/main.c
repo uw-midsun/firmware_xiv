@@ -15,7 +15,10 @@
 #include "soft_timer.h"
 #include "wait.h"
 
-#define SMOKE_BTS7200_SENSE_RESISTOR 1600
+// experimentally determined value: scaling factor of 670/1160 ~ 0.578 ohms, bias of -8 mA
+#define SMOKE_BTS7200_SENSE_RESISTOR 1160
+#define SMOKE_BTS7200_BIAS (-8)
+
 #define SMOKE_BTS7200_MIN_FAULT_VOLTAGE_MV 3200
 #define SMOKE_BTS7200_MAX_FAULT_VOLTAGE_MV 10000
 
@@ -89,6 +92,7 @@ int main() {
     .i2c_port = s_hw_config.i2c_port,
     .fault_callback = prv_fault_callback,
     .resistor = SMOKE_BTS7200_SENSE_RESISTOR,
+    .bias = SMOKE_BTS7200_BIAS,
     .min_fault_voltage_mv = SMOKE_BTS7200_MIN_FAULT_VOLTAGE_MV,
     .max_fault_voltage_mv = SMOKE_BTS7200_MAX_FAULT_VOLTAGE_MV,
   };
