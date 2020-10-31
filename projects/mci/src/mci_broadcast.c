@@ -66,7 +66,7 @@ static void prv_change_filter(void) {
 
 // CB for rx received
 static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
-  LOG_DEBUG("received rx from id: %d\n", (int)id);
+  LOG_DEBUG("received rx from id: 0x%x\n", (int)id);
   LOG_DEBUG("Data: 0x%x%x\n", (int)data, (int)(data >> 32));
   // this is kinda weird since the enum starts at 1, figure out a better way of doing
   uint32_t cb_offset = (uint32_t)(s_cb_storage.cur_measurement);
