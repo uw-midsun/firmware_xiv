@@ -1,5 +1,6 @@
 // A simple smoke test for ADS1015
 
+// Default set to what pedal board currently implements
 // Periodically take reading from user selected channels and log the result
 // Configurable items: wait time, I2C port, channels to be tested and conversion enable
 #include "ads1015.h"
@@ -18,14 +19,13 @@
 static Ads1015Storage s_storage = { 0 };
 static bool READ_CONVERTED = false;
 
-// Number of channels to be tested, MUST match the number of elements in test_channels
-#define NUM_TEST_CHANNELS 2
 // Set of channels to be tested, the number of elements MUST match NUM_TEST_CHANNELS
-const Ads1015Channel test_channels[NUM_TEST_CHANNELS] = {
-  ADS1015_CHANNEL_0,
-  ADS1015_CHANNEL_1,
+const Ads1015Channel test_channels[] = {
+  ADS1015_CHANNEL_0,  //
+  ADS1015_CHANNEL_1,  //
+  // ADS1015_CHANNEL_2,  //
+  // ADS1015_CHANNEL_3,  //
 };
-// ADS1015_CHANNEL_2, ADS1015_CHANNEL_3 };
 
 static void prv_read_and_log(SoftTimerId timer_id, void *context) {
   Ads1015Storage *storage = context;
@@ -66,8 +66,9 @@ int main(void) {
   };
   ads1015_init(&s_storage, SMOKE_ADS1015_I2C_PORT, SMOKE_ADS1015_ADDR, &ready_pin);
 
-  ads1015_configure_channel(&s_storage, 0, true, NULL, NULL);
-  ads1015_configure_channel(&s_storage, 1, true, NULL, NULL);
+  for (Ads1015Channel i = 0; i < SIZEOF_ARRAY(test_channels); i++) {
+    ads1015_configure_channel(&s_storage, i, true, NULL, NULL);
+  }
 
   soft_timer_start_millis(SMOKE_READING_WAIT_MS, prv_read_and_log, &s_storage, NULL);
   while (true) {
