@@ -11,8 +11,8 @@
 #include <unistd.h>
 
 #include "critical_section.h"
-#include "gpio.pb-c.h"
 #include "log.h"
+#include "stores.pb-c.h"
 
 #define MAX_STORE_COUNT 64
 #define INVALID_STORE_ID MAX_STORE_COUNT
@@ -24,7 +24,7 @@ typedef struct Store {
 } Store;
 
 // Used to ensure this module is only initialized once
-static bool s_initialized = false;
+bool store_lib_inited = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
@@ -33,18 +33,16 @@ static int s_ctop_fifo;
 
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
-static pthread_mutex_t s_sig_lock;
-pthread_mutex_t s_sig_lock2;
+static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
   pthread_mutex_unlock(&s_sig_lock);
-  return;
 }
 
 static void prv_sigusr2(int signo) {
-  pthread_mutex_unlock(&s_sig_lock2);
-  return;
+  pthread_mutex_unlock(&log_lock);
 }
 
 Store *prv_get_first_empty() {
@@ -66,9 +64,7 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
 static void *prv_poll_update(void *arg) {
   // read protos from stdin
   // compare using second proto as 'mask'
-  // trigger gpio interrupt as necessary
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
-  // LOG_DEBUG("starting to poll\n");
   while (true) {
     int res = poll(&pfd, 1, -1);
     if (res == -1) {
@@ -78,8 +74,8 @@ static void *prv_poll_update(void *arg) {
       continue;  // nothing to read
     } else {
       if (pfd.revents & POLLIN) {
-        static uint8_t buf[4096];  // store may be bigger than this?
-        int64_t len = read(STDIN_FILENO, buf, sizeof(buf));
+        static uint8_t buf[MAX_STORE_SIZE_BYTES];
+        ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
         if (len == -1) {
           LOG_DEBUG("read error while polling\n");
         }
@@ -94,15 +90,13 @@ static void *prv_poll_update(void *arg) {
 
 void store_config(void) {
   // do nothing after the first call
-  if (s_initialized) {
+  if (store_lib_inited) {
     return;
   }
 
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
   signal(SIGUSR2, prv_sigusr2);
-  pthread_mutex_init(&s_sig_lock, NULL);
-  pthread_mutex_init(&s_sig_lock2, NULL);
 
   // set up polling thread
   pthread_t poll_thread;
@@ -117,16 +111,17 @@ void store_config(void) {
   mkfifo(fifo_path, 0666);
   s_ctop_fifo = open(fifo_path, O_WRONLY);
 
-  s_initialized = true;
+  store_lib_inited = true;
 }
 
 void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) {
+  if (store == NULL) {
+    LOG_DEBUG("invalid store\n");
+    return;
+  }
   s_func_table[type] = funcs;
   // malloc a proto as a store and return a pointer to it
   Store *local_store = prv_get_first_empty();
-  if (store == NULL) {
-    return;
-  }
   local_store->type = type;
   local_store->store = store;
   local_store->key = key;
@@ -136,12 +131,8 @@ void *store_get(MxStoreType type, void *key) {
   // just linear search for it
   // if key is NULL just get first one with right type
   for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
-    if (key == NULL && s_stores[i].type == type) {
+    if (s_stores[i].type == type && (key == NULL || s_stores[i].key == key)) {
       return s_stores[i].store;
-    } else if (key != NULL && s_stores[i].type == type) {
-      if (s_stores[i].key == key) {
-        return s_stores[i].store;
-      }
     }
   }
   return NULL;
