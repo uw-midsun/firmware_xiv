@@ -179,12 +179,12 @@ static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *me
   if (*meas <= BTS7200_MAX_LEAKAGE_VOLTAGE_MV) {
     *meas = 0;
   } else {
-    // using uint32_t to avoid overflow when multiplying by nominal scaling factor
+    // using 32 bits to avoid overflow, and signed ints to get around C's janky type system
     uint32_t meas32 = (uint32_t)*meas;
     meas32 *= BTS7200_IS_SCALING_NOMINAL;
     meas32 /= storage->resistor;
-    meas32 -= storage->bias;
-    *meas = (uint16_t)meas32;
+    int32_t unbiased_meas32 = (int32_t)meas32 - storage->bias;
+    *meas = (uint16_t)MAX(unbiased_meas32, 0);
   }
 }
 

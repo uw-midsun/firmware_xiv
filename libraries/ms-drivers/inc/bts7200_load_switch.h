@@ -42,7 +42,7 @@ typedef struct {
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
-  uint32_t bias;      // experimental bias to be subtracted from the resulting current, in mA
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Stm32Settings;
@@ -60,7 +60,7 @@ typedef struct {
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
-  uint32_t bias;      // experimental bias to be subtracted from the resulting current, in mA
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Pca9539rSettings;
@@ -79,7 +79,7 @@ typedef struct {
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
-  uint32_t bias;      // experimental bias to be subtracted from the resulting current, in mA
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
