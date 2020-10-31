@@ -79,10 +79,15 @@ int main() {
   Bts7200Pca9539rSettings bts7200_settings = {
     .sense_pin = &s_hw_config.mux_output_pin,
     .i2c_port = s_hw_config.i2c_port,
+    .resistor = 1600,
+    .min_fault_voltage_mv = 3300,
+    .max_fault_voltage_mv = 10000,
   };
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
     bts7200_settings.select_pin = &s_hw_config.bts7200s[s_test_channels[i]].dsel_pin;
+    bts7200_settings.enable_0_pin = &s_hw_config.bts7200s[s_test_channels[i]].en0_pin;
+    bts7200_settings.enable_1_pin = &s_hw_config.bts7200s[s_test_channels[i]].en1_pin;
     status_ok_or_return(bts7200_init_pca9539r(&s_bts7200_storages[i], &bts7200_settings));
   }
 
