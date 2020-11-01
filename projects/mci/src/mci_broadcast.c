@@ -16,14 +16,14 @@
 
 //static Mcp2515Storage s_mcp2515_storage;
 
-static MotorControllerCallbackStorage s_cb_storage;
+//static MotorControllerCallbackStorage s_cb_storage;
 
-static const MciBroadcastMeasurementType MCI_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[NUM_MCI_BROADCAST_MEASUREMENTS] = {
-  [MCI_BROADCAST_STATUS] = MCI_BROADCAST_STATUS_OFFSET,
-  [MCI_BROADCAST_BUS] = MCI_BROADCAST_BUS_OFFSET, 
-  [MCI_BROADCAST_VELOCITY] = MCI_BROADCAST_VELOCITY_OFFSET, 
-  [MCI_BROADCAST_MOTOR_TEMP] = MCI_BROADCAST_MOTOR_TEMP_OFFSET, 
-  [MCI_BROADCAST_DSP_TEMP] = MCI_BROADCAST_DSP_TEMP_OFFSET 
+static const MotorControllerBroadcastMeasurement MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
+  [MOTOR_CONTROLLER_BROADCAST_STATUS] = MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
+  [MOTOR_CONTROLLER_BROADCAST_BUS] = MOTOR_CONTROLLER_BROADCAST_BUS_OFFSET, 
+  [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = MOTOR_CONTROLLER_BROADCAST_VELOCITY_OFFSET, 
+  [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP_OFFSET, 
+  [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET 
 };
 
 // Uncomment when using with only the left motor controller
@@ -45,19 +45,19 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 
 // Change the MCP2515 filter to filter for the next ID to look for
 static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
-  if(s_cb_storage.cur_measurement == NUM_MCI_BROADCAST_MEASUREMENTS - 1) {
-    s_cb_storage.cur_measurement = MCI_BROADCAST_STATUS;
+  if(storage->cb_storage.cur_measurement == NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS - 1) {
+    storage->cb_storage.cur_measurement = MOTOR_CONTROLLER_BROADCAST_STATUS;
     LOG_DEBUG("reset to status broadcast\n");
     #ifndef RIGHT_MOTOR_CONTROLLER_UNUSED 
-      s_cb_storage.motor_controller = !s_cb_storage.motor_controller;
+      storage->cb_storage.motor_controller = !storage->cb_storage.motor_controller;
     #endif
   } else {
-    s_cb_storage.cur_measurement++;
+    storage->cb_storage.cur_measurement++;
   }
-  uint32_t filter = (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(s_cb_storage.motor_controller) +
-  (uint32_t)MCI_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[s_cb_storage.cur_measurement];
+  uint32_t filter = (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
+  (uint32_t)MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
   LOG_DEBUG("Changing filter to %x\n", (int)filter);
-  uint32_t filters[2] = {MCI_ID_UNUSED, filter};
+  uint32_t filters[2] = {MOTOR_CONTROLLER_ID_UNUSED, filter};
   LOG_DEBUG("Change filter result %d\n", mcp2515_set_filter(storage->motor_can, filters));
 }
 
@@ -67,11 +67,11 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   LOG_DEBUG("received rx from id: 0x%x\n", (int)id);
   LOG_DEBUG("Data: 0x%x%x\n", (int)data, (int)(data >> 32));
   // this is kinda weird since the enum starts at 1, figure out a better way of doing
-  uint32_t cb_offset = (uint32_t)(s_cb_storage.cur_measurement);
+  uint32_t cb_offset = (uint32_t)(storage->cb_storage.cur_measurement);
   
 
   // Only call CB if it exists
-  if(s_cb_storage.callbacks[cb_offset] != NULL) {
+  if(storage->cb_storage.callbacks[cb_offset] != NULL) {
     // consider reworking so we don't need to use this
     GenericCanMsg msg = {
       .id = id, 
@@ -79,7 +79,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
       .data = data, 
       .dlc = dlc,
     };
-    s_cb_storage.callbacks[cb_offset](&msg, context);
+    storage->cb_storage.callbacks[cb_offset](&msg, context);
   }
   // Change to filter for next message
   prv_change_filter(storage);
@@ -133,15 +133,20 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
 static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
   // Set up callbacks and define in storage
   // TODO(SOFT-353): move the cb storage into MotorControllerBroadcastStorage
+  /*
   s_cb_storage.callbacks[MCI_BROADCAST_STATUS] = prv_handle_status_rx;
   storage->callbacks[MCI_BROADCAST_STATUS] = prv_handle_status_rx;
   s_cb_storage.callbacks[MCI_BROADCAST_BUS] = prv_handle_bus_measurement_rx; 
   storage->callbacks[MCI_BROADCAST_BUS] = prv_handle_bus_measurement_rx; 
   s_cb_storage.callbacks[MCI_BROADCAST_VELOCITY] = prv_handle_speed_rx; 
   storage->callbacks[MCI_BROADCAST_VELOCITY] = prv_handle_speed_rx; 
+  */
+  storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_STATUS] = prv_handle_status_rx;
+  storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS] = prv_handle_bus_measurement_rx;
+  storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY] = prv_handle_speed_rx;
 
-  s_cb_storage.cur_measurement = MCI_BROADCAST_STATUS;
-  s_cb_storage.motor_controller = LEFT_MOTOR_CONTROLLER;
+  storage->cb_storage.cur_measurement = MOTOR_CONTROLLER_BROADCAST_STATUS;
+  storage->cb_storage.motor_controller = LEFT_MOTOR_CONTROLLER;
   
   Mcp2515Settings mcp2515_settings = {
     .spi_port = SPI_PORT_2,
@@ -155,8 +160,8 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
     .can_bitrate = MCP2515_BITRATE_500KBPS,
     .loopback = false,
     .filters = {
-      [MCP2515_FILTER_ID_RXF0] = {.raw = MCI_ID_UNUSED}, // only want to use one filter
-      [MCP2515_FILTER_ID_RXF1] = {.raw = (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR + s_cb_storage.cur_measurement)},
+      [MCP2515_FILTER_ID_RXF0] = {.raw = MOTOR_CONTROLLER_ID_UNUSED}, // only want to use one filter
+      [MCP2515_FILTER_ID_RXF1] = {.raw = (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR + storage->cb_storage.cur_measurement + 1)},
     },
   };
   mcp2515_init(storage->motor_can, &mcp2515_settings);
