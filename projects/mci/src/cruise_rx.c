@@ -26,7 +26,6 @@ float cruise_rx_get_target_velocity(void) {
 
 static StatusCode prv_cruise_command_rx(const CanMessage *msg, void *context,
                                         CanAckStatus *ack_reply) {
-  return STATUS_CODE_OK;
   (void)context;
   uint8_t cruise_command = 2;
   CAN_UNPACK_CRUISE_CONTROL_COMMAND(msg, &cruise_command);
@@ -37,7 +36,7 @@ static StatusCode prv_cruise_command_rx(const CanMessage *msg, void *context,
           s_target_velocity_ms <= MCI_MAX_CRUISE_VELOCITY_MS)
         drive_fsm_toggle_cruise();
       return STATUS_CODE_OK;
-    case EE_CRUISE_CONTROL_COMMAND_INCREASE: // this breaks mci broadcast for some reason, no idea why
+    case EE_CRUISE_CONTROL_COMMAND_INCREASE:
       if (drive_fsm_is_cruise())
         s_target_velocity_ms =
             MIN(MCI_MAX_CRUISE_VELOCITY_MS, s_target_velocity_ms + MCI_CRUISE_CHANGE_AMOUNT_MS);
