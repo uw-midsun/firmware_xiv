@@ -402,23 +402,23 @@
 */
 
 #define CAN_TRANSMIT_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(aux_voltage_u16, aux_current_u16, \
-                                                           aux_temp_u16, main_voltage_u16)
-({
-  CanMessage msg = { 0 };
-  CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(&msg, (aux_voltage_u16), (aux_current_u16),
-                                                 (aux_temp_u16), (main_voltage_u16));
-  StatusCode status = can_transmit(&msg, NULL);
-  status;
-})
+                                                           aux_temp_u16, main_voltage_u16) \
+  ({ \
+    CanMessage msg = { 0 }; \
+    CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(&msg, (aux_voltage_u16), (aux_current_u16), \
+                                                  (aux_temp_u16), (main_voltage_u16)); \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status; \
+  }) 
 
 #define CAN_TRANSMIT_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(dcdc_voltage_u16, dcdc_current_u16, \
-                                                            dcdc_temp_u16, main_current_u16)
-    ({
-      CanMessage msg = { 0 };
-      CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(&msg, (dcdc_voltage_u16), (dcdc_current_u16),
-                                                     (dcdc_temp_u16), (main_current_u16));
-      StatusCode status = can_transmit(&msg, NULL);
-      status;
+                                                            dcdc_temp_u16, main_current_u16) \
+    ({ \
+      CanMessage msg = { 0 }; \
+      CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(&msg, (dcdc_voltage_u16), (dcdc_current_u16), \
+                                                     (dcdc_temp_u16), (main_current_u16)); \
+      StatusCode status = can_transmit(&msg, NULL); \
+      status; \
     })
 
 #define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8, fan_6_u8, \

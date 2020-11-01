@@ -33,7 +33,7 @@ static const GpioAddress TEMP_MEASUREMENT_PINS[NUM_POWER_SELECT_TEMP_MEASUREMENT
 static StatusCode prv_broadcast_measurements(void) {
   StatusCode status = CAN_TRANSMIT_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(
       s_storage.voltages[POWER_SELECT_AUX], s_storage.currents[POWER_SELECT_AUX],
-      s_storage.temps[POWER_SELECT_AUX], s_storage.voltages[POWER_SELECT_PWR_SUP]));
+      s_storage.temps[POWER_SELECT_AUX], s_storage.voltages[POWER_SELECT_PWR_SUP]);
   status_ok_or_return(CAN_TRANSMIT_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(
       s_storage.voltages[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_DCDC],
       s_storage.temps[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_PWR_SUP]));
@@ -101,14 +101,15 @@ static StatusCode prv_init_fault_pin(void) {
   const GpioSettings settings = {
     GPIO_DIR_IN,
   };
+  GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
+  status_ok_or_return(gpio_init_pin(&pin, &settings));
 
-  status_ok_or_return(gpio_init_pin(&POWER_SELECT_DCDC_FAULT_ADDR, &settings));
   const InterruptSettings it_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT, 
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  return gpio_it_register_interrupt(&POWER_SELECT_DCDC_FAULT_ADDR, &it_settings, INTERRUPT_EDGE_RISING, prv_handle_fault, &s_storage);
+  return gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING, prv_handle_fault_it, &s_storage);
 }
 
 // Initialize valid pins (mainly for debugging purposes)
@@ -120,9 +121,12 @@ static StatusCode prv_init_valid_pins(void) {
     GPIO_ALTFN_NONE,
   };
 
-  status_ok_or_return(gpio_init_pin(&POWER_SELECT_VALID1_ADDR, &settings));
-  status_ok_or_return(gpio_init_pin(&POWER_SELECT_VALID2_ADDR, &settings));
-  return gpio_init_pin(&POWER_SELECT_VALID3_ADDR, &settings);
+  GpioAddress pin = POWER_SELECT_VALID1_ADDR;
+  status_ok_or_return(gpio_init_pin(&pin, &settings));
+  GpioAddress pin2 = POWER_SELECT_VALID2_ADDR;
+  status_ok_or_return(gpio_init_pin(&pin2, &settings));
+  GpioAddress pin3 = POWER_SELECT_VALID3_ADDR;
+  return gpio_init_pin(&pin3, &settings);
 }
 
 StatusCode power_select_init(void) {

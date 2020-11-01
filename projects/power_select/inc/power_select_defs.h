@@ -53,7 +53,5 @@
 // Show whether power sources are connected, active-low
 #define POWER_SELECT_VALID1_ADDR \
   { GPIO_PORT_A, 10 }
-#define POWER_SELECT_VALID2_ADDR \
-  { GPIO_PORT_A, 9 }
-#define POWER_SELECT_VALID3_ADDR \
-  { GPIO_PORT_A, 8 }
+#define POWER_SELECT_VALID2_ADDR { GPIO_PORT_A, 9 }
+#define POWER_SELECT_VALID3_ADDR { GPIO_PORT_A, 8 }
