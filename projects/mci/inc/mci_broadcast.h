@@ -65,6 +65,7 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
   MotorControllerMeasurements measurements;
+  uint64_t status;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
   MotorControllerMeasurementCallback callbacks[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS]; // Callbacks exposed so we can unit test more easily
   MotorControllerCallbackStorage cb_storage; // ditto
