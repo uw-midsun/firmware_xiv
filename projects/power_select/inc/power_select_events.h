@@ -1,0 +1,8 @@
+#pragma once
+
+typedef enum {
+  POWER_SELECT_CAN_EVENT_RX = 0,
+  POWER_SELECT_CAN_EVENT_TX,
+  POWER_SELECT_CAN_EVENT_FAULT,
+  NUM_POWER_SELECT_CAN_EVENTS,
+} PowerSelectCanEvent;
