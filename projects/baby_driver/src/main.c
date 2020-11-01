@@ -11,9 +11,9 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "dispatcher.h"
-#include "gpio_set.h"
 #include "event_queue.h"
 #include "gpio.h"
+#include "gpio_set.h"
 #include "interrupt.h"
 #include "log.h"
 #include "wait.h"
@@ -47,7 +47,7 @@ int main() {
 
   dispatcher_init();
   gpio_set_init();
-  
+
   Event e = { 0 };
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
