@@ -15,6 +15,13 @@
 #include "soft_timer.h"
 #include "wait.h"
 
+// experimentally determined value: scaling factor of 670/1160 ~ 0.578 ohms, bias of -8 mA
+#define SMOKE_BTS7200_SENSE_RESISTOR 1160
+#define SMOKE_BTS7200_BIAS (-8)
+
+#define SMOKE_BTS7200_MIN_FAULT_VOLTAGE_MV 3200
+#define SMOKE_BTS7200_MAX_FAULT_VOLTAGE_MV 10000
+
 // Smoke test settings. Can be modified to fit testing purpose.
 #define CURRENT_MEASURE_INTERVAL_MS 500  // Set wait time between each set of readings
 #define IS_FRONT_POWER_DISTRO true       // Set whether to test FRONT or REAR power distro
@@ -48,6 +55,10 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, s_hw_config, NULL);
 }
 
+static void prv_fault_callback(bool fault0, bool fault1, void *context) {
+  LOG_DEBUG("Fault! channel 0=%d, channel 1=%d\n", fault0, fault1);
+}
+
 int main() {
   gpio_init();
   interrupt_init();
@@ -79,10 +90,17 @@ int main() {
   Bts7200Pca9539rSettings bts7200_settings = {
     .sense_pin = &s_hw_config.mux_output_pin,
     .i2c_port = s_hw_config.i2c_port,
+    .fault_callback = prv_fault_callback,
+    .resistor = SMOKE_BTS7200_SENSE_RESISTOR,
+    .bias = SMOKE_BTS7200_BIAS,
+    .min_fault_voltage_mv = SMOKE_BTS7200_MIN_FAULT_VOLTAGE_MV,
+    .max_fault_voltage_mv = SMOKE_BTS7200_MAX_FAULT_VOLTAGE_MV,
   };
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
     bts7200_settings.select_pin = &s_hw_config.bts7200s[s_test_channels[i]].dsel_pin;
+    bts7200_settings.enable_0_pin = &s_hw_config.bts7200s[s_test_channels[i]].en0_pin;
+    bts7200_settings.enable_1_pin = &s_hw_config.bts7200s[s_test_channels[i]].en1_pin;
     status_ok_or_return(bts7200_init_pca9539r(&s_bts7200_storages[i], &bts7200_settings));
   }
 
