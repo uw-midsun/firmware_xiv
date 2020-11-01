@@ -33,6 +33,8 @@ typedef struct FanControlSettings {
   GpioItCallback callback;
   void *callback_context;
   uint32_t poll_interval_ms;
+  uint8_t i2c_write_addr;
+  uint8_t i2c_read_addr;
 } FanControlSettings;
 
 StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage);

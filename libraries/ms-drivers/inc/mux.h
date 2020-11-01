@@ -1,6 +1,6 @@
 #pragma once
 
-// GPIO interface to an arbitrary-bit multiplexer like SN74LV4051AQPWRQ1 or CD74HC4067.
+// GPIO interface to an arbitrary-bit multiplexer or demultiplexer.
 // Requires GPIO to be initialized.
 
 #include "gpio.h"
@@ -11,13 +11,9 @@
 typedef struct {
   uint8_t bit_width;
   GpioAddress sel_pins[MAX_MUX_BIT_WIDTH];
-  GpioAddress mux_output_pin;
-  GpioAddress mux_enable_pin;
 } MuxAddress;
 
-// Initialize all the pins of the given mux.
-// Note: this will initialize the mux_output_pin as input with GPIO_ALTFN_NONE. If you want a
-// different configuration, reinitialize it. (Arshan what should I do)
+// Initialize all the select pins of the given mux.
 StatusCode mux_init(MuxAddress *address);
 
 // Set the select pins to get the specified pin.
