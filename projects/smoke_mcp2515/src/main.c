@@ -95,6 +95,7 @@ static void prv_periodic_send(SoftTimerId timer_id, void *context) {
 }
 
 void prv_send_messages() {
+  /*
   bool test_1_passed = false;
   bool test_2_passed = false;
 
@@ -138,6 +139,8 @@ void prv_send_messages() {
   } else {
     LOG_DEBUG("Loopback check has failed\n");
   }
+  */
+
 }
 
 int main(void) {
