@@ -1,11 +1,6 @@
 #include <math.h>
 #include <stddef.h>
 #include <string.h>
-
-#ifdef MPXE
-#include <stdlib.h>
-
-#include "adt7476a.pb-c.h"
 #include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
 #include "gpio.h"
@@ -13,6 +8,10 @@
 #include "i2c.h"
 #include "interrupt.h"
 #include "soft_timer.h"
+
+#ifdef MPXE
+#include <stdlib.h>
+#include "adt7476a.pb-c.h"
 #include "store.h"
 #include "stores.pb-c.h"
 
@@ -20,7 +19,7 @@ static MxAdt7476aStore s_store = MX_ADT7476A_STORE__INIT;
 static uint32_t s_speed[NUM_ADT_PWM_PORTS] = { 0 };
 static bool s_status[NUM_ADT_PWM_PORTS] = { 0 };
 
-static void prv_update_store() {
+static void prv_export_store() {
   for (AdtPwmPort i = 0; i < NUM_ADT_PWM_PORTS; i++) {
     s_store.speed[i] = s_speed[i];
     s_store.status[i] = s_status[i];
@@ -42,7 +41,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
 
   mx_adt7476a_store__free_unpacked(msg, NULL);
   mx_adt7476a_store__free_unpacked(mask, NULL);
-  prv_update_store();
+  prv_export_store();
 }
 
 static void prv_init_store(void) {
@@ -60,6 +59,7 @@ static void prv_init_store(void) {
   s_store.status = malloc(NUM_ADT_PWM_PORTS * sizeof(protobuf_c_boolean));
   store_register(MX_STORE_TYPE__ADT7476A, funcs, &s_store, NULL);
 }
+#endif
 
 // need to set interrupt once fan goes out of range
 // PWM duty cycle is set from 0-100, in steps of 0.39 (0x00 - 0xFF)
@@ -78,14 +78,18 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
 
     status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
                                   SIZEOF_ARRAY(adt7476a_speed_register)));
-    s_speed[0] = real_speed;
+    #ifdef MPXE
+      s_speed[0] = real_speed;
+    #endif
 
   } else if (pwm_port == ADT_PWM_PORT_2) {
     uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_3, real_speed };
 
     status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
                                   SIZEOF_ARRAY(adt7476a_speed_register)));
-    s_speed[1] = real_speed;
+    #ifdef MPXE
+      s_speed[1] = real_speed;
+    #endif
 
   } else if (pwm_port == ADT_PWM_PORT_3) {
     return STATUS_CODE_UNIMPLEMENTED;
@@ -93,7 +97,9 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
     return STATUS_CODE_INVALID_ARGS;
   }
 
-  prv_update_store();
+  #ifdef MPXE
+    prv_export_store();
+  #endif
   return STATUS_CODE_OK;
 }
 
@@ -106,16 +112,19 @@ StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
   StatusCode reg2 =
       (i2c_read_reg(port, adt7476a_i2c_read_address, ADT7476A_INTERRUPT_STATUS_REGISTER_2,
                     register_2_data, ADT7476A_REG_SIZE));
+  #ifdef MPXE
+    s_status[0] = reg1 ? true : false;
+    s_status[1] = reg2 ? true : false;
 
-  s_status[0] = reg1 ? true : false;
-  s_status[1] = reg2 ? true : false;
-
-  prv_update_store();
+    prv_export_store();
+  #endif
   return (reg1 || reg2) ? STATUS_CODE_UNKNOWN : STATUS_CODE_OK;
 }
 
 StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
-  prv_init_store();
+  #ifdef MPXE
+    prv_init_store();
+  #endif
   if (storage == NULL || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -158,110 +167,9 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
   gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              storage->callback, storage->callback_context);
 
-  prv_update_store();
+  #ifdef MPXE
+    prv_export_store();
+  #endif
 
   return STATUS_CODE_OK;
 }
-
-#else
-#include "adt7476a_fan_controller.h"
-#include "adt7476a_fan_controller_defs.h"
-#include "gpio.h"
-#include "gpio_it.h"
-#include "i2c.h"
-#include "interrupt.h"
-#include "soft_timer.h"
-
-// need to set interrupt once fan goes out of range
-// PWM duty cycle is set from 0-100, in steps of 0.39 (0x00 - 0xFF)
-// accepts number between 0-100, converts into into range of 0x00 - 0xFF
-StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pwm_port,
-                              uint8_t adt7476a_i2c_address) {
-  // check for out of range conditions.
-  if (speed_percent > 100) {
-    return STATUS_CODE_OUT_OF_RANGE;
-  }
-
-  // determine which PWM output to change
-  uint8_t real_speed = (speed_percent / 0.39);
-  if (pwm_port == ADT_PWM_PORT_1) {
-    uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_1, real_speed };
-
-    status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
-                                  SIZEOF_ARRAY(adt7476a_speed_register)));
-
-  } else if (pwm_port == ADT_PWM_PORT_2) {
-    uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_3, real_speed };
-
-    status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
-                                  SIZEOF_ARRAY(adt7476a_speed_register)));
-
-  } else if (pwm_port == ADT_PWM_PORT_3) {
-    return STATUS_CODE_UNIMPLEMENTED;
-  } else {
-    return STATUS_CODE_INVALID_ARGS;
-  }
-
-  return STATUS_CODE_OK;
-}
-
-StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
-                               uint8_t *register_1_data, uint8_t *register_2_data) {
-  // read interrupt status register
-  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_read_address,
-                                   ADT7476A_INTERRUPT_STATUS_REGISTER_1, register_1_data,
-                                   ADT7476A_REG_SIZE));
-  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_read_address,
-                                   ADT7476A_INTERRUPT_STATUS_REGISTER_2, register_2_data,
-                                   ADT7476A_REG_SIZE));
-
-  return STATUS_CODE_OK;
-}
-
-StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
-  if (storage == NULL || settings == NULL) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
-  }
-
-  memset(storage, 0, sizeof(Adt7476aStorage));
-
-  storage->smbalert_pin = settings->smbalert_pin;
-  storage->callback = settings->callback;  // called when tachometer goes out of range
-  storage->callback_context = settings->callback_context;
-  storage->i2c = settings->i2c;
-
-  static InterruptSettings s_interrupt_settings = {
-    .type = INTERRUPT_TYPE_INTERRUPT,       //
-    .priority = INTERRUPT_PRIORITY_NORMAL,  //
-  };
-
-  status_ok_or_return(i2c_init(settings->i2c, &settings->i2c_settings));
-
-  uint8_t fan_config_data_register_1[] = { ADT7476A_FAN_MODE_REGISTER_1,
-                                           ADT7476A_MANUAL_MODE_MASK };
-  uint8_t fan_config_data_register_3[] = { ADT7476A_FAN_MODE_REGISTER_3,
-                                           ADT7476A_MANUAL_MODE_MASK };
-  uint8_t strt_config_data[] = { ADT7476A_CONFIG_REGISTER_1, ADT7476A_CONFIG_REG_1_MASK };
-  uint8_t smbalert_config_data[] = { ADT7476A_CONFIG_REGISTER_3, ADT7476A_CONFIG_REG_3_MASK };
-
-  // set STRT bit to on
-  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, strt_config_data,
-                                SIZEOF_ARRAY(strt_config_data)));
-
-  // configure pwm to manual mode
-  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, fan_config_data_register_1,
-                                SIZEOF_ARRAY(fan_config_data_register_1)));
-  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, fan_config_data_register_3,
-                                SIZEOF_ARRAY(fan_config_data_register_3)));
-
-  // set pin 10 to SMBALERT rather than pwm output
-  status_ok_or_return(i2c_write(settings->i2c, settings->i2c_write_addr, smbalert_config_data,
-                                SIZEOF_ARRAY(smbalert_config_data)));
-
-  gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
-                             storage->callback, storage->callback_context);
-
-  return STATUS_CODE_OK;
-}
-
-#endif
