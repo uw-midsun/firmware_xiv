@@ -10,6 +10,8 @@
 
 typedef struct {
   Pca9539rGpioAddress dsel_pin;
+  Pca9539rGpioAddress en0_pin;
+  Pca9539rGpioAddress en1_pin;
   uint8_t mux_selection;
 } PowerDistributionBts7200Data;
 
