@@ -26,10 +26,10 @@ float cruise_rx_get_target_velocity(void) {
 
 static StatusCode prv_cruise_command_rx(const CanMessage *msg, void *context,
                                         CanAckStatus *ack_reply) {
+  return STATUS_CODE_OK;
   (void)context;
   uint8_t cruise_command = 2;
-  LOG_DEBUG("WHY DOESN'T THIS OUTPUT????????\n");
-  //CAN_UNPACK_CRUISE_CONTROL_COMMAND(msg, &cruise_command);
+  CAN_UNPACK_CRUISE_CONTROL_COMMAND(msg, &cruise_command);
 
   switch (cruise_command) {
     case EE_CRUISE_CONTROL_COMMAND_TOGGLE:
