@@ -243,14 +243,23 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     0x00,
     0x00,
   };
-
+  
+  uint8_t test = 0;
+  prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
+  LOG_DEBUG("before write %d\n", test);
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
-
+  prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
+  LOG_DEBUG("after write %d\n", test);
   // Leave config mode
   uint8_t opmode =
       (settings->loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
-
+  test = 0;
+  prv_read(storage, MCP2515_CTRL_REG_CANCTRL, &test, sizeof(test));
+  LOG_DEBUG("before write 2 %d\n", test);
+  prv_write(storage, MCP2515_CTRL_REG_CANCTRL, registers, SIZEOF_ARRAY(registers));
+  prv_read(storage, MCP2515_CTRL_REG_CANCTRL, &test, sizeof(test));
+  LOG_DEBUG("after write 2 %d\n", test);
   // Active-low interrupt pin
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
