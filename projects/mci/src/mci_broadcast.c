@@ -47,11 +47,15 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
                                    (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a);
 }
 
+static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
+  LOG_DEBUG("broadcasting status: 0x%x%x\n", (int)storage->status, (int)(storage->status >> 32));
+  CAN_TRANSMIT_MOTOR_DEBUG(storage->status);
+}
+
 // Change the MCP2515 filter to filter for the next ID to look for
 static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   if(storage->cb_storage.cur_measurement == NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS - 1) {
     storage->cb_storage.cur_measurement = MOTOR_CONTROLLER_BROADCAST_STATUS;
-    LOG_DEBUG("reset to status broadcast\n");
     #ifndef RIGHT_MOTOR_CONTROLLER_UNUSED 
       storage->cb_storage.motor_controller = !storage->cb_storage.motor_controller;
     #endif
@@ -90,8 +94,15 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
 }
 
 // TODO(SOFT-139): implement status message handling + broadcast
+// just resending the status message for now since it's a uint64
+// in future, we can probably pack both status messages together by 
+// cutting out the reserved bits from the error flags and the 2-byte active motor 
+// ID (which we don't need for anything IIRC)
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("got status message\n");
+  MotorControllerBroadcastStorage *storage = context; 
+  storage->status = msg->data;
+  prv_broadcast_status(storage);
 }
 
 static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
@@ -134,6 +145,14 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
   }
 }
 
+static void prv_handle_motor_temp_rx(const GenericCanMsg *msg, void *context) {
+  LOG_DEBUG("got motor temp rx\n");
+}
+
+static void prv_handle_dsp_temp_rx(const GenericCanMsg *msg, void *context) { 
+  LOG_DEBUG("got dsp temp rx\n");
+}
+
 static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
   // Set up callbacks and define in storage
   // TODO(SOFT-353): move the cb storage into MotorControllerBroadcastStorage
@@ -148,6 +167,9 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
   storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_STATUS] = prv_handle_status_rx;
   storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS] = prv_handle_bus_measurement_rx;
   storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY] = prv_handle_speed_rx;
+  storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = prv_handle_motor_temp_rx; 
+  storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = prv_handle_dsp_temp_rx; 
+
 
   storage->cb_storage.cur_measurement = MOTOR_CONTROLLER_BROADCAST_STATUS;
   storage->cb_storage.motor_controller = LEFT_MOTOR_CONTROLLER;
