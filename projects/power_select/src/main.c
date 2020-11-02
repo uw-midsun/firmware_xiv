@@ -6,11 +6,10 @@
 #include "power_select.h"
 #include "power_select_events.h"
 
-#define POWER_SELECT_CAN_DEVICE_ID 0x1  // from old power_selection, not sure if up to date
 static CanStorage s_can_storage;
 
 static CanSettings s_can_settings = {
-  .device_id = POWER_SELECT_CAN_DEVICE_ID,
+  .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .tx_event = POWER_SELECT_CAN_EVENT_TX,
   .rx_event = POWER_SELECT_CAN_EVENT_RX,

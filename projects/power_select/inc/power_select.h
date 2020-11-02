@@ -1,9 +1,8 @@
 #pragma once
-// FW for power selection board.
-// Requires gpio, interrupts, CAN, and soft timers to be initialized.
-// Handles reading current, voltage, and temp values from the power select
-// board and broadcasting the results over CAN
-// TODO: work in fault handling, disabling the LTC into the driver (probably after powertrain
+// Measures values from power selection to send over CAN and handles faults.
+
+// Requires gpio, interrupts, CAN, ADC (in ADC_MODE_SINGLE), and soft timers to be initialized.
+// TODO: Improve fault handling, disable LTC through driver (probably after powertrain
 // mockup)
 
 #include "adc.h"
@@ -34,6 +33,7 @@ typedef struct {
   uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
   uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
   uint16_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];  // no power supply temp measurements
+  uint16_t fault_bitset; // TODO: send this over CAN instead of the individual fault
 } PowerSelectStorage;
 
 // Initialize power selection
