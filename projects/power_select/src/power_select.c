@@ -29,6 +29,13 @@ static const GpioAddress TEMP_MEASUREMENT_PINS[NUM_POWER_SELECT_TEMP_MEASUREMENT
   [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_TEMP_ADDR,
 };
 
+static const GpioAddress VALID_PINS[NUM_VALID_PINS] = {
+  POWER_SELECT_VALID1_ADDR, 
+  POWER_SELECT_VALID2_ADDR,
+  POWER_SELECT_VALID3_ADDR,
+};
+
+/*
 // Broadcast sense measurements from storage.
 static StatusCode prv_broadcast_measurements(void) {
   StatusCode status = CAN_TRANSMIT_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(
@@ -39,53 +46,63 @@ static StatusCode prv_broadcast_measurements(void) {
       s_storage.temps[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_PWR_SUP]));
   return status;
 }
+*/
 
 // Read current, voltage, and temp measurements to storage
 void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("Reading measurements...\n");
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
-
+  LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP\n");
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    (adc_get_channel(VOLTAGE_MEASUREMENT_PINS[i], &sense_channel));
-    (adc_read_converted(sense_channel, &s_storage.voltages[i]));
+    //(adc_get_channel(VOLTAGE_MEASUREMENT_PINS[i], &sense_channel));
+    (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]));
+    LOG_DEBUG("Voltage %d: %d\n", (int)i, s_storage.voltages[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
-    (adc_get_channel(CURRENT_MEASUREMENT_PINS[i], &sense_channel));
-    (adc_read_converted(sense_channel, &s_storage.currents[i]));
+    //(adc_get_channel(CURRENT_MEASUREMENT_PINS[i], &sense_channel));
+    (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]));
+    LOG_DEBUG("Current %d: %d\n", (int)i, s_storage.currents[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
-    (adc_get_channel(TEMP_MEASUREMENT_PINS[i], &sense_channel));
-    (adc_read_converted(sense_channel, &s_storage.temps[i]));
+    //(adc_get_channel(TEMP_MEASUREMENT_PINS[i], &sense_channel));
+    (adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &s_storage.temps[i]));
+    LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
   }
 
-  prv_broadcast_measurements();
+  for(uint8_t i = 0; i < NUM_VALID_PINS; i++) {
+    GpioState state = GPIO_STATE_LOW;
+    gpio_get_state(&VALID_PINS[i], &state);
+    LOG_DEBUG("Valid pin %d: %d\n", i+1, state == GPIO_STATE_HIGH);
+  }
+
+  //prv_broadcast_measurements();
   soft_timer_start(POWER_SELECT_MEASUREMENT_INTERVAL_US, prv_periodic_measure, &s_storage,
                    &timer_id);
 }
 
 // Initialize all sense pins as ADC
 static StatusCode prv_init_sense_pins(void) {
-  AdcChannel sense_channel = NUM_ADC_CHANNELS;
+  //AdcChannel sense_channel = NUM_ADC_CHANNELS;
 
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     status_ok_or_return(gpio_init_pin(&VOLTAGE_MEASUREMENT_PINS[i], &SENSE_SETTINGS));
-    status_ok_or_return(adc_get_channel(VOLTAGE_MEASUREMENT_PINS[i], &sense_channel));
-    status_ok_or_return(adc_set_channel(sense_channel, true));
-    sense_channel = NUM_ADC_CHANNELS;
+    //status_ok_or_return(adc_get_channel(VOLTAGE_MEASUREMENT_PINS[i], &sense_channel));
+    status_ok_or_return(adc_set_channel_pin(VOLTAGE_MEASUREMENT_PINS[i], true));
+    //sense_channel = NUM_ADC_CHANNELS;
   }
 
   for (uint32_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
     status_ok_or_return(gpio_init_pin(&CURRENT_MEASUREMENT_PINS[i], &SENSE_SETTINGS));
-    status_ok_or_return(adc_get_channel(CURRENT_MEASUREMENT_PINS[i], &sense_channel));
-    status_ok_or_return(adc_set_channel(sense_channel, true));
-    sense_channel = NUM_ADC_CHANNELS;
+    //status_ok_or_return(adc_get_channel(CURRENT_MEASUREMENT_PINS[i], &sense_channel));
+    status_ok_or_return(adc_set_channel_pin(CURRENT_MEASUREMENT_PINS[i], true));
+    //sense_channel = NUM_ADC_CHANNELS;
   }
 
   for (uint32_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
     status_ok_or_return(gpio_init_pin(&TEMP_MEASUREMENT_PINS[i], &SENSE_SETTINGS));
-    status_ok_or_return(adc_get_channel(TEMP_MEASUREMENT_PINS[i], &sense_channel));
-    status_ok_or_return(adc_set_channel(sense_channel, true));
-    sense_channel = NUM_ADC_CHANNELS;
+    //status_ok_or_return(adc_get_channel(TEMP_MEASUREMENT_PINS[i], &sense_channel));
+    status_ok_or_return(adc_set_channel_pin(TEMP_MEASUREMENT_PINS[i], true));
+    //sense_channel = NUM_ADC_CHANNELS;
   }
 
   return STATUS_CODE_OK;
