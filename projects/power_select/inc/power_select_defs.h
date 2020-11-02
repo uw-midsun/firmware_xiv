@@ -2,13 +2,19 @@
 
 // Pin defintions + other info for power select
 
+#define A_TO_MA 1000
+#define V_TO_MV 1000
+
 // Scaling factors
 #define POWER_SELECT_PWR_SUP_ISENSE_SCALING 80       // mV/A
-#define POWER_SELECT_PWR_SUP_VSENSE_SCALING 189.655  // mV/V
+#define POWER_SELECT_PWR_SUP_VSENSE_SCALING 190  // mV/V
 #define POWER_SELECT_DCDC_ISENSE_SCALING 80          // mV/A
-#define POWER_SELECT_DCDC_VSENSE_SCALING 189.655     // mV/V
+#define POWER_SELECT_DCDC_VSENSE_SCALING 190     // mV/V
 #define POWER_SELECT_AUX_ISENSE_SCALING 1            // mV/A
-#define POWER_SELECT_AUX_VSENSE_SCALING 189.655      // mV/V
+#define POWER_SELECT_AUX_VSENSE_SCALING 190      // mV/V
+
+#define POWER_SELECT_VSENSE_SCALING 190 // mV/V
+#define POWER_SELECT_ISENSE_SCALING 80
 
 #define POWER_SELECT_AUX_VREF_MV 1624  // todo figure out if this is just for isense or
 
