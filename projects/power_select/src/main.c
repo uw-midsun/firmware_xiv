@@ -4,6 +4,7 @@
 #include "interrupt.h"
 #include "power_select.h"
 #include "power_select_events.h"
+#include "log.h"
 
 #define POWER_SELECT_CAN_DEVICE_ID 0x1  // from old power_selection, not sure if up to date
 static CanStorage s_can_storage;
@@ -20,14 +21,16 @@ static CanSettings s_can_settings = {
 };
 
 int main() {
-  gpio_init();
-  event_queue_init();
   interrupt_init();
+  gpio_init();
   soft_timer_init();
+  adc_init(ADC_MODE_SINGLE);
+
+  event_queue_init();
 
   can_init(&s_can_storage, &s_can_settings);
 
-  power_select_init();
+  LOG_DEBUG("init: %d\n", power_select_init());
   power_select_start();
 
   Event e = { 0 };
