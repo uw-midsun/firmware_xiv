@@ -2,9 +2,9 @@
 
 #include "can.h"
 #include "interrupt.h"
+#include "log.h"
 #include "power_select.h"
 #include "power_select_events.h"
-#include "log.h"
 
 #define POWER_SELECT_CAN_DEVICE_ID 0x1  // from old power_selection, not sure if up to date
 static CanStorage s_can_storage;
