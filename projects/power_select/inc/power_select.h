@@ -31,8 +31,8 @@ typedef enum {
 
 // Storage for previous measurements
 typedef struct {
-  uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
-  uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
+  float voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
+  float currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
   uint16_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];  // no power supply temp measurements
   bool fault_status;
 } PowerSelectStorage;

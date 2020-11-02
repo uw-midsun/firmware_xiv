@@ -49,19 +49,31 @@ static StatusCode prv_broadcast_measurements(void) {
 */
 
 // Read current, voltage, and temp measurements to storage
+// Note to self: might be easier to store these values as floats instead
+// and then cast them to uint16s when sending over CAN
 void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("Reading measurements...\n");
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP\n");
+  uint16_t temp_reading = 0;
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     //(adc_get_channel(VOLTAGE_MEASUREMENT_PINS[i], &sense_channel));
-    (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]));
-    LOG_DEBUG("Voltage %d: %d\n", (int)i, s_storage.voltages[i]);
+    (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &temp_reading));
+    // convert 
+    s_storage.voltages[i] = temp_reading;
+    s_storage.voltages[i] /= POWER_SELECT_VSENSE_SCALING;
+    s_storage.voltages[i] *= V_TO_MV;
+    LOG_DEBUG("Voltage %d: %d\n", (int)i, (int)s_storage.voltages[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
     //(adc_get_channel(CURRENT_MEASUREMENT_PINS[i], &sense_channel));
-    (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]));
-    LOG_DEBUG("Current %d: %d\n", (int)i, s_storage.currents[i]);
+    (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &temp_reading));
+    s_storage.currents[i] = temp_reading;
+    if(i != 4) {
+      s_storage.currents[i] *= A_TO_MA;
+      s_storage.currents[i] /= POWER_SELECT_ISENSE_SCALING;
+    }
+    LOG_DEBUG("Current %d: %d\n", (int)i, (int)s_storage.currents[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
     //(adc_get_channel(TEMP_MEASUREMENT_PINS[i], &sense_channel));
