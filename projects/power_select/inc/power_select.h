@@ -9,9 +9,9 @@
 #include "adc.h"
 #include "can_transmit.h"
 #include "gpio.h"
+#include "gpio_it.h"
 #include "soft_timer.h"
 #include "status.h"
-#include "gpio_it.h"
 
 #include "power_select_defs.h"
 
@@ -31,10 +31,9 @@ typedef enum {
 
 // Storage for previous measurements
 typedef struct {
-  float voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
-  float currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
+  uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
+  uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
   uint16_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];  // no power supply temp measurements
-  bool fault_status;
 } PowerSelectStorage;
 
 // Initialize power selection
