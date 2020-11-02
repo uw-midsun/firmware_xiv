@@ -25,8 +25,12 @@ static GpioSettings s_adc_pin_settings = {
   GPIO_ALTFN_ANALOG,
 };
 
-static void prv_adc_read_callback(BabydriverMessageId id, uint8_t data[8],
-                                  const GpioAddress *address, void *context) {
+// Only first half of data is used. Data contains the id = 4 (BABYDRIVER_MESSAGE_ADC_READ_COMMAND
+// id), port number, pin number and an int indicating if read should be raw or converted. Callback
+// sends back a CAN message with id = 5 (BABYDRIVER_MESSAGE_ADC_READ_DATA), low byte, and high byte
+// of ADC read conversion.
+static void adc_read_callback(void *context) {
+  uint8_t *data = context;
   uint16_t adc_pin_data = 0;
 
   bool tx_result = true;
@@ -38,8 +42,10 @@ static void prv_adc_read_callback(BabydriverMessageId id, uint8_t data[8],
 
   gpio_init_pin(&s_adc_pin_addr, &s_adc_pin_settings);
 
+  adc_set_channel_pin(s_adc_pin_addr, true);
+
   if (is_raw) {
-    adc_read_raw_pin(s_adc_pin_addr, adc_pin_data);
+    adc_read_raw_pin(s_adc_pin_addr, &adc_pin_data);
   } else {
     adc_read_converted_pin(s_adc_pin_addr, &adc_pin_data);
   }
@@ -48,9 +54,10 @@ static void prv_adc_read_callback(BabydriverMessageId id, uint8_t data[8],
   uint8_t high = (adc_pin_data >> 8) & 0xff;
 
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_DATA, low, high, 0, 0, 0, 0, 0);
+
   return STATUS_CODE_OK;
 }
 
 StatusCode adc_read_init(void) {
-  dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, prv_adc_read_callback, NULL);
+  dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, adc_read_callback, NULL);
 }
