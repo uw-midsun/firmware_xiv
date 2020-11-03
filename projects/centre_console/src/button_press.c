@@ -24,9 +24,23 @@ static CentreConsoleButtonPressEvent s_button_event_lookup[NUM_CENTRE_CONSOLE_BU
   [CENTRE_CONSOLE_BUTTON_REVERSE] = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_REVERSE,
 };
 
+static const char *s_button_names[NUM_CENTRE_CONSOLE_BUTTONS] = {
+  [CENTRE_CONSOLE_BUTTON_POWER] = "power button",
+  [CENTRE_CONSOLE_BUTTON_PARKING] = "parking button",
+  [CENTRE_CONSOLE_BUTTON_HAZARDS] = "hazard button",
+  [CENTRE_CONSOLE_BUTTON_DRIVE] = "drive button",
+  [CENTRE_CONSOLE_BUTTON_NEUTRAL] = "neutral button",
+  [CENTRE_CONSOLE_BUTTON_REVERSE] = "reverse button",
+};
+
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
   CentreConsoleButtonPressEvent *event_id = (CentreConsoleButtonPressEvent *)context;
   event_raise(*event_id, 0);
+  for (uint8_t i = 0; i < NUM_CENTRE_CONSOLE_BUTTONS; i++) {
+    if (s_button_event_lookup[i] == *event_id) {
+      LOG_DEBUG("%s interrupt, raising event\n", s_button_names[i]);
+    }
+  }
 }
 
 StatusCode button_press_init(void) {

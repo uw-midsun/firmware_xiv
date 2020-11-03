@@ -31,13 +31,19 @@ bool prv_process_power_event(MainEventGeneratorStorage *storage, const Event *e)
   if (power_state == POWER_STATE_OFF) {
     output_event = (pedal_state == PEDAL_STATE_PRESSED) ? CENTRE_CONSOLE_POWER_EVENT_ON_MAIN
                                                         : CENTRE_CONSOLE_POWER_EVENT_ON_AUX;
+    LOG_DEBUG("raising %s\n", output_event == CENTRE_CONSOLE_POWER_EVENT_ON_MAIN ?
+              "power on main" : "power on aux");
   } else if (power_state == POWER_STATE_AUX) {
     output_event = (pedal_state == PEDAL_STATE_PRESSED) ? CENTRE_CONSOLE_POWER_EVENT_ON_MAIN
                                                         : CENTRE_CONSOLE_POWER_EVENT_OFF;
+    LOG_DEBUG("raising %s\n", output_event == CENTRE_CONSOLE_POWER_EVENT_ON_MAIN ?
+              "power on main" : "power off");
   } else if (power_state == POWER_STATE_MAIN) {
     output_event = (drive_state == DRIVE_STATE_NEUTRAL || drive_state == DRIVE_STATE_PARKING)
                        ? CENTRE_CONSOLE_POWER_EVENT_OFF
                        : NUM_CENTRE_CONSOLE_POWER_EVENTS;
+    LOG_DEBUG("raising %s\n", output_event == CENTRE_CONSOLE_POWER_EVENT_OFF ?
+              "power off" : "nevermind not raising");
   }
   if (output_event == NUM_CENTRE_CONSOLE_POWER_EVENTS) {
     return false;
