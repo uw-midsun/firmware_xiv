@@ -5,7 +5,8 @@ enum MxStoreType {
   ADS1015 = 1;
   MCP2515 = 2;
   ADS1259 = 3;
-  END = 4;
+  ADT7476A = 4;
+  END = 5;
 }
 
 message MxStoreInfo {

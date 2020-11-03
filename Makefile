@@ -11,7 +11,6 @@
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
-#   IT: [INT_TEST=] - Specifies the target integration test (only for mpxe)
 #
 # Usage:
 #   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
@@ -86,6 +85,11 @@ else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
+# MPXE generated file directories
+MPXE_C_GEN_DIR := $(LIB_DIR)/mpxe-gen
+MPXE_PYTHON_GEN_DIR := $(MPXE_DIR)/protogen
+MPXE_PROTOS_DIR := $(MPXE_DIR)/protos
+
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
@@ -96,10 +100,11 @@ COMMA := ,
 
 # $(call gen_mpxe)
 define gen_mpxe
-$(shell cd $(MPXE_DIR)/protos && protoc --c_out=$(ROOT)/$(LIB_DIR)/mpxe-gen/inc *)
-$(shell cd $(MPXE_DIR)/protos && protoc --python_out=$(ROOT)/$(MPXE_DIR)/protogen *)
-$(shell mv $(LIB_DIR)/mpxe-gen/inc/*.c $(LIB_DIR)/mpxe-gen/src)
-$(shell rm -r -f $(LIB_DIR)/mpxe-gen/inc/mpxe)
+$(shell mkdir -p $(MPXE_C_GEN_DIR)/inc $(MPXE_C_GEN_DIR)/src $(MPXE_PYTHON_GEN_DIR))
+$(shell cd $(MPXE_PROTOS_DIR) && protoc --c_out=$(ROOT)/$(MPXE_C_GEN_DIR)/inc *)
+$(shell cd $(MPXE_PROTOS_DIR) && protoc --python_out=$(ROOT)/$(MPXE_PYTHON_GEN_DIR) *)
+$(shell mv $(MPXE_C_GEN_DIR)/inc/*.c $(MPXE_C_GEN_DIR)/src)
+$(shell rm -r -f $(MPXE_C_GEN_DIR)/inc/mpxe)
 endef
 
 # $(call include_lib,libname)
@@ -191,19 +196,24 @@ lint:
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
 
-#Quick lint on ONLY changed/new files
+# Quick lint on ONLY changed/new files
 .PHONY: lint_quick
 lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
 # Disable import error
+PYLINT_DISABLE := F0401 duplicate-code
+PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE))
+
+# Lints Python files, excluding MPXE generated files
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR), $(MPXE_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
-	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
+	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r $(PYLINT)
+	@$(FIND:"*.[ch]"="*.py") | xargs -r $(PYLINT)
+	@find $(MPXE_DIR) -path $(MPXE_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(PYLINT)
 
 .PHONY: format_quick
 format_quick:
