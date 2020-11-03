@@ -1,8 +1,5 @@
 syntax = "proto3";
 
 message MxAds1259Store {
-  uint32 rx_data_lsb = 1;
-  uint32 rx_data_mid = 2;
-  uint32 rx_data_msb = 3;
-  uint32 chk_sum = 4;
+  uint32 reading = 1;
 }
