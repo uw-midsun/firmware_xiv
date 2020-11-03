@@ -1,4 +1,5 @@
 #include "power_off_sequence.h"
+
 #include "can_transmit.h"
 #include "centre_console_events.h"
 #include "centre_console_fault_reason.h"
@@ -44,16 +45,22 @@ FSM_STATE_TRANSITION(state_fault) {
 static void prv_state_discharge(Fsm *fsm, const Event *e, void *context) {
   PowerOffSequenceStorage *storage = (PowerOffSequenceStorage *)context;
   CAN_TRANSMIT_DISCHARGE_PRECHARGE();
+  LOG_DEBUG("requesting discharge\n");
   event_raise(POWER_OFF_SEQUENCE_EVENT_DISCHARGE_COMPLETED, 0);
 }
 
 static StatusCode prv_can_ack_everything_turned_off(CanMessageId msg_id, uint16_t device,
                                                     CanAckStatus status, uint16_t num_remaining,
                                                     void *context) {
+  if (status == CAN_ACK_STATUS_TIMEOUT) {
+    LOG_DEBUG("ack timed out\n");
+  }
   if (status != CAN_ACK_STATUS_OK) {
+    LOG_DEBUG("ack not ok, faulting\n");
     return event_raise(POWER_OFF_SEQUENCE_EVENT_FAULT, EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING);
   }
   if (num_remaining == 0 && status == CAN_ACK_STATUS_OK) {
+    LOG_DEBUG("ack ok, raising turned off\n");
     return event_raise(POWER_OFF_SEQUENCE_EVENT_TURNED_OFF_EVERYTHING, 0);
   }
   return STATUS_CODE_OK;
@@ -61,9 +68,12 @@ static StatusCode prv_can_ack_everything_turned_off(CanMessageId msg_id, uint16_
 
 static void prv_state_turn_off_everything(Fsm *fsm, const Event *e, void *context) {
   CanAckRequest ack_req = { .callback = prv_can_ack_everything_turned_off,
-                            .expected_bitset = CAN_ACK_EXPECTED_DEVICES(
-                                SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
-                                SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR) };
+                            // .expected_bitset = CAN_ACK_EXPECTED_DEVICES(
+                            //     SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
+                            //     SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR) };
+                            .expected_bitset =
+                                CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER) };
+  LOG_DEBUG("requesting to turn off everything\n");
   CAN_TRANSMIT_POWER_OFF_SEQUENCE(&ack_req, EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING);
 }
 
@@ -73,14 +83,17 @@ static void prv_open_battery_relays(Fsm *fsm, const Event *e, void *context) {
                          .fault_event_id = POWER_OFF_SEQUENCE_EVENT_FAULT,
                          .fault_event_data = EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS,
                          .retry_indefinitely = false };
+  LOG_DEBUG("requesting opening the relays\n");
   relay_tx_relay_state(&storage->relay_tx_storage, &req, EE_RELAY_ID_BATTERY, EE_RELAY_STATE_OPEN);
 }
 
 static void prv_power_off_complete(Fsm *fsm, const Event *e, void *context) {
+  LOG_DEBUG("power off complete\n");
   event_raise(POWER_OFF_SEQUENCE_EVENT_COMPLETE, 0);
 }
 
 static void prv_fault(Fsm *fsm, const Event *e, void *context) {
+  LOG_DEBUG("faulted\n");
   FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_OFF, .reason = e->data } };
   event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 }

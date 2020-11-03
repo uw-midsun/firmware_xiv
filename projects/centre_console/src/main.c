@@ -38,7 +38,7 @@ void prv_set_up_can(void) {
     .fault_event = CENTRE_CONSOLE_EVENT_CAN_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
-    .loopback = true,
+    .loopback = false,
   };
   can_init(&s_can_storage, &can_settings);
 }
@@ -84,7 +84,7 @@ int main(void) {
 
   // init_charging_manager(&s_drive_fsm_storage.current_state);
   speed_monitor_init(SPEED_MONITOR_WATCHDOG_TIMEOUT);
-  fault_monitor_init(FAULT_MONITOR_TIMEOUT);
+  // fault_monitor_init(FAULT_MONITOR_TIMEOUT);
 
   MainEventGeneratorResources resources = { .power_fsm = &s_power_fsm_storage,
                                             .drive_fsm = &s_drive_fsm_storage };
