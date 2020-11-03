@@ -9,6 +9,9 @@
 #include "mcp23008_gpio_expander.h"
 #include "status.h"
 
+#define MCP23008_I2C_PORT I2C_PORT_2
+#define MCP23008_I2C_ADDR 0x20
+
 typedef enum {
   CENTRE_CONSOLE_LED_BPS = 0,
   CENTRE_CONSOLE_LED_POWER,
