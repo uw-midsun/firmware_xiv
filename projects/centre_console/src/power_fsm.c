@@ -52,6 +52,14 @@ FSM_STATE_TRANSITION(power_state_fault) {
   FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_OFF, power_state_transitioning);
 }
 
+static const char *s_power_state_names[] = {
+  [POWER_STATE_TRANSITIONING] = "transitioning",
+  [POWER_STATE_OFF] = "off",
+  [POWER_STATE_MAIN] = "main",
+  [POWER_STATE_AUX] = "aux",
+  [POWER_STATE_FAULT] = "fault",
+};
+
 static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   // Go back to previous state
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
@@ -65,11 +73,13 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
     power_fsm->previous_state = POWER_STATE_OFF;
     event_raise(CENTRE_CONSOLE_POWER_EVENT_OFF, 0);
   }
+  LOG_DEBUG("faulting, going to state %s\n", s_power_state_names[power_fsm->previous_state]);
 }
 
 static void prv_destination_state_output(Fsm *fsm, const Event *e, void *context) {
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->current_state = power_fsm->destination_state;
+  LOG_DEBUG("moved to state %s\n", s_power_state_names[power_fsm->current_state]);
 }
 
 static PowerState s_destination_lookup[] = {
@@ -78,10 +88,19 @@ static PowerState s_destination_lookup[] = {
   [CENTRE_CONSOLE_POWER_EVENT_ON_AUX] = POWER_STATE_AUX
 };
 
+static const char *s_power_event_names[] = {
+  [CENTRE_CONSOLE_POWER_EVENT_OFF] = "power off",
+  [CENTRE_CONSOLE_POWER_EVENT_ON_AUX] = "power on aux",
+  [CENTRE_CONSOLE_POWER_EVENT_ON_MAIN] = "power on main",
+  [CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT] = "clear fault",
+  [CENTRE_CONSOLE_POWER_EVENT_FAULT] = "fault",
+};
+
 bool power_fsm_process_event(PowerFsmStorage *power_fsm, const Event *event) {
   if (CENTRE_CONSOLE_POWER_EVENT_OFF <= event->id &&
       event->id <= CENTRE_CONSOLE_POWER_EVENT_ON_AUX) {
     power_fsm->destination_state = s_destination_lookup[event->id];
+    LOG_DEBUG("processing %s\n", s_power_event_names[event->id]);
   }
   return fsm_process_event(&power_fsm->power_fsm, event);
 }
