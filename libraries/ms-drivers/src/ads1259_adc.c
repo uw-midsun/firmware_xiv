@@ -94,6 +94,7 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   return STATUS_CODE_OK;
 }
 
+#ifndef MPXE
 // calculate check-sum based on page 29 of datasheet
 static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
   uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID + storage->rx_data.MSB +
@@ -106,6 +107,8 @@ static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
   }
   return ADS1259_STATUS_CODE_OK;
 }
+
+#endif
 
 // using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
 // 0x000000-0x7FFFFF positive range, 0xFFFFFF - 0x800000 neg range, rightmost is greatest magnitude
