@@ -18,9 +18,6 @@
 // * the drive, reverse, neutral, and parking LEDs (collectively, the "drive state LEDs") are
 //   mutually exclusive, and one is on depending on the state of the drive FSM
 
-#define MCP23008_I2C_PORT I2C_PORT_2
-#define MCP23008_I2C_ADDR 0x27
-
 typedef void (*EventHandler)(Event *e, uint16_t context);
 
 typedef struct EventHandlerAndContext {
@@ -29,14 +26,14 @@ typedef struct EventHandlerAndContext {
 } EventHandlerAndContext;
 
 static const Mcp23008GpioAddress s_led_to_address[NUM_CENTRE_CONSOLE_LEDS] = {
-  [CENTRE_CONSOLE_LED_REVERSE] = { MCP23008_I2C_ADDR, 0 },
-  [CENTRE_CONSOLE_LED_DRIVE] = { MCP23008_I2C_ADDR, 1 },
-  [CENTRE_CONSOLE_LED_NEUTRAL] = { MCP23008_I2C_ADDR, 2 },
-  [CENTRE_CONSOLE_LED_POWER] = { MCP23008_I2C_ADDR, 3 },
-  [CENTRE_CONSOLE_LED_SPARE] = { MCP23008_I2C_ADDR, 4 },
-  [CENTRE_CONSOLE_LED_PARKING] = { MCP23008_I2C_ADDR, 5 },
-  [CENTRE_CONSOLE_LED_HAZARDS] = { MCP23008_I2C_ADDR, 6 },
-  [CENTRE_CONSOLE_LED_BPS] = { MCP23008_I2C_ADDR, 7 },
+  [CENTRE_CONSOLE_LED_BPS] = { MCP23008_I2C_ADDR, 0 },
+  [CENTRE_CONSOLE_LED_POWER] = { MCP23008_I2C_ADDR, 1 },
+  [CENTRE_CONSOLE_LED_REVERSE] = { MCP23008_I2C_ADDR, 2 },
+  [CENTRE_CONSOLE_LED_DRIVE] = { MCP23008_I2C_ADDR, 3 },
+  [CENTRE_CONSOLE_LED_NEUTRAL] = { MCP23008_I2C_ADDR, 4 },
+  [CENTRE_CONSOLE_LED_SPARE] = { MCP23008_I2C_ADDR, 5 },
+  [CENTRE_CONSOLE_LED_PARKING] = { MCP23008_I2C_ADDR, 6 },
+  [CENTRE_CONSOLE_LED_HAZARDS] = { MCP23008_I2C_ADDR, 7 },
 };
 
 static const CentreConsoleLed s_drive_state_leds[] = {
