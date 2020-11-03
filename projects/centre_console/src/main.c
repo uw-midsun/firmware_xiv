@@ -3,6 +3,7 @@
 #include "can_msg_defs.h"
 #include "centre_console_events.h"
 #include "charging_manager.h"
+#include "controller_board_pins.h"
 #include "delay.h"
 #include "drive_fsm.h"
 #include "event_queue.h"
@@ -70,9 +71,18 @@ int main(void) {
   pedal_monitor_init();
   button_press_init();
   hazard_tx_init();
+
+  I2CSettings i2c_settings = {
+    .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,
+    .sda = CONTROLLER_BOARD_ADDR_I2C2_SDA,
+    .speed = I2C_SPEED_FAST,
+  };
+  i2c_init(MCP23008_I2C_PORT, &i2c_settings);
   led_manager_init();
+
   prv_init_fsms();
-  init_charging_manager(&s_drive_fsm_storage.current_state);
+
+  // init_charging_manager(&s_drive_fsm_storage.current_state);
   speed_monitor_init(SPEED_MONITOR_WATCHDOG_TIMEOUT);
   fault_monitor_init(FAULT_MONITOR_TIMEOUT);
 
