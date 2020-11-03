@@ -33,8 +33,8 @@ static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
   uint32_t brake_msg;
   CAN_UNPACK_PEDAL_OUTPUT(msg, &throttle_msg, &brake_msg);
 
-  pedal_values->throttle = (float)(throttle_msg) / EE_PEDAL_VALUE_DENOMINATOR;
-  pedal_values->brake = (float)(brake_msg) / EE_PEDAL_VALUE_DENOMINATOR;
+  pedal_values->throttle = (float)(throttle_msg);
+  pedal_values->brake = (float)(brake_msg);
   prv_kick_watchdog(storage);
   return STATUS_CODE_OK;
 }
