@@ -21,7 +21,7 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
   }
 
   // determine which PWM output to change
-  uint8_t real_speed = (speed_percent / 0.39);
+  uint8_t real_speed = (speed_percent) ? (speed_percent / 0.39) : 0;
   if (pwm_port == ADT_PWM_PORT_1) {
     uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_1, real_speed };
 
@@ -72,8 +72,6 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
     .type = INTERRUPT_TYPE_INTERRUPT,       //
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
-
-  status_ok_or_return(i2c_init(settings->i2c, &settings->i2c_settings));
 
   uint8_t fan_config_data_register_1[] = { ADT7476A_FAN_MODE_REGISTER_1,
                                            ADT7476A_MANUAL_MODE_MASK };

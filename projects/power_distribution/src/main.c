@@ -13,6 +13,7 @@
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
 #include "pd_events.h"
+#include "pd_fan_ctrl.h"
 #include "pd_gpio.h"
 #include "pd_gpio_config.h"
 #include "pin_defs.h"
@@ -84,6 +85,7 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   gpio_init();
+  gpio_it_init();
   event_queue_init();
   adc_init(ADC_MODE_SINGLE);
   prv_init_i2c();
@@ -130,6 +132,24 @@ int main(void) {
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
+
+  // initialize fan ctrl
+  if (is_front_power_distribution) {
+    FanCtrlSettings fan_settings = {
+      .i2c = POWER_DISTRIBUTION_I2C_PORT,
+      // .i2c_settings = ? -> check adt driver to see if needed
+      .fan_pwm1 = FRONT_PD_PWM_1,
+      .fan_pwm2 = FRONT_PD_PWM_2,
+    };
+    pd_fan_ctrl_init(&fan_settings, true);
+  } else {
+    FanCtrlSettings fan_settings = {
+      .i2c = POWER_DISTRIBUTION_I2C_PORT,
+      .fan_pwm1 = REAR_ENC_VENT_PWM,
+      .fan_pwm2 = REAR_DCDC_PWM,
+    };
+    pd_fan_ctrl_init(&fan_settings, false);
+  }
 
   // initialize strobe_blinker on rear
   if (!is_front_power_distribution) {
