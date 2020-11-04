@@ -29,6 +29,12 @@ static const GpioAddress TEMP_MEASUREMENT_PINS[NUM_POWER_SELECT_TEMP_MEASUREMENT
   [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_TEMP_ADDR,
 };
 
+static const GpioAddress VALID_PINS[NUM_POWER_SELECT_VALID_PINS] = {
+  POWER_SELECT_AUX_VALID_ADDR,
+  POWER_SELECT_DCDC_VALID_ADDR,
+  POWER_SELECT_PWR_SUP_VALID_ADDR,
+};
+
 static const uint16_t MAX_VOLTAGES[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS] = {
   [POWER_SELECT_AUX] = POWER_SELECT_AUX_MAX_VOLTAGE_MV,
   [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_MAX_VOLTAGE_MV,
@@ -41,14 +47,9 @@ static const uint16_t MAX_CURRENTS[NUM_POWER_SELECT_CURRENT_MEASUREMENTS] = {
   [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_MAX_CURRENT_MA,
 };
 
-static const GpioAddress VALID_PINS[POWER_SELECT_NUM_VALID_PINS] = {
-  POWER_SELECT_VALID1_ADDR,
-  POWER_SELECT_VALID2_ADDR,
-  POWER_SELECT_VALID3_ADDR,
-};
-
-void prv_handle_fault(PowerSelectFault fault) {
-  CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)fault);
+// Broadcast the fault bitset
+void prv_broadcast_fault(void) {
+  CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset);
 }
 // Broadcast sense measurements from storage.
 static StatusCode prv_broadcast_measurements(void) {
@@ -67,53 +68,74 @@ static StatusCode prv_broadcast_measurements(void) {
 void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("Reading measurements...\n");
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP\n");
+  LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP; valid pins active-low\n");
+
+  for (uint8_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
+    GpioState state = GPIO_STATE_LOW;
+    gpio_get_state(&VALID_PINS[i], &state);
+    // Valid pins are active-low
+    if (state == GPIO_STATE_LOW) {
+      s_storage.valid_bitset |= 1 << i;
+    } else {
+      s_storage.valid_bitset &= ~(1 << i);
+    }
+    LOG_DEBUG("Valid pin %d: %d\n", i, state == GPIO_STATE_HIGH);
+  }
+
   float temp_reading = 0;
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]));
-    // convert
-    temp_reading = s_storage.voltages[i];
-    temp_reading /= POWER_SELECT_VSENSE_SCALING;
-    temp_reading *= V_TO_MV;
-    s_storage.voltages[i] = (uint16_t)temp_reading;
+    // Only measure + store the value if the input pin is valid
+    if(s_storage.valid_bitset & 1 << i) {
+      (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]));
+      // convert
+      temp_reading = s_storage.voltages[i];
+      temp_reading /= POWER_SELECT_VSENSE_SCALING;
+      temp_reading *= V_TO_MV;
+      s_storage.voltages[i] = (uint16_t)temp_reading;
 
-    // check for fault
-    if (s_storage.voltages[i] > MAX_VOLTAGES[i]) {
+      // Check for fault, clear fault otherwise
       PowerSelectFault fault = 1 + i;  // todo: make this nicer
-      prv_handle_fault(fault);
+      if (s_storage.voltages[i] > MAX_VOLTAGES[i]) {
+        s_storage.fault_bitset |= 1 << fault;
+        prv_broadcast_fault();
+      } else {
+        s_storage.fault_bitset &= ~(1 << fault);
+      }
+    } else { 
+      s_storage.voltages[i] = 0;
     }
-
     LOG_DEBUG("Voltage %d: %d\n", (int)i, (int)s_storage.voltages[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
-    (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]));
-    // convert
-    temp_reading = s_storage.currents[i];
-    temp_reading *= A_TO_MA;
-    temp_reading /= POWER_SELECT_ISENSE_SCALING;
-    s_storage.currents[i] = (uint16_t)temp_reading;
+    // Only measure + store the value if the input pin is valid
+    if(s_storage.valid_bitset & 1 << i) {
+      (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]));
+      // convert
+      temp_reading = s_storage.currents[i];
+      temp_reading *= A_TO_MA;
+      temp_reading /= POWER_SELECT_ISENSE_SCALING;
+      s_storage.currents[i] = (uint16_t)temp_reading;
 
-    // check for fault
-    if (s_storage.currents[i] > MAX_CURRENTS[i]) {
+      // check for fault
       PowerSelectFault fault = 1 + 3 + i;  // todo: make this nicer
-      prv_handle_fault(fault);
+      if (s_storage.currents[i] > MAX_CURRENTS[i]) {
+        s_storage.fault_bitset |= 1 << fault;
+        prv_broadcast_fault();
+      } else {
+        s_storage.fault_bitset &= ~(1 << fault);
+      }
+    } else {
+      s_storage.currents[i] = 0;
     }
-
     LOG_DEBUG("Current %d: %d\n", (int)i, (int)s_storage.currents[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
     (adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &s_storage.temps[i]));
-    
-    // just using the old power selection thermistor functions for now.
-    // pretty sure temp_to_res should be voltage_to_res 
-    //s_storage.temps[i] = (uint16_t)resistance_to_temp(temp_to_res(s_storage.temps[i]));
-    LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
-  }
 
-  for (uint8_t i = 0; i < POWER_SELECT_NUM_VALID_PINS; i++) {
-    GpioState state = GPIO_STATE_LOW;
-    gpio_get_state(&VALID_PINS[i], &state);
-    LOG_DEBUG("Valid pin %d: %d\n", i + 1, state == GPIO_STATE_HIGH);
+    // just using the old power selection thermistor functions for now.
+    // pretty sure temp_to_res should be named voltage_to_res
+    s_storage.temps[i] = (uint16_t)resistance_to_temp(voltage_to_res(s_storage.temps[i]));
+    LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
   }
 
   LOG_DEBUG("Send measurements result: %d\n", prv_broadcast_measurements());
@@ -143,7 +165,9 @@ static StatusCode prv_init_sense_pins(void) {
 
 void prv_handle_fault_it(const GpioAddress *address, void *context) {
   LOG_DEBUG("DCDC FAULT\n");
-  prv_handle_fault(POWER_SELECT_LTC_FAULT);
+  // should figure out a way to clear this fault in future
+  s_storage.fault_bitset |= 1 << POWER_SELECT_LTC_FAULT;  
+  prv_broadcast_fault();
 }
 
 // DCDC_FAULT pin goes high on fault
@@ -172,7 +196,7 @@ static StatusCode prv_init_valid_pins(void) {
     GPIO_ALTFN_NONE,
   };
 
-  for (uint8_t i = 0; i < POWER_SELECT_NUM_VALID_PINS; i++) {
+  for (uint8_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
     status_ok_or_return(gpio_init_pin(&VALID_PINS[i], &settings));
   }
   return STATUS_CODE_OK;
@@ -203,4 +227,12 @@ StatusCode power_select_start(
     void) {  // do we even need this? or is it fine if we just expose prv_periodic_measure
   prv_periodic_measure(SOFT_TIMER_INVALID_TIMER, &s_storage);
   return STATUS_CODE_OK;
+}
+
+uint16_t power_select_get_fault_bitset(void) {
+  return s_storage.fault_bitset;
+}
+
+uint8_t power_select_get_valid_bitset(void) {
+  return s_storage.valid_bitset;
 }
