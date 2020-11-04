@@ -1,5 +1,6 @@
 #include "ebrake_tx.h"
 #include "can_transmit.h"
+#include "log.h"
 
 static void prv_tx_ebrake_state(CanAckRequest *ack_ptr, void *context) {
   EbrakeTxStorage *storage = (EbrakeTxStorage *)context;
@@ -19,6 +20,7 @@ EEEbrakeState get_current_state(EbrakeTxStorage *storage) {
 }
 
 void prv_success_ebrake_tx_callback(void *context) {
+  LOG_DEBUG("ebrake set success\n");
   EbrakeTxStorage *storage = (EbrakeTxStorage *)context;
   storage->current_state = storage->state;
 }
@@ -31,7 +33,8 @@ StatusCode ebrake_tx_brake_state(EbrakeTxStorage *storage, RetryTxRequest *reque
   storage->state = state;
   CanTxRetryWrapperRequest retry_wrapper_request = {
     .retry_request = *request,
-    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT),
+    // .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT),
+    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER),
     .tx_callback = prv_tx_ebrake_state,
     .tx_callback_context = storage
   };

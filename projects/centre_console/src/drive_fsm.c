@@ -8,6 +8,28 @@
 #include "precharge_monitor.h"
 #include "relay_tx.h"
 
+static const char *s_drive_event_names[] = {
+  [DRIVE_FSM_INPUT_EVENT_NEUTRAL] = "neutral",
+  [DRIVE_FSM_INPUT_EVENT_PARKING] = "parking",
+  [DRIVE_FSM_INPUT_EVENT_REVERSE] = "reverse",
+  [DRIVE_FSM_INPUT_EVENT_CHARGING] = "charging",
+  [DRIVE_FSM_INPUT_EVENT_DRIVE] = "drive",
+  [DRIVE_FSM_INPUT_EVENT_FAULT] = "fault",
+  [DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_EBRAKE_PRESSED] = "fault recover ebrake pressed",
+  [DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED] = "fault recover released",
+  [DRIVE_FSM_INPUT_EVENT_BEGIN_PRECHARGE] = "begin precharge",
+  [DRIVE_FSM_INPUT_EVENT_PRECHARGE_COMPLETED] = "precharge complete",
+  [DRIVE_FSM_INPUT_EVENT_DISCHARGE_COMPLETED] = "discharge complete",
+  [DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_DRIVE] = "relays closed dest drive",
+  [DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_CLOSED_DESTINATION_REVERSE] = "relays close dest reverse",
+  [DRIVE_FSM_INPUT_EVENT_MCI_RELAYS_OPENED_DESTINATION_NEUTRAL_PARKING] = "relays open dest neut",
+  [DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_PRESSED] = "ebrake pressed",
+  [DRIVE_FSM_INPUT_EVENT_MCI_EBRAKE_RELEASED] = "ebrake released",
+  [DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_DRIVE] = "set out dest drive",
+  [DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_REVERSE] = "set out dest reverse",
+  [DRIVE_FSM_INPUT_EVENT_MCI_SET_OUTPUT_DESTINATION_OFF] = "set out dest off",
+};
+
 static DriveState s_drive_state = NUM_DRIVE_STATES;
 
 FSM_DECLARE_STATE(state_fault);
@@ -112,6 +134,7 @@ static DestinationTransitionInfo s_destination_transition_lookup[NUM_DRIVE_STATE
 static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
   FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_DRIVE_FSM, .reason = e->data } };
+  LOG_DEBUG("faulted, discharging precharge and raising transition fault\n");
   CAN_TRANSMIT_DISCHARGE_PRECHARGE();
   CAN_TRANSMIT_STATE_TRANSITION_FAULT(reason.fields.area, reason.fields.reason);
   EventId id = (storage->ebrake_storage.current_state == EE_EBRAKE_STATE_PRESSED)
@@ -150,8 +173,18 @@ static void prv_set_ebrake_output(Fsm *fsm, const Event *e, void *context) {
                             .fault_event_id = DRIVE_FSM_INPUT_EVENT_FAULT,
                             .fault_event_data = reason.raw,
                             .retry_indefinitely = false };
+  LOG_DEBUG("setting ebrake state\n");
   ebrake_tx_brake_state(&storage->ebrake_storage, &tx_req, info.ebrake_state);
 }
+
+static const char *s_drive_state_names[] = {
+  [DRIVE_STATE_NEUTRAL] = "neutral",
+  [DRIVE_STATE_PARKING] = "parking",
+  [DRIVE_STATE_DRIVE] = "drive",
+  [DRIVE_STATE_REVERSE] = "reverse",
+  [DRIVE_STATE_TRANSITIONING] = "transitioning",
+  [NUM_DRIVE_STATES] = "num drive states",
+};
 
 static void prv_drive_fsm_destination_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
@@ -160,6 +193,7 @@ static void prv_drive_fsm_destination_output(Fsm *fsm, const Event *e, void *con
   }
   storage->current_state = storage->destination;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
+  LOG_DEBUG("destination %d\n", storage->destination);
   event_raise(info.fsm_output_event_id, 0);
 }
 
@@ -198,7 +232,7 @@ StatusCode drive_fsm_init(DriveFsmStorage *storage) {
   fsm_state_init(state_set_motorcontroller_output, prv_set_motorcontroller_output);
   fsm_state_init(state_set_ebrake, prv_set_ebrake_output);
   fsm_state_init(state_fault, prv_fault_output);
-  status_ok_or_return(ebrake_tx_init(&storage->ebrake_storage));
+  // status_ok_or_return(ebrake_tx_init(&storage->ebrake_storage));
   status_ok_or_return(mci_output_init(&storage->mci_output_storage));
   storage->current_state = DRIVE_STATE_NEUTRAL;
   Event precharge_success_event = { .id = DRIVE_FSM_INPUT_EVENT_PRECHARGE_COMPLETED, .data = 0 };
@@ -223,6 +257,7 @@ static DriveState s_destination_lookup[] = { [DRIVE_FSM_INPUT_EVENT_NEUTRAL] = D
 bool drive_fsm_process_event(DriveFsmStorage *storage, Event *e) {
   if (e->id >= DRIVE_FSM_INPUT_EVENT_NEUTRAL && e->id <= DRIVE_FSM_INPUT_EVENT_DRIVE) {
     storage->destination = s_destination_lookup[e->id];
+    LOG_DEBUG("processing %s\n", s_drive_event_names[e->id]);
   }
   return fsm_process_event(&(storage->drive_fsm), e);
 }
