@@ -2,18 +2,17 @@
 This script is run just before the Python REPL opens when you run `make babydriver`.
 It imports everything that's visible to the REPL by default and sets up the default CAN channel.
 """
-
+# pylint: disable=unused-import
+from gpio_port import GpioPort
+from gpio_set import gpio_set
 
 def setup_default_channel():
     """Set up the default CAN channel."""
 
     # We import these here so that they aren't imported for the REPL
     # pylint: disable=import-outside-toplevel
-    # pylint: disable=unused-import
     import argparse
     import can_util
-    import gpio_port
-    import gpio_set
 
     parser = argparse.ArgumentParser(description="Setup the Babydriver REPL")
     parser.add_argument("--channel", default=None, help="Default CAN channel to use")
