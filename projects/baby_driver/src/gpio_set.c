@@ -7,12 +7,14 @@
 #include "gpio.h"
 
 static StatusCode prv_gpio_set_callback(uint8_t data[8], void *context, bool *tx_result) {
-  uint8_t port = data[1], pin = data[2], state = data[3];
+  GpioPort port = data[1];
+  uint8_t pin = data[2];
+  GpioState state = data[3];
   if (port >= NUM_GPIO_PORTS || pin >= GPIO_PINS_PER_PORT) {
     return STATUS_CODE_INVALID_ARGS;
   }
   // treat any nonzero state value as high
-  if (state > 0) {
+  if (state != GPIO_STATE_LOW) {
     state = GPIO_STATE_HIGH;
   }
   GpioAddress gpio_address = { .port = port, .pin = pin };
@@ -23,7 +25,7 @@ static StatusCode prv_gpio_set_callback(uint8_t data[8], void *context, bool *tx
     .alt_function = GPIO_ALTFN_NONE,
   };
 
-  gpio_init_pin(&gpio_address, &gpio_settings);
+  status_ok_or_return(gpio_init_pin(&gpio_address, &gpio_settings));
 
   return STATUS_CODE_OK;
 }

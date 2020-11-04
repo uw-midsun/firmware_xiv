@@ -44,18 +44,19 @@ void setup_test(void) {
   s_times_callback_called = 0;
   memset(s_received_data, 0, sizeof(s_received_data));
   s_status_return = STATUS_CODE_OK;
+
+  // register a callback for the status message to check the resulting status
+  TEST_ASSERT_OK(
+      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_gpio_set_callback, NULL));
 }
 
 void teardown_test(void) {}
 
-// Test that we can succesfully set the gpio pin to specified value (0 to 1) with an OK status
+// Test that we can succesfully set the gpio pin to specified value with an OK status
 void test_setting_gpio(void) {
-  // register a callback for the status message to check the resulting status
-  TEST_ASSERT_OK(
-      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_gpio_set_callback, NULL));
-
-  // initialize existing gpio pin to modify: port = 1, pin = 2, state = GPIO_STATE_LOW
-  uint8_t data[7] = { 1, 2, 1, 0, 0, 0, 0 };
+  // data of the gpio_set message to send
+  uint8_t data[7] = { GPIO_PORT_B, 2, GPIO_STATE_HIGH, 0, 0, 0, 0 };
+  // initialize existing gpio pin to modify: port = GPIO_PORT_B, pin = 2, state = GPIO_STATE_LOW
   GpioAddress gpio_address = { .port = data[0], .pin = data[1] };
   GpioSettings gpio_settings = {
     .direction = GPIO_DIR_OUT,
@@ -68,7 +69,7 @@ void test_setting_gpio(void) {
   // send can message to set gpio pin state to high
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_SET, data[0], data[1], data[2], data[3], data[4],
                           data[5], data[6]);
-  // proces BABYDRIVER_MESSAGE_GPIO_SET message
+  // process BABYDRIVER_MESSAGE_GPIO_SET message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   // process BABYDRIVER_MESSAGE_STATUS message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
@@ -86,14 +87,11 @@ void test_setting_gpio(void) {
 
 // Test that the status message has an invalid status when trying to set invalid gpio ports and pins
 void test_setting_invalid_gpio(void) {
-  // register a callback for the status message to check the resulting status
-  TEST_ASSERT_OK(
-      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_gpio_set_callback, NULL));
   s_status_return = STATUS_CODE_INVALID_ARGS;
 
-  // test setting invalid pin
-  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_SET, 7, 0, 0, 0, 0, 0, 0);
-  // proces BABYDRIVER_MESSAGE_GPIO_SET message
+  // test setting invalid port
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_SET, NUM_GPIO_PORTS, 0, 0, 0, 0, 0, 0);
+  // process BABYDRIVER_MESSAGE_GPIO_SET message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   // process BABYDRIVER_MESSAGE_STATUS message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
@@ -103,9 +101,9 @@ void test_setting_invalid_gpio(void) {
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(s_status_return, s_received_data[1]);
 
-  // test setting invalid port
-  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_SET, 0, 16, 0, 0, 0, 0, 0);
-  // proces BABYDRIVER_MESSAGE_GPIO_SET message
+  // test setting invalid pin
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_SET, 0, GPIO_PINS_PER_PORT, 0, 0, 0, 0, 0);
+  // process BABYDRIVER_MESSAGE_GPIO_SET message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   // process BABYDRIVER_MESSAGE_STATUS message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
