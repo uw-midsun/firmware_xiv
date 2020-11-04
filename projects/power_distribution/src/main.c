@@ -81,6 +81,7 @@ static void prv_current_measurement_data_ready_callback(void *context) {
 
 int main(void) {
   // initialize all libraries
+  LOG_DEBUG("working??\n");
   interrupt_init();
   soft_timer_init();
   gpio_init();
@@ -116,44 +117,44 @@ int main(void) {
   power_distribution_current_measurement_init(&current_measurement_settings);
 
   // initialize lights_signal_fsm
-  SignalFsmSettings lights_signal_fsm_settings = {
-    .signal_left_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
-    .signal_right_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
-    .signal_hazard_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
-    .signal_left_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
-    .signal_right_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
-    .signal_hazard_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
-    .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
-    .sync_behaviour = is_front_power_distribution ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
-                                                  : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
-    .sync_event = POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS,
-    .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
-  };
-  lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
+  // SignalFsmSettings lights_signal_fsm_settings = {
+  //   .signal_left_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
+  //   .signal_right_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
+  //   .signal_hazard_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
+  //   .signal_left_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
+  //   .signal_right_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
+  //   .signal_hazard_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
+  //   .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
+  //   .sync_behaviour = is_front_power_distribution ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
+  //                                                 : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
+  //   .sync_event = POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS,
+  //   .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
+  // };
+  // lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
 
-  // initialize strobe_blinker on rear
-  if (!is_front_power_distribution) {
-    RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
-      .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
-    };
-    rear_power_distribution_strobe_blinker_init(&strobe_blinker_settings);
-  }
+  // // initialize strobe_blinker on rear
+  // if (!is_front_power_distribution) {
+  //   RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
+  //     .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
+  //   };
+  //   rear_power_distribution_strobe_blinker_init(&strobe_blinker_settings);
+  // }
 
-  LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
-            is_front_power_distribution ? "front" : "rear");
+  // LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
+  //           is_front_power_distribution ? "front" : "rear");
 
-  // process events
-  Event e = { 0 };
-  while (true) {
-    while (event_process(&e) == STATUS_CODE_OK) {
-      can_process_event(&e);
-      power_distribution_gpio_process_event(&e);
-      lights_signal_fsm_process_event(&s_lights_signal_fsm_storage, &e);
-      if (!is_front_power_distribution) {
-        rear_power_distribution_strobe_blinker_process_event(&e);
-      }
-    }
-  }
+  // // process events
+  // Event e = { 0 };
+  // while (true) {
+  //   while (event_process(&e) == STATUS_CODE_OK) {
+  //     can_process_event(&e);
+  //     power_distribution_gpio_process_event(&e);
+  //     lights_signal_fsm_process_event(&s_lights_signal_fsm_storage, &e);
+  //     if (!is_front_power_distribution) {
+  //       rear_power_distribution_strobe_blinker_process_event(&e);
+  //     }
+  //   }
+  // }
 
-  return 0;
+  // return 0;
 }

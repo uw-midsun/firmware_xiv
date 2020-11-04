@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "bts7040_load_switch.h"
 #include "bts7200_load_switch.h"
+#include "log.h"
 
 static PowerDistributionCurrentHardwareConfig s_hw_config;
 static PowerDistributionCurrentStorage s_storage = { 0 };
@@ -16,25 +17,27 @@ static void *s_callback_context;
 
 static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   // read from all the BTS7200s
-  for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
-    mux_set(&s_hw_config.mux_address, s_hw_config.bts7200s[i].mux_selection);
-    bts7200_get_measurement(&s_bts7200_storages[i],
-                            &s_storage.measurements[s_hw_config.bts7200s[i].current_0],
-                            &s_storage.measurements[s_hw_config.bts7200s[i].current_1]);
-  }
+  LOG_DEBUG("testing\n");
+  // for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
+  //   mux_set(&s_hw_config.mux_address, s_hw_config.bts7200s[i].mux_selection);
+  //   bts7200_get_measurement(&s_bts7200_storages[i],
+  //                           &s_storage.measurements[s_hw_config.bts7200s[i].current_0],
+  //                           &s_storage.measurements[s_hw_config.bts7200s[i].current_1]);
+  // }
 
-  // read from all the BTS7040s
-  for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
-    mux_set(&s_hw_config.mux_address, s_hw_config.bts7040s[i].mux_selection);
-    bts7040_get_measurement(&s_bts7040_storages[i],
-                            &s_storage.measurements[s_hw_config.bts7040s[i].current]);
-  }
+  // // read from all the BTS7040s
+  // for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
+  //   mux_set(&s_hw_config.mux_address, s_hw_config.bts7040s[i].mux_selection);
+  //   bts7040_get_measurement(&s_bts7040_storages[i],
+  //                           &s_storage.measurements[s_hw_config.bts7040s[i].current]);
+  // }
 
-  if (s_callback) {
-    s_callback(s_callback_context);
-  }
+  // if (s_callback) {
+  //   s_callback(s_callback_context);
+  // }
 
   soft_timer_start(s_interval_us, &prv_measure_currents, NULL, &s_timer_id);
+  LOG_DEBUG("testing 2\n");
 }
 
 StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentSettings *settings) {
@@ -68,9 +71,11 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   // bts7200_init_pca9539r and bts7040_init do it for us
 
   // initialize and start the BTS7200s
-  Bts7200Pca9539rSettings bts7200_settings = {
-    .sense_pin = &s_hw_config.mux_output_pin,
-  };
+  // Bts7200Pca9539rSettings bts7200_settings = {
+  //   .sense_pin = &s_hw_config.mux_output_pin,
+  // };
+  Bts7200Pca9539rSettings bts7200_settings = { 0 };
+  bts7200_settings.sense_pin = &s_hw_config.mux_output_pin;
 
   for (uint8_t i = 0; i < s_hw_config.num_bts7200_channels; i++) {
     // check that the currents are valid
@@ -96,9 +101,11 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   }
 
   // initialize all BTS7040/7008s
-  Bts7040Pca9539rSettings bts7040_settings = {
-    .sense_pin = &s_hw_config.mux_output_pin,
-  };
+  // Bts7040Pca9539rSettings bts7040_settings = {
+  //   .sense_pin = &s_hw_config.mux_output_pin,
+  // };
+  Bts7040Pca9539rSettings bts7040_settings = { 0 };
+  bts7040_settings.sense_pin = &s_hw_config.mux_output_pin;
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     // check that the current is valid
     if (s_hw_config.bts7040s[i].current >= NUM_POWER_DISTRIBUTION_CURRENTS) {

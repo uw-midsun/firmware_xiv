@@ -8,6 +8,7 @@
 #include "gpio.h"        // General Purpose I/O control.
 #include "interrupt.h"   // For enabling interrupts.
 #include "misc.h"        // Various helper functions/macros.
+#include "log.h"
 #include "soft_timer.h"  // Software timers for scheduling future events.
 
 // Depending on which board you are working with you will need to (un)comment
@@ -30,11 +31,15 @@ static const GpioAddress leds[] = {
 //  { .port = GPIO_PORT_C, .pin = 7 },  //
 //};
 
+extern int asdf;
+
 int main(void) {
   // Enable various peripherals
   interrupt_init();
   soft_timer_init();
   gpio_init();
+
+  LOG_DEBUG("asdf: %d\n", asdf);
 
   GpioSettings led_settings = {
     .direction = GPIO_DIR_OUT,        // The pin needs to output.
