@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "adc_read.h"
 #include "can.h"
 #include "can_msg_defs.h"
@@ -18,7 +20,7 @@ typedef enum {
 
 static GpioAddress s_test_adc_pin_addr = { .port = 1, .pin = 1 };
 
-static CanStorage s_can_storage;
+static CanStorage s_can_storage = { 0 };
 
 static uint8_t s_times_callback_called;
 static uint8_t s_received_data[8];
@@ -26,6 +28,14 @@ static void *s_received_context;
 
 static bool s_should_tx_result;
 static StatusCode s_status_return;
+
+static StatusCode prv_rx_adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
+  s_times_callback_called++;
+  memcpy(s_received_data, data, 8);
+  s_received_context = context;
+  *tx_result = false;  // avoid TXing result of the status message
+  return s_status_return;
+}
 
 // static StatusCode prv_test_adc_read_callback_handler(uint8_t data[8], void *context,
 //                                                      bool *tx_result) {
@@ -52,7 +62,11 @@ void setup_test(void) {
   TEST_ASSERT_OK(adc_read_init());
 
   s_times_callback_called = 0;
+  memset(s_received_data, 0, sizeof(s_received_data));
   s_received_context = NULL;
+
+  TEST_ASSERT_OK(
+      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
 }
 
 void teardown_test(void) {}
@@ -63,8 +77,7 @@ void test_adc_read_raw(void) {
   //                                             prv_test_adc_read_callback_handler, NULL));
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
-  uint8_t data[8] = { BABYDRIVER_MESSAGE_ADC_READ_COMMAND,
-                      s_test_adc_pin_addr.port,
+  uint8_t data[7] = { s_test_adc_pin_addr.port,
                       s_test_adc_pin_addr.pin,
                       1,  // raw read
                       0,
@@ -72,26 +85,29 @@ void test_adc_read_raw(void) {
                       0,
                       0 };
 
-  CAN_TRANSMIT_BABYDRIVER(data[0], data[1], data[2], data[3], 0, 0, 0, 0);
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, data[0], data[1], data[2], data[3],
+                          data[4], data[5], data[6]);
+
+  // process adc_read message
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  // process message_status message
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
-  s_times_callback_called++;
   // RAIYAN change array indices to understandable macros e.g LOW_BYTE = 1
-  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, data[0]);
-  TEST_ASSERT_EQUAL_INT8(1, s_received_data[1]);  // confused on what to put for "expected" here.
-  TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);
+  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
+  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
+  TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);  // confused on what to put for "expected" here.
+  TEST_ASSERT_EQUAL_INT8(1, s_received_data[3]);
 }
 
 // Test that converted data command works
 void test_adc_read_converted(void) {
-  uint8_t arbitrary_context;
   // TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND,
   //                                             prv_test_adc_read_callback_handler, NULL));
 
-  uint8_t data[8] = { BABYDRIVER_MESSAGE_ADC_READ_COMMAND,
-                      s_test_adc_pin_addr.port,
+  uint8_t data[7] = { s_test_adc_pin_addr.port,
                       s_test_adc_pin_addr.pin,
                       0,  // converted read
                       0,
@@ -99,18 +115,19 @@ void test_adc_read_converted(void) {
                       0,
                       0 };
 
-  CAN_TRANSMIT_BABYDRIVER(data[0], data[1], data[2], data[3], 0, 0, 0, 0);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, data[0], data[1], data[2], data[3],
+                          data[4], data[5], data[6]);
 
-  s_times_callback_called++;
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   // change array indices to understandable macros e.g LOW_BYTE = 1
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
-  TEST_ASSERT_EQUAL(&arbitrary_context, s_received_context);
 
-  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, data[0]);
-  TEST_ASSERT_EQUAL_INT8(1, s_received_data[1]);  // confused on what to put for "expected" here.
-  TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);
+  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
+  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
+  TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);  // confused on what to put for "expected" here.
+  TEST_ASSERT_EQUAL_INT8(1, s_received_data[3]);
 }
 
-// Test that dispatch sends error if proper data isn't put into read command message
+// Test that dispatch sends error if not pin data is incorrect

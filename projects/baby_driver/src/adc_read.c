@@ -8,6 +8,7 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "dispatcher.h"
 #include "gpio.h"
 #include "gpio_it.h"
@@ -38,7 +39,7 @@ StatusCode adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
   s_adc_pin_addr.pin = data[2];
   is_raw = data[3];
 
-  gpio_init_pin(&s_adc_pin_addr, &s_adc_pin_settings);
+  status_ok_or_return(gpio_init_pin(&s_adc_pin_addr, &s_adc_pin_settings));
 
   adc_set_channel_pin(s_adc_pin_addr, true);
 
