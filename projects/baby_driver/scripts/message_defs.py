@@ -17,3 +17,7 @@ class BabydriverMessageId:
     """
 
     STATUS = 0
+
+    #gpio_get constants
+    GPIO_GET_COMMAND = 2
+    GPIO_GET_DATA = 3
