@@ -29,11 +29,9 @@ static GpioSettings s_adc_pin_settings = {
 // id), port number, pin number and an int indicating if read should be raw or converted. Callback
 // sends back a CAN message with id = 5 (BABYDRIVER_MESSAGE_ADC_READ_DATA), low byte, and high byte
 // of ADC read conversion.
-static void adc_read_callback(void *context) {
-  uint8_t *data = context;
+StatusCode adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
   uint16_t adc_pin_data = 0;
 
-  bool tx_result = true;
   bool is_raw;  // nonzero means raw, 0 means converted
 
   s_adc_pin_addr.port = data[1];
@@ -59,5 +57,5 @@ static void adc_read_callback(void *context) {
 }
 
 StatusCode adc_read_init(void) {
-  dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, adc_read_callback, NULL);
+  return dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, adc_read_callback, NULL);
 }
