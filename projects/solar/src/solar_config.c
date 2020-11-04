@@ -96,6 +96,7 @@ static const CanSettings s_can_settings = {
 };
 
 static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_status_pin = { NUM_GPIO_PORTS, 0 };
 
 static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
@@ -134,6 +135,12 @@ const CanSettings *config_get_can_settings(void) {
 
 const GpioAddress *config_get_drv120_relay_pin(void) {
   return &s_drv120_relay_pin;
+}
+
+// To enable status interrupt for drv120, add pin below, and return its address here
+const GpioAddress *config_get_drv120_status_pin(void) {
+  // return &s_drv120_status_pin;
+  return NULL;
 }
 
 const SenseSettings *config_get_sense_settings(void) {

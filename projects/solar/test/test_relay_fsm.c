@@ -4,11 +4,15 @@
 
 #include "can.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "delay.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
 #include "exported_enums.h"
+#include "fault_handler.h"
 #include "gpio.h"
+#include "gpio_it.h"
+#include "interrupt.h"
 #include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
@@ -26,13 +30,35 @@
   })
 
 static const GpioAddress s_test_relay_pin = { .port = GPIO_PORT_A, .pin = 6 };
+static const GpioAddress s_test_status_pin = { .port = GPIO_PORT_A, .pin = 7 };
 
 static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;
 
+static bool relay_err_rx_cb_called;
+StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  relay_err_rx_cb_called = true;
+  uint8_t solar_fault;
+  uint8_t fault_data;
+  CAN_UNPACK_SOLAR_FAULT(msg, &solar_fault, &fault_data);
+  TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_DRV120, solar_fault);
+  TEST_ASSERT_EQUAL(0, fault_data);
+  return STATUS_CODE_OK;
+}
+
 void setup_test(void) {
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
+                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT, prv_err_rx_cb, NULL);
   event_queue_init();
-  drv120_relay_init(&s_test_relay_pin);
+  gpio_it_init();
+  Drv120RelaySettings drv120_settings = {
+    .pin = &s_test_relay_pin,
+    .status = &s_test_status_pin,
+    .handler = relay_err_cb,
+    .context = NULL,
+  };
+  drv120_relay_init(&drv120_settings);
   TEST_ASSERT_OK(relay_fsm_init(&s_storage));
 }
 void teardown_test(void) {}
@@ -165,4 +191,11 @@ void test_invalid_input(void) {
   TEST_ASSERT_FALSE(relay_fsm_process_event(NULL, &e));
   TEST_ASSERT_FALSE(relay_fsm_process_event(&s_storage, NULL));
   TEST_ASSERT_FALSE(relay_fsm_process_event(NULL, NULL));
+}
+
+void test_relay_it_cb(void) {
+  gpio_it_trigger_interrupt(&s_test_status_pin);
+  MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
+  TEST_ASSERT_TRUE(relay_err_rx_cb_called);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }

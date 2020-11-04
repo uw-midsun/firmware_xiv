@@ -3,8 +3,8 @@
 // Storage for EN pin on DRV120 to open/close relay
 static GpioAddress s_relay_pin;
 
-StatusCode drv120_relay_init(GpioAddress *pin) {
-  s_relay_pin = *pin;
+StatusCode drv120_relay_init(Drv120RelaySettings *settings) {
+  s_relay_pin = *settings->pin;
 
   // Pin low on initialization
   GpioSettings drv120_pin_settings = {
@@ -14,6 +14,15 @@ StatusCode drv120_relay_init(GpioAddress *pin) {
     .alt_function = GPIO_ALTFN_NONE,
   };
 
+  if (settings->status != NULL) {
+    InterruptSettings it_settings = {
+      .type = INTERRUPT_TYPE_INTERRUPT,
+      .priority = INTERRUPT_PRIORITY_NORMAL,
+    };
+    status_ok_or_return(gpio_it_register_interrupt(settings->status, &it_settings,
+                                                   INTERRUPT_EDGE_FALLING, settings->handler,
+                                                   settings->context));
+  }
   return gpio_init_pin(&s_relay_pin, &drv120_pin_settings);
 }
 
