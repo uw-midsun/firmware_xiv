@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "bts7040_load_switch.h"
 #include "bts7200_load_switch.h"
+#include "log.h"
 
 static PowerDistributionCurrentHardwareConfig s_hw_config;
 static PowerDistributionCurrentStorage s_storage = { 0 };
@@ -26,8 +27,8 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   // read from all the BTS7040s
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     mux_set(&s_hw_config.mux_address, s_hw_config.bts7040s[i].mux_selection);
-    bts7040_get_measurement(&s_bts7040_storages[i],
-                            &s_storage.measurements[s_hw_config.bts7040s[i].current]);
+    // bts7040_get_measurement(&s_bts7040_storages[i],
+    //                         &s_storage.measurements[s_hw_config.bts7040s[i].current]);
   }
 
   if (s_callback) {
@@ -115,6 +116,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     bts7040_settings.min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV;
     bts7040_settings.max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV;
 
+    // Does this break???
     status_ok_or_return(bts7040_init_pca9539r(&s_bts7040_storages[i], &bts7040_settings));
   }
 

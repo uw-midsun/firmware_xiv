@@ -80,6 +80,8 @@ static void prv_current_measurement_data_ready_callback(void *context) {
 }
 
 int main(void) {
+  // __asm("BKPT #1\n");
+  LOG_DEBUG("here?\n");
   // initialize all libraries
   interrupt_init();
   soft_timer_init();
