@@ -1,6 +1,7 @@
 """Constants for GpioPort"""
 
 class GpioPort():
+    # pylint: disable=too-few-public-methods
     """
     An enumeration to specify GPIO ports by name (e.g. GpioPort.A instead of 0).
     """
