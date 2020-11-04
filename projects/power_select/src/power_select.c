@@ -103,6 +103,10 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
     (adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &s_storage.temps[i]));
+    
+    // just using the old power selection thermistor functions for now.
+    // pretty sure temp_to_res should be voltage_to_res 
+    //s_storage.temps[i] = (uint16_t)resistance_to_temp(temp_to_res(s_storage.temps[i]));
     LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
   }
 
