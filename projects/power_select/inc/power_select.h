@@ -13,6 +13,7 @@
 #include "status.h"
 
 #include "power_select_defs.h"
+#include "power_select_thermistor.h"
 
 #define POWER_SELECT_MEASUREMENT_INTERVAL_MS 1000
 #define POWER_SELECT_MEASUREMENT_INTERVAL_US (POWER_SELECT_MEASUREMENT_INTERVAL_MS * 1000)
