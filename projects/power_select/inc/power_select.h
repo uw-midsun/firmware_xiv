@@ -33,8 +33,9 @@ typedef enum {
 typedef struct {
   uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
   uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
-  uint16_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];  // no power supply temp measurements
-  uint16_t fault_bitset; // TODO: send this over CAN instead of the individual fault
+  uint16_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];
+  uint16_t fault_bitset;
+  uint8_t valid_bitset;  // valid pins
 } PowerSelectStorage;
 
 // Initialize power selection
@@ -42,3 +43,9 @@ StatusCode power_select_init(void);
 
 // Start periodically measuring sense values
 StatusCode power_select_start(void);
+
+// Return the fault bitset
+uint16_t power_select_get_fault_bitset(void);
+
+// Return the valid bitset
+uint8_t power_select_get_valid_bitset(void);

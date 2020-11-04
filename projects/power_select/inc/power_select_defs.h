@@ -27,7 +27,7 @@
 #define POWER_SELECT_AUX_MAX_CURRENT_MA 8220
 #define POWER_SELECT_AUX_MAX_VOLTAGE_MV 15820
 
-// Fault types
+// Offsets to use in fault bitset
 typedef enum {
   POWER_SELECT_LTC_FAULT = 0,
   POWER_SELECT_PWR_SUP_OVERCURRENT,
@@ -70,11 +70,16 @@ typedef enum {
   { GPIO_PORT_B, 8 }
 
 // Show whether power sources are connected, active-low
-#define POWER_SELECT_VALID1_ADDR \
-  { GPIO_PORT_A, 10 }
-#define POWER_SELECT_VALID2_ADDR \
-  { GPIO_PORT_A, 9 }
-#define POWER_SELECT_VALID3_ADDR \
-  { GPIO_PORT_A, 8 }
+#define POWER_SELECT_PWR_SUP_VALID_ADDR \
+{ GPIO_PORT_A, 10 }
+#define POWER_SELECT_DCDC_VALID_ADDR \
+{ GPIO_PORT_A, 9 }
+#define POWER_SELECT_AUX_VALID_ADDR \
+{ GPIO_PORT_A, 8 }
 
-#define POWER_SELECT_NUM_VALID_PINS 3
+typedef enum {
+  POWER_SELECT_AUX_VALID = 0,
+  POWER_SELECT_DCDC_VALID,
+  POWER_SELECT_PWR_SUP_VALID,
+  NUM_POWER_SELECT_VALID_PINS,
+} PowerSelectValidPin;
