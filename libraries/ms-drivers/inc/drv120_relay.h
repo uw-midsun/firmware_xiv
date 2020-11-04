@@ -1,13 +1,14 @@
 #pragma once
 
 // Driver for the DRV120 relay
-// Requires GPIO to be initialized
+// Requires GPIO and Gpio_it to be initialized
 
 #include <stdbool.h>
 #include <stdlib.h>
 
 #include "gpio.h"
 #include "gpio_it.h"
+#include "interrupt.h"
 #include "status.h"
 
 typedef struct Drv120RelaySettings {
