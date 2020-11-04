@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 
+#include "drv120_relay.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "status.h"
@@ -22,3 +23,6 @@ bool relay_fsm_process_event(RelayFsmStorage *storage, const Event *event);
 StatusCode relay_fsm_close(void);
 
 StatusCode relay_fsm_open(void);
+
+// Callback called on status pin interrupt
+void relay_err_cb(const GpioAddress *address, void *context);

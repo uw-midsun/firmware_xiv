@@ -29,6 +29,8 @@ const CanSettings *config_get_can_settings(void);
 
 const GpioAddress *config_get_drv120_relay_pin(void);
 
+const GpioAddress *config_get_drv120_status_pin(void);
+
 const SenseSettings *config_get_sense_settings(void);
 
 const FaultHandlerSettings *config_get_fault_handler_settings(void);

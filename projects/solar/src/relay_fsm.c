@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#include "drv120_relay.h"
 #include "event_queue.h"
+#include "fault_handler.h"
 #include "fsm.h"
 #include "log.h"
 #include "solar_events.h"
@@ -58,4 +58,9 @@ StatusCode relay_fsm_close(void) {
 
 StatusCode relay_fsm_open(void) {
   return event_raise_priority(RELAY_EVENT_PRIORITY, SOLAR_RELAY_EVENT_OPEN, 0);
+}
+
+void relay_err_cb(const GpioAddress *address, void *context) {
+  LOG_DEBUG("DRV120 RELAY ERR TRIGGERED\n");
+  fault_handler_raise_fault(EE_SOLAR_FAULT_DRV120, 0);
 }
