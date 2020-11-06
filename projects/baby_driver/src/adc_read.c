@@ -41,7 +41,7 @@ StatusCode adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
 
   status_ok_or_return(gpio_init_pin(&s_adc_pin_addr, &s_adc_pin_settings));
 
-  adc_set_channel_pin(s_adc_pin_addr, true);
+  status_ok_or_return(adc_set_channel_pin(s_adc_pin_addr, true));
 
   if (is_raw) {
     adc_read_raw_pin(s_adc_pin_addr, &adc_pin_data);

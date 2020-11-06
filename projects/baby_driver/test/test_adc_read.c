@@ -58,7 +58,7 @@ void setup_test(void) {
   TEST_ASSERT_OK(initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_BABYDRIVER,
                                                  TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX,
                                                  TEST_CAN_EVENT_FAULT));
-
+  TEST_ASSERT_OK(dispatcher_init());
   TEST_ASSERT_OK(adc_read_init());
 
   s_times_callback_called = 0;
@@ -67,6 +67,8 @@ void setup_test(void) {
 
   TEST_ASSERT_OK(
       dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
+  // TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_DATA,
+  // prv_rx_adc_read_callback, NULL));
 }
 
 void teardown_test(void) {}
@@ -94,12 +96,12 @@ void test_adc_read_raw(void) {
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   // RAIYAN change array indices to understandable macros e.g LOW_BYTE = 1
-  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
 
-  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
-  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
-  TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);  // confused on what to put for "expected" here.
-  TEST_ASSERT_EQUAL_INT8(1, s_received_data[3]);
+  // TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
+  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[0]);
+  TEST_ASSERT_EQUAL_INT8(1, s_received_data[1]);  // confused on what to put for "expected" here.
+  TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);
 }
 
 // Test that converted data command works

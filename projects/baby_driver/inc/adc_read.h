@@ -9,8 +9,6 @@
 #include "status.h"
 // #include "dispatcher.h"
 
-typedef StatusCode (*DispatcherCallback)(uint8_t data[8], void *context, bool *tx_result);
-
 // Initialize module
 StatusCode adc_read_init(void);
 
