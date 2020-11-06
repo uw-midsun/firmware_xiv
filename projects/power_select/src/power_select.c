@@ -85,7 +85,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   float temp_reading = 0;
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     // Only measure + store the value if the input pin is valid
-    if(s_storage.valid_bitset & 1 << i) {
+    if (s_storage.valid_bitset & 1 << i) {
       (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]));
       // convert
       temp_reading = s_storage.voltages[i];
@@ -101,14 +101,14 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
       } else {
         s_storage.fault_bitset &= ~(1 << fault);
       }
-    } else { 
+    } else {
       s_storage.voltages[i] = 0;
     }
     LOG_DEBUG("Voltage %d: %d\n", (int)i, (int)s_storage.voltages[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
     // Only measure + store the value if the input pin is valid
-    if(s_storage.valid_bitset & 1 << i) {
+    if (s_storage.valid_bitset & 1 << i) {
       (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]));
       // convert
       temp_reading = s_storage.currents[i];
@@ -166,7 +166,7 @@ static StatusCode prv_init_sense_pins(void) {
 void prv_handle_fault_it(const GpioAddress *address, void *context) {
   LOG_DEBUG("DCDC FAULT\n");
   // should figure out a way to clear this fault in future
-  s_storage.fault_bitset |= 1 << POWER_SELECT_LTC_FAULT;  
+  s_storage.fault_bitset |= 1 << POWER_SELECT_LTC_FAULT;
   prv_broadcast_fault();
 }
 

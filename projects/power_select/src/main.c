@@ -25,8 +25,7 @@ static CanSettings s_can_settings = {
 
 // Handles CAN message from centre console during startup.
 // TODO(SOFT-341): move this out of main
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context,
-                                  CanAckStatus *ack_reply) {
+static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   uint16_t sequence = 0;
   CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &sequence);
   uint16_t fault_bitset = power_select_get_fault_bitset();
