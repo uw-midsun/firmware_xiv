@@ -71,11 +71,20 @@ typedef enum {
 
 // Show whether power sources are connected, active-low
 #define POWER_SELECT_PWR_SUP_VALID_ADDR \
-{ GPIO_PORT_A, 10 }
+  \
+{                                    \
+    GPIO_PORT_A, 10                     \
+  }
 #define POWER_SELECT_DCDC_VALID_ADDR \
-{ GPIO_PORT_A, 9 }
+  \
+{                                 \
+    GPIO_PORT_A, 9                   \
+  }
 #define POWER_SELECT_AUX_VALID_ADDR \
-{ GPIO_PORT_A, 8 }
+  \
+{                                \
+    GPIO_PORT_A, 8                  \
+  }
 
 typedef enum {
   POWER_SELECT_AUX_VALID = 0,
