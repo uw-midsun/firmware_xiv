@@ -29,6 +29,10 @@ static const MotorControllerBroadcastMeasurement MOTOR_CONTROLLER_BROADCAST_MEAS
 // Uncomment when using with only the left motor controller
 #define RIGHT_MOTOR_CONTROLLER_UNUSED
 
+#ifdef RIGHT_MOTOR_CONTROLLER_UNUSED
+#define NUM_MOTOR_CONTROLLERS 1
+#endif
+
 static void prv_broadcast_speed(MotorControllerBroadcastStorage *storage) {
   float *measurements = storage->measurements.vehicle_velocity;
   CAN_TRANSMIT_MOTOR_VELOCITY((uint16_t)measurements[LEFT_MOTOR_CONTROLLER],
