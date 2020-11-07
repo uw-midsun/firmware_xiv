@@ -5,6 +5,7 @@
 #include "soft_timer.h"
 #include "wait.h"
 
+#define HALF_MS 500
 typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
@@ -22,7 +23,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   }
 
   // start another timer
-  soft_timer_start_millis(500, prv_timer_callback, storage, NULL);
+  soft_timer_start_millis(HALF_MS, prv_timer_callback, storage, NULL);
 }
 
 int main(void) {
@@ -31,7 +32,7 @@ int main(void) {
 
   Counters storage = { 0 };
 
-  soft_timer_start_millis(500, prv_timer_callback, &storage, NULL);
+  soft_timer_start_millis(HALF_MS, prv_timer_callback, &storage, NULL);
 
   while (true) {
     wait();
