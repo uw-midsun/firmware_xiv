@@ -43,7 +43,7 @@ int main(void) {
 
   LOG_DEBUG("testing transmit via horn\n");
   CAN_TRANSMIT_HORN(1);
-  
+
   LOG_DEBUG("now acking all critical messages\n");
 
   while (true) {
