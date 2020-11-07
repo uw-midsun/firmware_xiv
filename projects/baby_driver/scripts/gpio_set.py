@@ -25,11 +25,12 @@ def gpio_set(port, pin, state):
 
     # Checks whether valid parameters were passed into gpio_set
     if port < 0 or port >= GpioPort.NUM_GPIO_PORTS:
-        raise ValueError("Expected port between A and {}".format(chr(GpioPort.NUM_GPIO_PORTS + 64)))
+        raise ValueError("Expected port between A and {}".format(
+            chr(GpioPort.NUM_GPIO_PORTS + ord('A') - 1)
+        ))
     if pin < 0 or pin >= NUM_PINS_PER_PORT:
         raise ValueError("Expected pin between 0 and {}".format(NUM_PINS_PER_PORT - 1))
-    # pylint: disable=consider-using-in
-    if state != 0 and state != 1:
+    if state not in (0, 1):
         raise ValueError("Expected state of 0 (low) or 1 (high)")
 
     can_pack_args = [(port, 1), (pin, 1), (state, 1)]
@@ -37,7 +38,7 @@ def gpio_set(port, pin, state):
     can_util.send_message(
         babydriver_id=BabydriverMessageId.GPIO_SET,
         data=can_util.can_pack(can_pack_args)
-        )
+    )
 
     gpio_set_status = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
 

@@ -49,7 +49,7 @@ class TestGpioSet(unittest.TestCase):
             channel=None,
             msg_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
-            ):
+        ):
 
             self.babydriver_id = babydriver_id
             self.data = data
