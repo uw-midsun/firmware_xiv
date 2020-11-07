@@ -123,9 +123,9 @@ int main(void) {
 
   // Turn everything on
   for (CentreConsoleLed i = 0; i < NUM_CENTRE_CONSOLE_LEDS; i++) {
-      LOG_DEBUG("turning %s on\n", s_led_name[i]);
-      mcp23008_gpio_set_state(&s_led_addresses[i], MCP23008_GPIO_STATE_HIGH);
-      delay_ms(2000);
+    LOG_DEBUG("turning %s on\n", s_led_name[i]);
+    mcp23008_gpio_set_state(&s_led_addresses[i], MCP23008_GPIO_STATE_HIGH);
+    delay_ms(2000);
   }
 
   // Turn everything off

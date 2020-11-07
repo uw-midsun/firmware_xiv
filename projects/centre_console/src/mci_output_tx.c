@@ -27,8 +27,8 @@ StatusCode mci_output_tx_drive_output(MciOutputTxStorage *storage, RetryTxReques
   }
   storage->drive_output = drive_output;
   CanTxRetryWrapperRequest retry_wrapper_request = { .retry_request = *request,
-                                                    //  .ack_bitset = CAN_ACK_EXPECTED_DEVICES(
-                                                    //      SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
+                                                     //  .ack_bitset = CAN_ACK_EXPECTED_DEVICES(
+                                                     //      SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
                                                      .ack_bitset = CAN_ACK_EXPECTED_DEVICES(
                                                          SYSTEM_CAN_DEVICE_BABYDRIVER),
                                                      .tx_callback = prv_tx_mci_output,

@@ -119,20 +119,19 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
 StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                                  size_t dlc) {
   if (storage->rx_cb != NULL) {
-
     GenericCanMsg msg = {
-      .id = id, 
-      .data = data, 
-      .extended = extended, 
+      .id = id,
+      .data = data,
+      .extended = extended,
       .dlc = dlc,
     };
-    //storage->rx_cb(id, extended, data, dlc, storage->context);
+    // storage->rx_cb(id, extended, data, dlc, storage->context);
 
-    if(id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
-  
+    if (id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID ||
+        id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
       s_broadcast_storage.callbacks[MCI_BROADCAST_VELOCITY](&msg, &s_broadcast_storage);
-    } else if(id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID || id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
-  
+    } else if (id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID ||
+               id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
       s_broadcast_storage.callbacks[MCI_BROADCAST_BUS](&msg, &s_broadcast_storage);
     }
   }
@@ -202,7 +201,6 @@ void setup_test(void) {
                                          prv_handle_bus_measurement, NULL));
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, prv_handle_velocity, NULL));
-
 }
 
 void teardown_test(void) {
