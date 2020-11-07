@@ -23,10 +23,10 @@ static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_
 static void prv_export() {
   for (uint16_t i = 0; i < MAX_I2C_ADDRESSES; i++) {
     for (uint16_t j = 0; j < NUM_PCA9539R_GPIO_PINS; j++) {
-      s_store.state[i + j] = s_pin_settings[i][j].state;
+      s_store.state[i * NUM_PCA9539R_GPIO_PINS + j] = s_pin_settings[i][j].state;
     }
   }
-  store_export(MX_STORE_TYPE__PCA9539A, &s_store, NULL);
+  store_export(MX_STORE_TYPE__PCA9539R, &s_store, NULL);
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
@@ -61,7 +61,7 @@ static void prv_init_store(void) {
   };
   s_store.n_state = MAX_I2C_ADDRESSES * NUM_PCA9539R_GPIO_PINS;
   s_store.state = malloc(MAX_I2C_ADDRESSES * NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
-  store_register(MX_STORE_TYPE__PCA9539A, funcs, &s_store, NULL);
+  store_register(MX_STORE_TYPE__PCA9539R, funcs, &s_store, NULL);
 }
 #endif
 

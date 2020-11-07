@@ -5,7 +5,7 @@ enum MxStoreType {
   ADS1015 = 1;
   MCP2515 = 2;
   ADT7476A = 3;
-  PCA9539A = 4;
+  PCA9539R = 4;
   END = 5;
 }
 

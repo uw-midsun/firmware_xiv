@@ -1,10 +1,15 @@
 from mpxe.protogen import stores_pb2
+from mpxe.protogen import pca9539r_pb2
 
 from mpxe.sims import sim
 
 class Pca9539r(sim.Sim):
     def handle_update(self, pm, proj):
-        # states = [int(i) for i in proj.stores[(stores_pb2.MxStoreType.GPIO, 0)].state]
-        # # use addution to indicate port - 16 = GPIO_PORT_B, 0 = GPIO_PORT_A
-        # leds = [states[16+5], states[16+4], states[16+3], states[0+15]]
-        print("updating")
+        stores  = proj.stores
+        if (stores_pb2.MxStoreType.PCA9539R, 0) in stores:
+            pca         = stores[(stores_pb2.MxStoreType.PCA9539R, 0)]
+            self.state  = [pca.state[i] for i in range((0x74 * 16), (0x75 * 16))]
+
+    def assert_store_values(self, proj, state):
+        for x in range(16):
+            assert(self.state[x]  == state)
