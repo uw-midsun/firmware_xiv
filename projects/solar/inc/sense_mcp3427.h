@@ -16,8 +16,11 @@
 typedef struct SenseMcp3427AdcConfig {
   Mcp3427Settings mcp3427_settings;
   DataPoint data_point;
-  // The factor to multiply raw MCP3427 ADC values by to get the needed units. Results are rounded.
+  // The factor to multiply raw MCP3427 ADC values by to get correct units. Results are truncated.
   float scaling_factor;
+  // The bias of the MCP3427 input in terms of the scaled value. Can be unspecified if 0.
+  // The result stored will be scaling_factor * raw_value - bias, truncated.
+  float bias;
 } SenseMcp3427AdcConfig;
 
 typedef struct SenseMcp3427Settings {
