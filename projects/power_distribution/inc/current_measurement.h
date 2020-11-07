@@ -4,6 +4,8 @@
 // Requires GPIO, interrupts, soft timers, ADC (in ADC_MODE_SINGLE), and I2C to be initalized.
 
 #include <stdint.h>
+
+#include "bts7xxx_common.h"
 #include "currents.h"
 #include "gpio.h"
 #include "mux.h"
@@ -97,3 +99,7 @@ PowerDistributionCurrentStorage *power_distribution_current_measurement_get_stor
 
 // Stop periodically reading currents.
 StatusCode power_distribution_current_measurement_stop(void);
+
+// TODO(SOFT-336): replace this with a less janky system that doesn't involve double pointers.
+// Return an array of pointers to the enable pins of the BTS7200s/7040s in no particular order.
+Bts7xxxEnablePin **power_distribution_current_measurement_get_pins(size_t *num_pins);
