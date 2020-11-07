@@ -1,8 +1,10 @@
 #include "current_measurement.h"
 
 #include <stddef.h>
+
 #include "bts7040_load_switch.h"
 #include "bts7200_load_switch.h"
+#include "bts7xxx_common.h"
 #include "log.h"
 
 static PowerDistributionCurrentHardwareConfig s_hw_config;
@@ -10,6 +12,10 @@ static PowerDistributionCurrentStorage s_storage = { 0 };
 static Bts7200Storage s_bts7200_storages[MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS];
 static Bts7040Storage s_bts7040_storages[MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS];
 static SoftTimerId s_timer_id;
+
+static Bts7xxxEnablePin *s_enable_pins[2 * MAX_POWER_DISTRIBUTION_BTS7200_CHANNELS +
+                                       MAX_POWER_DISTRIBUTION_BTS7040_CHANNELS];
+static size_t s_num_enable_pins;
 
 static uint32_t s_interval_us;
 static PowerDistributionCurrentMeasurementCallback s_callback;
@@ -68,6 +74,8 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   // note: we don't have to initialize the mux_output_pin as ADC because
   // bts7200_init_pca9539r and bts7040_init_pca9539r do it for us
 
+  s_num_enable_pins = 0;
+
   // initialize and start the BTS7200s
   Bts7200Pca9539rSettings bts7200_settings = {
     .sense_pin = &s_hw_config.mux_output_pin,
@@ -90,6 +98,9 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     bts7200_settings.enable_1_pin = &s_hw_config.bts7200s[i].en1_pin;
 
     status_ok_or_return(bts7200_init_pca9539r(&s_bts7200_storages[i], &bts7200_settings));
+
+    s_enable_pins[s_num_enable_pins++] = &s_bts7200_storages[i].enable_pin_0;
+    s_enable_pins[s_num_enable_pins++] = &s_bts7200_storages[i].enable_pin_1;
   }
 
   // initialize all BTS7040/7008s
@@ -100,6 +111,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV,
     .max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV,
   };
+
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     // check that the current is valid
     if (s_hw_config.bts7040s[i].current >= NUM_POWER_DISTRIBUTION_CURRENTS) {
@@ -110,6 +122,8 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
     bts7040_settings.enable_pin = &s_hw_config.bts7040s[i].en_pin;
 
     status_ok_or_return(bts7040_init_pca9539r(&s_bts7040_storages[i], &bts7040_settings));
+
+    s_enable_pins[s_num_enable_pins++] = &s_bts7040_storages[i].enable_pin;
   }
 
   // measure the currents immediately; the callback doesn't use the timer id it's passed
@@ -127,4 +141,11 @@ StatusCode power_distribution_current_measurement_stop(void) {
   s_timer_id = SOFT_TIMER_INVALID_TIMER;
 
   return STATUS_CODE_OK;
+}
+
+Bts7xxxEnablePin **power_distribution_current_measurement_get_pins(size_t *num_pins) {
+  if (num_pins != NULL) {
+    *num_pins = s_num_enable_pins;
+  }
+  return s_enable_pins;
 }
