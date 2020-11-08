@@ -70,7 +70,6 @@ int main(void) {
 
   pedal_monitor_init();
   button_press_init();
-  hazard_tx_init();
 
   I2CSettings i2c_settings = {
     .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,

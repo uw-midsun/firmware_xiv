@@ -33,12 +33,18 @@ static const char *s_button_names[NUM_CENTRE_CONSOLE_BUTTONS] = {
   [CENTRE_CONSOLE_BUTTON_REVERSE] = "reverse button",
 };
 
+static bool s_button_is_latching[NUM_CENTRE_CONSOLE_BUTTONS] = {
+  [CENTRE_CONSOLE_BUTTON_HAZARDS] = true,
+};
+
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
   CentreConsoleButtonPressEvent *event_id = (CentreConsoleButtonPressEvent *)context;
-  event_raise(*event_id, 0);
+  GpioState button_state = NUM_GPIO_STATES;
+  gpio_get_state(address, &button_state);
+  event_raise(*event_id, button_state);
   for (uint8_t i = 0; i < NUM_CENTRE_CONSOLE_BUTTONS; i++) {
     if (s_button_event_lookup[i] == *event_id) {
-      LOG_DEBUG("%s interrupt, raising event\n", s_button_names[i]);
+      LOG_DEBUG("%s interrupt, raising event (state=%d)\n", s_button_names[i], button_state);
     }
   }
 }
@@ -48,11 +54,23 @@ StatusCode button_press_init(void) {
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
+  GpioSettings gpio_settings = {
+    .direction = GPIO_DIR_IN,
+    .state = GPIO_STATE_LOW,
+    .alt_function = GPIO_ALTFN_NONE,
+    .resistor = GPIO_RES_NONE,
+  };
+
   for (CentreConsoleButton button = 0; button < NUM_CENTRE_CONSOLE_BUTTONS; button++) {
-    gpio_it_register_interrupt(&s_button_addresses[button], &interrupt_settings,
-                               INTERRUPT_EDGE_RISING, prv_button_interrupt_handler,
-                               &s_button_event_lookup[button]);
+    // initialize the pin as input so we can get its state later
+    gpio_init_pin(&s_button_addresses[button], &gpio_settings);
+
+    InterruptEdge edge =
+        s_button_is_latching[button] ? INTERRUPT_EDGE_RISING_FALLING : INTERRUPT_EDGE_RISING;
+    gpio_it_register_interrupt(&s_button_addresses[button], &interrupt_settings, edge,
+                               prv_button_interrupt_handler, &s_button_event_lookup[button]);
   }
+
   return STATUS_CODE_OK;
 }
 
