@@ -16,7 +16,7 @@ static StatusCode prv_handle_msg(const CanMessage *msg, void *context, CanAckSta
     LOG_DEBUG("acked %d\n", msg->msg_id);
   }
   if (msg->msg_id == SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE) {
-    CAN_TRANSMIT_PRECHARGE_COMPLETED();
+    // CAN_TRANSMIT_PRECHARGE_COMPLETED();
   }
   return STATUS_CODE_OK;
 };

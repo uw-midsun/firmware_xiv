@@ -34,7 +34,7 @@ StatusCode ebrake_tx_brake_state(EbrakeTxStorage *storage, RetryTxRequest *reque
   CanTxRetryWrapperRequest retry_wrapper_request = {
     .retry_request = *request,
     // .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT),
-    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER),
+    .ack_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_RESERVED),
     .tx_callback = prv_tx_ebrake_state,
     .tx_callback_context = storage
   };

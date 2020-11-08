@@ -53,6 +53,13 @@ static Fsm s_drive_fsm;
 static EEDriveOutput s_current_drive_state;
 static bool s_is_cruise;
 
+static const char *s_drive_state_names[] = {
+  [EE_DRIVE_OUTPUT_OFF] = "off",
+  [EE_DRIVE_OUTPUT_DRIVE] = "drive",
+  [EE_DRIVE_OUTPUT_REVERSE] = "reverse",
+  [NUM_EE_DRIVE_OUTPUTS] = "num output",
+};
+
 static void prv_state_off_output(Fsm *fsm, const Event *e, void *context) {
   s_current_drive_state = EE_DRIVE_OUTPUT_OFF;
   s_is_cruise = false;
@@ -93,9 +100,12 @@ static StatusCode prv_drive_output_rx(const CanMessage *msg, void *context,
   e.id = s_drive_output_fsm_map[drive_output];
   expect_transition = drive_output != s_current_drive_state;
   LOG_DEBUG("curent state: %i (target state: %i)\n", s_current_drive_state, drive_output);
+  LOG_DEBUG("curent state: %s (target state: %s)\n", s_drive_state_names[s_current_drive_state],
+            s_drive_state_names[drive_output]);
   LOG_DEBUG("drive_fsm_state: %i\n", e.id);
   bool transitioned = drive_fsm_process_event(&e);
   LOG_DEBUG("post transition: %i\n", s_current_drive_state);
+  LOG_DEBUG("post transition: %s\n", s_drive_state_names[s_current_drive_state]);
   if (expect_transition != transitioned) {
     *ack_reply = CAN_ACK_STATUS_INVALID;
     return STATUS_CODE_INTERNAL_ERROR;
