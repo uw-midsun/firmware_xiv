@@ -43,6 +43,9 @@ static const CentreConsoleLed s_drive_state_leds[] = {
   CENTRE_CONSOLE_LED_PARKING,
 };
 
+static CentreConsoleLed s_current_drive_state_led;
+static bool s_drive_state_leds_enabled;
+
 static void prv_set_led(CentreConsoleLed led, Mcp23008GpioState state) {
   mcp23008_gpio_set_state(&s_led_to_address[led], state);
 }
@@ -59,26 +62,44 @@ static void prv_set_hazards_led(Event *e, uint16_t context) {
   prv_set_led(CENTRE_CONSOLE_LED_HAZARDS, state);
 }
 
-static void prv_set_power_led(Event *e, uint16_t context) {
-  Mcp23008GpioState state = context;
-  prv_set_led(CENTRE_CONSOLE_LED_POWER, state);
+static void prv_update_drive_state_leds(void) {
+  for (size_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
+    CentreConsoleLed led = s_drive_state_leds[i];
+    bool on = s_drive_state_leds_enabled && led == s_current_drive_state_led;
+    prv_set_led(led, on ? MCP23008_GPIO_STATE_HIGH : MCP23008_GPIO_STATE_LOW);
+  }
+}
+
+static void prv_main_sequence_complete(Event *e, uint16_t context) {
+  s_drive_state_leds_enabled = true;
+  prv_update_drive_state_leds();
+  prv_set_led(CENTRE_CONSOLE_LED_POWER, MCP23008_GPIO_STATE_HIGH);
+}
+
+static void prv_aux_sequence_complete(Event *e, uint16_t context) {
+  s_drive_state_leds_enabled = false;
+  prv_update_drive_state_leds();
+  prv_set_led(CENTRE_CONSOLE_LED_POWER, MCP23008_GPIO_STATE_HIGH);
+}
+
+static void prv_off_sequence_complete(Event *e, uint16_t context) {
+  s_drive_state_leds_enabled = false;
+  prv_update_drive_state_leds();
+  prv_set_led(CENTRE_CONSOLE_LED_POWER, MCP23008_GPIO_STATE_LOW);
 }
 
 static void prv_set_drive_state_leds(Event *e, uint16_t context) {
-  CentreConsoleLed led_to_enable = context;
-  for (size_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
-    CentreConsoleLed led = s_drive_state_leds[i];
-    prv_set_led(led, led == led_to_enable ? MCP23008_GPIO_STATE_HIGH : MCP23008_GPIO_STATE_LOW);
-  }
+  s_current_drive_state_led = context;
+  prv_update_drive_state_leds();
 }
 
 static const EventHandlerAndContext s_event_to_handler[NUM_CENTRE_CONSOLE_EVENTS] = {
   [CENTRE_CONSOLE_POWER_EVENT_FAULT] = { prv_set_bps_led, 0 },
   [HAZARD_EVENT_ON] = { prv_set_hazards_led, MCP23008_GPIO_STATE_HIGH },
   [HAZARD_EVENT_OFF] = { prv_set_hazards_led, MCP23008_GPIO_STATE_LOW },
-  [POWER_MAIN_SEQUENCE_EVENT_COMPLETE] = { prv_set_power_led, MCP23008_GPIO_STATE_HIGH },
-  [POWER_AUX_SEQUENCE_EVENT_COMPLETE] = { prv_set_power_led, MCP23008_GPIO_STATE_HIGH },
-  [POWER_OFF_SEQUENCE_EVENT_COMPLETE] = { prv_set_power_led, MCP23008_GPIO_STATE_LOW },
+  [POWER_MAIN_SEQUENCE_EVENT_COMPLETE] = { prv_main_sequence_complete, 0 },
+  [POWER_AUX_SEQUENCE_EVENT_COMPLETE] = { prv_aux_sequence_complete, 0 },
+  [POWER_OFF_SEQUENCE_EVENT_COMPLETE] = { prv_off_sequence_complete, 0 },
   [DRIVE_FSM_OUTPUT_EVENT_DRIVE] = { prv_set_drive_state_leds, CENTRE_CONSOLE_LED_DRIVE },
   [DRIVE_FSM_OUTPUT_EVENT_REVERSE] = { prv_set_drive_state_leds, CENTRE_CONSOLE_LED_REVERSE },
   [DRIVE_FSM_OUTPUT_EVENT_NEUTRAL] = { prv_set_drive_state_leds, CENTRE_CONSOLE_LED_NEUTRAL },
@@ -94,6 +115,7 @@ StatusCode led_manager_init(void) {
   for (CentreConsoleLed led = 0; led < NUM_CENTRE_CONSOLE_LEDS; led++) {
     status_ok_or_return(mcp23008_gpio_init_pin(&s_led_to_address[led], &pin_settings));
   }
+  s_drive_state_leds_enabled = false;
   prv_set_drive_state_leds(NULL, CENTRE_CONSOLE_LED_NEUTRAL);
   return STATUS_CODE_OK;
 }
