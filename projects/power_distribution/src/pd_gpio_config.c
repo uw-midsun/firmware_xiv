@@ -173,8 +173,12 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .address = FRONT_PIN_RIGHT_CAMERA_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
+                      {
+                          .address = FRONT_PIN_FRONT_LEFT_TURN_EN,
+                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      },
                   },
-              .num_outputs = 13,
+              .num_outputs = 14,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
@@ -235,8 +239,12 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .address = FRONT_PIN_RIGHT_CAMERA_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
                       },
+                      {
+                          .address = FRONT_PIN_FRONT_LEFT_TURN_EN,
+                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                      },
                   },
-              .num_outputs = 13,
+              .num_outputs = 14,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
