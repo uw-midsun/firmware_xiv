@@ -137,9 +137,7 @@ static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("faulted, discharging precharge and raising transition fault\n");
   CAN_TRANSMIT_DISCHARGE_PRECHARGE();
   CAN_TRANSMIT_STATE_TRANSITION_FAULT(reason.fields.area, reason.fields.reason);
-  EventId id = (storage->ebrake_storage.current_state == EE_EBRAKE_STATE_PRESSED)
-                   ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_EBRAKE_PRESSED
-                   : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;
+  EventId id = DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;
   storage->destination = NUM_DRIVE_STATES;
   event_raise(id, 0);
 }
