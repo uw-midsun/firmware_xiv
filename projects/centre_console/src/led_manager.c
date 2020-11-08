@@ -94,6 +94,7 @@ StatusCode led_manager_init(void) {
   for (CentreConsoleLed led = 0; led < NUM_CENTRE_CONSOLE_LEDS; led++) {
     status_ok_or_return(mcp23008_gpio_init_pin(&s_led_to_address[led], &pin_settings));
   }
+  prv_set_drive_state_leds(NULL, CENTRE_CONSOLE_LED_NEUTRAL);
   return STATUS_CODE_OK;
 }
 
