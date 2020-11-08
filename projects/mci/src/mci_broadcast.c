@@ -203,7 +203,7 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
 static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
   MotorControllerBroadcastStorage *storage = context;
   // LOG_DEBUG("velocity rx bitset: %d, bus bitset: %d\n", storage->velocity_rx_bitset,
-            // storage->bus_rx_bitset);
+  // storage->bus_rx_bitset);
   if (storage->velocity_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
     // Received speed from all motor controllers - clear bitset and broadcast
     storage->velocity_rx_bitset = 0;
