@@ -9,13 +9,11 @@
 #include "status.h"
 
 static StatusCode prv_callback_gpio_get(uint8_t data[8], void *context, bool *tx_result) {
-  gpio_init();
-
   uint8_t port_number = data[1];
   uint8_t pin_number = data[2];
 
   if (port_number >= NUM_GPIO_PORTS || pin_number >= GPIO_PINS_PER_PORT) {
-    return status_code(STATUS_CODE_INVALID_ARGS);
+    return STATUS_CODE_INVALID_ARGS;
   }
 
   GpioAddress pin_address = { .port = port_number, .pin = pin_number };
@@ -26,17 +24,14 @@ static StatusCode prv_callback_gpio_get(uint8_t data[8], void *context, bool *tx
     .alt_function = GPIO_ALTFN_NONE,  //
   };
 
-  gpio_init_pin(&pin_address, &pin_settings);
+  GpioState input_state = NUM_GPIO_STATES;
+  status_ok_or_return(gpio_get_state(&pin_address, &input_state));
+  uint8_t state = (input_state == GPIO_STATE_HIGH) ? 1 : 0;
 
-  GpioState inputState = GPIO_STATE_LOW;
-  gpio_get_state(&pin_address, &inputState);
+  status_ok_or_return(gpio_init_pin(&pin_address, &pin_settings));
 
-  uint8_t state = 0;
-  if (inputState == GPIO_STATE_HIGH) {
-    state = 1;
-  }
-
-  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_GET_DATA, state, 0, 0, 0, 0, 0, 0);
+  status_ok_or_return(CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_GET_DATA,  //
+                                              state, 0, 0, 0, 0, 0, 0));         //
 
   return STATUS_CODE_OK;
 }
