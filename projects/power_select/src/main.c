@@ -48,7 +48,8 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
     if (!(valid_bitset & 1 << POWER_SELECT_DCDC_VALID) ||
         fault_bitset & 1 << POWER_SELECT_DCDC_OVERCURRENT ||
         fault_bitset & 1 << POWER_SELECT_DCDC_OVERVOLTAGE) {
-      *ack_reply = CAN_ACK_STATUS_INVALID;
+      // *ack_reply = CAN_ACK_STATUS_INVALID;
+      *ack_reply = CAN_ACK_STATUS_OK;
     } else {
       LOG_DEBUG("acking\n");
       *ack_reply = CAN_ACK_STATUS_OK;
