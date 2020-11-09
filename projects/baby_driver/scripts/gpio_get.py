@@ -4,6 +4,8 @@ import can_util
 from gpio_port import GpioPort
 from message_defs import BabydriverMessageId
 
+GPIO_PINS_PER_PORT = 16
+
 def gpio_get(port, pin):
     '''
     Returns the state of the GPIO pin at the given port and pin number as a bool
@@ -12,33 +14,34 @@ def gpio_get(port, pin):
     The pin is an int value
     '''
 
+    if isinstance(port, str):
+        port = getattr(GpioPort, port.capitalize())
+
     if port < 0 or port >= GpioPort.NUM_GPIO_PORTS:
         raise ValueError("ERROR: invalid GPIO port")
-    if pin < 0 or pin >= 16:
+    if pin < 0 or pin >= GPIO_PINS_PER_PORT:
         raise ValueError("ERROR: invalid GPIO pin number")
 
-    data = [port, pin]
+    data = can_util.can_pack([(port, 1), (pin, 1)])
+
     can_util.send_message(
         babydriver_id=BabydriverMessageId.GPIO_GET_COMMAND,
         data=data,
-        channel=can_util.default_channel
     )
 
     gpio_data_msg = can_util.next_message(
         babydriver_id=BabydriverMessageId.GPIO_GET_DATA,
-        channel=can_util.default_channel
     )
 
     status_msg = can_util.next_message(
-        babydriver_id=BabydriverMessageId.GPIO_GET_DATA,
-        channel=can_util.default_channel
+        babydriver_id=BabydriverMessageId.STATUS,
     )
 
-    if status_msg.msg.data[0] != BabydriverMessageId.STATUS:
+    if status_msg.data[1] != 0:
         raise Exception("ERROR: never recieved status message")
 
-    msg_data = gpio_data_msg.msg.data[0]
+    raw_state = gpio_data_msg.data[1]
 
-    gpio_pin_state = msg_data == 1
+    gpio_pin_state = bool(raw_state)
 
     return gpio_pin_state
