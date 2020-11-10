@@ -1,5 +1,7 @@
 """This Module Tests methods in gpio_get.py"""
 # pylint: disable=unused-import
+# pylint: disable=unused-argument
+
 import unittest
 from unittest.mock import patch
 
@@ -28,7 +30,6 @@ class TestGpioGet(unittest.TestCase):
             device_id=BABYDRIVER_DEVICE_ID,
             data=status_data,
         )
-        mock_send_message.side_effect = None
 
         mock_next_message.side_effect = [gpio_pin_msg, status_msg]
         self.assertTrue(gpio_get(GpioPort.A, 0))
@@ -72,7 +73,6 @@ class TestGpioGet(unittest.TestCase):
             device_id=BABYDRIVER_DEVICE_ID,
             data=status_data,
         )
-        mock_send_message.side_effect = None
 
         mock_next_message.side_effect = [gpio_pin_msg, status_msg]
         self.assertTrue(gpio_get(GpioPort.F, 15))
@@ -117,7 +117,6 @@ class TestGpioGet(unittest.TestCase):
             device_id=BABYDRIVER_DEVICE_ID,
             data=status_data,
         )
-        mock_send_message.side_effect = None
 
         # This should fail because of a non zero status message
         mock_next_message.side_effect = [gpio_pin_msg, status_msg]
