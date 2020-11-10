@@ -131,7 +131,7 @@ StatusCode can_transmit(const CanMessage *msg, const CanAckRequest *ack_request)
     }
 
     StatusCode ret = can_ack_add_request(&s_can_storage->ack_requests, msg->msg_id, ack_request);
-    // status_ok_or_return(ret);
+    status_ok_or_return(ret);
   }
 
   // Basically, the idea is that all the TX and RX should be happening in the
