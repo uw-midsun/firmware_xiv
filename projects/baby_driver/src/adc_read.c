@@ -33,7 +33,7 @@ static GpioSettings s_adc_pin_settings = {
 StatusCode adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
   uint16_t adc_pin_data = 0;
 
-  bool is_raw;  // nonzero means raw, 0 means converted
+  int is_raw;  // nonzero means raw, 0 means converted
 
   s_adc_pin_addr.port = data[1];
   s_adc_pin_addr.pin = data[2];
@@ -52,7 +52,8 @@ StatusCode adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
   uint8_t low = adc_pin_data & 0xff;
   uint8_t high = (adc_pin_data >> 8) & 0xff;
 
-  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_DATA, low, high, 0, 0, 0, 0, 0);
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_DATA, BABYDRIVER_MESSAGE_ADC_READ_DATA, low,
+                          high, 0, 0, 0, 0);
 
   return STATUS_CODE_OK;
 }

@@ -7,3 +7,7 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
+
+ifeq (x86,$(PLATFORM))
+$(T)_test_adc_read_MOCKS := adc_read_raw_pin adc_read_converted_pin
+endif
