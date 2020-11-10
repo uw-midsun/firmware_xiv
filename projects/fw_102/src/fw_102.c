@@ -21,7 +21,7 @@ void prv_timer_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B:%d\n", count->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_timer_callback, count, NULL);
+  soft_timer_start_millis(COUNTER_INCREMENT_MS, prv_timer_callback, count, NULL);
 }
 
 int main() {
@@ -30,7 +30,7 @@ int main() {
 
   Counters count = { 0 };
 
-  soft_timer_start_millis(500, prv_timer_callback, &count, NULL);
+  soft_timer_start_millis(COUNTER_INCREMENT_MS, prv_timer_callback, &count, NULL);
 
   while (true) {
     wait();
