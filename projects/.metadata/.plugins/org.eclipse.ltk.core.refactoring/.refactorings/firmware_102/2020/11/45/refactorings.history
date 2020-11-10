@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;firmware_102/src/counter.c&apos; to &apos;main.c&apos;" description="Rename resource &apos;counter.c&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/counter.c" name="main.c" stamp="1604771247657" updateReferences="true"/>
+</session>

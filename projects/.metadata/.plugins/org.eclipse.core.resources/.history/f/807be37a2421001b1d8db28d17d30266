@@ -1,0 +1,29 @@
+#include "interrupt.h" // interrupts are required for soft timers
+#include "soft_timer.h" // for soft timers
+#include "log.h" // for printing
+#include "wait.h" // for wait function
+
+#include <stdlib.h> // for random numbers
+#include <stdint.h> // for integer types
+
+#define COIN_FLIP_PERIOD_MS 1000 // milliseconds between coin flips
+
+typedef struct Counters{
+	uint8_t counter_a;
+	uint8_t counter_b;
+
+}Counters;
+
+
+void prv_timer_callback(SoftTimerId timer_id, void *context){
+	Counters *count = context;
+
+	uint8_t counter_a += 1;
+
+
+
+
+
+
+
+}

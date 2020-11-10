@@ -1,0 +1,53 @@
+
+#include "soft_timer.h" // for soft timers
+#include "log.h" // for printing
+#include "wait.h" // for wait function
+#include <stdlib.h> // for random numbers
+#include <stdint.h> // for integer types
+#include <stdbool.h>
+
+
+
+typedef struct Counters{
+	uint8_t counter_a;
+	uint8_t counter_b;
+
+}Counters;
+
+
+void prv_timer_callback(SoftTimerId timer_id, void *context){
+	int a = 0;
+
+	Counters *count = context;
+	count-> counter_a += 1;
+	a++;
+	LOG_DEBUG("Counter A:", count->counter_a);
+	if (a%2 == 0)
+	{
+		count-> counter_b += 1;
+		LOG_DEBUG("Counter B:", count->counter_b);
+	}
+
+	soft_timer_start_millis(500,
+	                          prv_timer_callback,
+	                          count,
+	                          NULL);
+}
+
+int main(){
+
+	interrupt_init();
+	soft_timer_init();
+
+	Counters count = {0};
+
+	soft_timer_start_millis(COIN_FLIP_PERIOD_MS, // timer duration
+	                          prv_timer_callback, // function to call after timer
+	                          &count, // automatically gets cast to void*
+	                          NULL);
+
+	while (true){
+		wait();
+	}
+
+}
