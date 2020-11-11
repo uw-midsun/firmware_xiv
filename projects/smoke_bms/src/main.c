@@ -49,7 +49,7 @@ int main(void) {
   };
   gpio_it_register_interrupt(&ks, &it_settings, INTERRUPT_EDGE_RISING_FALLING, prv_ks_handler,
                              NULL);
-//   gpio_init_pin(&r_gnd, &en_settings);
+  gpio_init_pin(&r_gnd, &en_settings);
   gpio_init_pin(&r_hv, &en_settings);
   while (true) {
     gpio_toggle_state(&debug_led);

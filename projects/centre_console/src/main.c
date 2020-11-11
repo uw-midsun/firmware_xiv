@@ -90,6 +90,16 @@ int main(void) {
 
   main_event_generator_init(&s_main_event_generator, &resources);
 
+  // turn on enable pin for raspberry pi
+  GpioAddress raspi_addr = { .port = GPIO_PORT_B, .pin = 12 };
+  GpioSettings raspi_settings = {
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_HIGH,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
+  };
+  gpio_init_pin(&raspi_addr, &raspi_settings);
+
   LOG_DEBUG("Hello from Centre Console!\n");
 
   while (true) {
