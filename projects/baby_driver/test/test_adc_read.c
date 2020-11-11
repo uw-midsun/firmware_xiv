@@ -44,7 +44,6 @@ StatusCode TEST_MOCK(adc_read_raw_pin)(GpioAddress address, uint16_t *reading) {
   *reading = X86READING;
   s_low = *reading & 0xff;
   s_high = (*reading >> 8) & 0xff;
-  LOG_DEBUG("Bruhraw %d\n", s_low);
   return STATUS_CODE_OK;
 }
 
@@ -52,7 +51,7 @@ StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *read
   *reading = X86READING;
   s_low = s_mock_reading & 0xff;
   s_high = (s_mock_reading >> 8) & 0xff;
-  LOG_DEBUG("Bruh\n");
+  LOG_DEBUG("s_low:  %d\n", s_low);
   return STATUS_CODE_OK;
 }
 
@@ -130,7 +129,6 @@ void test_adc_read_raw(void) {
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
-  TEST_ASSERT_EQUAL(0, s_times_callback_called);
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
 
@@ -161,14 +159,14 @@ void test_adc_read_raw(void) {
 
 // Test that converted data command works
 void test_adc_read_converted(void) {
-  // TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_COMMAND,
-  //                                             prv_test_adc_read_callback_handler, NULL));
   s_should_tx_result = true;
 
   TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_DATA,
                                               prv_rx_adc_read_callback, NULL));
   TEST_ASSERT_OK(
       dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
+
+  TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   uint8_t data[7] = { s_test_adc_pin_addr.port,
                       s_test_adc_pin_addr.pin,
@@ -187,17 +185,18 @@ void test_adc_read_converted(void) {
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
-  TEST_ASSERT_EQUAL(0, s_times_callback_called);
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
 
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
+  // MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
+
   TEST_ASSERT_EQUAL_INT8(1, s_received_data[2]);  // confused on what to put for "expected" here.
   TEST_ASSERT_EQUAL_INT8(1, s_received_data[3]);
 
