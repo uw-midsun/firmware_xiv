@@ -8,7 +8,7 @@
 
 // interrupt callback function
 static void prv_button_pressed(const GpioAddress *address, void *context) {
-  AdcChannel *adc_read = (AdcChannel *)context;
+  GpioAddress *adc_read = (GpioAddress *)context;
   uint16_t adc_value = 0;
   adc_read_converted_pin(*adc_read, &adc_value);
   LOG_DEBUG("%d\n", adc_value);
