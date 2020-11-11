@@ -13,7 +13,6 @@ typedef struct {
   I2CPort i2c;
   I2CAddress i2c_read_addr;
   I2CAddress i2c_write_addr;
-  I2CSettings i2c_settings;
 } Adt7476aSettings;
 
 typedef struct {

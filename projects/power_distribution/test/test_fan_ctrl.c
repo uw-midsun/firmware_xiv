@@ -1,9 +1,12 @@
 #include <stdbool.h>
+#include <string.h>
+
 #include "adc.h"
 #include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
 #include "can.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "delay.h"
 #include "gpio.h"
 #include "gpio_it.h"
@@ -11,6 +14,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
+#include "pd_events.h"
 #include "pd_fan_ctrl.h"
 #include "pin_defs.h"
 #include "status.h"
@@ -18,6 +22,7 @@
 #include "unity.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
+#define TEST_I2C_ADDRESS 0x1
 
 #define TEST_CONFIG_PIN_I2C_SCL \
   { GPIO_PORT_B, 10 }
@@ -30,34 +35,30 @@
 #define ADT7476A_PWM_1 0x30
 #define ADT7476A_PWM_3 0x32
 
-#define OVERTEMP_FLAGS (FAN_OVERTEMP_TRIGGERED | DCDC_OVERTEMP | ENC_VENT_OVERTEMP)
+#define OVERTEMP_FLAGS (FAN_OVERTEMP_TRIGGERED | DCDC_OVERTEMP | ENCLOSURE_OVERTEMP)
 #define OVERVOLT_FLAGS (VCC_EXCEEDED | VCCP_EXCEEDED)
 #define FAN_ERR_FLAGS (FAN1_STATUS | FAN2_STATUS | FAN3_STATUS | FAN4_STATUS)
+
+#define ADC_MAX_VAL 3300
 
 #define FAN_UNDERTEMP_VOLTAGE 1163
 #define FAN_OVERTEMP_VOLTAGE 758
 #define FAN_50_PERC_VOLTAGE 975
 
-#define FAN_MAX_I2C_WRITE 0xFF  // equates to value/0.39 -> adt7476A conversion
+#define FAN_OVERTEMP_FRACTION_TRANSMIT (FAN_OVERTEMP_VOLTAGE * 1000) / ADC_MAX_VAL
+
+#define FAN_MAX_I2C_WRITE 0xFF  // equates to (percent value)/0.39 -> adt7476A conversion
 #define FAN_50_PERC_I2C_WRITE 0x7F
 #define FAN_MIN_I2C_WRITE 0x0
 
-#define ADC_MAX_VAL 3300
-
-typedef enum {
-  TEST_CAN_EVENT_RX = 10,
-  TEST_CAN_EVENT_TX,
-  TEST_CAN_EVENT_FAULT,
-  NUM_TEST_CAN_EVENTS,
-} TestCanEvent;
-
-static uint64_t s_fan_ctrl_msg;
+static uint16_t s_fan_ctrl_msg[4];
 static CanStorage s_can_storage;
 
 static FanCtrlSettings s_fan_settings = {
-  .i2c = TEST_I2C_PORT,
+  .i2c_port = TEST_I2C_PORT,
   .fan_pwm1 = TEST_PWM_1,
   .fan_pwm2 = TEST_PWM_2,
+  .i2c_address = TEST_I2C_ADDRESS,
 };
 
 static uint16_t adc_ret_val;
@@ -71,13 +72,9 @@ static uint8_t i2c_buf2[10];
 StatusCode TEST_MOCK(i2c_write)(I2CPort i2c, I2CAddress addr, uint8_t *tx_data, size_t tx_len) {
   // Save both temp values written over i2c
   if (tx_data[0] == ADT7476A_PWM_1) {
-    for (size_t i = 0; i < tx_len; i++) {
-      i2c_buf1[i] = tx_data[i];
-    }
+    memcpy(i2c_buf1, tx_data, tx_len);
   } else {
-    for (size_t i = 0; i < tx_len; i++) {
-      i2c_buf2[i] = tx_data[i];
-    }
+    memcpy(i2c_buf2, tx_data, tx_len);
   }
   return STATUS_CODE_OK;
 }
@@ -92,10 +89,16 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
   return STATUS_CODE_OK;
 }
 
-static StatusCode prv_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
-                                              CanAckStatus *ack_reply) {
-  LOG_DEBUG("\nFAN CTRL RX CALLBACK ACTIVATED\n");
-  s_fan_ctrl_msg = msg->data;
+static StatusCode prv_front_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
+                                                    CanAckStatus *ack_reply) {
+  CAN_UNPACK_FRONT_FAN_FAULT(msg, &s_fan_ctrl_msg[0]);
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_rear_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
+                                                   CanAckStatus *ack_reply) {
+  CAN_UNPACK_REAR_FAN_FAULT(msg, &s_fan_ctrl_msg[0], &s_fan_ctrl_msg[1], &s_fan_ctrl_msg[2],
+                            &s_fan_ctrl_msg[3]);
   return STATUS_CODE_OK;
 }
 
@@ -104,9 +107,9 @@ static void prv_initialize_can(SystemCanDevice can_device) {
     .device_id = can_device,
     .loopback = true,
     .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = TEST_CAN_EVENT_RX,
-    .tx_event = TEST_CAN_EVENT_TX,
-    .fault_event = TEST_CAN_EVENT_FAULT,
+    .rx_event = POWER_DISTRIBUTION_CAN_EVENT_RX,
+    .tx_event = POWER_DISTRIBUTION_CAN_EVENT_TX,
+    .fault_event = POWER_DISTRIBUTION_CAN_EVENT_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
   };
@@ -126,11 +129,12 @@ void setup_test(void) {
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
   gpio_it_init();
+  memset(s_fan_ctrl_msg, 0, 4 * sizeof(uint16_t));
 }
 
 void teardown_test(void) {}
 
-void test_front_pd_fan_ctrl_init(void) {
+void test_fan_ctrl_init(void) {
   TEST_ASSERT_NOT_OK(pd_fan_ctrl_init(NULL, true));
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, true));
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, false));
@@ -141,11 +145,11 @@ void test_fan_err_rear(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, false));
   gpio_it_trigger_interrupt(&(GpioAddress)REAR_PIN_SMBALERT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, prv_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg >> 8 & OVERVOLT_FLAGS) == OVERVOLT_FLAGS);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
-  s_fan_ctrl_msg = 0;
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, prv_rear_can_fan_ctrl_rx_handler,
+                          NULL);
+  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  TEST_ASSERT_TRUE(((s_fan_ctrl_msg[0] >> 8) & OVERVOLT_FLAGS) == OVERVOLT_FLAGS);
+  TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
 }
 
 // Test Gpio interrupt on front smbalert pin triggered
@@ -153,18 +157,18 @@ void test_fan_err_front(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, true));
   gpio_it_trigger_interrupt(&(GpioAddress)FRONT_PIN_SMBALERT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_FAN_FAULT, prv_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg >> 8 & OVERVOLT_FLAGS) == OVERVOLT_FLAGS);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
-  s_fan_ctrl_msg = 0;
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_FAN_FAULT, prv_front_can_fan_ctrl_rx_handler,
+                          NULL);
+  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  TEST_ASSERT_TRUE((((s_fan_ctrl_msg[0]) >> 8) & OVERVOLT_FLAGS) == OVERVOLT_FLAGS);
+  TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
 }
 
 void test_rear_pd_fan_ctrl_temp(void) {
   // Check overtemp, undertemp, and 50% temp values transmit correct
   // values and execute properly
 
-  // set adc to return 50% speed temp
+  // set adc to return temp that converts to 50% speed
   adc_ret_val = FAN_50_PERC_VOLTAGE;
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, pd_fan_ctrl_init(&s_fan_settings, false));
   delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS + 10);
@@ -179,19 +183,20 @@ void test_rear_pd_fan_ctrl_temp(void) {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // Test adc returns an overtemp value - CAN message with overtemp values transmitted
-  Event e = { 0 };
   adc_ret_val = FAN_OVERTEMP_VOLTAGE;
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, prv_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  while (event_process(&e) != STATUS_CODE_OK) {
-  }
-  can_process_event(&e);
-  // Check Overtemp byte set correctly
-  TEST_ASSERT_EQUAL(OVERTEMP_FLAGS, (s_fan_ctrl_msg >> 8 & OVERTEMP_FLAGS));
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, prv_rear_can_fan_ctrl_rx_handler,
+                          NULL);
+  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(ADC_MAX_VAL, s_fan_ctrl_msg[3]);
+  TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1], s_fan_ctrl_msg[2]);
+  TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1],
+                    FAN_OVERTEMP_FRACTION_TRANSMIT);  // FAN_OVERTEMP_VOLTAGE as a fraction of v_ref
+  // Check Overtemp byte set correctlys
+  TEST_ASSERT_EQUAL(OVERTEMP_FLAGS, ((s_fan_ctrl_msg[0] >> 8) & OVERTEMP_FLAGS));
 }
 
 void test_front_pd_fan_ctrl_pot(void) {

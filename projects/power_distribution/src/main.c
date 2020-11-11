@@ -132,25 +132,26 @@ int main(void) {
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
-
+#ifndef FAN_CONTROL_NOT_ACTIVATED
   // initialize fan ctrl
   if (is_front_power_distribution) {
     FanCtrlSettings fan_settings = {
-      .i2c = POWER_DISTRIBUTION_I2C_PORT,
-      // .i2c_settings = ? -> check adt driver to see if needed
+      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
       .fan_pwm1 = FRONT_PD_PWM_1,
       .fan_pwm2 = FRONT_PD_PWM_2,
+      .i2c_address = ADT7476A_I2C_ADDRESS,
     };
     pd_fan_ctrl_init(&fan_settings, true);
   } else {
     FanCtrlSettings fan_settings = {
-      .i2c = POWER_DISTRIBUTION_I2C_PORT,
+      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
       .fan_pwm1 = REAR_ENC_VENT_PWM,
       .fan_pwm2 = REAR_DCDC_PWM,
+      .i2c_address = ADT7476A_I2C_ADDRESS,
     };
     pd_fan_ctrl_init(&fan_settings, false);
   }
-
+#endif
   // initialize strobe_blinker on rear
   if (!is_front_power_distribution) {
     RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {

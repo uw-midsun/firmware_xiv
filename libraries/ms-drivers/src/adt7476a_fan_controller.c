@@ -21,7 +21,7 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
   }
 
   // determine which PWM output to change
-  uint8_t real_speed = (speed_percent) ? (speed_percent / 0.39) : 0;
+  uint8_t real_speed = (speed_percent) ? (speed_percent / 0.39 - 1) : 0;
   if (pwm_port == ADT_PWM_PORT_1) {
     uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_1, real_speed };
 
