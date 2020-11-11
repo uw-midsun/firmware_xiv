@@ -35,7 +35,7 @@ static StatusCode prv_set_pin(Pca9539rGpioAddress *addr, Pca9539rGpioState state
              addr->i2c_address, addr->pin / 8, addr->pin % 8);
     return status_code(STATUS_CODE_INTERNAL_ERROR);
   }
-
+  LOG_DEBUG("setting state %d en_pin addr 0x%x pin IO%d_%d\n", state, addr->i2c_address, addr->pin / 8, addr->pin % 8);
   if (state == PCA9539R_GPIO_STATE_LOW) {
     return bts7xxx_disable_pin(en_pin);
   } else {
@@ -93,6 +93,7 @@ StatusCode power_distribution_gpio_process_event(Event *e) {
     return STATUS_CODE_OK;
   }
 
+  LOG_DEBUG("acting on spec id %d\n", id);
   // act on all the event spec's outputs
   for (uint8_t i = 0; i < event_spec->num_outputs; i++) {
     PowerDistributionGpioOutputSpec *output_spec = &event_spec->outputs[i];
@@ -116,7 +117,7 @@ StatusCode power_distribution_gpio_process_event(Event *e) {
         return status_code(STATUS_CODE_INTERNAL_ERROR);
     }
 
-    status_ok_or_return(prv_set_pin(&output_spec->address, state));
+    prv_set_pin(&output_spec->address, state);
   }
 
   return STATUS_CODE_OK;
