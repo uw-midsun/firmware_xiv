@@ -14,7 +14,7 @@ class TestADCRead(unittest.TestCase):
     def test_check_message_format(self, mock_send_message):
         """Tests that CAN messages are passed with the correct parameters"""
 
-        # pylint: disable=attribute-defined-outside-init 
+        # pylint: disable=attribute-defined-outside-init
         # Parameters to be sent in a CAN message to the firmware project
         self.msg_id = None
         self.port = None

@@ -1,9 +1,9 @@
-"""Constants for identifying GPIO ports."""
+"""Constants to specify GPIO ports for babydriver"""
+# pylint: disable=too-few-public-methods
 
-class GpioPort():
-    """
-    An enumeration to specify GPIO ports by name (e.g. GpioPort.A instead of 0).
-    """
+class GpioPort:
+    """An enumeration of GPIO ports"""
+
     A = 0
     B = 1
     C = 2

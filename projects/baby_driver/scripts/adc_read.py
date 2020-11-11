@@ -13,7 +13,7 @@ def adc_read(port, pin, raw):
     Args:
         port: The port of the GPIO pin to read from.
         pin: The pin number of the GPIO pin to read from.
-        raw: If raw is True, a raw read should be performed; otherwise a converted read. 
+        raw: If raw is True, a raw read should be performed; otherwise a converted read.
 
     Returns:
         The ADC reading as a 16-bit integer.
