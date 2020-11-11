@@ -33,8 +33,8 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   // read from all the BTS7040s
   for (uint8_t i = 0; i < s_hw_config.num_bts7040_channels; i++) {
     mux_set(&s_hw_config.mux_address, s_hw_config.bts7040s[i].mux_selection);
-    // bts7040_get_measurement(&s_bts7040_storages[i],
-    //                         &s_storage.measurements[s_hw_config.bts7040s[i].current]);
+    bts7040_get_measurement(&s_bts7040_storages[i],
+                            &s_storage.measurements[s_hw_config.bts7040s[i].current]);
   }
 
   if (s_callback) {

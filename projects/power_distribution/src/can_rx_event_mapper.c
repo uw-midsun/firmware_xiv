@@ -1,6 +1,7 @@
 #include "can_rx_event_mapper.h"
 #include "can.h"
 #include "event_queue.h"
+#include "log.h"
 
 #define CAN_RX_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
 
@@ -30,6 +31,7 @@ static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStat
   } else {
     event_id = spec->event_id;
   }
+  LOG_DEBUG("can rx spec event id %d\n", event_id);
 
   uint16_t data = 0;
   if (spec->has_state) {
