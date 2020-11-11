@@ -3,7 +3,7 @@
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
-#define COUNTER_INCREMENT_MS 500;  // 500 milliseconds between incrementing counter A
+#define COUNTER_INCREMENT_MS 500  // 500 milliseconds between incrementing counter A
 
 typedef struct Counters {
   uint8_t counter_a;
