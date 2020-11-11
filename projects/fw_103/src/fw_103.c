@@ -44,14 +44,14 @@ int main(void) {
   AdcChannel adc_channel = NUM_ADC_CHANNELS;
 
   adc_get_channel(adc_reading_addr, &adc_channel);
-  adc_set_channel(adc_reading_addr, true);
+  adc_set_channel(adc_read, true);
 
   InterruptSettings interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLIING,
+  gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING,
                              prv_button_pressed, &adc_reading_addr);
 
   while (true) {
