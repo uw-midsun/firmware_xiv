@@ -11,20 +11,34 @@ class TestADCRead(unittest.TestCase):
     """Test Babydriver's adc_read function"""
 
     @patch('can_util.send_message')
-    @patch('can_util.next_message')
-    def test_check_message_format(self, mock_next_message, mock_send_message):
-        """Tests that messages are in the correct format"""
-        mock_send_message.side_effect = 
-        self.assertEqual(adc_read(GpioPort.A, 0, True), ((result_high << 8) | result_low))
-        self.assertEqual(adc_read(GpioPort.A, 0, False), ((result_high << 8) | result_low))
+    def test_check_message_format(self, mock_send_message):
+        """Tests that CAN messages are passed with the correct parameters"""
 
-    @patch('can_util.send_message')
+        # pylint: disable=attribute-defined-outside-init 
+        # Parameters to be sent in a CAN message to the firmware project
+        self.msg_id = None
+        self.port = None
+        self.pin = None
+        self.raw = None
+
+        def parameter_test(msg_id=BabydriverMessageId.ADC_READ_COMMAND, port=1, pin=1, raw=1):
+            self.msg_id = msg_id
+            self.port = port
+            self.pin = pin
+            self.raw = raw
+
+        mock_send_message.side_effect = parameter_test
+        self.assertEqual(self.msg_id, BabydriverMessageId.ADC_READ_COMMAND)
+        self.assertEqual(self.port, 1)
+        self.assertEqual(self.pin, 1)
+        self.assertEqual(self.raw, 1)
+
     @patch('can_util.next_message')
-    def test_check_values(self, mock_next_message, mock_send_message):
+    def test_check_values(self, mock_next_message):
         """Tests the ADC's read values"""
         result_low = 1
         result_high = 1
-        data = [ 
+        data = [
             (BabydriverMessageId.ADC_READ_DATA, 1),
             (result_low, 1),
             (result_high, 1),
