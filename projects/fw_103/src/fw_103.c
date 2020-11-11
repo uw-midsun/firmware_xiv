@@ -44,7 +44,7 @@ int main(void) {
   AdcChannel adc_channel = NUM_ADC_CHANNELS;
 
   adc_get_channel(adc_reading_addr, &adc_channel);
-  adc_set_channel(adc_read, true);
+  adc_set_channel(adc_reading_addr, true);
 
   InterruptSettings interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,
