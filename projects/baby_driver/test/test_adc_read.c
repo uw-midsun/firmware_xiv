@@ -7,6 +7,7 @@
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "dispatcher.h"
+#include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "test_helpers.h"
@@ -31,8 +32,8 @@ static bool s_should_tx_result;
 static StatusCode s_status_return;
 
 static uint16_t s_mock_reading;
-static uint8_t s_low;
-static uint8_t s_high;
+static uint8_t s_low = 0;
+static uint8_t s_high = 0;
 
 // On x86, adc_read_raw is hardcoded to return 2500. Low byte of 2500 is -60 and high byte is 9
 #define X86READING 2500
@@ -41,8 +42,9 @@ static uint8_t s_high;
 
 StatusCode TEST_MOCK(adc_read_raw_pin)(GpioAddress address, uint16_t *reading) {
   *reading = X86READING;
-  s_low = s_mock_reading & 0xff;
-  s_high = (s_mock_reading >> 8) & 0xff;
+  s_low = *reading & 0xff;
+  s_high = (*reading >> 8) & 0xff;
+  LOG_DEBUG("Bruhraw %d\n", s_low);
   return STATUS_CODE_OK;
 }
 
@@ -50,6 +52,7 @@ StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *read
   *reading = X86READING;
   s_low = s_mock_reading & 0xff;
   s_high = (s_mock_reading >> 8) & 0xff;
+  LOG_DEBUG("Bruh\n");
   return STATUS_CODE_OK;
 }
 
@@ -88,8 +91,8 @@ void setup_test(void) {
   s_times_callback_called = 0;
   memset(s_received_data, 0, sizeof(s_received_data));
   s_received_context = NULL;
-  s_low = 0;
-  s_high = 0;
+  // s_low = 0;
+  // s_high = 0;
 
   // TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS,
   // prv_rx_adc_read_callback, NULL));
