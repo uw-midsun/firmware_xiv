@@ -35,7 +35,7 @@ static StatusCode prv_set_pin(Pca9539rGpioAddress *addr, Pca9539rGpioState state
              addr->i2c_address, addr->pin / 8, addr->pin % 8);
     return status_code(STATUS_CODE_INTERNAL_ERROR);
   }
-  LOG_DEBUG("setting state %d en_pin addr 0x%x pin IO%d_%d\n", state, addr->i2c_address, addr->pin / 8, addr->pin % 8);
+  // LOG_DEBUG("setting state %d en_pin addr 0x%x pin IO%d_%d\n", state, addr->i2c_address, addr->pin / 8, addr->pin % 8);
   if (state == PCA9539R_GPIO_STATE_LOW) {
     return bts7xxx_disable_pin(en_pin);
   } else {

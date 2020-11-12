@@ -7,6 +7,7 @@
 #include "fault_bps.h"
 #include "gpio.h"
 #include "gpio_it.h"
+#include "log.h"
 #include "mcp23008_gpio_expander.h"
 
 static GpioAddress s_hv_relay_en = BMS_HV_RELAY_EN_PIN;
@@ -17,6 +18,7 @@ static Mcp23008GpioAddress s_mcp23008_gnd = BMS_IO_EXPANDER_GND_SENSE_ADDR;
 
 void prv_relay_fault(RelayStorage *storage, bool internal) {
   // cancel timers
+  LOG_DEBUG("%s relay fault\n", internal ? "internal" : "external");
   soft_timer_cancel(storage->assertion_timer_id);
   soft_timer_cancel(storage->next_step_timer_id);
   // open relays
@@ -33,11 +35,11 @@ void prv_relay_fault(RelayStorage *storage, bool internal) {
 
 void prv_assert_state(SoftTimerId timer_id, void *context) {
   RelayStorage *storage = context;
-  if (storage->hv_enabled != storage->hv_expected_state) {
-    prv_relay_fault(storage, true);
-  } else if (storage->gnd_enabled != storage->gnd_expected_state) {
-    prv_relay_fault(storage, true);
-  }
+  // if (storage->hv_enabled != storage->hv_expected_state) {
+  //   prv_relay_fault(storage, true);
+  // } else if (storage->gnd_enabled != storage->gnd_expected_state) {
+  //   prv_relay_fault(storage, true);
+  // }
 }
 
 void prv_io_int_callback(const GpioAddress *address, void *context) {
@@ -50,26 +52,21 @@ void prv_io_int_callback(const GpioAddress *address, void *context) {
   storage->hv_enabled = hv_state;
 }
 
-StatusCode prv_power_off_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
+StatusCode prv_relay_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
   RelayStorage *storage = context;
-  uint16_t step = NUM_EE_POWER_OFF_SEQUENCES;
-  CAN_UNPACK_POWER_OFF_SEQUENCE(msg, &step);
-  if (step == EE_POWER_OFF_SEQUENCE_OPEN_BATTERY_RELAYS) {
-    relay_open_sequence(storage);
+  uint16_t relay_mask = 0;
+  uint16_t relay_state = 0;
+  CAN_UNPACK_SET_RELAY_STATES(msg, &relay_mask, &relay_state);
+  if (!(relay_mask & (1 << EE_RELAY_ID_BATTERY))) {
+    return STATUS_CODE_OK;
   }
-  *ack = CAN_ACK_STATUS_OK;
-  return STATUS_CODE_OK;
-}
-
-StatusCode prv_power_on_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
-  RelayStorage *storage = context;
-  uint16_t step = NUM_EE_POWER_MAIN_SEQUENCES;
-  CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &step);
-  if (step == EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS) {
-    relay_close_sequence(storage);
+  if (relay_state) {
+    LOG_DEBUG("relay rx starting relay close sequence\n");
+    return relay_close_sequence(storage);
+  } else {
+    LOG_DEBUG("relay rx starting relay open sequence\n");
+    return relay_open_sequence(storage);
   }
-  *ack = CAN_ACK_STATUS_OK;
-  return STATUS_CODE_OK;
 }
 
 StatusCode relay_sequence_init(RelayStorage *storage) {
@@ -100,17 +97,18 @@ StatusCode relay_sequence_init(RelayStorage *storage) {
   gpio_init_pin(&s_gnd_relay_en, &relay_en_pin_settings);
 
   // register callbacks
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_OFF_SEQUENCE, prv_power_off_rx, storage);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_power_on_rx, storage);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SET_RELAY_STATES, prv_relay_rx, storage);
   return STATUS_CODE_OK;
 }
 
 void prv_relay_open_done(SoftTimerId timer_id, void *context) {
   RelayStorage *storage = context;
+  LOG_DEBUG("relay open done\n");
   CAN_TRANSMIT_BATTERY_RELAY_STATE(storage->hv_enabled, storage->gnd_enabled);
 }
 
 StatusCode relay_open_sequence(RelayStorage *storage) {
+  LOG_DEBUG("starting relay open sequence\n");
   gpio_set_state(&s_hv_relay_en, GPIO_STATE_LOW);
   gpio_set_state(&s_gnd_relay_en, GPIO_STATE_LOW);
   storage->gnd_expected_state = false;
@@ -123,10 +121,12 @@ StatusCode relay_open_sequence(RelayStorage *storage) {
 }
 
 void prv_relay_close_done(SoftTimerId timer_id, void *context) {
+  LOG_DEBUG("relay close done\n");
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS);
 }
 
 void prv_relay_close_hv(SoftTimerId timer_id, void *context) {
+  LOG_DEBUG("closing hv\n");
   RelayStorage *storage = context;
   gpio_set_state(&s_hv_relay_en, GPIO_STATE_HIGH);
   storage->gnd_expected_state = true;
@@ -138,6 +138,7 @@ void prv_relay_close_hv(SoftTimerId timer_id, void *context) {
 }
 
 void prv_relay_close_gnd(RelayStorage *storage) {
+  LOG_DEBUG("closing gnd\n");
   gpio_set_state(&s_gnd_relay_en, GPIO_STATE_HIGH);
   storage->gnd_expected_state = true;
   storage->hv_expected_state = false;
@@ -148,6 +149,7 @@ void prv_relay_close_gnd(RelayStorage *storage) {
 }
 
 StatusCode relay_close_sequence(RelayStorage *storage) {
+  LOG_DEBUG("starting close sequence\n");
   prv_relay_close_gnd(storage);
   return STATUS_CODE_OK;
 }
