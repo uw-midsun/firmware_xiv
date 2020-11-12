@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 
-#include "debouncer.h"
 #include "i2c.h"
 #include "status.h"
 
@@ -34,6 +33,5 @@ typedef struct BmsStorage {
   CellSenseStorage cell_storage;
   FanStorage fan_storage_1;
   FanStorage fan_storage_2;
-  DebouncerStorage killswitch_storage;
   BpsStorage bps_storage;
 } BmsStorage;

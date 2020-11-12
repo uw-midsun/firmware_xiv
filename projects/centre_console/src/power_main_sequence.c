@@ -82,9 +82,9 @@ static void prv_init_ack_lookup(void) {
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS] =
       CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS] =
-      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
+      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BMS_CARRIER);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS] =
-      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
+      CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BMS_CARRIER);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC] =
       CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
   s_ack_devices_lookup[EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
@@ -144,7 +144,7 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
     prv_advance_sequence(storage);
     return event_raise(next_event, 0);
   }
-  LOG_DEBUG("bad ack dev %d\n", device);
+  LOG_DEBUG("bad ack dev %d status %d\n", device, status);
   return event_raise(POWER_MAIN_SEQUENCE_EVENT_FAULT, storage->current_sequence);
 }
 

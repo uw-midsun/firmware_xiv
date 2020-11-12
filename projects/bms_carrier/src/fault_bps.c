@@ -1,12 +1,32 @@
 #include "fault_bps.h"
 
 #include "bms.h"
+#include "can.h"
+#include "can_unpack.h"
 #include "exported_enums.h"
+#include "log.h"
 #include "relay_sequence.h"
 
 static BmsStorage *s_storage;
 
+StatusCode prv_confirm_status_handler(const CanMessage *msg, void *context,
+                                      CanAckStatus *ack_reply) {
+  uint16_t step = NUM_EE_POWER_MAIN_SEQUENCES;
+  CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &step);
+  if (step != EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS) {
+    return STATUS_CODE_OK;
+  }
+  if (s_storage->bps_storage.fault_bitset) {
+    LOG_DEBUG("invalid, fault bitstet %d\n", s_storage->bps_storage.fault_bitset);
+    // *ack_reply = CAN_ACK_STATUS_INVALID;
+    // return STATUS_CODE_INTERNAL_ERROR;
+  }
+  return STATUS_CODE_OK;
+}
+
 StatusCode fault_bps_init(BmsStorage *storage) {
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_confirm_status_handler,
+                          NULL);
   s_storage = storage;
   return STATUS_CODE_OK;
 }

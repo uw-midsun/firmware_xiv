@@ -5,7 +5,6 @@
 
 // Faults if the killswitch is hit as an input.
 
-#include "debouncer.h"
 #include "status.h"
 
 #define KS_MONITOR_PIN \
@@ -15,4 +14,4 @@
   { GPIO_PORT_B, 9 }
 
 // Set the killswitch up to fault if hit. Killswitch is active-low.
-StatusCode killswitch_init(DebouncerStorage *storage);
+StatusCode killswitch_init(void);

@@ -42,7 +42,9 @@ static void prv_periodic_heartbeat(SoftTimerId timer_id, void *context) {
 StatusCode bps_heartbeat_init(BpsStorage *storage, uint32_t hb_freq_ms) {
   // force first one
   s_hb_freq_ms = hb_freq_ms;
-  prv_periodic_heartbeat(0, storage);
+  storage->ack_devices = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE);
+  // storage->ack_devices = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
+  prv_periodic_heartbeat(SOFT_TIMER_INVALID_TIMER, storage);
 
   return STATUS_CODE_OK;
 }
