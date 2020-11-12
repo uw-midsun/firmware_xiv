@@ -37,8 +37,10 @@ def gpio_get(port, pin):
         babydriver_id=BabydriverMessageId.STATUS,
     )
 
-    if status_msg.data[1] != 0:
-        raise Exception("ERROR: never recieved status message")
+    status = status_msg.data[1]
+    if status != 0:
+        raise Exception("ERROR: Non-OK status returned: {}".format(status))
+
 
     raw_state = gpio_data_msg.data[1]
 
