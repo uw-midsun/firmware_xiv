@@ -6,7 +6,7 @@ from mpxe.sims.pedal_board import PedalBoard
 
 class TestPedal(int_test.IntTest):
     def setUp(self):
-        super(TestPedal, self).setUp()
+        super().setUp()
         self.pedal = self.manager.start('pedal_board', PedalBoard())
 
     def test_pedal(self):

@@ -1,17 +1,19 @@
 import can
 import cantools
 import threading
-from collections import deque
+from collections import deque, namedtuple
 
-class Msg:
-    def __init__(self, metadata, data):
-        self.metadata = metadata
-        self.data = data
+from mpxe.harness import pm
 
-class Canio:
-    def __init__(self, max_msgs=10):
-        self.messages = deque(maxlen=max_msgs)
-        self.db = cantools.database.load_file('../system_can.dbc')
+DBC_PATH = pm.REPO_ROOT_DIR + 'system_can.dbc'
+BUS_RECV_TIMEOUT = 0.5
+
+Msg = namedtuple('Msg', ['name', 'data'])
+
+class CanIO:
+    def __init__(self):
+        self.messages = deque()
+        self.db = cantools.database.load_file(DBC_PATH)
         self.bus = can.interface.Bus('vcan0', receive_own_messages=True, bustype='socketcan')
         self.killed = False
         self.listen_thread = threading.Thread(target=self.listener)
@@ -19,8 +21,9 @@ class Canio:
 
     def get_latest_by_name(self, name):
         for msg in self.messages:
-            if msg.metadata.name == name:
+            if msg.name == name:
                 return msg
+        return None
 
     def send(self, name, data):
         msg_type = self.db.get_message_by_name(name)
@@ -36,15 +39,14 @@ class Canio:
 
     def listener(self):
         while not self.killed:
-            raw_msg = self.bus.recv(timeout=0.5)
-            if raw_msg == None:
+            raw_msg = self.bus.recv(BUS_RECV_TIMEOUT)
+            if raw_msg is None:
                 continue
             try:
                 msg_data = self.db.decode_message(raw_msg.arbitration_id, raw_msg.data)
                 metadata = self.db.get_message_by_frame_id(raw_msg.arbitration_id)
-                print('[CAN] {}: {}'.format(metadata.name, msg_data))
-                if len(self.messages)  == self.messages.maxlen:
-                    self.messages.pop()
-                self.messages.appendleft(Msg(metadata, msg_data))
+                msg = Msg(metadata.name, msg_data)
+                print('[CAN] {}: {}'.format(msg.name, msg.data))
+                self.messages.appendleft(msg)
             except KeyError as e:
                 print('[CAN] UNKNOWN {}#{}'.format(e, list(raw_msg.data)))

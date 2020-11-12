@@ -6,7 +6,7 @@ from mpxe.sims.adt7476a import Adt7476a
 
 class TestAdt7476a(int_test.IntTest):
     def setUp(self):
-        super(TestAdt7476a, self).setUp()
+        super().setUp()
         self.adt7476a = self.manager.start('smoke_adt7476a', Adt7476a())
 
     def test_adt7476a(self):
