@@ -56,7 +56,6 @@ StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage) {
     .i2c_write_addr = storage->i2c_write_addr,
     .i2c_read_addr = storage->i2c_read_addr,
     .i2c = BMS_FAN_CTRL_I2C_PORT_1,
-    .i2c_settings = settings->i2c_settings,
   };
 
   s_interval_ms = settings->poll_interval_ms;
