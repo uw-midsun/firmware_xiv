@@ -1,44 +1,36 @@
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "interrupt.h"   // interrupts are required for soft timers
 #include "log.h"         // for printing
 #include "soft_timer.h"  // for soft timers
 #include "wait.h"        // for wait function
 
-#define INTERVAL_COUNTER_A 500
-#define INTERVAL_COUNTER_B 1000
+#define INTERVAL_COUNTER 500
 
-typedef struct {
+typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
-} Main_var;
+} Counters;
 
-void timer_callback_A(SoftTimerId timer_id, void *context) {
-  Main_var *counters = context;
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
+  Counters *counters = context;
   counters->counter_a++;
-
   LOG_DEBUG("Counter A : %i\n", counters->counter_a);
-
-  soft_timer_start_millis(INTERVAL_COUNTER_A, timer_callback_A, counters, NULL);
+  if(counters->counter_a % 2 == 0) {
+    (counters->counter_b)++;
+    LOG_DEBUG("Counter B: %i\n", counters->counter_b);
+  }
+  soft_timer_start_millis(INTERVAL_COUNTER, prv_timer_callback, counters, NULL);
 }
 
-void timer_callback_B(SoftTimerId timer_id, void *context) {
-  Main_var *counters = context;
-  counters->counter_b++;
-
-  LOG_DEBUG("Counter B : %i", counters->counter_b);
-  soft_timer_start_millis(INTERVAL_COUNTER_B, timer_callback_B, counters, NULL);
-}
 int main(void) {
   interrupt_init();
   soft_timer_init();
-  Main_var counters = { 0 };
-  soft_timer_start_millis(INTERVAL_COUNTER_A, timer_callback_A, &counters, NULL);
-  soft_timer_start_millis(INTERVAL_COUNTER_B, timer_callback_B, &counters, NULL);
-
+  Counters counters = { 0 };
+  soft_timer_start_millis(INTERVAL_COUNTER, prv_timer_callback, &counters, NULL);
   while (true) {
     wait();
   }
-
   return 0;
 }
