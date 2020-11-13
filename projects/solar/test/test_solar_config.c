@@ -46,9 +46,9 @@ void test_initializing_library_config(void) {
 // Test that we can initialize the DRV120 relay driver with the GPIO address we return.
 void test_initializing_drv120_relay_pin(void) {
   Drv120RelaySettings settings = {
-    .pin = config_get_drv120_relay_pin(),
-    .status = config_get_drv120_status_pin(),
-    .handler = NULL,
+    .enable_pin = config_get_drv120_relay_pin(),
+    .status_pin = config_get_drv120_status_pin(),
+    .error_handler = NULL,
     .context = NULL,
   };
   TEST_ASSERT_OK(drv120_relay_init(&settings));

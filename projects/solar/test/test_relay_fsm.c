@@ -17,6 +17,7 @@
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "solar_events.h"
+#include "solar_config.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -29,14 +30,12 @@
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();   \
   })
 
-static const GpioAddress s_test_relay_pin = { .port = GPIO_PORT_A, .pin = 6 };
-static const GpioAddress s_test_status_pin = { .port = GPIO_PORT_A, .pin = 7 };
 
 static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;
 
 static bool relay_err_rx_cb_called;
-StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   relay_err_rx_cb_called = true;
   uint8_t solar_fault;
   uint8_t fault_data;
@@ -52,13 +51,6 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT, prv_err_rx_cb, NULL);
   event_queue_init();
   gpio_it_init();
-  Drv120RelaySettings drv120_settings = {
-    .pin = &s_test_relay_pin,
-    .status = &s_test_status_pin,
-    .handler = relay_err_cb,
-    .context = NULL,
-  };
-  drv120_relay_init(&drv120_settings);
   TEST_ASSERT_OK(relay_fsm_init(&s_storage));
 }
 void teardown_test(void) {}
@@ -194,7 +186,7 @@ void test_invalid_input(void) {
 }
 
 void test_relay_it_cb(void) {
-  gpio_it_trigger_interrupt(&s_test_status_pin);
+  gpio_it_trigger_interrupt(config_get_drv120_status_pin());
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   TEST_ASSERT_TRUE(relay_err_rx_cb_called);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();

@@ -7,14 +7,18 @@
 
 // Gpio_it callback function
 static bool s_gpio_it_callback_called = false;
-void prv_callback(const GpioAddress *address, void *context) {
+static int rcv_context;
+void prv_callback(void *context) {
   LOG_DEBUG("DRV120 Interrupt Triggered!\n");
   s_gpio_it_callback_called = true;
+  if(context) {
+    rcv_context = *(int*)context;
+  }
 }
 
 // Pin used to enable/disable relay
 static const GpioAddress s_test_drv120_pin = { GPIO_PORT_A, 8 };
-static const GpioAddress s_test_drv120_status = { GPIO_PORT_A, 9 };
+static const GpioAddress s_test_drv120_status = { GPIO_PORT_A, 6 };
 
 void setup_test(void) {
   LOG_DEBUG("Initializing GPIO\n");
@@ -32,9 +36,9 @@ void test_drv120_relay(void) {
 
   LOG_DEBUG("Initializing relay\n");
   Drv120RelaySettings settings = {
-    .pin = &s_test_drv120_pin,
-    .status = NULL,
-    .handler = prv_callback,
+    .enable_pin = &s_test_drv120_pin,
+    .status_pin = NULL,
+    .error_handler = prv_callback,
     .context = NULL,
   };
   TEST_ASSERT_OK(drv120_relay_init(&settings));
@@ -67,13 +71,16 @@ void test_drv120_relay(void) {
 
 void test_callback_registered(void) {
   LOG_DEBUG("Initializing gpio interrupt\n");
+  int test_ctx = 1;
   Drv120RelaySettings settings = {
-    .pin = &s_test_drv120_pin,
-    .status = &s_test_drv120_status,
-    .handler = prv_callback,
-    .context = NULL,
+    .enable_pin = &s_test_drv120_pin,
+    .status_pin = &s_test_drv120_status,
+    .error_handler = prv_callback,
+    .context = &test_ctx,
   };
   TEST_ASSERT_OK(drv120_relay_init(&settings));
   gpio_it_trigger_interrupt(&s_test_drv120_status);
   TEST_ASSERT_TRUE(s_gpio_it_callback_called);
+  TEST_ASSERT_EQUAL(1, rcv_context);
+
 }

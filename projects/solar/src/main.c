@@ -75,14 +75,6 @@ static StatusCode prv_initialize_libraries(void) {
   status_ok_or_return(spi_init(SOLAR_SPI_PORT, config_get_spi_settings()));
   status_ok_or_return(can_init(&s_can_storage, config_get_can_settings()));
 
-  Drv120RelaySettings drv120_settings = {
-    .pin = config_get_drv120_relay_pin(),
-    .status = config_get_drv120_status_pin(),
-    .handler = relay_err_cb,
-    .context = NULL,
-  };
-  status_ok_or_return(drv120_relay_init(&drv120_settings));
-
   return STATUS_CODE_OK;
 }
 
