@@ -114,7 +114,6 @@ def send_message(
         data=data,
         is_extended_id=False
     )
-
     bus.send(msg.msg)
 
 
