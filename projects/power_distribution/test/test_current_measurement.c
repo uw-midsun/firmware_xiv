@@ -171,9 +171,9 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
                     { .port = GPIO_PORT_A, .pin = 2 },  //
                     { .port = GPIO_PORT_A, .pin = 3 },  //
                 },
-            .mux_output_pin = { .port = GPIO_PORT_A, .pin = 0 },  //
-            .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 1 },  //
         },
+    .mux_output_pin = { .port = GPIO_PORT_A, .pin = 0 },  //
+    .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 1 },  //
   };
   PowerDistributionCurrentSettings settings = {
     .interval_us = 2000,
@@ -214,14 +214,14 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
   settings.hw_config.mux_address.sel_pins[0].port = GPIO_PORT_A;
 
   // invalid mux output pin
-  settings.hw_config.mux_address.mux_output_pin.port = NUM_GPIO_PORTS;
+  settings.hw_config.mux_output_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
-  settings.hw_config.mux_address.mux_output_pin.port = GPIO_PORT_A;
+  settings.hw_config.mux_output_pin.port = GPIO_PORT_A;
 
   // invalid mux enable pin
-  settings.hw_config.mux_address.mux_enable_pin.port = NUM_GPIO_PORTS;
+  settings.hw_config.mux_enable_pin.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
-  settings.hw_config.mux_address.mux_enable_pin.port = GPIO_PORT_A;
+  settings.hw_config.mux_enable_pin.port = GPIO_PORT_A;
 
   // otherwise valid
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
