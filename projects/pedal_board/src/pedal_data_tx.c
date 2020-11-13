@@ -18,9 +18,8 @@
 int16_t brake_position = INT16_MAX;
 int16_t throttle_position = INT16_MAX;
 
-static GpioAddress  s_limit_led = { .port = GPIO_PORT_B, .pin = 3 };
-static GpioSettings s_led_settings =
-{
+static GpioAddress s_limit_led = { .port = GPIO_PORT_B, .pin = 3 };
+static GpioSettings s_led_settings = {
   .direction = GPIO_DIR_OUT,
   .state = GPIO_STATE_LOW,
   .alt_function = GPIO_ALTFN_NONE,
@@ -35,13 +34,11 @@ static void prv_pedal_timeout(SoftTimerId timer_id, void *context) {
 
   gpio_get_state(&s_limit_led, &s_state);
   if (brake_position > 50) {
-    if (s_state != GPIO_STATE_HIGH)
-    {
+    if (s_state != GPIO_STATE_HIGH) {
       gpio_set_state(&s_limit_led, GPIO_STATE_HIGH);
     }
   } else {
-    if (s_state != GPIO_STATE_LOW)
-    {
+    if (s_state != GPIO_STATE_LOW) {
       gpio_set_state(&s_limit_led, GPIO_STATE_LOW);
     }
   }
