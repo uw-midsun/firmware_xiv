@@ -31,7 +31,7 @@ StatusCode killswitch_init(void) {
 
   GpioSettings monitor_settings = {
     .direction = GPIO_DIR_IN,         //
-    .state = GPIO_STATE_HIGH,          //
+    .state = GPIO_STATE_HIGH,         //
     .alt_function = GPIO_ALTFN_NONE,  //
     .resistor = GPIO_RES_NONE,        //
   };
@@ -43,8 +43,8 @@ StatusCode killswitch_init(void) {
   status_ok_or_return(gpio_init_pin(&enable_pin, &enable_pin_settings));
   status_ok_or_return(gpio_init_pin(&monitor_pin, &monitor_settings));
 
-  status_ok_or_return(gpio_it_register_interrupt(&monitor_pin, &it_settings,
-                      INTERRUPT_EDGE_RISING_FALLING, prv_killswitch_handler, NULL));
+  status_ok_or_return(gpio_it_register_interrupt(
+      &monitor_pin, &it_settings, INTERRUPT_EDGE_RISING_FALLING, prv_killswitch_handler, NULL));
 
   // Force update
   prv_killswitch_handler(&monitor_pin, NULL);

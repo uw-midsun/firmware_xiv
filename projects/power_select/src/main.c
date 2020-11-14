@@ -23,6 +23,20 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
+static void prv_confirm_aux_status(CanAckStatus *ack_reply) {
+  LOG_DEBUG("confirm aux status\n");
+  uint16_t fault_bitset = power_select_get_fault_bitset();
+  uint8_t valid_bitset = power_select_get_valid_bitset();
+  if (!(valid_bitset & 1 << POWER_SELECT_AUX_VALID) ||
+      fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT ||
+      fault_bitset & 1 << POWER_SELECT_AUX_OVERVOLTAGE) {
+    *ack_reply = CAN_ACK_STATUS_INVALID;
+  } else {
+    LOG_DEBUG("acking\n");
+    *ack_reply = CAN_ACK_STATUS_OK;
+  }
+}
+
 // Handles CAN message from centre console during startup.
 // TODO(SOFT-341): move this out of main
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
@@ -31,16 +45,7 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &sequence);
   uint16_t fault_bitset = power_select_get_fault_bitset();
   if (sequence == EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS) {
-    LOG_DEBUG("confirm aux status\n");
-    uint8_t valid_bitset = power_select_get_valid_bitset();
-    if (!(valid_bitset & 1 << POWER_SELECT_AUX_VALID) ||
-        fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT ||
-        fault_bitset & 1 << POWER_SELECT_AUX_OVERVOLTAGE) {
-      *ack_reply = CAN_ACK_STATUS_INVALID;
-    } else {
-      LOG_DEBUG("acking\n");
-      *ack_reply = CAN_ACK_STATUS_OK;
-    }
+    prv_confirm_aux_status(ack_reply);
   }
   if (sequence == EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC) {
     LOG_DEBUG("confirm dcdc\n");
@@ -59,6 +64,17 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_rx_aux_callback(const CanMessage *msg, void *context,
+                                      CanAckStatus *ack_reply) {
+  LOG_DEBUG("got aux rx\n");
+  uint16_t sequence = 0;
+  CAN_UNPACK_POWER_ON_AUX_SEQUENCE(msg, &sequence);
+  if (sequence == EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS) {
+    prv_confirm_aux_status(ack_reply);
+  }
+  return STATUS_CODE_OK;
+}
+
 int main() {
   interrupt_init();
   gpio_init();
@@ -74,6 +90,8 @@ int main() {
 
   status_ok_or_return(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_rx_callback, NULL));
+  status_ok_or_return(
+      can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE, prv_rx_aux_callback, NULL));
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
