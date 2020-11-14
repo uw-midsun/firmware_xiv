@@ -65,7 +65,8 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   uint32_t filter = (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
   (uint32_t)MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
   LOG_DEBUG("Changing filter to %x\n", (int)filter);
-  uint32_t filters[2] = {MOTOR_CONTROLLER_ID_UNUSED, filter};
+  // can we just set both filters to the same thing? - hewitt
+  uint32_t filters[2] = {filter, filter};
   LOG_DEBUG("Change filter result %d\n", mcp2515_set_filter(storage->motor_can, filters));
 }
 
