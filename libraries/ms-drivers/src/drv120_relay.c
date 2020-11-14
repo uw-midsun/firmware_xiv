@@ -27,7 +27,7 @@ StatusCode drv120_relay_init(Drv120RelaySettings *settings) {
     };
     s_callback = settings->error_handler;
     status_ok_or_return(gpio_it_register_interrupt(settings->status_pin, &it_settings,
-                                                   INTERRUPT_EDGE_FALLING, prv_drv120_gpio_it_cb,
+                                                   INTERRUPT_EDGE_RISING, prv_drv120_gpio_it_cb,
                                                    settings->context));
   }
   return gpio_init_pin(&s_relay_pin, &drv120_pin_settings);
