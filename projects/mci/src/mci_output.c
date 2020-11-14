@@ -10,10 +10,10 @@
 
 #include "exported_enums.h"
 #include "generic_can.h"
+#include "log.h"
 #include "pedal_rx.h"
 #include "soft_timer.h"
 #include "status.h"
-#include "log.h"
 
 static float s_velocity_lookup[] = {
   [EE_DRIVE_OUTPUT_OFF] = 0.0f,
@@ -51,7 +51,7 @@ static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
   memcpy(&msg.data, data, sizeof(data));
   LOG_DEBUG("Sending speed message to wavesculptor\n");
   mcp2515_tx(storage->motor_can, msg.id, msg.extended, msg.data, msg.dlc);
-  //generic_can_tx(storage->motor_can, &msg);
+  // generic_can_tx(storage->motor_can, &msg);
 }
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {

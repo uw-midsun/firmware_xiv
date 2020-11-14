@@ -224,7 +224,6 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     prv_bit_modify(storage, filterRegH + 2, 0xff, filter.eid8);
     // Set eid0-7
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
-    
   }
 
   // 5.7 Timing configurations:
@@ -243,7 +242,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     0x00,
     0x00,
   };
-  
+
   uint8_t test = 0;
   prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
   LOG_DEBUG("before write %d\n", test);
@@ -348,11 +347,11 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
 
 StatusCode mcp2515_set_filter(Mcp2515Storage *storage, uint32_t *filters) {
   // mostly just copy-pasting code from mcp2515_init here. not sure if this will work, but will
-  // need refactoring if it does 
+  // need refactoring if it does
 
-  // convert filters to Mcp2515Ids 
+  // convert filters to Mcp2515Ids
   Mcp2515Id filters_converted[NUM_MCP2515_FILTER_IDS];
-  for(uint8_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
+  for (uint8_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
     filters_converted[i].raw = filters[i];
   }
   // Set to Config mode, CLKOUT /4
@@ -399,8 +398,7 @@ StatusCode mcp2515_set_filter(Mcp2515Storage *storage, uint32_t *filters) {
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
   }
   // Leave config mode (hardcoding this to always be normal for now, never loopback)
-  uint8_t opmode =
-      (MCP2515_CANCTRL_OPMODE_NORMAL);
+  uint8_t opmode = (MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
   return STATUS_CODE_OK;
 }

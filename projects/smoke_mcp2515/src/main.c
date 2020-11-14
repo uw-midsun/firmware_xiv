@@ -140,7 +140,6 @@ void prv_send_messages() {
     LOG_DEBUG("Loopback check has failed\n");
   }
   */
-
 }
 
 int main(void) {

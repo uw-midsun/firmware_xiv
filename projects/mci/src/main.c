@@ -20,7 +20,7 @@
 #include "log.h"
 
 static CanStorage s_can_storage;
-//static GenericCanMcp2515 s_can_mcp2515;
+// static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
 
 static Mcp2515Storage s_can_mcp2515;
@@ -44,9 +44,8 @@ static void prv_change_filter(void) {
 }
 
 // CB for rx received
-static void prv_test_receive_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
-  LOG_DEBUG("received rx from id: %d\n", (int)id);
-  LOG_DEBUG("Data: 0x%x\n", (int)data);
+static void prv_test_receive_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void
+*context) { LOG_DEBUG("received rx from id: %d\n", (int)id); LOG_DEBUG("Data: 0x%x\n", (int)data);
   // Change to other filter and re-init
   s_filter_id ^= 1;
   prv_change_filter();
@@ -67,7 +66,7 @@ void prv_setup_system_can() {
 
   can_init(&s_can_storage, &can_settings);
   drive_fsm_init();
-  //cruise_rx_init();
+  cruise_rx_init();
 }
 
 /*
@@ -96,14 +95,13 @@ static void prv_setup_motor_can(void) {
 }
 */
 
-
 void prv_mci_storage_init(void *context) {
   PrechargeControlSettings precharge_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
     .precharge_monitor2 = { .port = GPIO_PORT_A, .pin = 10 },
   };
-  //precharge_control_init(&precharge_settings);
+  // precharge_control_init(&precharge_settings);
 
   MotorControllerBroadcastSettings broadcast_settings =
       { .motor_can = &s_can_mcp2515,
@@ -125,12 +123,12 @@ int main(void) {
   LOG_DEBUG("here 1\n");
 
   prv_setup_system_can();
-  //prv_setup_motor_can();
+  // prv_setup_motor_can();
 
-  LOG_DEBUG("before storage init\n"); 
+  LOG_DEBUG("before storage init\n");
   prv_mci_storage_init(&s_mci_storage);
-  drive_fsm_init(); // why do we call this here after calling it in prv_setup_system_can? 
-  LOG_DEBUG("after storage init\n"); 
+  drive_fsm_init();  // why do we call this here after calling it in prv_setup_system_can?
+  LOG_DEBUG("after storage init\n");
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
