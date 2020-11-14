@@ -1,5 +1,6 @@
 #include "pedal_monitor.h"
 #include "centre_console_events.h"
+#include "log.h"
 
 static PedalMonitorStorage s_storage = { 0 };
 

@@ -91,7 +91,7 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
   }
   if (num_remaining == 0 && status == CAN_ACK_STATUS_OK) {
     storage->current_sequence++;
-    LOG_DEBUG("got enough acks, continuing sequence\n");
+    LOG_DEBUG("got enough acks, continuing sequence (device %d)\n", device);
     return event_raise(next_event, 0);
   }
   LOG_DEBUG("bad ack dev %d\n", device);

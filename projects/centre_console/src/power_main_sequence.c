@@ -140,7 +140,7 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
     return STATUS_CODE_OK;
   }
   if (num_remaining == 0 && status == CAN_ACK_STATUS_OK) {
-    LOG_DEBUG("got enough acks, continuing sequence\n");
+    LOG_DEBUG("got enough acks, continuing sequence (device %d)\n", device);
     prv_advance_sequence(storage);
     return event_raise(next_event, 0);
   }
