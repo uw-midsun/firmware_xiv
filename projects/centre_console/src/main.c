@@ -59,6 +59,12 @@ void prv_init_fsms() {
 
 static MainEventGeneratorStorage s_main_event_generator = { 0 };
 
+static void prv_push_power_button(SoftTimerId id, void *context) {
+  // mock power button press
+  GpioAddress power = { .port = GPIO_PORT_B, .pin = 0 };
+  gpio_it_trigger_interrupt(&power);
+}
+
 int main(void) {
   gpio_init();
   interrupt_init();
@@ -101,6 +107,7 @@ int main(void) {
   gpio_init_pin(&raspi_addr, &raspi_settings);
 
   LOG_DEBUG("Hello from Centre Console!\n");
+  soft_timer_start_millis(1000, prv_push_power_button, NULL, NULL);
 
   while (true) {
     Event e = { 0 };
