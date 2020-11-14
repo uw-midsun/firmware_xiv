@@ -7,6 +7,10 @@ class Sim:
 
     def handle_log(self, pm, proj, log):
         print('[{}]'.format(proj.name), log)
+    
+    def get_gpio(self, proj, port, pin):
+        gpio_msg = proj.stores[(stores_pb2.MxStoreType.GPIO, 0)]
+        return gpio_msg.state[(ord(port.capitalize()) - ord('A')) * 16 + pin]
 
     def set_gpio(self, proj, port, pin, state):
         ind = (ord(port.capitalize()) - ord('A')) * 16 + pin
@@ -16,4 +20,4 @@ class Sim:
         gpio_mask = gpio_pb2.MxGpioStore()
         gpio_mask.state.extend([0] * 6 * 16)
         gpio_mask.state[ind] = state
-        proj.write_store(stores_pb2.MxStoreType.GPIO, gpio_msg, gpio_mask)
+        proj.write_store(gpio_msg, gpio_mask, stores_pb2.MxStoreType.GPIO)

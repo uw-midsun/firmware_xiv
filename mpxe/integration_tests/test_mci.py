@@ -6,7 +6,7 @@ from mpxe.sims.mci import Mci
 
 class TestMci(int_test.IntTest):
     def setUp(self):
-        super(TestMci, self).setUp()
+        super().setUp()
         self.mci = self.manager.start('mci', Mci())
 
     def test_mci(self):
@@ -16,7 +16,7 @@ class TestMci(int_test.IntTest):
 
         self.manager.can.send('BEGIN_PRECHARGE', None)
         time.sleep(1)
-        self.assert_can_got('PRECHARGE_COMPLETED')
+        self.assert_can_received('PRECHARGE_COMPLETED')
 
         self.can_send('PEDAL_OUTPUT', {'throttle_output': 50, 'brake_output': 0})
         time.sleep(1)

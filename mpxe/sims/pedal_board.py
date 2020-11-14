@@ -13,4 +13,4 @@ class PedalBoard(sim.Sim):
         ads1015_mask.readings.extend([0] * 4)
         ads1015_mask.readings[channel] = 1
 
-        proj.write_store(stores_pb2.MxStoreType.ADS1015, ads1015_msg, ads1015_mask)
+        proj.write_store(ads1015_msg, ads1015_mask, stores_pb2.MxStoreType.ADS1015)
