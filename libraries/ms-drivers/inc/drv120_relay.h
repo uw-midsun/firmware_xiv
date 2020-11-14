@@ -11,13 +11,13 @@
 #include "interrupt.h"
 #include "status.h"
 
-typedef void (*Drv120ErrorCallback)(void * context);
+typedef void (*Drv120ErrorCallback)(void *context);
 
 typedef struct Drv120RelaySettings {
-  GpioAddress *enable_pin;        // Pin initialized as output for relay
-  GpioAddress *status_pin;     // Pin set to trigger interrupt on error
-  Drv120ErrorCallback error_handler; 
-  void *context;           // Context for error handler
+  GpioAddress *enable_pin;  // Pin initialized as output for relay
+  GpioAddress *status_pin;  // Pin set to trigger interrupt on error
+  Drv120ErrorCallback error_handler;
+  void *context;  // Context for error handler
 } Drv120RelaySettings;
 
 // Initialize pin for output to open/close relay

@@ -16,8 +16,8 @@
 #include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
-#include "solar_events.h"
 #include "solar_config.h"
+#include "solar_events.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -29,7 +29,6 @@
     relay_fsm_process_event(&(storage), &(e)); \
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();   \
   })
-
 
 static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;

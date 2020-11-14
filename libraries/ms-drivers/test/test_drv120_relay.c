@@ -11,8 +11,8 @@ static int rcv_context;
 void prv_callback(void *context) {
   LOG_DEBUG("DRV120 Interrupt Triggered!\n");
   s_gpio_it_callback_called = true;
-  if(context) {
-    rcv_context = *(int*)context;
+  if (context) {
+    rcv_context = *(int *)context;
   }
 }
 
@@ -82,5 +82,4 @@ void test_callback_registered(void) {
   gpio_it_trigger_interrupt(&s_test_drv120_status);
   TEST_ASSERT_TRUE(s_gpio_it_callback_called);
   TEST_ASSERT_EQUAL(1, rcv_context);
-
 }

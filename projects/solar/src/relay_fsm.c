@@ -6,9 +6,9 @@
 #include "fault_handler.h"
 #include "fsm.h"
 #include "log.h"
+#include "solar_config.h"
 #include "solar_events.h"
 #include "status.h"
-#include "solar_config.h"
 
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
@@ -73,5 +73,3 @@ StatusCode relay_fsm_close(void) {
 StatusCode relay_fsm_open(void) {
   return event_raise_priority(RELAY_EVENT_PRIORITY, SOLAR_RELAY_EVENT_OPEN, 0);
 }
-
-
