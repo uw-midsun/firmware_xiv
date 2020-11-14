@@ -71,8 +71,8 @@ static void prv_state_turn_off_everything(Fsm *fsm, const Event *e, void *contex
                             // .expected_bitset = CAN_ACK_EXPECTED_DEVICES(
                             //     SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
                             //     SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR) };
-                            .expected_bitset =
-                                CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT) };
+                            .expected_bitset = CAN_ACK_EXPECTED_DEVICES(
+                                SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT) };
   LOG_DEBUG("requesting to turn off everything\n");
   CAN_TRANSMIT_POWER_OFF_SEQUENCE(&ack_req, EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING);
 }
