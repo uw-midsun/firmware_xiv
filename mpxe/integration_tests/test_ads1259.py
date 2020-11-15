@@ -6,7 +6,7 @@ from mpxe.sims.ads1259 import Ads1259
 
 class TestAds1259(int_test.IntTest):
     def setUp(self):
-        super(TestAds1259, self).setUp()
+        super().setUp()
         self.ads1259 = self.manager.start('smoke_ads1259', Ads1259())        
 
     def test_ads1259(self):

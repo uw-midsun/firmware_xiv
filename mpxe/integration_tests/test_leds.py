@@ -6,7 +6,7 @@ from mpxe.sims.controller_board_blinking_leds import Leds
 
 class TestLeds(int_test.IntTest):
     def setUp(self):
-        super(TestLeds, self).setUp()
+        super().setUp()
         self.leds = self.manager.start('controller_board_blinking_leds', Leds())
 
     def test_leds(self):

@@ -4,9 +4,11 @@ enum MxStoreType {
   GPIO = 0;
   ADS1015 = 1;
   MCP2515 = 2;
-  ADT7476A = 3;
-  PCA9539R = 4;
-  END = 5;
+  ADS1259 = 3;
+  ADT7476A = 4;
+  ADC = 5;
+  PCA9539R = 6;
+  END = 7;
 }
 
 message MxStoreInfo {

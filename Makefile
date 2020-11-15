@@ -284,7 +284,6 @@ update_codegen:
 	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
 
 MPXE_PROJS := 
-MPXE_LIBS :=
 -include $(MPXE_DIR)/integration_tests/deps.mk
 
 .PHONY: fastmpxe
@@ -292,7 +291,7 @@ fastmpxe:
 	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(TEST).py"
 
 .PHONY: mpxe
-mpxe: $(MPXE_LIBS:%=$(STATIC_LIB_DIR)/lib%.a) $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
+mpxe: $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
