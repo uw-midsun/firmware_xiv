@@ -32,6 +32,7 @@ static uint8_t s_callback_counter;
 static uint8_t s_callback_counter_state;
 static uint8_t s_received_data[8];
 static uint8_t s_received_data_state[8];
+static GpioState s_returned_state;
 
 // This callback is used to receive and store the data from a babydriver status message
 // for use in testing cases where the port/pin is invalid
@@ -74,6 +75,7 @@ void setup_test(void) {
   TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_GPIO_GET_DATA,  //
                                               prv_callback_gpio_get_state,       //
                                               NULL));                            //
+  s_returned_state = NUM_GPIO_STATES;
 }
 
 void teardown_test(void) {}
@@ -119,19 +121,8 @@ void test_invalid_input() {
 // Testing that gpio_get works by checking if it outputs the correct state of a given pin and port
 void test_gpio_get_valid_input() {
   // Valid pin and port with a high state
-  GpioSettings settings = {
-    .direction = GPIO_DIR_OUT,        //
-    .state = GPIO_STATE_HIGH,         //
-    .resistor = GPIO_RES_NONE,        //
-    .alt_function = GPIO_ALTFN_NONE,  //
-  };
 
-  GpioAddress address = {
-    .port = VALID_PORT,  //
-    .pin = VALID_PIN,    //
-  };
-
-  TEST_ASSERT_OK(gpio_init_pin(&address, &settings));
+  s_returned_state = GPIO_STATE_HIGH;
 
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_GET_COMMAND,  //
                           VALID_PORT,                           //
@@ -153,9 +144,7 @@ void test_gpio_get_valid_input() {
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
 
   // Valid pin and port with low state
-  settings.state = GPIO_STATE_LOW;
-
-  TEST_ASSERT_OK(gpio_init_pin(&address, &settings));
+  s_returned_state = GPIO_STATE_LOW;
 
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_GET_COMMAND,  //
                           VALID_PORT,                           //
@@ -175,4 +164,12 @@ void test_gpio_get_valid_input() {
   TEST_ASSERT_EQUAL(2, s_callback_counter);
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
+}
+
+// Because x86 does not provide the correct state after reinitializing a pin as an input pin,
+// a mock is used to replicate gpio_get_state to obtain the correct results
+StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *state) {
+  *state = s_returned_state;
+
+  return STATUS_CODE_OK;
 }
