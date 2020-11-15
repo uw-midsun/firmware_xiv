@@ -20,12 +20,13 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_PINS];
 
 #ifdef MPXE
+#define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address used in the smoke test
+
 static void prv_export() {
-  for (uint16_t i = 0; i < MAX_I2C_ADDRESSES; i++) {
-    for (uint16_t j = 0; j < NUM_PCA9539R_GPIO_PINS; j++) {
-      s_store.state[i * NUM_PCA9539R_GPIO_PINS + j] = s_pin_settings[i][j].state;
-    }
+  for (uint16_t j = 0; j < NUM_PCA9539R_GPIO_PINS; j++) {
+    s_store.state[j] = s_pin_settings[PCA9539_I2C_ADDRESS][j].state;
   }
+
   store_export(MX_STORE_TYPE__PCA9539R, &s_store, NULL);
 }
 
@@ -37,10 +38,8 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     // only update state if mask is set
     if (mask->state[i] != 0) {
       s_store.state[i] = msg->state[i];
-      uint8_t i2c_port = i / MAX_I2C_ADDRESSES;
-      uint8_t gpio_pin = i % MAX_I2C_ADDRESSES;
-      if (s_pin_settings[i2c_port][gpio_pin].state != (uint8_t)msg->state[i]) {
-       s_pin_settings[i2c_port][gpio_pin].state = msg->state[i];
+      if (s_pin_settings[PCA9539_I2C_ADDRESS][i].state != (uint8_t)msg->state[i]) {
+        s_pin_settings[PCA9539_I2C_ADDRESS][i].state = msg->state[i];
       }
     }
   }
@@ -59,8 +58,8 @@ static void prv_init_store(void) {
     (FreeUnpackedFunc)mx_pca9539r_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  s_store.n_state = MAX_I2C_ADDRESSES * NUM_PCA9539R_GPIO_PINS;
-  s_store.state = malloc(MAX_I2C_ADDRESSES * NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
+  s_store.n_state = NUM_PCA9539R_GPIO_PINS;
+  s_store.state = malloc(NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
   store_register(MX_STORE_TYPE__PCA9539R, funcs, &s_store, NULL);
 }
 #endif
@@ -87,9 +86,6 @@ StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
 
 StatusCode pca9539r_gpio_init_pin(const Pca9539rGpioAddress *address,
                                   const Pca9539rGpioSettings *settings) {
-#ifdef MPXE
-  prv_init_store();
-#endif
   if (s_i2c_port >= NUM_I2C_PORTS) {
     return status_code(STATUS_CODE_UNINITIALIZED);
   }
