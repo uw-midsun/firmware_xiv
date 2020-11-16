@@ -8,7 +8,7 @@
 
 static void prv_button_press(const GpioAddress *address, void *context) {
   uint16_t adc_data = 0;
-  GpioAddress *read_channel = (GpioAddress *)context;
+  AdcChannel *read_channel = context;
   adc_read_converted(*read_channel, &adc_data);
   LOG_DEBUG("%d\n", adc_data);
 }
@@ -25,15 +25,15 @@ int main(void) {
   GpioSettings read_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
-    .resistor GPIO_RES_NONE,
-    .alt_function GPIO_ALTFN_ANALOG,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_ANALOG,
   };
 
   GpioSettings button_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
-    .resistor GPIO_RES_NONE,
-    .alt_function GPIO_ALTFN_ANALOG,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_ANALOG,
   };
 
   gpio_init_pin(&read_addr, &read_settings);
