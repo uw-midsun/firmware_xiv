@@ -5,6 +5,7 @@ from gpio_port import GpioPort
 from message_defs import BabydriverMessageId
 
 NUM_PINS_PER_PORT = 16
+OK_STATUS = 0
 
 def adc_read(port, pin, raw):
     """
@@ -56,7 +57,7 @@ def adc_read(port, pin, raw):
     status = status_msg.data[1]
 
     # Check if status is not ok
-    if status != 0:
+    if status != OK_STATUS:
         raise Exception("ERROR: received a nonzero STATUS_CODE: {}".format(status))
 
     return (result_high << 8) | result_low
