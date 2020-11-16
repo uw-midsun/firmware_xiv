@@ -53,7 +53,7 @@ class TestADCRead(unittest.TestCase):
         data_msg = [BabydriverMessageId.ADC_READ_DATA, 1, 1]
         status_msg = [BabydriverMessageId.ADC_READ_DATA, OK_STATUS]
         mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
-        
+
         converted_read = int(adc_read(GpioPort.A, 0, False))
 
         result_low = 1
