@@ -5,7 +5,6 @@ It imports everything that's visible to the REPL by default and sets up the defa
 
 # pylint: disable=unused-import
 from gpio_port import GpioPort
-from gpio_port import GpioPort
 from gpio_get import gpio_get
 from gpio_set import gpio_set
 from adc_read import adc_read
