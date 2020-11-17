@@ -11,8 +11,6 @@ static MuxAddress s_mux_address = {
   .sel_pins[0] = MUX_SEL_PIN_0,
   .sel_pins[1] = MUX_SEL_PIN_1,
   .sel_pins[2] = MUX_SEL_PIN_2,
-  .mux_enable_pin = SOLAR_UNUSED_PIN,  // we don't have an accessible enable or output pin
-  .mux_output_pin = SOLAR_UNUSED_PIN,  // but the mux driver needs them to be set
 };
 
 StatusCode mppt_init() {
