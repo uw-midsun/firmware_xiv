@@ -114,7 +114,6 @@ def send_message(
         data=data,
         is_extended_id=False
     )
-
     bus.send(msg.msg)
 
 
@@ -183,3 +182,33 @@ def next_message(
         ))
 
     return msg
+
+def can_pack(data_list):
+    """
+    Converts list of tuples and combines them into an array
+    rendition. Each val is broken into individual byte values
+    and appended to bytearr output (LSB first)
+    Args:
+        List of tuples in form ((int) val, (int) len_in_bytes). val must be
+        in range [0, 2**len_in_bytes - 1]
+    Returns:
+        An array of byte values in little endian format, representing
+        message components input
+    Raises:
+        ValueError: if invalid values for val, len_in_bytes input
+    """
+    bytearr = []
+    # Traverse list
+    for val, len_in_bytes in data_list:
+        # Error check input vals
+        if len_in_bytes < 1 or val < 0:
+            raise ValueError("len in bytes must be > 0; val must be non-negative")
+        if val >= 1 << (len_in_bytes * 8):
+            raise ValueError("Value {} exceeds allotted {} bytes. Max Val: {}".format(
+                val, len_in_bytes, 1 << (len_in_bytes * 8) - 1))
+        # Split val into bytes rendition, re-pack in little-endian
+        for _ in range(len_in_bytes):
+            int_out = val & 0xFF
+            bytearr.append(int_out)
+            val = val>>8
+    return bytearr

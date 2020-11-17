@@ -7,13 +7,21 @@
 #include "spi.h"
 #include "status.h"
 
-// Requires ltc_afe to be initialized
-
 #define NUM_AFES 3
 #define NUM_CELL_MODULES_PER_AFE 6
 #define NUM_TOTAL_CELLS (NUM_AFES * NUM_CELL_MODULES_PER_AFE)
 #define NUM_THERMISTORS (NUM_TOTAL_CELLS * 2)
 #define MAX_AFE_FAULTS 5
+
+#define AFE_SPI_PORT SPI_PORT_1
+#define AFE_SPI_SS \
+  { .port = GPIO_PORT_A, .pin = 4 }
+#define AFE_SPI_SCK \
+  { .port = GPIO_PORT_A, .pin = 5 }
+#define AFE_SPI_MISO \
+  { .port = GPIO_PORT_A, .pin = 6 }
+#define AFE_SPI_MOSI \
+  { .port = GPIO_PORT_A, .pin = 7 }
 
 typedef struct CellSenseSettings {
   // Units are 100 uV (or DeciMilliVolts)

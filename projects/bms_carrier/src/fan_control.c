@@ -12,6 +12,8 @@ static void prv_measure_temps(SoftTimerId timer_id, void *context) {
 
   uint16_t max = 0;
   uint8_t fan_speed = 0;
+  StatusCode pwm_status_1;
+  StatusCode pwm_status_2;
 
   for (int i = 0; i < NUM_THERMISTORS; i++) {
     if (storage->readings->temps[i] > max) {
@@ -25,11 +27,23 @@ static void prv_measure_temps(SoftTimerId timer_id, void *context) {
       ? (fan_speed = MAX_FAN_SPEED)
       : (fan_speed = (max * ((double)MAX_FAN_SPEED / (double)MAX_BATTERY_TEMP)));
 
-  adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_1, storage->i2c_write_addr);
-  adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_2, storage->i2c_write_addr);
+  pwm_status_1 = adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_1,
+                                    storage->i2c_write_addr);
+  pwm_status_2 = adt7476a_set_speed(BMS_FAN_CTRL_I2C_PORT_1, fan_speed, ADT_PWM_PORT_2,
+                                    storage->i2c_write_addr);
+
+  for (int i = 0; i < ADT_7476A_NUM_FANS; i++) {
+    (i < NUM_FANS_PER_OUTPUT) ? (storage->statuses[i] = pwm_status_1)
+                              : (storage->statuses[i] = pwm_status_2);
+  }
+
+  if (pwm_status_1 != STATUS_CODE_OK || pwm_status_2 != STATUS_CODE_OK) {
+    storage->status = STATUS_CODE_UNKNOWN;
+  } else {
+    storage->status = STATUS_CODE_OK;
+  }
 
   storage->speed = fan_speed;
-  storage->status = STATUS_CODE_OK;
 
   soft_timer_start_millis(s_interval_ms, &prv_measure_temps, storage, NULL);
 }
@@ -39,11 +53,14 @@ StatusCode fan_control_init(FanControlSettings *settings, FanStorage *storage) {
     .smbalert_pin = BMS_FAN_ALERT_PIN,
     .callback = (GpioItCallback)settings->callback,  // set to NULL for no callback
     .callback_context = settings->callback_context,
-    .i2c_write_addr = storage->i2c_write_addr,
-    .i2c_read_addr = storage->i2c_read_addr,
+    .i2c_write_addr = settings->i2c_write_addr,
+    .i2c_read_addr = settings->i2c_read_addr,
     .i2c = BMS_FAN_CTRL_I2C_PORT_1,
     .i2c_settings = settings->i2c_settings,
   };
+
+  storage->i2c_write_addr = settings->i2c_write_addr;
+  storage->i2c_read_addr = settings->i2c_read_addr;
 
   s_interval_ms = settings->poll_interval_ms;
 

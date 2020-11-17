@@ -73,8 +73,6 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
 
-  status_ok_or_return(i2c_init(settings->i2c, &settings->i2c_settings));
-
   uint8_t fan_config_data_register_1[] = { ADT7476A_FAN_MODE_REGISTER_1,
                                            ADT7476A_MANUAL_MODE_MASK };
   uint8_t fan_config_data_register_3[] = { ADT7476A_FAN_MODE_REGISTER_3,

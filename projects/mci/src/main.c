@@ -8,6 +8,7 @@
 #include "pedal_rx.h"
 #include "soft_timer.h"
 
+#include "cruise_rx.h"
 #include "drive_fsm.h"
 #include "mci_broadcast.h"
 #include "mci_events.h"
@@ -33,6 +34,8 @@ void prv_setup_system_can() {
   };
 
   can_init(&s_can_storage, &can_settings);
+  drive_fsm_init();
+  cruise_rx_init();
 }
 
 static void prv_setup_motor_can(void) {
@@ -73,15 +76,16 @@ void prv_mci_storage_init(void *context) {
 
 int main(void) {
   event_queue_init();
-  gpio_init();
-  gpio_it_init();
   interrupt_init();
   soft_timer_init();
+  gpio_init();
+  gpio_it_init();
 
   prv_setup_system_can();
   prv_setup_motor_can();
 
   prv_mci_storage_init(&s_mci_storage);
+  drive_fsm_init();
 
   Event e = { 0 };
   while (true) {
