@@ -43,17 +43,6 @@ void test_initializing_library_config(void) {
   TEST_ASSERT_OK(can_init(&s_can_storage, config_get_can_settings()));
 }
 
-// Test that we can initialize the DRV120 relay driver with the GPIO address we return.
-void test_initializing_drv120_relay_pin(void) {
-  Drv120RelaySettings settings = {
-    .enable_pin = config_get_drv120_relay_pin(),
-    .status_pin = config_get_drv120_status_pin(),
-    .error_handler = NULL,
-    .context = NULL,
-  };
-  TEST_ASSERT_OK(drv120_relay_init(&settings));
-}
-
 // Test that we can initialize the config returned by |config_get_sense_settings|
 void test_initializing_sense_config(void) {
   TEST_ASSERT_OK(sense_init(config_get_sense_settings()));
