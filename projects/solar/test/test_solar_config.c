@@ -16,7 +16,6 @@
 #include "sense_mppt.h"
 #include "sense_temperature.h"
 #include "solar_events.h"
-#include "solar_config.h"
 #include "spi.h"
 #include "test_helpers.h"
 #include "unity.h"
