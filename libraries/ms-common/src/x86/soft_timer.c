@@ -136,6 +136,10 @@ bool soft_timer_cancel(SoftTimerId timer_id) {
 }
 
 uint32_t soft_timer_remaining_time(SoftTimerId timer_id) {
+  if (timer_id >= SOFT_TIMER_MAX_TIMERS) {
+    return 0;
+  }
+
   struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
   timer_gettime(s_posix_timers[timer_id].timer_id, &spec);
   return spec.it_value.tv_sec * 1000000 + spec.it_value.tv_nsec / 1000;

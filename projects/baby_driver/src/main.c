@@ -13,6 +13,8 @@
 #include "dispatcher.h"
 #include "event_queue.h"
 #include "gpio.h"
+#include "gpio_get.h"
+#include "gpio_set.h"
 #include "interrupt.h"
 #include "log.h"
 #include "wait.h"
@@ -45,6 +47,8 @@ int main() {
   can_init(&s_can_storage, &s_can_settings);
 
   dispatcher_init();
+  gpio_set_init();
+  gpio_get_init();
 
   Event e = { 0 };
   while (true) {
