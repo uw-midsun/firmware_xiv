@@ -7,7 +7,7 @@
 
 // Gpio_it callback function
 static bool s_gpio_it_callback_called = false;
-static int rcv_context;
+static uint8_t rcv_context;
 void prv_callback(void *context) {
   LOG_DEBUG("DRV120 Interrupt Triggered!\n");
   s_gpio_it_callback_called = true;
@@ -71,7 +71,7 @@ void test_drv120_relay(void) {
 
 void test_callback_registered(void) {
   LOG_DEBUG("Initializing gpio interrupt\n");
-  int test_ctx = 1;
+  uint8_t test_ctx = 1;
   Drv120RelaySettings settings = {
     .enable_pin = &s_test_drv120_pin,
     .status_pin = &s_test_drv120_status,

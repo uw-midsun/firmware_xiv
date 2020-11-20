@@ -140,7 +140,6 @@ const GpioAddress *config_get_drv120_enable_pin(void) {
   return &s_drv120_relay_pin;
 }
 
-// To enable status interrupt for drv120, add pin below, and return its address here
 const GpioAddress *config_get_drv120_status_pin(void) {
   return ENABLE_DRV120_FAULT_HANDLING ? &s_drv120_status_pin : NULL;
 }

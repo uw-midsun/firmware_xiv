@@ -6,7 +6,9 @@ static GpioAddress s_relay_pin;
 static Drv120ErrorCallback s_callback;
 
 static void prv_drv120_gpio_it_cb(const GpioAddress *address, void *context) {
-  s_callback(context);
+  if (s_callback != NULL) {
+    s_callback(context);
+  }
 }
 
 StatusCode drv120_relay_init(Drv120RelaySettings *settings) {
