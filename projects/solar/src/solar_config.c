@@ -19,21 +19,28 @@
 #define DATA_TX_MSGS_PER_TX_ITERATION 8
 
 // Scaling factor to convert MCP3427 ADC values (LSB = 62.5uV) for voltage sense to millivolts.
-// Must be calibrated.
-#define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.0f
+// Experimentally determined to be ~1.184mV/LSB.
+#define SOLAR_MCP3427_VOLTAGE_SENSE_SCALING_FACTOR 1.184f
 
 // Scaling factor from MCP3427 ADC values for current sense to microamps.
 // MCP3427 uses 62.5uV/LSB, ACS722LLCTR-10AU has sensitivity of 264mV/A = 0.264uV/uA.
-// (62.5uV/LSB)/(0.264uV/uA) = 236.74uA/LSB
-#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 236.74f
+// (62.5uV/LSB)/(0.264uV/uA) = 236.74uA/LSB. Experimental value is 228.25uA/LSB, which is close.
+#define SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR 228.25f
+
+// Bias of MCP3427 ADC for current sense, in microamps.
+// ACS722LLCTR-10AU gives a bias of 0.33V, corresponding to 1.25A.
+// The experimental value of 1.2527A is close to this.
+#define SOLAR_MCP3427_CURRENT_SENSE_BIAS 1.2527e6f
 
 // Scaling factor to convert SPV1020 current values from SPI to microamps.
-// Must be calibrated.
-#define SOLAR_MPPT_CURRENT_SCALING_FACTOR 1.0f
+// This is based on ONE data point: reading 46 for a current of 600-800mA, so call it 700mA.
+// 700mA/46LSB ~ 15220uA/LSB.
+// TODO(SOFT-282): get more data points to calibrate this.
+#define SOLAR_MPPT_CURRENT_SCALING_FACTOR 15220.0f
 
-// Scaling factor to convert SPV1020 VIN values from SPI to millivolts.
-// Must be calibrated.
-#define SOLAR_MPPT_VIN_SCALING_FACTOR 1.0f
+// Scaling factor to convert SPV1020 input voltage values from SPI to millivolts.
+// Experimentally determined to be ~26.1mV/LSB.
+#define SOLAR_MPPT_VIN_SCALING_FACTOR 26.1f
 
 // Overcurrent threshold for the output current of the array. 9A.
 #define SOLAR_OUTPUT_OVERCURRENT_THRESHOLD_uA 9000000
@@ -50,6 +57,9 @@
 
 #define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
+
+// Registers gpio interrupt with STATUS pin on drv120, enables fault handling
+#define ENABLE_DRV120_FAULT_HANDLING true
 
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
@@ -89,6 +99,7 @@ static const CanSettings s_can_settings = {
 };
 
 static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_status_pin = { GPIO_PORT_A, 6 };
 
 static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
@@ -125,8 +136,12 @@ const CanSettings *config_get_can_settings(void) {
   return &s_can_settings;
 }
 
-const GpioAddress *config_get_drv120_relay_pin(void) {
+const GpioAddress *config_get_drv120_enable_pin(void) {
   return &s_drv120_relay_pin;
+}
+
+const GpioAddress *config_get_drv120_status_pin(void) {
+  return ENABLE_DRV120_FAULT_HANDLING ? &s_drv120_status_pin : NULL;
 }
 
 const SenseSettings *config_get_sense_settings(void) {
@@ -149,6 +164,7 @@ static SenseMcp3427Settings s_sense_mcp3427_settings = {
           {
               .data_point = DATA_POINT_CURRENT,
               .scaling_factor = SOLAR_MCP3427_CURRENT_SENSE_SCALING_FACTOR,
+              .bias = SOLAR_MCP3427_CURRENT_SENSE_BIAS,
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_1,
