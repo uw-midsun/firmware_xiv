@@ -10,4 +10,4 @@ $(T)_DEPS := ms-common ms-drivers
 
 $(T)_test_fan_ctrl_MOCKS := adc_read_converted_pin i2c_write i2c_read_reg
 
-$(T)_CFLAGS+= -DFAN_CONTROL_NOT_ACTIVATED
+$(T)_CFLAGS += -DFAN_CONTROL_NOT_ACTIVATED

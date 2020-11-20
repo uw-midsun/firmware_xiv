@@ -195,7 +195,7 @@ void test_rear_pd_fan_ctrl_temp(void) {
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1], s_fan_ctrl_msg[2]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1],
                     FAN_OVERTEMP_FRACTION_TRANSMIT);  // FAN_OVERTEMP_VOLTAGE as a fraction of v_ref
-  // Check Overtemp byte set correctlys
+  // Check Overtemp byte set correctly
   TEST_ASSERT_EQUAL(OVERTEMP_FLAGS, ((s_fan_ctrl_msg[0] >> 8) & OVERTEMP_FLAGS));
 }
 

@@ -21,7 +21,7 @@ static FanCtrlStorage s_fan_storage;
 #define ADC_EPSILON_MV 50
 
 // Transmit fan error message if overtemp
-static void prv_fan_overtemp_callback() {
+static void prv_fan_overtemp_callback(void) {
   uint16_t fan_flags = s_fan_storage.fan_err_flags;
   fan_flags |= FAN_OVERTEMP_TRIGGERED;
   // Transmit stored ratio values for dcdc and enclosure based on ref reading
