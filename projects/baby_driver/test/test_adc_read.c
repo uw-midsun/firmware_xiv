@@ -49,8 +49,8 @@ StatusCode TEST_MOCK(adc_read_raw_pin)(GpioAddress address, uint16_t *reading) {
 
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
   *reading = X86READING;
-  s_low = s_mock_reading & 0xff;
-  s_high = (s_mock_reading >> 8) & 0xff;
+  s_low = *reading & 0xff;
+  s_high = (*reading >> 8) & 0xff;
   return STATUS_CODE_OK;
 }
 
@@ -72,17 +72,17 @@ void setup_test(void) {
   s_times_callback_called = 0;
   memset(s_received_data, 0, sizeof(s_received_data));
   s_received_context = NULL;
+
+  TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_DATA,
+                                              prv_rx_adc_read_callback, NULL));
+  TEST_ASSERT_OK(
+      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
 }
 
 void teardown_test(void) {}
 
 // Test that raw data command works
 void test_adc_read_raw(void) {
-  TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_DATA,
-                                              prv_rx_adc_read_callback, NULL));
-  TEST_ASSERT_OK(
-      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
-
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   uint8_t data[7] = { s_test_adc_pin_addr.port,
@@ -96,47 +96,30 @@ void test_adc_read_raw(void) {
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, data[0], data[1], data[2], data[3],
                           data[4], data[5], data[6]);
 
-  // process adc_read message
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  // process message status message
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
 
+  // process adc_read_data message
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  // s_should_tx_result = false; // disable tx for status message
 
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[0]);
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
 
-  TEST_ASSERT_EQUAL_INT8(LOW_BYTE, s_received_data[2]);
-
   TEST_ASSERT_EQUAL_INT8(LOW_BYTE, s_low);
-
-  // TEST_ASSERT_EQUAL_INT8(HIGH_BYTE, s_received_data[3]);
   TEST_ASSERT_EQUAL_INT8(HIGH_BYTE, s_high);
 
-  // MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
-  // RAIYAN change array indices to understandable macros e.g LOW_BYTE = 1
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
-
-  // TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
 }
 
 // Test that converted data command works
 void test_adc_read_converted(void) {
-  // s_should_tx_result = true;
-
-  TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_DATA,
-                                              prv_rx_adc_read_callback, NULL));
-  TEST_ASSERT_OK(
-      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
-
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
   uint8_t data[7] = { s_test_adc_pin_addr.port,
@@ -150,29 +133,23 @@ void test_adc_read_converted(void) {
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, data[0], data[1], data[2], data[3],
                           data[4], data[5], data[6]);
 
-  // MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  // MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  // process message status
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
 
+  // process adc_read_data message
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  // MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[0]);
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
 
-  TEST_ASSERT_EQUAL_INT8(LOW_BYTE,
-                         s_received_data[2]);  // confused on what to put for "expected" here.
-  TEST_ASSERT_EQUAL_INT8(HIGH_BYTE, s_received_data[3]);
+  TEST_ASSERT_EQUAL_INT8(LOW_BYTE, s_low);
+  TEST_ASSERT_EQUAL_INT8(HIGH_BYTE, s_high);
 
-  // MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
@@ -180,20 +157,9 @@ void test_adc_read_converted(void) {
 
 // Test that dispatch sends error if pin data is incorrect
 void test_invalid_read(void) {
-  TEST_ASSERT_OK(dispatcher_register_callback(BABYDRIVER_MESSAGE_ADC_READ_DATA,
-                                              prv_rx_adc_read_callback, NULL));
-  TEST_ASSERT_OK(
-      dispatcher_register_callback(BABYDRIVER_MESSAGE_STATUS, prv_rx_adc_read_callback, NULL));
-
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 
-  uint8_t inv_port_data[7] = { NUM_GPIO_PORTS,
-                               1,  // random pin on invalid port
-                               0,  // converted read
-                               0,
-                               0,
-                               0,
-                               0 };
+  uint8_t inv_port_data[7] = { NUM_GPIO_PORTS, 1, 0, 0, 0, 0, 0 };
 
   uint8_t inv_pin_data[7] = { 1, GPIO_TOTAL_PINS, 0, 0, 0, 0, 0 };
 
@@ -202,11 +168,9 @@ void test_invalid_read(void) {
                           inv_port_data[2], inv_port_data[3], inv_port_data[4], inv_port_data[5],
                           inv_port_data[6]);
 
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, s_received_data[1]);
@@ -220,11 +184,9 @@ void test_invalid_read(void) {
                           inv_pin_data[2], inv_pin_data[3], inv_pin_data[4], inv_pin_data[5],
                           inv_pin_data[6]);
 
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
-  MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-  MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, s_received_data[1]);
