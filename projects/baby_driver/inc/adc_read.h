@@ -1,15 +1,11 @@
 #pragma once
 
-// Abstraction layer over the adc_read command
+// This module provides the function adc_read_init() which can be used to listen for
+// adc_read_command CAN messages from the babydriver. Once the message is received, the
+// ADC reading from the specificed port and pin is sent back to Python using a CAN message.
+// Requires dispatcher, interrupts, gpio, the event queue, and CAN to be initialized.
 
-#include <stdbool.h>
-#include <stdint.h>
-
-#include "babydriver_msg_defs.h"
 #include "status.h"
-// #include "dispatcher.h"
 
 // Initialize module
 StatusCode adc_read_init(void);
-
-// StatusCode adc_read_callback(void *context);
