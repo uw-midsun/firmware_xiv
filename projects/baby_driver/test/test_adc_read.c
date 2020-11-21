@@ -1,17 +1,10 @@
 #include <string.h>
 
-#include "adc.h"
 #include "adc_read.h"
-#include "can.h"
-#include "can_msg_defs.h"
 #include "can_transmit.h"
-#include "can_unpack.h"
 #include "dispatcher.h"
-#include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
-#include "test_helpers.h"
-#include "unity.h"
 
 typedef enum {
   TEST_CAN_EVENT_TX = 0,
@@ -21,13 +14,9 @@ typedef enum {
 } TestCanEvent;
 
 static GpioAddress s_test_adc_pin_addr = { .port = 1, .pin = 1 };
-
 static CanStorage s_can_storage = { 0 };
-
 static uint8_t s_times_callback_called;
 static uint8_t s_received_data[8];
-
-static StatusCode s_status_return;
 
 #define TEST_READING 2500
 
@@ -45,7 +34,7 @@ static StatusCode prv_rx_adc_read_callback(uint8_t data[8], void *context, bool 
   s_times_callback_called++;
   memcpy(s_received_data, data, 8);
   *tx_result = false;
-  return s_status_return;
+  return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
@@ -81,26 +70,21 @@ void test_adc_read_raw(void) {
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, data[0], data[1], data[2], data[3],
                           data[4], data[5], data[6]);
 
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-
   // process adc_read_data message
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[0]);
-  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
-
-  TEST_ASSERT_EQUAL_INT8(TEST_READING, (s_received_data[3] << 8) | s_received_data[2]);
+  // combine high and low bytes to check with original reading
+  TEST_ASSERT_EQUAL_INT8(TEST_READING, (s_received_data[2] << 8) | s_received_data[1]);
 
   // process message status message
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
-
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
-
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -119,26 +103,21 @@ void test_adc_read_converted(void) {
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_ADC_READ_COMMAND, data[0], data[1], data[2], data[3],
                           data[4], data[5], data[6]);
 
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-
   // process adc_read_data message
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
-
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[0]);
-  TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_ADC_READ_DATA, s_received_data[1]);
-
-  TEST_ASSERT_EQUAL_INT8(TEST_READING, (s_received_data[3] << 8) | s_received_data[2]);
+  // combine high and low bytes to check with original reading
+  TEST_ASSERT_EQUAL_INT8(TEST_READING, (s_received_data[2] << 8) | s_received_data[1]);
 
   // process message status
   MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_data[1]);
-
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
-
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -156,7 +135,6 @@ void test_invalid_read(void) {
                           inv_port_data[6]);
 
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
@@ -172,9 +150,10 @@ void test_invalid_read(void) {
                           inv_pin_data[6]);
 
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
   TEST_ASSERT_EQUAL(BABYDRIVER_MESSAGE_STATUS, s_received_data[0]);
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, s_received_data[1]);
+
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
