@@ -1,6 +1,6 @@
+#include "i2c.h"
 #include <stdbool.h>
 #include "gpio.h"
-#include "i2c.h"
 #include "log.h"
 
 // ==== WRITE PARAMETERS ====
@@ -9,7 +9,7 @@
 #define SHOULD_WRITE true
 
 // Fill in these variables with the port and address to write to.
-#define WRITE_I2C_PORT 4  
+#define WRITE_I2C_PORT 4
 #define WRITE_I2C_ADDRESS 0x48
 
 // Fill in this array with the bytes to write.
@@ -19,7 +19,7 @@ static const uint8_t bytes_to_write[] = { 0b0010010010100110 };
 #define SHOULD_WRITE_REGISTER true
 
 // If the previous parameter is true, fill in this variable with the register to write to.
-#define REGISTER_TO_WRITE 0b00000001 // config register
+#define REGISTER_TO_WRITE 0b00000001  // config register
 
 // ==== READ PARAMETERS ====
 
@@ -27,7 +27,7 @@ static const uint8_t bytes_to_write[] = { 0b0010010010100110 };
 #define SHOULD_READ true
 
 // Fill in these variables with the port and address to read from.
-#define READ_I2C_PORT 4  
+#define READ_I2C_PORT 4
 #define READ_I2C_ADDRESS 0x48
 
 // Fill in this variable with the number of bytes to read.
@@ -37,7 +37,7 @@ static const uint8_t bytes_to_write[] = { 0b0010010010100110 };
 #define SHOULD_READ_REGISTER true
 
 // If the previous parameter is true, fill in this variable with the register to read from.
-#define REGISTER_TO_READ 0b00000000 // conversion register
+#define REGISTER_TO_READ 0b00000000  // conversion register
 
 // ==== END OF PARAMETERS ====
 
@@ -55,8 +55,7 @@ static void prv_initialize(void) {
     .sda = I2C1_SDA,
     .scl = I2C1_SCL,
   };
-  i2c_init(I2C_PORT_1, &i2c1_settings);
-
+  i2c_init(WRITE_I2C_PORT, &i2c1_settings);
 }
 
 int main(void) {
