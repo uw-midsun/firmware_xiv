@@ -1,4 +1,15 @@
 #include "pca9539r_gpio_expander.h"
+#ifdef MPXE
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "pca9539r.pb-c.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+static MxPca9539rStore s_store = MX_PCA9539R_STORE__INIT;
+#endif
 
 // There's only 256 I2C addresses so it's ok to keep all the settings in memory
 #define MAX_I2C_ADDRESSES 256
@@ -8,7 +19,55 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_PINS];
 
+#ifdef MPXE
+#define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address used in the smoke test
+
+static void prv_export() {
+  for (uint16_t j = 0; j < NUM_PCA9539R_GPIO_PINS; j++) {
+    s_store.state[j] = s_pin_settings[PCA9539_I2C_ADDRESS][j].state;
+  }
+
+  store_export(MX_STORE_TYPE__PCA9539R, &s_store, NULL);
+}
+
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  MxPca9539rStore *msg = mx_pca9539r_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MxPca9539rStore *mask = mx_pca9539r_store__unpack(NULL, mask_buf.len, mask_buf.data);
+
+  for (uint16_t i = 0; i < mask->n_state; i++) {
+    // only update state if mask is set
+    if (mask->state[i] != 0) {
+      s_store.state[i] = msg->state[i];
+      if (s_pin_settings[PCA9539_I2C_ADDRESS][i].state != (uint8_t)msg->state[i]) {
+        s_pin_settings[PCA9539_I2C_ADDRESS][i].state = msg->state[i];
+      }
+    }
+  }
+
+  mx_pca9539r_store__free_unpacked(msg, NULL);
+  mx_pca9539r_store__free_unpacked(mask, NULL);
+  prv_export();
+}
+
+static void prv_init_store(void) {
+  store_config();
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mx_pca9539r_store__get_packed_size,
+    (PackFunc)mx_pca9539r_store__pack,
+    (UnpackFunc)mx_pca9539r_store__unpack,
+    (FreeUnpackedFunc)mx_pca9539r_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  s_store.n_state = NUM_PCA9539R_GPIO_PINS;
+  s_store.state = malloc(NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
+  store_register(MX_STORE_TYPE__PCA9539R, funcs, &s_store, NULL);
+}
+#endif
+
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
+#ifdef MPXE
+  prv_init_store();
+#endif
   s_i2c_port = i2c_port;
 
   // Set each pin to the default settings
@@ -19,6 +78,9 @@ StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
   for (Pca9539rPinAddress i = 0; i < NUM_PCA9539R_GPIO_PINS; i++) {
     s_pin_settings[i2c_address][i] = default_settings;
   }
+#ifdef MPXE
+  prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -34,6 +96,9 @@ StatusCode pca9539r_gpio_init_pin(const Pca9539rGpioAddress *address,
   }
 
   s_pin_settings[address->i2c_address][address->pin] = *settings;
+#ifdef MPXE
+  prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -48,6 +113,9 @@ StatusCode pca9539r_gpio_set_state(const Pca9539rGpioAddress *address,
   }
 
   s_pin_settings[address->i2c_address][address->pin].state = state;
+#ifdef MPXE
+  prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -65,6 +133,9 @@ StatusCode pca9539r_gpio_toggle_state(const Pca9539rGpioAddress *address) {
   } else {
     s_pin_settings[address->i2c_address][address->pin].state = PCA9539R_GPIO_STATE_HIGH;
   }
+#ifdef MPXE
+  prv_export();
+#endif
   return STATUS_CODE_OK;
 }
 

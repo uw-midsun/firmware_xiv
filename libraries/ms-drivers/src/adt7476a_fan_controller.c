@@ -1,7 +1,7 @@
+#include "adt7476a_fan_controller.h"
 #include <math.h>
 #include <stddef.h>
 #include <string.h>
-#include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
 #include "gpio.h"
 #include "gpio_it.h"
