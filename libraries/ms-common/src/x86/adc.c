@@ -5,7 +5,7 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 // x86 implementation very similar to STM32F0 implementation.
-// adc_read_raw should always return 4090.
+// adc_read_raw should always return 2500.
 // Vdda locked at 3300 mV.
 // adc_read_converted should always return close to 2V
 // temperature reading always returns 293 kelvin.
