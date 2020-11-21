@@ -21,7 +21,7 @@ typedef enum {
   BABYDRIVER_MESSAGE_GPIO_GET_DATA = 3,
 
   // The adc_read command message, sent whenever adc_read() is called in python
-  // Message data: uint8 state
+  // Message data: uint8 port, uint8 pin, uint8 is_raw
   BABYDRIVER_MESSAGE_ADC_READ_COMMAND = 4,
 
   // The adc_read data message, sent from firmware when it gets data from the port/pin requested

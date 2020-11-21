@@ -16,9 +16,6 @@
 #include "log.h"
 #include "soft_timer.h"
 
-static GpioAddress s_adc_pin_addr;
-static AdcChannel s_adc_pin_channel = NUM_ADC_CHANNELS;
-
 static GpioSettings s_adc_pin_settings = {
   GPIO_DIR_IN,
   GPIO_STATE_LOW,
@@ -33,20 +30,20 @@ static GpioSettings s_adc_pin_settings = {
 StatusCode adc_read_callback(uint8_t data[8], void *context, bool *tx_result) {
   uint16_t adc_pin_data = 0;
 
-  int is_raw;  // nonzero means raw, 0 means converted
+  bool is_raw;  // nonzero means raw, 0 means converted
 
-  s_adc_pin_addr.port = data[1];
-  s_adc_pin_addr.pin = data[2];
-  is_raw = data[3];
+  GpioAddress adc_pin_addr = { .port = data[1], .pin = data[2] };
 
-  status_ok_or_return(gpio_init_pin(&s_adc_pin_addr, &s_adc_pin_settings));
+  is_raw = (data[3] != 0);
 
-  status_ok_or_return(adc_set_channel_pin(s_adc_pin_addr, true));
+  status_ok_or_return(gpio_init_pin(&adc_pin_addr, &s_adc_pin_settings));
+
+  status_ok_or_return(adc_set_channel_pin(adc_pin_addr, true));
 
   if (is_raw) {
-    adc_read_raw_pin(s_adc_pin_addr, &adc_pin_data);
+    adc_read_raw_pin(adc_pin_addr, &adc_pin_data);
   } else {
-    adc_read_converted_pin(s_adc_pin_addr, &adc_pin_data);
+    adc_read_converted_pin(adc_pin_addr, &adc_pin_data);
   }
 
   uint8_t low = adc_pin_data & 0xff;
