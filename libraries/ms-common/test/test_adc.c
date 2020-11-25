@@ -11,6 +11,9 @@
 
 #define ADC_MOCK_READING 999
 
+// the stm32f0xx's ADC is 12 bits, so the maximum uint16 value is way out of its range
+#define ADC_INVALID_READING ((1 << 16) - 1)
+
 static volatile uint8_t s_callback_runs;
 static volatile bool s_callback_ran;
 
