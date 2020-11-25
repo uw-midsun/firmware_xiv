@@ -15,6 +15,7 @@
 #include "gpio.h"
 #include "gpio_set.h"
 #include "interrupt.h"
+#include "i2c_write.h"
 #include "log.h"
 #include "wait.h"
 
@@ -47,6 +48,7 @@ int main() {
 
   dispatcher_init();
   gpio_set_init();
+  i2c_write_init();
 
   Event e = { 0 };
   while (true) {

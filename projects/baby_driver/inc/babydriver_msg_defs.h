@@ -12,5 +12,9 @@ typedef enum {
   // Message data: uint8 id, uint8 port, uint8 pin, uint8 state
   BABYDRIVER_MESSAGE_GPIO_SET = 1,
 
+  BABYDRIVER_MESSAGE_I2C_WRITE_COMMAND = 8,
+
+  BABYDRIVER_MESSAGE_I2C_WRITE_DATA = 9,
+
   NUM_BABYDRIVER_MESSAGES,
 } BabydriverMessageId;
