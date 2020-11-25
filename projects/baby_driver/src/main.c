@@ -8,6 +8,7 @@
 // To send a CAN message from Python write
 // can_util.send_message(<id>, <data>) to send can message
 
+#include "adc.h"
 #include "adc_read.h"
 #include "can.h"
 #include "can_msg_defs.h"
@@ -44,6 +45,7 @@ int main() {
   gpio_init();
   event_queue_init();
   interrupt_init();
+  adc_init(ADC_MODE_SINGLE);
 
   can_init(&s_can_storage, &s_can_settings);
 
