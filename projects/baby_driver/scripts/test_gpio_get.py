@@ -10,7 +10,6 @@ from gpio_port import GpioPort
 import can_util
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
-
 class TestGpioGet(unittest.TestCase):
     """Test Babydriver's gpio_get function"""
 

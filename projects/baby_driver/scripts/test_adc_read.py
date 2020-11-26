@@ -94,6 +94,5 @@ class TestADCRead(unittest.TestCase):
         mock_next_message.return_value = Message(data=bad_next_data)
         self.assertRaises(Exception, adc_read, GpioPort.A, 0, 0)
 
-
 if __name__ == '__main__':
     unittest.main()

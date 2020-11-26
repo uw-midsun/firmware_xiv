@@ -6,7 +6,6 @@ from message_defs import BabydriverMessageId
 
 NUM_PINS_PER_PORT = 16
 
-
 def gpio_set(port, pin, state):
     """
     Sets a GPIO pin
