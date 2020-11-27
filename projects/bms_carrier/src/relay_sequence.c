@@ -16,16 +16,25 @@ static GpioAddress s_io_expander_int = BMS_IO_EXPANDER_INT_PIN;
 static Mcp23008GpioAddress s_mcp23008_hv = BMS_IO_EXPANDER_HV_SENSE_ADDR;
 static Mcp23008GpioAddress s_mcp23008_gnd = BMS_IO_EXPANDER_GND_SENSE_ADDR;
 
+void prv_cancel_timers(RelayStorage *storage) {
+  if (storage->assertion_timer_id != SOFT_TIMER_INVALID_TIMER) {
+    soft_timer_cancel(storage->assertion_timer_id);
+    storage->assertion_timer_id = SOFT_TIMER_INVALID_TIMER;
+  }
+  if (storage->next_step_timer_id != SOFT_TIMER_INVALID_TIMER) {
+    soft_timer_cancel(storage->next_step_timer_id);
+    storage->next_step_timer_id = SOFT_TIMER_INVALID_TIMER;
+  }
+}
+
 void prv_relay_fault(RelayStorage *storage, bool internal) {
   // cancel timers
   LOG_DEBUG("%s relay fault\n", internal ? "internal" : "external");
-  soft_timer_cancel(storage->assertion_timer_id);
-  soft_timer_cancel(storage->next_step_timer_id);
+  prv_cancel_timers(storage);
   // open relays
   relay_open_sequence(storage);
   // skip assertion, we're already faulted
-  soft_timer_cancel(storage->assertion_timer_id);
-  soft_timer_cancel(storage->next_step_timer_id);
+  prv_cancel_timers(storage);
   if (internal) {
     // fault bps
     fault_bps_set(EE_BPS_STATE_FAULT_RELAY);
@@ -40,6 +49,7 @@ void prv_assert_state(SoftTimerId timer_id, void *context) {
   // } else if (storage->gnd_enabled != storage->gnd_expected_state) {
   //   prv_relay_fault(storage, true);
   // }
+  storage->assertion_timer_id = SOFT_TIMER_INVALID_TIMER;
 }
 
 void prv_io_int_callback(const GpioAddress *address, void *context) {
@@ -105,6 +115,7 @@ void prv_relay_open_done(SoftTimerId timer_id, void *context) {
   RelayStorage *storage = context;
   LOG_DEBUG("relay open done\n");
   CAN_TRANSMIT_BATTERY_RELAY_STATE(storage->hv_enabled, storage->gnd_enabled);
+  storage->next_step_timer_id = SOFT_TIMER_INVALID_TIMER;
 }
 
 StatusCode relay_open_sequence(RelayStorage *storage) {
@@ -121,8 +132,10 @@ StatusCode relay_open_sequence(RelayStorage *storage) {
 }
 
 void prv_relay_close_done(SoftTimerId timer_id, void *context) {
+  RelayStorage *storage = context;
   LOG_DEBUG("relay close done\n");
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(NULL, EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS);
+  storage->next_step_timer_id = SOFT_TIMER_INVALID_TIMER;
 }
 
 void prv_relay_close_hv(SoftTimerId timer_id, void *context) {
@@ -131,6 +144,8 @@ void prv_relay_close_hv(SoftTimerId timer_id, void *context) {
   gpio_set_state(&s_hv_relay_en, GPIO_STATE_HIGH);
   storage->gnd_expected_state = true;
   storage->hv_expected_state = true;
+  storage->assertion_timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->next_step_timer_id = SOFT_TIMER_INVALID_TIMER;
   soft_timer_start_millis(RELAY_SEQUENCE_ASSERTION_DELAY_MS, prv_assert_state, storage,
                           &storage->assertion_timer_id);
   soft_timer_start_millis(RELAY_SEQUENCE_NEXT_STEP_DELAY_MS, prv_relay_close_done, storage,
@@ -142,6 +157,8 @@ void prv_relay_close_gnd(RelayStorage *storage) {
   gpio_set_state(&s_gnd_relay_en, GPIO_STATE_HIGH);
   storage->gnd_expected_state = true;
   storage->hv_expected_state = false;
+  storage->assertion_timer_id = SOFT_TIMER_INVALID_TIMER;
+  storage->next_step_timer_id = SOFT_TIMER_INVALID_TIMER;
   soft_timer_start_millis(RELAY_SEQUENCE_ASSERTION_DELAY_MS, prv_assert_state, storage,
                           &storage->assertion_timer_id);
   soft_timer_start_millis(RELAY_SEQUENCE_NEXT_STEP_DELAY_MS, prv_relay_close_hv, storage,
