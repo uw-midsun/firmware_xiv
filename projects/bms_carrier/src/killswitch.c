@@ -9,6 +9,7 @@
 static void prv_killswitch_handler(const GpioAddress *address, void *context) {
   GpioState state = NUM_GPIO_STATES;
   gpio_get_state(address, &state);
+  LOG_DEBUG("killswitch triggered, state: %d\n", state);
   if (state == GPIO_STATE_LOW) {
     LOG_DEBUG("faulting from killswitch\n");
     fault_bps_set(EE_BPS_STATE_FAULT_KILLSWITCH);

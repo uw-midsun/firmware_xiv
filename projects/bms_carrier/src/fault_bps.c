@@ -33,6 +33,10 @@ StatusCode fault_bps_init(BmsStorage *storage) {
 
 // Fault BPS and open relays
 StatusCode fault_bps_set(uint8_t fault_bitmask) {
+  // do nothing if it's not a new fault
+  if (s_storage->bps_storage.fault_bitset & fault_bitmask) {
+    return STATUS_CODE_OK;
+  }
   s_storage->bps_storage.fault_bitset |= fault_bitmask;
   if (fault_bitmask != EE_BPS_STATE_FAULT_RELAY) {
     relay_fault(&s_storage->relay_storage);

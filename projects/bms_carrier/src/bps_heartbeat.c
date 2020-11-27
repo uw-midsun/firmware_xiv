@@ -6,6 +6,7 @@
 #include "can_transmit.h"
 #include "exported_enums.h"
 #include "fault_bps.h"
+#include "log.h"
 #include "soft_timer.h"
 
 static uint32_t s_hb_freq_ms = 0;
@@ -36,14 +37,14 @@ static void prv_periodic_heartbeat(SoftTimerId timer_id, void *context) {
 
   CAN_TRANSMIT_BPS_HEARTBEAT(&ack_req, storage->fault_bitset);
 
-  soft_timer_start_millis(s_hb_freq_ms, prv_periodic_heartbeat, storage, 0);
+  soft_timer_start_millis(s_hb_freq_ms, prv_periodic_heartbeat, storage, NULL);
 }
 
 StatusCode bps_heartbeat_init(BpsStorage *storage, uint32_t hb_freq_ms) {
   // force first one
   s_hb_freq_ms = hb_freq_ms;
-  storage->ack_devices = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE);
-  // storage->ack_devices = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
+  // storage->ack_devices = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_CENTRE_CONSOLE);
+  storage->ack_devices = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_BABYDRIVER);
   prv_periodic_heartbeat(SOFT_TIMER_INVALID_TIMER, storage);
 
   return STATUS_CODE_OK;
