@@ -1,5 +1,6 @@
 """ This modules provides the Python implementation to exchange data through SPI and the CAN protocol"""
 
+import math
 import can_util
 from gpio_port import GpioPort
 from message_defs import BabydriverMessageId
@@ -56,11 +57,52 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     data1 = can_util.can_pack(data1)
     data2 = can_util.can_pack(data2)
 
-    # loop with step of len(tx_bytes)
+    can_util.send_message(
+        babydriver_id=BabydriverMessageId.SPI_EXCHANGE_METADATA_1,
+        data=data1
+    )
 
     can_util.send_message(
-        babydriver_id=BabydriverMessageId.SPI_EXCHANGE_METADATA_1
+        babydriver_id=BabydriverMessageId.SPI_EXCHANGE_METADATA_2,
+        data=data2
     )
+
+    # collect bytes into groups of 7
+    chunks = [tx_bytes[x:x+7] for x in range(0, len(tx_bytes), 7)]
+
+    for data in chunks: 
+        # pad with 0s if length isn't 7
+        if len(data) < 7:
+            for i in 7 - len(data): 
+                data.append(0)
+
+        can_util.send_message(
+            babydriver_id=BabydriverMessageId.SPI_EXCHANGE_TX_DATA,
+            data=data
+        )
+
+    count = rx_len
+    rx_data = []
+    for i in range(0, math.ceil(rx_len / 7)):
+        rx_msg = can_util.next_message(babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
+        data = rx_msg.data
+        if count < 7:
+            tmp_data = []
+            for i in count:
+                tmp_data.append(data[i+1])
+            rx_data.append(tmp_data)
+            break
+        rx_data.append(data[1:])
+        count -= 7
+
+    status = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
+    if status.data[1] != 0:
+        raise Exception("Received STATUS_CODE {}".format(status.data[1]))
+
+    return rx_data
+
+
+    
 
     
 
