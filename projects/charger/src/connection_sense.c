@@ -8,6 +8,7 @@
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "gpio.h"
+#include "log.h"
 #include "soft_timer.h"
 #include "status.h"
 
@@ -26,12 +27,16 @@ static ConnectionState prv_read_conn_state() {
   uint16_t read = 0;
   adc_read_converted(s_connection_adc_channel, &read);
   if (CS_UNPLUGGED_LOWER < read && read < CS_UNPLUGGED_UPPER) {
+    LOG_DEBUG("CHARGER_STATE_UNPLUGGED\n");
     return CHARGER_STATE_UNPLUGGED;
   } else if (CS_PLUGGED_RELEASED_LOWER < read && read < CS_PLUGGED_RELEASED_UPPER) {
+    LOG_DEBUG("CHARGER_STATE_UNPLUGGED\n");
     return CHARGER_STATE_PLUGGED_RELEASED;
   } else if (CS_PLUGGED_PRESSED_LOWER < read && read < CS_PLUGGED_PRESSED_UPPER) {
+    LOG_DEBUG("CHARGER_STATE_UNPLUGGED\n");
     return CHARGER_STATE_PLUGGED_PRESSED;
   } else {
+    LOG_DEBUG("THIS SHOULDN'T HAPPEN\n");
     return NUM_CHARGER_CONNECTION_STATES;
   }
 }
