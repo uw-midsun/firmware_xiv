@@ -89,6 +89,7 @@ static void prv_afe_trigger_cell_conv_output(struct Fsm *fsm, const Event *e, vo
   if (status_ok(ret)) {
     soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, afe, NULL);
   } else {
+    LOG_DEBUG("cell conv fault\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
                          LTC_AFE_FSM_FAULT_TRIGGER_CELL_CONV);
   }
@@ -113,6 +114,7 @@ static void prv_afe_read_cells_output(struct Fsm *fsm, const Event *e, void *con
     afe->retry_count++;
     soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, afe, NULL);
   } else {
+    LOG_DEBUG("read cells fault\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
                          LTC_AFE_FSM_FAULT_READ_ALL_CELLS);
   }
@@ -149,6 +151,7 @@ static void prv_afe_read_aux_output(struct Fsm *fsm, const Event *e, void *conte
     afe->retry_count++;
     soft_timer_start_millis(LTC_AFE_FSM_AUX_CONV_DELAY_MS, prv_aux_conv_timeout, afe, NULL);
   } else {
+    LOG_DEBUG("aux conv fault\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
                          LTC_AFE_FSM_FAULT_READ_AUX);
   }
