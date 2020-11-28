@@ -12,12 +12,12 @@
 // smoke test settings
 // NOTE: Test assumes num_thermistors == num_cells
 #define SMOKE_LTC_AFE_NUM_DEVICES 1
-#define SMOKE_LTC_AFE_NUM_CELLS 12
+#define SMOKE_LTC_AFE_NUM_CELLS 1
 #define SMOKE_LTC_AFE_INPUT_BITSET_FULL 0xFFF
 
 // To disable samples set value to 0
 #define SMOKE_LTC_AFE_NUM_VOLTAGE_SAMPLES 1
-#define SMOKE_LTC_AFE_NUM_TEMP_SAMPLES 100
+#define SMOKE_LTC_AFE_NUM_TEMP_SAMPLES 0
 
 // To disable logging for an event, set the event name to NULL
 static const char *s_event_names[NUM_SMOKE_LTC_EVENTS] = {
@@ -92,8 +92,8 @@ static void prv_dump_voltages(uint16_t *result_arr, size_t len, void *context) {
   if (s_num_samples != 0) {
     if (!status_ok(ltc_afe_request_cell_conversion(&s_afe))) return;
   } else {
-    LOG_DEBUG("==END OF VOLTAGE SAMPLES==");
-    LOG_DEBUG("==START OF TEMPERATURE SAMPLES==");
+    LOG_DEBUG("==END OF VOLTAGE SAMPLES==\n");
+    LOG_DEBUG("==START OF TEMPERATURE SAMPLES==\n");
     if (!status_ok(ltc_afe_request_aux_conversion(&s_afe))) return;
   }
 }
@@ -107,7 +107,7 @@ static void prv_dump_temps(uint16_t *result_arr, size_t len, void *context) {
   if (s_num_samples != 0) {
     if (!status_ok(ltc_afe_request_aux_conversion(&s_afe))) return;
   } else {
-    LOG_DEBUG("==END OF TEMPERATURE SAMPLES==");
+    LOG_DEBUG("==END OF TEMPERATURE SAMPLES==\n");
     // TODO(SOFT-222): Could test cell discharge here as well ...
   }
 }
@@ -166,12 +166,13 @@ static void prv_log_event(const Event *event) {
 
 int main(void) {
   // Initialize ltc driver
-  prv_ltc_init();
+  StatusCode init_status = prv_ltc_init();
+  LOG_DEBUG("smoke ltc6811 init: %d\n", init_status);
 
   // Initialize bound variable
   prv_reset_sample_bounds();
 
-  LOG_DEBUG("==START OF VOLTAGE SAMPLES==");
+  LOG_DEBUG("==START OF VOLTAGE SAMPLES==\n");
   status_ok_or_return(ltc_afe_request_cell_conversion(&s_afe));
 
   Event e = { 0 };

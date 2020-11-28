@@ -59,6 +59,7 @@ static StatusCode prv_build_cmd(uint16_t command, uint8_t *cmd, size_t len) {
 static StatusCode prv_read_register(LtcAfeStorage *afe, LtcAfeRegister reg, uint8_t *data,
                                     size_t len) {
   if (reg > NUM_LTC_AFE_REGISTERS) {
+    LOG_DEBUG("prv_read_register bad args\n");
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -75,6 +76,7 @@ static StatusCode prv_read_register(LtcAfeStorage *afe, LtcAfeRegister reg, uint
 static StatusCode prv_read_voltage(LtcAfeStorage *afe, LtcAfeVoltageRegister reg,
                                    LtcAfeVoltageRegisterGroup *data) {
   if (reg > NUM_LTC_AFE_VOLTAGE_REGISTERS) {
+    LOG_DEBUG("prv_read_voltage bad args\n");
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
@@ -286,6 +288,9 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
       uint16_t data_pec = crc15_calculate((uint8_t *)&voltage_register[device], 6);
       if (received_pec != data_pec) {
         // return early on failure
+        LOG_DEBUG("PEC error, got 0x%x but expected 0x%x\n", received_pec, data_pec);
+        uint8_t *d = &voltage_register[0].reg.values[0];
+        LOG_DEBUG("data: 0x%x, 0x%x, 0x%x, 0x%x\n", *d, *(d+1), *(d+2), *(d+3));
         return status_code(STATUS_CODE_INTERNAL_ERROR);
       }
     }
