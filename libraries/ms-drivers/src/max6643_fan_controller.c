@@ -15,8 +15,7 @@ StatusCode max6643_init(Max6643Storage *storage, Max6643Settings *settings) {
 
   storage->overtemp_pin = settings->overtemp_pin;
   storage->fanfail_pin = settings->fanfail_pin;
-  storage->overtemp_callback =
-      settings->overtemp_callback;  // called when tachometer goes out of range
+  storage->overtemp_callback = settings->overtemp_callback;
   storage->fanfail_callback = settings->fanfail_callback;
   storage->fanfail_callback_context = settings->fanfail_callback_context;
   storage->overtemp_callback_context = settings->overtemp_callback_context;
