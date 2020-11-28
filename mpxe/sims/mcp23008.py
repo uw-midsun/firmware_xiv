@@ -1,0 +1,32 @@
+from mpxe.protogen import stores_pb2
+from mpxe.protogen import mcp23008_pb2
+
+import time
+
+from mpxe.sims import sim
+
+MCP23008_KEY = (stores_pb2.MxStoreType.MCP23008, 0)
+NUM_MCP_PINS = 8
+
+class Mcp23008(sim.Sim):
+    
+    def handle_update(self, pm, proj):
+        stores = proj.stores
+        if MCP23008_KEY in stores:
+            mcp         = stores[MCP23008_KEY]
+            self.states  = [bool(adt.speed[i]) for i in range(len(mcp.state)) if i < MCP23008_KEY]
+
+    # Update the store with an array of chosen pin states
+    def update_pin_state(self, proj, pin, state):
+        mcp23008_msg = mcp23008_pb2.MxMcp23008Store()
+        mcp23008_msg.state[pin] = state
+
+        mcp23008_mask = mcp23008_pb2.MxMcp23008Store()
+        mcp23008_mask.state[pin] = 1
+    
+        proj.write_store(mcp23008_msg, mcp23008_mask, stores_pb2.MxStoreType.MCP23008)
+
+    # Passed an array of pin states, compares against store
+    def assert_store_value_reading(self, proj, pin, state):
+        for i in range(NUM_MCP_PINS):
+            assert(proj.stores[MCP23008_KEY].state[pin] == state[i]) 
