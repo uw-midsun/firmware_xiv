@@ -18,3 +18,7 @@ class BabydriverMessageId:
 
     STATUS = 0
     GPIO_SET = 1
+    GPIO_GET_COMMAND = 2
+    GPIO_GET_DATA = 3
+    ADC_READ_COMMAND = 4
+    ADC_READ_DATA = 5
