@@ -6,6 +6,10 @@
 #include "unity.h"
 #include "wait.h"
 
+#define TEST_CALLBACK_EXPECTED_TIMES_CALLED 1
+#define TEST_FANFAIL_EXPECTED_CONTEXT 0xA
+#define TEST_OVERTEMP_EXPECTED_CONTEXT 0xB
+
 static uint8_t s_times_fanfail_callback_called;
 static uint8_t s_times_overtemp_callback_called;
 static uint8_t s_fanfail_callback_context;
@@ -17,7 +21,7 @@ static void prv_test_max6643_fanfail_interrupt_callback(const GpioAddress *addre
   LOG_DEBUG("FANFAIL INTERRUPT CALLBACK TRIGGERED\n");
 
   uint8_t *fanfail_context = (uint8_t *)context;
-  TEST_ASSERT_EQUAL(0xA, *fanfail_context);
+  TEST_ASSERT_EQUAL(TEST_FANFAIL_EXPECTED_CONTEXT, *fanfail_context);
 
   s_times_fanfail_callback_called++;
 }
@@ -27,7 +31,7 @@ static void prv_test_max6643_overtemp_interrupt_callback(const GpioAddress *addr
   LOG_DEBUG("OVERTEMP INTERRUPT CALLBACK TRIGGERED\n");
 
   uint8_t *overtemp_context = (uint8_t *)context;
-  TEST_ASSERT_EQUAL(0xB, *overtemp_context);
+  TEST_ASSERT_EQUAL(TEST_OVERTEMP_EXPECTED_CONTEXT, *overtemp_context);
 
   s_times_overtemp_callback_called++;
 }
@@ -72,8 +76,8 @@ void test_max6643_interrupts(void) {
 
   // trigger interrupt and fetch data
   gpio_it_trigger_interrupt(&test_fanfail_pin);
-  TEST_ASSERT_EQUAL(1, s_times_fanfail_callback_called);
+  TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_TIMES_CALLED, s_times_fanfail_callback_called);
 
   gpio_it_trigger_interrupt(&test_overtemp_pin);
-  TEST_ASSERT_EQUAL(1, s_times_overtemp_callback_called);
+  TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_TIMES_CALLED, s_times_overtemp_callback_called);
 }
