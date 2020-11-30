@@ -16,13 +16,4 @@ typedef struct {
   void *overtemp_callback_context;
 } Max6643Settings;
 
-// typedef struct {
-//   GpioAddress fanfail_pin;
-//   GpioAddress overtemp_pin;
-//   GpioItCallback fanfail_callback;
-//   GpioItCallback overtemp_callback;
-//   void *fanfail_callback_context;
-//   void *overtemp_callback_context;
-// } Max6643Storage;
-
 StatusCode max6643_init(Max6643Settings *settings);

@@ -7,6 +7,7 @@
 #include "gpio_it.h"
 #include "interrupt.h"
 
+// Callbacks being set here
 StatusCode max6643_init(Max6643Settings *settings) {
   if (settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);

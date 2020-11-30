@@ -67,7 +67,7 @@ void test_max6643_interrupts(void) {
     .overtemp_callback_context = &s_overtemp_callback_context
   };
 
-  // add callback to storage
+  // add callback
   TEST_ASSERT_OK(max6643_init(&valid_settings));
 
   // trigger interrupt and fetch data
