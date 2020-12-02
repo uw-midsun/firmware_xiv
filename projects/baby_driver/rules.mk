@@ -7,3 +7,5 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
+
+$(T)_test_i2c_write_MOCKS := i2c_write i2c_write_reg

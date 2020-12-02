@@ -14,9 +14,10 @@
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_set.h"
-#include "interrupt.h"
 #include "i2c_write.h"
+#include "interrupt.h"
 #include "log.h"
+#include "soft_timer.h"
 #include "wait.h"
 
 typedef enum {
@@ -43,6 +44,7 @@ int main() {
   gpio_init();
   event_queue_init();
   interrupt_init();
+  soft_timer_init();
 
   can_init(&s_can_storage, &s_can_settings);
 
