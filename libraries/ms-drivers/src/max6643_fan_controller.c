@@ -13,15 +13,15 @@ StatusCode max6643_init(Max6643Settings *settings) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
-  InterruptSettings s_interrupt_settings = {
+  InterruptSettings interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  gpio_it_register_interrupt(&settings->overtemp_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
+  gpio_it_register_interrupt(&settings->overtemp_pin, &interrupt_settings, INTERRUPT_EDGE_FALLING,
                              settings->overtemp_callback, settings->overtemp_callback_context);
 
-  gpio_it_register_interrupt(&settings->fanfail_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
+  gpio_it_register_interrupt(&settings->fanfail_pin, &interrupt_settings, INTERRUPT_EDGE_FALLING,
                              settings->fanfail_callback, settings->fanfail_callback_context);
 
   return STATUS_CODE_OK;
