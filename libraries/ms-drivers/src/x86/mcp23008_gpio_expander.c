@@ -23,19 +23,15 @@ static MxMcp23008Store s_store = MX_MCP23008_STORE__INIT;
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
   MxMcp23008Store *msg = mx_mcp23008_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxMcp23008Store *mask = mx_mcp23008_store__unpack(NULL, mask_buf.len, mask_buf.data);
-  for (uint8_t addr = 0; addr < NUM_STORED_ADDRESSES; addr++) {
-    if (msg->address[addr] != 0) {
       for (uint8_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
         // only update state if mask is set
         if (mask->state[i] != 0) {
           s_store.state[i] = msg->state[i];
-          if (s_pin_settings[mpxe_address][i] != msg->state[i]) {
-            s_pin_settings[mpxe_address][i] = msg->state[i];
+          if (s_pin_settings[mpxe_address][i].state != (uint8_t)msg->state[i]) {
+            s_pin_settings[mpxe_address][i].state = (uint8_t)msg->state[i];
 	        }
         }
       }
-    }
-  }
 
   mx_mcp23008_store__free_unpacked(msg, NULL);
   mx_mcp23008_store__free_unpacked(mask, NULL);
@@ -56,9 +52,8 @@ static void prv_init_store(void) {
   store_register(MX_STORE_TYPE__MCP23008, funcs, &s_store, NULL);
 }
 
-static void prv_export(const I2CAddress address) {
-  for (uint8_t addr = 0; addr < NUM_STORED_ADDRESSES; addr++) {
-      for (uint16_t i = 0; i < GPIO_TOTAL_PINS; i++) {
+static void prv_export() {
+      for (uint16_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
         s_store.state[i] = s_pin_settings[mpxe_address][i].state;
       }
   store_export(MX_STORE_TYPE__MCP23008, &s_store, NULL);

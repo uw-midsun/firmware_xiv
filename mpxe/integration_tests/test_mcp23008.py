@@ -10,13 +10,12 @@ class TestMcp23008(int_test.IntTest):
         self.mcp23008 = self.manager.start('smoke_mcp23008', Mcp23008())        
 
     def test_mcp23008(self):
+        time.sleep(0.1)
         for x in range(NUM_MCP_PINS): # test all pins init'd
-            time.sleep(1)     
             self.mcp23008.sim.assert_store_value_reading(self.mcp23008, x, 1)
-        time.sleep(3) # allow check pins to run
-        for x in range(NUM_MCP_PINS): # test toggle pins
-            time.sleep(1)     
-            self.mcp23008.sim.assert_store_value_reading(self.mcp23008, x, 0)
+        time.sleep(0.1)
+        for x in range(NUM_MCP_PINS): # test all pins toggled
+            self.mcp23008.sim.assert_store_value_reading(self.mcp23008, x, 0)            
 
 if __name__ == '__main__':
     unittest.main()
