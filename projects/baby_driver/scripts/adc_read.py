@@ -7,7 +7,7 @@ from message_defs import BabydriverMessageId
 NUM_PINS_PER_PORT = 16
 OK_STATUS = 0
 
-def adc_read(port, pin, raw):
+def adc_read(port, pin, raw=False):
     """
     Reads a raw or converted ADC value.
 
@@ -15,6 +15,7 @@ def adc_read(port, pin, raw):
         port: The port of the GPIO pin to read from.
         pin: The pin number of the GPIO pin to read from.
         raw: If raw is True, a raw read should be performed; otherwise a converted read.
+            Defaults to converted.
 
     Returns:
         The ADC reading as a 16-bit integer.
@@ -43,10 +44,10 @@ def adc_read(port, pin, raw):
         (raw, 1),
     ]
     data = can_util.can_pack(data)
-    can_util.send_message(data)
+    can_util.send_message(babydriver_id=BabydriverMessageId.ADC_READ_COMMAND, data=data)
 
     # Wait to receive the first CAN message with data
-    data_msg = can_util.next_message(babydriver_id=BabydriverMessageId.ADC_READ_COMMAND)
+    data_msg = can_util.next_message(babydriver_id=BabydriverMessageId.ADC_READ_DATA)
 
     # Extract the low and high bytes of the ADC conversion
     result_low = data_msg.data[1]
