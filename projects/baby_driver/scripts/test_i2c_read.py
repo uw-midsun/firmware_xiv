@@ -14,7 +14,7 @@ class TestI2CRead(unittest.TestCase):
     @patch('can_util.next_message')
     # pylint: disable=no-self-use
     def test_i2c_read_parameters(self, mock_next_message, mock_send_message):
-        """Tests parameters passed into gpio_set"""
+        """Tests parameters passed into i2c_read"""
 
         # Tests minimum values for address, rx_len, and reg
         mock_next_message.return_value.data = [0, 0]
