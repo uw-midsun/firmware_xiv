@@ -131,6 +131,14 @@ class TestI2CWrite(unittest.TestCase):
         self.assertRaises(ValueError,i2c_write, 1, 0, [0], 266)
         self.assertRaises(ValueError,i2c_write, 2, 0, [0], -1)
 
+        # Tests fail conditions when there is not a registered write, (reg=None)
+        self.assertRaises(ValueError,i2c_write, 2, 0, [0])
+        self.assertRaises(ValueError,i2c_write, 1, 266, [0])
+        self.assertRaises(ValueError,i2c_write, 1, -1, [0])
+        self.assertRaises(ValueError,i2c_write, 1, 0, [266])
+        self.assertRaises(ValueError,i2c_write, 1, 0, [0])
+        self.assertRaises(ValueError,i2c_write, 2, 0, [0])
+
         # Tests fail condition for can_util.next_message
         mock_next_messaage.return_value.data = [0,1]
         self.assertRaises(Exception,i2c_write, 0,0,[0],1)
