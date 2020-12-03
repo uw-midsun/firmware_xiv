@@ -18,17 +18,17 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests minimum values for port, address, tx_bytes and reg
         mock_next_messaage.return_value.data = [0,0]
-        i2c_write(0,1,1,1)
-        i2c_write(1,0,1,1)
-        i2c_write(1,1,0,1)
-        i2c_write(1,1,1,0)
-        i2c_write(1,1,1)
+        i2c_write(0,1,[7, 5, 12],1)
+        i2c_write(1,0,[7, 5, 12],1)
+        i2c_write(1,1,[0],1)
+        i2c_write(1,1,[7, 5, 12],0)
+        i2c_write(1,1,[7, 5, 12])
 
         # Tests maximum values for port, address, tx_bytes and reg
-        i2c_write(1,1,1,1)
-        i2c_write(0,255,1,1)
-        i2c_write(0,1,255,1)
-        i2c_write(0,1,1,255)
+        i2c_write(1,1,[7, 5, 12],1)
+        i2c_write(0,255,[7, 5, 12],1)
+        i2c_write(0,1,[255, 255, 255],1)
+        i2c_write(0,1,[7, 5, 12],255)
 
 @patch('can_util.send_message')
 @patch('can_util.next_message')
@@ -59,28 +59,28 @@ def test_send_message(self, mock_next_message, mock_send_message):
     # Tests low parameters for can_util.send_message
     mock_send_message.side_effect = test_parameter
     mock_next_message.return_value.data = [0,0]
-    i2c_write(0, 10, 1, 1)
+    i2c_write(0, 10, [7, 5, 12], 1)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([0, 10, 1, 1, 1], self.data)
     self.assertEqual(None, self.channel)
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-    i2c_write(1, 0, 1, 1)
+    i2c_write(1, 0, [7, 5, 12], 1)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 0, 1, 1, 1], self.data)
     self.assertEqual(None, self.channel)
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-    i2c_write(1, 10, 0)
+    i2c_write(1, 10, [0])
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 10, 0, 0], self.data)
     self.assertEqual(None, self.channel)
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-    i2c_write(1, 10, 1, 0)
+    i2c_write(1, 10, [7, 5, 12], 0)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 10, 1, 1, 0], self.data)
     self.assertEqual(None, self.channel)
@@ -96,28 +96,28 @@ def test_send_message(self, mock_next_message, mock_send_message):
 
 
     # Tests high parameters for can_util.send_message
-    i2c_write(1, 10, 1, 1)
+    i2c_write(1, 10, [7, 5, 12], 1)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 10, 1, 1], self.data)
     self.assertEqual(None, self.channel)
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-    i2c_write(1, 255, 1, 1)
+    i2c_write(1, 255, [7, 5, 12], 1)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 255, 1, 1], self.data)
     self.assertEqual(None, self.channel)
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-    i2c_write(1, 10, 255, 1)
+    i2c_write(1, 10, [255,255,255], 1)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 10, 255, 1], self.data)
     self.assertEqual(None, self.channel)
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-    i2c_write(1, 10, 1, 255)
+    i2c_write(1, 10, [7, 5, 12], 255)
     self.assertEqual(1, self.babydriver_id)
     self.assertEqual([1, 10, 1, 255], self.data)
     self.assertEqual(None, self.channel)
