@@ -44,7 +44,7 @@ class TestI2CWrite(unittest.TestCase):
         self.msg_id = None
         self.device_id = None
 
-        def test_parameter(
+        def test_low_parameter(
             babydriver_id=None,
             data=None,
             channel=None,
@@ -58,7 +58,7 @@ class TestI2CWrite(unittest.TestCase):
             self.device_id = device_id
 
         # Tests low parameters for can_util.send_message
-        mock_send_message.side_effect = test_parameter
+        mock_send_message.side_effect = test_low_parameter
         mock_next_message.return_value.data = [0,0]
         i2c_write(0, 10, [0], 1)
         self.assertEqual(9, self.babydriver_id)
@@ -88,35 +88,50 @@ class TestI2CWrite(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
+        def test_high_parameter(
+            babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID,
+            ):
+            self.babydriver_id = babydriver_id
+            self.data = data
+            self.channel = channel
+            self.msg_id = msg_id
+            self.device_id = device_id
 
-        # Tests high parameters for can_util.send_message
-        i2c_write(1, 10, [7, 5, 12, 7, 5, 12, 8, 1, 2, 3, 4, 5, 6, 7], 1)
-        self.assertEqual(9, self.babydriver_id)
-        self.assertEqual([1, 2, 3, 4, 5, 6, 7], self.data)
-        self.assertEqual(None, self.channel)
-        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
-        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+            mock_send_message.side_effect = test_high_parameter
+            mock_next_message.return_value.data = [0,0]
 
-        i2c_write(1, 255, [7, 5, 12, 7, 5, 12, 7, 255, 255, 255, 255, 255, 255, 255], 1)
-        self.assertEqual(9, self.babydriver_id)
-        self.assertEqual([255, 255, 255, 255, 255, 255, 255], self.data)
-        self.assertEqual(None, self.channel)
-        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
-        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+            # Tests high parameters for can_util.send_message
+            i2c_write(1, 10, [7, 5, 12, 7, 5, 12, 8, 1, 2, 3, 4, 5, 6, 7], 1)
+            self.assertEqual(9, self.babydriver_id)
+            self.assertEqual([1, 2, 3, 4, 5, 6, 7], self.data)
+            self.assertEqual(None, self.channel)
+            self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+            self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        i2c_write(1, 10, [255,255,255], 1)
-        self.assertEqual(9, self.babydriver_id)
-        self.assertEqual([255, 255, 255], self.data)
-        self.assertEqual(None, self.channel)
-        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
-        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+            i2c_write(1, 255, [7, 5, 12, 7, 5, 12, 7, 255, 255, 255, 255, 255, 255, 255], 1)
+            self.assertEqual(9, self.babydriver_id)
+            self.assertEqual([255, 255, 255, 255, 255, 255, 255], self.data)
+            self.assertEqual(None, self.channel)
+            self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+            self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        i2c_write(1, 10, [7, 5, 12], 255)
-        self.assertEqual(9, self.babydriver_id)
-        self.assertEqual([7, 5, 12], self.data)
-        self.assertEqual(None, self.channel)
-        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
-        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+            i2c_write(1, 10, [255,255,255], 1)
+            self.assertEqual(9, self.babydriver_id)
+            self.assertEqual([255, 255, 255], self.data)
+            self.assertEqual(None, self.channel)
+            self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+            self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+
+            i2c_write(1, 10, [7, 5, 12], 255)
+            self.assertEqual(9, self.babydriver_id)
+            self.assertEqual([7, 5, 12], self.data)
+            self.assertEqual(None, self.channel)
+            self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+            self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
