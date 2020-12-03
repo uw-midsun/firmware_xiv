@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from i2c_write import i2c_write
-from message_defs import BabydriverMessageId
+from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
 #pylint: disable=unused-argument
 class TestI2CWrite(unittest.TestCase):
@@ -45,8 +45,8 @@ def test_send_message(self, mock_next_message, mock_send_message):
 
     def test_parameter(
         babydriver_id=None,
-        data=None
-        channel=None
+        data=None,
+        channel=None,
         msg_id=BABYDRIVER_CAN_MESSAGE_ID,
         device_id=BABYDRIVER_DEVICE_ID,
     ):
@@ -57,7 +57,7 @@ def test_send_message(self, mock_next_message, mock_send_message):
         self.device_id = device_id
 
     # Tests low parameters for can_util.send_message
-    mock_send_message.side_effect = parameter_test
+    mock_send_message.side_effect = test_parameter
     mock_next_message.return_value.data = [0,0]
     i2c_write(0, 10, 1, 1)
     self.assertEqual(1, self.babydriver_id)
