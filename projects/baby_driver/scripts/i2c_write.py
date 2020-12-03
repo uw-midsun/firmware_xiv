@@ -25,8 +25,7 @@ def i2c_write(port,address, tx_bytes, reg=None):
     if reg != None:
         is_reg = 1
     else:
-        reg = 0
-    
+        reg = 0   
     if reg <0 or reg > 255:
         raise ValueError("Expected register to write to between 0 and 255")
 
@@ -44,8 +43,6 @@ def i2c_write(port,address, tx_bytes, reg=None):
             )
     
     status_msg = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
-
     # Raises Exception if status is non-OK
     if status_msg.data[1] != 0:
         raise Exception("Received STATUS_CODE {}".format(status_msg.data[1]))
-    
