@@ -42,6 +42,8 @@ def i2c_write(port,address, tx_bytes, reg=None):
                 data=tx_bytes[i:i+8]
             )
             
+    status_msg = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
+
     # Raises Exception if status is non-OK
-    if can_util.next_message(babydriver_id=BabydriverMessageId.STATUS) != 0:
-        raise Exception("Received STATUS_CODE {}".format(can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)))
+    if status_msg.data[1] != 0:
+        raise Exception("Received STATUS_CODE {}".format(status_msg.data[1]))
