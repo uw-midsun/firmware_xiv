@@ -33,7 +33,7 @@ class TestI2CWrite(unittest.TestCase):
     @patch('can_util.send_message')
     @patch('can_util.next_message')
 
-    def test_send_message(self, mock_next_message, mock_send_message):
+    def test_send_message_min(self, mock_next_message, mock_send_message):
         """Tests accuracy of parameters passed into can_util.send_message"""
 
         # Stores parameters passed into can_util.send_message
@@ -44,7 +44,7 @@ class TestI2CWrite(unittest.TestCase):
         self.msg_id = None
         self.device_id = None
 
-        def test_low_parameter(
+        def test_parameter(
             babydriver_id=None,
             data=None,
             channel=None,
@@ -58,7 +58,7 @@ class TestI2CWrite(unittest.TestCase):
             self.device_id = device_id
 
         # Tests low parameters for can_util.send_message
-        mock_send_message.side_effect = test_low_parameter
+        mock_send_message.side_effect = test_parameter
         mock_next_message.return_value.data = [0,0]
         i2c_write(0, 10, [0], 1)
         self.assertEqual(9, self.babydriver_id)
@@ -88,7 +88,19 @@ class TestI2CWrite(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        def test_high_parameter(
+    @patch('can_util.send_message')
+    @patch('can_util.next_message')
+    def test_send_message_max(self, mock_next_message, mock_send_message):
+
+        # Stores parameters passed into can_util.send_message
+        # pylint: disable=attribute-defined-outside-init
+        self.babydriver_id = None
+        self.data = None
+        self.channel = None
+        self.msg_id = None
+        self.device_id = None
+
+        def test_parameter(
             babydriver_id=None,
             data=None,
             channel=None,
@@ -101,7 +113,7 @@ class TestI2CWrite(unittest.TestCase):
             self.msg_id = msg_id
             self.device_id = device_id
 
-            mock_send_message.side_effect = test_high_parameter
+            mock_send_message.side_effect = test_parameter
             mock_next_message.return_value.data = [0,0]
 
             # Tests high parameters for can_util.send_message
@@ -132,9 +144,9 @@ class TestI2CWrite(unittest.TestCase):
             self.assertEqual(None, self.channel)
             self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
             self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
-
     @patch('can_util.send_message')
     @patch('can_util.next_message')
+
     def test_fail_conditions(self, mock_next_messaage, mock_send_message):
         """Tests fail conditions"""
 
