@@ -16,6 +16,11 @@ def i2c_read(port, address, rx_len, reg=None):
         ValueError: if parameters passed into i2c_read are invalid
         Exception: if a non-zero status code was received
     """
+    is_reg = 0
+    if reg == None:
+        reg = 0
+    else:
+        is_reg = 1
     if port !=0 and port != 1:
         raise ValueError("Expected port of 0 (I2C_PORT_1) or 1 (I2C_PORT_2)")
     if address < 0 or address > 255:
@@ -25,11 +30,7 @@ def i2c_read(port, address, rx_len, reg=None):
     if reg < 0 or reg > 255:
         raise ValueError("Expected an uint8 register between 0 and 255")
     
-    is_reg = 0
-    if reg == None:
-        reg = 0
-    else:
-        is_reg = 1
+    
     # send can message
     data_pack = can_util.can_pack([(port, 1), (address, 1), (rx_len, 1), (is_reg, 1), (reg, 1)])
     can_util.send_message(

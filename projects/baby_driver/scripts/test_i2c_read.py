@@ -5,7 +5,7 @@ from unittest.mock import patch
 from i2c_read import i2c_read
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
-
+I2C_READ_COMMAND = 6
 # pylint: disable=unused-argument
 class TestI2CRead(unittest.TestCase):
     """Test Babydriver's i2c_read function"""
@@ -14,7 +14,8 @@ class TestI2CRead(unittest.TestCase):
     # pylint: disable=no-self-use
     def test_i2c_read_parameters(self, mock_next_message, mock_send_message):
         """Tests parameters passed into gpio_set"""
-         # Tests minimum values for address, rx_len, and reg
+
+        # Tests minimum values for address, rx_len, and reg
         mock_next_message.return_value.data = [0, 0]
         i2c_read(0, 2, 1, 3)
         i2c_read(0, 0, 1, 3)
@@ -41,78 +42,77 @@ class TestI2CRead(unittest.TestCase):
         self.msg_id = None
         self.device_id = None
 
-        def parameter_test(babydriver_id=None, data=None, channel=None, msg_id=BABYDRIVER_CAN_MESSAGE_ID, device_id=BABYDRIVER_DEVICE_ID ):
-
+        def parameter_test(babydriver_id=None, data=None, channel=None, msg_id=BABYDRIVER_CAN_MESSAGE_ID, device_id=BABYDRIVER_DEVICE_ID):
             self.babydriver_id = babydriver_id
             self.data = data
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
         
-        # Tests min parameters for can_util.send_message
+        # Tests minimum parameters for can_util.send_message
         mock_send_message.side_effect = parameter_test
         mock_next_message.return_value.data = [0, 0]
         # Low port value
         i2c_read(0, 2, 1, 3)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([0, 2, 1, 1, 3], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # Min address value
         i2c_read(0, 0, 1, 3)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([0, 0, 1, 1, 3], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # Min rx_len value and High port value
         i2c_read(1, 2, 0, 3)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 2, 0, 1, 3], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # None reg value
         i2c_read(1, 0, 5)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 0, 5, 0, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # Min reg value
         i2c_read(1, 1, 5, 0)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 1, 5, 1, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        # Tests max parameters for can_util.send_message
+        # Tests maximum parameters for can_util.send_message
         # Max address value
         i2c_read(0, 255, 1, 3)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([0, 255, 1, 1, 3], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # Max rx_len value
         i2c_read(0, 3, 255, 3)
-        self.assertEqual(1, self.babydriver_id)
-        self.assertEqual([0, 0, 255, 1, 3], self.data)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
+        self.assertEqual([0, 3, 255, 1, 3], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # None reg value
         i2c_read(1, 255, 5)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 255, 5, 0, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # Max reg value
         i2c_read(1, 1, 5, 255)
-        self.assertEqual(1, self.babydriver_id)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 1, 5, 1, 255], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
