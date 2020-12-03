@@ -8,7 +8,6 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Mcp23008GpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_MCP23008_GPIO_PINS];
 
-
 #ifdef MPXE
 #include <stdlib.h>
 #include "mcp23008.pb-c.h"
@@ -23,15 +22,15 @@ static MxMcp23008Store s_store = MX_MCP23008_STORE__INIT;
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
   MxMcp23008Store *msg = mx_mcp23008_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxMcp23008Store *mask = mx_mcp23008_store__unpack(NULL, mask_buf.len, mask_buf.data);
-      for (uint8_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
-        // only update state if mask is set
-        if (mask->state[i] != 0) {
-          s_store.state[i] = msg->state[i];
-          if (s_pin_settings[mpxe_address][i].state != (uint8_t)msg->state[i]) {
-            s_pin_settings[mpxe_address][i].state = (uint8_t)msg->state[i];
-	        }
-        }
+  for (uint8_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
+    // only update state if mask is set
+    if (mask->state[i] != 0) {
+      s_store.state[i] = msg->state[i];
+      if (s_pin_settings[mpxe_address][i].state != (uint8_t)msg->state[i]) {
+        s_pin_settings[mpxe_address][i].state = (uint8_t)msg->state[i];
       }
+    }
+  }
 
   mx_mcp23008_store__free_unpacked(msg, NULL);
   mx_mcp23008_store__free_unpacked(mask, NULL);
@@ -53,9 +52,9 @@ static void prv_init_store(void) {
 }
 
 static void prv_export() {
-      for (uint16_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
-        s_store.state[i] = s_pin_settings[mpxe_address][i].state;
-      }
+  for (uint16_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
+    s_store.state[i] = s_pin_settings[mpxe_address][i].state;
+  }
   store_export(MX_STORE_TYPE__MCP23008, &s_store, NULL);
 }
 #endif
