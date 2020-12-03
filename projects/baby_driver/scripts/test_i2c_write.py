@@ -124,7 +124,8 @@ def test_send_message(self, mock_next_message, mock_send_message):
     self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
     self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-
+if __name__ == '__main__':
+    unittest.main()
 
 
 
