@@ -24,4 +24,3 @@ class BabydriverMessageId:
     ADC_READ_DATA = 5
     I2C_READ_COMMAND = 6
     I2C_READ_DATA = 7
-

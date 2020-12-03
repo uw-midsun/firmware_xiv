@@ -9,6 +9,7 @@ I2C_READ_COMMAND = 6
 # pylint: disable=unused-argument
 class TestI2CRead(unittest.TestCase):
     """Test Babydriver's i2c_read function"""
+
     @patch('can_util.send_message')
     @patch('can_util.next_message')
     # pylint: disable=no-self-use
@@ -35,20 +36,26 @@ class TestI2CRead(unittest.TestCase):
         """Tests accuracy of parameters passed into can_util.send_message"""
 
         # Stores parameters passed into can_util.send_message
-        # pylint: disable=attribute-defined-outside-init 
+        # pylint: disable=attribute-defined-outside-init
         self.babydriver_id = None
         self.data = None
         self.channel = None
         self.msg_id = None
         self.device_id = None
 
-        def parameter_test(babydriver_id=None, data=None, channel=None, msg_id=BABYDRIVER_CAN_MESSAGE_ID, device_id=BABYDRIVER_DEVICE_ID):
+        def parameter_test(babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID
+        ):
+
             self.babydriver_id = babydriver_id
             self.data = data
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
-        
+
         # Tests minimum parameters for can_util.send_message
         mock_send_message.side_effect = parameter_test
         mock_next_message.return_value.data = [0, 0]
@@ -144,4 +151,3 @@ class TestI2CRead(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
