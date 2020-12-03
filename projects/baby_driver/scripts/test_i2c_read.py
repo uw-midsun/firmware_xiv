@@ -1,4 +1,4 @@
-"""This Module Tests methods in i2c_read.py"""
+"""This module tests methods in i2c_read.py"""
 import unittest
 from unittest.mock import patch
 
