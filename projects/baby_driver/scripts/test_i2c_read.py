@@ -32,8 +32,8 @@ class TestI2CRead(unittest.TestCase):
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
-    def test_send_message(self, mock_next_message, mock_send_message):
-        """Tests accuracy of parameters passed into can_util.send_message"""
+    def test_min_values(self, mock_next_message, mock_send_message):
+        """Tests minimum i2c_read parameters for can_util.send_message"""
 
         # Stores parameters passed into can_util.send_message
         # pylint: disable=attribute-defined-outside-init
@@ -49,14 +49,12 @@ class TestI2CRead(unittest.TestCase):
             msg_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID
         ):
-
             self.babydriver_id = babydriver_id
             self.data = data
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
 
-        # Tests minimum parameters for can_util.send_message
         mock_send_message.side_effect = parameter_test
         mock_next_message.return_value.data = [0, 0]
         # Low port value
@@ -73,7 +71,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
-        # Min rx_len value and High port value
+        # Min rx_len value
         i2c_read(1, 2, 0, 3)
         self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 2, 0, 1, 3], self.data)
@@ -95,7 +93,40 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        # Tests maximum parameters for can_util.send_message
+    @patch('can_util.send_message')
+    @patch('can_util.next_message')
+    def test_max_values(self, mock_next_message, mock_send_message):
+        """Tests maximum i2c_read parameters for can_util.send_message"""
+
+        # Stores parameters passed into can_util.send_message
+        # pylint: disable=attribute-defined-outside-init
+        self.babydriver_id = None
+        self.data = None
+        self.channel = None
+        self.msg_id = None
+        self.device_id = None
+
+        def parameter_test(babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID
+        ):
+            self.babydriver_id = babydriver_id
+            self.data = data
+            self.channel = channel
+            self.msg_id = msg_id
+            self.device_id = device_id
+
+        mock_send_message.side_effect = parameter_test
+        mock_next_message.return_value.data = [0, 0]
+        # High port value
+        i2c_read(1, 2, 1, 3)
+        self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
+        self.assertEqual([1, 2, 1, 1, 3], self.data)
+        self.assertEqual(None, self.channel)
+        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
         # Max address value
         i2c_read(0, 255, 1, 3)
         self.assertEqual(I2C_READ_COMMAND, self.babydriver_id)
