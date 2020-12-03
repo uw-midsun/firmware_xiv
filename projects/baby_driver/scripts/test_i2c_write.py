@@ -144,18 +144,3 @@ class TestI2CWrite(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

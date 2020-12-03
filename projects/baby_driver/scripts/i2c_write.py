@@ -26,10 +26,10 @@ def i2c_write(port,address, tx_bytes, reg=None):
         is_reg = 1
     else:
         reg = 0
-        
+    
     if reg <0 or reg > 255:
         raise ValueError("Expected register to write to between 0 and 255")
-    
+
     can_pack = can_util.can_pack([(port,1), (address,1), (len(tx_bytes),1), (is_reg,1), (reg,1)])
     can_util.send_message(
         babydriver_id=BabydriverMessageId.I2C_WRITE_COMMAND,
@@ -38,13 +38,14 @@ def i2c_write(port,address, tx_bytes, reg=None):
 
     # Sends CAN message
     for i in range(0, len(tx_bytes), 7):
-            can_util.send_message(
-                babydriver_id=BabydriverMessageId.I2C_WRITE_DATA,
-                data=tx_bytes[i:i+8]
+        can_util.send_message(
+            babydriver_id=BabydriverMessageId.I2C_WRITE_DATA,
+            data=tx_bytes[i:i+8]
             )
-            
+    
     status_msg = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
 
     # Raises Exception if status is non-OK
     if status_msg.data[1] != 0:
         raise Exception("Received STATUS_CODE {}".format(status_msg.data[1]))
+    
