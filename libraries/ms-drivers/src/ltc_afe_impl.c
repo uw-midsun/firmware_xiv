@@ -183,8 +183,13 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
   }
 
   size_t len = SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(settings->num_devices);
+  // for (uint8_t i = 0; i < len; i++) {
+  //   LOG_DEBUG("byte %d: 0x%x\n", i, ((uint8_t *)&config_packet)[i]);
+  // }
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, (uint8_t *)&config_packet, len, NULL, 0);
+  uint8_t status = spi_exchange(settings->spi_port, (uint8_t *)&config_packet, len, NULL, 0);
+  // exit(0);
+  return status;
 }
 
 static void prv_calc_offsets(LtcAfeStorage *afe) {
@@ -269,7 +274,8 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
   for (uint8_t cell_reg = 0; cell_reg < NUM_LTC_AFE_VOLTAGE_REGISTERS; ++cell_reg) {
     LtcAfeVoltageRegisterGroup voltage_register[LTC_AFE_MAX_DEVICES] = { 0 };
     prv_read_voltage(afe, cell_reg, voltage_register);
-
+    // uint8_t *d = &voltage_register[0].reg.values[0];
+    // LOG_DEBUG("data: 0x%x, 0x%x, 0x%x, 0x%x\n", *d, *(d+1), *(d+2), *(d+3));
     for (uint8_t device = 0; device < settings->num_devices; ++device) {
       for (uint16_t cell = 0; cell < LTC6811_CELLS_IN_REG; ++cell) {
         // LSB of the reading is 100 uV

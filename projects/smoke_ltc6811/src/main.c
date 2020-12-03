@@ -12,7 +12,7 @@
 // smoke test settings
 // NOTE: Test assumes num_thermistors == num_cells
 #define SMOKE_LTC_AFE_NUM_DEVICES 1
-#define SMOKE_LTC_AFE_NUM_CELLS 1
+#define SMOKE_LTC_AFE_NUM_CELLS 12
 #define SMOKE_LTC_AFE_INPUT_BITSET_FULL 0xFFF
 
 // To disable samples set value to 0
@@ -49,17 +49,17 @@ static void prv_reset_sample_bounds(void) {
 
 static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len,
                                                 size_t max_samples) {
-  if (len != sizeof(s_result_arr)) {
-    LOG_WARN("Expected reading length to be %zu but it was %zu\n", sizeof(s_result_arr), len);
+  if (len != SIZEOF_ARRAY(s_result_arr)) {
+    LOG_WARN("Expected reading length to be %u but it was %u\n", sizeof(s_result_arr), len);
     return STATUS_CODE_INVALID_ARGS;
   }
 
-  memcpy(s_result_arr, result_arr, len);
+  memcpy(s_result_arr, result_arr, len * sizeof(s_result_arr[0]));
 
   if (s_num_samples == 0) {
-    LOG_DEBUG("INITIAL READINGS:");
+    LOG_DEBUG("INITIAL READINGS:\n");
   } else if (s_num_samples == max_samples - 1) {
-    LOG_DEBUG("READING STATS:");
+    LOG_DEBUG("READING STATS:\n");
   }
 
   for (size_t cell = 0; cell < len; ++cell) {
@@ -67,10 +67,10 @@ static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len
     s_sample_bounds[cell].max = MAX(s_result_arr[cell], s_sample_bounds[cell].max);
 
     if (s_num_samples == 0) {
-      LOG_DEBUG("CELL#%zu = %d\n", cell, s_result_arr[cell]);
+      LOG_DEBUG("CELL#%u = %d\n", cell, s_result_arr[cell]);
     } else if (s_num_samples == max_samples - 1) {
       uint16_t delta = s_sample_bounds[cell].max - s_sample_bounds[cell].min;
-      LOG_DEBUG("CELL#%zu DELTA %d (MIN=%d, MAX=%d)\n", cell, delta, s_sample_bounds[cell].min,
+      LOG_DEBUG("CELL#%u DELTA %d (MIN=%d, MAX=%d)\n", cell, delta, s_sample_bounds[cell].min,
                 s_sample_bounds[cell].max);
     }
   }
