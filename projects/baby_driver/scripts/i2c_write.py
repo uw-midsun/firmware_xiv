@@ -39,7 +39,7 @@ def i2c_write(port,address, tx_bytes, reg=None):
     for i in range(0, len(tx_bytes), 7):
             can_util.send_message(
                 babydriver_id=BabydriverMessageId.I2C_WRITE_DATA,
-                data=can_util.can_pack(tx_bytes[i:i+8])
+                data=tx_bytes[i:i+8]
             )
             
     # Raises Exception if status is non-OK
