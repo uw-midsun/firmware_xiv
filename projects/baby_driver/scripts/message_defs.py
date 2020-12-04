@@ -17,5 +17,8 @@ class BabydriverMessageId:
     """
 
     STATUS = 0
-    I2C_WRITE_COMMAND = 8
-    I2C_WRITE_DATA = 9
+    GPIO_SET = 1
+    GPIO_GET_COMMAND = 2
+    GPIO_GET_DATA = 3
+    ADC_READ_COMMAND = 4
+    ADC_READ_DATA = 5

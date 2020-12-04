@@ -37,3 +37,15 @@
 #define ADT7476A_CONFIG_REG_3_MASK 0b00000001
 
 #define ADT7476A_REG_SIZE 1
+
+// Interrupt status register bit definitions
+// ISR 1 overtemp/overvoltage bits -
+#define VCC_EXCEEDED 0x04   // Indicates that Input voltage high or low limit exceeded
+#define VCCP_EXCEEDED 0x02  // Indicates that Input voltage high or low limit exceeded
+
+// ISR 2 fan status bits - will be set if fans drop below threshold speed
+// LSB of u16 fan data
+#define FAN1_STATUS 0x04
+#define FAN2_STATUS 0x08
+#define FAN3_STATUS 0x10
+#define FAN4_STATUS 0x20
