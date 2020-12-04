@@ -47,3 +47,4 @@ def i2c_write(port,address, tx_bytes, reg=None):
     # Raises Exception if status is non-OK
     if status_msg.data[1] != 0:
         raise Exception("Received STATUS_CODE {}".format(status_msg.data[1]))
+    
