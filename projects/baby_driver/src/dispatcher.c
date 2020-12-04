@@ -13,9 +13,11 @@ static void *s_context_map[NUM_BABYDRIVER_MESSAGES] = { NULL };
 
 static void prv_call_callback(BabydriverMessageId id, uint8_t data[8]) {
   bool tx_result = true;
-  StatusCode status = s_callback_map[id](data, s_context_map[id], &tx_result);
-  if (tx_result) {
-    CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, status, 0, 0, 0, 0, 0, 0);
+  if (s_callback_map[id] != NULL) {
+    StatusCode status = s_callback_map[id](data, s_context_map[id], &tx_result);
+    if (tx_result) {
+      CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, status, 0, 0, 0, 0, 0, 0);
+    }
   }
 }
 

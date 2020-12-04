@@ -58,6 +58,9 @@
 #define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 
+// Registers gpio interrupt with STATUS pin on drv120, enables fault handling
+#define ENABLE_DRV120_FAULT_HANDLING true
+
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
 
@@ -96,6 +99,7 @@ static const CanSettings s_can_settings = {
 };
 
 static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_status_pin = { GPIO_PORT_A, 6 };
 
 static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
@@ -132,8 +136,12 @@ const CanSettings *config_get_can_settings(void) {
   return &s_can_settings;
 }
 
-const GpioAddress *config_get_drv120_relay_pin(void) {
+const GpioAddress *config_get_drv120_enable_pin(void) {
   return &s_drv120_relay_pin;
+}
+
+const GpioAddress *config_get_drv120_status_pin(void) {
+  return ENABLE_DRV120_FAULT_HANDLING ? &s_drv120_status_pin : NULL;
 }
 
 const SenseSettings *config_get_sense_settings(void) {
