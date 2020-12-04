@@ -1,4 +1,4 @@
-
+"""This module tests methods in i2c_write.py"""
 import unittest
 from unittest.mock import patch
 
@@ -34,7 +34,7 @@ class TestI2CWrite(unittest.TestCase):
     @patch('can_util.next_message')
 
     def test_send_message_min(self, mock_next_message, mock_send_message):
-        """Tests accuracy of parameters passed into can_util.send_message"""
+        """Tests accuracy of minimum parameters passed into can_util.send_message"""
 
         # Stores parameters passed into can_util.send_message
         # pylint: disable=attribute-defined-outside-init
@@ -91,7 +91,8 @@ class TestI2CWrite(unittest.TestCase):
     @patch('can_util.send_message')
     @patch('can_util.next_message')
     def test_send_message_max(self, mock_next_message, mock_send_message):
-
+        """Tests accuracy of minimum parameters passed into can_util.send_message"""
+        
         # Stores parameters passed into can_util.send_message
         # pylint: disable=attribute-defined-outside-init
         self.babydriver_id = None
