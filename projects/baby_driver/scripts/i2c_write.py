@@ -20,16 +20,17 @@ def i2c_write(port,address, tx_bytes, reg=None):
         raise ValueError("Expected address between 0 and 255")
     if not all(0 <= byte < 256 for byte in tx_bytes):
         raise ValueError("Expected list of bytes between 0 and 255")
-    if reg <0 or reg > 255:
-        raise ValueError("Expected register to write to between 0 and 255")
 
     is_reg = 0
-    if reg == None:
+    if reg is None:
         reg = 0
     else:
         is_reg = 1
+    
+    if reg <0 or reg > 255:
+        raise ValueError("Expected register to write to between 0 and 255")
 
-    can_pack = can_util.can_pack([(port,1), (address,1), (len(tx_bytes),1), (is_reg,1), (reg,1)])
+    can_pack = can_util.can_pack([(port, 1), (address, 1), (len(tx_bytes), 1), (is_reg, 1), (reg, 1)])
     can_util.send_message(
         babydriver_id=BabydriverMessageId.I2C_WRITE_COMMAND,
         data=can_pack
