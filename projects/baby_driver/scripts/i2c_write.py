@@ -18,10 +18,8 @@ def i2c_write(port,address, tx_bytes, reg=None):
         raise ValueError("Expected port of 0 (I2C_PORT_1) or 1 (I2C_PORT_2)")
     if address <0 or address > 255:
         raise ValueError("Expected address between 0 and 255")
-    # pylint: disable=consider-using-enumerate
-    for i in range(len(tx_bytes)):
-        if tx_bytes[i] <0 or tx_bytes[i] > 255:
-            raise ValueError("Expected list of bytes between 0 and 255")
+    if not all(0 <= byte < 256 for byte in tx_bytes):
+        raise ValueError("Expected list of bytes between 0 and 255")
 
     is_reg = 0
     if reg is not None:
@@ -47,4 +45,3 @@ def i2c_write(port,address, tx_bytes, reg=None):
     # Raises Exception if status is non-OK
     if status_msg.data[1] != 0:
         raise Exception("Received STATUS_CODE {}".format(status_msg.data[1]))
-    
