@@ -129,6 +129,8 @@ class TestI2CWrite(unittest.TestCase):
             self.babydriver_id = babydriver_id
             if self.babydriver_id == BabydriverMessageId.I2C_WRITE_DATA:
                 self.data += data
+            else:
+                self.data = data
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
