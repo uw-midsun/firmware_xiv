@@ -133,9 +133,9 @@ class TestI2CWrite(unittest.TestCase):
         # Tests high parameters for can_util.send_message
 
         # Tests high value for port
-        i2c_write(1, 10, [7, 5, 12, 7, 5, 12, 8, 1, 2, 3, 4, 5, 6, 7], 1)
+        i2c_write(1, 10, [0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([7, 5, 12, 7, 5, 12, 8, 1, 2, 3, 4, 5, 6, 7], self.data)
+        self.assertEqual([0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
