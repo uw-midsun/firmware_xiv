@@ -296,7 +296,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
         // return early on failure
         LOG_DEBUG("PEC error, got 0x%x but expected 0x%x\n", received_pec, data_pec);
         uint8_t *d = &voltage_register[0].reg.values[0];
-        LOG_DEBUG("data: 0x%x, 0x%x, 0x%x, 0x%x\n", *d, *(d+1), *(d+2), *(d+3));
+        LOG_DEBUG("data: 0x%x, 0x%x, 0x%x, 0x%x\n", *d, *(d + 1), *(d + 2), *(d + 3));
         return status_code(STATUS_CODE_INTERNAL_ERROR);
       }
     }
