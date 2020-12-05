@@ -127,8 +127,8 @@ class TestI2CWrite(unittest.TestCase):
             self.msg_id = msg_id
             self.device_id = device_id
 
-            mock_send_message.side_effect = test_parameter
-            mock_next_message.return_value.data = [0,0]
+        mock_send_message.side_effect = test_parameter
+        mock_next_message.return_value.data = [0,0]
 
         # Tests high parameters for can_util.send_message
 
