@@ -66,7 +66,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = [] 
         i2c_write(0, 10, [0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([0], self.data)
+        self.assertEqual([0, 10, 1, 1, 1, 1], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -75,7 +75,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 0, [0,0,0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([0,0,0], self.data)
+        self.assertEqual([1, 0, 3, 1, 1, 1], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -84,7 +84,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [0], 0)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([0], self.data)
+        self.assertEqual([1, 10, 1, 1, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -93,7 +93,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [7, 5, 12, 14], 0)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([7, 5, 12, 14], self.data)
+        self.assertEqual([1, 10, 4, 1, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -102,7 +102,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [7, 5, 12, 14])
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([7, 5, 12, 14], self.data)
+        self.assertEqual([1, 10, 4, 0, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -141,7 +141,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([0], self.data)
+        self.assertEqual([1, 10, 1, 1, 1, 1], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -150,7 +150,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 255, [7, 5, 12, 7, 5, 12, 7, 255, 255, 255, 255, 255, 255, 255], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([255, 255, 255, 255, 255, 255, 255], self.data)
+        self.assertEqual([1, 255, 14, 1, 1], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -159,7 +159,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [255,255,255], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([255, 255, 255], self.data)
+        self.assertEqual([1, 10, 3, 1, 1], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -168,7 +168,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [7, 5, 12], 255)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([7, 5, 12], self.data)
+        self.assertEqual([1, 10, 3, 1, 255], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -178,7 +178,7 @@ class TestI2CWrite(unittest.TestCase):
         testlist = [1] * 255
         i2c_write(1, 10, testlist, 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual(testlist, self.data)
+        self.assertEqual(1, 10, 255, 1, 1, self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -187,7 +187,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [7, 5, 12, 7, 5, 12, 7, 5, 12], 255)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([7, 5, 12, 7, 5, 12, 7, 5, 12], self.data)
+        self.assertEqual([1, 10, 9, 1, 255], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
