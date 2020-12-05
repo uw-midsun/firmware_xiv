@@ -22,12 +22,11 @@ def i2c_write(port,address, tx_bytes, reg=None):
         raise ValueError("Expected list of bytes between 0 and 255")
 
     is_reg = 0
-    if reg is None:
+    if reg == None:
         reg = 0
-        is_reg = 0
     else:
         is_reg = 1
-        
+
     if reg <0 or reg > 255:
         raise ValueError("Expected register to write to between 0 and 255")
 
