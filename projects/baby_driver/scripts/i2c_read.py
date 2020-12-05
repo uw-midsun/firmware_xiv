@@ -6,9 +6,9 @@ from message_defs import BabydriverMessageId
 
 def i2c_read(port, address, rx_len, reg=None):
     """
-    Reads a i2c
+    Reads a number of bytes over I2C
     Args:
-        port: I2C port (0 or 1 for I2C_PORT_1 or I2C_PORT_2) to read from
+        port: I2C port (1 or 2) to read from
         address: I2C address to read from
         rx_len: expected response length
         reg: register to read from, or None if it is a normal read (non-register read)
@@ -21,16 +21,17 @@ def i2c_read(port, address, rx_len, reg=None):
         reg = 0
     else:
         is_reg = 1
-    if port not in (0, 1):
-        raise ValueError("Expected port of 0 (I2C_PORT_1) or 1 (I2C_PORT_2)")
+    if port not in (1, 2):
+        raise ValueError("Expected port of 1 or 2 ")
     if address < 0 or address > 255:
         raise ValueError("Expected an uint8 address between 0 and 255")
     if rx_len < 0 or rx_len > 255:
         raise ValueError("Expected an uint8 response length value between 0 and 255")
     if reg < 0 or reg > 255:
         raise ValueError("Expected an uint8 register between 0 and 255")
-    # send can message
-    data_pack = can_util.can_pack([(port, 1), (address, 1), (rx_len, 1), (is_reg, 1), (reg, 1)])
+
+    # shift port to 0 or 1, and send can message
+    data_pack = can_util.can_pack([(port-1, 1), (address, 1), (rx_len, 1), (is_reg, 1), (reg, 1)])
     can_util.send_message(
         babydriver_id=BabydriverMessageId.I2C_READ_COMMAND,
         data=data_pack
