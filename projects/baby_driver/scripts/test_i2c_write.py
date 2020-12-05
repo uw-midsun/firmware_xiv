@@ -178,7 +178,7 @@ class TestI2CWrite(unittest.TestCase):
         testlist = [1] * 255
         i2c_write(1, 10, testlist, 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual(1, 10, 255, 1, 1, self.data)
+        self.assertEqual([1, 10, 255, 1, 1], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
