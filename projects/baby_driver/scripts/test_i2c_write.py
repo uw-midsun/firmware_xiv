@@ -48,12 +48,16 @@ class TestI2CWrite(unittest.TestCase):
         def test_parameter(
             babydriver_id=None,
             data=None,
+            command=None,
             channel=None,
             msg_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
-        ):
+            ):
             self.babydriver_id = babydriver_id
-            self.data += data
+            if self.babydriver_id == BabydriverMessageId.I2C_WRITE_DATA:
+                self.data += data
+            if self.babydriver_id == BabydriverMessageId.I2C_WRITE_COMMAND:
+                self.command = data
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
@@ -122,6 +126,7 @@ class TestI2CWrite(unittest.TestCase):
         def test_parameter(
             babydriver_id=None,
             data=None,
+            command=None,
             channel=None,
             msg_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
@@ -129,8 +134,8 @@ class TestI2CWrite(unittest.TestCase):
             self.babydriver_id = babydriver_id
             if self.babydriver_id == BabydriverMessageId.I2C_WRITE_DATA:
                 self.data += data
-            else:
-                self.data = data
+            if self.babydriver_id == BabydriverMessageId.I2C_WRITE_COMMAND:
+                self.command = data
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
