@@ -8,22 +8,23 @@
 // To send a CAN message from Python write
 // can_util.send_message(<id>, <data>) to send can message
 
+#include "adc.h"
+#include "adc_read.h"
 #include "can.h"
 #include "can_msg_defs.h"
 #include "dispatcher.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_get.h"
+<<<<<<< HEAD
+=======
+#include "gpio_set.h"
+>>>>>>> master
 #include "interrupt.h"
 #include "log.h"
 #include "wait.h"
 
-typedef enum {
-  CAN_EVENT_RX = 0,
-  CAN_EVENT_TX,
-  CAN_EVENT_FAULT,
-  NUM_CAN_EVENTS,
-} CanEvent;
+    typedef enum { CAN_EVENT_RX = 0, CAN_EVENT_TX, CAN_EVENT_FAULT, NUM_CAN_EVENTS, } CanEvent;
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
@@ -42,10 +43,16 @@ int main() {
   gpio_init();
   event_queue_init();
   interrupt_init();
+  adc_init(ADC_MODE_SINGLE);
 
   can_init(&s_can_storage, &s_can_settings);
 
   dispatcher_init();
+<<<<<<< HEAD
+=======
+  adc_read_init();
+  gpio_set_init();
+>>>>>>> master
   gpio_get_init();
 
   Event e = { 0 };

@@ -101,6 +101,10 @@ bool soft_timer_inuse(void) {
 }
 
 uint32_t soft_timer_remaining_time(SoftTimerId timer_id) {
+  if (timer_id >= SOFT_TIMER_MAX_TIMERS) {
+    return 0;
+  }
+
   if (s_storage[timer_id].expiry_us == 0) {
     return 0;
   }

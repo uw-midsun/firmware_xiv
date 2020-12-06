@@ -2,14 +2,16 @@
 
 // Standard hardware configurations for current_measurement.
 
-// #include "current_measurement.h"
 #include <stdint.h>
+
 #include "gpio.h"
 #include "mux.h"
 #include "pca9539r_gpio_expander.h"
 
 typedef struct {
   Pca9539rGpioAddress dsel_pin;
+  Pca9539rGpioAddress en0_pin;
+  Pca9539rGpioAddress en1_pin;
   uint8_t mux_selection;
 } PowerDistributionBts7200Data;
 
@@ -25,6 +27,8 @@ typedef struct {
   uint8_t num_bts7200_channels;  // length of preceding array
 
   MuxAddress mux_address;
+  GpioAddress mux_output_pin;
+  GpioAddress mux_enable_pin;
 } PowerDistributionCurrentHardwareConfig;
 
 extern const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG;
