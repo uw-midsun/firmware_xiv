@@ -11,7 +11,7 @@ BABYDRIVER_CAN_MESSAGE_ID = 63
 class BabydriverMessageId:
     """
     An enumeration of babydriver IDs, which go in the first uint8 in a babydriver CAN message.
-    
+
     This is the Python equivalent of the enum of the same name in babydriver_msg_defs.h and should
     be kept up to date with it.
     """
