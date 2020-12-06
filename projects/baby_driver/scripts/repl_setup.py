@@ -8,6 +8,7 @@ from gpio_port import GpioPort
 from gpio_get import gpio_get
 from gpio_set import gpio_set
 from adc_read import adc_read
+from spi_exchange import spi_exchange
 
 def setup_default_channel():
     """Set up the default CAN channel."""
