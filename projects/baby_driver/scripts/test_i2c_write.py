@@ -19,17 +19,17 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests minimum values for port, address, tx_bytes and reg
         mock_next_messaage.return_value.data = [0,0]
-        i2c_write(0,1,[7, 5, 12],1)
-        i2c_write(1,0,[7, 5, 12],1)
-        i2c_write(1,1,[0],1)
-        i2c_write(1,1,[7, 5, 12],0)
-        i2c_write(1,1,[7, 5, 12])
+        i2c_write(1,1,[7, 5, 12],1)
+        i2c_write(2,0,[7, 5, 12],1)
+        i2c_write(2,1,[0],1)
+        i2c_write(2,1,[7, 5, 12],0)
+        i2c_write(2,1,[7, 5, 12])
 
         # Tests maximum values for port, address, tx_bytes and reg
-        i2c_write(1,1,[7, 5, 12],1)
-        i2c_write(0,255,[7, 5, 12],1)
-        i2c_write(0,1,[255, 255, 255],1)
-        i2c_write(0,1,[7, 5, 12],255)
+        i2c_write(2,1,[7, 5, 12],1)
+        i2c_write(1,255,[7, 5, 12],1)
+        i2c_write(1,1,[255, 255, 255],1)
+        i2c_write(1,1,[7, 5, 12],255)
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
@@ -67,7 +67,7 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests for min value of port
         self.data = []
-        i2c_write(0, 10, [0], 1)
+        i2c_write(1, 10, [0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
         self.assertEqual([0, 10, 1, 1, 1], self.command)
         self.assertEqual([0], self.data)
@@ -77,7 +77,7 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests for min value of address
         self.data = []
-        i2c_write(1, 0, [0,0,0], 1)
+        i2c_write(2, 0, [0,0,0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
         self.assertEqual([1, 0, 3, 1, 1], self.command)
         self.assertEqual([0, 0, 0], self.data)
@@ -87,7 +87,7 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests for min value of tx_bytes
         self.data = []
-        i2c_write(1, 10, [0], 0)
+        i2c_write(2, 10, [0], 0)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
         self.assertEqual([1, 10, 1, 1, 0], self.command)
         self.assertEqual([0], self.data)
@@ -97,7 +97,7 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests for if reg=None
         self.data = []
-        i2c_write(1, 10, [7, 5, 12, 14])
+        i2c_write(2, 10, [7, 5, 12, 14])
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
         self.assertEqual([1, 10, 4, 0, 0], self.command)
         self.assertEqual([7, 5, 12, 14], self.data)
@@ -140,7 +140,7 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests high value for port
         self.data = []
-        i2c_write(1, 10, [0], 1)
+        i2c_write(2, 10, [0], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
         self.assertEqual([1, 10, 1, 1, 1], self.command)
         self.assertEqual([0], self.data)
@@ -152,7 +152,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 255, [7, 5, 12], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([1, 255, 3, 1, 1], self.command)
+        self.assertEqual([0, 255, 3, 1, 1], self.command)
         self.assertEqual([7, 5, 12], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -162,7 +162,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [255,255,255], 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([1, 10, 3, 1, 1], self.command)
+        self.assertEqual([0, 10, 3, 1, 1], self.command)
         self.assertEqual([255,255,255], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -172,7 +172,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [7, 5, 12], 255)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([1, 10, 3, 1, 255], self.command)
+        self.assertEqual([0, 10, 3, 1, 255], self.command)
         self.assertEqual([7, 5, 12], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -214,7 +214,7 @@ class TestI2CWrite(unittest.TestCase):
         self.data = []
         i2c_write(1, 10, [7, 5, 12, 7, 5, 12, 7, 8], 255)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([1, 10, 8, 1, 255], self.command)
+        self.assertEqual([0, 10, 8, 1, 255], self.command)
         self.assertEqual([7, 5, 12, 7, 5, 12, 7, 8], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -225,7 +225,7 @@ class TestI2CWrite(unittest.TestCase):
         testlist = [1] * 175
         i2c_write(1, 10, testlist, 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([1, 10, 175, 1, 1], self.command)
+        self.assertEqual([0, 10, 175, 1, 1], self.command)
         self.assertEqual(testlist, self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -238,7 +238,8 @@ class TestI2CWrite(unittest.TestCase):
         """Tests fail conditions"""
 
         # Tests fail condition for i2c_write parameter input
-        self.assertRaises(ValueError,i2c_write, 2, 0, [0], 1)
+        self.assertRaises(ValueError,i2c_write, 3, 0, [0], 1)
+        self.assertRaises(ValueError,i2c_write, -1, 0, [0], 1)
         self.assertRaises(ValueError,i2c_write, 1, 256, [0], 1)
         self.assertRaises(ValueError,i2c_write, 1, -1, [0], 1)
         self.assertRaises(ValueError,i2c_write, 1, 0, [256], 1)
@@ -248,10 +249,11 @@ class TestI2CWrite(unittest.TestCase):
         testlist = [1] * 256
         self.assertRaises(ValueError,i2c_write, 1, 0, testlist, 255)
         # Tests fail conditions when there is not a registered write, (reg=None)
-        self.assertRaises(ValueError,i2c_write, 2, 0, [0])
+        self.assertRaises(ValueError,i2c_write, 3, 0, [0])
         self.assertRaises(ValueError,i2c_write, 1, 256, [0])
         self.assertRaises(ValueError,i2c_write, 1, -1, [0])
         self.assertRaises(ValueError,i2c_write, 1, 0, [256])
+        self.assertRaises(ValueError,i2c_write, -1, 0, [256])
 
         # Tests fail condition for can_util.next_message
         mock_next_message.return_value.data = [0,1]

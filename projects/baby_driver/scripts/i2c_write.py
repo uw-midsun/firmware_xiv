@@ -14,7 +14,7 @@ def i2c_write(port,address, tx_bytes, reg=None):
     Raises:
         Exception: if a non-zero status code was received
     """
-    if port not in (1,0):
+    if port not in (1,2):
         raise ValueError("Expected port of 0 (I2C_PORT_1) or 1 (I2C_PORT_2)")
     if address <0 or address > 255:
         raise ValueError("Expected address between 0 and 255")
@@ -29,7 +29,7 @@ def i2c_write(port,address, tx_bytes, reg=None):
     if reg <0 or reg > 255:
         raise ValueError("Expected register to write to between 0 and 255")
 
-    can_pack = can_util.can_pack([(port, 1), (address, 1),
+    can_pack = can_util.can_pack([(port-1, 1), (address, 1),
     (len(tx_bytes), 1), (is_reg, 1), (reg, 1)])
 
     can_util.send_message(
