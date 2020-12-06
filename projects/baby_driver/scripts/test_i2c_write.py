@@ -6,14 +6,13 @@ from i2c_write import i2c_write
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 from message_defs import BabydriverMessageId
 
-#pylint: disable=unused-argument
+# pylint: disable=unused-argument
 class TestI2CWrite(unittest.TestCase):
     """Test i2c_write function"""
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
-    #pylint: disable =no-self-use
-
+    # pylint: disable=no-self-use
     def test_i2c_write_parameters(self, mock_next_messaage, mock_send_message):
         """Tests parameters passed into i2c_write"""
 
@@ -33,7 +32,6 @@ class TestI2CWrite(unittest.TestCase):
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
-
     def test_send_message_min(self, mock_next_message, mock_send_message):
         """Tests accuracy of minimum parameters passed into can_util.send_message"""
 
@@ -51,7 +49,7 @@ class TestI2CWrite(unittest.TestCase):
             channel=None,
             msg_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
-            ):
+        ):
             self.babydriver_id = babydriver_id
             if self.babydriver_id == BabydriverMessageId.I2C_WRITE_DATA:
                 self.data += data
@@ -123,7 +121,7 @@ class TestI2CWrite(unittest.TestCase):
             channel=None,
             msg_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
-            ):
+        ):
             self.babydriver_id = babydriver_id
             if self.babydriver_id == BabydriverMessageId.I2C_WRITE_DATA:
                 self.data += data
@@ -180,7 +178,6 @@ class TestI2CWrite(unittest.TestCase):
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
-
     def test_send_message_tx_bytes(self, mock_next_message, mock_send_message):
         """Tests accuracy of the tx_bytes parameter passed into can_util.send_message"""
         # Stores parameters passed into can_util.send_message
@@ -222,10 +219,10 @@ class TestI2CWrite(unittest.TestCase):
 
         # Tests for len(tx_bytes) == 255
         self.data = []
-        testlist = [1] * 175
+        testlist = [1] * 255
         i2c_write(1, 10, testlist, 1)
         self.assertEqual(BabydriverMessageId.I2C_WRITE_DATA, self.babydriver_id)
-        self.assertEqual([0, 10, 175, 1, 1], self.command)
+        self.assertEqual([0, 10, 255, 1, 1], self.command)
         self.assertEqual(testlist, self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -233,7 +230,6 @@ class TestI2CWrite(unittest.TestCase):
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
-
     def test_fail_conditions(self, mock_next_message, mock_send_message):
         """Tests fail conditions"""
 

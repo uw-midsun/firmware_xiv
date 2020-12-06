@@ -31,4 +31,3 @@ def setup_default_channel():
 
 if __name__ == "__main__":
     setup_default_channel()
-    
