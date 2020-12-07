@@ -1,4 +1,5 @@
 """This Module Tests methods in can_send.py"""
+# pylint: disable=unused-import
 
 import unittest
 from unittest.mock import patch

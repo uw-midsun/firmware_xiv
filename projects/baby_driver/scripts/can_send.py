@@ -1,4 +1,4 @@
-"""This module sends user-specified CAN messages, without needing to first send them through the STM32."""
+"""Sends user-specified CAN messages, without needing to first send them through the STM32."""
 
 import cantools
 import can_util
@@ -33,7 +33,8 @@ def load_dbc(dbc_filename):
     Args:
         dbc_filename: a string representing the path to a DBC file
     """
-
+    # pylint: disable=redefined-outer-name
+    # pylint: disable=invalid-name
     DBC_DATABASE = cantools.database.load_file(dbc_filename)
 
     if not DBC_DATABASE:
@@ -55,4 +56,4 @@ def can_send(msg_name, channel=None, **data):
 
     bus = can_util.get_bus(channel)
     can_msg = can_util.Message(arbitration_id=msg_obj.frame_id, data=msg_obj)
-    bus.send(msg_obj.msg)
+    bus.send(can_msg.msg)
