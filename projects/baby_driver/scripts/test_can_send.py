@@ -11,7 +11,7 @@ from can_send import can_send_raw, load_dbc, can_send
 
 class TestCanSendRaw(unittest.TestCase):
     """Tests functions in Babydriver's can_send module"""
-    
+
     @patch('can_util.send_message')
     def can_send_raw(self, mock_send_message):
         """Tests that can_send_raw raises an Exception if CAN msg fails to send"""
