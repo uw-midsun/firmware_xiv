@@ -17,7 +17,6 @@
 #include "i2c_write.h"
 #include "interrupt.h"
 #include "log.h"
-#include "soft_timer.h"
 #include "wait.h"
 
 typedef enum {
@@ -44,13 +43,12 @@ int main() {
   gpio_init();
   event_queue_init();
   interrupt_init();
-  soft_timer_init();
 
   can_init(&s_can_storage, &s_can_settings);
 
   dispatcher_init();
   gpio_set_init();
-  i2c_write_init();
+  i2c_write_init(0);
 
   Event e = { 0 };
   while (true) {
