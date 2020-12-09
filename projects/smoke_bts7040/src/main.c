@@ -15,9 +15,9 @@
 #include "soft_timer.h"
 #include "wait.h"
 
-// experimentally determined value: scaling factor of 670/1160 ~ 0.578 ohms, bias of -8 mA
-#define SMOKE_BTS7040_SENSE_RESISTOR 1160
-#define SMOKE_BTS7040_BIAS (-8)
+// these parameters need to be calibrated for the bts7040s
+#define SMOKE_BTS7040_SENSE_RESISTOR 1210
+#define SMOKE_BTS7040_BIAS 0
 
 #define SMOKE_BTS7040_MIN_FAULT_VOLTAGE_MV 3200
 #define SMOKE_BTS7040_MAX_FAULT_VOLTAGE_MV 10000
@@ -27,17 +27,17 @@
 #define IS_FRONT_POWER_DISTRO true       // Set whether to test FRONT or REAR power distro
 
 // Maximum number of channels that can be tested,
-// which is the same number of bts7200 used in front/rear power distribution
-#define MAX_TEST_CHANNELS 8
+// which is the same number of bts7040 used in front/rear power distribution
+#define MAX_TEST_CHANNELS 6
 
 #define I2C_PORT I2C_PORT_2
 #define PIN_I2C_SCL CONTROLLER_BOARD_ADDR_I2C2_SCL
 #define PIN_I2C_SDA CONTROLLER_BOARD_ADDR_I2C2_SDA
 
-// Set of channels to be tested, the array contains the indices of the BTS7200 in the front/rear HW
+// Set of channels to be tested, the array contains the indices of the BTS7040 in the front/rear HW
 // config Details at
-// https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1419740028/BTS7200+smoke+test+user+guide
-static uint8_t s_test_channels[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+// https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1922957313/BTS7040+smoke+test+user+guide
+static uint8_t s_test_channels[] = { 0, 1, 2, 3, 4, 5 };
 
 static Bts7040Storage s_bts7040_storages[MAX_TEST_CHANNELS];
 

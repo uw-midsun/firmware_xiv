@@ -13,31 +13,33 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           POWER_DISTRIBUTION_I2C_ADDRESS_1,  //
       },
   .num_dsel_i2c_addresses = 2,
-
-  .bts7040s = (PowerDistributionBts7040Data[]){ {
-                                                    .en_pin = FRONT_PIN_MAIN_DISP_EN,
-                                                    .mux_selection = 13,
-                                                },
-                                                {
-                                                    .en_pin = FRONT_PIN_DAYTIME_EN,
-                                                    .mux_selection = 8,
-                                                },
-                                                {
-                                                    .en_pin = FRONT_PIN_PARKING_BRAKE_EN,
-                                                    .mux_selection = 10,
-                                                },
-                                                {
-                                                    .en_pin = FRONT_PIN_SPARE_1_EN,
-                                                    .mux_selection = 11,
-                                                },
-                                                {
-                                                    .en_pin = FRONT_PIN_HORN_EN,
-                                                    .mux_selection = 3,
-                                                },
-                                                {
-                                                    .en_pin = FRONT_PIN_SPEAKER_EN,
-                                                    .mux_selection = 5,
-                                                } },
+  .bts7040s =
+      (PowerDistributionBts7040Data[]){
+          {
+              .en_pin = FRONT_PIN_MAIN_DISP_EN,  //
+              .mux_selection = 13,               //
+          },                                     //
+          {
+              .en_pin = FRONT_PIN_DAYTIME_EN,  //
+              .mux_selection = 8,              //
+          },                                   //
+          {
+              .en_pin = FRONT_PIN_PARKING_BRAKE_EN,  //
+              .mux_selection = 10,                   //
+          },                                         //
+          {
+              .en_pin = FRONT_PIN_SPARE_1_EN,  //
+              .mux_selection = 11,             //
+          },                                   //
+          {
+              .en_pin = FRONT_PIN_HORN_EN,  //
+              .mux_selection = 3,           //
+          },                                //
+          {
+              .en_pin = FRONT_PIN_SPEAKER_EN,  //
+              .mux_selection = 5,              //
+          }                                    //
+      },                                       //
   .num_bts7040_channels = 6,
   .mux_address =
       {
