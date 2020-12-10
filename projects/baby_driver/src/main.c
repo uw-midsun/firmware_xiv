@@ -48,7 +48,7 @@ int main() {
 
   dispatcher_init();
   gpio_set_init();
-  i2c_write_init(0);
+  i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS);
 
   Event e = { 0 };
   while (true) {

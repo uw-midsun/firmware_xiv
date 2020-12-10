@@ -15,5 +15,7 @@ typedef struct I2CWriteCommand {
   uint8_t reg;
 } I2CWriteCommand;
 
+#define I2C_WRITE_DEFAULT_TIMEOUT_MS 750
+
 // Timeout period can be adjusted - mostly for testing
 StatusCode i2c_write_init(uint32_t timeout_ms);

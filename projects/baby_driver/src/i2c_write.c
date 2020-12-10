@@ -10,7 +10,6 @@
 #include "misc.h"
 #include "watchdog.h"
 
-#define TIMEOUT_PERIOD_MS 750
 #define MAX_DATA_BYTES_TRANSMITTED 255
 
 static I2CWriteCommand s_storage = { 0 };
@@ -19,13 +18,13 @@ static WatchdogStorage s_watchdog;
 
 static uint8_t s_metadata_index = 0;
 static uint8_t s_i2c_metadata[MAX_DATA_BYTES_TRANSMITTED];
-static bool s_command_message = true;
+static bool s_expecting_command_message = true;
 
 // Resets module state to initial state
 static void prv_i2c_data_reset(void) {
   s_metadata_index = 0;
   memset(s_i2c_metadata, 0, sizeof(s_i2c_metadata));
-  s_command_message = true;
+  s_expecting_command_message = true;
 
   s_storage.port = 0;
   s_storage.address = 0;
@@ -38,7 +37,7 @@ static void prv_i2c_data_reset(void) {
 static void prv_expiry_callback(void *context) {
   // Only tx's timeout error if timeout occurs between data and command message or consecutive data
   // messages
-  if (!s_command_message) {
+  if (!s_expecting_command_message) {
     prv_i2c_data_reset();
     CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_TIMEOUT, 0, 0, 0, 0, 0, 0);
   }
@@ -79,7 +78,7 @@ static StatusCode prv_i2c_write_data_callback(uint8_t data[8], void *context, bo
   *tx_result = false;
 
   // Checks whether data message was expected
-  if (s_command_message) {
+  if (s_expecting_command_message) {
     *tx_result = true;
     prv_i2c_data_reset();
     return STATUS_CODE_INVALID_ARGS;
@@ -114,25 +113,21 @@ static StatusCode prv_i2c_write_command_callback(uint8_t data[8], void *context,
   s_storage.reg = data[5];
 
   // Checks whether port is invalid or whether a command message is expected
-  if (s_storage.port >= NUM_I2C_PORTS || !s_command_message) {
+  if (s_storage.port >= NUM_I2C_PORTS || !s_expecting_command_message) {
     *tx_result = true;
     prv_i2c_data_reset();
     return STATUS_CODE_INVALID_ARGS;
   }
 
   // Expects a data message next
-  s_command_message = false;
+  s_expecting_command_message = false;
 
   return STATUS_CODE_OK;
 }
 
 StatusCode i2c_write_init(uint32_t timeout_ms) {
   // For timeout test the the timeout period is adjusted otherwise 750ms is the default timeout
-  if (timeout_ms) {
-    watchdog_start(&s_watchdog, timeout_ms, prv_expiry_callback, NULL);
-  } else {
-    watchdog_start(&s_watchdog, TIMEOUT_PERIOD_MS, prv_expiry_callback, NULL);
-  }
+  watchdog_start(&s_watchdog, timeout_ms, prv_expiry_callback, NULL);
   status_ok_or_return(dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_WRITE_COMMAND,
                                                    prv_i2c_write_command_callback, NULL));
   return dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_WRITE_DATA,

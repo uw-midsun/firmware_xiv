@@ -73,7 +73,7 @@ void setup_test(void) {
   if (s_timeout_test) {
     TEST_ASSERT_OK(i2c_write_init(TEST_TIMEOUT_PERIOD_MS));
   } else {
-    TEST_ASSERT_OK(i2c_write_init(0));
+    TEST_ASSERT_OK(i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS));
   }
   s_times_callback_called = 0;
 
@@ -370,18 +370,8 @@ void test_timeout_error_i2c(void) {
 
   // Delay before next message to trigger timeout error
   delay_ms(TEST_TIMEOUT_PERIOD_MS);
-  // MS_TEST_HELPER_CAN_TX_RX will stall waiting for a message to be received. This makes it
-  // difficult to check whether the timeout is being triggered on time. By calculating the time it
-  // takes for the status message to be returned, this can be prevented.
-  clock_t start_time = clock();
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  clock_t end_time = clock();
-  // Stores time taken to receive a status message in milliseconds and truncates the number to 0
-  // decimals
-  uint32_t time_taken = 1000 * ((end_time - start_time) / (double)CLOCKS_PER_SEC);
 
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
   TEST_ASSERT_EQUAL(STATUS_CODE_TIMEOUT, s_received_status);
-  // It is expected that it will take 10ms +/- 10ms for status to be returned
-  TEST_ASSERT_INT32_WITHIN(10, 10, time_taken);
 }
