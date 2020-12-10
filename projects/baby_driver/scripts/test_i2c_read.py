@@ -6,7 +6,6 @@ from i2c_read import i2c_read
 from can_util import Message
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
 
-I2C_READ_COMMAND = 6
 # pylint: disable=unused-argument
 class TestI2CRead(unittest.TestCase):
     """Test Babydriver's i2c_read function"""
