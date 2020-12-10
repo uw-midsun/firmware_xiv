@@ -8,7 +8,8 @@ enum MxStoreType {
   ADT7476A = 4;
   ADC = 5;
   PCA9539R = 6;
-  END = 7;
+  MCP23008 = 7;
+  END = 8;
 }
 
 message MxStoreInfo {
