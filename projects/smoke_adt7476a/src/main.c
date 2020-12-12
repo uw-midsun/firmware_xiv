@@ -87,6 +87,7 @@ int main() {
 
   prv_periodic_set_speed(SOFT_TIMER_INVALID_TIMER, NULL);
   while (true) {
+    LOG_DEBUG("WAITING\n");
     wait();
   }
 }
