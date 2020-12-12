@@ -34,23 +34,10 @@ void test_wait_init_works_timer(void) {
     soft_timer_start_seconds(WAIT_INTERVAL_S, prv_test_wait_interrupt_callback, NULL, NULL);
 
     wait();
-
+    s_num_wait_cycles_timer++;
     if (s_num_wait_cycles_timer > EXPECTED_INTERRUPT_CYCLES - 1) {
       break;
     }
   }
   TEST_ASSERT_EQUAL(EXPECTED_INTERRUPT_CYCLES, s_num_wait_cycles_timer);
-}
-
-void test_wait_init_works_gpio(void) {
-  int done = 0;
-  while (!done) {
-    wait();
-    s_num_wait_cycles_gpio++;
-
-    if (s_num_wait_cycles_gpio > 1) {
-      break;
-    }
-  }
-  TEST_ASSERT_EQUAL(1, s_num_wait_cycles_gpio);
 }
