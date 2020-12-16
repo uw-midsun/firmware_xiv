@@ -41,7 +41,6 @@ def gpio_get(port, pin):
     if status != 0:
         raise Exception("ERROR: Non-OK status returned: {}".format(status))
 
-
     raw_state = gpio_data_msg.data[1]
 
     gpio_pin_state = bool(raw_state)
