@@ -9,16 +9,14 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     """
     Sends data through SPI
 
-    The tx_bytes is an int array
-    The rx_len is an int.
-    The spi_port can be entered as either a string or int value (e.g. 'A' or 0). 
-        Must be pin 1 or 2
-    The spi_mode is an int
-    The baudrate is an int
-    The pin is an int value
-    The CS pin, if not None, should be passed as a tuple (port, pin), where pin is an
-        int in [0, NUM_PINS_PER_PORT) and port is either an int in [0, NUM_GPIO_PORTS),
-        or a string 'a' through 'f', case insensitive;
+        The tx_bytes is an int array
+        The rx_len is an int.
+        The spi_port can be entered as either a string or int value (e.g. 'A' or 0). 
+        The spi_mode is an int
+        The baudrate is an int
+        The CS pin, if not None, should be passed as a tuple (port, pin), where pin is an
+            int in [0, NUM_PINS_PER_PORT) and port is either an int in [0, NUM_GPIO_PORTS),
+            or a string 'a' through 'f', case insensitive;
     
     Args: 
         TODO 
@@ -30,8 +28,12 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         cs: 
     Raises: 
         TODO 
-        AttributeError: if port parameter is entered as a string and is invalid 
+        AttributeError: if spi_port parameter is entered as a string and is invalid 
     """
+
+    # If port is entered as a str, convert to int
+    if isinstance(spi_port, str):
+        spi_port = getattr(GpioPort, spi_port.capitalize())
 
     if spi_port < 0 or spi_port >= GpioPort.NUM_GPIO_PORTS:
         raise ValueError("Expected port between A and {}".format(
@@ -135,15 +137,15 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     for i in range(0, math.ceil(rx_len / 7) + 1):
         rx_msg = can_util.next_message(
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
-        data = rx_msg.data[1]
+        data = rx_msg.data
         print("data {}".format(i))
         print(rx_msg)
         print(data)
         if count < 7:
             tmp_data = []
             for i in range(0, count):
-                # print(data[i+1])
-                tmp_data.append(data[i+1])
+                print(tmp_data)
+                tmp_data.append(data[i])
             rx_data.append(tmp_data)
             break
         rx_data.append(data[1:])
@@ -157,7 +159,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         raise Exception("Received STATUS_CODE {}".format(status.data[1]))
         # raise Exception("ERROR: Non-OK status returned: {}".format(status))
 
-    return rx_data
+    return rx_data[0]
 
 
     
