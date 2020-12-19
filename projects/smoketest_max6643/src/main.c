@@ -5,14 +5,13 @@
 #include "log.h"
 #include "max6643_fan_controller.h"
 #include "wait.h"
+// The smoke test (in a project called smoke_max6643) uses the MAX6643 driver
+// to register two separate callbacks which LOG_WARN a warning when the fan fail or
+// overtemp conditions are signalled.It also have a #define bool constant as a parameter
+// if that constant is true, it should turn the full
+// speed pin high, and if false, it should turn it low.
 
-#define FANFAIL_PIN \
-  { .port = GPIO_PORT_B, .pin = 4 }
-#define OVERTEMP_PIN \
-  { .port = GPIO_PORT_B, .pin = 5 }
-#define FAN_PIN \
-  { .port = GPIO_PORT_B, .pin = 3 }
-#define FAN_SPEED_HIGH true
+#define FAN_FULL_SPEED true
 
 static void prv_fanfail_callback(const GpioAddress *address, void *context) {
   LOG_WARN("Error %s\n", "Warning: The fan failed");
@@ -26,24 +25,22 @@ int main(void) {
   interrupt_init();
   gpio_it_init();
   gpio_init();
-  GpioAddress fanfail_pin_address = FANFAIL_PIN;
-  GpioAddress overtemp_pin_address = OVERTEMP_PIN;
-  GpioAddress fan_pin_address = FAN_PIN;
-  bool fan_speed_toggle = FAN_SPEED_HIGH;
+  GpioAddress fanfail_pin_address = { .port = GPIO_PORT_B, .pin = 4 };
+  GpioAddress overtemp_pin_address = { .port = GPIO_PORT_B, .pin = 5 };
+  GpioAddress fan_pin_address = { .port = GPIO_PORT_B, .pin = 3 };
+  bool fan_speed_toggle = FAN_FULL_SPEED;
   GpioSettings gpio_high_settings = {
-    .direction = GPIO_DIR_OUT,  //
-    .state = GPIO_STATE_HIGH,   //
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_HIGH,
   };
   GpioSettings gpio_low_settings = {
-    .direction = GPIO_DIR_OUT,  //
-    .state = GPIO_STATE_LOW,    //
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_LOW,
   };
   if (fan_speed_toggle) {
     gpio_init_pin(&fan_pin_address, &gpio_high_settings);
-    gpio_set_state(&fan_pin_address, GPIO_STATE_HIGH);
   } else {
     gpio_init_pin(&fan_pin_address, &gpio_low_settings);
-    gpio_set_state(&fan_pin_address, GPIO_STATE_LOW);
   }
   Max6643Settings settings = { .fanfail_pin = fanfail_pin_address,
                                .overtemp_pin = overtemp_pin_address,
