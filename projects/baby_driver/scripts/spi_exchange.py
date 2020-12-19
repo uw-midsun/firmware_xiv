@@ -1,4 +1,4 @@
-""" This modules provides the Python implementation to exchange data through SPI and the CAN protocol"""
+""" This modules provides the Python implementation to exchange data through the SPI protocol"""
 
 import math
 import can_util
@@ -105,6 +105,8 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
                 data.append(0)
             # print(barr)   
             # data = narr 
+            # print("< 7")
+            # print(data)
         # print(data)
         tmp = [12]
         tmp.extend(data)
@@ -137,18 +139,22 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     for i in range(0, math.ceil(rx_len / 7) + 1):
         rx_msg = can_util.next_message(
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
-        data = rx_msg.data
+        d = rx_msg.data
         print("data {}".format(i))
         print(rx_msg)
-        print(data)
-        if count < 7:
+        print(d)
+        if count <= 7:
             tmp_data = []
             for i in range(0, count):
+                tmp_data.append(d[i])
+                print("tmp")
                 print(tmp_data)
-                tmp_data.append(data[i])
-            rx_data.append(tmp_data)
+                print(d)
+            rx_data = rx_data + tmp_data
             break
-        rx_data.append(data[1:])
+        rx_data = rx_data + d[0:]
+        print("rx_data")
+        print(rx_data)
         count -= 7
 
     status = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
@@ -159,7 +165,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         raise Exception("Received STATUS_CODE {}".format(status.data[1]))
         # raise Exception("ERROR: Non-OK status returned: {}".format(status))
 
-    return rx_data[0]
+    return rx_data
 
 
     

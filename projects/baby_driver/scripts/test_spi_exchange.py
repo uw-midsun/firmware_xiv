@@ -44,8 +44,11 @@ class TestSPIExchange(unittest.TestCase):
 
         # Tests parameters for can_util.send_message
         mock_send_message.side_effect = parameter_test
-        mock_next_message.return_value.data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        # mock data sent back from firmware project, each message sends 7 bits
+        # mock_next_message.return_value.data = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0]]
+        mock_next_message.return_value.data = [0, 0, 0, 0, 0, 0, 0]
 
+        # Normal test
         self.assertEqual(spi_exchange(
             tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
             rx_len=5,
@@ -56,19 +59,6 @@ class TestSPIExchange(unittest.TestCase):
         ), [0, 0, 0, 0, 0])
         # self.assertEqual(BabydriverMessageId.SPI_EXCHANGE_METADATA_1, self.babydriver_id) TODO returns TX_DATA for some reason...
         #self.assertEqual([12, 1, 1, 1, 0, 0, 0, 0], self.data)
-        self.assertEqual(None, self.channel)
-        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
-        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
-
-        # 0 rx_len
-        self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=0,
-            spi_port="B",
-            spi_mode=0,
-            baudrate=5000000,
-            cs=("A", 1),
-        ), [])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -86,21 +76,54 @@ class TestSPIExchange(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        # Test with CS not defined
+        # Test default values (including CS)
         self.assertEqual(spi_exchange(
             tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
             rx_len=5,
-            spi_port=2,
-            spi_mode=0,
-            baudrate=5000000
         ), [0, 0, 0, 0, 0])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        # Test default values (including CS)
+        # 0 rx_len
+        self.assertEqual(spi_exchange(
+            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
+            rx_len=0,
+            spi_port="B",
+            spi_mode=0,
+            baudrate=5000000,
+            cs=("A", 1),
+        ), [])
+        self.assertEqual(None, self.channel)
+        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+
+        # Test rx_len equal a multiple of 7
+        self.assertEqual(spi_exchange(
+            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
+            rx_len=7,
+        ), [0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(None, self.channel)
+        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Test rx_len > 7
+        self.assertEqual(spi_exchange(
+            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
+            rx_len=8,
+        ), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(None, self.channel)
+        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+
+        # rx_len > len(tx_bytes)
+        self.assertEqual(spi_exchange(
+            tx_bytes=[1],  # 10 bits
+            rx_len=2,
+        ), [0, 0, 0, 0, 0, 0, 0, 0])
+        self.assertEqual(None, self.channel)
+        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
