@@ -1,16 +1,21 @@
 """ This modules provides the Python implementation to exchange data through the SPI protocol"""
 
 import math
+import sys
 import can_util
 from gpio_port import GpioPort
 from message_defs import BabydriverMessageId
+
+GPIO_PINS_PER_PORT = 16
+
+#TODO add error in front of error messages
 
 def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=None):
     """
     Sends data through SPI
 
         The tx_bytes is an int array
-        The rx_len is an int.
+        The rx_len is a non-negative int.
         The spi_port can be entered as either a string or int value (e.g. 'A' or 0). 
         The spi_mode is an int
         The baudrate is an int
@@ -35,12 +40,12 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     if isinstance(spi_port, str):
         spi_port = getattr(GpioPort, spi_port.capitalize())
 
-    if spi_port < 0 or spi_port >= GpioPort.NUM_GPIO_PORTS:
-        raise ValueError("Expected port between A and {}".format(
-            chr(GpioPort.NUM_GPIO_PORTS + ord('A') - 1)
-        ))
+    if spi_port < 1 or spi_port > 2:
+        raise ValueError("Expected SPI port A or B")
     if spi_mode < 0 or spi_mode > 3:
         raise ValueError("Expected mode between 0 and 3")
+    if rx_len < 0:
+        raise ValueError("rx_len must be a non-negative integer")
 
     if cs == None:
         cs_port = 0
@@ -54,8 +59,12 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     if isinstance(cs_port, str):
         cs_port = getattr(GpioPort, cs_port.capitalize())
 
+    if cs_port < 0 or cs_port >= GpioPort.NUM_GPIO_PORTS:
+        raise ValueError("ERROR: invalid CS GPIO port")
+    if cs_pin < 0 or cs_pin >= GPIO_PINS_PER_PORT:
+        raise ValueError("ERROR: invalid CS GPIO pin number")
+
     data1 = [
-        (10, 1), # id
         (spi_port, 1), 
         (spi_mode, 1),
         (len(tx_bytes), 1), # tx_len
@@ -66,7 +75,6 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     ]
 
     data2 = [
-        (11, 1), # id
         (baudrate, 4)
     ]
 
@@ -76,8 +84,14 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     # print("tx")
     # print(tx_bytes)
 
+    # print(sys.getsizeof(data1))
+    # print(sys.getsizeof(data2))
+
     data1 = can_util.can_pack(data1)
     data2 = can_util.can_pack(data2)
+
+    # print(sys.getsizeof(data1))
+    # print(sys.getsizeof(data2))
 
     can_util.send_message(
         babydriver_id=BabydriverMessageId.SPI_EXCHANGE_METADATA_1,
@@ -107,19 +121,19 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
             # data = narr 
             # print("< 7")
             # print(data)
+        # print("data")
         # print(data)
-        tmp = [12]
-        tmp.extend(data)
+        # tmp = [12]
+        # tmp.extend(data)
         # tmp = can_util.can_pack(tmp)
         tmp = [
-            (tmp[0], 1),
-            (tmp[1], 1),
-            (tmp[2], 1),
-            (tmp[3], 1),
-            (tmp[4], 1),
-            (tmp[5], 1),
-            (tmp[6], 1),
-            (tmp[7], 1)
+            (data[0], 1),
+            (data[1], 1),
+            (data[2], 1),
+            (data[3], 1),
+            (data[4], 1),
+            (data[5], 1),
+            (data[6], 1),
         ]
         # print(tmp)
         new_data = can_util.can_pack(tmp)
@@ -135,7 +149,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
 
     count = rx_len
     rx_data = []
-    print(range(0, math.ceil(rx_len / 7) + 1))
+    # print(range(0, math.ceil(rx_len / 7) + 1))
     for i in range(0, math.ceil(rx_len / 7) + 1):
         rx_msg = can_util.next_message(
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)

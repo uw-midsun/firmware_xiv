@@ -5,12 +5,13 @@ from unittest.mock import patch
 
 from spi_exchange import spi_exchange
 from gpio_port import GpioPort
-import can_util
+from can_util import Message
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
 
 # TODO
 # shorten spi exchange calls without param names
 
+FAILING_STATUS = 1
 class TestSPIExchange(unittest.TestCase):
     """Test spi_exchange function"""
 
@@ -45,7 +46,6 @@ class TestSPIExchange(unittest.TestCase):
         # Tests parameters for can_util.send_message
         mock_send_message.side_effect = parameter_test
         # mock data sent back from firmware project, each message sends 7 bits
-        # mock_next_message.return_value.data = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0]]
         mock_next_message.return_value.data = [0, 0, 0, 0, 0, 0, 0]
 
         # Normal test
@@ -76,7 +76,7 @@ class TestSPIExchange(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        # Test default values (including CS)
+        # Test default values
         self.assertEqual(spi_exchange(
             tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
             rx_len=5,
@@ -94,6 +94,15 @@ class TestSPIExchange(unittest.TestCase):
             baudrate=5000000,
             cs=("A", 1),
         ), [])
+        self.assertEqual(None, self.channel)
+        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
+        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
+
+        # Test rx_len < 7
+        self.assertEqual(spi_exchange(
+            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
+            rx_len=6,
+        ), [0, 0, 0, 0, 0, 0])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
@@ -116,15 +125,6 @@ class TestSPIExchange(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-        # rx_len > len(tx_bytes)
-        self.assertEqual(spi_exchange(
-            tx_bytes=[1],  # 10 bits
-            rx_len=2,
-        ), [0, 0, 0, 0, 0, 0, 0, 0])
-        self.assertEqual(None, self.channel)
-        self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
-        self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
-
     @patch('can_util.send_message')
     @patch('can_util.next_message')
     def test_fail_conditions(self, mock_next_message, mock_send_message):
@@ -138,11 +138,30 @@ class TestSPIExchange(unittest.TestCase):
 
         # Invalid spi_mode
         self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, -1, 50)
+        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 0, 50)
         self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 4, 50)
 
+        # Invalid rx_len
+        self.assertRaises(ValueError, spi_exchange, [0], -1, GpioPort.A, 2, 50)
+
+        # Invalid cs_port
+        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (-1, 2))
+        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (7, 2))
+        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, ("G", 2))
+
+        # Invalid cs_pin
+        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (1, -1))
+        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (1, 17))
+
         # Failing status code
-        mock_next_message.return_value.data = [0, 0, 0]
-        self.assertRaises(Exception, spi_exchange, [0], 1, GpioPort.A, -1, 50)
+        mock_next_message.return_value.data = [0, 0, 0] # bad return data
+        self.assertRaises(Exception, spi_exchange, [0], 1, GpioPort.A, 3, 50)
+        # Set mock returns for 2 calls of next_message
+        data_msg = [BabydriverMessageId.SPI_EXCHANGE_RX_DATA, 0, 0, 0, 0, 0, 0, 0]
+        status_msg = [BabydriverMessageId.STATUS, FAILING_STATUS]
+        # mock_next_message.return_value.data = [0, 0, 0, 0, 0, 0, 0] # normal return data
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
+        self.assertRaises(Exception, spi_exchange, [0], 1, GpioPort.A, 3, 50)
 
 
 if __name__ == '__main__':
