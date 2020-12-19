@@ -41,11 +41,11 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         spi_port = getattr(GpioPort, spi_port.capitalize())
 
     if spi_port < 1 or spi_port > 2:
-        raise ValueError("Expected SPI port A or B")
+        raise ValueError("ERROR: Expected SPI port A or B")
     if spi_mode < 0 or spi_mode > 3:
-        raise ValueError("Expected mode between 0 and 3")
+        raise ValueError("ERROR: Expected mode between 0 and 3")
     if rx_len < 0:
-        raise ValueError("rx_len must be a non-negative integer")
+        raise ValueError("ERROR: rx_len must be a non-negative integer")
 
     if cs == None:
         cs_port = 0
@@ -78,20 +78,8 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         (baudrate, 4)
     ]
 
-    # print(data1)
-    # print(data2)
-
-    # print("tx")
-    # print(tx_bytes)
-
-    # print(sys.getsizeof(data1))
-    # print(sys.getsizeof(data2))
-
     data1 = can_util.can_pack(data1)
     data2 = can_util.can_pack(data2)
-
-    # print(sys.getsizeof(data1))
-    # print(sys.getsizeof(data2))
 
     can_util.send_message(
         babydriver_id=BabydriverMessageId.SPI_EXCHANGE_METADATA_1,
@@ -104,28 +92,13 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     )
 
     # collect bytes into groups of 7
-    # TODO turn byte arr into int arr
     chunks = [tx_bytes[x:x+7] for x in range(0, len(tx_bytes), 7)] 
-
-    # print("chunks")
-    # print(chunks)
 
     for data in chunks: 
         # pad with 0s if length isn't 7
         if len(data) < 7:
-            # narr = data
-            # print(barr)
             for i in range(7 - len(data)): 
                 data.append(0)
-            # print(barr)   
-            # data = narr 
-            # print("< 7")
-            # print(data)
-        # print("data")
-        # print(data)
-        # tmp = [12]
-        # tmp.extend(data)
-        # tmp = can_util.can_pack(tmp)
         tmp = [
             (data[0], 1),
             (data[1], 1),
@@ -135,49 +108,31 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
             (data[5], 1),
             (data[6], 1),
         ]
-        # print(tmp)
-        new_data = can_util.can_pack(tmp)
-        print(new_data)
         can_util.send_message(
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_TX_DATA,
-            data=new_data
+            data=can_util.can_pack(tmp)
         )
 
-    # print(chunks)
-
     # Receive bytes
-
     count = rx_len
     rx_data = []
-    # print(range(0, math.ceil(rx_len / 7) + 1))
     for i in range(0, math.ceil(rx_len / 7) + 1):
         rx_msg = can_util.next_message(
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
         d = rx_msg.data
-        print("data {}".format(i))
-        print(rx_msg)
-        print(d)
         if count <= 7:
             tmp_data = []
             for i in range(0, count):
                 tmp_data.append(d[i])
-                print("tmp")
-                print(tmp_data)
-                print(d)
             rx_data = rx_data + tmp_data
             break
         rx_data = rx_data + d[0:]
-        print("rx_data")
-        print(rx_data)
         count -= 7
 
     status = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
 
     if status.data[1] != 0:
-        # print("rx_data")
-        # print(rx_data)
-        raise Exception("Received STATUS_CODE {}".format(status.data[1]))
-        # raise Exception("ERROR: Non-OK status returned: {}".format(status))
+        raise Exception("ERROR: Received non-zero status code: {}".format(status.data[1]))
 
     return rx_data
 

@@ -6,7 +6,8 @@ from unittest.mock import patch
 from spi_exchange import spi_exchange
 from gpio_port import GpioPort
 from can_util import Message
-from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
+from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID,
+                         BabydriverMessageId
 
 # TODO
 # shorten spi exchange calls without param names
