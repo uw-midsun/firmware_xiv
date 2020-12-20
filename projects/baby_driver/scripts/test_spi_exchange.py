@@ -6,11 +6,7 @@ from unittest.mock import patch
 from spi_exchange import spi_exchange
 from gpio_port import GpioPort
 from can_util import Message
-from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID,
-                         BabydriverMessageId
-
-# TODO
-# shorten spi exchange calls without param names
+from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
 
 FAILING_STATUS = 1
 class TestSPIExchange(unittest.TestCase):
@@ -28,7 +24,6 @@ class TestSPIExchange(unittest.TestCase):
         self.channel = None
         self.msg_id = None
         self.device_id = None
-        # self.read_status = [BabydriverMessageId.STATUS, 0]
 
         def parameter_test(
             babydriver_id=None,
@@ -58,29 +53,21 @@ class TestSPIExchange(unittest.TestCase):
             baudrate=5000000,
             cs=("A", 1),
         ), [0, 0, 0, 0, 0])
-        # self.assertEqual(BabydriverMessageId.SPI_EXCHANGE_METADATA_1, self.babydriver_id) TODO returns TX_DATA for some reason...
-        #self.assertEqual([12, 1, 1, 1, 0, 0, 0, 0], self.data)
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Test with spi_port as an int value
         self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=5,
-            spi_port=2,
-            spi_mode=0,
-            baudrate=5000000,
-            cs=(1, 1),
-        ), [0, 0, 0, 0, 0])
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 5, 2, 0, 5000000, (1, 1)), [0, 0, 0, 0, 0]
+        )
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Test default values
         self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=5,
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 5
         ), [0, 0, 0, 0, 0])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -88,12 +75,7 @@ class TestSPIExchange(unittest.TestCase):
 
         # 0 rx_len
         self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=0,
-            spi_port="B",
-            spi_mode=0,
-            baudrate=5000000,
-            cs=("A", 1),
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 0, "B", 0, 5000000, ("A", 1),
         ), [])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -101,8 +83,7 @@ class TestSPIExchange(unittest.TestCase):
 
         # Test rx_len < 7
         self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=6,
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 6
         ), [0, 0, 0, 0, 0, 0])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -110,8 +91,7 @@ class TestSPIExchange(unittest.TestCase):
 
         # Test rx_len equal a multiple of 7
         self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=7,
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 7
         ), [0, 0, 0, 0, 0, 0, 0])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -119,8 +99,7 @@ class TestSPIExchange(unittest.TestCase):
 
         # Test rx_len > 7
         self.assertEqual(spi_exchange(
-            tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
-            rx_len=8,
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 8
         ), [0, 0, 0, 0, 0, 0, 0, 0])
         self.assertEqual(None, self.channel)
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
@@ -128,6 +107,7 @@ class TestSPIExchange(unittest.TestCase):
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
+    # pylint: disable=unused-argument
     def test_fail_conditions(self, mock_next_message, mock_send_message):
         """Tests fail conditions"""
 
