@@ -7,48 +7,46 @@ from message_defs import BabydriverMessageId
 
 GPIO_PINS_PER_PORT = 16
 
-# 'cs' doesn't conform to snake_case
-# pylint: disable=C0103
-# too many arguments
-# pylint: disable=R0913
-# too many branches
-# pylint: disable=R0912
-# too many local variables
-# pylint: disable=R0914
+# pylint: disable=invalid-name
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
 def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=None):
     """
     Sends data through SPI
         The tx_bytes is an int array
         The rx_len is a non-negative int.
         The spi_port can be entered as either a string or int value (e.g. 'A' or 0).
-        The spi_mode is an int
-        The baudrate is an int
-        The CS pin, if not None, should be passed as a tuple (port, pin), where pin is an
+        The spi_mode is a non-negative int.
+        The baudrate is a non-negative int.
+        The CS pin, if not None, is a tuple (port, pin), where pin is an
             int in [0, NUM_PINS_PER_PORT) and port is either an int in [0, NUM_GPIO_PORTS),
-            or a string 'a' through 'f', case insensitive;
+            or a string 'a' through 'f', case insensitive
     Args:
-        TODO
         tx_bytes: The bytes to TX.
         rx_len: Number of bytes to RX
         spi_port: port of the GPIO pin to perform SPI exchange on (1 or 2)
         spi_mode: SPI mode to use (0, 1, 2 or 3)
-        baudrate:
-        cs:
+        baudrate: baudrate to use
+        cs: chip select port and pin to use (defaults to (1, 1))
     Raises:
-        TODO
-        AttributeError: if spi_port parameter is entered as a string and is invalid
+        AttributeError: if spi_port, cs_port parameter is entered as a string and is invalid
+        ValueError: if spi_port, spi_mode, rx_len, cs_port, cs_pin don't meet their requirements
+        Exception: if a non-zero status code was received.
     """
 
     # If port is entered as a str, convert to int
     if isinstance(spi_port, str):
         spi_port = getattr(GpioPort, spi_port.capitalize())
 
-    if spi_port < 1 or spi_port > 2:
+    if spi_port not in (0, 1):
         raise ValueError("ERROR: Expected SPI port A or B")
-    if spi_mode < 0 or spi_mode > 3:
+    if spi_mode not in (0, 1, 2, 3):
         raise ValueError("ERROR: Expected mode between 0 and 3")
     if rx_len < 0:
         raise ValueError("ERROR: rx_len must be a non-negative integer")
+    if baudrate < 0:
+        raise ValueError("ERROR: baudrate must be a non-negative integer")
 
     if cs is None:
         cs_port = 0
@@ -62,9 +60,11 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         use_cs = 1
 
     if cs_port < 0 or cs_port >= GpioPort.NUM_GPIO_PORTS:
-        raise ValueError("ERROR: invalid CS GPIO port")
+        raise ValueError("ERROR: Expected CS port between A and {}".format(
+            chr(GpioPort.NUM_GPIO_PORTS + ord('A') - 1)
+        ))
     if cs_pin < 0 or cs_pin >= GPIO_PINS_PER_PORT:
-        raise ValueError("ERROR: invalid CS GPIO pin number")
+        raise ValueError("ERROR: Expected CS pin between 0 and {}".format(GPIO_PINS_PER_PORT - 1))
 
     data1 = [
         (spi_port, 1),
@@ -116,16 +116,15 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     count = rx_len
     rx_data = []
     for _ in range(0, math.ceil(rx_len / 7) + 1):
-        rx_msg = can_util.next_message(
-            babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
+        rx_msg = can_util.next_message(babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
         msg_data = rx_msg.data
         if count <= 7:
             tmp_data = []
-            for j in range(0, count):
+            for j in range(1, count + 1):
                 tmp_data.append(msg_data[j])
             rx_data = rx_data + tmp_data
             break
-        rx_data = rx_data + msg_data[0:]
+        rx_data = rx_data + list(msg_data[1:]) #handles bytearray
         count -= 7
 
     status = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
