@@ -5,7 +5,6 @@
 #include "can_transmit.h"
 #include "dispatcher.h"
 #include "gpio.h"
-#include "spi.h"
 
 // Only first half of data is used. Data contains the id = 4 (BABYDRIVER_MESSAGE_ADC_READ_COMMAND
 // id), port number, pin number and an int indicating if read should be raw or converted. Callback
