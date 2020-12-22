@@ -38,8 +38,10 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         raise ValueError("ERROR: Expected SPI port 1 or 2")
     if spi_mode not in (0, 1, 2, 3):
         raise ValueError("ERROR: Expected mode between 0 and 3")
-    if rx_len < 0:
-        raise ValueError("ERROR: rx_len must be a non-negative integer")
+    if not 0 <= len(tx_bytes) <= 256:
+        raise ValueError("ERROR: numbers of tx_bytes must be between 0 and 256")
+    if not 0 <= rx_len <= 256:
+        raise ValueError("ERROR: rx_len must be a non-negative integer between 0 and 256")
     if baudrate < 0:
         raise ValueError("ERROR: baudrate must be a non-negative integer")
 

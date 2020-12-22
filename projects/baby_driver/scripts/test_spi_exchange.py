@@ -106,6 +106,7 @@ class TestSpiExchange(unittest.TestCase):
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 3
         ), [0, 0, 0])
 
+
     @patch('can_util.send_message')
     @patch('can_util.next_message')
     # pylint: disable=unused-argument
