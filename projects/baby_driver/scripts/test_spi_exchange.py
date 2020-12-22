@@ -10,7 +10,8 @@ from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, Babydr
 
 OK_STATUS = 0
 FAILING_STATUS = 1
-class TestSPIExchange(unittest.TestCase):
+
+class TestSpiExchange(unittest.TestCase):
     """Test spi_exchange function"""
 
     @patch('can_util.send_message')
@@ -38,31 +39,22 @@ class TestSPIExchange(unittest.TestCase):
             self.channel = channel
             self.msg_id = msg_id
             self.device_id = device_id
-            self.return_rx_data = [BabydriverMessageId.SPI_EXCHANGE_RX_DATA, 0, 0, 0, 0, 0, 0, 0]
-            self.rx_status = [BabydriverMessageId.SPI_EXCHANGE_TX_DATA, OK_STATUS]
 
         mock_send_message.side_effect = send_msg_test
 
         data_msg = [BabydriverMessageId.SPI_EXCHANGE_RX_DATA, 0, 0, 0, 0, 0, 0, 0]
         status_msg = [BabydriverMessageId.STATUS, OK_STATUS]
-        mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
 
         # Normal test
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
         self.assertEqual(spi_exchange(
             tx_bytes=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 10 bits
             rx_len=5,
-            spi_port="B",
+            spi_port=1,
             spi_mode=0,
             baudrate=5000000,
             cs=("A", 1),
         ), [0, 0, 0, 0, 0])
-
-        # Test with spi_port as an int value
-        mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
-        self.assertEqual(spi_exchange(
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 5, 1, 0, 5000000, (1, 1)
-            ), [0, 0, 0, 0, 0]
-        )
 
         # Test default values
         mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
@@ -70,10 +62,16 @@ class TestSPIExchange(unittest.TestCase):
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 5
         ), [0, 0, 0, 0, 0])
 
+        # len(tx_bytes) = 255
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
+        self.assertEqual(spi_exchange(
+            [1] * 255, 5
+        ), [0, 0, 0, 0, 0])
+
         # 0 rx_len
         mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
         self.assertEqual(spi_exchange(
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 0, "B", 0, 5000000, ("A", 1),
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 0, 2, 0, 5000000, ("A", 1),
         ), [])
 
         # Test rx_len < 7
@@ -89,15 +87,21 @@ class TestSPIExchange(unittest.TestCase):
         ), [0, 0, 0, 0, 0, 0, 0])
 
         # Test rx_len > 7
-        # pylint: disable=line-too-long
-        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg), Message(data=status_msg))
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg), \
+                                        Message(data=status_msg))
         self.assertEqual(spi_exchange(
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 8
         ), [0, 0, 0, 0, 0, 0, 0, 0])
 
+        # Test rx_len = 255
+        mock_next_message.side_effect = (Message(data=data_msg),) * 37 + (Message(data=status_msg),)
+        self.assertEqual(spi_exchange(
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 255
+        ), [0] * 255)
+
         # Test multiple messages, low rx_len
-        # pylint: disable=line-too-long
-        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg), Message(data=status_msg))
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg), \
+                                        Message(data=status_msg))
         self.assertEqual(spi_exchange(
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 3
         ), [0, 0, 0])
@@ -109,22 +113,25 @@ class TestSPIExchange(unittest.TestCase):
         """Tests fail conditions"""
 
         # Invalid spi_port
-        self.assertRaises(AttributeError, spi_exchange, [0], 1, 'G', 0, 50)
+        self.assertRaises(ValueError, spi_exchange, [0], 1, 'G', 0, 50)
         self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.NUM_GPIO_PORTS, 0, 50)
-        self.assertRaises(AttributeError, spi_exchange, [0], 1, '2', 0, 50)
         self.assertRaises(ValueError, spi_exchange, [0], 1, -1, 0, 50)
 
         # Invalid spi_mode
-        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, -1, 50)
-        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 4, 50)
+        self.assertRaises(ValueError, spi_exchange, [0], 1, 1, -1, 50)
+        self.assertRaises(ValueError, spi_exchange, [0], 1, 1, 4, 50)
+
+        # Invalid number of tx_bytes
+        self.assertRaises(ValueError, spi_exchange, [0] * 256, 1, 1, 2, 50)
 
         # Invalid rx_len
-        self.assertRaises(ValueError, spi_exchange, [0], -1, GpioPort.A, 2, 50)
+        self.assertRaises(ValueError, spi_exchange, [0], -1, 1, 2, 50)
+        self.assertRaises(ValueError, spi_exchange, [0], 256, 1, 2, 50)
 
         # Invalid cs_port
-        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (-1, 2))
-        self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (7, 2))
-        self.assertRaises(AttributeError, spi_exchange, [0], 1, GpioPort.A, 2, 50, ("G", 2))
+        self.assertRaises(ValueError, spi_exchange, [0], 1, 1, 2, 50, (-1, 2))
+        self.assertRaises(ValueError, spi_exchange, [0], 1, 1, 2, 50, (7, 2))
+        self.assertRaises(AttributeError, spi_exchange, [0], 1, 1, 2, 50, ("G", 2))
 
         # Invalid cs_pin
         self.assertRaises(ValueError, spi_exchange, [0], 1, GpioPort.A, 2, 50, (1, -1))
