@@ -15,7 +15,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     Sends data through SPI
         The tx_bytes is an int array
         The rx_len is a non-negative int.
-        The spi_port is an int
+        The spi_port is a non-negative int.
         The spi_mode is a non-negative int.
         The baudrate is a non-negative int.
         The CS pin, if not None, is a tuple (port, pin), where pin is an
@@ -26,7 +26,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         rx_len: Number of bytes to RX
         spi_port: port of the pin to perform SPI exchange on (1 or 2)
         spi_mode: SPI mode to use (0, 1, 2 or 3)
-        baudrate: baudrate to use
+        baudrate: baudrate to use (defaults to 6000000)
         cs: chip select port and pin to use (defaults to (1, 1))
     Raises:
         AttributeError: if cs_port parameter is entered as a string and is invalid
@@ -103,6 +103,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
         rx_msg = can_util.next_message(
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
         msg_data = rx_msg.data
+        # list constructor to handle bytearrays
         rx_data += list(msg_data[1:min(rx_bytes_left+1, 8)])
         rx_bytes_left -= 7
 
