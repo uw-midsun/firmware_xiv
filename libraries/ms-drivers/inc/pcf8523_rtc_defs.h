@@ -1,5 +1,4 @@
 #pragma once
-#include <stdint.h>
 
 typedef enum {
   CR1 = 0,
