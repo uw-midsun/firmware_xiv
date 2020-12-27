@@ -10,6 +10,10 @@
 // overtemp conditions are signalled.It also have a #define bool constant as a parameter
 // if that constant is true, it should turn the full
 // speed pin high, and if false, it should turn it low.
+#define fanfail_pin_addr \
+  { .port = GPIO_PORT_B, .pin = 4 }
+#define overtemp_pin_addr \
+  { .port = GPIO_PORT_B, .pin = 5 }
 
 #define FAN_FULL_SPEED true
 
@@ -25,8 +29,7 @@ int main(void) {
   interrupt_init();
   gpio_it_init();
   gpio_init();
-  GpioAddress fanfail_pin_address = { .port = GPIO_PORT_B, .pin = 4 };
-  GpioAddress overtemp_pin_address = { .port = GPIO_PORT_B, .pin = 5 };
+
   GpioAddress fan_pin_address = { .port = GPIO_PORT_B, .pin = 3 };
   bool fan_speed_toggle = FAN_FULL_SPEED;
   GpioSettings gpio_high_settings = {
@@ -42,8 +45,8 @@ int main(void) {
   } else {
     gpio_init_pin(&fan_pin_address, &gpio_low_settings);
   }
-  Max6643Settings settings = { .fanfail_pin = fanfail_pin_address,
-                               .overtemp_pin = overtemp_pin_address,
+  Max6643Settings settings = { .fanfail_pin = fanfail_pin_addr,
+                               .overtemp_pin = overtemp_pin_addr,
                                .fanfail_callback = prv_fanfail_callback,
                                .overtemp_callback = prv_overtemp_callback,
                                .fanfail_callback_context = NULL,
