@@ -47,6 +47,7 @@ make clean
 # Linting and formatting - used to help enforce our coding style
 make format
 make lint
+make pylint
 
 # Define a symbol from the command line - for example, setting the log level
 make test LIBRARY=ms-common DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_WARN"
