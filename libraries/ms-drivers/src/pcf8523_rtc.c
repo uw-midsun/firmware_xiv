@@ -29,11 +29,3 @@ StatusCode pcf8523_init(Pcf8523Settings *settings) {
 StatusCode pcf8523_get_time(Pcf8523Time *time) {}
 
 StatusCode pcf8523_set_time(Pcf8523Time *time) {}
-
-StatusCode pcf8523_reset() {
-  uint8_t data[2];
-  data[0] = CR1;
-  data[1] = CR1_SOFTWARE_RESET;
-  i2c_write(port, I2C_ADDR, data, (sizeof(data)));
-  return STATUS_CODE_OK;
-}

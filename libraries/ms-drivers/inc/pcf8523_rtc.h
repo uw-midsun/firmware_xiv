@@ -13,6 +13,7 @@
 // to write to
 #pragma once
 
+#include <stdint.h>
 #include "status.h"
 
 #define I2C_ADDR 0x68
