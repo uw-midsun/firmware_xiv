@@ -4,6 +4,10 @@ typedef enum {
   CR1 = 0,
   CR2,
   CR3,
+  NUM_CONTROL_REG,
+} Pcf8523ControlReg;
+
+typedef enum {
   SECONDS,
   MINUTES,
   HOURS,
@@ -11,12 +15,21 @@ typedef enum {
   WEEKDAYS,
   MONTHS,
   YEARS,
+  NUM_TIME_REG,
+} Pcf8523TimeReg;
+
+typedef enum {
   MINUTE_ALARM,
   HOUR_ALARM,
   DAY_ALARM,
   WEEKDAY_ALARM,
+  NUM_ALARM_REG,
+} Pcf8523AlarmReg;
+
+typedef enum {
   OFFSET,
-} Pcf8523RegDef;
+  NUM_OFFSET_REG,
+} Pcf8523OffsetReg;
 
 typedef enum {
   CIE = 0,
