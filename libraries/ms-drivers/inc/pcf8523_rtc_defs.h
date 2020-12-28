@@ -8,27 +8,27 @@ typedef enum {
 } Pcf8523ControlReg;
 
 typedef enum {
-  SECONDS,
+  SECONDS = 3,
   MINUTES,
   HOURS,
   DAYS,
   WEEKDAYS,
   MONTHS,
   YEARS,
-  NUM_TIME_REG,
+  NUM_TIME_REG = 7,
 } Pcf8523TimeReg;
 
 typedef enum {
-  MINUTE_ALARM,
+  MINUTE_ALARM = 10,
   HOUR_ALARM,
   DAY_ALARM,
   WEEKDAY_ALARM,
-  NUM_ALARM_REG,
+  NUM_ALARM_REG = 4,
 } Pcf8523AlarmReg;
 
 typedef enum {
-  OFFSET,
-  NUM_OFFSET_REG,
+  OFFSET = 14,
+  NUM_OFFSET_REG = 1,
 } Pcf8523OffsetReg;
 
 typedef enum {

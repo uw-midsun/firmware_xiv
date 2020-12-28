@@ -1,5 +1,4 @@
 #include "pcf8523_rtc.h"
-#include <time.h>
 #include "gpio.h"
 #include "i2c.h"
 #include "pcf8523_rtc_defs.h"
@@ -13,9 +12,9 @@ StatusCode pcf8523_init(Pcf8523Settings *settings) {
   i2c_init(port, settings->i2c_settings);
 }
 
-StatusCode pcf8523_get_time(tm *time) {}
+StatusCode pcf8523_get_time(Pcf8523Time *time) {}
 
-StatusCode pcf8523_set_time(tm *time) {}
+StatusCode pcf8523_set_time(Pcf8523Time *time) {}
 
 StatusCode pcf8523_reset() {
   uint8_t data[2];
