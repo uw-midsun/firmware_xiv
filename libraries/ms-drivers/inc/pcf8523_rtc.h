@@ -16,7 +16,6 @@
 #include "status.h"
 
 #define I2C_ADDR 0x68
-#define CR1_SOFTWARE_RESET 0x58
 
 typedef struct {
   I2CPort i2c_port;
@@ -35,6 +34,6 @@ typedef struct {
 
 StatusCode pcf8523_init(Pcf8523Settings *settings);
 
-StatusCode pcf8523_get_time();
+StatusCode pcf8523_get_time(Pcf8523Time *time);
 
-StatusCode pcf8523_set_time(tm *time);
+StatusCode pcf8523_set_time(Pcf8523Time *time);
