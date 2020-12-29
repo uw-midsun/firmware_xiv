@@ -14,6 +14,8 @@
 #pragma once
 
 #include <stdint.h>
+#include "i2c.h"
+#include "i2c_mcu.h"
 #include "status.h"
 
 #define I2C_ADDR 0x68
