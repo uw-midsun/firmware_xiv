@@ -34,7 +34,8 @@ StatusCode pcf8523_init(Pcf8523Settings *settings) {
 
 StatusCode pcf8523_get_time(Pcf8523Time *time) {
   // Set starting register address (this will auto-increment)
-  i2c_write(port, I2C_ADDR, (uint8_t *)SECONDS, 1);
+  uint8_t starting_reg = SECONDS;
+  i2c_write(port, I2C_ADDR, &starting_reg, 1);
 
   // Read time registers
   uint8_t data[NUM_TIME_REG];
