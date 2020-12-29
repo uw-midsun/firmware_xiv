@@ -11,11 +11,8 @@
 
 static I2CPort port;
 
-StatusCode pcf8523_init(Pcf8523Settings *settings) {
-  gpio_init();
-  port = settings->i2c_port;
-  i2c_init(port, settings->i2c_settings);
-
+StatusCode pcf8523_init(I2CPort i2c_port) {
+  port = i2c_port;
   // Write the address of the first control register and then
   // send the data for the 3 control registers
   // Note that the addr of the control register auto-increments
@@ -28,8 +25,7 @@ StatusCode pcf8523_init(Pcf8523Settings *settings) {
   data[2] = 0;
   data[3] = 0;
 
-  i2c_write(port, I2C_ADDR, data, (sizeof(data)));
-  return STATUS_CODE_OK;
+  return i2c_write(port, I2C_ADDR, data, (sizeof(data)));
 }
 
 StatusCode pcf8523_get_time(Pcf8523Time *time) {
@@ -58,6 +54,11 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
       time->years > 99) {
     return STATUS_CODE_INVALID_ARGS;
   }
+  // Stop the timer
+  uint8_t stop[2] = { CR1, STOP_CR1_SETTINGS };
+  i2c_write(port, I2C_ADDR, stop, (sizeof(stop)));
+
+  // Write time to registers
   uint8_t data[NUM_TIME_REG + 1];
   data[0] = SECONDS;
   // Convert data to bcd
@@ -68,12 +69,6 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
   data[5] = dec_to_bcd(time->weekdays);
   data[6] = dec_to_bcd(time->months);
   data[7] = dec_to_bcd(time->years);
-
-  // Stop the timer
-  uint8_t stop[2] = { CR1, STOP_CR1_SETTINGS };
-  i2c_write(port, I2C_ADDR, stop, (sizeof(stop)));
-
-  // Write time to registers
   i2c_write(port, I2C_ADDR, data, (sizeof(data)));
 
   // Restart the timer
