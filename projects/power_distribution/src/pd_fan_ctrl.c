@@ -160,8 +160,7 @@ StatusCode pd_fan_ctrl_init(FanCtrlSettings *settings, bool is_front_pd) {
     .i2c = settings->i2c_port,
     .i2c_read_addr = settings->i2c_address,
     .i2c_write_addr = settings->i2c_address,
-    .smbalert_pin = s_fan_storage.is_front_pd ? (GpioAddress)FRONT_PIN_SMBALERT
-                                              : (GpioAddress)REAR_PIN_SMBALERT,
+    .smbalert_pin = POWER_DISTRIBUTION_SMBALERT_PIN,
   };
   Adt7476aStorage adt_storage;
   status_ok_or_return(adt7476a_init(&adt_storage, &adt_settings));

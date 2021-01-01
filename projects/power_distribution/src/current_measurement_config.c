@@ -120,14 +120,14 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           .bit_width = 4,
           .sel_pins =
               {
-                  { .port = GPIO_PORT_A, .pin = 6 },  //
-                  { .port = GPIO_PORT_A, .pin = 5 },  //
-                  { .port = GPIO_PORT_A, .pin = 4 },  //
-                  { .port = GPIO_PORT_A, .pin = 3 },  //
+                  POWER_DISTRIBUTION_MUX_SEL1_PIN,  //
+                  POWER_DISTRIBUTION_MUX_SEL2_PIN,  //
+                  POWER_DISTRIBUTION_MUX_SEL3_PIN,  //
+                  POWER_DISTRIBUTION_MUX_SEL4_PIN,  //
               },
       },
-  .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
-  .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
+  .mux_output_pin = POWER_DISTRIBUTION_MUX_OUTPUT_PIN,  //
+  .mux_enable_pin = POWER_DISTRIBUTION_MUX_ENABLE_PIN,  //
 };
 
 // This is based on https://uwmidsun.atlassian.net/wiki/x/GgODP, assuming that the currents in
@@ -247,12 +247,12 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           .bit_width = 4,
           .sel_pins =
               {
-                  { .port = GPIO_PORT_A, .pin = 6 },  //
-                  { .port = GPIO_PORT_A, .pin = 5 },  //
-                  { .port = GPIO_PORT_A, .pin = 4 },  //
-                  { .port = GPIO_PORT_A, .pin = 3 },  //
+                  POWER_DISTRIBUTION_MUX_SEL1_PIN,  //
+                  POWER_DISTRIBUTION_MUX_SEL2_PIN,  //
+                  POWER_DISTRIBUTION_MUX_SEL3_PIN,  //
+                  POWER_DISTRIBUTION_MUX_SEL4_PIN,  //
               },
       },
-  .mux_output_pin = { .port = GPIO_PORT_A, .pin = 7 },  //
-  .mux_enable_pin = { .port = GPIO_PORT_A, .pin = 2 },  //
+  .mux_output_pin = POWER_DISTRIBUTION_MUX_OUTPUT_PIN,  //
+  .mux_enable_pin = POWER_DISTRIBUTION_MUX_ENABLE_PIN,  //
 };
