@@ -25,7 +25,7 @@ static InterruptSettings s_interrupt_settings = {
 static CanStorage s_can_storage;
 static uint8_t s_times_register_callback_called;
 static uint8_t s_times_handler_callback_called;
-static uint8_t s_received_status;
+static StatusCode s_received_status;
 static void *s_received_context;
 static GpioPort s_test_port;
 static uint8_t s_test_pin;
@@ -95,6 +95,7 @@ void test_register_gpio_interrupts(void) {
   uint8_t data[8] = { BABYDRIVER_MESSAGE_GPIO_IT_REGISTER_COMMAND, port, pin, edge, 0, 0, 0, 0 };
 
   // Test whether a single register command works
+  // Simultaneously test whether triggering interrupt with opposite edge fails
   // Send CAN message with register command message information
   CAN_TRANSMIT_BABYDRIVER(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
@@ -103,7 +104,13 @@ void test_register_gpio_interrupts(void) {
   TEST_ASSERT_EQUAL(1, s_times_register_callback_called);
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_received_status);
 
-  // Trigger the gpio interrupt and a message should be received
+  // Trigger the gpio interrupt with incorrect edge and a message should not be received
+  s_returned_state = GPIO_STATE_LOW;
+  gpio_it_trigger_interrupt(&address);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  // Trigger the gpio interrupt with correct edge and a message should be received
+  s_returned_state = GPIO_STATE_HIGH;
   gpio_it_trigger_interrupt(&address);
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 
