@@ -32,31 +32,34 @@ typedef enum {
 } Pcf8523OffsetReg;
 
 typedef enum {
-  CIE = 0,
-  AIE,
-  SIE,
-  TIME_12_24,
-  SR,
-  STOP,
-  T,
-  CAP_SEL,
+  PCF8523_CR1_CIE = 0,
+  PCF8523_CR1_AIE,
+  PCF8523_CR1_SIE,
+  PCF8523_CR1_TIME_12_24,
+  PCF8523_CR1_SR,
+  PCF8523_CR1_STOP,
+  PCF8523_CR1_T,
+  PCF8523_CR1_CAP_SEL,
+  NUM_CR1 = 8,
 } Control1;
 
 typedef enum {
-  CTBIE = 0,
-  CTAIE,
-  WTAIE,
-  AF,
-  SF,
-  CTBF,
-  CTAF,
-  WTAF,
+  PCF8523_CR2_CTBIE = 0,
+  PCF8523_CR2_CTAIE,
+  PCF8523_CR2_WTAIE,
+  PCF8523_CR2_AF,
+  PCF8523_CR2_SF,
+  PCF8523_CR2_CTBF,
+  PCF8523_CR2_CTAF,
+  PCF8523_CR2_WTAF,
+  NUM_CR2 = 8,
 } Control2;
 
 typedef enum {
-  BLIE = 0,
-  BSIE,
-  BLF,
-  BSF,
-  PM,
+  PCF8523_CR3_BLIE = 0,
+  PCF8523_CR3_BSIE,
+  PCF8523_CR3_BLF,
+  PCF8523_CR3_BSF,
+  PCF8523_CR3_PM,
+  NUM_CR3 = 8,
 } Control3;

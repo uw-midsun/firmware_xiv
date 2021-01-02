@@ -8,7 +8,7 @@
 #include "pcf8523_rtc_defs.h"
 #include "status.h"
 
-#define STOP_CR1_SETTINGS (1 << STOP)
+#define STOP_CR1_SETTINGS (1 << PCF8523_CR1_STOP)
 // Countdown and watchdog timers disabled
 #define DEFAULT_CR2_SETTINGS 0
 
@@ -25,11 +25,11 @@ StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523Settings *settings) {
   uint8_t data[NUM_CONTROL_REG + 1];
   data[0] = CR1;
   // Set load capacitance
-  data[1] = s_cap << CAP_SEL;
+  data[1] = s_cap << PCF8523_CR1_CAP_SEL;
   data[2] = DEFAULT_CR2_SETTINGS;
   // Set power management setting
   // Note battery low detection function is disabled
-  data[3] = settings->power << PM;
+  data[3] = settings->power << PCF8523_CR3_PM;
 
   return i2c_write(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 }
@@ -84,7 +84,7 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
   i2c_write(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 
   // Restart the timer
-  uint8_t restart[2] = { CR1, s_cap << CAP_SEL };
+  uint8_t restart[2] = { CR1, s_cap << PCF8523_CR1_CAP_SEL };
   i2c_write(s_port, PCF8523_I2C_ADDR, restart, (sizeof(restart)));
 
   return STATUS_CODE_OK;
