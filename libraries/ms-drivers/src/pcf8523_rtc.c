@@ -1,4 +1,5 @@
 #include "pcf8523_rtc.h"
+
 #include "bcd.h"
 #include "gpio.h"
 #include "i2c.h"
@@ -6,13 +7,16 @@
 #include "pcf8523_rtc_defs.h"
 #include "status.h"
 
-#define DEFAULT_CR1_SETTINGS (1 << TIME_12_24 | 1 << CAP_SEL)
-#define STOP_CR1_SETTINGS (1 << TIME_12_24 | 1 << STOP | 1 << CAP_SEL)
+#define STOP_CR1_SETTINGS (1 << STOP)
+// Countdown and watchdog timers disabled
+#define DEFAULT_CR2_SETTINGS 0
 
 static I2CPort s_port;
+static Pcf8523CrystalLoadCapacitance s_cap;
 
-StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523CrystalLoadCapacitance cap) {
+StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523Settings *settings) {
   s_port = i2c_port;
+  s_cap = settings->cap;
   // Write the address of the first control register and then
   // send the data for the 3 control registers
   // Note that the addr of the control register auto-increments
@@ -20,10 +24,11 @@ StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523CrystalLoadCapacitance cap) {
   uint8_t data[NUM_CONTROL_REG + 1];
   data[0] = CR1;
   // Set load capacitance
-  data[1] = cap << CAP_SEL;
-  // Default settings for CR2 and CR3
-  data[2] = 0;
-  data[3] = 0;
+  data[1] = s_cap << CAP_SEL;
+  data[2] = DEFAULT_CR2_SETTINGS;
+  // Set power management setting
+  // Note battery low detection function is disabled
+  data[3] = settings->power << PM;
 
   return i2c_write(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 }
@@ -72,7 +77,7 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
   i2c_write(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 
   // Restart the timer
-  uint8_t restart[2] = { CR1, DEFAULT_CR1_SETTINGS };
+  uint8_t restart[2] = { CR1, s_cap << CAP_SEL };
   i2c_write(s_port, PCF8523_I2C_ADDR, restart, (sizeof(restart)));
 
   return STATUS_CODE_OK;

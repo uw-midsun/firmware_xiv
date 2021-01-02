@@ -9,6 +9,7 @@
 // This clock is also in 24hr mode by default
 
 #include <stdint.h>
+
 #include "i2c.h"
 #include "i2c_mcu.h"
 #include "status.h"
@@ -18,7 +19,20 @@
 typedef enum {
   SEVEN_PF,
   TWELVE_POINT_FIVE_PF,
+  NUM_LOAD_CAPACITANCE_OPTIONS
 } Pcf8523CrystalLoadCapacitance;
+
+typedef enum {
+  BATTERY_SWITCH_OVER_STANDARD = 4,
+  BATTERY_SWITCH_OVER_DIRECT_SWITCHING,
+  BATTERY_SWITCH_OVER_DISABLED = 7,  // Used when there is only one power supply
+  NUM_POWER_MANAGEMENT_OPTIONS
+} Pcf8523PowerManagement;
+
+typedef struct {
+  Pcf8523CrystalLoadCapacitance cap;
+  Pcf8523PowerManagement power;
+} Pcf8523Settings;
 
 typedef struct {
   uint8_t seconds;   // 0 to 59
@@ -30,7 +44,7 @@ typedef struct {
   uint8_t years;     // 0 to 99
 } Pcf8523Time;
 
-StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523CrystalLoadCapacitance cap);
+StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523Settings *settings);
 
 StatusCode pcf8523_get_time(Pcf8523Time *time);
 

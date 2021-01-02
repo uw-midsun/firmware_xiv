@@ -7,12 +7,16 @@
 #include "unity.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
-#define TEST_LOAD_CAPACITANCE TWELVE_POINT_FIVE_PF
 
 #define TEST_CONFIG_PIN_I2C_SCL \
   { GPIO_PORT_B, 10 }
 #define TEST_CONFIG_PIN_I2C_SDA \
   { GPIO_PORT_B, 11 }
+
+static Pcf8523Settings s_settings = {
+  .cap = TWELVE_POINT_FIVE_PF,
+  .power = BATTERY_SWITCH_OVER_STANDARD,
+};
 
 void setup_test(void) {
   I2CSettings i2c = {
@@ -28,7 +32,7 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_get_time(void) {
-  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT, TEST_LOAD_CAPACITANCE));
+  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT, &s_settings));
   Pcf8523Time time = { 0 };
   TEST_ASSERT_OK(pcf8523_get_time(&time));
   // Make sure the value's have changed and are not all zero
@@ -38,7 +42,7 @@ void test_get_time(void) {
 }
 
 void test_set_time(void) {
-  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT, TEST_LOAD_CAPACITANCE));
+  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT, &s_settings));
   Pcf8523Time time_set = {
     .seconds = 0,
     .minutes = 1,
@@ -59,7 +63,7 @@ void test_set_time(void) {
 
 // Test setting time to 0
 void test_invalid_set_time(void) {
-  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT, TEST_LOAD_CAPACITANCE));
+  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT, &s_settings));
   Pcf8523Time time_zero = { 0 };
   TEST_ASSERT_NOT_OK(pcf8523_set_time(&time_zero));
 
