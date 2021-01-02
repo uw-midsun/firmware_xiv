@@ -4,6 +4,10 @@
 // allows the user to read the time and rewrite the time
 // Requires GPIO and I2C to be initialized
 
+// There are features such as timers, alarms, battery low detection, clock pulses
+// that have not been implemented but are present on the PCF8523.
+// This clock is also in 24hr mode by default
+
 #include <stdint.h>
 #include "i2c.h"
 #include "i2c_mcu.h"
