@@ -21,13 +21,13 @@ I2CSettings i2c = {
 
 void setup_test(void) {
   gpio_init();
-  i2c_init(I2C_PORT_1, &i2c);
+  i2c_init(TEST_I2C_PORT, &i2c);
 }
 
 void teardown_test(void) {}
 
 void test_pcf8523_init_valid() {
-  TEST_ASSERT_OK(pcf8523_init(I2C_PORT_1));
+  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT));
 }
 
 void test_get_time() {
