@@ -13,24 +13,21 @@
 #define TEST_CONFIG_PIN_I2C_SDA \
   { GPIO_PORT_B, 11 }
 
-I2CSettings i2c = {
-  .speed = I2C_SPEED_FAST,         //
-  .sda = TEST_CONFIG_PIN_I2C_SDA,  //
-  .scl = TEST_CONFIG_PIN_I2C_SCL,  //
-};
-
 void setup_test(void) {
+  I2CSettings i2c = {
+    .speed = I2C_SPEED_FAST,
+    .sda = TEST_CONFIG_PIN_I2C_SDA,
+    .scl = TEST_CONFIG_PIN_I2C_SCL,
+  };
+
   gpio_init();
   i2c_init(TEST_I2C_PORT, &i2c);
 }
 
 void teardown_test(void) {}
 
-void test_pcf8523_init_valid() {
+void test_get_time(void) {
   TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT));
-}
-
-void test_get_time() {
   Pcf8523Time time = { 0 };
   TEST_ASSERT_OK(pcf8523_get_time(&time));
   // Make sure the value's have changed and are not all zero
@@ -39,7 +36,8 @@ void test_get_time() {
                     (time.years == 0));
 }
 
-void test_set_time() {
+void test_set_time(void) {
+  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT));
   Pcf8523Time time_set = {
     .seconds = 0,
     .minutes = 1,
@@ -59,7 +57,8 @@ void test_set_time() {
 }
 
 // Test setting time to 0
-void test_invalid_set_time() {
+void test_invalid_set_time(void) {
+  TEST_ASSERT_OK(pcf8523_init(TEST_I2C_PORT));
   Pcf8523Time time_zero = { 0 };
   TEST_ASSERT_NOT_OK(pcf8523_set_time(&time_zero));
 
