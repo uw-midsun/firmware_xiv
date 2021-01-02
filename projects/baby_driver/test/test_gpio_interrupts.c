@@ -188,7 +188,7 @@ void test_register_gpio_interrupts(void) {
   TEST_ASSERT_EQUAL(INTERRUPT_EDGE_RISING, s_test_edge);
 
   // Test whether a rising edge triggers the interrupt when the edge is
-  // INTERRUPT_EDGE_RISING_FALLING 
+  // INTERRUPT_EDGE_RISING_FALLING
   // Since the edge is falling the gpio state will become low
   s_returned_state = GPIO_STATE_LOW;
 
