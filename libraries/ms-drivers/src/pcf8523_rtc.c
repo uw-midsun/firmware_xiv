@@ -9,33 +9,33 @@
 #define DEFAULT_CR1_SETTINGS (1 << TIME_12_24 | 1 << CAP_SEL)
 #define STOP_CR1_SETTINGS (1 << TIME_12_24 | 1 << STOP | 1 << CAP_SEL)
 
-static I2CPort port;
+static I2CPort s_port;
 
-StatusCode pcf8523_init(I2CPort i2c_port) {
-  port = i2c_port;
+StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523CrystalLoadCapacitance cap) {
+  s_port = i2c_port;
   // Write the address of the first control register and then
   // send the data for the 3 control registers
   // Note that the addr of the control register auto-increments
   // After each byte is sent
   uint8_t data[NUM_CONTROL_REG + 1];
   data[0] = CR1;
-  // Set 24 hr time and 12.5pF load capacitance
-  data[1] = DEFAULT_CR1_SETTINGS;
+  // Set load capacitance
+  data[1] = cap << CAP_SEL;
   // Default settings for CR2 and CR3
   data[2] = 0;
   data[3] = 0;
 
-  return i2c_write(port, PCF8523_I2C_ADDR, data, (sizeof(data)));
+  return i2c_write(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 }
 
 StatusCode pcf8523_get_time(Pcf8523Time *time) {
   // Set starting register address (this will auto-increment)
   uint8_t starting_reg = SECONDS;
-  i2c_write(port, PCF8523_I2C_ADDR, &starting_reg, 1);
+  i2c_write(s_port, PCF8523_I2C_ADDR, &starting_reg, 1);
 
   // Read time registers
   uint8_t data[NUM_TIME_REG];
-  i2c_read(port, PCF8523_I2C_ADDR, data, (sizeof(data)));
+  i2c_read(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 
   // Store time
   time->seconds = bcd_to_dec(data[0]);
@@ -56,7 +56,7 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
   }
   // Stop the timer
   uint8_t stop[2] = { CR1, STOP_CR1_SETTINGS };
-  i2c_write(port, PCF8523_I2C_ADDR, stop, (sizeof(stop)));
+  i2c_write(s_port, PCF8523_I2C_ADDR, stop, (sizeof(stop)));
 
   // Write time to registers
   uint8_t data[NUM_TIME_REG + 1];
@@ -69,11 +69,11 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
   data[5] = dec_to_bcd(time->weekdays);
   data[6] = dec_to_bcd(time->months);
   data[7] = dec_to_bcd(time->years);
-  i2c_write(port, PCF8523_I2C_ADDR, data, (sizeof(data)));
+  i2c_write(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 
   // Restart the timer
   uint8_t restart[2] = { CR1, DEFAULT_CR1_SETTINGS };
-  i2c_write(port, PCF8523_I2C_ADDR, restart, (sizeof(restart)));
+  i2c_write(s_port, PCF8523_I2C_ADDR, restart, (sizeof(restart)));
 
   return STATUS_CODE_OK;
 }

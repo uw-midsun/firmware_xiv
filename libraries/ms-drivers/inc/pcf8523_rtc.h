@@ -15,6 +15,11 @@
 
 #define PCF8523_I2C_ADDR 0x68
 
+typedef enum {
+  SEVEN_PF,
+  TWELVE_POINT_FIVE_PF,
+} Pcf8523CrystalLoadCapacitance;
+
 typedef struct {
   uint8_t seconds;   // 0 to 59
   uint8_t minutes;   // 0 to 59
@@ -25,7 +30,7 @@ typedef struct {
   uint8_t years;     // 0 to 99
 } Pcf8523Time;
 
-StatusCode pcf8523_init(I2CPort i2c_port);
+StatusCode pcf8523_init(I2CPort i2c_port, Pcf8523CrystalLoadCapacitance cap);
 
 StatusCode pcf8523_get_time(Pcf8523Time *time);
 
