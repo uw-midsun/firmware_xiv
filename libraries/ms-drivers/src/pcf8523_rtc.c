@@ -4,6 +4,7 @@
 #include "gpio.h"
 #include "i2c.h"
 #include "i2c_mcu.h"
+#include "log.h"
 #include "pcf8523_rtc_defs.h"
 #include "status.h"
 
@@ -42,6 +43,12 @@ StatusCode pcf8523_get_time(Pcf8523Time *time) {
   uint8_t data[NUM_TIME_REG];
   i2c_read(s_port, PCF8523_I2C_ADDR, data, (sizeof(data)));
 
+  // If the 7th bit is enabled if the oscillator has stopped
+  if ((time->seconds) & (1 << 7)) {
+    LOG_WARN("Clock integrity is not guaranteed; oscillator has stopped or been interrupted");
+    // Disable 7th bit to ensure we get proper values when converting to decimal
+    time->seconds &= ~(1 << 7);
+  }
   // Store time
   time->seconds = bcd_to_dec(data[0]);
   time->minutes = bcd_to_dec(data[1]);
