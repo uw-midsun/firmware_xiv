@@ -26,7 +26,7 @@ static GpioSettings s_gpio_settings = { .state = GPIO_STATE_LOW,
 
 // For every GPIO pin the array stores whether it's interrupt is enabled
 // When the value is INTERRUPT_NOT_REGISTERED the interrupt must be registered before being enabled
-// When the value is INTERRUPT_DSIABLED the interrupt is disabled
+// When the value is INTERRUPT_DISABLED the interrupt is disabled
 // Other values indicate the interrupt edge type and that the interrupts have been enabled
 static uint8_t s_interrupt_data[NUM_GPIO_PORTS][GPIO_PINS_PER_PORT];
 
@@ -52,7 +52,7 @@ static void prv_gpio_interrupt_handler(const GpioAddress *address, void *context
   // Interrupt is only triggered if the interrupt data indicates that the edge is
   // rising & falling, rising with a rising edge, or falling with a falling edge
   if (s_interrupt_data[port][pin] == INTERRUPT_EDGE_RISING_FALLING ||
-      s_interrupt_data[port][pin] == edge || s_interrupt_data[port][pin] == edge) {
+      s_interrupt_data[port][pin] == edge) {
     CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_GPIO_IT_INTERRUPT, port, pin, edge, 0, 0, 0, 0);
   }
 }
