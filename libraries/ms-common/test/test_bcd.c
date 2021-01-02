@@ -3,9 +3,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define INVALID 0
-
-void setup_test() {}
+void setup_test(void) {}
 
 void teardown_test(void) {}
 
