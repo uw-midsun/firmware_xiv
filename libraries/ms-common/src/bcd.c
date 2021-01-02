@@ -6,7 +6,7 @@ uint8_t dec_to_bcd(uint8_t dec_value) {
   }
   uint8_t tens = dec_value / 10;
   uint8_t ones = dec_value % 10;
-  return (tens << 4) + ones;
+  return (tens << 4) | ones;
 }
 
 uint8_t bcd_to_dec(uint8_t bcd_value) {
