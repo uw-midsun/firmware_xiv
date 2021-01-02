@@ -9,7 +9,7 @@
 #include "i2c_mcu.h"
 #include "status.h"
 
-#define I2C_ADDR 0x68
+#define PCF8523_I2C_ADDR 0x68
 
 typedef struct {
   uint8_t seconds;   // 0 to 59
