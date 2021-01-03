@@ -53,10 +53,10 @@ static bool prv_determine_is_front_power_distribution(void) {
 static void prv_init_i2c(void) {
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
-    .scl = POWER_DISTRIBUTION_I2C_SCL_PIN,
-    .sda = POWER_DISTRIBUTION_I2C_SDA_PIN,
+    .scl = PD_I2C_SCL_PIN,
+    .sda = PD_I2C_SDA_PIN,
   };
-  i2c_init(POWER_DISTRIBUTION_I2C_PORT, &i2c_settings);
+  i2c_init(PD_I2C_PORT, &i2c_settings);
 }
 
 static void prv_init_can(bool is_front_power_distribution) {
@@ -68,8 +68,8 @@ static void prv_init_can(bool is_front_power_distribution) {
     .rx_event = POWER_DISTRIBUTION_CAN_EVENT_RX,
     .tx_event = POWER_DISTRIBUTION_CAN_EVENT_TX,
     .fault_event = POWER_DISTRIBUTION_CAN_EVENT_FAULT,
-    .rx = POWER_DISTRIBUTION_CAN_RX_PIN,
-    .tx = POWER_DISTRIBUTION_CAN_TX_PIN,
+    .rx = PD_CAN_RX_PIN,
+    .tx = PD_CAN_TX_PIN,
   };
   can_init(&s_can_storage, &can_settings);
 }
@@ -90,8 +90,8 @@ int main(void) {
   adc_init(ADC_MODE_SINGLE);
   prv_init_i2c();
 
-  pca9539r_gpio_init(POWER_DISTRIBUTION_I2C_PORT, POWER_DISTRIBUTION_I2C_ADDRESS_0);
-  pca9539r_gpio_init(POWER_DISTRIBUTION_I2C_PORT, POWER_DISTRIBUTION_I2C_ADDRESS_1);
+  pca9539r_gpio_init(PD_I2C_PORT, PD_PCA9539R_I2C_ADDRESS_0);
+  pca9539r_gpio_init(PD_I2C_PORT, PD_PCA9539R_I2C_ADDRESS_1);
 
   // test if it's front or rear power distribution
   bool is_front_power_distribution = prv_determine_is_front_power_distribution();
@@ -136,7 +136,7 @@ int main(void) {
   // initialize fan ctrl
   if (is_front_power_distribution) {
     FanCtrlSettings fan_settings = {
-      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+      .i2c_port = PD_I2C_PORT,
       .fan_pwm1 = FRONT_PD_PWM_1,
       .fan_pwm2 = FRONT_PD_PWM_2,
       .i2c_address = ADT7476A_I2C_ADDRESS,
@@ -144,7 +144,7 @@ int main(void) {
     pd_fan_ctrl_init(&fan_settings, true);
   } else {
     FanCtrlSettings fan_settings = {
-      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+      .i2c_port = PD_I2C_PORT,
       .fan_pwm1 = REAR_ENC_VENT_PWM,
       .fan_pwm2 = REAR_DCDC_PWM,
       .i2c_address = ADT7476A_I2C_ADDRESS,

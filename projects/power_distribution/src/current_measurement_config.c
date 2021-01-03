@@ -5,14 +5,12 @@
 
 // Definitions of the hardware configs declared in the header
 
-#define POWER_DISTRIBUTION_I2C_PORT I2C_PORT_2
-
 const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG = {
-  .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+  .i2c_port = PD_I2C_PORT,
   .dsel_i2c_addresses =
       (I2CAddress[]){
-          POWER_DISTRIBUTION_I2C_ADDRESS_0,  //
-          POWER_DISTRIBUTION_I2C_ADDRESS_1,  //
+          PD_PCA9539R_I2C_ADDRESS_0,  //
+          PD_PCA9539R_I2C_ADDRESS_1,  //
       },
   .num_dsel_i2c_addresses = 2,
   .bts7200s =
@@ -120,24 +118,24 @@ const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW
           .bit_width = 4,
           .sel_pins =
               {
-                  POWER_DISTRIBUTION_MUX_SEL1_PIN,  //
-                  POWER_DISTRIBUTION_MUX_SEL2_PIN,  //
-                  POWER_DISTRIBUTION_MUX_SEL3_PIN,  //
-                  POWER_DISTRIBUTION_MUX_SEL4_PIN,  //
+                  PD_MUX_SEL1_PIN,  //
+                  PD_MUX_SEL2_PIN,  //
+                  PD_MUX_SEL3_PIN,  //
+                  PD_MUX_SEL4_PIN,  //
               },
       },
-  .mux_output_pin = POWER_DISTRIBUTION_MUX_OUTPUT_PIN,  //
-  .mux_enable_pin = POWER_DISTRIBUTION_MUX_ENABLE_PIN,  //
+  .mux_output_pin = PD_MUX_OUTPUT_PIN,  //
+  .mux_enable_pin = PD_MUX_ENABLE_PIN,  //
 };
 
 // This is based on https://uwmidsun.atlassian.net/wiki/x/GgODP, assuming that the currents in
 // each row are connected to the same BTS7200s/BTS7040s (on the same pins with same mux selections).
 const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG = {
-  .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+  .i2c_port = PD_I2C_PORT,
   .dsel_i2c_addresses =
       (I2CAddress[]){
-          POWER_DISTRIBUTION_I2C_ADDRESS_0,  //
-          POWER_DISTRIBUTION_I2C_ADDRESS_1,  //
+          PD_PCA9539R_I2C_ADDRESS_0,  //
+          PD_PCA9539R_I2C_ADDRESS_1,  //
       },
   .num_dsel_i2c_addresses = 2,
   .bts7200s =
@@ -247,12 +245,12 @@ const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_
           .bit_width = 4,
           .sel_pins =
               {
-                  POWER_DISTRIBUTION_MUX_SEL1_PIN,  //
-                  POWER_DISTRIBUTION_MUX_SEL2_PIN,  //
-                  POWER_DISTRIBUTION_MUX_SEL3_PIN,  //
-                  POWER_DISTRIBUTION_MUX_SEL4_PIN,  //
+                  PD_MUX_SEL1_PIN,  //
+                  PD_MUX_SEL2_PIN,  //
+                  PD_MUX_SEL3_PIN,  //
+                  PD_MUX_SEL4_PIN,  //
               },
       },
-  .mux_output_pin = POWER_DISTRIBUTION_MUX_OUTPUT_PIN,  //
-  .mux_enable_pin = POWER_DISTRIBUTION_MUX_ENABLE_PIN,  //
+  .mux_output_pin = PD_MUX_OUTPUT_PIN,  //
+  .mux_enable_pin = PD_MUX_ENABLE_PIN,  //
 };
