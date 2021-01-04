@@ -24,6 +24,13 @@
 #define CC_DECREASE_SPEED_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 1 }
 
+#define TIMER_INTERVAL_MS 1000
+#define VOLTAGE_TOLERANCE_MV 100
+#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE_MV 1000
+#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV 2000
+#define ADC_READER_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 3 }
+
 typedef enum {
   STEERING_DIGITAL_INPUT_HORN = 0,
   STEERING_DIGITAL_INPUT_RADIO_PPT,
@@ -58,9 +65,20 @@ static char *s_steering_input_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = "Decrease Speed Cruise Control",
 };
 
-void prv_callback_log(const GpioAddress *address, void *context) {
+void prv_callback_log_button(const GpioAddress *address, void *context) {
   char *input = (char *)context;
   printf("%s\n", input);
+}
+
+void prv_callback_log_adc(uint16_t data, PeriodicReaderId id, void *context) {
+  if (data > STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE_MV - VOLTAGE_TOLERANCE_MV &&
+      data < STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE_MV + VOLTAGE_TOLERANCE_MV) {
+    printf("Left signal\n");
+  } else if (data > STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV - VOLTAGE_TOLERANCE_MV &&
+             data < STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV + VOLTAGE_TOLERANCE_MV) {
+    printf("Right Signal\n");
+  }
+  printf("ADC Value: %d\n", data);
 }
 
 void prv_init_buttons() {
@@ -81,14 +99,23 @@ void prv_init_buttons() {
         i == STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED ||
         i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
-                                 INTERRUPT_EDGE_RISING_FALLING, prv_callback_log,
+                                 INTERRUPT_EDGE_RISING_FALLING, prv_callback_log_button,
                                  &s_steering_input_lookup_table[i]);
     } else {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
-                                 INTERRUPT_EDGE_FALLING, prv_callback_log,
+                                 INTERRUPT_EDGE_FALLING, prv_callback_log_button,
                                  &s_steering_input_lookup_table[i]);
     }
   }
+}
+
+void prv_init_stalk() {
+  AdcPeriodicReaderSettings reader_settings = {
+    .address = ADC_READER_GPIO_ADDR,
+    .callback = prv_callback_log_adc,
+  };
+  adc_periodic_reader_set_up_reader(PERIODIC_READER_ID_0, &reader_settings);
+  adc_periodic_reader_start(PERIODIC_READER_ID_0);
 }
 
 int main(void) {
@@ -96,10 +123,14 @@ int main(void) {
   soft_timer_init();
   gpio_init();
   gpio_it_init();
+  adc_init(ADC_MODE_SINGLE);
+  adc_periodic_reader_init(TIMER_INTERVAL_MS);
 
   prv_init_buttons();
+  prv_init_stalk();
 
 Loop:
   goto Loop;
+
   return 0;
 }
