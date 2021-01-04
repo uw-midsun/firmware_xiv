@@ -10,7 +10,7 @@ StatusCode power_distribution_publish_data_init(PowerDistributionPublishConfig c
 
   // check that each current we're to publish is valid to avoid segfaults
   for (uint16_t c = 0; c < config.num_currents_to_publish; c++) {
-    if (config.currents_to_publish[c] >= NUM_POWER_DISTRIBUTION_CURRENTS) {
+    if (config.currents_to_publish[c] >= NUM_CURRENTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
   }
@@ -19,8 +19,7 @@ StatusCode power_distribution_publish_data_init(PowerDistributionPublishConfig c
   return STATUS_CODE_OK;
 }
 
-StatusCode power_distribution_publish_data_publish(
-    uint16_t current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS]) {
+StatusCode power_distribution_publish_data_publish(uint16_t current_measurements[NUM_CURRENTS]) {
   if (!s_config.currents_to_publish) {
     return status_code(STATUS_CODE_UNINITIALIZED);
   }

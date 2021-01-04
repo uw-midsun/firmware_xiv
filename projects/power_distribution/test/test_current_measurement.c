@@ -46,7 +46,7 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
+    .hw_config = FRONT_CURRENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -69,7 +69,7 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
+    .hw_config = REAR_CURRENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -92,7 +92,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
+    .hw_config = FRONT_CURRENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -107,7 +107,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
   PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
 
   // print out the storage for debugging
-  for (PowerDistributionCurrent i = 0; i < NUM_POWER_DISTRIBUTION_CURRENTS; i++) {
+  for (PowerDistributionCurrent i = 0; i < NUM_CURRENTS; i++) {
     LOG_DEBUG("front hw config: current %d is %d\r\n", i, storage->measurements[i]);
   }
 
@@ -120,7 +120,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
+    .hw_config = REAR_CURRENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -135,7 +135,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
   PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
 
   // print out the storage for debugging
-  for (PowerDistributionCurrent i = 0; i < NUM_POWER_DISTRIBUTION_CURRENTS; i++) {
+  for (PowerDistributionCurrent i = 0; i < NUM_CURRENTS; i++) {
     LOG_DEBUG("rear hw config: current %d is %d\r\n", i, storage->measurements[i]);
   }
 
@@ -196,15 +196,15 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
   settings.hw_config.bts7200s[0].dsel_pin.pin = PCA9539R_PIN_IO0_0;
 
   // invalid BTS7200 currents
-  settings.hw_config.bts7200s[0].current_0 = NUM_POWER_DISTRIBUTION_CURRENTS;
+  settings.hw_config.bts7200s[0].current_0 = NUM_CURRENTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
   settings.hw_config.bts7200s[0].current_0 = 0;
-  settings.hw_config.bts7200s[0].current_1 = NUM_POWER_DISTRIBUTION_CURRENTS;
+  settings.hw_config.bts7200s[0].current_1 = NUM_CURRENTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
   settings.hw_config.bts7200s[0].current_1 = 1;
 
   // invalid BTS7040 current
-  settings.hw_config.bts7040s[0].current = NUM_POWER_DISTRIBUTION_CURRENTS;
+  settings.hw_config.bts7040s[0].current = NUM_CURRENTS;
   TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
   settings.hw_config.bts7040s[0].current = 2;
 

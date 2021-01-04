@@ -25,5 +25,4 @@ StatusCode power_distribution_publish_data_init(PowerDistributionPublishConfig c
 
 // Publish the given set of current measurements.
 // This should be called from a power_distribution_current_measurement callback.
-StatusCode power_distribution_publish_data_publish(
-    uint16_t current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS]);
+StatusCode power_distribution_publish_data_publish(uint16_t current_measurements[NUM_CURRENTS]);

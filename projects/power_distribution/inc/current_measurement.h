@@ -86,7 +86,7 @@ typedef struct {
 
 typedef struct {
   // Only the currents specified in the hardware config will be populated.
-  uint16_t measurements[NUM_POWER_DISTRIBUTION_CURRENTS];
+  uint16_t measurements[NUM_CURRENTS];
 } PowerDistributionCurrentStorage;
 
 // Initialize the module with the given settings and set up a soft timer to read currents.

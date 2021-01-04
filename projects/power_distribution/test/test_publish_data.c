@@ -73,7 +73,7 @@ void test_power_distribution_publish_data_publish_single_current(void) {
   s_single_received_current_data = 0;
   s_times_single_current_callback_called = 0;
 
-  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = {
+  uint16_t test_current_measurements[NUM_CURRENTS] = {
     [TEST_CURRENT_ID_1] = TEST_CURRENT_DATA_1,
   };
 
@@ -124,7 +124,7 @@ void test_power_distribution_publish_data_publish_multiple_currents(void) {
     s_multiple_received_current_ids[i] = s_multiple_received_current_data[i] = 0;
   }
 
-  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = {
+  uint16_t test_current_measurements[NUM_CURRENTS] = {
     [TEST_CURRENT_ID_1] = TEST_CURRENT_DATA_1,
     [TEST_CURRENT_ID_2] = TEST_CURRENT_DATA_2,
     [TEST_CURRENT_ID_3] = TEST_CURRENT_DATA_3,
@@ -152,7 +152,7 @@ void test_power_distribution_publish_data_invalid_config_errors(void) {
 
   // invalid currents
   bad_config.transmitter = &prv_single_current_callback;
-  bad_config.currents_to_publish[0] = NUM_POWER_DISTRIBUTION_CURRENTS;
+  bad_config.currents_to_publish[0] = NUM_CURRENTS;
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(bad_config));
 
   // null currents
@@ -174,7 +174,7 @@ void test_power_distribution_publish_data_mirrors_transmitter_error(void) {
   };
   TEST_ASSERT_OK(power_distribution_publish_data_init(config));
 
-  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = {
+  uint16_t test_current_measurements[NUM_CURRENTS] = {
     [TEST_CURRENT_ID_1] = TEST_CURRENT_DATA_1,
   };
   TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR,
@@ -195,7 +195,7 @@ void test_power_distribution_publish_data_send_can_msgs_front(void) {
       power_distribution_publish_data_init(FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
 
   // the values aren't important
-  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = { 0 };
+  uint16_t test_current_measurements[NUM_CURRENTS] = { 0 };
   TEST_ASSERT_OK(power_distribution_publish_data_publish(test_current_measurements));
 
   // make sure we can tx all of them
@@ -212,7 +212,7 @@ void test_power_distribution_publish_data_send_can_msgs_rear(void) {
   TEST_ASSERT_OK(power_distribution_publish_data_init(REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
 
   // the values aren't important
-  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = { 0 };
+  uint16_t test_current_measurements[NUM_CURRENTS] = { 0 };
   TEST_ASSERT_OK(power_distribution_publish_data_publish(test_current_measurements));
 
   // make sure we can tx all of them
