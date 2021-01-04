@@ -4,7 +4,7 @@
 // Binary coded decimal converter for two-digit numbers
 // A value of 0xFF will be returned if an invalid value is passed in
 
-#define INVALID 0xFF
+#define INVALID_BCD_VALUE 0xFF
 
 uint8_t dec_to_bcd(uint8_t dec_value);
 

@@ -45,7 +45,7 @@ StatusCode pcf8523_get_time(Pcf8523Time *time) {
 
   // If the 7th bit is enabled if the oscillator has stopped
   if ((time->seconds) & (1 << 7)) {
-    LOG_WARN("Clock integrity is not guaranteed; oscillator has stopped or been interrupted");
+    LOG_WARN("Clock integrity is not guaranteed; oscillator has stopped or been interrupted\n");
     // Disable 7th bit to ensure we get proper values when converting to decimal
     time->seconds &= ~(1 << 7);
   }
@@ -67,7 +67,7 @@ StatusCode pcf8523_set_time(Pcf8523Time *time) {
     return STATUS_CODE_INVALID_ARGS;
   }
   // Stop the timer
-  uint8_t stop[2] = { CR1, STOP_CR1_SETTINGS };
+  uint8_t stop[2] = { CR1, (STOP_CR1_SETTINGS | s_cap << PCF8523_CR1_CAP_SEL) };
   i2c_write(s_port, PCF8523_I2C_ADDR, stop, (sizeof(stop)));
 
   // Write time to registers
