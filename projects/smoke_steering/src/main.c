@@ -25,9 +25,10 @@
   { .port = GPIO_PORT_A, .pin = 1 }
 
 #define TIMER_INTERVAL_MS 1000
-#define VOLTAGE_TOLERANCE_MV 100
-#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE_MV 1000
-#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV 2000
+#define VOLTAGE_TOLERANCE_MV 10
+#define STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE_MV 2972
+#define STEERING_CONTROL_STALK_RIGHT_SIGNAL_VOLTAGE_MV 3013
+#define STEERING_CONTROL_STALK_NO_SIGNAL_VOLTAGE_MV 3300
 #define ADC_READER_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 3 }
 
@@ -51,7 +52,7 @@ static GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] 
   [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = REGEN_BRAKE_TOGGLE_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_CC_TOGGLE] = CC_TOGGLE_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
-  [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = CC_DECREASE_SPEED_GPIO_ADDR,
 };
 
 static char *s_steering_input_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
@@ -97,9 +98,9 @@ void prv_init_buttons() {
 
     if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT ||
         i == STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED ||
-        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED) {
+        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED || i == STEERING_DIGITAL_INPUT_CC_TOGGLE) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
-                                 INTERRUPT_EDGE_RISING_FALLING, prv_callback_log_button,
+                                 INTERRUPT_EDGE_RISING, prv_callback_log_button,
                                  &s_steering_input_lookup_table[i]);
     } else {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,

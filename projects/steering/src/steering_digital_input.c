@@ -1,4 +1,5 @@
 #include "steering_digital_input.h"
+
 #include "event_queue.h"
 #include "gpio_it.h"
 #include "interrupt_def.h"
@@ -15,7 +16,7 @@ static GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] 
   [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = REGEN_BRAKE_TOGGLE_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_CC_TOGGLE] = CC_TOGGLE_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
-  [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED] = CC_DECREASE_SPEED_GPIO_ADDR,
 };
 
 static EventId s_steering_event_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
@@ -53,9 +54,9 @@ StatusCode steering_digital_input_init() {
 
     if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT ||
         i == STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED ||
-        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED) {
+        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED || i == STEERING_DIGITAL_INPUT_CC_TOGGLE) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
-                                 INTERRUPT_EDGE_RISING_FALLING, prv_callback_raise_event,
+                                 INTERRUPT_EDGE_RISING, prv_callback_raise_event,
                                  &s_steering_event_lookup_table[i]);
     } else {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
