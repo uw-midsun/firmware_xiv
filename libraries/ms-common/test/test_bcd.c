@@ -17,10 +17,10 @@ void test_conversion(void) {
 
 void test_invalid_dec_to_bcd(void) {
   uint8_t dec = 101;
-  TEST_ASSERT_EQUAL(INVALID, dec_to_bcd(dec));
+  TEST_ASSERT_EQUAL(INVALID_BCD_VALUE, dec_to_bcd(dec));
 }
 
 void test_invalid_bcd_to_dec(void) {
   uint8_t bcd = 0b11111111;
-  TEST_ASSERT_EQUAL(INVALID, bcd_to_dec(bcd));
+  TEST_ASSERT_EQUAL(INVALID_BCD_VALUE, bcd_to_dec(bcd));
 }
