@@ -27,13 +27,13 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   return STATUS_CODE_OK;
 }
 
-static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
-                                   uint16_t num_remaining, void *context) {
-  uint16_t *device_acked = context;
-  *device_acked = device;
+// static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+//                                    uint16_t num_remaining, void *context) {
+//   uint16_t *device_acked = context;
+//   *device_acked = device;
 
-  return STATUS_CODE_OK;
-}
+//   return STATUS_CODE_OK;
+// }
 
 static StatusCode prv_ack_callback_status(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                                           uint16_t num_remaining, void *context) {
@@ -105,84 +105,84 @@ void test_can_basic(void) {
   TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
 }
 
-void test_can_filter(void) {
-  volatile CanMessage rx_msg = { 0 };
-  can_add_filter(0x2);
+// void test_can_filter(void) {
+//   volatile CanMessage rx_msg = { 0 };
+//   can_add_filter(0x2);
 
-  can_register_rx_handler(0x1, prv_rx_callback, &rx_msg);
-  can_register_rx_handler(0x2, prv_rx_callback, &rx_msg);
+//   can_register_rx_handler(0x1, prv_rx_callback, &rx_msg);
+//   can_register_rx_handler(0x2, prv_rx_callback, &rx_msg);
 
-  CanMessage msg = {
-    .msg_id = 0x1,               //
-    .type = CAN_MSG_TYPE_DATA,   //
-    .data = 0x1122334455667788,  //
-    .dlc = 8,                    //
-  };
+//   CanMessage msg = {
+//     .msg_id = 0x1,               //
+//     .type = CAN_MSG_TYPE_DATA,   //
+//     .data = 0x1122334455667788,  //
+//     .dlc = 8,                    //
+//   };
 
-  StatusCode ret = can_transmit(&msg, NULL);
-  TEST_ASSERT_OK(ret);
-  prv_clock_tx();
+//   StatusCode ret = can_transmit(&msg, NULL);
+//   TEST_ASSERT_OK(ret);
+//   prv_clock_tx();
 
-  msg.msg_id = 0x2;
-  ret = can_transmit(&msg, NULL);
-  TEST_ASSERT_OK(ret);
-  prv_clock_tx();
+//   msg.msg_id = 0x2;
+//   ret = can_transmit(&msg, NULL);
+//   TEST_ASSERT_OK(ret);
+//   prv_clock_tx();
 
-  Event e = { 0 };
-  while (event_process(&e) != STATUS_CODE_OK) {
-  }
-  TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
-  TEST_ASSERT_EQUAL(1, e.data);
+//   Event e = { 0 };
+//   while (event_process(&e) != STATUS_CODE_OK) {
+//   }
+//   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
+//   TEST_ASSERT_EQUAL(1, e.data);
 
-  bool processed = can_process_event(&e);
-  TEST_ASSERT_TRUE(processed);
+//   bool processed = can_process_event(&e);
+//   TEST_ASSERT_TRUE(processed);
 
-  TEST_ASSERT_EQUAL(msg.msg_id, rx_msg.msg_id);
-  TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
-}
+//   TEST_ASSERT_EQUAL(msg.msg_id, rx_msg.msg_id);
+//   TEST_ASSERT_EQUAL(msg.data, rx_msg.data);
+// }
 
-void test_can_ack(void) {
-  volatile CanMessage rx_msg = { 0 };
-  volatile uint16_t device_acked = CAN_MSG_INVALID_DEVICE;
+// void test_can_ack(void) {
+//   volatile CanMessage rx_msg = { 0 };
+//   volatile uint16_t device_acked = CAN_MSG_INVALID_DEVICE;
 
-  CanMessage msg = {
-    .msg_id = 0x1,               //
-    .type = CAN_MSG_TYPE_DATA,   //
-    .data = 0x1122334455667788,  //
-    .dlc = 8,                    //
-  };
+//   CanMessage msg = {
+//     .msg_id = 0x1,               //
+//     .type = CAN_MSG_TYPE_DATA,   //
+//     .data = 0x1122334455667788,  //
+//     .dlc = 8,                    //
+//   };
 
-  CanAckRequest ack_req = {
-    .callback = prv_ack_callback,                                     //
-    .context = &device_acked,                                         //
-    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_CAN_DEVICE_ID),  //
-  };
+//   CanAckRequest ack_req = {
+//     .callback = prv_ack_callback,                                     //
+//     .context = &device_acked,                                         //
+//     .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_CAN_DEVICE_ID),  //
+//   };
 
-  // Register handler so we ACK
-  can_register_rx_handler(0x1, prv_rx_callback, &rx_msg);
+//   // Register handler so we ACK
+//   can_register_rx_handler(0x1, prv_rx_callback, &rx_msg);
 
-  StatusCode ret = can_transmit(&msg, &ack_req);
-  TEST_ASSERT_OK(ret);
-  prv_clock_tx();
+//   StatusCode ret = can_transmit(&msg, &ack_req);
+//   TEST_ASSERT_OK(ret);
+//   prv_clock_tx();
 
-  Event e = { 0 };
-  // Handle RX of message and attempt transmit of ACK
-  while (event_process(&e) != STATUS_CODE_OK) {
-  }
-  TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
-  bool processed = can_process_event(&e);
-  TEST_ASSERT_TRUE(processed);
-  prv_clock_tx();
+//   Event e = { 0 };
+//   // Handle RX of message and attempt transmit of ACK
+//   while (event_process(&e) != STATUS_CODE_OK) {
+//   }
+//   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
+//   bool processed = can_process_event(&e);
+//   TEST_ASSERT_TRUE(processed);
+//   prv_clock_tx();
 
-  // Handle RX of ACK
-  while (event_process(&e) != STATUS_CODE_OK) {
-  }
-  TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
-  processed = can_process_event(&e);
-  TEST_ASSERT_TRUE(processed);
+//   // Handle RX of ACK
+//   while (event_process(&e) != STATUS_CODE_OK) {
+//   }
+//   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
+//   processed = can_process_event(&e);
+//   TEST_ASSERT_TRUE(processed);
 
-  TEST_ASSERT_EQUAL(TEST_CAN_DEVICE_ID, device_acked);
-}
+//   TEST_ASSERT_EQUAL(TEST_CAN_DEVICE_ID, device_acked);
+// }
 
 void test_can_ack_expire(void) {
   volatile CanAckStatus ack_status = NUM_CAN_ACK_STATUSES;
@@ -208,46 +208,46 @@ void test_can_ack_expire(void) {
   TEST_ASSERT_EQUAL(CAN_ACK_STATUS_TIMEOUT, ack_status);
 }
 
-void test_can_ack_status(void) {
-  volatile CanAckStatus ack_status = NUM_CAN_ACK_STATUSES;
-  volatile CanMessage rx_msg = { 0 };
-  CanMessage msg = {
-    .msg_id = TEST_CAN_UNKNOWN_MSG_ID,
-    .type = CAN_MSG_TYPE_DATA,
-    .data = 0x1122334455667788,
-    .dlc = 8,
-  };
+// void test_can_ack_status(void) {
+//   volatile CanAckStatus ack_status = NUM_CAN_ACK_STATUSES;
+//   volatile CanMessage rx_msg = { 0 };
+//   CanMessage msg = {
+//     .msg_id = TEST_CAN_UNKNOWN_MSG_ID,
+//     .type = CAN_MSG_TYPE_DATA,
+//     .data = 0x1122334455667788,
+//     .dlc = 8,
+//   };
 
-  CanAckRequest ack_req = {
-    .callback = prv_ack_callback_status,                              //
-    .context = &ack_status,                                           //
-    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_CAN_DEVICE_ID),  //
-  };
+//   CanAckRequest ack_req = {
+//     .callback = prv_ack_callback_status,                              //
+//     .context = &ack_status,                                           //
+//     .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_CAN_DEVICE_ID),  //
+//   };
 
-  can_register_rx_handler(TEST_CAN_UNKNOWN_MSG_ID, prv_rx_callback, &rx_msg);
+//   can_register_rx_handler(TEST_CAN_UNKNOWN_MSG_ID, prv_rx_callback, &rx_msg);
 
-  StatusCode ret = can_transmit(&msg, &ack_req);
-  TEST_ASSERT_OK(ret);
-  prv_clock_tx();
+//   StatusCode ret = can_transmit(&msg, &ack_req);
+//   TEST_ASSERT_OK(ret);
+//   prv_clock_tx();
 
-  Event e = { 0 };
-  // Handle RX of message and attempt transmit of ACK
-  while (event_process(&e) != STATUS_CODE_OK) {
-  }
-  TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
-  bool processed = can_process_event(&e);
-  TEST_ASSERT_TRUE(processed);
-  prv_clock_tx();
+//   Event e = { 0 };
+//   // Handle RX of message and attempt transmit of ACK
+//   while (event_process(&e) != STATUS_CODE_OK) {
+//   }
+//   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
+//   bool processed = can_process_event(&e);
+//   TEST_ASSERT_TRUE(processed);
+//   prv_clock_tx();
 
-  // Handle RX of ACK
-  while (event_process(&e) != STATUS_CODE_OK) {
-  }
-  TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
-  processed = can_process_event(&e);
-  TEST_ASSERT_TRUE(processed);
+//   // Handle RX of ACK
+//   while (event_process(&e) != STATUS_CODE_OK) {
+//   }
+//   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
+//   processed = can_process_event(&e);
+//   TEST_ASSERT_TRUE(processed);
 
-  TEST_ASSERT_EQUAL(CAN_ACK_STATUS_UNKNOWN, ack_status);
-}
+//   TEST_ASSERT_EQUAL(CAN_ACK_STATUS_UNKNOWN, ack_status);
+// }
 
 void test_can_default(void) {
   volatile CanMessage rx_msg = { 0 };

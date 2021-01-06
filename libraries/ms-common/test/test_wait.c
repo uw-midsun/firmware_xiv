@@ -68,6 +68,14 @@ static void *x86_interrupt_thread(void *argument) {
   pthread_exit(NULL);
 }
 
+static void *x86_wake_thread(void *argument) {
+  usleep(999999);
+  LOG_DEBUG("trigger interrupt\n");
+  x86_interrupt_wake();
+  // s_num_times_gpio_callback_called++;
+  pthread_exit(NULL);
+}
+
 void teardown_test(void) {}
 
 void test_wait_works_timer(void) {
@@ -142,4 +150,37 @@ void test_wait_works_raw_x86(void) {
 
   TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
   TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
+}
+
+void test_wait_works_wake(void) {
+  // uint8_t num_wait_cycles_timer = 0;
+  pthread_t interrupt_thread;
+
+  // uint8_t handler_id;
+
+  // x86_interrupt_register_handler(prv_test_wait_x86_thread_callback, &handler_id);
+  // InterruptSettings it_settings = {
+  //   .type = INTERRUPT_TYPE_INTERRUPT,       //
+  //   .priority = INTERRUPT_PRIORITY_NORMAL,  //
+  // };
+  // // uint8_t interrupt_id;
+
+  // x86_interrupt_register_interrupt(handler_id, &it_settings, &interrupt_id);
+
+  // LOG_DEBUG("CREATING THREADS\n");
+  // LOG_DEBUG("PIN: %d\n", s_test_output_pin.pin);
+  pthread_create(&interrupt_thread, NULL, x86_wake_thread, NULL);
+
+  // while (s_num_times_x86_callback_called < EXPECTED_TIMES_x86_CALLBACK_CALLED) {
+  LOG_DEBUG("WAITING FOR WAKE \n");
+  wait();
+  LOG_DEBUG("WAITed\n");
+  //   num_wait_cycles_timer++;
+  // }
+
+  pthread_join(interrupt_thread, NULL);
+  // LOG_DEBUG("JOINED THREADS: %i\n", s_num_times_x86_callback_called);
+
+  // TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
+  // TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
 }
