@@ -46,7 +46,7 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = FRONT_CURRENT_HW_CONFIG,
+    .hw_config = FRONT_CURRENT_MEASUREMENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -69,7 +69,7 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = REAR_CURRENT_HW_CONFIG,
+    .hw_config = REAR_CURRENT_MEASUREMENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -92,7 +92,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = FRONT_CURRENT_HW_CONFIG,
+    .hw_config = FRONT_CURRENT_MEASUREMENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -120,7 +120,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
   PowerDistributionCurrentSettings settings = {
     .interval_us = interval_us,
     .callback = &prv_increment_callback,
-    .hw_config = REAR_CURRENT_HW_CONFIG,
+    .hw_config = REAR_CURRENT_MEASUREMENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
