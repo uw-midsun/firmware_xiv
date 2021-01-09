@@ -136,7 +136,6 @@ const PowerDistributionCurrentHardwareConfig REAR_CURRENT_MEASUREMENT_HW_CONFIG 
               .mux_selection = 9,
           },
           {
-              // TODO(SOFT-396): allow suppressing a current in a bts7200 so we can not tx spare 6
               .dsel_pin = REAR_PIN_REAR_CAMERA_SPARE_6_DSEL,
               .en0_pin = REAR_PIN_REAR_CAMERA_EN,
               .en1_pin = REAR_PIN_SPARE_6_EN,

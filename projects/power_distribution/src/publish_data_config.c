@@ -33,12 +33,8 @@ const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFI
           FRONT_CURRENT_HORN,
           FRONT_CURRENT_FAN_1,
           FRONT_CURRENT_FAN_2,
-          FRONT_CURRENT_5V_SPARE_1,
-          FRONT_CURRENT_5V_SPARE_2,
-          FRONT_CURRENT_SPARE_1,
-          FRONT_CURRENT_SPARE_2,
       },
-  .num_currents_to_publish = 22,
+  .num_currents_to_publish = 18,
 };
 
 const PowerDistributionPublishConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
@@ -57,16 +53,6 @@ const PowerDistributionPublishConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG
           REAR_CURRENT_STROBE,
           REAR_CURRENT_FAN_1,
           REAR_CURRENT_FAN_2,
-          REAR_CURRENT_SPARE_1,
-          REAR_CURRENT_SPARE_2,
-          REAR_CURRENT_SPARE_3,
-          REAR_CURRENT_SPARE_4,
-          REAR_CURRENT_SPARE_5,
-          REAR_CURRENT_SPARE_6,
-          REAR_CURRENT_SPARE_7,
-          REAR_CURRENT_SPARE_8,
-          REAR_CURRENT_SPARE_9,
-          REAR_CURRENT_SPARE_10,
       },
-  .num_currents_to_publish = 22,
+  .num_currents_to_publish = 12,
 };
