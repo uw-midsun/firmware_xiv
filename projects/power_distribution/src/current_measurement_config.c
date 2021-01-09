@@ -37,8 +37,8 @@ const PowerDistributionCurrentHardwareConfig FRONT_CURRENT_MEASUREMENT_HW_CONFIG
               .dsel_pin = FRONT_PIN_LEFT_RIGHT_DISPLAY_DSEL,
               .en0_pin = FRONT_PIN_LEFT_DISPLAY_EN,
               .en1_pin = FRONT_PIN_RIGHT_DISPLAY_EN,
-              .current_0 = FRONT_CURRENT_LEFT_DRIVER_DISPLAY,
-              .current_1 = FRONT_CURRENT_RIGHT_DRIVER_DISPLAY,
+              .current_0 = FRONT_CURRENT_LEFT_DISPLAY,
+              .current_1 = FRONT_CURRENT_RIGHT_DISPLAY,
               .mux_selection = 4,
           },
           {
