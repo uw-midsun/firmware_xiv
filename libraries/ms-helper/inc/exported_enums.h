@@ -217,5 +217,11 @@ typedef enum EESolarFault {
   // thermistor.
   EE_SOLAR_FAULT_OVERTEMPERATURE,
 
+  // The temperature of the fan is over the threshold. No data.
+  EE_SOLAR_FAULT_FAN_OVERTEMPERATURE,
+
+  // Fan failure detected. No data.
+  EE_SOLAR_FAULT_FAN_FAIL,
+
   NUM_EE_SOLAR_FAULTS,
 } EESolarFault;

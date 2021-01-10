@@ -7,6 +7,7 @@
 #include "data_tx.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
+#include "fan_control.h"
 #include "fault_handler.h"
 #include "fault_monitor.h"
 #include "gpio.h"
@@ -77,6 +78,7 @@ static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count
   status_ok_or_return(logger_init(mppt_count));
   status_ok_or_return(data_tx_init(config_get_data_tx_settings()));
   status_ok_or_return(fault_monitor_init(config_get_fault_monitor_settings(mppt_count)));
+  status_ok_or_return(fan_control_process_event(config_get_fan_control_settings(mppt_count)));
   return STATUS_CODE_OK;
 }
 
@@ -102,6 +104,7 @@ int main(void) {
       fault_monitor_process_event(&e);
       data_tx_process_event(&e);
       logger_process_event(&e);
+      fan_control_process_event(&e);
     }
     wait();
   }
