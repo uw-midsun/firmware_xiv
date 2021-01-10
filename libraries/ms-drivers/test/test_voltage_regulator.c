@@ -18,10 +18,16 @@ static uint8_t s_regulator_callback_called;
 
 VoltageRegulatorStorage storage = { 0 };
 
+StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *input_state) {
+
+  *input_state=GPIO_STATE_LOW;
+  return STATUS_CODE_OK;
+
+}
 void setup_test(void) {
   gpio_init();
   interrupt_init();
-  gpio_it_init();
+  soft_timer_init();
   s_regulator_callback_context = 0xA;
 }
 
@@ -42,6 +48,13 @@ void test_voltage_regulator_init_works(void) {
                                         .error_callback_context = &s_regulator_callback_context };
 
   TEST_ASSERT_OK(voltage_regulator_init(&settings, &storage));
+}
+
+
+
+void test_voltage_regulator_set_enabled_works(void) {
+  TEST_ASSERT_OK(voltage_regulator_set_enabled(&storage,true));
+  delay_s(5);
 }
 
 void teardown_test(void) {

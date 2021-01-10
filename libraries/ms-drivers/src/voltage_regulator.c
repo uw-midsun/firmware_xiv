@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include "log.h"
 
 #include "gpio.h"
 #include "gpio_it.h"
@@ -10,6 +11,7 @@
 #define TIME_INTERVAL 2000
 
 static void prv_timer_callback(SoftTimerId timer_id, void *context) {
+  LOG_DEBUG("timer CALLBACK TRIGGERED\n");
   VoltageRegulatorStorage *storage = context;
   GpioState state = NUM_GPIO_STATES;
   gpio_get_state(&(storage->monitor_pin), &state);
@@ -42,9 +44,11 @@ StatusCode voltage_regulator_set_enabled(VoltageRegulatorStorage *storage, bool 
   }
 
   if (!(storage->regulator_on) && switch_action) {
+	LOG_DEBUG("timer CALLBACK TRIGGERED HIGH\n");
     GpioState state = GPIO_STATE_HIGH;
     gpio_set_state(&(storage->monitor_pin), state);
   } else if (storage->regulator_on && !switch_action) {
+    LOG_DEBUG("timer CALLBACK TRIGGERED HIGH\n");
     GpioState state = GPIO_STATE_LOW;
     gpio_set_state(&(storage->monitor_pin), state);
   }
