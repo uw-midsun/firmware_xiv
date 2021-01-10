@@ -11,7 +11,6 @@
 #define TIME_INTERVAL 2000
 
 static void prv_timer_callback(SoftTimerId timer_id, void *context) {
-  LOG_DEBUG("timer CALLBACK TRIGGERED\n");
   VoltageRegulatorStorage *storage = context;
   GpioState state = NUM_GPIO_STATES;
   gpio_get_state(&(storage->monitor_pin), &state);
@@ -35,6 +34,7 @@ StatusCode voltage_regulator_init(VoltageRegulatorSettings *settings,
   storage->error_callback_context = settings->error_callback_context;
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
   soft_timer_start_millis(TIME_INTERVAL, prv_timer_callback, storage, NULL);
+
   return STATUS_CODE_OK;
 }
 
@@ -44,13 +44,13 @@ StatusCode voltage_regulator_set_enabled(VoltageRegulatorStorage *storage, bool 
   }
 
   if (!(storage->regulator_on) && switch_action) {
-	LOG_DEBUG("timer CALLBACK TRIGGERED HIGH\n");
     GpioState state = GPIO_STATE_HIGH;
     gpio_set_state(&(storage->monitor_pin), state);
+    storage->regulator_on = true;
   } else if (storage->regulator_on && !switch_action) {
-    LOG_DEBUG("timer CALLBACK TRIGGERED HIGH\n");
     GpioState state = GPIO_STATE_LOW;
     gpio_set_state(&(storage->monitor_pin), state);
+    storage->regulator_on = false;
   }
   return STATUS_CODE_OK;
 }

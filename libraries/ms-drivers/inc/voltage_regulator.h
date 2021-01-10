@@ -1,6 +1,10 @@
 #pragma once
 // Driver for the voltage regulator
 // When hardware needs 5V power, use this 5V regulator
+// init intializes the regulator with the provided settings and starts the softimer
+// set enabled enable/disable the regulator
+// timer checks if regulator is in the opposite state of the desired one
+// error callback is called if that happens
 #include "gpio.h"
 #include "gpio_it.h"
 #include "soft_timer.h"
