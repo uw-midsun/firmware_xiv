@@ -4,6 +4,7 @@
 
 #include "can.h"
 #include "data_tx.h"
+#include "fan_control.h"
 #include "fault_handler.h"
 #include "fault_monitor.h"
 #include "gpio.h"
@@ -44,3 +45,5 @@ const SenseMcp3427Settings *config_get_sense_mcp3427_settings(SolarMpptCount mpp
 const SenseMpptSettings *config_get_sense_mppt_settings(SolarMpptCount mppt_count);
 
 const FaultMonitorSettings *config_get_fault_monitor_settings(SolarMpptCount mppt_count);
+
+const FanControlSettings *config_get_fan_control_settings(SolarMpptCount mppt_count);
