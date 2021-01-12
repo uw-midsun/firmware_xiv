@@ -205,8 +205,6 @@ void x86_interrupt_unmask(void) {
 }
 
 void x86_interrupt_wake(void) {
-  // Enqueue a new signal sent to this process that has a signal number
-  // determined by the id for the callback it is going to run.
   siginfo_t value_store;
   uint8_t interrupt_id = NUM_X86_INTERRUPT_INTERRUPTS;
   value_store.si_value.sival_int = interrupt_id;

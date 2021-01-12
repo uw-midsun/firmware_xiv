@@ -90,7 +90,6 @@ static void *prv_rx_thread(void *arg) {
       }
 
       // Limit how often we can receive messages to simulate bus speed
-      x86_interrupt_wake();
       usleep(s_socket_data.delay_us);
     }
   }
