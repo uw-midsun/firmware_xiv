@@ -89,6 +89,8 @@ static void *prv_rx_thread(void *arg) {
             s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
       }
 
+      // Wakes the main thread
+      x86_interrupt_wake();
       // Limit how often we can receive messages to simulate bus speed
       usleep(s_socket_data.delay_us);
     }

@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include "can.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -17,6 +18,14 @@ static uint8_t s_num_times_gpio_callback_called;
 static uint8_t s_num_times_x86_callback_called;
 static GpioAddress s_test_output_pin = { .port = GPIO_PORT_A, .pin = 0 };
 static uint8_t interrupt_id;
+static CanStorage s_can_storage;
+static bool can_recieved;
+
+static uint32_t tx_id = 0x01;
+static uint64_t tx_data = 0x1122334455667788;
+static size_t tx_len = 8;
+
+static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply);
 
 #define WAIT_INTERVAL_MS 30
 #define EXPECTED_TIMER_INTERRUPT_CYCLES 2
@@ -25,6 +34,28 @@ static uint8_t interrupt_id;
 #define EXPECTED_TIMES_GPIO_CALLBACK_CALLED 1
 #define EXPECTED_x86_INTERRUPT_CYCLES 1
 #define EXPECTED_TIMES_x86_CALLBACK_CALLED 1
+#define TEST_CAN_DEVICE_ID 0x1
+
+typedef enum {
+  TEST_CAN_EVENT_RX = 10,
+  TEST_CAN_EVENT_TX,
+  TEST_CAN_EVENT_FAULT,
+} TestCanEvent;
+
+static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  LOG_DEBUG("Received a message!\n");
+  char log_message[30];
+  printf("Data:\n\t");
+  uint8_t i;
+  for (i = 0; i < msg->dlc; i++) {
+    uint8_t byte = 0;
+    byte = msg->data >> (i * 8);
+    printf("%x ", byte);
+  }
+  printf("\n");
+  can_recieved = true;
+  return STATUS_CODE_OK;
+}
 
 static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
   s_num_times_timer_callback_called++;
@@ -42,6 +73,7 @@ static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
 
 void setup_test(void) {
   gpio_init();
+  event_queue_init();
   interrupt_init();
   soft_timer_init();
   gpio_it_init();
@@ -50,6 +82,7 @@ void setup_test(void) {
   s_num_times_timer_callback_called = 0;
   s_num_times_gpio_callback_called = 0;
   s_num_times_x86_callback_called = 0;
+  can_recieved = false;
 }
 
 static void *gpio_interrupt_thread(void *argument) {
@@ -68,15 +101,38 @@ static void *x86_interrupt_thread(void *argument) {
   pthread_exit(NULL);
 }
 
-static void *x86_wake_thread(void *argument) {
-  usleep(999999);
-  LOG_DEBUG("trigger interrupt\n");
-  x86_interrupt_wake();
-  // s_num_times_gpio_callback_called++;
+static void *can_tx(void *argument) {
+  usleep(30);
+  LOG_DEBUG("can sending\n");
+  can_hw_transmit(tx_id, false, (uint8_t *)&tx_data, tx_len);
   pthread_exit(NULL);
 }
 
+void init_can(void) {
+  CanSettings can_settings = {
+    .device_id = TEST_CAN_DEVICE_ID,
+    .bitrate = CAN_HW_BITRATE_500KBPS,
+    .rx_event = TEST_CAN_EVENT_RX,
+    .tx_event = TEST_CAN_EVENT_TX,
+    .fault_event = TEST_CAN_EVENT_FAULT,
+    .tx = { GPIO_PORT_A, 12 },
+    .rx = { GPIO_PORT_A, 11 },
+    .loopback = true,
+  };
+
+  StatusCode ret = can_init(&s_can_storage, &can_settings);
+  can_register_rx_default_handler(prv_rx_callback, NULL);
+}
+
 void teardown_test(void) {}
+
+// Ideally x86 wait() will suspend the thread until only an interrupt of some sorts happens - from
+// x86 interrupt, gpio, timer, or CAN In order to test that wait() suspends properly, the idea is to
+// have the main thread suspend until a threshold is met if wait() wakes up prematurely or not at
+// all, then a counter is incremented or the thread will hang indefinitely
+
+// Another thread will sleep a certain amount of time before calling an interrupt, and then the
+// number of waits done is checked
 
 void test_wait_works_timer(void) {
   uint8_t num_wait_cycles_timer = 0;
@@ -152,35 +208,26 @@ void test_wait_works_raw_x86(void) {
   TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
 }
 
-void test_wait_works_wake(void) {
-  // uint8_t num_wait_cycles_timer = 0;
-  pthread_t interrupt_thread;
+void test_can_wake_works(void) {
+  uint8_t num_wait_cycles_timer = 0;
 
-  // uint8_t handler_id;
+  init_can();
 
-  // x86_interrupt_register_handler(prv_test_wait_x86_thread_callback, &handler_id);
-  // InterruptSettings it_settings = {
-  //   .type = INTERRUPT_TYPE_INTERRUPT,       //
-  //   .priority = INTERRUPT_PRIORITY_NORMAL,  //
-  // };
-  // // uint8_t interrupt_id;
+  pthread_t can_send_thread;
 
-  // x86_interrupt_register_interrupt(handler_id, &it_settings, &interrupt_id);
+  pthread_create(&can_send_thread, NULL, can_tx, NULL);
+  Event e = { 0 };
+  while (!can_recieved) {
+    wait();
+    while (event_process(&e) != STATUS_CODE_OK) {
+    }
+    can_process_event(&e);
 
-  // LOG_DEBUG("CREATING THREADS\n");
-  // LOG_DEBUG("PIN: %d\n", s_test_output_pin.pin);
-  pthread_create(&interrupt_thread, NULL, x86_wake_thread, NULL);
+    num_wait_cycles_timer++;
+  }
 
-  // while (s_num_times_x86_callback_called < EXPECTED_TIMES_x86_CALLBACK_CALLED) {
-  LOG_DEBUG("WAITING FOR WAKE \n");
-  wait();
-  LOG_DEBUG("WAITed\n");
-  //   num_wait_cycles_timer++;
-  // }
+  pthread_join(can_send_thread, NULL);
 
-  pthread_join(interrupt_thread, NULL);
-  // LOG_DEBUG("JOINED THREADS: %i\n", s_num_times_x86_callback_called);
-
-  // TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
-  // TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
+  // we should only wait once
+  TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
 }
