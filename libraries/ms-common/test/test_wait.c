@@ -3,11 +3,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
-<<<<<<< HEAD
 #include "can.h"
-=======
->>>>>>> fcc73707c20baaedc4784d4cfb3e70f7718b46b9
-    #include "gpio.h"
+#include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
@@ -16,12 +13,11 @@
 #include "unity.h"
 #include "x86_interrupt.h"
 
-    static uint8_t s_num_times_timer_callback_called;
+static uint8_t s_num_times_timer_callback_called;
 static uint8_t s_num_times_gpio_callback_called;
 static uint8_t s_num_times_x86_callback_called;
 static GpioAddress s_test_output_pin = { .port = GPIO_PORT_A, .pin = 0 };
 static uint8_t interrupt_id;
-<<<<<<< HEAD
 static CanStorage s_can_storage;
 static bool can_recieved;
 
@@ -30,8 +26,6 @@ static uint64_t tx_data = 0x1122334455667788;
 static size_t tx_len = 8;
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply);
-=======
->>>>>>> fcc73707c20baaedc4784d4cfb3e70f7718b46b9
 
 #define WAIT_INTERVAL_MS 30
 #define EXPECTED_TIMER_INTERRUPT_CYCLES 2
@@ -42,8 +36,11 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 #define EXPECTED_TIMES_x86_CALLBACK_CALLED 1
 #define TEST_CAN_DEVICE_ID 0x1
 
-    typedef enum {
-      TEST_CAN_EVENT_RX = 10, TEST_CAN_EVENT_TX, TEST_CAN_EVENT_FAULT, } TestCanEvent;
+typedef enum {
+  TEST_CAN_EVENT_RX = 10,
+  TEST_CAN_EVENT_TX,
+  TEST_CAN_EVENT_FAULT,
+} TestCanEvent;
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   LOG_DEBUG("Received a message!\n");
