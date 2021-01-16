@@ -84,8 +84,8 @@ void test_blink_event_generator_valid(void) {
   TEST_ASSERT_EQUAL(1, e.data);
 
   // make sure we can restart without stopping first correctly
-  blink_event_generator_start(&storage, TEST_EVENT_ID_2);  // different event_id to actually
-  restart TEST_ASSERT_OK(event_process(&e));
+  blink_event_generator_start(&storage, TEST_EVENT_ID_2);  // different event_id to actually restart
+  TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
   TEST_ASSERT_EQUAL(0, e.data);  // resets to first_value
   delay_us(interval_us);
@@ -217,10 +217,10 @@ void test_multiple_blink_event_generators(void) {
   TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
   TEST_ASSERT_EQUAL(1, e.data);
 
-  // cancel the second one, restart the first one with a new event ID, make sure everything's
-  valid blink_event_generator_stop(&storage2);
-  TEST_ASSERT_OK(event_process(&e));  // eat the
-  event from stop transitioning back to default TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
+  // cancel the second one, restart the first one with a new event ID, make sure everything's valid
+  blink_event_generator_stop(&storage2);
+  TEST_ASSERT_OK(event_process(&e));  // eat the event from stop transitioning back to default
+  TEST_ASSERT_EQUAL(TEST_EVENT_ID_2, e.id);
   TEST_ASSERT_EQUAL(0, e.data);
   blink_event_generator_start(&storage1, TEST_EVENT_ID_3);
   TEST_ASSERT_OK(event_process(&e));  // event from the first one
