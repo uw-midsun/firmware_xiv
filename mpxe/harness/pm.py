@@ -31,12 +31,18 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.CanIO()
         
-    def start(self, name, sim=None):
+    def start(self, name, startup_messages={}, sim=None):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
+
+        # Write startup messages to project, raise SIGUSR2 on completion
+        proj.popen.stdin.write(startup_messages)
+        signal.raise_signal(signal.SIGUSR2)
+
         self.fd_to_proj[proj.ctop_fifo.fileno()] = proj
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
+
         return proj
 
     def stop(self, proj):

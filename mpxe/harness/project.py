@@ -1,4 +1,5 @@
 import subprocess
+import threading
 import os
 import fcntl
 import signal
@@ -16,6 +17,13 @@ class Project:
         self.name = name
         self.killed = False
         self.stores = {}
+        self.lock = threading.Lock()
+
+        # Handler for SIGUSR2 sent by manager upon completion of sending startup states
+        def sig_handler_unlock(signum, stack_frame):
+            self.lock.release()
+
+        signal.signal(signal.SIGUSR2, sig_handler_unlock) # Initialize handler
 
         cmd = BIN_DIR_FORMAT.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
@@ -34,6 +42,11 @@ class Project:
         ctop_fl = fcntl.fcntl(ctop_fd, fcntl.F_GETFL)
         fcntl.fcntl(ctop_fd, fcntl.F_SETFL, ctop_fl | os.O_NONBLOCK)
 
+        # Lock fifo so manager can send startup-state messages 
+        self.lock.acquire()
+        with lock:
+            pass # waits for lock to be unlocked (on acquire call), then immediately unlocks it
+        
         self.sim = sim
 
     def stop(self):
