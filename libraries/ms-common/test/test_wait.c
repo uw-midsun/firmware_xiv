@@ -19,7 +19,7 @@ static uint8_t s_num_times_x86_callback_called;
 static GpioAddress s_test_output_pin = { .port = GPIO_PORT_A, .pin = 0 };
 static uint8_t interrupt_id;
 static CanStorage s_can_storage;
-static bool can_recieved;
+static bool can_received;
 
 static uint32_t tx_id = 0x01;
 static uint64_t tx_data = 0x1122334455667788;
@@ -44,16 +44,18 @@ typedef enum {
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   LOG_DEBUG("Received a message!\n");
-  char log_message[30];
-  printf("Data:\n\t");
-  uint8_t i;
-  for (i = 0; i < msg->dlc; i++) {
-    uint8_t byte = 0;
-    byte = msg->data >> (i * 8);
-    printf("%x ", byte);
+
+  if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
+    printf("Data:\n\t");
+    uint8_t i;
+    for (i = 0; i < msg->dlc; i++) {
+      uint8_t byte = 0;
+      byte = msg->data >> (i * 8);
+      printf("%x ", byte);
+    }
+    printf("\n");
   }
-  printf("\n");
-  can_recieved = true;
+  can_received = true;
   return STATUS_CODE_OK;
 }
 
@@ -82,7 +84,7 @@ void setup_test(void) {
   s_num_times_timer_callback_called = 0;
   s_num_times_gpio_callback_called = 0;
   s_num_times_x86_callback_called = 0;
-  can_recieved = false;
+  can_received = false;
 }
 
 static void *gpio_interrupt_thread(void *argument) {
@@ -97,13 +99,11 @@ static void *x86_interrupt_thread(void *argument) {
   usleep(30);
   LOG_DEBUG("trigger interrupt\n");
   x86_interrupt_trigger(interrupt_id);
-  // s_num_times_gpio_callback_called++;
   pthread_exit(NULL);
 }
 
 static void *can_tx(void *argument) {
   usleep(30);
-  LOG_DEBUG("can sending\n");
   can_hw_transmit(tx_id, false, (uint8_t *)&tx_data, tx_len);
   pthread_exit(NULL);
 }
@@ -120,7 +120,7 @@ void init_can(void) {
     .loopback = true,
   };
 
-  StatusCode ret = can_init(&s_can_storage, &can_settings);
+  can_init(&s_can_storage, &can_settings);
   can_register_rx_default_handler(prv_rx_callback, NULL);
 }
 
@@ -187,7 +187,6 @@ void test_wait_works_raw_x86(void) {
     .type = INTERRUPT_TYPE_INTERRUPT,       //
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
-  // uint8_t interrupt_id;
 
   x86_interrupt_register_interrupt(handler_id, &it_settings, &interrupt_id);
 
@@ -217,7 +216,7 @@ void test_can_wake_works(void) {
 
   pthread_create(&can_send_thread, NULL, can_tx, NULL);
   Event e = { 0 };
-  while (!can_recieved) {
+  while (!can_received) {
     wait();
     while (event_process(&e) != STATUS_CODE_OK) {
     }

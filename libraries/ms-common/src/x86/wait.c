@@ -7,5 +7,4 @@ void wait(void) {
 
   sigemptyset(&s_wait_sigset);
   sigsuspend(&s_wait_sigset);
-  return;
 }

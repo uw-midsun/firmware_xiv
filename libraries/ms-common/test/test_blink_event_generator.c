@@ -265,11 +265,9 @@ void test_blink_event_generator_stop_return_value(void) {
   TEST_ASSERT_EQUAL(false, blink_event_generator_stop_silently(&storage));
 }
 
-// Test that if not in the default state, blink_event_generator_stop raises an event to
-transition
-    // back to the default state.
-    void
-    test_blink_event_generator_stop_raises_last_event(void) {
+// Test that if not in the default state, blink_event_generator_stop raises an event to transition
+// back to the default state.
+void test_blink_event_generator_stop_raises_last_event(void) {
   const uint32_t interval_us = 5000;
   BlinkEventGeneratorSettings settings = {
     .interval_us = interval_us,
