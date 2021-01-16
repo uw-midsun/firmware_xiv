@@ -14,7 +14,7 @@
 #include "log.h"
 #include "stores.pb-c.h"
 
-#define MAX_STORE_COUNT 64
+#define MAX_STORE_COUNT 257 // this should be increased for more stores. There's 257 for 256 stores from pca9539 and 1 GPIO store that's initialized for some reason
 #define INVALID_STORE_ID MAX_STORE_COUNT
 
 typedef struct Store {
@@ -56,7 +56,7 @@ Store *prv_get_first_empty() {
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
-  s_func_table[update->type].update_store(update->msg, update->mask);
+  s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
   mx_store_update__free_unpacked(update, NULL);
 }
 

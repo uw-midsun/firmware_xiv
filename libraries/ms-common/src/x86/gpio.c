@@ -33,7 +33,7 @@ static void prv_export() {
   store_export(MX_STORE_TYPE__GPIO, &s_store, NULL);
 }
 
-static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf, void *key) {
   MxGpioStore *msg = mx_gpio_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxGpioStore *mask = mx_gpio_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
