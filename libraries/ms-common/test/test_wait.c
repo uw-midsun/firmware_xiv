@@ -25,8 +25,6 @@ static uint32_t tx_id = 0x01;
 static uint64_t tx_data = 0x1122334455667788;
 static size_t tx_len = 8;
 
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply);
-
 #define WAIT_INTERVAL_MS 30
 #define EXPECTED_TIMER_INTERRUPT_CYCLES 2
 #define EXPECTED_TIMES_TIMER_CALLBACK_CALLED 2
@@ -87,28 +85,31 @@ void setup_test(void) {
   can_received = false;
 }
 
-static void *gpio_interrupt_thread(void *argument) {
+static void *prv_gpio_interrupt_thread(void *argument) {
   usleep(30);
   LOG_DEBUG("trigger interrupt\n");
   gpio_it_trigger_interrupt(&s_test_output_pin);
   LOG_DEBUG("INTERRUPT DONE\n");
   pthread_exit(NULL);
+  return NULL;
 }
 
-static void *x86_interrupt_thread(void *argument) {
+static void *prv_x86_interrupt_thread(void *argument) {
   usleep(30);
   LOG_DEBUG("trigger interrupt\n");
   x86_interrupt_trigger(interrupt_id);
   pthread_exit(NULL);
+  return NULL;
 }
 
-static void *can_tx(void *argument) {
+static void *prv_can_tx(void *argument) {
   usleep(30);
   can_hw_transmit(tx_id, false, (uint8_t *)&tx_data, tx_len);
   pthread_exit(NULL);
+  return NULL;
 }
 
-void init_can(void) {
+static void prv_init_can(void) {
   CanSettings can_settings = {
     .device_id = TEST_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -161,7 +162,7 @@ void test_wait_works_gpio(void) {
   gpio_it_register_interrupt(&s_test_output_pin, &s_it_settings, INTERRUPT_EDGE_FALLING,
                              prv_test_wait_gpio_thread_callback, NULL);
   LOG_DEBUG("CREATING THREADS\n");
-  pthread_create(&gpio_thread, NULL, gpio_interrupt_thread, NULL);
+  pthread_create(&gpio_thread, NULL, prv_gpio_interrupt_thread, NULL);
 
   while (s_num_times_gpio_callback_called < EXPECTED_TIMES_GPIO_CALLBACK_CALLED) {
     LOG_DEBUG("WAITING: %i\n", s_num_times_gpio_callback_called);
@@ -192,7 +193,7 @@ void test_wait_works_raw_x86(void) {
 
   LOG_DEBUG("CREATING THREADS\n");
   LOG_DEBUG("PIN: %d\n", s_test_output_pin.pin);
-  pthread_create(&interrupt_thread, NULL, x86_interrupt_thread, NULL);
+  pthread_create(&interrupt_thread, NULL, prv_x86_interrupt_thread, NULL);
 
   while (s_num_times_x86_callback_called < EXPECTED_TIMES_x86_CALLBACK_CALLED) {
     LOG_DEBUG("WAITING: %i\n", s_num_times_x86_callback_called);
@@ -210,11 +211,11 @@ void test_wait_works_raw_x86(void) {
 void test_can_wake_works(void) {
   uint8_t num_wait_cycles_timer = 0;
 
-  init_can();
+  prv_init_can();
 
   pthread_t can_send_thread;
 
-  pthread_create(&can_send_thread, NULL, can_tx, NULL);
+  pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
   Event e = { 0 };
   while (!can_received) {
     wait();
