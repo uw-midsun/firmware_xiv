@@ -8,6 +8,8 @@
 #include "can_rx_event_mapper_config.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
+#include "front_uv_detector.c"
+#include "front_uv_detector.h"
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
@@ -158,6 +160,11 @@ int main(void) {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
     rear_power_distribution_strobe_blinker_init(&strobe_blinker_settings);
+  }
+
+  // initialize UV cutoff detector
+  if (is_front_power_distribution) {
+    front_uv_detector_init();
   }
 
   LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
