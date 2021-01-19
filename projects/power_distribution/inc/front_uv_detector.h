@@ -1,7 +1,8 @@
 #pragma once
 
-// Detects if undervoltage lockout occurs on front PD
+// Checks if UV cutoff has occurred on front PD and sends CAN message to telemetry.
+// This should only be called in front power distribution.
+// Requires interrupts to be initialized.
 
-#include "event_queue.h"
-
+// Initialize module for UV cutoff notification
 StatusCode front_uv_detector_init();

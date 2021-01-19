@@ -1,21 +1,7 @@
-// uv_comp PB0
-
-// Checks if UV cutoff has occurred and sends message to telemetry.
-
-#include "adc.h"
-#include "can.h"
-#include "can_msg.h"
-#include "can_msg_defs.h"
 #include "can_transmit.h"
-#include "delay.h"
-#include "event_queue.h"
-#include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
-#include "pd_events.h"
-#include "pin_defs.h"
-#include "soft_timer.h"
 
 static GpioAddress s_uv_comp_pin_address = { .port = GPIO_PORT_B, .pin = 0 };
 
@@ -37,11 +23,8 @@ void prv_register_interrupts(void) {
 }
 
 StatusCode front_uv_detector_init() {
-  // check if all are needed
-  // raiyan todo wrap in status ok or return
   interrupt_init();
-  soft_timer_init();
-  gpio_init();
+  status_ok_or_return(gpio_init());
   gpio_it_init();
   prv_register_interrupts();
 
