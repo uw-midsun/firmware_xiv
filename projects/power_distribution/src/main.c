@@ -8,7 +8,6 @@
 #include "can_rx_event_mapper_config.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
-#include "front_uv_detector.c"
 #include "front_uv_detector.h"
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
