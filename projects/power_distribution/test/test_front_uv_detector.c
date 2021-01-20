@@ -1,6 +1,6 @@
+#include "front_uv_detector.h"
 
 #include "can_transmit.h"
-#include "front_uv_detector.h"
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "ms_test_helper_can.h"

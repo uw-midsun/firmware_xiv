@@ -4,8 +4,9 @@
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
+#include "pin_defs.h"
 
-static GpioAddress s_uv_comp_pin_address = { .port = GPIO_PORT_B, .pin = 0 };
+static GpioAddress s_uv_comp_pin_address = FRONT_UV_COMPARATOR_PIN;
 
 static void prv_pin_interrupt_handler(const GpioAddress *address, void *context) {
   CAN_TRANSMIT_UV_CUTOFF_NOTIFICATION();
