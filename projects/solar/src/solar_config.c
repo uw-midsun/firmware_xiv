@@ -325,7 +325,7 @@ const FanControlSettings *config_get_fan_control_settings(SolarMpptCount mppt_co
     return NULL;
   }
   s_fan_control_settings.mppt_count = mppt_count;
-  fan_control_init(&s_fan_control_settings);
+  // fan_control_init(&s_fan_control_settings);
   return &s_fan_control_settings;
 }
 
