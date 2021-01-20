@@ -15,6 +15,44 @@
 
 #define NUM_MCP3427_CHIP_IDS (1 << 4)
 
+#ifdef MPXE
+#include "mcp3427.pb-c.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+static MxMcp3427Store s_store = MX_MCP3427_STORE__INIT;
+
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  MxMcp3427Store *msg = mx_mcp3427_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MxMcp3427Store *mask = mx_mcp3427_store__unpack(NULL, mask_buf.len, mask_buf.data);
+
+  for (uint8_t i = 0; i < NUM_MCP3427_CHANNELS; i++) {
+    if (mask->readings[i] != 0) {
+      s_store.readings[i] = msg->readings[i];
+    }
+  }
+
+  mx_mcp3427_store__free_unpacked(msg, NULL);
+  mx_mcp3427_store__free_unpacked(mask, NULL);
+  store_export(MX_STORE_TYPE__MCP3427, &s_store, NULL);
+}
+
+static void prv_init_store(void) {
+  store_config();
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mx_mcp3427_store__get_packed_size,
+    (PackFunc)mx_mcp3427_store__pack,
+    (UnpackFunc)mx_mcp3427_store__unpack,
+    (FreeUnpackedFunc)mx_mcp3427_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  s_store.n_readings = NUM_MCP3427_CHANNELS;
+  s_store.readings = malloc(NUM_MCP3427_CHANNELS * sizeof(int32_t));
+
+  store_register(MX_STORE_TYPE__MCP3427, funcs, &s_store, NULL);
+}
+#endif
+
 // A lookup table of MCP3427 chip IDs (see |prv_get_chip_identifier|) to their storages,
 // used to automagically direct events to the correct storage in |mcp3427_process_event|.
 // This saves having to pass each event to every MCP3427, which is more of a concern on STM32,
@@ -66,6 +104,13 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
   Mcp3427Storage *storage = (Mcp3427Storage *)context;
 
   if (storage->current_channel == MCP3427_CHANNEL_2 && storage->callback != NULL) {
+#ifdef MPXE
+    s_store.readings[storage->current_channel] = FIXED_RESULT;
+    if (s_store.fault_flag) {
+      storage->fault_callback(storage->fault_context);
+    }
+#endif
+
     // We've "read" from both of the channels.
     storage->callback(FIXED_RESULT, FIXED_RESULT, storage->context);
   }
@@ -88,6 +133,10 @@ static uint8_t s_addr_lookup[NUM_MCP3427_PIN_STATES][NUM_MCP3427_PIN_STATES] = {
 };
 
 StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
+#ifdef MPXE
+  prv_init_store();
+#endif
+
   if (storage == NULL || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
