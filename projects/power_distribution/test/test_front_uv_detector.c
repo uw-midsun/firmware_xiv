@@ -1,29 +1,28 @@
+
 #include "can_transmit.h"
 #include "front_uv_detector.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "pd_events.h"
+#include "pin_defs.h"
+#include "status.h"
 
-static GpioAddress s_uv_comp_pin_address = { .port = GPIO_PORT_B, .pin = 0 };
+#include "log.h"
+
+static GpioAddress s_uv_comp_pin_address = FRONT_UV_COMPARATOR_PIN;
 
 static volatile bool s_interrupt_ran = false;
 
 static CanStorage s_can_storage;
 
-static void prv_initialize_can(SystemCanDevice can_device) {
-  CanSettings can_settings = {
-    .device_id = can_device,
-    .loopback = true,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = POWER_DISTRIBUTION_CAN_EVENT_RX,
-    .tx_event = POWER_DISTRIBUTION_CAN_EVENT_TX,
-    .fault_event = POWER_DISTRIBUTION_CAN_EVENT_FAULT,
-    .tx = { GPIO_PORT_A, 12 },
-    .rx = { GPIO_PORT_A, 11 },
-  };
-  can_init(&s_can_storage, &can_settings);
-}
+typedef enum {
+  TEST_CAN_EVENT_TX = 0,
+  TEST_CAN_EVENT_RX,
+  TEST_CAN_EVENT_FAULT,
+  NUM_TEST_CAN_EVENTS,
+} TestCanEvent;
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   s_interrupt_ran = true;
@@ -31,11 +30,10 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 }
 
 void setup_test(void) {
-  gpio_init();
-  interrupt_init();
-  soft_timer_init();
-  event_queue_init();
-  front_uv_detector_init();
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
+                                  TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
+
+  TEST_ASSERT_OK(front_uv_detector_init(&s_uv_comp_pin_address));
 
   s_interrupt_ran = false;
 }
@@ -43,13 +41,11 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 // test that CAN message gets sent after lockout
-void test_uv_front_detector_notification() {
-  prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
-
+void test_uv_front_detector_notification(void) {
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_uv_comp_pin_address));
 
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_UV_CUTOFF_NOTIFICATION, prv_rx_callback, NULL));
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   TEST_ASSERT_TRUE(s_interrupt_ran);
 }

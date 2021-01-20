@@ -159,11 +159,9 @@ int main(void) {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
     rear_power_distribution_strobe_blinker_init(&strobe_blinker_settings);
-  }
-
-  // initialize UV cutoff detector
-  if (is_front_power_distribution) {
-    front_uv_detector_init();
+  } else {
+    // initialize UV cutoff detector
+    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
   }
 
   LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
