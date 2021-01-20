@@ -9,8 +9,6 @@
 #include "pin_defs.h"
 #include "status.h"
 
-#include "log.h"
-
 static GpioAddress s_uv_comp_pin_address = FRONT_UV_COMPARATOR_PIN;
 
 static volatile bool s_interrupt_ran = false;

@@ -15,8 +15,6 @@ static void prv_pin_interrupt_handler(const GpioAddress *address, void *context)
 }
 
 StatusCode front_uv_detector_init(GpioAddress *detector_pin) {
-  interrupt_init();
-  status_ok_or_return(gpio_init());
   gpio_it_init();
 
   InterruptSettings interrupt_settings = {
