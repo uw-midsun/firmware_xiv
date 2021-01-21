@@ -32,7 +32,7 @@ static void prv_export(void *key) {
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf, void *key) {
-  MxPca9539rStore *msg  = mx_pca9539r_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MxPca9539rStore *msg = mx_pca9539r_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxPca9539rStore *mask = mx_pca9539r_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
   int k = (intptr_t)(key);
