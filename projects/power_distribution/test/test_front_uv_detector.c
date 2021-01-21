@@ -30,6 +30,7 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,
                                   TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
+  gpio_it_init();
 
   TEST_ASSERT_OK(front_uv_detector_init(&s_uv_comp_pin_address));
 

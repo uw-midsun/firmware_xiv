@@ -6,8 +6,6 @@
 #include "log.h"
 #include "pin_defs.h"
 
-static GpioAddress s_uv_comp_pin_address = FRONT_UV_COMPARATOR_PIN;
-
 static void prv_pin_interrupt_handler(const GpioAddress *address, void *context) {
   CAN_TRANSMIT_UV_CUTOFF_NOTIFICATION();
 
@@ -15,8 +13,6 @@ static void prv_pin_interrupt_handler(const GpioAddress *address, void *context)
 }
 
 StatusCode front_uv_detector_init(GpioAddress *detector_pin) {
-  gpio_it_init();
-
   InterruptSettings interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,

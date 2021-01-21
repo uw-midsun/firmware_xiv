@@ -153,15 +153,16 @@ int main(void) {
     pd_fan_ctrl_init(&fan_settings, false);
   }
 #endif
-  // initialize strobe_blinker on rear
-  if (!is_front_power_distribution) {
+
+  if (is_front_power_distribution) {
+    // initialize UV cutoff detector
+    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
+  } else {
+    // initialize strobe_blinker on rear
     RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
     rear_power_distribution_strobe_blinker_init(&strobe_blinker_settings);
-  } else {
-    // initialize UV cutoff detector
-    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
   }
 
   LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
