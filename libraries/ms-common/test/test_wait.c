@@ -17,13 +17,13 @@ static uint8_t s_num_times_timer_callback_called;
 static uint8_t s_num_times_gpio_callback_called;
 static uint8_t s_num_times_x86_callback_called;
 static GpioAddress s_test_output_pin = { .port = GPIO_PORT_A, .pin = 0 };
-static uint8_t interrupt_id;
+static uint8_t s_interrupt_id;
 static CanStorage s_can_storage;
-static bool can_received;
+static bool s_can_received;
 
-static uint32_t tx_id = 0x01;
-static uint64_t tx_data = 0x1122334455667788;
-static size_t tx_len = 8;
+static uint32_t s_tx_id = 0x01;
+static uint64_t s_tx_data = 0x1122334455667788;
+static size_t s_tx_len = 8;
 
 #define WAIT_INTERVAL_MS 30
 #define EXPECTED_TIMER_INTERRUPT_CYCLES 2
