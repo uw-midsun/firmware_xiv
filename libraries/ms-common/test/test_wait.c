@@ -53,7 +53,7 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
     }
     printf("\n");
   }
-  can_received = true;
+  s_can_received = true;
   return STATUS_CODE_OK;
 }
 
@@ -82,7 +82,7 @@ void setup_test(void) {
   s_num_times_timer_callback_called = 0;
   s_num_times_gpio_callback_called = 0;
   s_num_times_x86_callback_called = 0;
-  can_received = false;
+  s_can_received = false;
 }
 
 static void *prv_gpio_interrupt_thread(void *argument) {
@@ -97,14 +97,14 @@ static void *prv_gpio_interrupt_thread(void *argument) {
 static void *prv_x86_interrupt_thread(void *argument) {
   usleep(30);
   LOG_DEBUG("trigger interrupt\n");
-  x86_interrupt_trigger(interrupt_id);
+  x86_interrupt_trigger(s_interrupt_id);
   pthread_exit(NULL);
   return NULL;
 }
 
 static void *prv_can_tx(void *argument) {
   usleep(30);
-  can_hw_transmit(tx_id, false, (uint8_t *)&tx_data, tx_len);
+  can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
   pthread_exit(NULL);
   return NULL;
 }
@@ -189,7 +189,7 @@ void test_wait_works_raw_x86(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
 
-  x86_interrupt_register_interrupt(handler_id, &it_settings, &interrupt_id);
+  x86_interrupt_register_interrupt(handler_id, &it_settings, &s_interrupt_id);
 
   LOG_DEBUG("CREATING THREADS\n");
   LOG_DEBUG("PIN: %d\n", s_test_output_pin.pin);
@@ -217,7 +217,7 @@ void test_can_wake_works(void) {
 
   pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
   Event e = { 0 };
-  while (!can_received) {
+  while (!s_can_received) {
     wait();
     while (event_process(&e) != STATUS_CODE_OK) {
     }
