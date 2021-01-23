@@ -16,7 +16,6 @@ class Project:
         self.name = name
         self.killed = False
         self.stores = {}
-
         cmd = BIN_DIR_FORMAT.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=False)
