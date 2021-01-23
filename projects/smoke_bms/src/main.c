@@ -6,6 +6,11 @@
 #include "soft_timer.h"
 #include "wait.h"
 
+// ks toggle = toggle relay state + log / check if set correctly
+// periodic AFE temp and voltage readings
+// periodic current readings
+// passive balancing
+
 static void prv_ks_handler(const GpioAddress *addr, void *context) {
   uint8_t state = 2;
   gpio_get_state(addr, &state);
