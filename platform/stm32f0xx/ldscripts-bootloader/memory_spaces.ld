@@ -1,5 +1,5 @@
 /*
-Linker subscript for STM32F072 definitions with 128K Flash and 16K RAM for the CAN bootloader.
+Linker subscript for memory definitions for the bootloader on STM32F072 with 128K Flash and 16K RAM.
 See https://uwmidsun.atlassian.net/l/c/mHxmqjvn for more information.
 */
 
