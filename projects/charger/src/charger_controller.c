@@ -59,12 +59,11 @@ static void prv_periodic_charger_tx(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(CHARGER_TX_PERIOD_MS, prv_periodic_charger_tx, NULL, &s_charger_timer_id);
 }
 
-static void prv_charger_can_rx(uint32_t id, bool extended, uint64_t data, size_t dlc,
-                               void *context) {
-  if (id != CHARGER_RX_CAN_ID) {
+static void prv_charger_can_rx(const GenericCanMsg *msg, void *context) {
+  if (msg->id != CHARGER_RX_CAN_ID) {
     return;
   }
-  RxMsgData rx_msg = { .raw = data };
+  RxMsgData rx_msg = { .raw = msg->data };
   if (rx_msg.fields.status_flags.raw) {
     charger_controller_deactivate();
   }
@@ -114,6 +113,7 @@ StatusCode charger_controller_deactivate() {
 
 StatusCode charger_controller_init() {
   generic_can_mcp2515_init(&s_generic_can, &mcp2515_settings);
-  mcp2515_register_cbs(s_generic_can.mcp2515, prv_charger_can_rx, NULL, NULL);
+  // mcp2515_register_cbs(s_generic_can.mcp2515, prv_charger_can_rx, NULL, NULL);
+  generic_can_register_rx(&s_generic_can.base, prv_charger_can_rx, 0, 0, false, NULL);
   return STATUS_CODE_OK;
 }
