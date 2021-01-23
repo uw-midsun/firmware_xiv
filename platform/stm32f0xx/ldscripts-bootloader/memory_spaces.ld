@@ -12,6 +12,9 @@ _flash_start = 0x08000000;
 _flash_size = 128K;
 _flash_page_size = 2K;
 
+_ram_start = 0x20000000;
+_ram_size = 16K;
+
 _bootloader_start = _flash_start;
 _config_page1_start = _bootloader_start + _bootloader_size;
 _config_page2_start = _config_page1_start + _flash_page_size;
@@ -27,7 +30,7 @@ MEMORY
   CONFIG_PAGE1 (r) : ORIGIN = _config_page1_start, LENGTH = _flash_page_size
   CONFIG_PAGE2 (r) : ORIGIN = _config_page2_start, LENGTH = _flash_page_size
   APPLICATION (rx) : ORIGIN = _application_start, LENGTH = _application_size
-  RAM        (rwx) : ORIGIN = 0x20000000, LENGTH = 16K
+  RAM        (rwx) : ORIGIN = _ram_start, LENGTH = _ram_size
 }
 
 /* highest address of the user mode stack */
