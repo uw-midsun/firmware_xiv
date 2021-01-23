@@ -1,4 +1,14 @@
 #include "pca9539r_gpio_expander.h"
+#ifdef MPXE
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "pca9539r.pb-c.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+#endif
 
 // There's only 256 I2C addresses so it's ok to keep all the settings in memory
 #define MAX_I2C_ADDRESSES 256
@@ -9,14 +19,6 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_PINS];
 
 #ifdef MPXE
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include "log.h"
-
-#include "pca9539r.pb-c.h"
-#include "store.h"
-#include "stores.pb-c.h"
 
 static MxPca9539rStore s_stores[MAX_I2C_ADDRESSES];
 

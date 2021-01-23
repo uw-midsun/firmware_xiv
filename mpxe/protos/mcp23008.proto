@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message MxMcp23008Store {
+    repeated bool state = 1;
+}
+

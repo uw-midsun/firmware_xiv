@@ -36,7 +36,7 @@ static int s_ctop_fifo;
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_log_lock = PTHREAD_MUTEX_INITIALIZER;
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
@@ -44,7 +44,7 @@ static void prv_sigusr(int signo) {
 }
 
 static void prv_sigusr2(int signo) {
-  pthread_mutex_unlock(&log_lock);
+  pthread_mutex_unlock(&s_log_lock);
 }
 
 Store *prv_get_first_empty() {
@@ -172,4 +172,12 @@ void store_export(MxStoreType type, void *store, void *key) {
   // free memory
   free(export_buf);
   free(store_buf);
+}
+
+void log_mutex_lock() {
+  pthread_mutex_lock(&s_log_lock);
+}
+
+void log_mutex_unlock() {
+  pthread_mutex_unlock(&s_log_lock);
 }

@@ -19,8 +19,9 @@ class Ads1259(sim.Sim):
         proj.write_store(ads1259_msg, ads1259_mask, stores_pb2.MxStoreType.ADS1259)
 
     def assert_store_value_reading(self, proj, reading):
-        if ADS1259_KEY in proj.stores:
-            assert(proj.stores[ADS1259_KEY].reading == reading) 
+        if ADS1259_KEY in proj.stores: # as there is no export to store for this driver this will be false
+            assert(proj.stores[ADS1259_KEY].reading == reading)
+         
     
 
 

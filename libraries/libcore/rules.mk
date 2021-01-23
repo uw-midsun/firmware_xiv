@@ -8,3 +8,7 @@
 $(T)_DEPS :=
 
 $(T)_test_mock_MOCKS := status_impl_update
+
+ifneq (,$(IS_MPXE))
+$(T)_DEPS += mpxe-gen mpxe-store
+endif

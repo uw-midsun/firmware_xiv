@@ -34,20 +34,21 @@ typedef enum {
 #include <pthread.h>
 #include <stdbool.h>
 
-extern pthread_mutex_t log_lock;
+#include "store.h"
+
 extern bool store_lib_inited;
 
 // fflush necessary for printing through pipes
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
-      pthread_mutex_lock(&log_lock);                                          \
+      log_mutex_lock();                                                       \
       printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
       fflush(stdout);                                                         \
       if (store_lib_inited) {                                                 \
-        pthread_mutex_lock(&log_lock);                                        \
+        log_mutex_lock();                                                     \
       }                                                                       \
-      pthread_mutex_unlock(&log_lock);                                        \
+      log_mutex_unlock();                                                     \
     }                                                                         \
   } while (0)
 #endif
