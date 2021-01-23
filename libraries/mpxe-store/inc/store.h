@@ -41,6 +41,9 @@ void *store_get(MxStoreType type, void *key);
 // Call at every store update to export store to parent.
 void store_export(MxStoreType type, void *store, void *key);
 
+// Read and store initial conditions in project. Returns 0 if nothing to read, -1 if interrupted
+int read_init_conditions(void);
+
 // Locking for logs
 void log_mutex_lock();
 void log_mutex_unlock();

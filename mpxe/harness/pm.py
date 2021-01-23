@@ -3,6 +3,7 @@ import threading
 import select
 import subprocess
 import signal
+import time
 
 REPO_ROOT_DIR = '/home/vagrant/shared/'
 
@@ -10,17 +11,23 @@ from mpxe.harness import project
 from mpxe.harness import canio
 from mpxe.sims.sim import Sim
 
+from mpxe.protogen import stores_pb2
+from mpxe.protogen import mcp23008_pb2
+
 POLL_TIMEOUT = 0.5
 
 # signals are set in python and C, change in both places if changing
 STORE_LOCK_SIGNAL = signal.SIGUSR1
 LOG_LOCK_SIGNAL = signal.SIGUSR2
+INIT_LOCK_SIGNAL = signal.SIGRTMIN
 
 class InvalidPollError(Exception):
     pass
 
 class ProjectManager:
     def __init__(self):
+        # self.init_lock = threading.Lock()
+        # self.init_lock.acquire()
         # index projects by stdout and ctop_fifo fd
         # ctop_fifo is the child-to-parent fifo created by the C program
         self.fd_to_proj = {}
@@ -31,12 +38,17 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.CanIO()
         
-    def start(self, name, sim=None):
+    def start(self, name, sim=None, startup_messages=()):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.ctop_fifo.fileno()] = proj
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
+
+        if startup_messages: # tuple format is (msg, mask, key)
+            proj.write_store(startup_messages[0], startup_messages[1], startup_messages[2])
+        proj.popen.send_signal(INIT_LOCK_SIGNAL)
+        # self.init_lock.release()
         return proj
 
     def stop(self, proj):
@@ -62,16 +74,20 @@ class ProjectManager:
             proj = self.fd_to_proj[fd]
             # Check if we should check stdout or ctop
             if fd == proj.popen.stdout.fileno():
+                print("LOG RECEIVED!!!")
                 s = proj.popen.stdout.readline().rstrip()
                 proj.handle_log(self, s.decode('utf-8'))
                 proj.popen.send_signal(LOG_LOCK_SIGNAL)
             elif fd == proj.ctop_fifo.fileno():
+                print("STORE MESSAGE RECEIVED!!!")
                 # Currently assume all messages are storeinfo,
                 # will need other message types
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
                 proj.popen.send_signal(STORE_LOCK_SIGNAL)
-
+        # print("waiting on lock")
+        # self.init_lock.acquire() # don't read from store until init conditions are done setting up
+        # self.init_lock.release()
         try:
             while not self.killed:
                 if not self.fd_to_proj:
