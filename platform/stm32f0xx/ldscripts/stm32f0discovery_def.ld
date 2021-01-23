@@ -6,6 +6,8 @@ Linker subscript for STM32F072 definitions with 128K Flash and 16K RAM
 
 ENTRY(Reset_Handler)
 
+/* TODO: explicitly set aside the last page for calib */
+
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 128K
