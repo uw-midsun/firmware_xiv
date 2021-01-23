@@ -7,3 +7,5 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
+
+$(T)_LINKER_SCRIPT := stm32f0_bootloader.ld

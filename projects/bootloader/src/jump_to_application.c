@@ -5,7 +5,7 @@
 
 #include "bootloader_mcu.h"
 
-static noreturn void prv_perform_jump(uintptr_t pc, uintptr_t sp) __attribute__((naked)) {
+static noreturn __attribute__((naked)) void prv_perform_jump(uintptr_t pc, uintptr_t sp) {
   __asm(
       "msr msp, %[sp] \n"  // reset the stack pointer (msp) to sp
       "bx %[pc] \n"        // jump to pc
