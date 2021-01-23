@@ -42,7 +42,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     // only update state if mask is set
     if (mask->state[i] != 0) {
       s_stores[k].state[i] = msg->state[i];
-      if (s_pin_settings[k][i].state != (uint)msg->state[i]) {
+      if (s_pin_settings[k][i].state != (uint8_t)msg->state[i]) {
         s_pin_settings[k][i].state = msg->state[i];
       }
     }
@@ -53,7 +53,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
   prv_export(key);
 }
 
-static void prv_init_store(void) {
+static void prv_init_store(uint8_t address) {
   store_config();
   StoreFuncs funcs = {
     (GetPackedSizeFunc)mx_pca9539r_store__get_packed_size,
@@ -62,18 +62,16 @@ static void prv_init_store(void) {
     (FreeUnpackedFunc)mx_pca9539r_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  for (int i = 0; i < MAX_I2C_ADDRESSES; ++i) {
-    s_stores[i] = (MxPca9539rStore)MX_PCA9539R_STORE__INIT;
-    s_stores[i].n_state = NUM_PCA9539R_GPIO_PINS;
-    s_stores[i].state = malloc(NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
-    store_register(MX_STORE_TYPE__PCA9539R, funcs, &s_stores[i], (void *)(intptr_t)i);
-  }
+  s_stores[address] = (MxPca9539rStore)MX_PCA9539R_STORE__INIT;
+  s_stores[address].n_state = NUM_PCA9539R_GPIO_PINS;
+  s_stores[address].state = malloc(NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
+  store_register(MX_STORE_TYPE__PCA9539R, funcs, &s_stores[address], (void *)(intptr_t)address);
 }
 #endif
 
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
 #ifdef MPXE
-  prv_init_store();
+  prv_init_store(i2c_address);
 #endif
   s_i2c_port = i2c_port;
 
