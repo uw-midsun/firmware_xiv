@@ -1,19 +1,19 @@
 /*
-Linker subscript for section definitions for the bootloader itself.
+Linker subscript for section definitions for the bootloaded application.
 See https://uwmidsun.atlassian.net/l/c/mHxmqjvn for more information.
 */
 
 SECTIONS
 {
-  /* the vector table stored at .isr_vector must end up at the beginning, which is bootloader flash */
-  .isr_vector :
+  /* The vector table must be at the start of the flash, but that's in the bootloader section.
+  We don't want to try and reflash that, so we just rely on the bootloader's vector table being
+  the same as ours and use it. */
+  /DISCARD/ :
   {
-    . = ALIGN(4);
-    KEEP(*(.isr_vector))            /* Startup code */
-    . = ALIGN(4);
-  } >BOOTLOADER
+    *(.isr_vector)
+  }
 
-  /* bootloader program code is stored in the .text section, which goes to bootloader flash */
+  /* application program code is stored in the .text section, which goes to application flash */
   .text :
   {
     . = ALIGN(4);
@@ -33,11 +33,11 @@ SECTIONS
     _etext = .;
     /* This is used by the startup in order to initialize the .data section */
     _sidata = _etext;
-  } >BOOTLOADER
+  } >APPLICATION
 
   /* This is the initialized data section
   The program executes knowing that the data is in the RAM
-  but the loader puts the initial values in the BOOTLOADER flash.
+  but the loader puts the initial values in the APPLICATION flash.
   It is one task of the startup to copy the initial values from flash to RAM. */
   .data : AT ( _sidata )
   {
