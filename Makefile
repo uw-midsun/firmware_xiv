@@ -246,5 +246,13 @@ socketcan:
 update_codegen:
 	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
 
+.PHONY: test_python
+test_python:
+	@python3 -m unittest discover -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
+
+.PHONY: exper
+exper:
+	find projects -name "test_*.py"
+
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
