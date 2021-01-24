@@ -13,8 +13,7 @@ typedef struct {
   uint8_t counter_b;
 } Counters;
 
-static void inc_counter_a(SoftTimerId timer_id, void *context);
-static void inc_counter_b(SoftTimerId timer_id, void *context);
+static void inc_counter(SoftTimerId timer_id, void *context);
 
 int main(void) {
   // Initialize soft timer, and soft timer dependency (interrupt is needed)
@@ -27,8 +26,7 @@ int main(void) {
   };
 
   // Increment counter a every 0.5s, counter b ever 1s.
-  soft_timer_start_millis(500, inc_counter_a, &loop_counter, 0);
-  soft_timer_start_millis(1000, inc_counter_b, &loop_counter, 0);
+  soft_timer_start_millis(500, inc_counter, &loop_counter, 0);
 
   // Wait for an interrupt
   while (true) {
@@ -39,19 +37,16 @@ int main(void) {
 }
 
 // Increment a and print on LOG_DEBUG
-static void inc_counter_a(SoftTimerId timer_id, void *context) {
+static void inc_counter(SoftTimerId timer_id, void *context) {
   Counters *counter = context;
-  counter->counter_a += 1;
+  counter->counter_a++;
   LOG_DEBUG("Counter A: %d\n", counter->counter_a);
 
-  soft_timer_start_millis(500, inc_counter_a, context, 0);
-}
+  // Increment counter b every other time counter a is incremented
+  if (counter->counter_a % 2 == 0) {
+    counter->counter_b++;
+    LOG_DEBUG("Counter B: %d\n", counter->counter_b);
+  }
 
-// Increment b and print on LOG_DEBUG
-static void inc_counter_b(SoftTimerId timer_id, void *context) {
-  Counters *counter = context;
-  counter->counter_b += 1;
-  LOG_DEBUG("Counter B: %d\n", counter->counter_b);
-
-  soft_timer_start_millis(1000, inc_counter_b, context, 0);
+  soft_timer_start_millis(500, inc_counter, context, 0);
 }
