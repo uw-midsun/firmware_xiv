@@ -2,18 +2,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "delay.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
+
+#define A_COUNTER_MS 500
+#define B_COUNTER_MS 1000
 
 typedef struct {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-static void inc_counter(SoftTimerId timer_id, void *context);
+static void prv_inc_counter(SoftTimerId timer_id, void *context);
 
 int main(void) {
   // Initialize soft timer, and soft timer dependency (interrupt is needed)
@@ -26,7 +28,7 @@ int main(void) {
   };
 
   // Increment counter a every 0.5s, counter b ever 1s.
-  soft_timer_start_millis(500, inc_counter, &loop_counter, 0);
+  soft_timer_start_millis(500, prv_inc_counter, &loop_counter, 0);
 
   // Wait for an interrupt
   while (true) {
@@ -36,8 +38,8 @@ int main(void) {
   return 0;
 }
 
-// Increment a and print on LOG_DEBUG
-static void inc_counter(SoftTimerId timer_id, void *context) {
+// Increment a, b and print on LOG_DEBUG
+static void prv_inc_counter(SoftTimerId timer_id, void *context) {
   Counters *counter = context;
   counter->counter_a++;
   LOG_DEBUG("Counter A: %d\n", counter->counter_a);
@@ -48,5 +50,5 @@ static void inc_counter(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %d\n", counter->counter_b);
   }
 
-  soft_timer_start_millis(500, inc_counter, context, 0);
+  soft_timer_start_millis(500, prv_inc_counter, context, 0);
 }
