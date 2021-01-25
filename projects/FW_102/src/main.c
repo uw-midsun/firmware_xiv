@@ -7,8 +7,7 @@
 #include "soft_timer.h"
 #include "wait.h"
 
-#define A_COUNTER_MS 500
-#define B_COUNTER_MS 1000
+#define COUNTER_MS 500
 
 typedef struct {
   uint8_t counter_a;
@@ -28,7 +27,7 @@ int main(void) {
   };
 
   // Increment counter a every 0.5s, counter b ever 1s.
-  soft_timer_start_millis(500, prv_inc_counter, &loop_counter, 0);
+  soft_timer_start_millis(COUNTER_MS, prv_inc_counter, &loop_counter, 0);
 
   // Wait for an interrupt
   while (true) {
@@ -50,5 +49,5 @@ static void prv_inc_counter(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %d\n", counter->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_inc_counter, context, 0);
+  soft_timer_start_millis(COUNTER_MS, prv_inc_counter, context, 0);
 }
