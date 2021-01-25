@@ -14,9 +14,7 @@
 #include "log.h"
 #include "stores.pb-c.h"
 
-#define MAX_STORE_COUNT 1000
-// this should be increased for more stores.
-// There's 257 for 256 stores from pca9539 and 1 GPIO store that's initialized for some reason
+#define MAX_STORE_COUNT 64
 #define INVALID_STORE_ID MAX_STORE_COUNT
 
 typedef struct Store {
