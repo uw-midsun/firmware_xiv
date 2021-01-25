@@ -22,8 +22,6 @@ static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_
 
 static MxPca9539rStore s_stores[MAX_I2C_ADDRESSES];
 
-#define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address used in the smoke test
-
 static void prv_export(void *key) {
   int k = (intptr_t)(key);
   for (uint16_t j = 0; j < NUM_PCA9539R_GPIO_PINS; j++) {
