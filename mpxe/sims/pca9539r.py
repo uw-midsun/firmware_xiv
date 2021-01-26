@@ -6,8 +6,8 @@ from mpxe.sims import sim
 class Pca9539r(sim.Sim):
     def handle_update(self, pm, proj):
         stores = proj.stores
-        if (stores_pb2.MxStoreType.PCA9539R, 0) in stores:
-            pca        = stores[(stores_pb2.MxStoreType.PCA9539R, 0)]
+        if (stores_pb2.MxStoreType.PCA9539R, 0x74) in stores:    #0x74 is the address used in the smoke test
+            pca        = stores[(stores_pb2.MxStoreType.PCA9539R, 0x74)]
             self.state = [pca.state[i] for i in range(16)]
 
     def assert_store_values(self, test, state):

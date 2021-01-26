@@ -56,7 +56,7 @@ Store *prv_get_first_empty() {
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
-  s_func_table[update->type].update_store(update->msg, update->mask);
+  s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
   mx_store_update__free_unpacked(update, NULL);
 }
 

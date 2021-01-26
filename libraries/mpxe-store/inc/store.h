@@ -12,7 +12,7 @@ typedef void *(*UnpackFunc)(ProtobufCAllocator *allocator, size_t len, const uin
 typedef void (*FreeUnpackedFunc)(void *msg, ProtobufCAllocator *allocator);
 // Each module needs to define its own UpdateStoreFunc, so we pass a function pointer
 // around to avoid adding functions to headers
-typedef void (*UpdateStoreFunc)(ProtobufCBinaryData msg, ProtobufCBinaryData mask);
+typedef void (*UpdateStoreFunc)(ProtobufCBinaryData msg, ProtobufCBinaryData mask, void *key);
 
 // Each module registers a StoreFuncs set for the store library to work with
 typedef struct StoreFuncs {
