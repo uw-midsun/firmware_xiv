@@ -8,7 +8,8 @@
 static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Mcp23008GpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_MCP23008_GPIO_PINS];
-static int mpxe_initial_conditions;
+
+static int mpxe_initial_conditions; // If 1, read init conditions from store
 
 #ifdef MPXE
 #include <stdlib.h>
@@ -69,7 +70,7 @@ StatusCode mcp23008_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
   mpxe_initial_conditions = read_init_conditions();
 #endif
   s_i2c_port = i2c_port;
-  if (mpxe_initial_conditions == 0) { // TODO: This needs to be tested!
+  if (mpxe_initial_conditions != 1) {
     // Set each pin to the default settings
     Mcp23008GpioSettings default_settings = {
       .direction = MCP23008_GPIO_DIR_IN,
