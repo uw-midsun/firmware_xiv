@@ -26,8 +26,8 @@ class InvalidPollError(Exception):
 
 class ProjectManager:
     def __init__(self):
-        # self.init_lock = threading.Lock()
-        # self.init_lock.acquire()
+        self.init_lock = threading.Lock()
+        self.init_lock.acquire()
         # index projects by stdout and ctop_fifo fd
         # ctop_fifo is the child-to-parent fifo created by the C program
         self.fd_to_proj = {}
@@ -48,7 +48,7 @@ class ProjectManager:
         if startup_messages: # tuple format is (msg, mask, key)
             proj.write_store(startup_messages[0], startup_messages[1], startup_messages[2])
         proj.popen.send_signal(INIT_LOCK_SIGNAL)
-        # self.init_lock.release()
+        self.init_lock.release()
         return proj
 
     def stop(self, proj):
@@ -74,20 +74,17 @@ class ProjectManager:
             proj = self.fd_to_proj[fd]
             # Check if we should check stdout or ctop
             if fd == proj.popen.stdout.fileno():
-                print("LOG RECEIVED!!!")
                 s = proj.popen.stdout.readline().rstrip()
                 proj.handle_log(self, s.decode('utf-8'))
                 proj.popen.send_signal(LOG_LOCK_SIGNAL)
             elif fd == proj.ctop_fifo.fileno():
-                print("STORE MESSAGE RECEIVED!!!")
                 # Currently assume all messages are storeinfo,
                 # will need other message types
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
                 proj.popen.send_signal(STORE_LOCK_SIGNAL)
-        # print("waiting on lock")
-        # self.init_lock.acquire() # don't read from store until init conditions are done setting up
-        # self.init_lock.release()
+        self.init_lock.acquire() # don't read from store until init conditions are done setting up
+        self.init_lock.release()
         try:
             while not self.killed:
                 if not self.fd_to_proj:
