@@ -9,3 +9,5 @@
 $(T)_DEPS := ms-common
 
 $(T)_test_gpio_get_MOCKS := gpio_get_state
+
+$(T)_test_spi_exchange_MOCKS := spi_exchange spi_init
