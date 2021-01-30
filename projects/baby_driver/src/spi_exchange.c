@@ -10,6 +10,7 @@
 #include "gpio_mcu.h"
 #include "math.h"
 #include "spi.h"
+#include "spi_mcu.h"
 #include "status.h"
 #include "watchdog.h"
 
@@ -35,10 +36,89 @@ static WatchdogStorage watchdog_storage = { 0 };
 static WatchdogTimeout timeout_ms = 2000;
 static bool stop_watchdog;
 
+static uint8_t soft_timer_msg_counter = 0;
+
+static void prv_spi_set_up(void) {
+  SpiPort spi_port = SPI_PORT_1;
+  GpioAddress mosi = CONTROLLER_BOARD_ADDR_SPI1_MOSI;
+  GpioAddress miso = CONTROLLER_BOARD_ADDR_SPI1_MISO;
+  GpioAddress sclk = CONTROLLER_BOARD_ADDR_SPI1_SCK;
+  GpioAddress cs = CONTROLLER_BOARD_ADDR_SPI1_NSS;
+
+  if (port == 1) {
+    spi_port = (SpiPort)SPI_PORT_2;
+    mosi = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_MOSI;
+    miso = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_MISO;
+    sclk = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_SCK;
+    cs = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_NSS;
+  }
+
+  SpiMode spi_mode = 0;
+
+  switch (mode) {
+    case 0:
+      spi_mode = (SpiMode)SPI_MODE_0;
+      break;
+    case 1:
+      spi_mode = (SpiMode)SPI_MODE_1;
+      break;
+    case 2:
+      spi_mode = (SpiMode)SPI_MODE_2;
+      break;
+    case 3:
+      spi_mode = (SpiMode)SPI_MODE_3;
+      break;
+  }
+
+  if (use_cs != 0) {
+    cs = (GpioAddress){ cs_port, cs_pin };
+  }
+
+  SpiSettings spi_settings = {
+    .baudrate = baudrate, .mode = spi_mode, .mosi = mosi, .miso = miso, .sclk = sclk, .cs = cs
+  };
+  spi_init(spi_port, &spi_settings);
+}
+
+static void clear_array(uint8_t *array, uint8_t length) {
+  for (int i = 0; i < length; i++) {
+    array[i] = 0;
+  }
+}
+
+static void reset_spi_exchange(void) {
+  clear_array(p_tx_data, tx_len);
+  clear_array(p_rx_data, rx_len);
+  number_of_data_msgs = 0;
+  soft_timer_msg_counter = 0;
+  tx_array_loc = 0;
+}
+
+void prv_timer_callback(SoftTimerId timer_id, void *context) {
+  CAN_TRANSMIT_BABYDRIVER(
+      BABYDRIVER_MESSAGE_SPI_EXCHANGE_RX_DATA, rx_data[7 * soft_timer_msg_counter],
+      rx_data[7 * soft_timer_msg_counter + 1], rx_data[7 * soft_timer_msg_counter + 2],
+      rx_data[7 * soft_timer_msg_counter + 3], rx_data[7 * soft_timer_msg_counter + 4],
+      rx_data[7 * soft_timer_msg_counter + 5], rx_data[7 * soft_timer_msg_counter + 6]);
+  soft_timer_msg_counter++;
+  if (soft_timer_msg_counter < (rx_len / 7 + (rx_len % 7 == 0 ? 0 : 1))) {
+    soft_timer_start(2000, prv_timer_callback, NULL, NULL);
+  } else {
+    stop_watchdog = true;
+    reset_spi_exchange();
+  }
+}
+
+static void send_can_rx_msgs(void) {
+  prv_spi_set_up();
+  spi_exchange(port, p_tx_data, tx_len, p_rx_data, rx_len);
+  if (rx_len != 0) {
+    soft_timer_start(2000, prv_timer_callback, NULL, NULL);
+  }
+}
+
 static StatusCode prv_callback_spi_exchange_metadata1(uint8_t data[8], void *context,
                                                       bool *tx_result) {
-  // LOG_DEBUG("WORKS1 \n");
-
   watchdog_kick(&watchdog_storage);
   stop_watchdog = false;
   *tx_result = false;
@@ -51,7 +131,7 @@ static StatusCode prv_callback_spi_exchange_metadata1(uint8_t data[8], void *con
   cs_pin = data[6];
   use_cs = data[7];
 
-  if (port > 1) {
+  if (port >= NUM_SPI_PORTS) {
     *tx_result = true;
     return STATUS_CODE_INVALID_ARGS;
   }
@@ -61,7 +141,7 @@ static StatusCode prv_callback_spi_exchange_metadata1(uint8_t data[8], void *con
     return STATUS_CODE_INVALID_ARGS;
   }
 
-  if (mode > 3) {
+  if (mode >= NUM_SPI_MODES) {
     *tx_result = true;
     return STATUS_CODE_INVALID_ARGS;
   }
@@ -71,8 +151,6 @@ static StatusCode prv_callback_spi_exchange_metadata1(uint8_t data[8], void *con
 
 static StatusCode prv_callback_spi_exchange_metadata2(uint8_t data[8], void *context,
                                                       bool *tx_result) {
-  // LOG_DEBUG("WORKS2 \n");
-
   watchdog_kick(&watchdog_storage);
   stop_watchdog = false;
   *tx_result = false;
@@ -85,49 +163,20 @@ static StatusCode prv_callback_spi_exchange_metadata2(uint8_t data[8], void *con
     baudrate = baudrate | temp;
     temp = 0;
   }
+
+  if (tx_len == 0) {
+    *tx_result = true;
+    send_can_rx_msgs();
+    return STATUS_CODE_OK;
+  }
+
+  *tx_result = false;
+
   return STATUS_CODE_OK;
-}
-
-static void prv_spi_set_up(void) {
-  GpioAddress mosi = CONTROLLER_BOARD_ADDR_SPI1_MOSI;
-  GpioAddress miso = CONTROLLER_BOARD_ADDR_SPI1_MISO;
-  GpioAddress sclk = CONTROLLER_BOARD_ADDR_SPI1_SCK;
-  GpioAddress cs = CONTROLLER_BOARD_ADDR_SPI1_NSS;
-
-  if (port == 1) {
-    mosi = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_MOSI;
-    miso = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_MISO;
-    sclk = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_SCK;
-    cs = (GpioAddress)CONTROLLER_BOARD_ADDR_SPI2_NSS;
-  }
-
-  if (use_cs != 0) {
-    cs = (GpioAddress){ cs_port, cs_pin };
-  }
-
-  SpiSettings spi_settings = {
-    .baudrate = baudrate, .mode = mode, .mosi = mosi, .miso = miso, .sclk = sclk, .cs = cs
-  };
-  spi_init(port, &spi_settings);
-}
-
-static void clear_array(uint8_t *array, uint8_t length) {
-  for (int i = 0; i < length; i++) {
-    array[i] = 0;
-  }
-}
-
-static void reset_spi_exchange() {
-  clear_array(p_tx_data, tx_len);
-  clear_array(p_rx_data, rx_len);
-  number_of_data_msgs = 0;
-  tx_array_loc = 0;
 }
 
 static StatusCode prv_callback_spi_exchange_python_transfer(uint8_t data[8], void *context,
                                                             bool *tx_result) {
-  // LOG_DEBUG("WORKS3 \n");
-
   watchdog_kick(&watchdog_storage);
   stop_watchdog = false;
   *tx_result = false;
@@ -138,18 +187,10 @@ static StatusCode prv_callback_spi_exchange_python_transfer(uint8_t data[8], voi
     tx_array_loc++;
   }
 
-  if (number_of_data_msgs == ceil(tx_len / 7)) {
+  if (number_of_data_msgs == (tx_len / 7 + (tx_len % 7 == 0 ? 0 : 1))) {
     *tx_result = true;
-    prv_spi_set_up();
-    spi_exchange(port, p_tx_data, tx_len, p_rx_data, rx_len);
-    for (uint8_t i = 0; i < ceil(rx_len / 7); i++) {
-      status_ok_or_return(
-          CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_SPI_EXCHANGE_RX_DATA, rx_data[7 * i],
-                                  rx_data[7 * i + 1], rx_data[7 * i + 2], rx_data[7 * i + 3],
-                                  rx_data[7 * i + 4], rx_data[7 * i + 5], rx_data[7 * i + 6]));
-    }
-    stop_watchdog = true;
-    reset_spi_exchange();
+    send_can_rx_msgs();
+    return STATUS_CODE_OK;
   }
   *tx_result = false;
 
@@ -157,8 +198,9 @@ static StatusCode prv_callback_spi_exchange_python_transfer(uint8_t data[8], voi
 }
 
 static void prv_timeout_callback(void *context) {
-  if (!stop_watchdog)
+  if (!stop_watchdog) {
     CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_TIMEOUT, 0, 0, 0, 0, 0, 0);
+  }
   reset_spi_exchange();
 }
 
