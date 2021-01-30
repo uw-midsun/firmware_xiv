@@ -1,5 +1,4 @@
 #include "mcp23008_gpio_expander.h"
-#include "log.h"
 
 // There's only 256 I2C addresses so it's ok to keep all the settings in memory.
 #define MAX_I2C_ADDRESSES 256
@@ -55,7 +54,6 @@ static void prv_init_store(void) {
 }
 
 static void prv_export() {
-  // LOG_DEBUG("EXPORT CALLED\n\n");
   for (uint16_t i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
     s_store.state[i] = s_pin_settings[mpxe_address][i].state;
   }
