@@ -7,11 +7,8 @@
 #include "pca9539r.pb-c.h"
 #include "store.h"
 #include "stores.pb-c.h"
-#include "log.h"
 
 #endif
-
-static int mpxe_init_conditions; // If this remains zero, set default conditions in driver init
 
 // There's only 256 I2C addresses so it's ok to keep all the settings in memory
 #define MAX_I2C_ADDRESSES 256
@@ -74,18 +71,16 @@ StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
 #ifdef MPXE
   prv_init_store(i2c_address);
 #endif
-  if (mpxe_init_conditions != 1) {
-    s_i2c_port = i2c_port;
-    // Set each pin to the default settings
-    Pca9539rGpioSettings default_settings = {
-      .direction = PCA9539R_GPIO_DIR_IN,
-      .state = PCA9539R_GPIO_STATE_LOW,
-    };
-    for (Pca9539rPinAddress i = 0; i < NUM_PCA9539R_GPIO_PINS; i++) {
-      s_pin_settings[i2c_address][i] = default_settings;
-    }
-  } 
+  s_i2c_port = i2c_port;
 
+  // Set each pin to the default settings
+  Pca9539rGpioSettings default_settings = {
+    .direction = PCA9539R_GPIO_DIR_IN,
+    .state = PCA9539R_GPIO_STATE_LOW,
+  };
+  for (Pca9539rPinAddress i = 0; i < NUM_PCA9539R_GPIO_PINS; i++) {
+    s_pin_settings[i2c_address][i] = default_settings;
+  }
 #ifdef MPXE
   prv_export((void *)(intptr_t)i2c_address);
 #endif
