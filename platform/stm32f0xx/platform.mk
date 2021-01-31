@@ -69,7 +69,11 @@ gdb: $(TARGET_BINARY)
 
 # ABSOLUTELY, COMPLETELY, ENTIRELY TEMPORARY: build + flash the bootloader preloaded with an application
 # ONCE IT IS NO LONGER NECESSARY, REMOVE THIS AND ALL ITS REFERENCES
+# application code starts at 16K (bootloader) + 2K (config page 1) + 2K (config page 2) = 20480
 temp-bootloader-write: $(TARGET_BINARY:$(PLATFORM_EXT)=.bin) $(BIN_DIR)/bootloader.bin
+	@cp $(BIN_DIR)/bootloader.bin $(BIN_DIR)/bootloader-ready.bin
+	@dd if=$(TARGET_BINARY:$(PLATFORM_EXT)=.bin) of=$(BIN_DIR)/bootloader-ready.bin bs=1 seek=20480
+	@$(OPENOCD) $(OPENOCD_CFG) -c "stm_flash $(BIN_DIR)/bootloader-ready.bin" -c shutdown
 
 define session_wrapper
 pkill $(OPENOCD) || true
