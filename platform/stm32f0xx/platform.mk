@@ -50,7 +50,7 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
 CHANNEL ?= can0
 
 # Platform targets
-.PHONY: program gdb target babydriver
+.PHONY: program gdb target babydriver temp-bootloader-write
 
 babydriver:
 	@make program PROJECT=baby_driver
@@ -66,6 +66,10 @@ gdb: $(TARGET_BINARY)
 	@setsid $(OPENOCD) $(OPENOCD_CFG) > /dev/null 2>&1 &
 	@$(GDB) $< -x "$(SCRIPT_DIR)/gdb_flash"
 	@pkill $(OPENOCD)
+
+# ABSOLUTELY, COMPLETELY, ENTIRELY TEMPORARY: build + flash the bootloader preloaded with an application
+# ONCE IT IS NO LONGER NECESSARY, REMOVE THIS AND ALL ITS REFERENCES
+temp-bootloader-write: $(TARGET_BINARY:$(PLATFORM_EXT)=.bin) $(BIN_DIR)/bootloader.bin
 
 define session_wrapper
 pkill $(OPENOCD) || true
@@ -94,7 +98,7 @@ test_all: unsupported
 test: run_ssh
 
 # Host is macOS so we can't pass the programmer through - do it all through SSH
-program gdb:
+program gdb temp-bootloader-write:
 	@echo "Running command through SSH"
 	@$(SSH_CMD)
 
