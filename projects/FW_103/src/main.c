@@ -23,7 +23,7 @@ your lead)
 #include "soft_timer.h"
 #include "wait.h"
 
-void prv_get_adc_callback(const GpioAddress *address, void *context);
+static void prv_get_adc_callback(const GpioAddress *address, void *context);
 
 int main(void) {
   interrupt_init();
@@ -31,25 +31,28 @@ int main(void) {
   gpio_init();
 
   // Set up the ADC
-  GpioAddress ADC_addr = { .port = GPIO_PORT_A, .pin = 6 };
+  GpioAddress adc_addr = { .port = GPIO_PORT_A, .pin = 6 };
 
-  GpioSettings ADC_settings = {
+  GpioSettings adc_settings = {
     GPIO_DIR_IN,
     GPIO_STATE_LOW,
     GPIO_RES_NONE,
     GPIO_ALTFN_ANALOG,
   };
 
-  gpio_init_pin(&ADC_addr, &ADC_settings);
+  gpio_init_pin(&adc_addr, &adc_settings);
   adc_init(ADC_MODE_SINGLE);
 
   // Set up the button
   GpioAddress button_addr = { .port = GPIO_PORT_B, .pin = 2 };
 
   GpioSettings button_settings = {
-    GPIO_DIR_IN, GPIO_STATE_HIGH, GPIO_RES_NONE,
-    GPIO_ALTFN_3,  // I believe Pin B2 can only have the 3rd alternate function according to
-                   // datasheet (see above)
+    .direction = GPIO_DIR_IN,
+    .state = GPIO_STATE_HIGH,
+    .resistor = GPIO_RES_NONE,
+    .alt_function =
+        GPIO_ALTFN_NONE,  // I believe Pin B2 can only have the 3rd alternate function according to
+                          // datasheet (see above)
   };
 
   gpio_init_pin(&button_addr, &button_settings);
@@ -59,7 +62,7 @@ int main(void) {
   AdcChannel ADC_channel = NUM_ADC_CHANNELS;
 
   // Was told to not "worry about details", not sure what this does.
-  adc_get_channel(ADC_addr, &ADC_channel);
+  adc_get_channel(adc_addr, &ADC_channel);
   adc_set_channel(ADC_channel, true);
   // adc_set_channel(ADC_CHANNEL_TEMP, true);
 
@@ -80,7 +83,7 @@ int main(void) {
   }
 }
 
-void prv_get_adc_callback(const GpioAddress *address, void *context) {
+static void prv_get_adc_callback(const GpioAddress *address, void *context) {
   AdcChannel *channelData = (AdcChannel *)context;
   uint16_t data = 0;
   adc_read_raw(*channelData, &data);
