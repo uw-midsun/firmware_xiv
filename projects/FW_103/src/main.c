@@ -59,24 +59,24 @@ int main(void) {
 
   // Get ADC channel
 
-  AdcChannel ADC_channel = NUM_ADC_CHANNELS;
+  AdcChannel adc_channel = NUM_ADC_CHANNELS;
 
   // Was told to not "worry about details", not sure what this does.
-  adc_get_channel(adc_addr, &ADC_channel);
-  adc_set_channel(ADC_channel, true);
+  adc_get_channel(adc_addr, &adc_channel);
+  adc_set_channel(adc_channel, true);
   // adc_set_channel(ADC_CHANNEL_TEMP, true);
 
-  LOG_DEBUG("ADC Channel: %d\n", ADC_channel);
+  LOG_DEBUG("ADC Channel: %d\n", adc_channel);
 
   // Taking documentation from gpio_it.h and interrupt_def.h, and making guesses as to settings
-  InterruptSettings buttonInterruptSettings = {
+  InterruptSettings button_interrupt_settings = {
     INTERRUPT_TYPE_INTERRUPT,
     INTERRUPT_PRIORITY_NORMAL,
   };
 
   // Create a rising edge interrupt for the button to print data from the ADC (prv_get_adc_callback)
-  gpio_it_register_interrupt(&button_addr, &buttonInterruptSettings, INTERRUPT_EDGE_RISING,
-                             prv_get_adc_callback, &ADC_channel);
+  gpio_it_register_interrupt(&button_addr, &button_interrupt_settings, INTERRUPT_EDGE_RISING,
+                             prv_get_adc_callback, &adc_channel);
 
   while (true) {
     wait();
@@ -84,8 +84,11 @@ int main(void) {
 }
 
 static void prv_get_adc_callback(const GpioAddress *address, void *context) {
-  AdcChannel *channelData = (AdcChannel *)context;
+  AdcChannel *channel_data = (AdcChannel *)context;
   uint16_t data = 0;
-  adc_read_raw(*channelData, &data);
+
+  // Read scaled ADC value (use adc_read_raw to read raw ADC output)
+  adc_read_converted(*channel_data, &data);
+  // adc_read_raw(*channel_data, &data);
   LOG_DEBUG("ADC data: %d\n", data);
 }
