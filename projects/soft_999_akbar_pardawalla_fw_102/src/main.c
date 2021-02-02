@@ -1,7 +1,8 @@
-#include <stdlib.h>
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+
+#define INTERRUPT_TIME_MS 500
 
 typedef struct {
   uint8_t counter_a;
@@ -19,7 +20,7 @@ static void prv_inc_counter_a(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %d\n", c1->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_inc_counter_a, c1, NULL);
+  soft_timer_start_millis(INTERRUPT_TIME_MS, prv_inc_counter_a, c1, NULL);
 }
 
 int main() {
@@ -28,7 +29,7 @@ int main() {
 
   Counters c1 = { 0 };
 
-  soft_timer_start_millis(500, prv_inc_counter_a, &c1, NULL);
+  soft_timer_start_millis(INTERRUPT_TIME_MS, prv_inc_counter_a, &c1, NULL);
   while (true) {
   }
   return 0;
