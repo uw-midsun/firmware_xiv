@@ -1,8 +1,9 @@
-#include "fw_104_spi.h"
 #include "log.h"
 #include "spi.h"
 
-static StatusCode prv_write_read_spi_message() {
+#include "fw_104_spi.h"
+
+StatusCode prv_write_read_spi_message() {
   StatusCode status = NUM_STATUS_CODES;
 
   SpiSettings settings = {
