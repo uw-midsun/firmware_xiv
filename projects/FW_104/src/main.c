@@ -5,7 +5,7 @@
 #include "wait.h"
 
 #include "fw_104_can.h"
-#include "fw_104_i2c.h"
+#include "fw_104_iic.h"
 #include "fw_104_spi.h"
 
 int main() {

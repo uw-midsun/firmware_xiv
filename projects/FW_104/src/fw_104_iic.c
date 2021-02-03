@@ -1,6 +1,6 @@
 #include "i2c.h"
 
-#include "fw_104_i2c.h"
+#include "fw_104_iic.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
