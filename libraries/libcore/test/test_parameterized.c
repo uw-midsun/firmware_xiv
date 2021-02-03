@@ -3,7 +3,7 @@
 #include "unity.h"
 
 // Example of parameterized tests - use TEST_CASE with arguments to be passed literally to the
-// test function.
+// test function. See https://uwmidsun.atlassian.net/l/c/1yZudbzD.
 
 void setup_test(void) {}
 void teardown_test(void) {}
