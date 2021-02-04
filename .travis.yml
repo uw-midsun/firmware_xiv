@@ -107,4 +107,5 @@ script:
   - make clean
   - make build_all PLATFORM=x86 DEFINE="${DEFINES}"
   - make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+  - make test_all_python
   - make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"

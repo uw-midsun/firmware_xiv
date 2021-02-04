@@ -248,11 +248,15 @@ update_codegen:
 
 .PHONY: test_python
 test_python:
-	@python3 -m unittest discover -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
+	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
 
-.PHONY: exper
-exper:
-	find projects -name "test_*.py"
+#find projects -name "test_*.py" -print0 | xargs -0 python -m unittest
+.PHONY: test_all_python
+test_all_python:
+	for i in $$(find projects -name "test_*.py"); \
+	do											\
+		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);							\
+	done										
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
