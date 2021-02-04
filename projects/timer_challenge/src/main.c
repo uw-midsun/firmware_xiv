@@ -12,7 +12,7 @@ typedef struct Counters {
   uint8_t counter_b;
 } Counters;
 
-void timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   // casting void* back to our struct so we can use it outside of main()
   Counters *p_counter = context;
 
@@ -26,7 +26,7 @@ void timer_callback(SoftTimerId timer_id, void *context) {
   }
 
   // restart timer to continue clock cycle
-  soft_timer_start_millis(COUNTER_A_INCREMENT_INTERVAL_MS, timer_callback, p_counter, NULL);
+  soft_timer_start_millis(COUNTER_A_INCREMENT_INTERVAL_MS, prv_timer_callback, p_counter, NULL);
 }
 
 int main(void) {
@@ -36,7 +36,7 @@ int main(void) {
   Counters counter = { 0 };
 
   soft_timer_start_millis(COUNTER_A_INCREMENT_INTERVAL_MS,  // timer duration
-                          timer_callback,                   // function to call after timer
+                          prv_timer_callback,               // function to call after timer
                           &counter,                         // automatically cast to void
                           NULL);                            // timer id - not needed
   while (true) {
