@@ -52,7 +52,7 @@ int main() {
   dispatcher_init();
   gpio_set_init();
   gpio_get_init();
-  spi_exchange_init();
+  spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY);
 
   Event e = { 0 };
   while (true) {
