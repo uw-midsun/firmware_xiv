@@ -59,13 +59,29 @@ static StatusCode prv_ok_or_return() {
   return status_code(STATUS_CODE_UNKNOWN);
 }
 
+// Increments an external count to check how many times the function is called
+static StatusCode prv_status_num_calls(int *count) {
+  (*count)++;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_ok_or_return_function_count(int *count) {
+  status_ok_or_return(prv_status_num_calls(count));
+  return STATUS_CODE_OK;
+}
+
 // Tests the ok_or_return macro
 void test_status_ok_or_return(void) {
+  // Track the number of calls the test funciton makes
+  int numCalls = 0;
   StatusCode ok = prv_ok_or_return();
   Status status = status_get();
   TEST_ASSERT_EQUAL(STATUS_CODE_TIMEOUT, status.code);
   TEST_ASSERT_EQUAL_STRING("prv_ok_or_return", status.caller);
   TEST_ASSERT_EQUAL_STRING("This should work.", status.message);
+  // Checks that the function passed in to the macro is only called once
+  prv_ok_or_return_function_count(&numCalls);
+  TEST_ASSERT_EQUAL(1, numCalls);
 }
 
 void test_status_clear(void) {
