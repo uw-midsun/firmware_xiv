@@ -8,12 +8,12 @@ from gpio_port import GpioPort
 from gpio_get import gpio_get
 from gpio_set import gpio_set
 from adc_read import adc_read
+from can_send import can_send_raw, load_dbc, can_send
 
 def setup_default_channel():
     """Set up the default CAN channel."""
 
     # We import these here so that they aren't imported for the REPL
-    # pylint: disable=import-outside-toplevel
     import argparse
     import can_util
 

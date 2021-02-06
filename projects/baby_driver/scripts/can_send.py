@@ -5,11 +5,12 @@ import can_util
 from message_defs import BABYDRIVER_DEVICE_ID
 
 # global var for the Database from load_dbc
-DBC_DATABASE = None
+# pylint: disable=invalid-name
+dbc_database = None
 
 def can_send_raw(msg_id, data, device_id=BABYDRIVER_DEVICE_ID, channel=None):
     """
-    A wrapper over can_utils.send_message.
+    A wrapper over can_utils.send_message providing a friendlier interface to can_util.send_message.
     Args:
         msg_id: CAN message ID
             (if it's for babydriver messages, then msg_id=BABYDRIVER_CAN_MESSAGE_ID)
@@ -17,15 +18,12 @@ def can_send_raw(msg_id, data, device_id=BABYDRIVER_DEVICE_ID, channel=None):
         device_id: the device ID to send from
         channel: CAN channel
     """
-    try:
-        can_util.send_message(
-            data=data,
-            channel=channel,
-            msg_id=msg_id,
-            device_id=device_id,
-        )
-    except: # pylint: disable=raise-missing-from
-        raise Exception("Raw CAN message could not be sent.")
+    can_util.send_message(
+        data=data,
+        channel=channel,
+        msg_id=msg_id,
+        device_id=device_id,
+    )
 
 def load_dbc(dbc_filename):
     """
@@ -33,12 +31,9 @@ def load_dbc(dbc_filename):
     Args:
         dbc_filename: a string representing the path to a DBC file
     """
-    # pylint: disable=redefined-outer-name
-    # pylint: disable=invalid-name
-    DBC_DATABASE = cantools.database.load_file(dbc_filename)
-
-    if not DBC_DATABASE:
-        raise Exception("DBC file was not loaded.")
+    # pylint: disable=global-statement
+    global dbc_database
+    dbc_database = cantools.database.load_file(dbc_filename)
 
 def can_send(msg_name, channel=None, **data):
     """
@@ -48,12 +43,10 @@ def can_send(msg_name, channel=None, **data):
         channel: CAN channel
         data: a dictionary of field names (strings) to values (integers)
     """
-    try:
-        msg_obj = DBC_DATABASE.get_message_by_name(msg_name.upper())
-        msg_obj = msg_obj.encode(data)
-    except: # pylint: disable=raise-missing-from
-        raise Exception("CAN message could not be encoded with dbc data.")
+    msg_obj = dbc_database.get_message_by_name(msg_name.upper())
+    msg_obj_frame_id = msg_obj.frame_id
+    msg_obj_data = msg_obj.encode(data)
 
     bus = can_util.get_bus(channel)
-    can_msg = can_util.Message(arbitration_id=msg_obj.frame_id, data=msg_obj)
+    can_msg = can_util.Message(arbitration_id=msg_obj_frame_id, data=msg_obj_data)
     bus.send(can_msg.msg)
