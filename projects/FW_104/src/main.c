@@ -1,12 +1,12 @@
+#include "fw_104_can.h"
+#include "fw_104_iic.h"
+#include "fw_104_spi.h"
+
 #include "event_queue.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
-
-#include "fw_104_can.h"
-#include "fw_104_iic.h"
-#include "fw_104_spi.h"
 
 int main() {
   LOG_DEBUG("Program Started!\n");

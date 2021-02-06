@@ -1,13 +1,13 @@
+#include "fw_104_can.h"
+
 #include "can.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 
-#include "fw_104_can.h"
-
 #define CAN_SEND_TIME_MS 1000
 
-StatusCode prv_can_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+StatusCode can_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   // Taken from smoke_can
   LOG_DEBUG("Received a message!\n");
   printf("Data:\n\t");
@@ -19,27 +19,27 @@ StatusCode prv_can_callback(const CanMessage *msg, void *context, CanAckStatus *
   return STATUS_CODE_OK;
 }
 
-void prv_can_transmit_A(SoftTimerId timer_id, void *context) {
+void can_transmit_A(SoftTimerId timer_id, void *context) {
   uint8_t messageData = 5;
   CanMessage message = {
     .source_id = 0x1, .msg_id = 0x1, .data_u8 = { messageData }, .type = CAN_MSG_TYPE_DATA, .dlc = 8
   };
   can_transmit(&message, NULL);
 
-  soft_timer_start_millis(CAN_SEND_TIME_MS, prv_can_transmit_A, NULL, NULL);
+  soft_timer_start_millis(CAN_SEND_TIME_MS, can_transmit_A, NULL, NULL);
 }
 
-void prv_can_transmit_B(SoftTimerId timer_id, void *context) {
+void can_transmit_B(SoftTimerId timer_id, void *context) {
   uint8_t messageData = 5;
   CanMessage message = {
     .source_id = 0x1, .msg_id = 0x1, .data_u8 = { messageData }, .type = CAN_MSG_TYPE_DATA, .dlc = 8
   };
   can_transmit(&message, NULL);
 
-  soft_timer_start_millis(CAN_SEND_TIME_MS, prv_can_transmit_B, NULL, NULL);
+  soft_timer_start_millis(CAN_SEND_TIME_MS, can_transmit_B, NULL, NULL);
 }
 
-void prv_write_A_message() {
+void write_A_message(void) {
   CanStorage storage;
 
   CanSettings settings = {
@@ -56,11 +56,11 @@ void prv_write_A_message() {
 
   can_init(&storage, &settings);
 
-  can_register_rx_default_handler(prv_can_callback, NULL);
+  can_register_rx_default_handler(can_callback, NULL);
 
-  soft_timer_start_millis(CAN_SEND_TIME_MS, prv_can_transmit_A, NULL, NULL);
+  soft_timer_start_millis(CAN_SEND_TIME_MS, can_transmit_A, NULL, NULL);
 
-  // The prv_can_callback did not trigger unless I put this event queue stuff... (Copied from
+  // The can_callback did not trigger unless I put this event queue stuff... (Copied from
   // smoke_can)
   Event e = { 0 };
   while (true) {
@@ -70,7 +70,7 @@ void prv_write_A_message() {
   }
 }
 
-void prv_write_B_message() {
+void write_B_message(void) {
   CanStorage storage;
 
   CanSettings settings = {
@@ -87,11 +87,11 @@ void prv_write_B_message() {
 
   can_init(&storage, &settings);
 
-  can_register_rx_default_handler(prv_can_callback, NULL);
+  can_register_rx_default_handler(can_callback, NULL);
 
-  soft_timer_start_millis(CAN_SEND_TIME_MS, prv_can_transmit_B, NULL, NULL);
+  soft_timer_start_millis(CAN_SEND_TIME_MS, can_transmit_B, NULL, NULL);
 
-  // The prv_can_callback did not trigger unless I put this event queue stuff... (Copied from
+  // The can_callback did not trigger unless I put this event queue stuff... (Copied from
   // smoke_can)
   Event e = { 0 };
   while (true) {
