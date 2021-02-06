@@ -18,5 +18,5 @@ static noreturn __attribute__((naked)) void prv_perform_jump(uintptr_t pc, uintp
 noreturn void jump_to_application(void) {
   // TODO(SOFT-413): check that this is safe with a crc of the application code
   // TODO(SOFT-413): deinitialize any libraries the bootloader uses before doing this
-  prv_perform_jump(BOOTLOADER_APPLICATION_BASE_ADDR, BOOTLOADER_RAM_START);
+  prv_perform_jump(BOOTLOADER_APPLICATION_BASE_ADDR, BOOTLOADER_INITIAL_STACK_POINTER);
 }

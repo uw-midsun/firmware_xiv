@@ -34,4 +34,4 @@ MEMORY
 }
 
 /* highest address of the user mode stack */
-_estack = 0x20004000;
+_estack = _ram_start + _ram_size;
