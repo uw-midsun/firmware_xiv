@@ -19,7 +19,7 @@ static const GpioAddress test_overtemp_pin = { .port = GPIO_PORT_A, .pin = 1 };
 
 static void prv_test_max6643_fanfail_interrupt_callback(const GpioAddress *address, void *context) {
   LOG_DEBUG("FANFAIL INTERRUPT CALLBACK TRIGGERED\n");
-  8 uint8_t *fanfail_context = context;
+  uint8_t *fanfail_context = context;
   TEST_ASSERT_EQUAL(TEST_FANFAIL_EXPECTED_CONTEXT, *fanfail_context);
 
   s_times_fanfail_callback_called++;

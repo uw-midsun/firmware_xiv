@@ -22,12 +22,6 @@ StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *inpu
   *input_state = GPIO_STATE_HIGH;
   return STATUS_CODE_OK;
 }
-void setup_test(void) {
-  gpio_init();
-  interrupt_init();
-  soft_timer_init();
-  s_regulator_callback_context = 0xA;
-}
 
 static void prv_test_voltage_regulator_callback(void *context, VoltageRegulatorError error) {
   LOG_DEBUG("VOLTAGE REGULATOR ERROR CALLBACK TRIGGERED\n");
@@ -39,10 +33,22 @@ static void prv_test_voltage_regulator_callback(void *context, VoltageRegulatorE
   TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_TIMES_CALLED, s_regulator_callback_called);
 }
 
+void setup_test(void) {
+  gpio_init();
+  interrupt_init();
+  soft_timer_init();
+  s_regulator_callback_context = 0xA;
+  s_regulator_callback_called = 0;
+}
+
+void teardown_test(void) {
+  voltage_regulator_stop(&storage);
+}
+
 void test_voltage_regulator_init_works(void) {
   VoltageRegulatorSettings settings = { .enable_pin = test_enable_pin,
                                         .monitor_pin = test_monitor_pin,
-                                        .error_callback = &prv_test_voltage_regulator_callback,
+                                        .error_callback = prv_test_voltage_regulator_callback,
                                         .error_callback_context = &s_regulator_callback_context };
 
   TEST_ASSERT_OK(voltage_regulator_init(&settings, &storage));
@@ -55,10 +61,6 @@ void test_voltage_regulator_set_enabled_works(void) {
                                         .error_callback_context = &s_regulator_callback_context };
   voltage_regulator_init(&settings, &storage);
   TEST_ASSERT_OK(voltage_regulator_set_enabled(&storage, true));
-  delay_s(5);
-}
-
-void teardown_test(void) {
-  // Stop so we don't segfault if an assert fails while the fault soft timer is in progress.
-  voltage_regulator_stop(&storage);
+  delay_s(2.1);
+  TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_TIMES_CALLED, s_regulator_callback_called);
 }

@@ -1,17 +1,19 @@
 #pragma once
 // Driver for the voltage regulator
-// When hardware needs 5V power, use this 5V regulator
-// init intializes the regulator with the provided settings and starts the softimer
-// set enabled enable/disable the regulator
-// timer checks if regulator is in the opposite state of the desired one
-// error callback is called if that happens
+// Use this 5V regulator driver when the hardware needs 5v power.
+// Requires interrupts, soft timers, and gpio to be initialized.
+
+// voltage_regulator_init initializes the regulator with the
+// provided settings and starts the softimer.
+
 #include "gpio.h"
 #include "gpio_it.h"
 #include "soft_timer.h"
 
 typedef enum {
   VOLTAGE_REGULATOR_ERROR_ON_WHEN_SHOULD_BE_OFF,
-  VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON
+  VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON,
+  NUM_VOLTAGE_REGULATOR_ERRORS
 } VoltageRegulatorError;
 
 typedef void (*VoltageRegulatorErrorCallback)(void *context, VoltageRegulatorError error);
