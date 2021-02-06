@@ -99,9 +99,9 @@ void write_B_message(void) {
     .device_id = 0x1,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     // Not really sure what to put here, following smoke_can
-    .rx_event = 0,
-    .tx_event = 1,
-    .fault_event = 2,
+    .rx_event = FW_104_CAN_RX_EVENT,
+    .tx_event = FW_104_CAN_TX_EVENT,
+    .fault_event = FW_104_CAN_FAULT_EVENT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
     .loopback = false,

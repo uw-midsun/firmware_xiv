@@ -1,5 +1,6 @@
 #pragma once
 #include "can.h"
+#include "can_ack.h"
 
 StatusCode ack_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                         uint16_t num_remaining, void *context);
