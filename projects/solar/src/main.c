@@ -75,8 +75,6 @@ static StatusCode prv_initialize_libraries(void) {
   status_ok_or_return(spi_init(SOLAR_SPI_PORT, config_get_spi_settings()));
   status_ok_or_return(can_init(&s_can_storage, config_get_can_settings()));
 
-  status_ok_or_return(drv120_relay_init(config_get_drv120_relay_pin()));
-
   return STATUS_CODE_OK;
 }
 

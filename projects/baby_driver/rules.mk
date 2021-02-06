@@ -8,6 +8,8 @@
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
 
+$(T)_test_adc_read_MOCKS := adc_read_raw_pin adc_read_converted_pin
 $(T)_test_gpio_get_MOCKS := gpio_get_state
-
+$(T)_test_i2c_write_MOCKS := i2c_write i2c_write_reg
+$(T)_test_gpio_interrupts_MOCKS := gpio_get_state
 $(T)_test_spi_exchange_MOCKS := spi_exchange spi_init

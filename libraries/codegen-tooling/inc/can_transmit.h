@@ -317,6 +317,14 @@
     status;                                                \
   })
 
+#define CAN_TRANSMIT_UV_CUTOFF_NOTIFICATION()     \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_UV_CUTOFF_NOTIFICATION(&msg);        \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_CHARGER_INFO(current_u16, voltage_u16, status_bitset_u16)      \
   ({                                                                                \
     CanMessage msg = { 0 };                                                         \
@@ -431,6 +439,24 @@
     CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
     StatusCode status = can_transmit(&msg, NULL);            \
     status;                                                  \
+  })
+
+#define CAN_TRANSMIT_REAR_FAN_FAULT(fault_data_u16, enclosure_temp_data_u16, dcdc_temp_data_u16, \
+                                    reference_voltage_u16)                                       \
+  ({                                                                                             \
+    CanMessage msg = { 0 };                                                                      \
+    CAN_PACK_REAR_FAN_FAULT(&msg, (fault_data_u16), (enclosure_temp_data_u16),                   \
+                            (dcdc_temp_data_u16), (reference_voltage_u16));                      \
+    StatusCode status = can_transmit(&msg, NULL);                                                \
+    status;                                                                                      \
+  })
+
+#define CAN_TRANSMIT_FRONT_FAN_FAULT(fault_data_u16)  \
+  ({                                                  \
+    CanMessage msg = { 0 };                           \
+    CAN_PACK_FRONT_FAN_FAULT(&msg, (fault_data_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);     \
+    status;                                           \
   })
 
 #define CAN_TRANSMIT_BABYDRIVER(id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, data5_u8, \

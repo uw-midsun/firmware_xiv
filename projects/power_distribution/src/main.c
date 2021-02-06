@@ -8,11 +8,13 @@
 #include "can_rx_event_mapper_config.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
+#include "front_uv_detector.h"
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
 #include "pd_events.h"
+#include "pd_fan_ctrl.h"
 #include "pd_gpio.h"
 #include "pd_gpio_config.h"
 #include "pin_defs.h"
@@ -32,20 +34,19 @@ static bool prv_determine_is_front_power_distribution(void) {
 #ifdef FORCE_REAR_POWER_DISTRIBUTION
   return false;
 #else
-  // initialize pin 30 (PC13) as pull-up, it's shorted on rear
-  GpioAddress board_test_pin = { .port = GPIO_PORT_C, .pin = 13 };
+  // initialize PA8
+  GpioAddress board_test_pin = FRONT_OR_REAR_RECOGNITION_PIN;
   GpioSettings board_test_settings = {
-    .direction = GPIO_DIR_IN,
-    .resistor = GPIO_RES_PULLUP,
-    .alt_function = GPIO_ALTFN_NONE,
+    .direction = GPIO_DIR_IN, .resistor = GPIO_RES_NONE, .alt_function = GPIO_ALTFN_NONE
   };
+
   gpio_init_pin(&board_test_pin, &board_test_settings);
 
-  // we're on front if it's high and rear if it's low
-  GpioState state = GPIO_STATE_HIGH;  // default to front since we can force rear
+  // we're on front if it's low and rear if it's high
+  GpioState state = GPIO_STATE_LOW;
   gpio_get_state(&board_test_pin, &state);
 
-  return state == GPIO_STATE_HIGH;
+  return state == GPIO_STATE_LOW;
 #endif
 }
 
@@ -84,6 +85,7 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   gpio_init();
+  gpio_it_init();
   event_queue_init();
   adc_init(ADC_MODE_SINGLE);
   prv_init_i2c();
@@ -130,9 +132,32 @@ int main(void) {
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
+#ifndef FAN_CONTROL_NOT_ACTIVATED
+  // initialize fan ctrl
+  if (is_front_power_distribution) {
+    FanCtrlSettings fan_settings = {
+      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+      .fan_pwm1 = FRONT_PD_PWM_1,
+      .fan_pwm2 = FRONT_PD_PWM_2,
+      .i2c_address = ADT7476A_I2C_ADDRESS,
+    };
+    pd_fan_ctrl_init(&fan_settings, true);
+  } else {
+    FanCtrlSettings fan_settings = {
+      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+      .fan_pwm1 = REAR_ENC_VENT_PWM,
+      .fan_pwm2 = REAR_DCDC_PWM,
+      .i2c_address = ADT7476A_I2C_ADDRESS,
+    };
+    pd_fan_ctrl_init(&fan_settings, false);
+  }
+#endif
 
-  // initialize strobe_blinker on rear
-  if (!is_front_power_distribution) {
+  if (is_front_power_distribution) {
+    // initialize UV cutoff detector
+    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
+  } else {
+    // initialize strobe_blinker on rear
     RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };

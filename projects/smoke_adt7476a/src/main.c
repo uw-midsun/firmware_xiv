@@ -74,7 +74,6 @@ int main() {
     .i2c_write_addr = I2C_WRITE_ADDR,
     .i2c_read_addr = I2C_READ_ADDR,
     .i2c = I2C_PORT,
-    .i2c_settings = i2c_settings,
   };
 
   interrupt_init();
@@ -82,6 +81,7 @@ int main() {
   gpio_it_init();
   soft_timer_init();
   adt7476a_init(&s_storage, &settings);
+  i2c_init(I2C_PORT, &i2c_settings);
 
   s_current_speed = 0;
 

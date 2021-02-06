@@ -196,6 +196,10 @@
                     SYSTEM_CAN_MESSAGE_DCDC_TEMPS, 4, (temp_1_u16), (temp_2_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_UV_CUTOFF_NOTIFICATION(msg_ptr)                             \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT, \
+                      SYSTEM_CAN_MESSAGE_UV_CUTOFF_NOTIFICATION)
+
 #define CAN_PACK_CHARGER_INFO(msg_ptr, current_u16, voltage_u16, status_bitset_u16)           \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_INFO, 6, \
                     (current_u16), (voltage_u16), (status_bitset_u16), CAN_PACK_IMPL_EMPTY)
@@ -262,6 +266,17 @@
                    (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
                    CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_REAR_FAN_FAULT(msg_ptr, fault_data_u16, enclosure_temp_data_u16, \
+                                dcdc_temp_data_u16, reference_voltage_u16)        \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,         \
+                    SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, 8, (fault_data_u16),       \
+                    (enclosure_temp_data_u16), (dcdc_temp_data_u16), (reference_voltage_u16))
+
+#define CAN_PACK_FRONT_FAN_FAULT(msg_ptr, fault_data_u16)                                         \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,                        \
+                    SYSTEM_CAN_MESSAGE_FRONT_FAN_FAULT, 2, (fault_data_u16), CAN_PACK_IMPL_EMPTY, \
+                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_BABYDRIVER(msg_ptr, id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, \
                             data5_u8, data6_u8)                                               \
