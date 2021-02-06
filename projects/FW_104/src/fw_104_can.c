@@ -7,6 +7,13 @@
 
 #define CAN_SEND_TIME_MS 1000
 
+typedef enum {
+  FW_104_CAN_RX_EVENT = 0,
+  FW_104_CAN_TX_EVENT,
+  FW_104_CAN_FAULT_EVENT,
+  NUM_FW_104_CAN_EVENTS,
+} Fw104CanEvent;
+
 StatusCode can_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   // Taken from smoke_can
   LOG_DEBUG("Received a message!\n");
@@ -46,9 +53,9 @@ void write_A_message(void) {
     .device_id = 0xA,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     // Not really sure what to put here, following smoke_can
-    .rx_event = 0,
-    .tx_event = 1,
-    .fault_event = 2,
+    .rx_event = FW_104_CAN_RX_EVENT,
+    .tx_event = FW_104_CAN_TX_EVENT,
+    .fault_event = FW_104_CAN_FAULT_EVENT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
     .loopback = true,

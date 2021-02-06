@@ -13,14 +13,14 @@ int main() {
   interrupt_init();
   event_queue_init();
   soft_timer_init();
-  // prv_write_A_message();
-  prv_write_B_message();
+  // write_A_message();
+  write_B_message();
 
   while (true) {
     wait();
   }
-  prv_write_read_spi_message();
-  prv_write_read_i2c_message();
+  write_read_spi_message();
+  write_read_i2c_message();
 
   return 0;
 }
