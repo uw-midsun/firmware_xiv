@@ -72,8 +72,8 @@ static StatusCode prv_ok_or_return_function_count(int *count) {
 
 // Tests the ok_or_return macro
 void test_status_ok_or_return(void) {
-  // Track the number of calls the test funciton makes
-  int num_calls = 0;
+  // Track the number of calls the test function makes
+  uint16_t num_calls = 0;
   StatusCode ok = prv_ok_or_return();
   Status status = status_get();
   TEST_ASSERT_EQUAL(STATUS_CODE_TIMEOUT, status.code);
