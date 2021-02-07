@@ -14,7 +14,6 @@ extern uint32_t _application_start;
 extern uint32_t _application_size;
 extern uint32_t _ram_start;
 extern uint32_t _ram_size;
-extern uint32_t _estack;
 
 #define BOOTLOADER_CONFIG_PAGE_1_BASE_ADDR ((uintptr_t)&_config_page1_start)
 #define BOOTLOADER_CONFIG_PAGE_2_BASE_ADDR ((uintptr_t)&_config_page2_start)
@@ -22,4 +21,3 @@ extern uint32_t _estack;
 #define BOOTLOADER_APPLICATION_SIZE ((size_t)&_application_size)
 #define BOOTLOADER_RAM_START ((uintptr_t)&_ram_start)
 #define BOOTLOADER_RAM_SIZE ((uintptr_t)&_ram_size)
-#define BOOTLOADER_INITIAL_STACK_POINTER ((uintptr_t)&_estack)

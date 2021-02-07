@@ -5,13 +5,15 @@ See https://uwmidsun.atlassian.net/l/c/mHxmqjvn for more information.
 
 SECTIONS
 {
-  /* The vector table must be at the start of the flash, but that's in the bootloader section.
-  We don't want to try and reflash that, so we just rely on the bootloader's vector table being
-  the same as ours and use it. */
-  /DISCARD/ :
+  /* The vector table stored at .isr_vector must end up at the beginning of the application flash.
+  This isn't at address 0, but the bootloader will set the vector table here when jumping to the
+  application's reset handler. */
+  .isr_vector :
   {
-    *(.isr_vector)
-  }
+    . = ALIGN(4);
+    KEEP(*(.isr_vector))            /* Startup code */
+    . = ALIGN(4);
+  } >APPLICATION
 
   /* application program code is stored in the .text section, which goes to application flash */
   .text :
