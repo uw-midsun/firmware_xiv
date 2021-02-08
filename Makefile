@@ -155,11 +155,16 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
+IGNORE_PY_FILES := lint.py
+IGNORE_PY_FILES : echo $($(IGNORE_PY_FILES) | sed 's/ /,/g')
+FIND_PY_FILES:= $(shell find -path ./venv -prune -false -o -name '*.py')
+FIND_PY_FILES_NEW:= $(shell find -path ./venv -prune -false -o -name '*.py')
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h'
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -186,6 +191,7 @@ pylint:
 format_quick:
 	@echo "Quick format on ONlY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
+	@$(FIND_MOD_NEW_PY)| xargs autopep8 -a -a -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -193,11 +199,15 @@ format:
 	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
+	@echo "Formatting all *.py files in repo"
+	@echo "Excluding files: $(IGNORE_PY_FILES)"
+	@autopep8 -a -a -i --exclude $(IGNORE_PY_FILES) $(FIND_PY_FILES)
 
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
 test_format: format
 	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 -a -a -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
 # Builds the project or library
 .PHONY: build
