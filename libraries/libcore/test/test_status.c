@@ -62,7 +62,8 @@ static StatusCode prv_ok_or_return() {
 // Increments an external count to check how many times the function is called
 static StatusCode prv_status_num_calls(uint16_t *count) {
   (*count)++;
-  return STATUS_CODE_OK;
+  // Returning an error to check that the function isn't being called twice on failure
+  return STATUS_CODE_INTERNAL_ERROR;
 }
 
 static StatusCode prv_ok_or_return_function_count(uint16_t *count) {
