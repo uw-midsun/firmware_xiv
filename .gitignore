@@ -43,6 +43,7 @@ libraries/version/inc/git_version_impl.h.tmp
 .vs/
 build/
 *.DS_Store
+.project
 
 # Vim
 tags

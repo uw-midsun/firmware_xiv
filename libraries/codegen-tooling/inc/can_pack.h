@@ -196,6 +196,10 @@
                     SYSTEM_CAN_MESSAGE_DCDC_TEMPS, 4, (temp_1_u16), (temp_2_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_UV_CUTOFF_NOTIFICATION(msg_ptr)                             \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT, \
+                      SYSTEM_CAN_MESSAGE_UV_CUTOFF_NOTIFICATION)
+
 #define CAN_PACK_CHARGER_INFO(msg_ptr, current_u16, voltage_u16, status_bitset_u16)           \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_INFO, 6, \
                     (current_u16), (voltage_u16), (status_bitset_u16), CAN_PACK_IMPL_EMPTY)
