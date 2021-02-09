@@ -80,6 +80,9 @@ before_script:
   # Install pylint for python3 used by miniconda
   - pip install --user pylint
 
+  # Install python requirements for every project
+  - make install_requirements
+
   # force ${PATH} to update
   - hash -r
 
@@ -107,5 +110,5 @@ script:
   - make clean
   - make build_all PLATFORM=x86 DEFINE="${DEFINES}"
   - make test_all PLATFORM=x86 DEFINE="${DEFINES}"
-  - make test_all_python
+  - make pytest_all
   - make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
