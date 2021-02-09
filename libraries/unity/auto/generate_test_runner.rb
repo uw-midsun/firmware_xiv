@@ -343,7 +343,7 @@ class UnityTestRunnerGenerator
     if (@options[:use_param_tests])
       tests.each do |test|
         if ((test[:args].nil?) or (test[:args].empty?))
-          output.puts("  RUN_TEST(#{test[:test]}, #{test[:line_number]}, RUN_TEST_NO_ARGS);")
+          output.puts("  RUN_TEST(#{test[:test]}, #{test[:line_number]});")
         else
           test[:args].each {|args| output.puts("  RUN_TEST(#{test[:test]}, #{test[:line_number]}, #{args});")}
         end

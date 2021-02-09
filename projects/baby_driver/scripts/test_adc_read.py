@@ -5,7 +5,7 @@ from unittest.mock import patch
 from adc_read import adc_read, NUM_PINS_PER_PORT
 from can_util import can_pack, Message
 from gpio_port import GpioPort
-from message_defs import BabydriverMessageId, BABYDRIVER_CAN_MESSAGE_ID
+from message_defs import BabydriverMessageId
 
 OK_STATUS = 0
 
@@ -19,28 +19,26 @@ class TestADCRead(unittest.TestCase):
 
         # pylint: disable=attribute-defined-outside-init
         # Parameters to be sent to the firmware project
-        self.msg_id = None
+        self.babydriver_id = None
         self.port = None
         self.pin = None
         self.raw = None
 
-        def parameter_test(msg_id=BABYDRIVER_CAN_MESSAGE_ID, port=1, pin=1, raw=1):
-            self.msg_id = msg_id
-            self.port = port
-            self.pin = pin
-            self.raw = raw
+        def parameter_test(babydriver_id, data):
+            self.babydriver_id = babydriver_id
+            self.port, self.pin, self.raw = data[0:3]
 
         mock_send_message.side_effect = parameter_test
 
         # Set mock returns for 2 calls of next_message
         data_msg = [BabydriverMessageId.ADC_READ_DATA, 1, 1]
-        status_msg = [BabydriverMessageId.ADC_READ_DATA, OK_STATUS]
+        status_msg = [BabydriverMessageId.STATUS, OK_STATUS]
         mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
 
         adc_read(1, 1, False)
         self.assertEqual(self.port, 1)
         self.assertEqual(self.pin, 1)
-        self.assertEqual(self.raw, 1)
+        self.assertEqual(self.raw, 0)
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
@@ -51,7 +49,7 @@ class TestADCRead(unittest.TestCase):
 
         # Set mock returns for 2 calls of next_message
         data_msg = [BabydriverMessageId.ADC_READ_DATA, 1, 1]
-        status_msg = [BabydriverMessageId.ADC_READ_DATA, OK_STATUS]
+        status_msg = [BabydriverMessageId.STATUS, OK_STATUS]
         mock_next_message.side_effect = (Message(data=data_msg), Message(data=status_msg))
 
         converted_read = int(adc_read(GpioPort.A, 0, False))

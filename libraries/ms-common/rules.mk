@@ -9,4 +9,6 @@ $(T)_DEPS := $(PLATFORM_LIB) libcore
 
 ifeq (x86,$(PLATFORM))
 $(T)_EXCLUDE_TESTS := pwm pwm_input
+else 
+$(T)_EXCLUDE_TESTS := wait
 endif
