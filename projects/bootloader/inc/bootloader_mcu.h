@@ -14,10 +14,12 @@ extern uint32_t _application_start;
 extern uint32_t _application_size;
 extern uint32_t _ram_start;
 extern uint32_t _ram_size;
+extern uint32_t _vector_table_size;  // this one is defined in startup_stm32f072.s
 
-#define BOOTLOADER_CONFIG_PAGE_1_BASE_ADDR ((uintptr_t)&_config_page1_start)
-#define BOOTLOADER_CONFIG_PAGE_2_BASE_ADDR ((uintptr_t)&_config_page2_start)
-#define BOOTLOADER_APPLICATION_BASE_ADDR ((uintptr_t)&_application_start)
+#define BOOTLOADER_CONFIG_PAGE_1_START ((void *)&_config_page1_start)
+#define BOOTLOADER_CONFIG_PAGE_2_START ((void *)&_config_page2_start)
+#define BOOTLOADER_APPLICATION_START ((void *)&_application_start)
 #define BOOTLOADER_APPLICATION_SIZE ((size_t)&_application_size)
-#define BOOTLOADER_RAM_START ((uintptr_t)&_ram_start)
-#define BOOTLOADER_RAM_SIZE ((uintptr_t)&_ram_size)
+#define BOOTLOADER_RAM_START ((void *)&_ram_start)
+#define BOOTLOADER_RAM_SIZE ((size_t)&_ram_size)
+#define BOOTLOADER_VECTOR_TABLE_SIZE ((size_t)&_vector_table_size)

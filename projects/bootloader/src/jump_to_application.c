@@ -2,8 +2,10 @@
 
 #include <stdint.h>
 #include <stdnoreturn.h>
+#include <string.h>
 
 #include "bootloader_mcu.h"
+#include "stm32f0xx_syscfg.h"
 #include "stm32f0xx_misc.h"
 
 static noreturn __attribute__((naked)) void prv_perform_jump(uint32_t sp, uint32_t pc) {
@@ -20,16 +22,20 @@ noreturn void jump_to_application(void) {
   // TODO(SOFT-413): check that this is safe with a crc of the application code
   // TODO(SOFT-413): deinitialize any libraries the bootloader uses before doing this
 
-  // we don't want any interrupts while we're messing with the vector table
-  __disable_irq();
-  // use MSP (main stack pointer) as the stack pointer
-  __set_CONTROL(0);
-  // fuck there's no VTOR on STM32F072
-  // work around it with http://kevincuzner.com/2018/11/13/bootloader-for-arm-cortex-m0-no-vtor/
-  //SCB->VTOR = BOOTLOADER_APPLICATION_BASE_ADDR;
+  __disable_irq();   // we don't want any interrupts while we're messing with the vector table
+  __set_CONTROL(0);  // use MSP (main stack pointer) as the stack pointer
 
-  // the initial stack pointer and reset handler pointer are the first two 32-bit words in the image
-  uint32_t *application_flash = BOOTLOADER_APPLICATION_BASE_ADDR;
+  // We need to point the system at the application's interrupt vector table.
+  // Every ARM chip except the Cortex M0 (which the STM32F072 has) has a Vector Table Offset
+  // Register (VTOR) which we could use to remap the vector table.
+  // The STM32F072 doesn't have one, so instead we copy the vector table to SRAM and remap address 0
+  // (the vector table's address) to SRAM rather than flash.
+  // See the STM32F0xx manual, section 2.5, "Physical remap".
+  memcpy(BOOTLOADER_RAM_START, BOOTLOADER_APPLICATION_START, BOOTLOADER_VECTOR_TABLE_SIZE);
+  SYSCFG_MemoryRemapConfig(SYSCFG_MemoryRemap_SRAM);
+
+  // the first two 32-bit words in the vector table are the initial SP and the reset handler address
+  uint32_t *application_flash = BOOTLOADER_APPLICATION_START;
   uint32_t initial_sp = application_flash[0];
   uint32_t reset_handler_pc = application_flash[1];
 
