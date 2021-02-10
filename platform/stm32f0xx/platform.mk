@@ -34,6 +34,9 @@ LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority
 
 # temporary build mechanism for applications: set DEFAULT_LINKER_SCRIPT=stm32f0_application.ld
 DEFAULT_LINKER_SCRIPT ?= stm32f0_default.ld
+ifeq ($(MAKECMDGOALS),temp-bootloader-write)
+DEFAULT_LINKER_SCRIPT := stm32f0_application.ld
+endif
 
 # Device openocd config file
 # Use PROBE=stlink-v2 for discovery boards
