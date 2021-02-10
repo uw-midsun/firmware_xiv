@@ -59,10 +59,8 @@ static SpiSettings s_spi_settings_test_2 = { .baudrate = 6000000,
 
 static StatusCode prv_callback_spi_exchange_status(uint8_t data[2], void *context,
                                                    bool *tx_result) {
-  /*
-      This is a dispatcher callback to receive messages from the spi_exchange module
-      This callback receives the babydriver status messages
-  */
+  // This is a dispatcher callback to receive messages from the spi_exchange module
+  // This callback receives the babydriver status messages
 
   memcpy(s_received_data_status, data, 2);
   *tx_result = false;
@@ -72,10 +70,8 @@ static StatusCode prv_callback_spi_exchange_status(uint8_t data[2], void *contex
 }
 
 static StatusCode prv_callback_spi_exchange(uint8_t data[8], void *context, bool *tx_result) {
-  /*
-      This is a dispatcher callback to receive messages from the spi_exchange module
-      This callback receives the data messages
-  */
+  // This is a dispatcher callback to receive messages from the spi_exchange module
+  // This callback receives the data messages
 
   for (size_t i = 0; i < 8; i++) {
     s_received_data[s_num_bytes] = data[i];
@@ -88,13 +84,11 @@ static StatusCode prv_callback_spi_exchange(uint8_t data[8], void *context, bool
 
 static void prv_send_meta_data(uint8_t port, uint8_t mode, uint8_t tx_len, uint8_t rx_len,
                                uint8_t cs_port, uint8_t cs_pin, uint8_t use_cs, uint32_t baudrate) {
-  /*
-      This function only sends the first and second metadata message
-      This is used for valid input tests
+  // This function only sends the first and second metadata message
+  // This is used for valid input tests
 
-      Example of prv_send_meta_data:
-      prv_send_meta_data(port, mode, tx_len, rx_len, cs_port, cs_pin, use_cs, baudrate);
-  */
+  // Example of prv_send_meta_data:
+  // prv_send_meta_data(port, mode, tx_len, rx_len, cs_port, cs_pin, use_cs, baudrate);
 
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_1,  // id
                           port, mode,                                  // port, mode
@@ -117,10 +111,9 @@ static void prv_send_meta_data(uint8_t port, uint8_t mode, uint8_t tx_len, uint8
 
 static void prv_send_first_meta_data(uint8_t port, uint8_t mode, uint8_t tx_len, uint8_t rx_len,
                                      uint8_t cs_port, uint8_t cs_pin, uint8_t use_cs) {
-  /*
-      This function only sends the first metadata message
-      This is used for timeout and invalid input tests
-  */
+  // This function only sends the first metadata message
+  // This is used for timeout and invalid input tests
+
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_1,  // id
                           port, mode,                                  // port, mode
                           tx_len, rx_len,                              // tx_len, rx_len
@@ -129,19 +122,16 @@ static void prv_send_first_meta_data(uint8_t port, uint8_t mode, uint8_t tx_len,
 }
 
 static void prv_clear_received_data_array(void) {
-  /*
-      This function clears recieved data array
-  */
+  // This function clears recieved data array
+
   for (size_t i = 0; i < s_num_bytes; i++) {
     s_received_data[i] = 0;
   }
 }
 
 static void prv_test_equal_multiple_messages(void) {
-  /*
-      This function compares if the data received is correct
-      It also creates the mock_array to compare against the received data
-  */
+  // This function compares if the data received is correct
+  // It also creates the mock_array to compare against the received data
 
   uint8_t mock_array[296];
   for (size_t i = 0; i < s_num_bytes; i++) {
@@ -156,10 +146,8 @@ static void prv_test_equal_multiple_messages(void) {
 }
 
 static void prv_send_data(uint8_t bytes) {
-  /*
-      This function sends data messages to spi_exchange
-      that the python would normally send
-  */
+  // This function sends data messages to spi_exchange
+  // that the python would normally send
 
   uint8_t can_data_array[8] = { 0 };
   for (size_t i = 0; i < bytes; i++) {
@@ -192,11 +180,9 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_valid_input(void) {
-  /*
-      This test tests the different valid inputs for spi_exchange
-      The only test that was omitted was for a tx_len and rx_len of 255
-      This was because there was an error with the TX and RX helpers
-  */
+  // This test tests the different valid inputs for spi_exchange
+  // The only test that was omitted was for a tx_len and rx_len of 255
+  // This was because there was an error with the TX and RX helpers
 
   // first test using the given cs port and pin
   // Please see prv_send_meta_data for information on the parameters
@@ -259,13 +245,11 @@ void test_valid_input(void) {
   prv_clear_received_data_array();
   s_num_bytes = 0;
 
-  /*
-     fourth test for tx_len and rx_len edge cases (255)
+  // fourth test for tx_len and rx_len edge cases (255)
 
-     This test was removed because of an error with the MS_TEST_HELPERs
-     Since this test had to send and receive a lot of CAN messages it caused
-     an error within the helpers
-  */
+  // This test was removed because of an error with the MS_TEST_HELPERs
+  // Since this test had to send and receive a lot of CAN messages it caused
+  // an error within the helpers
 
   // fifth test for port and mode edge cases
   prv_send_meta_data(1, 3, 7, 7, 0, 0, 0, TEST_BAUDRATE);
@@ -317,10 +301,8 @@ void test_valid_input(void) {
 }
 
 void test_invalid_input(void) {
-  /*
-      This test tests the different invalid inputs
-      for spi_exchange
-  */
+  // This test tests the different invalid inputs
+  // for spi_exchange
 
   // first test invalid cs port
   prv_send_first_meta_data(0, 0, 7, 7, INVALID_CS_PORT, 0, 0);
@@ -356,9 +338,7 @@ void test_invalid_input(void) {
 }
 
 void test_timeout(void) {
-  /*
-      This test tests the watchdog timeout error in spi_exchange
-  */
+  // This test tests the watchdog timeout error in spi_exchange
 
   // test for watchdog error with second meta data message
   prv_send_first_meta_data(0, 0, 7, 7, 0, 0, 0);
@@ -379,18 +359,16 @@ void test_timeout(void) {
 
 StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len, uint8_t *rx_data,
                                    size_t rx_len) {
-  /*
-      This function mocks spi_exchange from spi.h
-  */
+  // This function mocks spi_exchange from spi.h
+
   for (size_t i = 0; i < rx_len; i++) rx_data[i] = 1;
 
   return STATUS_CODE_OK;
 }
 
 StatusCode TEST_MOCK(spi_init)(SpiPort spi, const SpiSettings *settings) {
-  /*
-      This function mocks spi_init from spi.h
-  */
+  // This function mocks spi_init from spi.h
+
   s_spi_port = spi;
   s_spi_settings = *settings;
 

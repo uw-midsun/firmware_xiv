@@ -27,10 +27,9 @@ static uint32_t s_baudrate;
 static size_t s_bytes_received = 0;
 static size_t s_bytes_sent = 0;
 
-/*
-    The two arrays are declared to be 260 to prevent an overflow
-    My module can read up to s_rx_data[259] but 256 to 259 will all be 0
-*/
+// The two arrays are declared to be 260 to prevent an overflow
+// My module can read up to s_rx_data[259] but 256 to 259 will all be 0
+
 static uint8_t s_tx_data[260] = { 0 };
 static uint8_t s_rx_data[260] = { 0 };
 
@@ -41,10 +40,8 @@ static bool s_in_transaction;
 static uint32_t s_soft_timer_delay;
 
 static StatusCode prv_spi_set_up(void) {
-  /*
-      This function sets up the spi_settings for spi_init
-      according to the data received from the python messages
-  */
+  // This function sets up the spi_settings for spi_init
+  // according to the data received from the python messages
 
   GpioAddress mosi = CONTROLLER_BOARD_ADDR_SPI1_MOSI;
   GpioAddress miso = CONTROLLER_BOARD_ADDR_SPI1_MISO;
@@ -71,19 +68,17 @@ static StatusCode prv_spi_set_up(void) {
 }
 
 static void prv_clear_array(uint8_t *array, size_t length) {
-  /*
-      This function clears the array it is given
-  */
+  // This function clears the array it is given
+
   for (size_t i = 0; i < length; i++) {
     array[i] = 0;
   }
 }
 
 static void prv_reset_spi_exchange(void) {
-  /*
-      This function resets everything in spi_exchange
-      so that it is ready for the next spi_exchange python call
-  */
+  // This function resets everything in spi_exchange
+  // so that it is ready for the next spi_exchange python call
+
   prv_clear_array(s_tx_data, s_tx_len);
   prv_clear_array(s_rx_data, s_rx_len);
   s_bytes_received = 0;
@@ -93,20 +88,18 @@ static void prv_reset_spi_exchange(void) {
 }
 
 static void prv_timer_status_callback(SoftTimerId timer_id, void *context) {
-  /*
-      This function is used to send a STATUS_CODE_OK message
-      The function is in a soft timer call back because there
-      needs to be time between each babydriver message sent
-  */
+  // This function is used to send a STATUS_CODE_OK message
+  // The function is in a soft timer call back because there
+  // needs to be time between each babydriver message sent
+
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_OK, 0, 0, 0, 0, 0, 0);
 }
 
 static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
-  /*
-      This function is used to send the data messages back to the python
-      The function is in a soft timer call back because there
-      needs to be time between each babydriver message sent
-  */
+  // This function is used to send the data messages back to the python
+  // The function is in a soft timer call back because there
+  // needs to be time between each babydriver message sent
+
   CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_SPI_EXCHANGE_RX_DATA, s_rx_data[s_bytes_sent],
                           s_rx_data[s_bytes_sent + 1], s_rx_data[s_bytes_sent + 2],
                           s_rx_data[s_bytes_sent + 3], s_rx_data[s_bytes_sent + 4],
@@ -122,10 +115,9 @@ static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
 }
 
 static StatusCode prv_send_can_rx_msgs(void) {
-  /*
-      This function calls the set up (for spi_init)
-      and calls the spi_exchange function
-  */
+  // This function calls the set up (for spi_init)
+  // and calls the spi_exchange function
+
   status_ok_or_return(prv_spi_set_up());
   status_ok_or_return(spi_exchange(s_port, s_tx_data, s_tx_len, s_rx_data, s_rx_len));
   if (s_rx_len != 0) {
@@ -138,11 +130,10 @@ static StatusCode prv_send_can_rx_msgs(void) {
 
 static StatusCode prv_callback_spi_exchange_metadata1(uint8_t data[8], void *context,
                                                       bool *tx_result) {
-  /*
-      This function is the dispatcher callback when the module
-      receives a babydriver can message with the id
-      BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_1
-  */
+  // This function is the dispatcher callback when the module
+  // receives a babydriver can message with the id
+  // BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_1
+
   watchdog_kick(&s_watchdog_storage);
   s_in_transaction = true;
   *tx_result = false;
@@ -175,11 +166,10 @@ static StatusCode prv_callback_spi_exchange_metadata1(uint8_t data[8], void *con
 
 static StatusCode prv_callback_spi_exchange_metadata2(uint8_t data[8], void *context,
                                                       bool *tx_result) {
-  /*
-      This function is the dispatcher callback when the module
-      receives a babydriver can message with the id
-      BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_2
-  */
+  // This function is the dispatcher callback when the module
+  // receives a babydriver can message with the id
+  // BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_2
+
   watchdog_kick(&s_watchdog_storage);
   s_in_transaction = true;
   *tx_result = false;
@@ -201,11 +191,10 @@ static StatusCode prv_callback_spi_exchange_metadata2(uint8_t data[8], void *con
 
 static StatusCode prv_callback_spi_exchange_python_transfer(uint8_t data[8], void *context,
                                                             bool *tx_result) {
-  /*
-      This function is the dispatcher callback when the module
-      receives a babydriver can message with the id
-      BABYDRIVER_MESSAGE_SPI_EXCHANGE_TX_DATA
-  */
+  // This function is the dispatcher callback when the module
+  // receives a babydriver can message with the id
+  // BABYDRIVER_MESSAGE_SPI_EXCHANGE_TX_DATA
+
   watchdog_kick(&s_watchdog_storage);
   s_in_transaction = true;
   *tx_result = false;
@@ -226,12 +215,11 @@ static StatusCode prv_callback_spi_exchange_python_transfer(uint8_t data[8], voi
 }
 
 static void prv_timeout_callback(void *context) {
-  /*
-      This function is the watchdog callback
-      It sends a STATUS_CODE_TIMEOUT if the module
-      does not receive all of the messages it was
-      supposed to receive
-  */
+  // This function is the watchdog callback
+  // It sends a STATUS_CODE_TIMEOUT if the module
+  // does not receive all of the messages it was
+  // supposed to receive
+
   if (s_in_transaction) {
     CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_TIMEOUT, 0, 0, 0, 0, 0, 0);
   }
@@ -239,11 +227,10 @@ static void prv_timeout_callback(void *context) {
 }
 
 StatusCode spi_exchange_init(uint32_t spi_exchange_timeout, uint32_t tx_delay) {
-  /*
-      This function starts the spi_exchange module
-      The two parameters are the timeout length for watchdog
-      and the delay between each CAN message sent back to the python
-  */
+  // This function starts the spi_exchange module
+  // The two parameters are the timeout length for watchdog
+  // and the delay between each CAN message sent back to the python
+
   s_timeout_ms = spi_exchange_timeout;
   s_soft_timer_delay = tx_delay;
   watchdog_start(&s_watchdog_storage, s_timeout_ms, prv_timeout_callback, NULL);
