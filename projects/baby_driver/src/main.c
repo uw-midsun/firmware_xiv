@@ -23,6 +23,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "spi_exchange.h"
 #include "wait.h"
 
 typedef enum {
@@ -61,6 +62,7 @@ int main() {
   gpio_get_init();
   gpio_interrupts_init();
   i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS);
+  spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY);
 
   Event e = { 0 };
   while (true) {
