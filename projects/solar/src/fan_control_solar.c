@@ -1,4 +1,4 @@
-#include "fan_control.h"
+#include "fan_control_solar.h"
 
 #include <stdbool.h>
 #include "data_store.h"
@@ -14,7 +14,7 @@
 #include "spv1020_mppt.h"
 
 /*
-GpioSettings FanControlSettings = {
+GpioSettings FanControlSettingsSolar = {
 
   .direction = GPIO_DIR_IN,
   .state = GPIO_STATE_LOW,
@@ -28,7 +28,7 @@ GpioSettings FanControlSettings = {
 
 */
 
-static FanControlSettings s_settings;
+static FanControlSettingsSolar s_settings;
 
 static void prv_fanfail_callback(const GpioAddress *address, void *context) {
   LOG_WARN("fan_control detected fanfail, raising fault event");
@@ -53,7 +53,7 @@ static void prv_check_temperature(uint8_t thermistor) {
   }
 }
 
-StatusCode fan_control_init(FanControlSettings *settings) {
+StatusCode fan_control_init(FanControlSettingsSolar *settings) {
   if (settings == NULL || settings->mppt_count > MAX_SOLAR_BOARD_MPPTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }

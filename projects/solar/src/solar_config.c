@@ -329,20 +329,18 @@ const FaultMonitorSettings *config_get_fault_monitor_settings(SolarMpptCount mpp
   return &s_fault_monitor_settings;
 }
 
-static FanControlSettings s_fan_control_settings = {
+static FanControlSettingsSolar s_fan_control_settings = {
   .overtemp_addr = { .port = GPIO_PORT_B, .pin = 5 },
   .fan_fail_addr = { .port = GPIO_PORT_B, .pin = 7 },
   .full_speed_addr = { .port = GPIO_PORT_B, .pin = 6 },
   .full_speed_temp_threshold = SOLAR_OVERTEMPERATURE_THRESHOLD_dC,
 };
 
-const FanControlSettings *config_get_fan_control_settings(SolarMpptCount mppt_count) {
+const FanControlSettingsSolar *config_get_fan_control_settings(SolarMpptCount mppt_count) {
   if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
     return NULL;
   }
   s_fan_control_settings.mppt_count = mppt_count;
-  // fan_control_init(&s_fan_control_settings);
+
   return &s_fan_control_settings;
 }
-
-// TODO(SOFT-349): test_initializing_fault_monitor_config
