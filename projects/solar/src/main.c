@@ -7,7 +7,7 @@
 #include "data_tx.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
-#include "fan_control.h"
+#include "fan_control_solar.h"
 #include "fault_handler.h"
 #include "fault_monitor.h"
 #include "gpio.h"
