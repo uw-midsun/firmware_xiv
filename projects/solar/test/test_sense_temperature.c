@@ -54,14 +54,14 @@ void test_single_thermistor_cycle(void) {
   bool is_set;
   uint32_t set_value;
   SenseTemperatureSettings settings = {
-    .thermistor_pins = { { GPIO_PORT_A, 0 } },
+    .thermistor_settings = { { RTD_THERMISTOR, { GPIO_PORT_A, 0 } } },
     .num_thermistors = 1,
   };
   TEST_ASSERT_OK(sense_temperature_init(&settings));
 
   // we use the ADC channel later, so get it now
   AdcChannel adc_channel = NUM_ADC_CHANNELS;
-  adc_get_channel(settings.thermistor_pins[0], &adc_channel);
+  adc_get_channel(settings.thermistor_settings[0].thermistor_address, &adc_channel);
 
   // nothing was set yet
   data_store_get_is_set(DATA_POINT_TEMPERATURE(0), &is_set);
@@ -85,8 +85,10 @@ void test_max_thermistors_cycle(void) {
   };
   // take the pins sequentially from PA0 on
   for (uint8_t thermistor = 0; thermistor < MAX_THERMISTORS; thermistor++) {
-    settings.thermistor_pins[thermistor].port = thermistor / GPIO_PINS_PER_PORT;
-    settings.thermistor_pins[thermistor].pin = thermistor % GPIO_PINS_PER_PORT;
+    settings.thermistor_settings[thermistor].thermistor_address.port =
+        thermistor / GPIO_PINS_PER_PORT;
+    settings.thermistor_settings[thermistor].thermistor_address.pin =
+        thermistor % GPIO_PINS_PER_PORT;
   }
   TEST_ASSERT_OK(sense_temperature_init(&settings));
 
@@ -111,12 +113,12 @@ void test_adc_read_fail(void) {
   bool is_set;
   uint32_t set_value;
   SenseTemperatureSettings settings = {
-    .thermistor_pins = { { GPIO_PORT_A, 0 } },
+    .thermistor_settings = { { RTD_THERMISTOR, { GPIO_PORT_A, 0 } } },
     .num_thermistors = 1,
   };
   TEST_ASSERT_OK(sense_temperature_init(&settings));
   AdcChannel adc_channel = NUM_ADC_CHANNELS;
-  adc_get_channel(settings.thermistor_pins[0], &adc_channel);
+  adc_get_channel(settings.thermistor_settings[0].thermistor_address, &adc_channel);
 
   // fault: should show warning but not set value
   s_adc_read_raw_ret = STATUS_CODE_INTERNAL_ERROR;
@@ -142,14 +144,16 @@ void test_invalid_settings(void) {
     .num_thermistors = MAX_THERMISTORS + 1,
   };
   for (uint8_t thermistor = 0; thermistor < MAX_THERMISTORS; thermistor++) {
-    invalid_settings.thermistor_pins[thermistor].port = thermistor / GPIO_PINS_PER_PORT;
-    invalid_settings.thermistor_pins[thermistor].pin = thermistor % GPIO_PINS_PER_PORT;
+    invalid_settings.thermistor_settings[thermistor].thermistor_address.port =
+        thermistor / GPIO_PINS_PER_PORT;
+    invalid_settings.thermistor_settings[thermistor].thermistor_address.pin =
+        thermistor % GPIO_PINS_PER_PORT;
   }
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, sense_temperature_init(&invalid_settings));
 
   // invalid GPIO pin
   invalid_settings.num_thermistors = MAX_THERMISTORS;
-  invalid_settings.thermistor_pins[0].port = NUM_GPIO_PORTS;
+  invalid_settings.thermistor_settings[0].thermistor_address.port = NUM_GPIO_PORTS;
   TEST_ASSERT_NOT_OK(sense_temperature_init(&invalid_settings));
 
   // null settings
