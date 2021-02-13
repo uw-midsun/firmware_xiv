@@ -39,5 +39,6 @@ noreturn void jump_to_application(void) {
   uint32_t initial_sp = application_flash[0];
   uint32_t reset_handler_pc = application_flash[1];
 
+  __enable_irq();
   prv_perform_jump(initial_sp, reset_handler_pc);
 }
