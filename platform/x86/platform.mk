@@ -48,7 +48,7 @@ ifeq (clang,$(COMPILER))
 endif
 
 # Linker flags
-LDFLAGS := -lrt
+LDFLAGS := -lrt -lm
 
 # Shell environment variables
 FLASH_VAR := MIDSUN_X86_FLASH_FILE

@@ -30,7 +30,7 @@ CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 
 # Linker flags
 LDFLAGS := -L$(LDSCRIPT_DIR) -Tstm32f0.ld -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
-           --specs=nosys.specs --specs=nano.specs
+           --specs=nosys.specs --specs=nano.specs -lm
 
 # Device openocd config file
 # Use PROBE=stlink-v2 for discovery boards

@@ -13,22 +13,10 @@
 // log(x) in c is the mathematical ln(x).
 #define ln(x) log(x)
 
-typedef enum ThermistorType {
-  NTC_THERMISTOR,
-  RTD_THERMISTOR,
-  FAN_CONTROL_THERMISTOR,
-  NUM_THERMISTOR_TYPES,
-} ThermistorType;
-
-typedef struct ThermistorSettings {
-  ThermistorType thermistor_type;
-  GpioAddress thermistor_address;
-} ThermistorSettings;
-
 typedef struct ThermistorData {
   DataPoint data_point;
   AdcChannel adc_channel;
-  ThermistorSettings thermistor_settings;
+  ThermistorType thermistor_type;
 } ThermistorData;
 
 static ThermistorData s_thermistor_data[MAX_THERMISTORS];
@@ -41,8 +29,8 @@ static void prv_sense_callback(void *context) {
   // Convert converted_reading into Volts
   converted_reading *= 1000;
 
-  // Based on the type of thermistor, convert the converted reading (mV) to degrees Celcius
-  switch (data->thermistor_settings.thermistor_type) {
+  // Based on the type of thermistor, convert the converted reading (V) to degrees Celcius
+  switch (data->thermistor_type) {
     case NTC_THERMISTOR:
       // NTC: T = 1 / ( ( ln(0.56 * V / (3.3 - V)) / 3428 ) + 1/298.15 )
       converted_reading =
@@ -83,8 +71,11 @@ StatusCode sense_temperature_init(SenseTemperatureSettings *settings) {
   for (uint8_t i = 0; i < settings->num_thermistors; i++) {
     ThermistorData *data = &s_thermistor_data[i];
     data->data_point = DATA_POINT_TEMPERATURE(i);
-    status_ok_or_return(gpio_init_pin(&settings->thermistor_pins[i], &thermistor_pin_settings));
-    status_ok_or_return(adc_get_channel(settings->thermistor_pins[i], &data->adc_channel));
+    data->thermistor_type = settings->thermistor_settings->thermistor_type;
+    status_ok_or_return(gpio_init_pin(&settings->thermistor_settings[i].thermistor_address,
+                                      &thermistor_pin_settings));
+    status_ok_or_return(
+        adc_get_channel(settings->thermistor_settings[i].thermistor_address, &data->adc_channel));
     status_ok_or_return(adc_set_channel(data->adc_channel, true));
     status_ok_or_return(sense_register(prv_sense_callback, data));
   }
