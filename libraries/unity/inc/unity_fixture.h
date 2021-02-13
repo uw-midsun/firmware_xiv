@@ -12,10 +12,6 @@
 #include "unity_fixture_internals.h"
 #include "unity_internals.h"
 
-#ifndef UNITY_FIXTURE_NO_EXTRAS
-#include "unity_memory.h"
-#endif
-
 int UnityMain(int argc, const char *argv[], void (*runAllTests)(void));
 
 #define TEST_GROUP(group) static const char *TEST_GROUP_##group = #group
