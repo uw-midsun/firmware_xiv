@@ -12,7 +12,6 @@ from adc_read import adc_read
 from spi_exchange import spi_exchange
 from i2c_read import i2c_read
 from gpio_interrupts import register_gpio_interrupt, unregister_gpio_interrupt, init_bus_gpio_it
-# from gpio_interrupts import register_gpio_interrupt, unregister_gpio_interrupt
 
 def setup_default_channel():
     """Set up the default CAN channel."""
