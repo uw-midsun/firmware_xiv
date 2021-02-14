@@ -155,10 +155,11 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
-IGNORE_PY_FILES := lint.py
-IGNORE_PY_FILES : echo $($(IGNORE_PY_FILES) | sed 's/ /,/g')
-FIND_PY_FILES:= $(shell find -path ./venv -prune -false -o -name '*.py')
-FIND_PY_FILES_NEW:= $(shell find -path ./venv -prune -false -o -name '*.py')
+# This uses regex
+IGNORE_PY_FILES := ./lint.py ./libraries/unity.*
+# Find all python files excluding library files in project env (./venv)
+FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find -path ./venv -prune -o -name '*.py')
+AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
@@ -191,7 +192,7 @@ pylint:
 format_quick:
 	@echo "Quick format on ONlY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
-	@$(FIND_MOD_NEW_PY)| xargs autopep8 -a -a -i
+	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -201,13 +202,13 @@ format:
 	@$(FIND) | xargs -r clang-format -i -style=file
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding files: $(IGNORE_PY_FILES)"
-	@autopep8 -a -a -i --exclude $(IGNORE_PY_FILES) $(FIND_PY_FILES)
+	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
 test_format: format
 	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
-	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 -a -a -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
 # Builds the project or library
 .PHONY: build
