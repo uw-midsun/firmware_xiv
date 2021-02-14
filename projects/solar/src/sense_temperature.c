@@ -32,9 +32,12 @@ static void prv_sense_callback(void *context) {
   // Based on the type of thermistor, convert the converted reading (V) to degrees Celcius
   switch (data->thermistor_type) {
     case NTC_THERMISTOR:
-      // NTC: T = 1 / ( ( ln(0.56 * V / (3.3 - V)) / 3428 ) + 1/298.15 )
+      // NTC: T = 1 / ( ( ln(0.56 * V / (3.3 - V)) / 3428 ) + 1/298.15 ) in KELVIN. For Celcius,
+      // subtract 273.15
       converted_reading =
-          1 / ((ln(0.56 * converted_reading / (3.3 - converted_reading)) / 3428.0) + 1.0 / 298.15);
+          (1 /
+           ((ln(0.56 * converted_reading / (3.3 - converted_reading)) / 3428.0) + 1.0 / 298.15)) -
+          273.15;
       break;
     case RTD_THERMISTOR:
       // RTD: ΔT = (33 * V / (87.45 - V) - 1) / 0.00385
