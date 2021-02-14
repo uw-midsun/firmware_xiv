@@ -11,7 +11,8 @@ from gpio_set import gpio_set
 from adc_read import adc_read
 from spi_exchange import spi_exchange
 from i2c_read import i2c_read
-from gpio_interrupts import register_gpio_interrupt, unregister_gpio_interrupt, init_bus_gpio_it
+from gpio_interrupts import register_gpio_interrupt, unregister_gpio_interrupt, \
+                            init_notifier_gpio_it
 
 def setup_default_channel():
     """Set up the default CAN channel."""
@@ -29,7 +30,7 @@ def setup_default_channel():
     if args.channel is not None:
         can_util.default_channel = args.channel
 
-    init_bus_gpio_it()
+    init_notifier_gpio_it()
 
     print("Welcome to the Babydriver REPL!")
     print("See https://uwmidsun.atlassian.net/l/c/XDCix3iH for details and usage.")
