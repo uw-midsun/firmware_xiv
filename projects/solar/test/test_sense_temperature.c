@@ -25,12 +25,12 @@ StatusCode TEST_MOCK(sense_register)(SenseCallback callback, void *context) {
 }
 
 static AdcChannel s_adc_channel_passed;
-static StatusCode s_adc_read_raw_ret;
+static StatusCode s_adc_read_converted_ret;
 
-StatusCode TEST_MOCK(adc_read_raw)(AdcChannel adc_channel, uint16_t *reading) {
+StatusCode TEST_MOCK(adc_read_converted)(AdcChannel adc_channel, uint16_t *reading) {
   s_adc_channel_passed = adc_channel;
   *reading = TEST_ADC_RAW_READING;
-  return s_adc_read_raw_ret;
+  return s_adc_read_converted_ret;
 }
 
 static void prv_trigger_sense_cycle(void) {
@@ -45,7 +45,7 @@ void setup_test(void) {
   data_store_init();
   s_num_sense_callbacks = 0;
   s_adc_channel_passed = NUM_ADC_CHANNELS;
-  s_adc_read_raw_ret = STATUS_CODE_OK;
+  s_adc_read_converted_ret = STATUS_CODE_OK;
 }
 void teardown_test(void) {}
 
@@ -121,14 +121,14 @@ void test_adc_read_fail(void) {
   adc_get_channel(settings.thermistor_settings[0].thermistor_address, &adc_channel);
 
   // fault: should show warning but not set value
-  s_adc_read_raw_ret = STATUS_CODE_INTERNAL_ERROR;
+  s_adc_read_converted_ret = STATUS_CODE_INTERNAL_ERROR;
   LOG_DEBUG("Testing ADC fault return value: there should be exactly one warning...\n");
   prv_trigger_sense_cycle();
   data_store_get_is_set(DATA_POINT_TEMPERATURE(0), &is_set);
   TEST_ASSERT_FALSE(is_set);
 
   // we should be able to recover
-  s_adc_read_raw_ret = STATUS_CODE_OK;
+  s_adc_read_converted_ret = STATUS_CODE_OK;
   prv_trigger_sense_cycle();
   TEST_ASSERT_EQUAL(adc_channel, s_adc_channel_passed);
   data_store_get_is_set(DATA_POINT_TEMPERATURE(0), &is_set);
