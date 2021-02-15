@@ -18,7 +18,7 @@ static noreturn __attribute__((naked)) void prv_perform_jump(uint32_t sp, uint32
       : [sp] "r"(sp), [pc] "r"(pc));
 }
 
-noreturn void jump_to_application(void) {
+void jump_to_application(void) {
   // TODO(SOFT-413): check that this is safe with a crc of the application code
   // TODO(SOFT-413): deinitialize any libraries the bootloader uses before doing this
 
