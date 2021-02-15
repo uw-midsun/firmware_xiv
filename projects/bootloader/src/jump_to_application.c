@@ -5,8 +5,8 @@
 #include <string.h>
 
 #include "bootloader_mcu.h"
-#include "stm32f0xx_syscfg.h"
 #include "stm32f0xx_misc.h"
+#include "stm32f0xx_syscfg.h"
 
 static noreturn __attribute__((naked)) void prv_perform_jump(uint32_t sp, uint32_t pc) {
   __asm(

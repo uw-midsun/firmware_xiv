@@ -14,7 +14,7 @@ extern uint32_t _application_start;
 extern uint32_t _application_size;
 extern uint32_t _ram_start;
 extern uint32_t _ram_size;
-extern uint32_t _vector_table_size;  // this one is defined in startup_stm32f072.s
+extern uint32_t _vector_table_size;
 
 #define BOOTLOADER_CONFIG_PAGE_1_START ((void *)&_config_page1_start)
 #define BOOTLOADER_CONFIG_PAGE_2_START ((void *)&_config_page2_start)

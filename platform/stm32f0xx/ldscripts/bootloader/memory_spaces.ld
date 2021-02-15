@@ -22,6 +22,8 @@ _application_start = _config_page2_start + _flash_page_size;
 
 _application_size = _flash_size - (_application_start - _flash_start);
 
+_vector_table_size = 0xc4; /* used for relocating the vector table to RAM for the application */
+
 /* TODO: explicitly set aside the last page for calib */
 
 MEMORY

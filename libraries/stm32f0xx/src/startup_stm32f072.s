@@ -218,11 +218,6 @@ g_pfnVectors:
   .word BootRAM          /* @0x108. This is for boot in RAM mode for
                             STM32F0xx devices. */
 
-
-  /* Store the size of the vector table to facilitate manipulating it in the bootloader. */
-  .set _vector_table_size, .-g_pfnVectors
-  .global _vector_table_size
-
 /*******************************************************************************
 *
 * Provide weak aliases for each Exception handler to the Default_Handler.

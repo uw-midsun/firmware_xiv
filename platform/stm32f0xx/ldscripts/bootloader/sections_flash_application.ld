@@ -37,6 +37,14 @@ SECTIONS
     _sidata = _etext;
   } >APPLICATION
 
+  /* Dummy section to provide an offset for the vector table at the start of RAM.
+  The bootloader relocates the vector table to the start of RAM, so the .data section needs to start
+  after the vector table. This phony section increments the RAM counter to accomplish this. */
+  .data_phony : AT ( _sidata )
+  {
+    . += _vector_table_size;
+  } >RAM
+
   /* This is the initialized data section
   The program executes knowing that the data is in the RAM
   but the loader puts the initial values in the APPLICATION flash.
