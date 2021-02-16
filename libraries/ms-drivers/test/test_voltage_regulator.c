@@ -19,7 +19,7 @@ static uint8_t s_regulator_callback_called;
 VoltageRegulatorStorage storage = { 0 };
 
 StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *input_state) {
-  *input_state = GPIO_STATE_HIGH;
+  *input_state = GPIO_STATE_LOW;
   return STATUS_CODE_OK;
 }
 
@@ -28,9 +28,7 @@ static void prv_test_voltage_regulator_callback(void *context, VoltageRegulatorE
 
   uint8_t *regulator_context = context;
   TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_CONTEXT, *regulator_context);
-
   s_regulator_callback_called++;
-  TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_TIMES_CALLED, s_regulator_callback_called);
 }
 
 void setup_test(void) {
@@ -57,10 +55,10 @@ void test_voltage_regulator_init_works(void) {
 void test_voltage_regulator_set_enabled_works(void) {
   VoltageRegulatorSettings settings = { .enable_pin = test_enable_pin,
                                         .monitor_pin = test_monitor_pin,
-                                        .error_callback = &prv_test_voltage_regulator_callback,
+                                        .error_callback = prv_test_voltage_regulator_callback,
                                         .error_callback_context = &s_regulator_callback_context };
   voltage_regulator_init(&settings, &storage);
-  TEST_ASSERT_OK(voltage_regulator_set_enabled(&storage, true));
-  delay_s(2.1);
+  TEST_ASSERT_OK(voltage_regulator_set_enabled(&storage, false));
+  delay_s(3);
   TEST_ASSERT_EQUAL(TEST_CALLBACK_EXPECTED_TIMES_CALLED, s_regulator_callback_called);
 }
