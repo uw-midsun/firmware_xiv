@@ -80,6 +80,9 @@ before_script:
   # Install pylint for python3 used by miniconda
   - pip install --user pylint
 
+  # Install autopep8 for python auto-formatting
+  - pip install --user autopep8
+
   # force ${PATH} to update
   - hash -r
 

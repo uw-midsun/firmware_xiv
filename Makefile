@@ -201,7 +201,7 @@ format:
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
 	@echo "Formatting all *.py files in repo"
-	@echo "Excluding files: $(IGNORE_PY_FILES)"
+	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
 # Tests that all files have been run through the format target mainly for CI usage

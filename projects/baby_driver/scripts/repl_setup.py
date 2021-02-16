@@ -12,6 +12,7 @@ from adc_read import adc_read
 from spi_exchange import spi_exchange
 from i2c_read import i2c_read
 
+
 def setup_default_channel():
     """Set up the default CAN channel."""
 
