@@ -1,14 +1,19 @@
 {
 	"folders": [
 		{
-			"path": "..\\.."
-		},
-		{
 			"path": "..\\..\\..\\..\\..\\..\\Sheertex\\iot-firmware"
 		},
 		{
 			"path": "..\\..\\..\\..\\..\\..\\..\\..\\Downloads\\MTE 140"
+		},
+		{
+			"path": "..\\.."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"interrupt.h": "c",
+			"stdbool.h": "c"
+		}
+	}
 }
