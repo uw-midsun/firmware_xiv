@@ -30,8 +30,8 @@ jobs:
 
       - name: Install gcc, clang, clang-format
         run: |
-          sudo echo "deb http://archive.ubuntu.com/ubuntu bionic main universe" >> /etc/apt/sources.list
-          sudo apt update
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
           sudo apt-fast install gcc-6
           sudo apt-fast install clang-5.0
           sudo apt-fast install clang-format-5.0
