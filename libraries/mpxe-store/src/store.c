@@ -202,3 +202,4 @@ void log_mutex_lock() {
 void log_mutex_unlock() {
   pthread_mutex_unlock(&s_log_lock);
 }
+
