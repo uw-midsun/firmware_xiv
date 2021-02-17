@@ -11,9 +11,6 @@ from mpxe.harness import project
 from mpxe.harness import canio
 from mpxe.sims.sim import Sim
 
-from mpxe.protogen import stores_pb2
-from mpxe.protogen import mcp23008_pb2
-
 POLL_TIMEOUT = 0.5
 
 # signals are set in python and C, change in both places if changing
@@ -26,8 +23,6 @@ class InvalidPollError(Exception):
 
 class ProjectManager:
     def __init__(self):
-        self.init_lock = threading.Lock()
-        self.init_lock.acquire()
         # index projects by stdout and ctop_fifo fd
         # ctop_fifo is the child-to-parent fifo created by the C program
         self.fd_to_proj = {}
@@ -48,7 +43,6 @@ class ProjectManager:
         if startup_messages: # tuple format is (msg, mask, key)
             proj.write_store(startup_messages[0], startup_messages[1], startup_messages[2])
         proj.popen.send_signal(INIT_LOCK_SIGNAL)
-        self.init_lock.release()
         return proj
 
     def stop(self, proj):
@@ -83,8 +77,6 @@ class ProjectManager:
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
                 proj.popen.send_signal(STORE_LOCK_SIGNAL)
-        self.init_lock.acquire() # don't read from store until init conditions are done setting up
-        self.init_lock.release()
         try:
             while not self.killed:
                 if not self.fd_to_proj:
