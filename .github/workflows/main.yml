@@ -30,10 +30,11 @@ jobs:
 
       - name: Install gcc, clang, clang-format
         run: |
-          sudo apt-get install gcc-6
-          sudo apt-get install clang-5.0
-          sudo apt-get install clang-format-5.0
-          sudo apt-get install libc6-i386
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-fast install gcc-6
+          sudo apt-fast install clang-5.0
+          sudo apt-fast install clang-format-5.0
+          sudo apt-fast install libc6-i386
           ln -sf `which gcc-6` ~/.local/bin/gcc
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
