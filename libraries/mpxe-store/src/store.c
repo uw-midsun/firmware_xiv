@@ -50,7 +50,6 @@ static void prv_sigusr2(int signo) {
 
 static void prv_sigrtmin(int signo) { 
   pthread_mutex_unlock(&s_init_lock);
-  LOG_DEBUG("SIGRTMIN RECEIVED!!!!");
 }
 
 Store *prv_get_first_empty() {
@@ -94,7 +93,6 @@ static int prv_poll_stdin(void) {
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
-  LOG_DEBUG("LOCKING STDIN\n");
   pthread_mutex_lock(&s_init_lock);
   pthread_mutex_lock(&s_init_lock);
   pthread_mutex_unlock(&s_init_lock); // poll update needs to block while initial messages are sent
@@ -115,7 +113,6 @@ void store_config(void) {
   signal(SIGUSR1, prv_sigusr);
   signal(SIGUSR2, prv_sigusr2);
   signal(SIGRTMIN, prv_sigrtmin);
-  LOG_DEBUG("STARTING POLLING!\n");
   // set up polling thread
   pthread_t poll_thread;
   pthread_create(&poll_thread, NULL, prv_poll_update, NULL);

@@ -3,7 +3,6 @@ import threading
 import select
 import subprocess
 import signal
-import time
 
 REPO_ROOT_DIR = '/home/vagrant/shared/'
 
@@ -77,6 +76,7 @@ class ProjectManager:
                 msg = proj.ctop_fifo.read()
                 proj.handle_store(self, msg)
                 proj.popen.send_signal(STORE_LOCK_SIGNAL)
+
         try:
             while not self.killed:
                 if not self.fd_to_proj:
