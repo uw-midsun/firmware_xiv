@@ -30,8 +30,6 @@ jobs:
 
       - name: Install gcc, clang, clang-format
         run: |
-          sudo add-apt-repository ppa:jonathonf/gcc-7.1
-          sudo apt-get update
           sudo apt-fast -y install gcc-7
           sudo apt-fast -y install clang-5.0
           sudo apt-fast -y install clang-format-5.0
