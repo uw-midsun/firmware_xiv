@@ -22,6 +22,7 @@ RULES_TEMPLATE = Template("""\
     $$(T)_DEPS := $deps
     """)
 
+
 def new_target(target_type, name):
     """Creates a new project or library.
 
@@ -30,10 +31,10 @@ def new_target(target_type, name):
 
     projects/libraries
     └── name
-        ├── inc
-        ├── rules.mk
-        ├── src
-        └── test
+           ├── inc
+           ├── rules.mk
+           ├── src
+           └── test
 
     where rules.mk is required for the project or library to be valid.
 
@@ -61,6 +62,7 @@ def new_target(target_type, name):
         rules_file.write(textwrap.dedent(RULES_TEMPLATE.substitute({'deps': deps})))
 
     print('Created new {0} {1}'.format(target_type, name))
+
 
 def main():
     """Main entry point of program"""
