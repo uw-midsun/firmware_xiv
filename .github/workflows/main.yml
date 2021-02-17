@@ -15,7 +15,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2
 
@@ -30,13 +30,15 @@ jobs:
 
       - name: Install gcc, clang, clang-format
         run: |
-          sudo apt-fast -y install gcc-7
-          sudo apt-fast -y install clang-6.0
-          sudo apt-fast -y install clang-format-6.0
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-fast -y install gcc-6
+          sudo apt-fast -y install clang-5.0
+          sudo apt-fast -y install clang-format-5.0
           sudo apt-fast -y install libc6-i386
-          ln -sf `which gcc-7` ~/.local/bin/gcc
-          ln -sf `which clang-6.0` ~/.local/bin/clang
-          ln -sf `which clang-format-6.0` ~/.local/bin/clang-format
+          ln -sf `which gcc-6` ~/.local/bin/gcc
+          ln -sf `which clang-5.0` ~/.local/bin/clang
+          ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
       - name: Install GCC Arm Embedded Toolchain
         env:
@@ -49,11 +51,11 @@ jobs:
           sudo tar xfj $GCC_ARCHIVE -C ~
           export PATH=${PATH}:${GCC_PATH}/bin
 
-      - name: Install GNU Make 4.3
+      - name: Install GNU Make 4.1
         env:
-          MAKE_PATH: make-4.3
-          MAKE_ARCHIVE_PATH: make-4.3.tar.gz
-          MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+          MAKE_PATH: make-4.1
+          MAKE_ARCHIVE_PATH: make-4.1.tar.gz
+          MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
         run: |
           wget $MAKE_URL
           tar xvf $MAKE_ARCHIVE_PATH
