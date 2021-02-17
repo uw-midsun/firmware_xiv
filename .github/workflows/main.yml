@@ -76,7 +76,7 @@ jobs:
         run: |
           pip install --user pylint
           pip install --user autopep8
-          # install dependencies from all requirements.txt in the repo
+          # Install dependencies from all requirements.txt in the repo
           make install_requirements
 
       - name: Force PATH to update
