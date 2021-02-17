@@ -22,8 +22,8 @@
 #define CAN_HW_DEV_INTERFACE "vcan0"
 #define CAN_HW_MAX_FILTERS 14
 #define CAN_HW_TX_FIFO_LEN 8
-// Check for thread exit once every 10ms
-#define CAN_HW_THREAD_EXIT_PERIOD_US 10000
+// Check for thread exit once every 1s
+#define CAN_HW_THREAD_EXIT_PERIOD_S 1
 
 typedef struct CanHwEventHandler {
   CanHwEventHandlerCb callback;
@@ -69,7 +69,7 @@ static void *prv_rx_thread(void *arg) {
 
   pthread_barrier_wait(&s_barrier);
 
-  struct timeval timeout = { .tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US };
+  struct timeval timeout = { .tv_sec = CAN_HW_THREAD_EXIT_PERIOD_S };
 
   // Mutex is unlocked when the thread should exit
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
@@ -80,6 +80,8 @@ static void *prv_rx_thread(void *arg) {
 
     select(s_socket_data.can_fd + 1, &input_fds, NULL, NULL, &timeout);
 
+    timeout.tv_sec = CAN_HW_THREAD_EXIT_PERIOD_S;
+
     if (FD_ISSET(s_socket_data.can_fd, &input_fds)) {
       int bytes =
           read(s_socket_data.can_fd, &s_socket_data.rx_frame, sizeof(s_socket_data.rx_frame));
@@ -89,8 +91,6 @@ static void *prv_rx_thread(void *arg) {
             s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
       }
 
-      // Wakes the main thread
-      x86_interrupt_wake();
       // Limit how often we can receive messages to simulate bus speed
       usleep(s_socket_data.delay_us);
     }
@@ -112,7 +112,7 @@ static void *prv_tx_thread(void *arg) {
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
     // Wait until the producer has created an item
     sem_wait(&s_tx_sem);
-    x86_interrupt_wake();
+
     fifo_pop(&s_socket_data.tx_fifo, &frame);
     int bytes = write(s_socket_data.can_fd, &frame, sizeof(frame));
 
@@ -145,6 +145,7 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
     sem_post(&s_tx_sem);
 
     sem_destroy(&s_tx_sem);
+
     pthread_join(s_tx_pthread_id, NULL);
   }
 
@@ -255,7 +256,6 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
   }
   // Unblock TX thread
   sem_post(&s_tx_sem);
-
   return STATUS_CODE_OK;
 }
 
