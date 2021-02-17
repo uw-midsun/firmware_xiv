@@ -66,15 +66,9 @@ jobs:
           cd ..
           rm -rf $MAKE_PATH
 
-      - name: Install miniconda
-        run: |
-          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-          bash ~/miniconda.sh -b -p ${HOME}/miniconda
-          eval "$(${HOME}/miniconda/bin/conda shell.bash hook)"
-          which python
-          which pip
-          python --version
-          pip --version
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
       - name: Install Python tooling
         run: |
