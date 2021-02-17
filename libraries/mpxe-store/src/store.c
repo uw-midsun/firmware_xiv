@@ -48,7 +48,7 @@ static void prv_sigusr2(int signo) {
   pthread_mutex_unlock(&s_log_lock);
 }
 
-static void prv_sigrtmin(int signo) { 
+static void prv_sigrtmin(int signo) {
   pthread_mutex_unlock(&s_init_lock);
 }
 
@@ -68,34 +68,34 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
 }
 
 static int prv_poll_stdin(void) {
-    // read protos from stdin
-    // compare using second proto as 'mask'
-    int res = poll(&pfd, 1, -1);
-    if (res == -1) {
-      // interrupted
-      return res;
-    } else if (res == 0) {
-      return res;  // nothing to read
-    } else {
-      if (pfd.revents & POLLIN) {
-        static uint8_t buf[MAX_STORE_SIZE_BYTES];
-        ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
-        if (len == -1) {
-          LOG_DEBUG("read error while polling\n");
-        }
-        prv_handle_store_update(buf, len);
-      } else {
-        LOG_DEBUG("pollhup\n");
+  // read protos from stdin
+  // compare using second proto as 'mask'
+  int res = poll(&pfd, 1, -1);
+  if (res == -1) {
+    // interrupted
+    return res;
+  } else if (res == 0) {
+    return res;  // nothing to read
+  } else {
+    if (pfd.revents & POLLIN) {
+      static uint8_t buf[MAX_STORE_SIZE_BYTES];
+      ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
+      if (len == -1) {
+        LOG_DEBUG("read error while polling\n");
       }
-      return res;
+      prv_handle_store_update(buf, len);
+    } else {
+      LOG_DEBUG("pollhup\n");
     }
+    return res;
+  }
 }
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
   pthread_mutex_lock(&s_init_lock);
   pthread_mutex_lock(&s_init_lock);
-  pthread_mutex_unlock(&s_init_lock); // poll update needs to block while initial messages are sent
+  pthread_mutex_unlock(&s_init_lock);  // poll update needs to block while initial messages are sent
   LOG_DEBUG("STDIN UNLOCKED\n");
   while (true) {
     prv_poll_stdin();
@@ -113,6 +113,7 @@ void store_config(void) {
   signal(SIGUSR1, prv_sigusr);
   signal(SIGUSR2, prv_sigusr2);
   signal(SIGRTMIN, prv_sigrtmin);
+
   // set up polling thread
   pthread_t poll_thread;
   pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
@@ -187,7 +188,6 @@ void store_export(MxStoreType type, void *store, void *key) {
   free(store_buf);
 }
 
-
 int read_init_conditions(void) {
   return prv_poll_stdin();
 }
@@ -199,4 +199,3 @@ void log_mutex_lock() {
 void log_mutex_unlock() {
   pthread_mutex_unlock(&s_log_lock);
 }
-

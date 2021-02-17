@@ -1,7 +1,6 @@
 import mpxe.protogen
 from mpxe.protogen import stores_pb2
 
-
 def mcp23008_init_conditions():
     NUM_MCP_PINS = 8 
     mcp23008_msg             = mpxe.protogen.mcp23008_pb2.MxMcp23008Store()

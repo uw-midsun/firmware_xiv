@@ -8,7 +8,7 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Mcp23008GpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_MCP23008_GPIO_PINS];
 
-static int mpxe_initial_conditions; // If 1, read init conditions from store
+static int mpxe_initial_conditions;  // If 1, read init conditions from store
 
 #ifdef MPXE
 #include <stdlib.h>

@@ -9,7 +9,7 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 
-static int mpxe_initial_conditions; // If 1, read init conditions from store
+static int mpxe_initial_conditions;  // If 1, read init conditions from store
 
 #ifdef MPXE
 #include <stdlib.h>

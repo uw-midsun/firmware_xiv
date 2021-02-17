@@ -80,13 +80,11 @@ OBJ_CACHE := $(BUILD_DIR)/obj/$(PLATFORM)
 DEP_VAR_DIR := $(BUILD_DIR)/dep_var/$(PLATFORM)
 
 # Set target binary - invalid for targets with more than one binary
-
 ifeq (,$(TEST))
 TARGET_BINARY = $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT)
 else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
-
 
 # MPXE generated file directories
 MPXE_C_GEN_DIR := $(LIB_DIR)/mpxe-gen
@@ -102,7 +100,6 @@ export MPXE_INIT_COND=True
 else
 export MPXE_INIT_COND=False
 endif
-
 
 # Please don't touch anything below this line
 ###################################################################################################

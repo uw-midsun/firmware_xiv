@@ -18,7 +18,7 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_PINS];
 
-static int mpxe_initial_conditions; // If 1, read init conditions from store
+static int mpxe_initial_conditions;  // If 1, read init conditions from store
 
 #ifdef MPXE
 
