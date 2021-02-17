@@ -30,13 +30,13 @@ jobs:
 
       - name: Install gcc, clang, clang-format
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo add-apt-repository ppa:jonathonf/gcc-7.1
           sudo apt-get update
-          sudo apt-fast -y install gcc-6
+          sudo apt-fast -y install gcc-7
           sudo apt-fast -y install clang-5.0
           sudo apt-fast -y install clang-format-5.0
           sudo apt-fast -y install libc6-i386
-          ln -sf `which gcc-6` ~/.local/bin/gcc
+          ln -sf `which gcc-7` ~/.local/bin/gcc
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
