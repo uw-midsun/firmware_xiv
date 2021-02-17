@@ -23,6 +23,9 @@
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make update_codegen - Update the codegen-tooling release
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
+#   make pytest_all - Runs all python tests in the scripts directory of every project 
+#   make install_requirements - Installs python requirements for every project
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -256,6 +259,24 @@ socketcan:
 .PHONY: update_codegen
 update_codegen:
 	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
+
+.PHONY: pytest
+pytest:
+	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
+
+.PHONY: pytest_all
+pytest_all:
+	@for i in $$(find projects -name "test_*.py"); 													\
+	do																								\
+		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
+	done			
+
+.PHONY: install_requirements
+install_requirements:
+	@for i in $$(find projects -name "requirements.txt"); 		\
+	do															\
+		pip install -r $$i;										\
+	done								
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

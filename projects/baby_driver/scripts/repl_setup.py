@@ -11,6 +11,7 @@ from gpio_set import gpio_set
 from adc_read import adc_read
 from spi_exchange import spi_exchange
 from i2c_read import i2c_read
+from can_send import can_send_raw, load_dbc, can_send
 
 
 def setup_default_channel():
