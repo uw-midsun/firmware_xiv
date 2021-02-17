@@ -44,6 +44,7 @@ libraries/version/inc/git_version_impl.h.tmp
 build/
 *.DS_Store
 .project
+*.code-workspace
 
 # Vim
 tags
