@@ -43,12 +43,12 @@ jobs:
       - name: Install GCC Arm Embedded Toolchain
         env:
           GCC_PATH: ~/gcc-arm-none-eabi-6-2017-q2-update
-          GCC_ARCHIVE_PATH: gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+          GCC_ARCHIVE: gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
           GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
         run: |
           cd ~/source
-          sudo wget $GCC_URL -O $GCC_ARCHIVE_PATH
-          sudo tar xfj $GCC_ARCHIVE_PATH -C ~
+          sudo wget $GCC_URL -O $GCC_ARCHIVE
+          sudo tar xfj $GCC_ARCHIVE -C ~
           export PATH=${PATH}:${GCC_PATH}/bin
 
       - name: Install GNU Make 4.1
@@ -60,7 +60,7 @@ jobs:
           wget $MAKE_URL
           tar xvf $MAKE_ARCHIVE_PATH
           cd $MAKE_PATH
-          ./configure --prefix=~/.local
+          ./configure --prefix=${HOME}/.local
           make
           make install
           cd ..
