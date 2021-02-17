@@ -66,11 +66,16 @@ jobs:
           cd ..
           rm -rf $MAKE_PATH
 
+      - name: Install miniconda
+        run: |
+          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+          bash ~/miniconda.sh -b -p ${HOME}/miniconda
+          eval "$(${HOME}/miniconda/bin/conda shell.bash hook)"
+
       - name: Install Python tooling
         run: |
-          pip3 install --upgrade pip
-          pip3 install --user pylint
-          pip3 install --user autopep8
+          pip install --user pylint
+          pip install --user autopep8
           # install dependencies from all requirements.txt in the repo
           make install_requirements
 
