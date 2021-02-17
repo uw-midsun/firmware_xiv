@@ -34,10 +34,8 @@ int main(void) {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
   };
-  InterruptSettings button_int_settings = {
-    .priority = INTERRUPT_PRIORITY_HIGH,  //
-    .type = INTERRUPT_TYPE_INTERRUPT      //
-  };
+  InterruptSettings button_int_settings = { .priority = INTERRUPT_PRIORITY_HIGH,
+                                            .type = INTERRUPT_TYPE_INTERRUPT };
 
   gpio_init_pin(&button_addr, &button_settings);
 
