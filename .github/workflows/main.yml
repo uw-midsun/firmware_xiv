@@ -90,20 +90,17 @@ jobs:
           pylint --version
           autopep8 --version
 
-      - run: make test_format
+      - name: Format and lint
+        run: |
+          make test_format
+          make lint
+          make pylint
 
-      - run: make lint
-
-      - run: make pylint
-
-      - run: |
-        make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
-        make clean
-      
-      - run: make build_all PLATFORM=x86 DEFINE="${DEFINES}"
-
-      - run: make test_all PLATFORM=x86 DEFINE="${DEFINES}"
-
-      - run: make pytest_all
-
-      - run: make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+      - name: Build and test
+        run: |
+          make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
+          make clean
+          make build_all PLATFORM=x86 DEFINE="${DEFINES}"
+          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+          make pytest_all
+          make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
