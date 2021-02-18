@@ -50,7 +50,8 @@ jobs:
           wget -nv $GCC_URL -O $GCC_ARCHIVE
           tar xfj $GCC_ARCHIVE -C ~
           echo "${GCC_PATH}/bin" >> $GITHUB_PATH
-          echo "${GCC_PATH}/lib/arm-none-eabi/6.3.1" >> $GITHUB_PATH
+          find -name "liblto_plugin.so"
+          ls -R $GCC_PATH
 
       - name: Install GNU Make 4.1
         env:
