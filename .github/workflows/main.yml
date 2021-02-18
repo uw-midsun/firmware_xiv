@@ -25,7 +25,7 @@ jobs:
         run: |
           # create directory that will be on the PATH
           mkdir -p ~/.local/bin
-          echo "~/.local/bin" >> $GITHUB_PATH
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
 
       - name: Install gcc, clang, clang-format
