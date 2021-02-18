@@ -47,8 +47,8 @@ jobs:
           GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
         run: |
           cd ~/source
-          wget -nv $GCC_URL -O $GCC_ARCHIVE
-          tar xfj $GCC_ARCHIVE -C ~
+          sudo wget -nv $GCC_URL -O $GCC_ARCHIVE
+          sudo tar xfj $GCC_ARCHIVE -C ~
           echo "${GCC_PATH}/bin" >> $GITHUB_PATH
           find -name "liblto_plugin.so"
           ls -R $GCC_PATH
