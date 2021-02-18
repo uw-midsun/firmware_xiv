@@ -100,10 +100,10 @@ jobs:
         make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
         make clean
       
-      - run: make build_all PLATFORM=x86 DEFINE="${DEFINES}"
+      - run: 'make build_all PLATFORM=x86 DEFINE="${DEFINES}"'
 
-      - run: make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+      - run: 'make test_all PLATFORM=x86 DEFINE="${DEFINES}"'
 
       - run: make pytest_all
 
-      - run: make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+      - run: 'make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"'
