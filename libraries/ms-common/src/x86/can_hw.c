@@ -22,8 +22,8 @@
 #define CAN_HW_DEV_INTERFACE "vcan0"
 #define CAN_HW_MAX_FILTERS 14
 #define CAN_HW_TX_FIFO_LEN 8
-// Check for thread exit once every 1s
-#define CAN_HW_THREAD_EXIT_PERIOD_S 1
+// Check for thread exit once every 100ms
+#define CAN_HW_THREAD_EXIT_PERIOD_US 100000
 
 typedef struct CanHwEventHandler {
   CanHwEventHandlerCb callback;
@@ -69,7 +69,7 @@ static void *prv_rx_thread(void *arg) {
 
   pthread_barrier_wait(&s_barrier);
 
-  struct timeval timeout = { .tv_sec = CAN_HW_THREAD_EXIT_PERIOD_S };
+  struct timeval timeout = { .tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US };
 
   // Mutex is unlocked when the thread should exit
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
@@ -80,7 +80,7 @@ static void *prv_rx_thread(void *arg) {
 
     select(s_socket_data.can_fd + 1, &input_fds, NULL, NULL, &timeout);
 
-    timeout.tv_sec = CAN_HW_THREAD_EXIT_PERIOD_S;
+    timeout.tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US;
 
     if (FD_ISSET(s_socket_data.can_fd, &input_fds)) {
       int bytes =
