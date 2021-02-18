@@ -25,7 +25,7 @@ jobs:
         run: |
           # create directory that will be on the PATH
           mkdir -p ~/.local/bin
-          export PATH=${PATH}:~/.local/bin
+          echo "~/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
 
       - name: Install gcc, clang, clang-format
@@ -47,9 +47,9 @@ jobs:
           GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
         run: |
           cd ~/source
-          sudo wget $GCC_URL -O $GCC_ARCHIVE
-          sudo tar xfj $GCC_ARCHIVE -C ~
-          export PATH=${PATH}:${GCC_PATH}/bin
+          wget -nv $GCC_URL -O $GCC_ARCHIVE
+          tar xfj $GCC_ARCHIVE -C ~
+          echo "${GCC_PATH}/bin" >> $GITHUB_PATH
 
       - name: Install GNU Make 4.1
         env:
@@ -57,7 +57,7 @@ jobs:
           MAKE_ARCHIVE_PATH: make-4.1.tar.gz
           MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
         run: |
-          wget $MAKE_URL
+          wget -nv $MAKE_URL
           tar xvf $MAKE_ARCHIVE_PATH
           cd $MAKE_PATH
           ./configure --prefix=${HOME}/.local
