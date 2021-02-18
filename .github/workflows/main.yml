@@ -40,18 +40,9 @@ jobs:
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
-      - name: Install GCC Arm Embedded Toolchain
-        env:
-          GCC_PATH: ~/gcc-arm-none-eabi-6-2017-q2-update
-          GCC_ARCHIVE: gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-          GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-        run: |
-          cd ~/source
-          sudo wget -nv $GCC_URL -O $GCC_ARCHIVE
-          sudo tar xfj $GCC_ARCHIVE -C ~
-          echo "${GCC_PATH}/bin" >> $GITHUB_PATH
-          find -name "liblto_plugin.so"
-          ls -R $GCC_PATH
+      - uses: fiam/arm-none-eabi-gcc@v1
+        with:
+          release: '6-2017-q2'
 
       - name: Install GNU Make 4.1
         env:
