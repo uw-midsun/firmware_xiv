@@ -81,3 +81,14 @@ StatusCode pca9539r_gpio_get_state(const Pca9539rGpioAddress *address,
   *input_state = s_pin_settings[address->i2c_address][address->pin].state;
   return STATUS_CODE_OK;
 }
+
+StatusCode pca9539r_gpio_subscribe_interrupts(const GpioAddress *interrupt_pin,
+                                              const Pca9539rInterruptCallback callback,
+                                              void *context) {
+  gpio_it_init();
+  InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
+                                           .priority = INTERRUPT_PRIORITY_NORMAL };
+  gpio_it_register_interrupt(interrupt_pin, &interrupt_settings, INTERRUPT_EDGE_FALLING, callback,
+                             context);
+  return STATUS_CODE_OK;
+}
