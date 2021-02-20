@@ -8,6 +8,7 @@
 #include "can_rx_event_mapper_config.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
+#include "front_uv_detector.h"
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
@@ -151,8 +152,12 @@ int main(void) {
     pd_fan_ctrl_init(&fan_settings, false);
   }
 #endif
-  // initialize strobe_blinker on rear
-  if (!is_front_power_distribution) {
+
+  if (is_front_power_distribution) {
+    // initialize UV cutoff detector
+    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
+  } else {
+    // initialize strobe_blinker on rear
     RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
