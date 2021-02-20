@@ -3,14 +3,15 @@
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
-// not sure how to make it work with struct inside main()
-// would appreciate feedback!
+
+#define COUNTER_A_PERIOD_MS 500
+
 typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-void counter_timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_counter_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *count = context;
   count->counter_a++;
   LOG_DEBUG("Counter A: %i\n", count->counter_a);
@@ -19,7 +20,7 @@ void counter_timer_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %i\n", count->counter_b);
   }
 
-  soft_timer_start_millis(500, counter_timer_callback, count, NULL);
+  soft_timer_start_millis(COUNTER_A_PERIOD_MS, prv_counter_timer_callback, count, NULL);
 }
 
 int main(void) {
@@ -28,7 +29,7 @@ int main(void) {
 
   Counters count = { 0 };
 
-  soft_timer_start_millis(500, counter_timer_callback, &count, NULL);
+  soft_timer_start_millis(COUNTER_A_PERIOD_MS, prv_counter_timer_callback, &count, NULL);
   while (true) {
     wait();
   }
