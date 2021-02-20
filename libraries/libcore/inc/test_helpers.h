@@ -11,3 +11,6 @@
 
 // Mocking
 #define TEST_MOCK(func) __attribute__((used)) __wrap_##func
+
+// Parameterized tests, see test_parameterized.c for usage examples
+#define TEST_CASE(...)
