@@ -85,6 +85,7 @@ def new_target(target_type, name):
 
     print('Created new {0} {1}'.format(target_type, name))
 
+
 def main():
     """Main entry point of program"""
     parser = argparse.ArgumentParser(description='Creates new project/library')
