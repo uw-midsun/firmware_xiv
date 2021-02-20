@@ -10,6 +10,7 @@ import can_util
 from message_defs import BABYDRIVER_DEVICE_ID
 from can_send import can_send_raw, load_dbc, can_send
 
+
 class TestCanSendRaw(unittest.TestCase):
     """Tests functions in Babydriver's can_send module"""
 
@@ -106,6 +107,7 @@ class TestCanSendRaw(unittest.TestCase):
         load_dbc("./some_file_path")
 
         self.assertRaises(Exception, can_send, "some message")
+
 
 if __name__ == '__main__':
     unittest.main()
