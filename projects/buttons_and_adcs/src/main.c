@@ -15,10 +15,10 @@
 #include "interrupt_def.h"
 #include "log.h"
 
-void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
+static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
   uint16_t adc_pin_data = 0;
   GpioAddress *adc_pin_addr = (GpioAddress *)context;
-  adc_read_raw_pin(*adc_pin_addr, &adc_pin_data);
+  adc_read_converted_pin(*adc_pin_addr, &adc_pin_data);
   LOG_DEBUG("Raw data: %d\n", adc_pin_data);
 }
 
