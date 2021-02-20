@@ -79,8 +79,8 @@ class CanDataSource:
                 can_msg = CanMessage(can_id, data)
                 can_msg.parse()
 
-            logging.info('{},{},{}'.format(can_id, data, len(data))
-                         )  # pylint: disable=logging-format-interpolation
+            # pylint: disable=logging-format-interpolation
+            logging.info('{},{},{}'.format(can_id, data, len(data)))
 
 
 class SocketCanDataSource(CanDataSource):
