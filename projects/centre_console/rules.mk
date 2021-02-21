@@ -6,7 +6,7 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common ms-helper
+$(T)_DEPS := ms-common ms-helper ms-drivers
 
 $(T)_test_main_event_generator_MOCKS := get_pedal_state \
 																				drive_fsm_get_global_state \

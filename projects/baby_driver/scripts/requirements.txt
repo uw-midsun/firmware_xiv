@@ -1,0 +1,2 @@
+python-can==3.3.3
+cantools==35.5.0

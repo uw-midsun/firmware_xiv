@@ -34,8 +34,12 @@ bool TEST_MOCK(current_sense_is_charging)() {
 }
 
 uint8_t s_expected_fault_bitset;
-void TEST_MOCK(fault_bps)(uint8_t fault_bitmask, bool clear) {
-  TEST_ASSERT_EQUAL((s_expected_fault_bitset & fault_bitmask) == 0x0, clear);
+void TEST_MOCK(fault_bps_set)(uint8_t fault_bitmask) {
+  TEST_ASSERT_EQUAL((s_expected_fault_bitset & fault_bitmask) == 0x0, false);
+}
+
+void TEST_MOCK(fault_bps_clear)(uint8_t fault_bitmask) {
+  TEST_ASSERT_EQUAL((s_expected_fault_bitset & fault_bitmask) == 0x0, true);
 }
 
 static bool s_afe_should_fault;

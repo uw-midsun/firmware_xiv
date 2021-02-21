@@ -1,9 +1,12 @@
+# Helper scripts location
+SCRIPT_DIR := $(PLATFORM_DIR)/scripts
+
 # Specify toolchain
 CC := $(GCC_ARM_BASE)arm-none-eabi-gcc
 LD := $(GCC_ARM_BASE)arm-none-eabi-gcc
 OBJCPY := $(GCC_ARM_BASE)arm-none-eabi-objcopy
 OBJDUMP := $(GCC_ARM_BASE)arm-none-eabi-objdump
-SIZE := $(GCC_ARM_BASE)arm-none-eabi-size
+SIZE := bash $(SCRIPT_DIR)/pretty_size.sh $(GCC_ARM_BASE)arm-none-eabi-size
 AR := $(GCC_ARM_BASE)arm-none-eabi-gcc-ar
 GDB := $(GCC_ARM_BASE)arm-none-eabi-gdb
 OPENOCD := openocd
@@ -17,9 +20,6 @@ ARCH_CFLAGS := -mlittle-endian -mcpu=cortex-m0 -march=armv6-m -mthumb
 
 # Linker script location
 LDSCRIPT_DIR := $(PLATFORM_DIR)/ldscripts
-
-# Helper scripts location
-SCRIPT_DIR := $(PLATFORM_DIR)/scripts
 
 # Build flags for the device
 CDEFINES := USE_STDPERIPH_DRIVER STM32F072 HSE_VALUE=32000000
@@ -43,8 +43,15 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
                -f $(SCRIPT_DIR)/stm32f0-openocd.cfg \
                -c 'stm32f0x.cpu configure -rtos FreeRTOS'
 
+# Default CAN channel for Babydriver
+CHANNEL ?= can0
+
 # Platform targets
-.PHONY: program gdb target
+.PHONY: program gdb target babydriver
+
+babydriver:
+	@make program PROJECT=baby_driver
+	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
 
 ifeq (,$(MACOS_SSH_USERNAME))
 
