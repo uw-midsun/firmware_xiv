@@ -22,6 +22,10 @@
 
 static MxMcp3427Store s_store = MX_MCP3427_STORE__INIT;
 
+static void prv_export() {
+  store_export(MX_STORE_TYPE__MCP3427, &s_store, NULL);
+}
+
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
   MxMcp3427Store *msg = mx_mcp3427_store__unpack(NULL, msg_buf.len, msg_buf.data);
   MxMcp3427Store *mask = mx_mcp3427_store__unpack(NULL, mask_buf.len, mask_buf.data);
@@ -34,7 +38,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
 
   mx_mcp3427_store__free_unpacked(msg, NULL);
   mx_mcp3427_store__free_unpacked(mask, NULL);
-  store_export(MX_STORE_TYPE__MCP3427, &s_store, NULL);
+  prv_export();
 }
 
 static void prv_init_store(void) {
@@ -102,13 +106,16 @@ static void prv_raise_ready(SoftTimerId timer_id, void *context) {
 
 static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
   Mcp3427Storage *storage = (Mcp3427Storage *)context;
+#ifdef MPXE
+  s_store.readings[storage->current_channel] = FIXED_RESULT;
+#endif
 
   if (storage->current_channel == MCP3427_CHANNEL_2 && storage->callback != NULL) {
 #ifdef MPXE
-    s_store.readings[storage->current_channel] = FIXED_RESULT;
     if (s_store.fault_flag) {
       storage->fault_callback(storage->fault_context);
     }
+    prv_export();
 #endif
 
     // We've "read" from both of the channels.
@@ -151,10 +158,10 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
   // Cache the storage for lookup in |mcp3427_process_event|
   s_id_to_storage_cache[prv_get_chip_identifier(storage)] = storage;
 
-  fsm_state_init(channel_1_trigger, prv_channel_trigger);
-  fsm_state_init(channel_1_readback, prv_channel_ready);
-  fsm_state_init(channel_2_trigger, prv_channel_trigger);
-  fsm_state_init(channel_2_readback, prv_channel_ready);
+  fsm_state_init(channel_1_trigger, &prv_channel_trigger);
+  fsm_state_init(channel_1_readback, &prv_channel_ready);
+  fsm_state_init(channel_2_trigger, &prv_channel_trigger);
+  fsm_state_init(channel_2_readback, &prv_channel_ready);
 
   // start the state machine ready to transition to channel_1_trigger
   storage->current_channel = MCP3427_CHANNEL_2;
