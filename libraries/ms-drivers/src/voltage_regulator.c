@@ -19,6 +19,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
     storage->error_callback(VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON,
                             storage->error_callback_context);
   }
+  soft_timer_start_millis(storage->timer_callback_delay_ms, prv_timer_callback, storage, NULL);
 }
 
 StatusCode voltage_regulator_init(VoltageRegulatorStorage *storage,
@@ -28,12 +29,12 @@ StatusCode voltage_regulator_init(VoltageRegulatorStorage *storage,
   }
   storage->enable_pin = settings->enable_pin;
   storage->monitor_pin = settings->monitor_pin;
-  storage->timer_callback_delay = settings->timer_callback_delay;
+  storage->timer_callback_delay_ms = settings->timer_callback_delay_ms;
   storage->error_callback = settings->error_callback;
   storage->error_callback_context = settings->error_callback_context;
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
 
-  return soft_timer_start_millis(storage->timer_callback_delay, prv_timer_callback, storage, NULL);
+  return soft_timer_start_millis(storage->timer_callback_delay_ms, prv_timer_callback, storage, NULL);
 }
 
 StatusCode voltage_regulator_set_enabled(VoltageRegulatorStorage *storage, bool enable) {

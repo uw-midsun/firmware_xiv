@@ -22,7 +22,7 @@ typedef struct {
   GpioAddress enable_pin;
   GpioAddress monitor_pin;
   SoftTimerId timer_id;
-  uint32_t timer_callback_delay;
+  uint32_t timer_callback_delay_ms;
   VoltageRegulatorErrorCallback error_callback;
   void *error_callback_context;
 } VoltageRegulatorStorage;
@@ -30,7 +30,7 @@ typedef struct {
 typedef struct {
   GpioAddress enable_pin;
   GpioAddress monitor_pin;
-  uint32_t timer_callback_delay;
+  uint32_t timer_callback_delay_ms;
   VoltageRegulatorErrorCallback error_callback;
   void *error_callback_context;
 } VoltageRegulatorSettings;
