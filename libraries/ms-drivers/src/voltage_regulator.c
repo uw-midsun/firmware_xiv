@@ -34,7 +34,8 @@ StatusCode voltage_regulator_init(VoltageRegulatorStorage *storage,
   storage->error_callback_context = settings->error_callback_context;
   storage->timer_id = SOFT_TIMER_INVALID_TIMER;
 
-  return soft_timer_start_millis(storage->timer_callback_delay_ms, prv_timer_callback, storage, NULL);
+  return soft_timer_start_millis(storage->timer_callback_delay_ms, prv_timer_callback, storage,
+                                 NULL);
 }
 
 StatusCode voltage_regulator_set_enabled(VoltageRegulatorStorage *storage, bool enable) {
