@@ -10,6 +10,8 @@ GPIO_PINS_PER_PORT = 16
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
+
+
 def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=None):
     """
     Sends data through SPI
@@ -62,7 +64,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
             GPIO_PINS_PER_PORT - 1))
 
     data1 = [
-        (spi_port - 1, 1), # 0 for SPI_PORT 1, 1 for SPI_PORT_2
+        (spi_port - 1, 1),  # 0 for SPI_PORT 1, 1 for SPI_PORT_2
         (spi_mode, 1),
         (len(tx_bytes), 1),  # tx_len
         (rx_len, 1),
@@ -86,7 +88,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
     )
 
     # collect bytes into groups of 7
-    chunks = [tx_bytes[x:x+7] for x in range(0, len(tx_bytes), 7)]
+    chunks = [tx_bytes[x:x + 7] for x in range(0, len(tx_bytes), 7)]
 
     for data in chunks:
         # pad with 0s if length isn't 7
@@ -106,7 +108,7 @@ def spi_exchange(tx_bytes, rx_len, spi_port=1, spi_mode=0, baudrate=6000000, cs=
             babydriver_id=BabydriverMessageId.SPI_EXCHANGE_RX_DATA)
         msg_data = rx_msg.data
         # list constructor to handle bytearrays
-        rx_data += list(msg_data[1:min(rx_bytes_left+1, 8)])
+        rx_data += list(msg_data[1:min(rx_bytes_left + 1, 8)])
         rx_bytes_left -= 7
 
     status = can_util.next_message(babydriver_id=BabydriverMessageId.STATUS)
