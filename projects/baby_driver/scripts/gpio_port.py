@@ -1,5 +1,6 @@
 """Constants for GpioPort"""
 
+
 class GpioPort:
     # pylint: disable=too-few-public-methods
     """

@@ -87,6 +87,9 @@
 #define FRONT_PIN_SMBALERT \
   { GPIO_PORT_A, 1 }
 
+#define FRONT_UV_COMPARATOR_PIN \
+  { GPIO_PORT_B, 0 }
+
 // Rear power distribution
 #define REAR_PIN_MOTOR_INTERFACE_EN \
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_1, .pin = PCA9539R_PIN_IO1_4 }
@@ -158,3 +161,6 @@
   { GPIO_PORT_A, 1 }
 #define REAR_PIN_SMBALERT \
   { GPIO_PORT_A, 0 }
+
+#define FRONT_OR_REAR_RECOGNITION_PIN \
+  { GPIO_PORT_A, 8 }

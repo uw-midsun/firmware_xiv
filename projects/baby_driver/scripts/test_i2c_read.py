@@ -7,6 +7,8 @@ from can_util import Message
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
 
 # pylint: disable=unused-argument
+
+
 class TestI2CRead(unittest.TestCase):
     """Test Babydriver's i2c_read function"""
 
@@ -43,7 +45,7 @@ class TestI2CRead(unittest.TestCase):
         self.channel = None
         self.msg_id = None
         self.device_id = None
-        self.read_data = [BabydriverMessageId.I2C_READ_DATA]+[1, 2, 3, 4, 5, 6, 7]
+        self.read_data = [BabydriverMessageId.I2C_READ_DATA] + [1, 2, 3, 4, 5, 6, 7]
         self.read_status = [BabydriverMessageId.STATUS, 0]
 
         def send_message_test(
@@ -99,7 +101,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # None reg value and read 5 different bytes
-        self.read_data = [BabydriverMessageId.I2C_READ_DATA]+[1, 2, 1, 2, 1, 0, 0]
+        self.read_data = [BabydriverMessageId.I2C_READ_DATA] + [1, 2, 1, 2, 1, 0, 0]
         self.assertEqual(i2c_read(2, 0, 5), [1, 2, 1, 2, 1])
         self.assertEqual(BabydriverMessageId.I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 0, 5, 0, 0], self.data)
@@ -108,7 +110,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Min reg value and read 5 different bytes
-        self.read_data = [BabydriverMessageId.I2C_READ_DATA]+[0, 0, 0, 0, 0, 255, 255]
+        self.read_data = [BabydriverMessageId.I2C_READ_DATA] + [0, 0, 0, 0, 0, 255, 255]
         self.assertEqual(i2c_read(2, 1, 5, 0), [0, 0, 0, 0, 0])
         self.assertEqual(BabydriverMessageId.I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 1, 5, 1, 0], self.data)
@@ -128,7 +130,7 @@ class TestI2CRead(unittest.TestCase):
         self.channel = None
         self.msg_id = None
         self.device_id = None
-        self.read_data = [BabydriverMessageId.I2C_READ_DATA]+[1, 2, 3, 4, 5, 6, 7]
+        self.read_data = [BabydriverMessageId.I2C_READ_DATA] + [1, 2, 3, 4, 5, 6, 7]
         self.read_status = [BabydriverMessageId.STATUS, 0]
 
         def send_message_test(
@@ -168,7 +170,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Max address value and read 14 bytes
-        self.assertEqual(i2c_read(1, 255, 14, 3), [1, 2, 3, 4, 5, 6, 7]*2)
+        self.assertEqual(i2c_read(1, 255, 14, 3), [1, 2, 3, 4, 5, 6, 7] * 2)
         self.assertEqual(BabydriverMessageId.I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([0, 255, 14, 1, 3], self.data)
         self.assertEqual(None, self.channel)
@@ -176,7 +178,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Max rx_len value (read 255 bytes)
-        self.assertEqual(i2c_read(1, 3, 255, 3), [1, 2, 3, 4, 5, 6, 7]*36+[1, 2, 3])
+        self.assertEqual(i2c_read(1, 3, 255, 3), [1, 2, 3, 4, 5, 6, 7] * 36 + [1, 2, 3])
         self.assertEqual(BabydriverMessageId.I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([0, 3, 255, 1, 3], self.data)
         self.assertEqual(None, self.channel)
@@ -184,7 +186,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # None reg value and read 5 different bytes
-        self.read_data = [BabydriverMessageId.I2C_READ_DATA]+[0, 255, 0, 255, 0, 0, 0]
+        self.read_data = [BabydriverMessageId.I2C_READ_DATA] + [0, 255, 0, 255, 0, 0, 0]
         self.assertEqual(i2c_read(2, 255, 5), [0, 255, 0, 255, 0])
         self.assertEqual(BabydriverMessageId.I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 255, 5, 0, 0], self.data)
@@ -193,7 +195,7 @@ class TestI2CRead(unittest.TestCase):
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
         # Max reg value and read 5 different bytes
-        self.read_data = [BabydriverMessageId.I2C_READ_DATA]+[0, 0, 0, 0, 0, 0, 0]
+        self.read_data = [BabydriverMessageId.I2C_READ_DATA] + [0, 0, 0, 0, 0, 0, 0]
         self.assertEqual(i2c_read(2, 1, 5, 255), [0, 0, 0, 0, 0])
         self.assertEqual(BabydriverMessageId.I2C_READ_COMMAND, self.babydriver_id)
         self.assertEqual([1, 1, 5, 1, 255], self.data)
@@ -230,6 +232,7 @@ class TestI2CRead(unittest.TestCase):
         # Tests failing status code from can_util.next_message
         mock_next_message.return_value.data = [0, 1]
         self.assertRaises(Exception, i2c_read, 1, 0, 0, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

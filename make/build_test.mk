@@ -1,7 +1,8 @@
 # Unity
 UNITY_ROOT := $(LIB_DIR)/unity
 UNITY_SCRIPT_DIR := $(UNITY_ROOT)/auto
-UNITY_GEN_RUNNER := ruby $(UNITY_SCRIPT_DIR)/generate_test_runner.rb --setup_name=setup_test --teardown_name=teardown_test
+UNITY_GEN_RUNNER_FLAGS := --setup_name=setup_test --teardown_name=teardown_test --use_param_tests=1
+UNITY_GEN_RUNNER := ruby $(UNITY_SCRIPT_DIR)/generate_test_runner.rb $(UNITY_GEN_RUNNER_FLAGS)
 
 # Test directories
 $(T)_GEN_DIR := $(BUILD_DIR)/gen/$(PLATFORM)/$(T)

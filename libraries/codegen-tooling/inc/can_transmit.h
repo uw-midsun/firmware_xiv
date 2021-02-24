@@ -317,6 +317,14 @@
     status;                                                \
   })
 
+#define CAN_TRANSMIT_UV_CUTOFF_NOTIFICATION()     \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_UV_CUTOFF_NOTIFICATION(&msg);        \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_CHARGER_INFO(current_u16, voltage_u16, status_bitset_u16)      \
   ({                                                                                \
     CanMessage msg = { 0 };                                                         \
