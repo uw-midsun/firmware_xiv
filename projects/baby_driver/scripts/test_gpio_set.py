@@ -36,7 +36,7 @@ class TestGpioSet(unittest.TestCase):
         """Tests accuracy of parameters passed into can_util.send_message"""
 
         # Stores parameters passed into can_util.send_message
-        # pylint: disable=attribute-defined-outside-init 
+        # pylint: disable=attribute-defined-outside-init
         self.babydriver_id = None
         self.data = None
         self.channel = None
@@ -89,7 +89,6 @@ class TestGpioSet(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-
     @patch('can_util.send_message')
     @patch('can_util.next_message')
     def test_fail_conditions(self, mock_next_message, mock_send_message):
@@ -108,6 +107,7 @@ class TestGpioSet(unittest.TestCase):
         mock_next_message.return_value.data = [0, 1]
         self.assertRaises(Exception, gpio_set, 'A', 0, 0)
         self.assertRaises(Exception, gpio_set, GpioPort.F, 15, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,11 +16,14 @@
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_get.h"
+#include "gpio_interrupts.h"
+#include "gpio_it.h"
 #include "gpio_set.h"
 #include "i2c_write.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "spi_exchange.h"
 #include "wait.h"
 
 typedef enum {
@@ -45,6 +48,7 @@ static CanSettings s_can_settings = {
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
   gpio_init();
+  gpio_it_init();
   event_queue_init();
   interrupt_init();
   soft_timer_init();
@@ -56,7 +60,9 @@ int main() {
   adc_read_init();
   gpio_set_init();
   gpio_get_init();
+  gpio_interrupts_init();
   i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS);
+  spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY);
 
   Event e = { 0 };
   while (true) {

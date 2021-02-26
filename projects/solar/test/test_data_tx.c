@@ -24,8 +24,8 @@ static uint32_t s_can_msg_values[2 * NUM_DATA_POINTS];
 static DataPoint s_can_msgs_data_points[2 * NUM_DATA_POINTS];
 static CanStorage s_can_storage = { 0 };
 static DataTxSettings s_data_tx_settings = {
-  .msgs_per_tx_iteration = 1,
-  .wait_between_tx_in_millis = 350,
+  .msgs_per_tx_iteration = 8,
+  .wait_between_tx_in_millis = 150,
 };
 
 static StatusCode prv_test_data_tx_callback_handler(const CanMessage *msg, void *context,
@@ -57,6 +57,7 @@ static void prv_reset_arrays(void) {
 static void prv_process_can_events(SoftTimerId timer_id, void *context) {
   uint16_t msgs_for_this_iteration =
       MIN(s_data_tx_settings.msgs_per_tx_iteration, NUM_DATA_POINTS - s_can_msg_count);
+  LOG_DEBUG("processing can messages: s_can_msg_count=%d\n", s_can_msg_count);
   for (uint16_t msg = 0; msg < msgs_for_this_iteration; msg++) {
     MS_TEST_HELPER_CAN_TX(SOLAR_CAN_EVENT_TX);
   }
