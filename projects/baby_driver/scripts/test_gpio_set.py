@@ -108,5 +108,6 @@ class TestGpioSet(unittest.TestCase):
         self.assertRaises(Exception, gpio_set, 'A', 0, 0)
         self.assertRaises(Exception, gpio_set, GpioPort.F, 15, 1)
 
+
 if __name__ == "__main__":
     unittest.main()

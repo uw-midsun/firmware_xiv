@@ -6,6 +6,7 @@ from message_defs import BabydriverMessageId
 
 GPIO_PINS_PER_PORT = 16
 
+
 def gpio_get(port, pin):
     '''
     Returns the state of the GPIO pin at the given port and pin number as a bool
