@@ -4,12 +4,13 @@
 #include <string.h>
 #include "fsm.h"
 
-#define NUM_CRC_BYTES 4
+#define CAN_TX_BUFFER_SIZE 8
 
-
-
-static CanDatagramStorage * s_store; // If need to store more than one  can turn this into a table
+static CanDatagramStorage s_store;
 static can_datagram_t * dt;
+static uint8_t s_can_tx_buffer[CAN_TX_BUFFER_SIZE];
+
+
 // If we want to have multiple instances of can datagram stores then this will need to be changed
 
 FSM_DECLARE_STATE(state_init);
@@ -62,81 +63,81 @@ FSM_STATE_TRANSITION(state_dst) {
 }
 
 // Process for protocol version depending on if store/send requested
+#define PROT_VER_LEN_BYTES 1 // should decide to use this or sizeof maybe?
 static void process_protocol_version(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("protocol_version\n");
-  uint8_t buffer; // Is there a more efficient way to store this memory ie. static buffer
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-    buffer = dt->protocol_version;
-    s_store.tx_cb(&buffer, 1, false);
-  }
+  memset(s_can_tx_buffer, 0, CAN_TX_BUFFER_SIZE*sizeof(uint8_t));
+  s_can_tx_buffer[0] = dt->protocol_version;
+  s_store.tx_cb(s_can_tx_buffer, sizeof(dt->protocol_version), false);
   data_state = DATAGRAM_EVENT_CRC;
-}
+}	
 
+#define CRC_LEN_BYTES 4
 static void process_crc(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("crc\n");
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-    uint8_t buf[4] = { 0 };
-    for(int byte = 0; i < NUM_CRC_BYTES; byte++) {
-      buf[i] = dt->crc >> (24 - 8 * byte);
-      dt->_crc_bytes_written++;
-    }
+  memset(s_can_tx_buffer, 0, CAN_TX_BUFFER_SIZE*sizeof(uint8_t));
+  for(int byte = 0; byte < CRC_LENGTH_BYTES; byte++) {
+    s_can_tx_buffer[byte] = dt->crc >> (24 - 8 * byte);
   }
+  s_store.tx_cb(s_can_tx_buffer, CRC_LENGTH_BYTES, false);
   data_state = DATAGRAM_EVENT_DST_LEN;
 }
 
+#define DST_LEN_BYTES 1
 static void process_dst_len(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("dst_len\n");
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-
-  }
+  memset(s_can_tx_buffer, 0, CAN_TX_BUFFER_SIZE*sizeof(uint8_t));
+  s_can_tx_buffer[0] = dt->destination_nodes_len;
+  s_store.tx_cb(s_can_tx_buffer, sizeof(dt->destination_nodes_len), false);
   data_state = DATAGRAM_EVENT_DST;
 }
 
 static void process_dst(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("dst\n");
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-
+  uint8_t dst_len = dt->destination_nodes_len;
+  uint8_t dst_bytes_sent = 0;
+  uint8_t dst_bytes_to_send; 
+  memset(s_can_tx_buffer, 0, CAN_TX_BUFFER_SIZE*sizeof(uint8_t));
+  while(dst_bytes_sent < dst_len) {
+    dst_bytes_to_send = (dst_len - dst_bytes_sent < 8) ?
+	   dst_len - dst_bytes_sent : CAN_TX_BUFFER_SIZE;
+    for(int byte = 0; byte < dst_bytes_to_send; byte++) {
+	s_can_tx_buffer[byte] = dt->destination_nodes[dst_bytes_read];
+	dst_bytes_read++;
+    }
+    s_store.tx_cb(s_can_tx_buffer, sizeof(dt->destination_nodes_len), false);
   }
   data_state = NUM_DATAGRAM_DIGEST_EVENTS;
 }
 
 static void process_data_len(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("data_len\n");
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-
-  }
+  memset(s_can_tx_buffer, 0, CAN_TX_BUFFER_SIZE*sizeof(uint8_t));
+  s_can_tx_buffer[0] = dt->data_len;
+  s_store.tx_cb(s_can_tx_buffer, sizeof(dt->data_len), false);
   data_state = DATAGRAM_EVENT_DATA;
 }	
 
 static void process_data(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("data\n");
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-
-  }
-  data_state = DATAGRAM_EVENT_TRAILING;
-}
-
-static void process_trailing(Fsm *fsm, const Event *e, void *context) {
-  LOG_DEBUG("trailing\n");
-  if(s_store.mode == CAN_DATAGRAM_MODE_TX){
-
+  uint8_t data_len = dt->data_len;
+  uint8_t data_bytes_sent = 0;
+  uint8_t data_bytes_to_send; 
+  memset(s_can_tx_buffer, 0, CAN_TX_BUFFER_SIZE*sizeof(uint8_t));
+  while(data_bytes_sent < data_len) {
+    data_bytes_to_send = (data_len - data_bytes_sent < CAN_TX_BUFFER_SIZE) ?
+	    data_len - data_bytes_sent : CAN_TX_BUFFER_SIZE;
+    for(int byte = 0; byte < data_bytes_to_send; byte++) {
+	s_can_tx_buffer[byte] = dt->destination_nodes[data_bytes_read];
+	data_bytes_read++;
+    }
+    s_store.tx_cb(s_can_tx_buffer, sizeof(dt->destination_nodes_len), false);
   }
   data_state = DATAGRAM_EVENT_COMPLETE;
 }
 
-
-
-
-
-
-
-
-
-
-
-
 static void prv_init_fsm(void * context) {
-	fsm_init(&fsm, "fsm", &state_init, context);
+	fsm_init(&fsm, "tx_fsm", &state_init, context);
 	fsm_state_init(state_protocol_version, process_protocol_version);
 	fsm_state_init(state_crc, process_crc);
 	fsm_state_init(state_dst_len, process_dst_len);
@@ -146,8 +147,13 @@ static void prv_init_fsm(void * context) {
 	fsm_state_init(state_trailing, process_trailing);
 }
 
+
 can_datagram_t *get_can_datagram(void) {
 	return &dt;
+}
+
+bool can_datagram_tx_complete(void) {
+  return s_store->state == DATAGRAM_EVENT_COMPLETE;
 }
 
 
@@ -163,10 +169,10 @@ StatusCode can_datagram_init(CanDatagramSettings * settings) {
   s_store.state = DATAGRAM_EVENT_PROTOCOL_VERSION;
   
   if(s_store.mode == CAN_DATAGRAM_MODE_TX) {
-	  s_store.tx_cb(NULL, 0, true); // TODO: Update init message
+	  s_store.tx_cb(NULL, 0, true); // TODO: used to send init -> Update init message
   }
 
-  memset(&settings->dt, 0, sizeof(settingsdt);
+  memset(&settings->dt, 0, sizeof(settings->dt);
   dt->protocol_version = CAN_DATAGRAM_VERSION;
 }
 
@@ -177,8 +183,7 @@ StatusCode can_datagram_init(CanDatagramSettings * settings) {
 
 
 
-
-
+#if 0
 void can_datagram_set_address_buffer(can_datagram_t *dt, uint8_t *buf) {
   dt->destination_nodes = buf;
 }
@@ -345,6 +350,7 @@ uint32_t can_datagram_compute_crc(can_datagram_t *dt) {
   return crc;
 }
 
+#endif
 bool can_datagram_id_start_is_set(unsigned int id) {
   return id & ID_START_MASK;
 }
