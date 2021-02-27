@@ -22,7 +22,6 @@ typedef enum {
   DATAGRAM_EVENT_DST,
   DATAGRAM_EVENT_DATA_LEN,
   DATAGRAM_EVENT_DATA,
-  DATAGRAM_EVENT_TRAILING,
   DATAGRAM_EVENT_COMPLETE,
   NUM_DATAGRAM_DIGEST_EVENTS,
 } CanDatagramEvent;
@@ -46,17 +45,6 @@ typedef struct {
   uint32_t data_len;
   uint8_t *data;
 
-  int _crc_bytes_read; //TODO: We may be able to get rid of this section, however error handling may become an issue
-  int _crc_bytes_written;
-  int _data_length_bytes_read;
-  int _data_length_bytes_written;
-  uint8_t _destination_nodes_read;
-  uint8_t _destination_nodes_written;
-  uint16_t _data_bytes_read;
-  uint16_t _data_bytes_written;
-  uint16_t _data_buffer_size;
-  int _reader_state; // If we assume that only one state in action at a time, we can get rid of these
-  int _writer_state;
 } can_datagram_t;
 
 typedef struct CanDatagramSettings {
