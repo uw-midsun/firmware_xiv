@@ -26,7 +26,9 @@ void setup_test(void) {
     .scl = TEST_CONFIG_PIN_I2C_SCL,  //
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
+  gpio_it_init();
 }
+
 void teardown_test(void) {}
 
 // pca9539r_gpio_init
@@ -307,4 +309,18 @@ void test_pca9539r_gpio_get_state_invalid_address(void) {
   };
   Pca9539rGpioState state;
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, pca9539r_gpio_get_state(&address, &state));
+}
+void prv_test(const struct GpioAddress *address, void *context) {
+  GpioState state = GPIO_STATE_LOW;
+  gpio_get_state(address, &state);
+}
+void test_pca9539r_gpio_subscribe_interrupts(void) {
+  GpioAddress address = { .pin = VALID_PORT_0_PIN, .port = 0 };
+  TEST_ASSERT_OK(pca9539r_gpio_subscribe_interrupts(&address, &prv_test, NULL));
+}
+
+void test_pca9539r_gpio_subscribe_interrupts_invalid(void) {
+  GpioAddress invalid_address = { .pin = INVALID_GPIO_PIN, .port = 1 };
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
+                    pca9539r_gpio_subscribe_interrupts(&invalid_address, NULL, NULL));
 }
