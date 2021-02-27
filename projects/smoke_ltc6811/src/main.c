@@ -11,13 +11,14 @@
 
 // smoke test settings
 // NOTE: Test assumes num_thermistors == num_cells
-#define SMOKE_LTC_AFE_NUM_DEVICES 1
-#define SMOKE_LTC_AFE_NUM_CELLS 12
+#define SMOKE_LTC_AFE_NUM_DEVICES 2
+#define SMOKE_LTC_AFE_NUM_CELLS 24  // 12 per AFE
+#define SMOKE_LTC_AFE_NUM_THERMISTORS 64  // 32 per AFE
 #define SMOKE_LTC_AFE_INPUT_BITSET_FULL 0xFFF
 
 // To disable samples set value to 0
 #define SMOKE_LTC_AFE_NUM_VOLTAGE_SAMPLES 1
-#define SMOKE_LTC_AFE_NUM_TEMP_SAMPLES 0
+#define SMOKE_LTC_AFE_NUM_TEMP_SAMPLES 1
 
 // To disable logging for an event, set the event name to NULL
 static const char *s_event_names[NUM_SMOKE_LTC_EVENTS] = {
@@ -134,7 +135,7 @@ static StatusCode prv_ltc_init(void) {
 
     .num_devices = SMOKE_LTC_AFE_NUM_DEVICES,
     .num_cells = SMOKE_LTC_AFE_NUM_CELLS,
-    .num_thermistors = SMOKE_LTC_AFE_NUM_CELLS,
+    .num_thermistors = SMOKE_LTC_AFE_NUM_THERMISTORS,
 
     .ltc_events = { .trigger_cell_conv_event = SMOKE_LTC_AFE_TRIGGER_CELL_CONV_EVENT,
                     .cell_conv_complete_event = SMOKE_LTC_AFE_CELL_CONV_COMPLETE_EVENT,
@@ -160,6 +161,13 @@ static StatusCode prv_ltc_init(void) {
 
 static void prv_log_event(const Event *event) {
   if (event->id < NUM_SMOKE_LTC_EVENTS && s_event_names[event->id] != NULL) {
+    // skip these messages because there's a lot of them and it's annoying
+    if (event->id == SMOKE_LTC_AFE_TRIGGER_AUX_CONV_EVENT) {
+      return;
+    }
+    if (event->id == SMOKE_LTC_AFE_AUX_CONV_COMPLETE_EVENT) {
+      return;
+    }
     LOG_DEBUG("LTC AFE PROCESSING RESULT: %s\n", s_event_names[event->id]);
   }
 }
@@ -168,6 +176,10 @@ int main(void) {
   // Initialize ltc driver
   StatusCode init_status = prv_ltc_init();
   LOG_DEBUG("smoke ltc6811 init: %d\n", init_status);
+  if (init_status != STATUS_CODE_OK) {
+    LOG_DEBUG("Error during initialization :( exiting\n");
+    exit(0);
+  }
 
   // Initialize bound variable
   prv_reset_sample_bounds();
