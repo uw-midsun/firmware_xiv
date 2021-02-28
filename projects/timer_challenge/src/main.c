@@ -5,14 +5,14 @@
 #include "soft_timer.h"
 #include "wait.h"
 
-#define TIMER_PERIOD 500  // timer in ms
+#define TIMER_PERIOD_MS 500  // timer in ms
 
 typedef struct Counters {  // stores counters
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-void prv_timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *counters = context;
 
   counters->counter_a++;  // increments a every 0.5s
@@ -25,7 +25,7 @@ void prv_timer_callback(SoftTimerId timer_id, void *context) {
   }
 
   // restart timer again after
-  soft_timer_start_millis(TIMER_PERIOD, prv_timer_callback, counters, NULL);
+  soft_timer_start_millis(TIMER_PERIOD_MS, prv_timer_callback, counters, NULL);
 }
 
 int main(void) {
@@ -34,7 +34,7 @@ int main(void) {
 
   Counters counters = { 0 };
 
-  soft_timer_start_millis(TIMER_PERIOD, prv_timer_callback, &counters, NULL);
+  soft_timer_start_millis(TIMER_PERIOD_MS, prv_timer_callback, &counters, NULL);
   while (true) {
     wait();
   }
