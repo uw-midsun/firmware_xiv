@@ -10,7 +10,6 @@
 #include "status.h"
 
 // smoke test settings
-// NOTE: Test assumes num_thermistors == num_cells
 #define SMOKE_LTC_AFE_NUM_DEVICES 2
 #define SMOKE_LTC_AFE_NUM_CELLS 24  // 12 per AFE
 #define SMOKE_LTC_AFE_NUM_THERMISTORS 64  // 32 per AFE
@@ -38,6 +37,7 @@ typedef struct LtcAfeReadingBound {
 
 static LtcAfeStorage s_afe;
 static uint16_t s_result_arr[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
+static uint16_t s_aux_result_arr[SMOKE_LTC_AFE_NUM_THERMISTORS] = { 0 };
 static size_t s_num_samples = 0;
 static LtcAfeReadingBound s_sample_bounds[SMOKE_LTC_AFE_NUM_CELLS] = { 0 };
 
@@ -46,6 +46,31 @@ static void prv_reset_sample_bounds(void) {
     s_sample_bounds[i].min = UINT16_MAX;
     s_sample_bounds[i].max = 0;
   }
+}
+
+static StatusCode prv_extract_and_dump_temps(uint16_t *result_arr, size_t len,
+                                             size_t max_samples) {
+  if (len != SIZEOF_ARRAY(s_aux_result_arr)) {
+    LOG_WARN("Expected reading length to be %u but it was %u\n", sizeof(s_aux_result_arr), len);
+    return STATUS_CODE_INVALID_ARGS;
+  }
+  memcpy(s_aux_result_arr, result_arr, len * sizeof(s_aux_result_arr[0]));
+  if (s_num_samples == 0) {
+    LOG_DEBUG("INITIAL READINGS:\n");
+  } else if (s_num_samples == max_samples - 1) {
+    LOG_DEBUG("READING STATS:\n");
+  }
+  for (size_t therm_pair = 0; therm_pair < len / 2; ++therm_pair) {
+    size_t t1 = therm_pair * 2;
+    size_t t2 = therm_pair * 2 + 1;
+    LOG_DEBUG("THERM#%u = %d, THERM#%u = %d\n", t1, s_aux_result_arr[t1],
+                                                t2, s_aux_result_arr[t2]);
+  }
+  s_num_samples++;
+  if (s_num_samples >= max_samples) {
+    s_num_samples = 0;
+  }
+  return STATUS_CODE_OK;
 }
 
 static StatusCode prv_extract_and_dump_readings(uint16_t *result_arr, size_t len,
@@ -101,7 +126,7 @@ static void prv_dump_voltages(uint16_t *result_arr, size_t len, void *context) {
 
 static void prv_dump_temps(uint16_t *result_arr, size_t len, void *context) {
 #if SMOKE_LTC_AFE_NUM_TEMP_SAMPLES > 0
-  if (!status_ok(prv_extract_and_dump_readings(result_arr, len, SMOKE_LTC_AFE_NUM_TEMP_SAMPLES)))
+  if (!status_ok(prv_extract_and_dump_temps(result_arr, len, SMOKE_LTC_AFE_NUM_TEMP_SAMPLES)))
     return;
 #endif
 
@@ -151,7 +176,7 @@ static StatusCode prv_ltc_init(void) {
 
   for (int i = 0; i < SMOKE_LTC_AFE_NUM_DEVICES; i++) {
     afe_settings.cell_bitset[i] = SMOKE_LTC_AFE_INPUT_BITSET_FULL;
-    afe_settings.aux_bitset[i] = SMOKE_LTC_AFE_INPUT_BITSET_FULL;
+    afe_settings.aux_bitset[i] = ~(uint32_t)0;
   }
 
   status_ok_or_return(ltc_afe_init(&s_afe, &afe_settings));

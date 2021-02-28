@@ -75,7 +75,7 @@ typedef struct LtcAfeSettings {
   LtcAfeAdcMode adc_mode;
 
   uint16_t cell_bitset[LTC_AFE_MAX_DEVICES];
-  uint16_t aux_bitset[LTC_AFE_MAX_DEVICES];
+  uint32_t aux_bitset[LTC_AFE_MAX_DEVICES];
 
   size_t num_devices;
   size_t num_cells;
@@ -91,7 +91,7 @@ typedef struct LtcAfeStorage {
   Fsm fsm;
 
   // Only used for storage in the FSM so we store data for the correct cells
-  uint16_t aux_index;
+  uint32_t aux_index;
   uint16_t retry_count;
 
   uint16_t cell_voltages[LTC_AFE_MAX_CELLS];

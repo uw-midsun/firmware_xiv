@@ -112,8 +112,9 @@ static StatusCode prv_trigger_aux_adc_conversion(LtcAfeStorage *afe) {
   return spi_exchange(settings->spi_port, cmd, LTC6811_CMD_SIZE, NULL, 0);
 }
 
-static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t device_cell) {
-  if (device_cell >= AUX_ADG731_NUM_PINS) {
+static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t therm) {
+  if (therm >= AUX_ADG731_NUM_PINS) {
+    LOG_DEBUG("aux out of range\n");
     return STATUS_CODE_OUT_OF_RANGE;
   }
   LtcAfeSettings *settings = &afe->settings;
@@ -124,7 +125,7 @@ static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t device
   // We send the a byte and then we send CSBM_HIGH to
   // release the SPI port
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d0 = device_cell;
+  packet.reg.d0 = therm;
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
   packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
   packet.reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
@@ -215,11 +216,12 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
         afe->discharge_cell_lookup[cell_index] = cell;
         afe->cell_result_lookup[cell] = cell_index++;
       }
+    }
+    for (size_t device_therm = 0; device_therm < LTC_AFE_MAX_THERMISTORS_PER_DEVICE; device_therm++) {
+      size_t therm = device * LTC_AFE_MAX_THERMISTORS_PER_DEVICE + device_therm;
 
-      if ((settings->aux_bitset[device] >> device_cell) & 0x1) {
-        // Cell input enabled - store the index that this input should be stored in
-        // when copying to the result array
-        afe->aux_result_lookup[cell] = aux_index++;
+      if ((settings->aux_bitset[device] >> device_therm) & 0x1) {
+        afe->aux_result_lookup[therm] = aux_index++;
       }
     }
   }
@@ -227,8 +229,8 @@ static void prv_calc_offsets(LtcAfeStorage *afe) {
 
 StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings) {
   if (settings->num_devices > LTC_AFE_MAX_DEVICES ||
-      settings->num_cells > settings->num_devices * LTC_AFE_MAX_CELLS ||
-      settings->num_thermistors > LTC_AFE_MAX_THERMISTORS) {
+      settings->num_cells > settings->num_devices * LTC_AFE_MAX_CELLS_PER_DEVICE ||
+      settings->num_thermistors > settings->num_devices * LTC_AFE_MAX_THERMISTORS_PER_DEVICE) {
     // bad no. devices (needs code change)
     // bad no. of cells (needs verification)
     return status_code(STATUS_CODE_INVALID_ARGS);
@@ -259,11 +261,11 @@ StatusCode ltc_afe_impl_trigger_cell_conv(LtcAfeStorage *afe) {
   return prv_trigger_adc_conversion(afe);
 }
 
-StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t device_cell) {
+StatusCode ltc_afe_impl_trigger_aux_conv(LtcAfeStorage *afe, uint8_t thermistor) {
   uint8_t gpio_bits =
       LTC6811_GPIO1_PD_OFF | LTC6811_GPIO3_PD_OFF | LTC6811_GPIO4_PD_OFF | LTC6811_GPIO5_PD_OFF;
   prv_write_config(afe, gpio_bits);
-  prv_aux_write_comm_register(afe, device_cell);
+  prv_aux_write_comm_register(afe, thermistor);
   prv_aux_send_comm_register(afe);
   return prv_trigger_aux_adc_conversion(afe);
 }
@@ -305,7 +307,7 @@ StatusCode ltc_afe_impl_read_cells(LtcAfeStorage *afe) {
   return STATUS_CODE_OK;
 }
 
-StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
+StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t thermistor) {
   LtcAfeSettings *settings = &afe->settings;
   LtcAfeAuxRegisterGroupPacket register_data[LTC_AFE_MAX_DEVICES] = { 0 };
 
@@ -317,15 +319,16 @@ StatusCode ltc_afe_impl_read_aux(LtcAfeStorage *afe, uint8_t device_cell) {
     // we only care about GPIO1 and the PEC
     uint16_t voltage = register_data[device].reg.voltages[0];
 
-    if ((settings->aux_bitset[device] >> device_cell) & 0x1) {
+    if ((settings->aux_bitset[device] >> thermistor) & 0x1) {
       // Input enabled - store result
-      uint16_t index = device * LTC_AFE_MAX_CELLS_PER_DEVICE + device_cell;
+      uint16_t index = device * LTC_AFE_MAX_THERMISTORS_PER_DEVICE + thermistor;
       afe->aux_voltages[afe->aux_result_lookup[index]] = voltage;
     }
 
     uint16_t received_pec = SWAP_UINT16(register_data[device].pec);
     uint16_t data_pec = crc15_calculate((uint8_t *)&register_data[device], 6);
     if (received_pec != data_pec) {
+      LOG_DEBUG("aux PEC error\n");
       return status_code(STATUS_CODE_INTERNAL_ERROR);
     }
   }
