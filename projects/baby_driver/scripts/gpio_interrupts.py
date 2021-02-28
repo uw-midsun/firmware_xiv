@@ -1,12 +1,20 @@
 """Python implementation of register_gpio_interrupt function"""
+
+from enum import IntEnum
+from collections import namedtuple
+
 import can_util
 from gpio_port import GpioPort
 import message_defs
 
+
+
 NUM_PINS_PER_PORT = 16
 
+GpioItInfo = namedtuple("GpioItInfo", ["port", "pin", "edge"])
+
 # pylint: disable=too-few-public-methods
-class InterruptEdge:
+class InterruptEdge(IntEnum):
     """Stores interrupt edge values"""
     RISING = 0
     FALLING = 1
@@ -27,33 +35,29 @@ def callback_listener(can_message):
     """
 
     unfiltered_msg = can_util.Message.from_msg(can_message)
-    # print(f"{unfiltered_msg.message_id}, {unfiltered_msg.data[0]},
-    # {unfiltered_msg.data[1]}, {unfiltered_msg.data[1]}")
+
     if (unfiltered_msg.message_id == message_defs.BABYDRIVER_CAN_MESSAGE_ID and
         unfiltered_msg.data[0] == message_defs.BabydriverMessageId.GPIO_IT_INTERRUPT):
 
-        data = unfiltered_msg.data[:]
+        data = unfiltered_msg.data
         port = data[1]
         pin = data[2]
         edge = data[3]
+
+        info = GpioItInfo(port, pin, edge)
         # Calling function from callback_dict based on (port, pin)
         try:
-            # ret is only used for testing purposes
-            ret = callback_dict[(port, pin)]((port, pin, edge))
-        except TypeError as type_error:
-            raise "Callback function parameters are of incorrect format (use a named-tuple called \
-                    info to store port, pin and edge" from type_error
-
-
-    return ret
+            callback_dict[(port, pin)](info)
+        except TypeError as type_err:
+            raise TypeError ("Callback function parameters are of incorrect format (use a "
+                             "named tuple called info to store port, pin and edge)") from type_err
 
 
 def default_callback(info):
     """ The function called after occurence of interrupt if
        no user-defined callback function exists"""
-    port, pin, edge = info
-    port = chr(port + ord('A'))
-    print(f"Interrupt on P{port}{pin}: {edge}")
+    info.port = chr(info.port + ord('A'))
+    print("Interrupt on P{}{}: {}".format(info.port, info.pin, info.edge))
 
 
 #  Setting up notifier to listen for all CAN messages
@@ -64,7 +68,7 @@ def init_notifier_gpio_it():
     notifier.add_listener(callback_listener)
 
 
-def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING, callback = None):
+def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING_AND_FALLING, callback = None):
     """
     Registers a gpio interrupt on a pin
 
@@ -73,12 +77,12 @@ def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING, callback = N
         pin: pin number of the GPIO pin to register an interrupt in
         edge: callback function is called when this interrupt edge occurs. Can be entered as a
               string or a number (RISING (0), FALLING (1) or RISING_AND_FALLING (2))
-        callback: if callback is None, a default callback function will be called that
-                  prints "Interrupt on P<port><pin>: <edge>" in this format.
-                  The callback function should follow this format:
-                  function_name(<info>) where the only parameter is info,
-                  a named tuple which holds port (info[0]),pin (info[1]) and edge (info[2])
-                  of the GPIO interrupt that occured.
+        callback: if callback is None, a default callback function will be called
+                  that prints "Interrupt on P<port><pin>: <edge>" in this format.
+                  The user-defined callback function should follow this format:
+                  function_name(info) where the only parameter is info,
+                  a named tuple which holds the port (info.port),pin (info.pin) and
+                  edge (info.edge) of the GPIO interrupt that occured.
 
     Raises:
         Value error: if the parameters passed into register_gpio_interrupt are incorrect
@@ -102,16 +106,16 @@ def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING, callback = N
         raise ValueError("Invalid GPIO pin number (Range: 0 - 15)")
 
     if isinstance(edge, str):
-        if hasattr(InterruptEdge, edge.upper()) is False:
-            raise AttributeError("Enter 'RISING', 'FALLING' or 'RISING_AND_FALLING' for \
-                                interrupt edge")
-        edge = getattr(InterruptEdge, edge.upper())
+        if edge.upper() not in InterruptEdge.__members__:
+            raise AttributeError("Enter 'RISING', 'FALLING' or 'RISING_AND_FALLING' for "
+                                 "interrupt edge")
+        edge = InterruptEdge[edge.upper()]
 
     if (edge < 0 or edge >= InterruptEdge.NUM_INTERRUPT_EDGES):
-        raise ValueError("invalid interrupt edge (enter 0 (Rising), 1 (Falling) \
-                        or 2 (Rising_and_falling")
+        raise ValueError("invalid interrupt edge (enter 0 (Rising), 1 (Falling) "
+                         "or 2 (Rising_and_falling")
 
-    if callback is not None and (callable(callback)) is False:
+    if callback is not None and not callable(callback):
         raise ValueError("invalid callback function")
 
     msg_data_register_gpio_interrupt = [(port, 1), (pin, 1), (edge, 1)]
@@ -177,6 +181,6 @@ def unregister_gpio_interrupt(port, pin):
 
     # Clearing callback related to the interrupt that was unregistered
     if (port, pin) not in callback_dict:
-        raise KeyError(f"No interrupt registered on given port and pin {callback_dict}")
+        raise KeyError("No interrupt registered on given port and pin")
 
     del callback_dict[(port, pin)]

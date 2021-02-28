@@ -137,18 +137,48 @@ class TestCallbackListener(unittest.TestCase):
     """Test the callback_listener function"""
 
     @patch('can_util.Message.from_msg')
+    @patch('can_util.send_message')
+    @patch('can_util.next_message')
     # pylint: disable=no-self-use
-    def test_params_and_fail_conditions(self, mock_convert_can_msg):
+    def test_params_and_fail_conditions(self, mock_next_message, mock_send_message,
+                                        mock_convert_can_msg):
         """
         Tests callback_listener by checking if it can trigger default/user-defined callbacks
         upon receving can messages and tests fail conditions
         """
 
+        # Stores parameters passed into can_util.send_message
+        # pylint: disable=attribute-defined-outside-init
+        self.babydriver_id = None
+        self.data = None
+        self.channel = None
+        self.msg_id = None
+        self.device_id = None
+
+        def parameter_test(
+            babydriver_id = None,
+            data = None,
+            channel = None,
+            msg_id = BABYDRIVER_CAN_MESSAGE_ID,
+            device_id = BABYDRIVER_DEVICE_ID,
+        ):
+            self.babydriver_id = babydriver_id
+            self.data = data
+            self.channel = channel
+            self.msg_id = msg_id
+            self.device_id = device_id
+
+        mock_send_message.side_effect = parameter_test
+        mock_next_message.return_value.data = [0, 0]
+        self.test_user_callback_output = None
+
         def test_user_callback(info):
-            return f"Test callback, port:{info[0]}, pin:{info[1]}, edge:{info[2]}"
+            self.test_user_callback_output = ("Test callback, port:{}, pin:{}, "
+                                              "edge:{}".format(info.port, info.pin, info.edge))
 
         def incorrect_test_user_callback(port, pin, edge):
-            return f"Incorrect Test callback, {port}, {pin}, {edge}"
+            self.test_user_callback_output =  ("Incorrect Test callback, {}, {},"
+                                               " {}".format(port, pin, edge))
 
         def test_msg_converter(can_message = None):
             ret_msg = can_util.Message(message_id = can_message[0], data = can_message[1][:],
@@ -158,35 +188,34 @@ class TestCallbackListener(unittest.TestCase):
         mock_convert_can_msg.side_effect = test_msg_converter
 
         callback_dict.clear()
-        callback_dict[(0,0)] = test_user_callback
-        callback_dict[(5,3)] = test_user_callback
-        callback_dict[(2,15)] = test_user_callback
-        callback_dict[(5,15)] = test_user_callback
+        register_gpio_interrupt(0,0,0,test_user_callback)
+        register_gpio_interrupt(5,3,0,test_user_callback)
+        register_gpio_interrupt(2,15,0,test_user_callback)
+        register_gpio_interrupt(5,15,0,test_user_callback)
 
         it_msg_id = BabydriverMessageId.GPIO_IT_INTERRUPT
 
         # The 2 element array represents a mock of the can message received from the firmware side
         # Testing function for keys stored in callback_dict
-
         data = [it_msg_id, 0, 0, 1]
-        self.assertEqual(callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data]),
-                        "Test callback, port:0, pin:0, edge:1")
+        callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
+        self.assertEqual(self.test_user_callback_output,"Test callback, port:0, pin:0, edge:1")
 
         data = [it_msg_id, 5, 3, 0]
-        self.assertEqual(callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data]),
-                        "Test callback, port:5, pin:3, edge:0")
+        callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
+        self.assertEqual(self.test_user_callback_output, "Test callback, port:5, pin:3, edge:0")
 
         data = [it_msg_id, 2, 15, 2]
-        self.assertEqual(callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data]),
-                        "Test callback, port:2, pin:15, edge:2")
+        callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
+        self.assertEqual(self.test_user_callback_output, "Test callback, port:2, pin:15, edge:2")
 
         data = [it_msg_id, 5, 15, 1]
-        self.assertEqual(callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data]),
-                        "Test callback, port:5, pin:15, edge:1")
+        callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
+        self.assertEqual(self.test_user_callback_output, "Test callback, port:5, pin:15, edge:1")
 
         #Testing fail condition
         callback_dict.clear()
-        callback_dict[(4,8)] = incorrect_test_user_callback
+        register_gpio_interrupt(4,8,0,incorrect_test_user_callback)
 
         data = [it_msg_id, 4, 8, 2]
         self.assertRaises(TypeError, callback_listener, [BABYDRIVER_CAN_MESSAGE_ID, data])
