@@ -125,11 +125,13 @@ static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t therm)
   // We send the a byte and then we send CSBM_HIGH to
   // release the SPI port
   packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d0 = therm;
+  packet.reg.d0_msb = LTC6811_EXTRACT_DATA_MSB(therm);
+  packet.reg.d0_lsb = LTC6811_EXTRACT_DATA_LSB(therm);
   packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
   packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
   packet.reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
   uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData));
+  packet.pec = SWAP_UINT16(comm_pec);
 
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeWriteCommRegPacket),
@@ -252,8 +254,8 @@ StatusCode ltc_afe_impl_init(LtcAfeStorage *afe, const LtcAfeSettings *settings)
   spi_init(settings->spi_port, &spi_config);
 
   // Use GPIO1 as analog input, GPIO 3-5 for SPI
-  uint8_t gpio_bits =
-      LTC6811_GPIO1_PD_OFF | LTC6811_GPIO3_PD_OFF | LTC6811_GPIO4_PD_OFF | LTC6811_GPIO5_PD_OFF;
+  uint8_t gpio_bits = LTC6811_GPIO1_PD_OFF | LTC6811_GPIO2_PD_ON | LTC6811_GPIO3_PD_ON |
+                      LTC6811_GPIO4_PD_ON | LTC6811_GPIO5_PD_ON;
   return prv_write_config(afe, gpio_bits);
 }
 
