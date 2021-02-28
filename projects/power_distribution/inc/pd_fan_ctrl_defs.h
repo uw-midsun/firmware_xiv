@@ -16,7 +16,3 @@
 #define FRONT_FAN_CONTROL_REFRESH_PERIOD_MILLIS 100
 #define REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS 100
 
-// Fan overtemp flags - all shifted left to MSB of u16 fan data
-#define FAN_OVERTEMP_TRIGGERED 0x20  // Indicates if overtemp condition triggered
-#define DCDC_OVERTEMP 0x10           // DCDC over-temp condition
-#define ENCLOSURE_OVERTEMP 0x08      // ENCLOSURE VENTILATION over-temp condition
