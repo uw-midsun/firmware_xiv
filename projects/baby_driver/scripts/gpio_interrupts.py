@@ -56,8 +56,11 @@ def callback_listener(can_message):
 def default_callback(info):
     """ The function called after occurence of interrupt if
        no user-defined callback function exists"""
-    info.port = chr(info.port + ord('A'))
-    print("Interrupt on P{}{}: {}".format(info.port, info.pin, info.edge))
+    port, pin, edge = info
+    port = chr(port + ord('A'))
+    edge = InterruptEdge(edge).name
+    edge = (edge.replace('_',' ')).lower()
+    print("Interrupt on P{}{}: {}".format(port, pin, edge))
 
 
 #  Setting up notifier to listen for all CAN messages
@@ -111,7 +114,7 @@ def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING_AND_FALLING, 
                                  "interrupt edge")
         edge = InterruptEdge[edge.upper()]
 
-    if (edge < 0 or edge >= InterruptEdge.NUM_INTERRUPT_EDGES):
+    if edge < 0 or edge >= InterruptEdge.NUM_INTERRUPT_EDGES:
         raise ValueError("invalid interrupt edge (enter 0 (Rising), 1 (Falling) "
                          "or 2 (Rising_and_falling")
 
