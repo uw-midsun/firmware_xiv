@@ -51,7 +51,6 @@ $(STATIC_LIB_DIR)/lib$(T).a: $($(T)_OBJ) $(call dep_to_lib,$($(T)_DEPS)) | $(STA
 # Application target
 $(BIN_DIR)/$(T)$(PLATFORM_EXT): $($(T)_OBJ) $(call dep_to_lib,$($(T)_DEPS)) $(DEP_VARS) | $(T) $(BIN_DIR)
 	@echo "Building $(notdir $@) for $(PLATFORM)"
-	@echo $($(firstword $|)_LINKER_SCRIPT)
 	@$(CC) $($(firstword $|)_CFLAGS) -Wl,-Map=$(BIN_DIR)/$(notdir $(@:%$(PLATFORM_EXT)=%.map)) \
 		$(filter-out $(DEP_VARS),$^) -o $@ \
 		-L$(STATIC_LIB_DIR) $(addprefix -l,$($(firstword $|)_DEPS)) \
