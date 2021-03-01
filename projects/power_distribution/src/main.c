@@ -6,16 +6,15 @@
 #include "can_msg_defs.h"
 #include "can_rx_event_mapper.h"
 #include "can_rx_event_mapper_config.h"
+#include "can_transmit.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
 #include "front_uv_detector.h"
 #include "interrupt.h"
-#include "voltage_regulator.h"
-#include "pd_error_defs.h"
-#include "can_transmit.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
+#include "pd_error_defs.h"
 #include "pd_events.h"
 #include "pd_fan_ctrl.h"
 #include "pd_gpio.h"
@@ -24,6 +23,7 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "voltage_regulator.h"
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
@@ -79,11 +79,12 @@ static void prv_init_can(bool is_front_power_distribution) {
 }
 
 static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void *context) {
-  uint16_t pd_err_flags = (error == VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON) ?
-    (PD_5V_REG_ERROR | PD_5V_REG_DATA) : PD_5V_REG_ERROR;
+  uint16_t pd_err_flags = (error == VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON)
+                              ? (PD_5V_REG_ERROR | PD_5V_REG_DATA)
+                              : PD_5V_REG_ERROR;
   bool is_front_pd = *(bool *)context;
 
-  if(is_front_pd == true) {
+  if (is_front_pd == true) {
     CAN_TRANSMIT_FRONT_PD_FAULT(pd_err_flags);
   } else {
     CAN_TRANSMIT_REAR_PD_FAULT(pd_err_flags, 0, 0, 0);
