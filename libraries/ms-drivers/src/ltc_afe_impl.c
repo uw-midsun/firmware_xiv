@@ -121,21 +121,24 @@ static StatusCode prv_aux_write_comm_register(LtcAfeStorage *afe, uint8_t therm)
   LtcAfeWriteCommRegPacket packet = { 0 };
   // Build WRCOMM Command
   prv_build_cmd(LTC6811_WRCOMM_RESERVED, packet.wrcomm, LTC6811_CMD_SIZE);
-  // Write 3 bytes of data to the COMM registers
-  // We send the a byte and then we send CSBM_HIGH to
-  // release the SPI port
-  packet.reg.icom0 = LTC6811_ICOM_CSBM_LOW;
-  packet.reg.d0_msb = LTC6811_EXTRACT_DATA_MSB(therm);
-  packet.reg.d0_lsb = LTC6811_EXTRACT_DATA_LSB(therm);
-  packet.reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
-  packet.reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
-  packet.reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
-  uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.reg, sizeof(LtcAfeCommRegisterData));
-  packet.pec = SWAP_UINT16(comm_pec);
+  
+  // Same thing as writing the config to all devices
+  for (uint8_t dev = 0; dev < settings->num_devices; dev++) {
+    packet.devices[dev].reg.icom0 = LTC6811_ICOM_CSBM_LOW;
+    packet.devices[dev].reg.d0_msb = LTC6811_EXTRACT_DATA_MSB(therm);
+    packet.devices[dev].reg.d0_lsb = LTC6811_EXTRACT_DATA_LSB(therm);
+    packet.devices[dev].reg.fcom0 = LTC6811_FCOM_CSBM_HIGH;
+    packet.devices[dev].reg.icom1 = LTC6811_ICOM_NO_TRANSMIT;
+    packet.devices[dev].reg.icom2 = LTC6811_ICOM_NO_TRANSMIT;
+    uint16_t comm_pec = crc15_calculate((uint8_t *)&packet.devices[dev].reg,
+                                        sizeof(LtcAfeCommRegisterData));
+    packet.devices[dev].pec = SWAP_UINT16(comm_pec);
+  }
+
+  size_t len = SIZEOF_LTC_AFE_WRITE_COMM_PACKET(settings->num_devices);
 
   prv_wakeup_idle(afe);
-  return spi_exchange(settings->spi_port, (uint8_t *)&packet, sizeof(LtcAfeWriteCommRegPacket),
-                      NULL, 0);
+  return spi_exchange(settings->spi_port, (uint8_t *)&packet, len, NULL, 0);
 }
 
 static StatusCode prv_aux_send_comm_register(LtcAfeStorage *afe) {

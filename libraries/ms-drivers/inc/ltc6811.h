@@ -102,12 +102,18 @@ typedef struct {
   uint16_t pec;
 } _PACKED LtcAfeWriteDeviceConfigPacket;
 
+typedef struct {
+  LtcAfeCommRegisterData reg;
+  uint16_t pec;
+} _PACKED LtcAfeWriteDeviceCommRegPacket;
+
 // WRCOMM + mux pin
 typedef struct {
   uint8_t wrcomm[LTC6811_CMD_SIZE];
-  LtcAfeCommRegisterData reg;
-  uint16_t pec;
+  LtcAfeWriteDeviceCommRegPacket devices[LTC_AFE_MAX_DEVICES];
 } _PACKED LtcAfeWriteCommRegPacket;
+#define SIZEOF_LTC_AFE_WRITE_COMM_PACKET(devices) \
+  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteDeviceCommRegPacket))
 
 // STMCOMM + clock cycles
 typedef struct {

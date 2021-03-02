@@ -11,7 +11,7 @@
 
 // smoke test settings
 #define SMOKE_LTC_AFE_NUM_DEVICES 2
-#define SMOKE_LTC_AFE_NUM_CELLS 24  // 12 per AFE
+#define SMOKE_LTC_AFE_NUM_CELLS 2  // 12 per AFE
 #define SMOKE_LTC_AFE_NUM_THERMISTORS 64  // 32 per AFE
 #define SMOKE_LTC_AFE_INPUT_BITSET_FULL 0xFFF
 
