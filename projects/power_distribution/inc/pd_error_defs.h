@@ -21,4 +21,3 @@
 #define ERR_VCC_EXCEEDED 0x200    // Indicated an overvoltage in the fan controller
 
 // More values can be added (up to 16 possible) below as needed
-
