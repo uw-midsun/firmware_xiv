@@ -8,12 +8,13 @@ from gpio_port import GpioPort
 import message_defs
 
 
-
 NUM_PINS_PER_PORT = 16
 
 GpioItInfo = namedtuple("GpioItInfo", ["port", "pin", "edge"])
 
 # pylint: disable=too-few-public-methods
+
+
 class InterruptEdge(IntEnum):
     """Stores interrupt edge values"""
     RISING = 0
@@ -21,10 +22,12 @@ class InterruptEdge(IntEnum):
     RISING_AND_FALLING = 2
     NUM_INTERRUPT_EDGES = 3
 
+
 # Callbacks that user defines when registering interrupt are stored here
 callback_dict = {
-    #("port", "pin"): callback,
+    # ("port", "pin"): callback,
 }
+
 
 def callback_listener(can_message):
     """
@@ -37,7 +40,7 @@ def callback_listener(can_message):
     unfiltered_msg = can_util.Message.from_msg(can_message)
 
     if (unfiltered_msg.message_id == message_defs.BABYDRIVER_CAN_MESSAGE_ID and
-        unfiltered_msg.data[0] == message_defs.BabydriverMessageId.GPIO_IT_INTERRUPT):
+            unfiltered_msg.data[0] == message_defs.BabydriverMessageId.GPIO_IT_INTERRUPT):
 
         data = unfiltered_msg.data
         port = data[1]
@@ -49,8 +52,8 @@ def callback_listener(can_message):
         try:
             callback_dict[(port, pin)](info)
         except TypeError as type_err:
-            raise TypeError ("Callback function parameters are of incorrect format (use a "
-                             "named tuple called info to store port, pin and edge)") from type_err
+            raise TypeError("Callback function parameters are of incorrect format (use a "
+                            "named tuple called info to store port, pin and edge)") from type_err
 
 
 def default_callback(info):
@@ -59,7 +62,7 @@ def default_callback(info):
     port, pin, edge = info
     port = chr(port + ord('A'))
     edge = InterruptEdge(edge).name
-    edge = (edge.replace('_',' ')).lower()
+    edge = (edge.replace('_', ' ')).lower()
     print("Interrupt on P{}{}: {}".format(port, pin, edge))
 
 
@@ -71,7 +74,7 @@ def init_notifier_gpio_it():
     notifier.add_listener(callback_listener)
 
 
-def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING_AND_FALLING, callback = None):
+def register_gpio_interrupt(port, pin, edge=InterruptEdge.RISING_AND_FALLING, callback=None):
     """
     Registers a gpio interrupt on a pin
 
@@ -124,8 +127,8 @@ def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING_AND_FALLING, 
     msg_data_register_gpio_interrupt = [(port, 1), (pin, 1), (edge, 1)]
 
     can_util.send_message(
-        babydriver_id = message_defs.BabydriverMessageId.GPIO_IT_REGISTER_COMMAND,
-        data = can_util.can_pack(msg_data_register_gpio_interrupt)
+        babydriver_id=message_defs.BabydriverMessageId.GPIO_IT_REGISTER_COMMAND,
+        data=can_util.can_pack(msg_data_register_gpio_interrupt)
     )
 
     status_message = can_util.next_message(babydriver_id=message_defs.BabydriverMessageId.STATUS)
@@ -140,7 +143,6 @@ def register_gpio_interrupt(port, pin, edge = InterruptEdge.RISING_AND_FALLING, 
         callback_dict[(port, pin)] = default_callback
     else:
         callback_dict[(port, pin)] = callback
-
 
 
 def unregister_gpio_interrupt(port, pin):
@@ -171,8 +173,8 @@ def unregister_gpio_interrupt(port, pin):
     msg_data_unregister_gpio_interrupt = [(port, 1), (pin, 1)]
 
     can_util.send_message(
-        babydriver_id = message_defs.BabydriverMessageId.GPIO_IT_UNREGISTER_COMMAND,
-        data = can_util.can_pack(msg_data_unregister_gpio_interrupt)
+        babydriver_id=message_defs.BabydriverMessageId.GPIO_IT_UNREGISTER_COMMAND,
+        data=can_util.can_pack(msg_data_unregister_gpio_interrupt)
     )
 
     status_message = can_util.next_message(babydriver_id=message_defs.BabydriverMessageId.STATUS)

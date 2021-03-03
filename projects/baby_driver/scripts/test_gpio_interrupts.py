@@ -3,13 +3,15 @@ import unittest
 from unittest.mock import patch
 
 from gpio_interrupts import (register_gpio_interrupt, unregister_gpio_interrupt,
-                            NUM_PINS_PER_PORT, InterruptEdge, callback_dict,
-                            callback_listener)
+                             NUM_PINS_PER_PORT, InterruptEdge, callback_dict,
+                             callback_listener)
 from gpio_port import GpioPort
 import can_util
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, BabydriverMessageId
 
 # pylint: disable=unused-argument
+
+
 class TestRegisterGpioInterrupt(unittest.TestCase):
     """Test register_gpio_interrupt function"""
 
@@ -46,11 +48,11 @@ class TestRegisterGpioInterrupt(unittest.TestCase):
         self.device_id = None
 
         def parameter_test(
-            babydriver_id = None,
-            data = None,
-            channel = None,
-            msg_id = BABYDRIVER_CAN_MESSAGE_ID,
-            device_id = BABYDRIVER_DEVICE_ID,
+            babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID,
         ):
             self.babydriver_id = babydriver_id
             self.data = data
@@ -156,11 +158,11 @@ class TestCallbackListener(unittest.TestCase):
         self.device_id = None
 
         def parameter_test(
-            babydriver_id = None,
-            data = None,
-            channel = None,
-            msg_id = BABYDRIVER_CAN_MESSAGE_ID,
-            device_id = BABYDRIVER_DEVICE_ID,
+            babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID,
         ):
             self.babydriver_id = babydriver_id
             self.data = data
@@ -177,21 +179,21 @@ class TestCallbackListener(unittest.TestCase):
                                               "edge:{}".format(info.port, info.pin, info.edge))
 
         def incorrect_test_user_callback(port, pin, edge):
-            self.test_user_callback_output =  ("Incorrect Test callback, {}, {},"
-                                               " {}".format(port, pin, edge))
+            self.test_user_callback_output = ("Incorrect Test callback, {}, {},"
+                                              " {}".format(port, pin, edge))
 
-        def test_msg_converter(can_message = None):
-            ret_msg = can_util.Message(message_id = can_message[0], data = can_message[1][:],
-                                       device_id = BABYDRIVER_DEVICE_ID)
+        def test_msg_converter(can_message=None):
+            ret_msg = can_util.Message(message_id=can_message[0], data=can_message[1][:],
+                                       device_id=BABYDRIVER_DEVICE_ID)
             return ret_msg
 
         mock_convert_can_msg.side_effect = test_msg_converter
 
         callback_dict.clear()
-        register_gpio_interrupt(0,0,0,test_user_callback)
-        register_gpio_interrupt(5,3,0,test_user_callback)
-        register_gpio_interrupt(2,15,0,test_user_callback)
-        register_gpio_interrupt(5,15,0,test_user_callback)
+        register_gpio_interrupt(0, 0, 0, test_user_callback)
+        register_gpio_interrupt(5, 3, 0, test_user_callback)
+        register_gpio_interrupt(2, 15, 0, test_user_callback)
+        register_gpio_interrupt(5, 15, 0, test_user_callback)
 
         it_msg_id = BabydriverMessageId.GPIO_IT_INTERRUPT
 
@@ -199,7 +201,7 @@ class TestCallbackListener(unittest.TestCase):
         # Testing function for keys stored in callback_dict
         data = [it_msg_id, 0, 0, 1]
         callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
-        self.assertEqual(self.test_user_callback_output,"Test callback, port:0, pin:0, edge:1")
+        self.assertEqual(self.test_user_callback_output, "Test callback, port:0, pin:0, edge:1")
 
         data = [it_msg_id, 5, 3, 0]
         callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
@@ -213,13 +215,12 @@ class TestCallbackListener(unittest.TestCase):
         callback_listener([BABYDRIVER_CAN_MESSAGE_ID, data])
         self.assertEqual(self.test_user_callback_output, "Test callback, port:5, pin:15, edge:1")
 
-        #Testing fail condition
+        # Testing fail condition
         callback_dict.clear()
-        register_gpio_interrupt(4,8,0,incorrect_test_user_callback)
+        register_gpio_interrupt(4, 8, 0, incorrect_test_user_callback)
 
         data = [it_msg_id, 4, 8, 2]
         self.assertRaises(TypeError, callback_listener, [BABYDRIVER_CAN_MESSAGE_ID, data])
-
 
 
 # pylint: disable=unused-argument
@@ -272,11 +273,11 @@ class TestUnregisterGpioInterrupt(unittest.TestCase):
         self.device_id = None
 
         def parameter_test(
-            babydriver_id = None,
-            data = None,
-            channel = None,
-            msg_id = BABYDRIVER_CAN_MESSAGE_ID,
-            device_id = BABYDRIVER_DEVICE_ID,
+            babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID,
         ):
             self.babydriver_id = babydriver_id
             self.data = data
@@ -302,7 +303,6 @@ class TestUnregisterGpioInterrupt(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-
         # Tests max parameters for can_util.send_message (port, pin)
         unregister_gpio_interrupt(GpioPort.F, 8)
         self.assertEqual(15, self.babydriver_id)
@@ -318,14 +318,13 @@ class TestUnregisterGpioInterrupt(unittest.TestCase):
         self.assertEqual(BABYDRIVER_CAN_MESSAGE_ID, self.msg_id)
         self.assertEqual(BABYDRIVER_DEVICE_ID, self.device_id)
 
-
     @patch('can_util.send_message')
     @patch('can_util.next_message')
     def test_fail_conditions(self, mock_next_message, mock_send_message):
         """Tests fail conditions"""
 
         # Stores parameters passed into can_util.send_message
-        # pylint: disable=attribute-defined-outside-init 
+        # pylint: disable=attribute-defined-outside-init
         self.babydriver_id = None
         self.data = None
         self.channel = None
@@ -333,11 +332,11 @@ class TestUnregisterGpioInterrupt(unittest.TestCase):
         self.device_id = None
 
         def parameter_test(
-            babydriver_id = None,
-            data = None,
-            channel = None,
-            msg_id = BABYDRIVER_CAN_MESSAGE_ID,
-            device_id = BABYDRIVER_DEVICE_ID,
+            babydriver_id=None,
+            data=None,
+            channel=None,
+            msg_id=BABYDRIVER_CAN_MESSAGE_ID,
+            device_id=BABYDRIVER_DEVICE_ID,
         ):
             self.babydriver_id = babydriver_id
             self.data = data
@@ -366,6 +365,7 @@ class TestUnregisterGpioInterrupt(unittest.TestCase):
         register_gpio_interrupt(0, 0, 0)
         unregister_gpio_interrupt(0, 0)
         self.assertRaises(KeyError, unregister_gpio_interrupt, 0, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

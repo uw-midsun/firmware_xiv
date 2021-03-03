@@ -50,6 +50,7 @@ def get_bus_reader(channel=None):
     """Returns a Python-CAN BufferedReader for reading from the specified channel."""
     return get_bus_data(channel).reader
 
+
 def get_bus_notifier(channel=None):
     """Returns a Python-CAN Notifier to listen for can messages."""
     return get_bus_data(channel).notifier
