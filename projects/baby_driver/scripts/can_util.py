@@ -9,7 +9,7 @@ from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
 
 # The default CAN channel to use for this module. Changed dynamically by repl_setup.
-default_channel = "can0" # pylint: disable=invalid-name
+default_channel = "can0"  # pylint: disable=invalid-name
 
 # We use the standard 500kbps baudrate.
 CAN_BITRATE = 500000
@@ -223,6 +223,7 @@ def next_message(
 
     return msg
 
+
 def can_pack(data_list):
     """
     Converts list of tuples and combines them into an array
@@ -250,5 +251,5 @@ def can_pack(data_list):
         for _ in range(len_in_bytes):
             int_out = val & 0xFF
             bytearr.append(int_out)
-            val = val>>8
+            val = val >> 8
     return bytearr

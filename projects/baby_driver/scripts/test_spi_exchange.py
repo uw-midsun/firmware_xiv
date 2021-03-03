@@ -11,6 +11,7 @@ from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID, Babydr
 OK_STATUS = 0
 FAILING_STATUS = 1
 
+
 class TestSpiExchange(unittest.TestCase):
     """Test spi_exchange function"""
 
@@ -87,8 +88,8 @@ class TestSpiExchange(unittest.TestCase):
         ), [0, 0, 0, 0, 0, 0, 0])
 
         # Test rx_len > 7
-        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg), \
-                                        Message(data=status_msg))
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg),
+                                         Message(data=status_msg))
         self.assertEqual(spi_exchange(
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 8
         ), [0, 0, 0, 0, 0, 0, 0, 0])
@@ -100,12 +101,11 @@ class TestSpiExchange(unittest.TestCase):
         ), [0] * 255)
 
         # Test multiple messages, low rx_len
-        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg), \
-                                        Message(data=status_msg))
+        mock_next_message.side_effect = (Message(data=data_msg), Message(data=data_msg),
+                                         Message(data=status_msg))
         self.assertEqual(spi_exchange(
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 3
         ), [0, 0, 0])
-
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')
