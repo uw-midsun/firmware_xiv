@@ -1,9 +1,12 @@
 from mpxe.protogen import stores_pb2
-from mpxe.protogen import adt7476a_pb2
 
 from mpxe.sims import sim
 
 class Adt7476a(sim.Sim):
+    def __init__(self):
+        self.speed = None
+        self.status = None
+
     def handle_update(self, pm, proj):
         stores  = proj.stores
         if (stores_pb2.MxStoreType.ADT7476A, 0) in stores:

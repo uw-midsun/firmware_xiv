@@ -1,9 +1,10 @@
 from mpxe.protogen import stores_pb2
-from mpxe.protogen import pca9539r_pb2
 
 from mpxe.sims import sim
 
 class Pca9539r(sim.Sim):
+    def __init__(self):
+        self.state = None
     def handle_update(self, pm, proj):
         stores = proj.stores
         # 0x74 is the address used in the smoke test

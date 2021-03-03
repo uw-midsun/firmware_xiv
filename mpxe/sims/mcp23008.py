@@ -8,10 +8,14 @@ NUM_MCP_PINS = 8
 
 class Mcp23008(sim.Sim):
 
+    def __init__(self):
+        self.states = None
+
+    # pylint: disable=unused-argument
     def handle_update(self, pm, proj):
         stores = proj.stores
         if MCP23008_KEY in stores:
-            mcp          = stores[MCP23008_KEY]
+            mcp = stores[MCP23008_KEY]
             self.states  = [bool(mcp.state[i]) for i in range(len(mcp.state)) if i < NUM_MCP_PINS]
 
     # Update the store with a new pin state
