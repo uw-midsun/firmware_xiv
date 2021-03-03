@@ -41,6 +41,7 @@ README_TEMPLATE = Template("""\
 
     """)
 
+
 def new_target(target_type, name):
     """Creates a new project or library.
 
@@ -49,11 +50,11 @@ def new_target(target_type, name):
 
     projects/libraries
     └── name
-        ├── inc
+        ├── inc
         ├── README.md
-        ├── rules.mk
-        ├── src
-        └── test
+        ├── rules.mk
+        ├── src
+        └── test
 
     where rules.mk is required for the project or library to be valid.
 
