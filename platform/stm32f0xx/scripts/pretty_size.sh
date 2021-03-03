@@ -10,9 +10,9 @@ bss="${temp[2]}"
 program_name="$(echo $2 | sed -E 's/\.elf//g')"
 program_name="$(echo "$program_name" | rev | cut -d'/' -f 1 | rev)"
 
-bytes_used=$(("bss + data"))
+bytes_used=$((bss + data))
 bytes_total=16384 # 16kb available
-bytes_remaining=$(("bytes_total - bytes_used"))
+bytes_remaining=$(("$bytes_total" - "$bytes_used"))
 bytes_threshold=2048 # need 2kb static memory left
 
 echo "${program_name} used ${bytes_used}/${bytes_total} bytes of static memory," \
