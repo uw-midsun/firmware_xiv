@@ -12,9 +12,10 @@ class TestAdt7476a(int_test.IntTest):
     def test_adt7476a(self):
         for x in range(1, 10):
             time.sleep(1)
-            self.adt7476a.sim.assert_store_values(self.adt7476a, x * 10, 0, 0) # this is for ADT_PWM_PORT_1
-            self.adt7476a.sim.assert_store_values(self.adt7476a, 0, 0, 1) # this is for ADT_PWM_PORT_2
-            
+            # this is for ADT_PWM_PORT_1
+            self.adt7476a.sim.assert_store_values(self.adt7476a, x * 10, 0, 0)
+            # this is for ADT_PWM_PORT_2
+            self.adt7476a.sim.assert_store_values(self.adt7476a, 0, 0, 1)
 
 if __name__ == '__main__':
     unittest.main()

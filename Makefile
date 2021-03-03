@@ -202,8 +202,9 @@ lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
-# Disable import error
-PYLINT_DISABLE := F0401 duplicate-code
+# Disable import-error, missing module/class/function docstring errors, 
+# 	invalid-name, redefined-outer-name
+PYLINT_DISABLE := F0401 C0114 C0115 C0116 C0103 W0621 duplicate-code no-self-use
 PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE))
 
 # Lints Python files, excluding MPXE generated files

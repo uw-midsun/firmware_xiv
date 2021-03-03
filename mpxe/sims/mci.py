@@ -1,9 +1,7 @@
-from mpxe.protogen import stores_pb2
-from mpxe.protogen import mcp2515_pb2
-from mpxe.protogen import gpio_pb2
-
 import time
 
+from mpxe.protogen import stores_pb2
+from mpxe.protogen import mcp2515_pb2
 from mpxe.sims import sim
 
 GPIO_KEY = (stores_pb2.MxStoreType.GPIO, 0)
@@ -19,7 +17,7 @@ class Mci(sim.Sim):
 
     def handle_update(self, pm, proj):
         # Upon precharge enable (PA9) going high, set PB0 and PA10 to mock precharge
-        if self.precharge_enable == False and self.get_gpio(proj, 'a',  9) == True:
+        if not self.precharge_enable and self.get_gpio(proj, 'a',  9):
             self.precharge_enable = self.get_gpio(proj, 'a', 9)
             time.sleep(0.1)
             # update precharge monitor and latch out
@@ -33,9 +31,9 @@ class Mci(sim.Sim):
             self.tx_data = proj.stores[MCP2515_KEY].tx_data
             print('MCP2515 Output: {}'.format(self.tx_data))
 
-    def update_mcp2515_rx(self, proj, id, data):
+    def update_mcp2515_rx(self, proj, rx_id, data):
         mcp2515_msg = mcp2515_pb2.MxMcp2515Store()
-        mcp2515_msg.rx_id = id
+        mcp2515_msg.rx_id = rx_id
         mcp2515_msg.rx_extended = False
         mcp2515_msg.rx_dlc = 8
         mcp2515_msg.rx_data = data

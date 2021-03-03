@@ -6,7 +6,7 @@ class IntTest(unittest.TestCase):
     def setUp(self):
         print("Running test", self._testMethodName)
         self.manager = ProjectManager()
-    
+
     def tearDown(self):
         self.manager.end()
         print("======", "PASS", self._testMethodName, "======")

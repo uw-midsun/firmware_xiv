@@ -1,14 +1,13 @@
 import os
 import threading
 import select
-import subprocess
 import signal
 
-REPO_ROOT_DIR = '/home/vagrant/shared/'
-
-from mpxe.harness import project
 from mpxe.harness import canio
+from mpxe.harness import project
 from mpxe.sims.sim import Sim
+
+REPO_ROOT_DIR = '/home/vagrant/shared/'
 
 POLL_TIMEOUT = 0.5
 
@@ -30,7 +29,7 @@ class ProjectManager:
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.CanIO()
-        
+
     def start(self, name, sim=None):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
@@ -52,12 +51,12 @@ class ProjectManager:
     def poll(self):
         def prep_poll():
             poll = select.poll()
-            for fd in self.fd_to_proj.keys():
+            for fd in self.fd_to_proj:
                 poll.register(fd, select.POLLIN)
             return poll
 
         def handle_poll_res(fd, event):
-            if not (event & select.POLLIN):
+            if not event & select.POLLIN:
                 raise InvalidPollError
             proj = self.fd_to_proj[fd]
             # Check if we should check stdout or ctop
@@ -81,7 +80,7 @@ class ProjectManager:
                 for fd, event in res_list:
                     handle_poll_res(fd, event)
         except InvalidPollError as e:
-            return
+            return e
 
     def end(self):
         self.killed = True

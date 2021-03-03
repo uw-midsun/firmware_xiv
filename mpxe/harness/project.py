@@ -1,9 +1,6 @@
 import subprocess
 import os
 import fcntl
-import signal
-import importlib
-import sys
 
 from mpxe.harness import decoder
 from mpxe.protogen import stores_pb2

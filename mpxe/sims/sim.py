@@ -7,7 +7,7 @@ class Sim:
 
     def handle_log(self, pm, proj, log):
         print('[{}]'.format(proj.name), log)
-    
+
     def get_gpio(self, proj, port, pin):
         gpio_msg = proj.stores[(stores_pb2.MxStoreType.GPIO, 0)]
         return gpio_msg.state[(ord(port.capitalize()) - ord('A')) * 16 + pin]
