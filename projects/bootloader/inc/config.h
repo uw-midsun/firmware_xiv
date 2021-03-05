@@ -12,15 +12,15 @@
 #include "status.h"
 
 typedef struct BootloaderConfig {
-  uint32_t CRC32;
-  uint8_t controller_board_ID;
-  char controller_board_name[64];
-  bool project_present;
-  char project_name[64];
-  char project_info[64];
-  char git_version[64];
-  uint32_t app_code;
-  uint32_t app_size;
+  uint32_t crc32; // CRC32 of config blob
+  uint8_t controller_board_id; // numeric ID of the controller board
+  char controller_board_name[64]; // human-friendly name of the controller board
+  bool project_present; // is there an application (project) present?
+  char project_name[64]; // name of the current project (empty project is "no project")
+  char project_info[64]; // possible extra info to differentiate boards
+  char git_version[64]; // commit hash of the branch we flashed from
+  uint32_t application_crc32; // CRC32 of the application code
+  uint32_t application_size; // size of the application code that the bootloader boots into
 } BootloaderConfig;
 
 // Initializes the config and will return a STATUS_CODE_INTERNAL_ERROR if both pages are corrupted
@@ -30,7 +30,7 @@ StatusCode config_init(void);
 
 // Gets the config for page 1, and memcpys it to the input config pointer
 // Please persist any changes you make
-StatusCode config_get(BootloaderConfig *config);
+void config_get(BootloaderConfig *config);
 
 // Will add the input config as the new config
 // If the config is corrupted during transfer, then the
