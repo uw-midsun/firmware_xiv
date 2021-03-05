@@ -70,7 +70,8 @@ StatusCode config_commit(BootloaderConfig *input_config) {
   status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
                                    &s_config_1_blob, sizeof(BootloaderConfig), false));
 
-  bool input_equals_config_1 = memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) == 0;
+  bool input_equals_config_1 =
+      memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) == 0;
 
   if (input_equals_config_1) {
     memcpy(&s_config_2_blob, &s_config_1_blob, sizeof(BootloaderConfig));

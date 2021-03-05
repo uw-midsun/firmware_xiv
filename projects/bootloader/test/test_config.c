@@ -22,7 +22,6 @@ static BootloaderConfig s_test_config_2 = { 0 };
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
 
-
 static void prv_change_config_page(void) {
   // This function changes the values in config page 1
   // This is to mimic the event in which page 1 gets corrupted
