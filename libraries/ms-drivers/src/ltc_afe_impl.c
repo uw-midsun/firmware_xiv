@@ -30,6 +30,8 @@ static uint8_t s_voltage_reg[NUM_LTC_AFE_VOLTAGE_REGISTERS] = {
   [LTC_AFE_VOLTAGE_REGISTER_D] = LTC_AFE_REGISTER_CELL_VOLTAGE_D,
 };
 
+static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins);
+
 static void prv_wakeup_idle(LtcAfeStorage *afe) {
   LtcAfeSettings *settings = &afe->settings;
   // Wakeup method 2 - pair of long -1, +1 for each device
@@ -80,6 +82,9 @@ static StatusCode prv_read_voltage(LtcAfeStorage *afe, LtcAfeVoltageRegister reg
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
 
+  memcpy(afe->discharge_bitset, afe->prev_discharges, sizeof(uint16_t) * LTC_AFE_MAX_DEVICES);
+  prv_write_config(afe, 0);
+
   size_t len = sizeof(LtcAfeVoltageRegisterGroup) * afe->settings.num_devices;
   return prv_read_register(afe, s_voltage_reg[reg], (uint8_t *)data, len);
 }
@@ -94,6 +99,10 @@ static StatusCode prv_trigger_adc_conversion(LtcAfeStorage *afe) {
 
   uint8_t cmd[LTC6811_CMD_SIZE] = { 0 };
   prv_build_cmd(adcv, cmd, LTC6811_CMD_SIZE);
+
+  memcpy(afe->prev_discharges, afe->discharge_bitset, sizeof(uint16_t) * LTC_AFE_MAX_DEVICES);
+  memset(afe->discharge_bitset, 0, sizeof(uint16_t) * LTC_AFE_MAX_DEVICES);
+  prv_write_config(afe, 0);
 
   prv_wakeup_idle(afe);
   return spi_exchange(settings->spi_port, cmd, LTC6811_CMD_SIZE, NULL, 0);

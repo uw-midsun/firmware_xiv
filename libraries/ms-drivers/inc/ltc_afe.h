@@ -97,6 +97,7 @@ typedef struct LtcAfeStorage {
   uint16_t cell_voltages[LTC_AFE_MAX_CELLS];
   uint16_t aux_voltages[LTC_AFE_MAX_THERMISTORS];
 
+  uint16_t prev_discharges[LTC_AFE_MAX_DEVICES];
   uint16_t discharge_bitset[LTC_AFE_MAX_DEVICES];
 
   uint16_t cell_result_lookup[LTC_AFE_MAX_CELLS];
