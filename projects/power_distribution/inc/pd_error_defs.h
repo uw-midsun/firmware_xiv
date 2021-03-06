@@ -2,6 +2,7 @@
 
 #include "adt7476a_fan_controller_defs.h"
 
+// See https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/2219114569/Decoding+Power+Distribution+Error+Codes
 // PD fault flag defs - allows transmission of 16 bits of info stored in a uint16_t
 
 // Errors flags for PD voltage regulator
