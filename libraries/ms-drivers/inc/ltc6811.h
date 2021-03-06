@@ -61,7 +61,7 @@ typedef enum {
 // SPI Packets
 typedef struct {
   uint8_t adcopt : 1;
-  uint8_t swtrd : 1;
+  uint8_t dten : 1;
   uint8_t refon : 1;
 
   uint8_t gpio : 5;  // GPIO pin control
@@ -226,7 +226,7 @@ static_assert(sizeof(LtcAfeAuxRegisterGroupPacket) == 8,
 
 #define LTC6811_ADCOPT (1 << 0)
 
-#define LTC6811_SWTRD (1 << 1)
+#define LTC6811_DTEN (1 << 1)
 
 #define LTC6811_ADAX_GPIO1 0x01
 #define LTC6811_ADAX_MODE_FAST (0 << 8) | (1 << 7)

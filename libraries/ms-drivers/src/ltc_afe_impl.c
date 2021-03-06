@@ -176,7 +176,7 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
     config_packet.devices[curr_device].reg.discharge_timeout = LTC_AFE_DISCHARGE_TIMEOUT_30_S;
 
     config_packet.devices[curr_device].reg.adcopt = ((settings->adc_mode + 1) > 3);
-    config_packet.devices[curr_device].reg.swtrd = true;
+    config_packet.devices[curr_device].reg.dten = true;
 
     config_packet.devices[curr_device].reg.undervoltage = undervoltage;
     config_packet.devices[curr_device].reg.overvoltage = overvoltage;
