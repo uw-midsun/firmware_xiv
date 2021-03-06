@@ -23,6 +23,13 @@
 
 #define CAN_BUS_OFF_RECOVERY_TIME_MS 500
 
+// flag enabled if x86 passed as platform
+#ifdef X86
+#define TX_CALLBACK_ENABLE false
+#else
+#define TX_CALLBACK_ENABLE true
+#endif
+
 // Attempts to transmit the specified message using the HW TX, overwriting the
 // source device.
 StatusCode prv_transmit(const CanMessage *msg);
@@ -145,14 +152,17 @@ bool can_process_event(const Event *e) {
 }
 
 void prv_tx_handler(void *context) {
-  CanStorage *can_storage = context;
-  CanMessage tx_msg;
-
-  // If we failed to TX some messages or aren't transmitting fast enough, those
-  // events were discarded. Raise a TX event to trigger a transmit attempt. We
-  // only raise one event since TX ready interrupts are 1-to-1.
-  if (can_fifo_size(&can_storage->tx_fifo) > 0) {
-    event_raise(can_storage->tx_event, 0);
+  // following condition used to disable tx events being re-raised on x86
+  // as this causes a race condition: see SOFT-301
+  if (TX_CALLBACK_ENABLE) {
+    CanStorage *can_storage = context;
+    CanMessage tx_msg;
+    // If we failed to TX some messages or aren't transmitting fast enough, those
+    // events were discarded. Raise a TX event to trigger a transmit attempt. We
+    // only raise one event since TX ready interrupts are 1-to-1.
+    if (can_fifo_size(&can_storage->tx_fifo) > 0) {
+      event_raise(can_storage->tx_event, 0);
+    }
   }
 }
 
