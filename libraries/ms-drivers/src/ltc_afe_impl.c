@@ -350,6 +350,8 @@ StatusCode ltc_afe_impl_toggle_cell_discharge(LtcAfeStorage *afe, uint16_t cell,
   uint16_t device_cell = actual_cell % LTC_AFE_MAX_CELLS_PER_DEVICE;
   uint16_t device = actual_cell / LTC_AFE_MAX_CELLS_PER_DEVICE;
 
+  afe->discharge_bitset[device] = 0;
+
   if (discharge) {
     afe->discharge_bitset[device] |= (1 << device_cell);
   } else {

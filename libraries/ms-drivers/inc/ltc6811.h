@@ -126,10 +126,10 @@ typedef struct {
   uint8_t wrcfg[LTC6811_CMD_SIZE];
 
   // devices are ordered with the last slave first
-  LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_CELLS_PER_DEVICE];
+  LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_DEVICES];
 } _PACKED LtcAfeWriteConfigPacket;
 #define SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(devices) \
-  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteConfigPacket))
+  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteDeviceConfigPacket))
 
 typedef union {
   uint16_t voltages[3];
