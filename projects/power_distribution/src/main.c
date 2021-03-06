@@ -84,7 +84,7 @@ static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void
                               : PD_5V_REG_ERROR;
   bool is_front_pd = *(bool *)context;
 
-  if (is_front_pd == true) {
+  if (is_front_pd) {
     CAN_TRANSMIT_FRONT_PD_FAULT(pd_err_flags);
   } else {
     CAN_TRANSMIT_REAR_PD_FAULT(pd_err_flags, 0, 0, 0);

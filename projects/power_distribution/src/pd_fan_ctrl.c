@@ -46,7 +46,7 @@ static void prv_fan_err_cb(const GpioAddress *address, void *context) {
     CAN_TRANSMIT_REAR_PD_FAULT(*err_data, s_fan_storage.dcdc_reading,
                                s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
   }
-  // s_fan_storage.fan_err_flags = 0; should we reset the flags here ?
+  s_fan_storage.fan_err_flags = 0;
 }
 
 // Converts front pd adc reading of potentiometer to fan speed percent
