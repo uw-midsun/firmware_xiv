@@ -11,9 +11,6 @@
 
 typedef void (*MotorControllerMeasurementCallback)(const GenericCanMsg *msg, void *context);
 
-// This is replicated to some degree in motor_can.h, just using here for testing stuff
-// using 6 IDs to replicate how we'd take in 6 IDs across two WaveSculptors,
-// but this should only have the first 3 when actually implemented
 typedef enum {
   MOTOR_CONTROLLER_BROADCAST_STATUS = 0,
   MOTOR_CONTROLLER_BROADCAST_BUS,
@@ -37,9 +34,8 @@ typedef enum {
 } MotorController;
 
 #define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
-#define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200  // idk what this actually should be
-
-#define MOTOR_CONTROLLER_ID_UNUSED 0x1
+#define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200  
+// NOTE: currently both motor controllers are 0x400, right will need to be configured
 
 #define MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(controller)                        \
   (((controller) == LEFT_MOTOR_CONTROLLER) ? LEFT_MOTOR_CONTROLLER_BASE_ADDR \

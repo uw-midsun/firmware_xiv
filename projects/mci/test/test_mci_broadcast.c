@@ -35,6 +35,7 @@ typedef enum {
 } TestMciMessage;
 
 static GenericCanMcp2515 s_motor_can;
+static Mcp2515Storage s_motor_can_storage;
 static CanStorage s_can_storage;
 static MotorControllerBroadcastStorage s_broadcast_storage;
 
@@ -42,7 +43,7 @@ static bool s_recieved_velocity = false;
 static bool s_recieved_bus_measurement = false;
 
 static MotorControllerBroadcastSettings s_broadcast_settings =
-    { .motor_can = (GenericCan *)&s_motor_can,
+    { .motor_can = &s_motor_can_storage,
       .device_ids = {
           [LEFT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_LEFT_MOTOR_CONTROLLER,
           [RIGHT_MOTOR_CONTROLLER] = MOTOR_CAN_ID_RIGHT_MOTOR_CONTROLLER,
@@ -129,10 +130,10 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
 
     if (id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID ||
         id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
-      s_broadcast_storage.callbacks[MCI_BROADCAST_VELOCITY](&msg, &s_broadcast_storage);
+      s_broadcast_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY](&msg, &s_broadcast_storage);
     } else if (id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID ||
                id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
-      s_broadcast_storage.callbacks[MCI_BROADCAST_BUS](&msg, &s_broadcast_storage);
+      s_broadcast_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS](&msg, &s_broadcast_storage);
     }
   }
   return STATUS_CODE_OK;

@@ -25,33 +25,6 @@ static MotorControllerStorage s_mci_storage;
 
 static Mcp2515Storage s_can_mcp2515;
 
-/*
-// For alternating filter IDs
-static bool s_filter_id = false;
-
-static void prv_change_filter(void) {
-  // Testing with voltage vector measurements instead of speed since they give values
-  LOG_DEBUG("Changing filter ID to %d\n", (s_filter_id ? 0x405 : 0x402));
-  uint32_t filters[2];
-  filters[0] = 0x1;
-  if(!s_filter_id) {
-    filters[1] = 0x402;
-  } else {
-    filters[1] = 0x405;
-  }
-
-  LOG_DEBUG("Change filter result %d\n", mcp2515_set_filter(&s_test_can_mcp2515, filters));
-}
-
-// CB for rx received
-static void prv_test_receive_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void
-*context) { LOG_DEBUG("received rx from id: %d\n", (int)id); LOG_DEBUG("Data: 0x%x\n", (int)data);
-  // Change to other filter and re-init
-  s_filter_id ^= 1;
-  prv_change_filter();
-}
-*/
-
 void prv_setup_system_can() {
   CanSettings can_settings = {
     .device_id = SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,

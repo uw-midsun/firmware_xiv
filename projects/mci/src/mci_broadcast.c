@@ -18,7 +18,7 @@
 
 // static MotorControllerCallbackStorage s_cb_storage;
 
-static const MotorControllerBroadcastMeasurement
+static const uint16_t
     MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP
         [NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
           [MOTOR_CONTROLLER_BROADCAST_STATUS] = MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
@@ -68,8 +68,9 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
       (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
       (uint32_t)
           MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
-  LOG_DEBUG("Changing filter to %x\n", (int)filter);
-  // can we just set both filters to the same thing? - hewitt
+  LOG_DEBUG("Changing filter to 0x%x\n", (int)filter);
+  // MCP2515 requires both filters to be set, so just use the same one twice
+  // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required one by one
   uint32_t filters[2] = { filter, filter };
   LOG_DEBUG("Change filter result %d\n", mcp2515_set_filter(storage->motor_can, filters));
 }
@@ -85,7 +86,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
                             ? LEFT_MOTOR_CONTROLLER_BASE_ADDR
                             : RIGHT_MOTOR_CONTROLLER_BASE_ADDR);
   uint32_t offset = (id - cur_mc_id);
-  LOG_DEBUG("CHECKING FOR OFFSET %d\n", (int)offset);
+  LOG_DEBUG("CHECKING FOR OFFSET 0x%x\n", (int)offset);
   // map base offset to the cb array index
   uint32_t cb_index = NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS;
   for (uint32_t i = 0; i < NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS; i++) {
@@ -94,9 +95,13 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
       break;
     }
   }
-  // make sure index gets set
+  // check if received message ID doesn't have a CB index
   if (cb_index == NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS) {
-    LOG_DEBUG("CB INDEX NOT SET");
+    LOG_DEBUG("WARNING - NO CB FOR MESSAGE ID 0x%x\n", (int)id);
+    // this should NEVER happen, so it may make sense to throw an error
+    // TODO(SOFT-139): error handling here?
+    // have had this happen a few times, always with offset 9 (voltage rail measurement)
+    // not sure what the cause is, doesn't happen often
     return;
   }
 
@@ -168,24 +173,17 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
 }
 
 static void prv_handle_motor_temp_rx(const GenericCanMsg *msg, void *context) {
+  // TODO(SOFT-421): send this over CAN
   LOG_DEBUG("got motor temp rx\n");
 }
 
 static void prv_handle_dsp_temp_rx(const GenericCanMsg *msg, void *context) {
+  // TODO(SOFT-421): figure out if this is needed
   LOG_DEBUG("got dsp temp rx\n");
 }
 
 static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
-  // Set up callbacks and define in storage
-  // TODO(SOFT-353): move the cb storage into MotorControllerBroadcastStorage
-  /*
-  s_cb_storage.callbacks[MCI_BROADCAST_STATUS] = prv_handle_status_rx;
-  storage->callbacks[MCI_BROADCAST_STATUS] = prv_handle_status_rx;
-  s_cb_storage.callbacks[MCI_BROADCAST_BUS] = prv_handle_bus_measurement_rx;
-  storage->callbacks[MCI_BROADCAST_BUS] = prv_handle_bus_measurement_rx;
-  s_cb_storage.callbacks[MCI_BROADCAST_VELOCITY] = prv_handle_speed_rx;
-  storage->callbacks[MCI_BROADCAST_VELOCITY] = prv_handle_speed_rx;
-  */
+  // Set up callbacks
   storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_STATUS] = prv_handle_status_rx;
   storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS] = prv_handle_bus_measurement_rx;
   storage->cb_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY] = prv_handle_speed_rx;
@@ -208,8 +206,9 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
     .loopback = false,
     .filters =
         {
-            [MCP2515_FILTER_ID_RXF0] =
-                { .raw = MOTOR_CONTROLLER_ID_UNUSED },  // only want to use one filter
+            [MCP2515_FILTER_ID_RXF0] = { .raw =
+                                             (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR +
+                                                        storage->cb_storage.cur_measurement + 1) },
             [MCP2515_FILTER_ID_RXF1] = { .raw =
                                              (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR +
                                                         storage->cb_storage.cur_measurement + 1) },
