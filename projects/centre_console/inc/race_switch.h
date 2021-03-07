@@ -8,6 +8,7 @@
 // Requires GPIO, soft timers, event queue, and interrupts to be initialized.
 
 #include <stdint.h>
+
 #include "fsm.h"
 #include "status.h"
 #include "voltage_regulator.h"
