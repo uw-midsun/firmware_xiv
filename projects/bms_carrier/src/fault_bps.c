@@ -38,6 +38,7 @@ StatusCode fault_bps_set(uint8_t fault_bitmask) {
     return STATUS_CODE_OK;
   }
   s_storage->bps_storage.fault_bitset |= fault_bitmask;
+  LOG_DEBUG("BPS FAULT, bitmask 0x%x\n", s_storage->bps_storage.fault_bitset);
   if (fault_bitmask != EE_BPS_STATE_FAULT_RELAY) {
     relay_fault(&s_storage->relay_storage);
   }

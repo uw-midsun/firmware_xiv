@@ -8,12 +8,30 @@
 #include "current_sense.h"
 #include "exported_enums.h"
 #include "fault_bps.h"
+#include "log.h"
 #include "ltc_afe.h"
 #include "passive_balance.h"
 #include "status.h"
 #include "thermistor.h"
 
 static CellSenseStorage s_storage = { 0 };
+
+#define LOG_AFE_TEMPS false
+#define LOG_AFE_VOLTS true
+
+static uint16_t log_counter = 0;
+static const uint16_t log_counter_mod = 10;
+
+static void prv_log_table(uint16_t *results, size_t len, const char *name) {
+  for (uint16_t row = 0; row < len / NUM_AFES; row++) {
+    printf("AFE %d  ", row / (len / NUM_AFES / NUM_AFES));
+    for (uint16_t col = 0; col < NUM_AFES; col++) {
+      uint16_t index = row * NUM_AFES + col;
+      printf("%s#%02d = %05d  ", name, index % (len / NUM_AFES), results[index]);
+    }
+    printf("\n");
+  }
+}
 
 static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *context) {
   ltc_afe_request_aux_conversion(s_storage.afe);
@@ -33,6 +51,14 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
 
   // Balance cells if needed
   passive_balance(s_storage.readings->voltages, len, s_storage.afe);
+
+  if (LOG_AFE_VOLTS && (log_counter % log_counter_mod == 0)) {
+    LOG_DEBUG("AFE voltages\n");
+    prv_log_table(result_arr, len, "cell");
+    for (uint8_t i = 0; i < NUM_AFES; i++) {
+      printf("AFE %d discharge bitset: 0x%03x\n", i, s_storage.afe->discharge_bitset[i]);
+    }
+  }
 
   if (fault) {
     fault_bps_set(EE_BPS_STATE_FAULT_AFE_CELL);
@@ -57,6 +83,12 @@ static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *conte
       return;
     }
   }
+
+  if (LOG_AFE_TEMPS && (log_counter % log_counter_mod == 0)) {
+    LOG_DEBUG("AFE temps\n");
+    prv_log_table(result_arr, len, "temp");
+  }
+  log_counter++;
 
   fault_bps_clear(EE_BPS_STATE_FAULT_AFE_TEMP);
 }

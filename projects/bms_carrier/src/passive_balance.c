@@ -21,7 +21,7 @@ StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe)
         cell_min = idx;
       }
     }
-    if (result_arr[cell_max] - result_arr[cell_min] >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV) {
+    if (result_arr[cell_max] - result_arr[cell_min] >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV * 10) {
       to_balance[cell_max] = true;
     }
   }
@@ -29,4 +29,6 @@ StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe)
   for (uint16_t i = 0; i < len; i++) {
     ltc_afe_toggle_cell_discharge(afe, i, to_balance[i]);
   }
+
+  return STATUS_CODE_OK;
 }
