@@ -32,16 +32,14 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-static EventId s_event_lookup[] = { [RACE_SWITCH_EVENT_OFF] = RACE_STATE_OFF,
-                                    [RACE_SWITCH_EVENT_ON] = RACE_STATE_ON };
-
 void prv_assert_current_race_state(RaceState state) {
   TEST_ASSERT_EQUAL(state, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
 }
 
 void test_transition_to_race(void) {
-  // Test state machine when switching from normal to race
-  // Initially the module begins in normal mode
+  // Test state machine when normal -> race
+  // Initially the module begins in normal mode so PA4 is low
+  s_returned_state = GPIO_STATE_LOW;
   prv_assert_current_race_state(RACE_STATE_OFF);
 
   // Mock rising edge on race switch pin
@@ -57,15 +55,9 @@ void test_transition_to_race(void) {
 }
 
 void test_transition_to_normal(void) {
-  // Test state machine when normal -> race -> normal
-  // Initially the module begins in normal mode
-  prv_assert_current_race_state(RACE_STATE_OFF);
-
-  // Mock rising edge on race switch pin
+  // Test state machine when race -> normal
+  // Initially the module begins in race mode so PA4 is high
   s_returned_state = GPIO_STATE_HIGH;
-
-  // Trigger interrupt to change fsm state from normal to race
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // Mock falling edge on race switch pin
@@ -79,16 +71,17 @@ void test_transition_to_normal(void) {
 void test_voltage_during_transition(void) {
   // Test voltage regulator when normal -> race -> normal
   // Initially the car is in normal mode so the voltage regulator is enabled
-  // Mock high state on voltage monitor pin
+  s_returned_state = GPIO_STATE_LOW;
   prv_assert_current_race_state(RACE_STATE_OFF);
+
   GpioState voltage_monitor_state;
+  // Mock high state on voltage monitor pin
   s_returned_state = GPIO_STATE_HIGH;
 
   gpio_get_state(&s_voltage_monitor_address, &voltage_monitor_state);
   TEST_ASSERT_EQUAL(voltage_monitor_state, s_returned_state);
 
   // Switch to race mode
-  s_returned_state = GPIO_STATE_HIGH;
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   prv_assert_current_race_state(RACE_STATE_ON);
 
@@ -98,7 +91,6 @@ void test_voltage_during_transition(void) {
   TEST_ASSERT_EQUAL(voltage_monitor_state, s_returned_state);
 
   // Switch to normal mode
-  s_returned_state = GPIO_STATE_LOW;
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   prv_assert_current_race_state(RACE_STATE_OFF);
 
