@@ -1,25 +1,32 @@
 #include "passive_balance.h"
+
+#include <stdbool.h>
 #include "log.h"
 
 StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe) {
-  // Storage for max + min voltage values as well as the cell # with the max voltage.
-  uint16_t cell_voltage_max = 0;
-  uint16_t cell_voltage_min = 0;
-  uint16_t max_voltage_cell_num = 0;
+  // Assumes all AFEs have an equal number of cells
+  // We pick the most charged cell per AFE
+  bool to_balance[LTC_AFE_MAX_CELLS_PER_DEVICE * LTC_AFE_MAX_DEVICES] = { 0 };
+  uint16_t cells_per_dev = len / afe->settings.num_devices;
 
-  cell_voltage_max = cell_voltage_min = result_arr[0];
-
-  // Iterate through all cells in storage, updating values.
-  for (uint8_t i = 0; i < len; i++) {
-    if (result_arr[i] > cell_voltage_max) {
-      cell_voltage_max = result_arr[i];
-      max_voltage_cell_num = i;
-    } else if (result_arr[i] < cell_voltage_min) {
-      cell_voltage_min = result_arr[i];
+  for (uint8_t dev = 0; dev < afe->settings.num_devices; dev++) {
+    uint16_t cell_max = 0;
+    uint16_t cell_min = 0;
+    for (uint16_t cell = 0; cell < cells_per_dev; cell++) {
+      uint16_t idx = cell + dev * cells_per_dev;
+      if (result_arr[cell_max] < result_arr[idx]) {
+        cell_max = idx;
+      }
+      if (result_arr[cell_min] > result_arr[idx]) {
+        cell_min = idx;
+      }
+    }
+    if (result_arr[cell_max] - result_arr[cell_min] >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV) {
+      to_balance[cell_max] = true;
     }
   }
-  // Balance cell, pass in whether difference meets threshold.
-  return ltc_afe_toggle_cell_discharge(
-      afe, max_voltage_cell_num,
-      (cell_voltage_max - cell_voltage_min >= PASSIVE_BALANCE_MIN_VOLTAGE_DIFF_MV));
+
+  for (uint16_t i = 0; i < len; i++) {
+    ltc_afe_toggle_cell_discharge(afe, i, to_balance[i]);
+  }
 }
