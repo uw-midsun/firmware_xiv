@@ -15,4 +15,4 @@
 
 // Iterate through all cells and call ltc_afe_toggle_cell_discharge, passing in whether the
 // difference in voltages meets the threshold.
-StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe);
+StatusCode passive_balance(uint16_t *result_arr, uint16_t len, LtcAfeStorage *afe);

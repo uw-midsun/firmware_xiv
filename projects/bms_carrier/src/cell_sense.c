@@ -22,7 +22,7 @@ static CellSenseStorage s_storage = { 0 };
 static uint16_t log_counter = 0;
 static const uint16_t log_counter_mod = 10;
 
-static void prv_log_table(uint16_t *results, size_t len, const char *name) {
+static void prv_log_table(uint16_t *results, uint16_t len, const char *name) {
   for (uint16_t row = 0; row < len / NUM_AFES; row++) {
     printf("AFE %d  ", row / (len / NUM_AFES / NUM_AFES));
     for (uint16_t col = 0; col < NUM_AFES; col++) {
@@ -33,7 +33,7 @@ static void prv_log_table(uint16_t *results, size_t len, const char *name) {
   }
 }
 
-static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *context) {
+static void prv_extract_cell_result(uint16_t *result_arr, uint16_t len, void *context) {
   ltc_afe_request_aux_conversion(s_storage.afe);
 
   bool disabled = critical_section_start();
@@ -41,7 +41,7 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
   critical_section_end(disabled);
 
   bool fault = false;
-  for (size_t i = 0; i < len; i++) {
+  for (uint16_t i = 0; i < len; i++) {
     // s_storage.total_voltage += s_storage.readings->voltages[i];
     if (s_storage.readings->voltages[i] < s_storage.settings.undervoltage_dmv ||
         s_storage.readings->voltages[i] > s_storage.settings.overvoltage_dmv) {
@@ -67,7 +67,7 @@ static void prv_extract_cell_result(uint16_t *result_arr, size_t len, void *cont
   }
 }
 
-static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *context) {
+static void prv_extract_aux_result(uint16_t *result_arr, uint16_t len, void *context) {
   ltc_afe_request_cell_conversion(s_storage.afe);
 
   bool disabled = critical_section_start();
@@ -77,7 +77,7 @@ static void prv_extract_aux_result(uint16_t *result_arr, size_t len, void *conte
   uint16_t threshold = s_storage.settings.discharge_overtemp_dmv;
   if (current_sense_is_charging()) threshold = s_storage.settings.charge_overtemp_dmv;
 
-  for (size_t i = 0; i < len; ++i) {
+  for (uint16_t i = 0; i < len; ++i) {
     if (s_storage.readings->temps[i] > threshold) {
       fault_bps_set(EE_BPS_STATE_FAULT_AFE_TEMP);
       return;

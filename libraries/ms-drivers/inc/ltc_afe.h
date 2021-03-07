@@ -35,7 +35,7 @@
 #endif
 
 // Function to run when a conversion is complete
-typedef void (*LtcAfeResultCallback)(uint16_t *result_arr, size_t len, void *context);
+typedef void (*LtcAfeResultCallback)(uint16_t *result_arr, uint16_t len, void *context);
 
 // select the ADC mode (trade-off between speed or minimizing noise)
 // see p.50 for conversion times and p.23 for noise
@@ -77,9 +77,9 @@ typedef struct LtcAfeSettings {
   uint16_t cell_bitset[LTC_AFE_MAX_DEVICES];
   uint32_t aux_bitset[LTC_AFE_MAX_DEVICES];
 
-  size_t num_devices;
-  size_t num_cells;
-  size_t num_thermistors;
+  uint16_t num_devices;
+  uint16_t num_cells;
+  uint16_t num_thermistors;
 
   LtcAfeEventList ltc_events;
   LtcAfeResultCallback cell_result_cb;

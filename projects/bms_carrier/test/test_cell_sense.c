@@ -90,7 +90,7 @@ static StatusCode prv_init_ltc(void) {
 }
 
 void prv_check_cell_results(bool is_clear) {
-  for (size_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
+  for (uint16_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
     if (is_clear) {
       TEST_ASSERT_EQUAL(s_readings.temps[i], 0);
       continue;
@@ -103,7 +103,7 @@ void prv_check_cell_results(bool is_clear) {
 }
 
 void prv_check_temp_results(bool is_clear) {
-  for (size_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
+  for (uint16_t i = 0; i < NUM_CELLS_TO_TEST; i++) {
     if (is_clear) {
       TEST_ASSERT_EQUAL(s_readings.temps[i], 0);
       continue;
@@ -168,7 +168,7 @@ void test_normal_cell_sense(void) {
   Event e = { 0 };
   TEST_ASSERT_OK(cell_sense_init(&settings, &s_readings, &s_afe));
   s_expected_fault_bitset = EE_BPS_STATE_OK;
-  for (size_t i = 0; i < NUM_GOOD_CELL_SENSE_TRIALS; i++) {
+  for (uint16_t i = 0; i < NUM_GOOD_CELL_SENSE_TRIALS; i++) {
     prv_test_single_loop();
   }
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, BMS_AFE_EVENT_TRIGGER_CELL_CONV);
@@ -258,12 +258,12 @@ void test_afe_fsm_fault_cell_sense(void) {
   s_afe_should_fault = true;
 
   s_expected_fault_bitset = EE_BPS_STATE_OK;
-  for (size_t i = 0; i < MAX_AFE_FAULTS; i++) {
+  for (uint16_t i = 0; i < MAX_AFE_FAULTS; i++) {
     prv_test_fsm_fault();
   }
 
   s_expected_fault_bitset = EE_BPS_STATE_FAULT_AFE_FSM;
-  for (size_t i = 0; i < MAX_AFE_FAULTS; i++) {
+  for (uint16_t i = 0; i < MAX_AFE_FAULTS; i++) {
     prv_test_fsm_fault();
   }
 

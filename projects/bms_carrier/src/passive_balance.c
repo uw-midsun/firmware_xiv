@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "log.h"
 
-StatusCode passive_balance(uint16_t *result_arr, size_t len, LtcAfeStorage *afe) {
+StatusCode passive_balance(uint16_t *result_arr, uint16_t len, LtcAfeStorage *afe) {
   // Assumes all AFEs have an equal number of cells
   // We pick the most charged cell per AFE
   bool to_balance[LTC_AFE_MAX_CELLS_PER_DEVICE * LTC_AFE_MAX_DEVICES] = { 0 };
