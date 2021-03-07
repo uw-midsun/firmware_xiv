@@ -3,6 +3,7 @@
 #include "bms.h"
 #include "can_transmit.h"
 #include "can_unpack.h"
+#include "current_sense.h"
 #include "exported_enums.h"
 #include "fault_bps.h"
 #include "gpio.h"
@@ -120,8 +121,13 @@ void prv_relay_open_done(SoftTimerId timer_id, void *context) {
 
 StatusCode relay_open_sequence(RelayStorage *storage) {
   LOG_DEBUG("starting relay open sequence\n");
-  gpio_set_state(&s_hv_relay_en, GPIO_STATE_LOW);
-  gpio_set_state(&s_gnd_relay_en, GPIO_STATE_LOW);
+  if (current_sense_is_charging()) {
+    gpio_set_state(&s_gnd_relay_en, GPIO_STATE_LOW);
+    gpio_set_state(&s_hv_relay_en, GPIO_STATE_LOW);
+  } else {
+    gpio_set_state(&s_hv_relay_en, GPIO_STATE_LOW);
+    gpio_set_state(&s_gnd_relay_en, GPIO_STATE_LOW);
+  }
   storage->gnd_expected_state = false;
   storage->hv_expected_state = false;
   soft_timer_start_millis(RELAY_SEQUENCE_ASSERTION_DELAY_MS, prv_assert_state, storage,
