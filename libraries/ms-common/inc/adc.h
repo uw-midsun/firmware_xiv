@@ -1,6 +1,7 @@
 #pragma once
 // Analog to Digital Converter HAL Inteface
 // Requires GPIO and interrupts to be initialized.
+// If using continuous mode on x86, soft timers must be initialized.
 #include <stdbool.h>
 #include <stdint.h>
 
