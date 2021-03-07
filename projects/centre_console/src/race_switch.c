@@ -62,9 +62,8 @@ FSM_STATE_TRANSITION(race_switch_on) {
   FSM_ADD_TRANSITION(RACE_STATE_OFF, race_switch_off);
 }
 
-static RaceState s_event_lookup[] = {
-  [RACE_SWITCH_EVENT_OFF] = RACE_STATE_OFF, [RACE_SWITCH_EVENT_ON] = RACE_STATE_ON
-};
+static RaceState s_event_lookup[] = { [RACE_SWITCH_EVENT_OFF] = RACE_STATE_OFF,
+                                      [RACE_SWITCH_EVENT_ON] = RACE_STATE_ON };
 
 // Triggered when the fsm switches to the normal mode
 // 5V regulator is enabled
