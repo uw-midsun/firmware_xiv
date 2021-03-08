@@ -20,7 +20,7 @@ StatusCode get_throttle_data(int16_t *position) {
   // just to check
 
   if (range != 0) {
-    position_upscaled /= range;
+    position_upscaled /= (range * EE_PEDAL_VALUE_DENOMINATOR);
     *position = (int16_t)position_upscaled;
   }
   return STATUS_CODE_OK;
