@@ -12,28 +12,30 @@
 extern "C" {
 #endif
 
-struct _UnityFixture {
+struct UNITY_FIXTURE_T {
   int Verbose;
+  int Silent;
   unsigned int RepeatCount;
   const char *NameFilter;
   const char *GroupFilter;
 };
-extern struct _UnityFixture UnityFixture;
+extern struct UNITY_FIXTURE_T UnityFixture;
 
 typedef void unityfunction(void);
-void UnityTestRunner(unityfunction *setup, unityfunction *body, unityfunction *teardown,
+void UnityTestRunner(unityfunction *setup, unityfunction *testBody, unityfunction *teardown,
                      const char *printableName, const char *group, const char *name,
                      const char *file, unsigned int line);
 
 void UnityIgnoreTest(const char *printableName, const char *group, const char *name);
-void UnityMalloc_StartTest(void);
-void UnityMalloc_EndTest(void);
 int UnityGetCommandLineOptions(int argc, const char *argv[]);
 void UnityConcludeFixtureTest(void);
 
-void UnityPointer_Set(void **ptr, void *newValue, UNITY_LINE_TYPE line);
+void UnityPointer_Set(void **pointer, void *newValue, UNITY_LINE_TYPE line);
 void UnityPointer_UndoAllSets(void);
 void UnityPointer_Init(void);
+#ifndef UNITY_MAX_POINTERS
+#define UNITY_MAX_POINTERS 5
+#endif
 
 #ifdef __cplusplus
 }
