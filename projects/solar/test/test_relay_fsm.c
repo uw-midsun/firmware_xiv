@@ -45,8 +45,8 @@ static StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStat
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, SOLAR_CAN_EVENT_TX,
-                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_5_MPPTS, prv_err_rx_cb, NULL);
   event_queue_init();
   gpio_it_init();

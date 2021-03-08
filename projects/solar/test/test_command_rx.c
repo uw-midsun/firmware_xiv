@@ -37,8 +37,8 @@ static void prv_transmit_command(EERelayState relay_state) {
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, SOLAR_CAN_EVENT_TX,
-                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(command_rx_init());
   s_times_relay_closed = 0;
   s_times_relay_opened = 0;

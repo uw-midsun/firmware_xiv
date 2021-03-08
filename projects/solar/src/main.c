@@ -77,7 +77,7 @@ static StatusCode prv_initialize_libraries(void) {
   return STATUS_CODE_OK;
 }
 
-static StatusCode prv_initialize_can(SolarMpptCount mppt_count){
+static StatusCode prv_initialize_can(SolarMpptCount mppt_count) {
   status_ok_or_return(can_init(&s_can_storage, config_get_can_settings(mppt_count)));
 
   return STATUS_CODE_OK;

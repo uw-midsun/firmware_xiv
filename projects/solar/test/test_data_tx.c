@@ -33,7 +33,7 @@ static StatusCode prv_test_data_tx_callback_handler(const CanMessage *msg, void 
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_SOLAR_DATA_5_MPPTS, msg->msg_id);
   if (s_can_msg_count < 2 * NUM_DATA_POINTS) {
     CAN_UNPACK_SOLAR_DATA_5_MPPTS(msg, (uint32_t *)&s_can_msgs_data_points[s_can_msg_count],
-                          &s_can_msg_values[s_can_msg_count]);
+                                  &s_can_msg_values[s_can_msg_count]);
     s_can_msg_count++;
     return STATUS_CODE_OK;
   }

@@ -144,7 +144,7 @@ const SpiSettings *config_get_spi_settings(void) {
 }
 
 const CanSettings *config_get_can_settings(SolarMpptCount mppt_count) {
-  if(mppt_count == SOLAR_BOARD_6_MPPTS)
+  if (mppt_count == SOLAR_BOARD_6_MPPTS)
     return &s_can_settings_6_mppts;
   else
     return &s_can_settings_5_mppts;

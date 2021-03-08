@@ -38,8 +38,8 @@ static StatusCode prv_handle_fault_can_msg(const CanMessage *msg, void *context,
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, SOLAR_CAN_EVENT_TX,
-                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_5_MPPTS, prv_handle_fault_can_msg, NULL);
   s_times_relay_opened = 0;
   s_relay_open_ret = STATUS_CODE_OK;
