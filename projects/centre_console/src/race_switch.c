@@ -1,5 +1,3 @@
-#include "race_switch.h"
-
 #include <stdbool.h>
 
 #include "centre_console_events.h"
@@ -8,6 +6,7 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "log.h"
+#include "race_switch.h"
 #include "status.h"
 #include "voltage_regulator.h"
 
@@ -16,6 +15,8 @@
 #define VOLTAGE_REGULATOR_MONITOR_ADDRESS \
   { .port = GPIO_PORT_B, .pin = 7 }
 #define VOLTAGE_REGULATOR_DELAY_MS 25
+#define RACE_SWITCH_FSM_NAME "Race Switch FSM"
+#define RACE_MODE GPIO_STATE_HIGH
 
 static GpioAddress s_race_switch_address = { .port = GPIO_PORT_A, .pin = 4 };
 
@@ -37,9 +38,9 @@ static InterruptSettings s_interrupt_settings = { .type = INTERRUPT_TYPE_INTERRU
 
 static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void *context) {
   if (error == VOLTAGE_REGULATOR_ERROR_ON_WHEN_SHOULD_BE_OFF) {
-    LOG_WARN("Voltage Regulator Error: On when should be off");
+    LOG_WARN("Voltage Regulator Error: On when should be off\n");
   } else {
-    LOG_WARN("Voltage Regulator Error: Off when should be on");
+    LOG_WARN("Voltage Regulator Error: Off when should be on\n");
   }
 }
 
@@ -55,15 +56,12 @@ FSM_DECLARE_STATE(race_switch_off);
 FSM_DECLARE_STATE(race_switch_on);
 
 FSM_STATE_TRANSITION(race_switch_off) {
-  FSM_ADD_TRANSITION(RACE_STATE_ON, race_switch_on);
+  FSM_ADD_TRANSITION(RACE_SWITCH_EVENT_ON, race_switch_on);
 }
 
 FSM_STATE_TRANSITION(race_switch_on) {
-  FSM_ADD_TRANSITION(RACE_STATE_OFF, race_switch_off);
+  FSM_ADD_TRANSITION(RACE_SWITCH_EVENT_OFF, race_switch_off);
 }
-
-static RaceState s_event_lookup[] = { [RACE_SWITCH_EVENT_OFF] = RACE_STATE_OFF,
-                                      [RACE_SWITCH_EVENT_ON] = RACE_STATE_ON };
 
 // Triggered when the fsm switches to the normal mode
 // 5V regulator is enabled
@@ -90,16 +88,11 @@ static void prv_gpio_interrupt_handler(const GpioAddress *address, void *context
   GpioState input_state;
   gpio_get_state(address, &input_state);
 
-  Event e = { 0 };
-
-  // Rising edge indicates the gpio state has become high and the car should go into race mode
-  if (input_state == GPIO_STATE_HIGH) {
-    e.id = s_event_lookup[RACE_SWITCH_EVENT_ON];
+  if (input_state == RACE_MODE) {
+    event_raise_no_data(RACE_SWITCH_EVENT_ON);
   } else {
-    e.id = s_event_lookup[RACE_SWITCH_EVENT_OFF];
+    event_raise_no_data(RACE_SWITCH_EVENT_OFF);
   }
-
-  race_switch_fsm_process_event(storage, &e);
 }
 
 StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
@@ -124,18 +117,19 @@ StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
   GpioState race_switch_initial_state;
   status_ok_or_return(gpio_get_state(&s_race_switch_address, &race_switch_initial_state));
 
+  bool is_race_mode = race_switch_initial_state == RACE_MODE;
+
   // If in race mode (gpio state high or 1) voltage regulator must be disabled, otherwise enable
-  bool is_voltage_regulator_enabled = race_switch_initial_state == GPIO_STATE_HIGH ? false : true;
+  bool is_voltage_regulator_enabled = !is_race_mode;
   status_ok_or_return(
       voltage_regulator_set_enabled(&storage->voltage_storage, is_voltage_regulator_enabled));
 
-  storage->current_state =
-      race_switch_initial_state == GPIO_STATE_HIGH ? RACE_STATE_ON : RACE_STATE_OFF;
+  storage->current_state = is_race_mode ? RACE_STATE_ON : RACE_STATE_OFF;
 
-  if (race_switch_initial_state == GPIO_STATE_HIGH) {
-    fsm_init(&storage->race_switch_fsm, "Race Switch FSM", &race_switch_on, storage);
+  if (is_race_mode) {
+    fsm_init(&storage->race_switch_fsm, RACE_SWITCH_FSM_NAME, &race_switch_on, storage);
   } else {
-    fsm_init(&storage->race_switch_fsm, "Race Switch FSM", &race_switch_off, storage);
+    fsm_init(&storage->race_switch_fsm, RACE_SWITCH_FSM_NAME, &race_switch_off, storage);
   }
   return STATUS_CODE_OK;
 }
