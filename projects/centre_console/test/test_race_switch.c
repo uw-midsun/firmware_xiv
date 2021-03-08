@@ -20,8 +20,9 @@ StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *stat
   return STATUS_CODE_OK;
 }
 
-static bool prv_process_fsm_event_manually(RaceSwitchEvent event) {
-  Event e = { .id = event };
+static bool prv_process_fsm_event_manually(void) {
+  Event e;
+  event_process(&e);
   bool transitioned = race_switch_fsm_process_event(&s_race_switch_fsm_storage, &e);
   return transitioned;
 }
@@ -53,14 +54,14 @@ void test_transition_to_race(void) {
 
   // Trigger interrupt to change fsm state from normal to race
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  TEST_ASSERT_TRUE(prv_process_fsm_event_manually(RACE_SWITCH_EVENT_ON));
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // Test if no error when interrupt is triggered with same edge multiple times
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
 
   // No fsm state transition will occur so race_switch_fsm_process_event will return false
-  TEST_ASSERT_FALSE(prv_process_fsm_event_manually(RACE_SWITCH_EVENT_ON));
+  TEST_ASSERT_FALSE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
 }
 
@@ -75,7 +76,7 @@ void test_transition_to_normal(void) {
 
   // Trigger interrupt to change fsm state from race to normal
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  TEST_ASSERT_TRUE(prv_process_fsm_event_manually(RACE_SWITCH_EVENT_OFF));
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_OFF);
 }
 
@@ -94,7 +95,7 @@ void test_voltage_during_transition(void) {
 
   // Switch to race mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  TEST_ASSERT_TRUE(prv_process_fsm_event_manually(RACE_SWITCH_EVENT_ON));
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // Mock low state on voltage monitor pin
@@ -104,7 +105,7 @@ void test_voltage_during_transition(void) {
 
   // Switch to normal mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  TEST_ASSERT_TRUE(prv_process_fsm_event_manually(RACE_SWITCH_EVENT_OFF));
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_OFF);
 
   // Mock high state on voltage monitor pin
