@@ -25,7 +25,7 @@ const I2CSettings *config_get_i2c2_settings(void);
 
 const SpiSettings *config_get_spi_settings(void);
 
-const CanSettings *config_get_can_settings(void);
+const CanSettings *config_get_can_settings(SolarMpptCount mppt_count);
 
 const GpioAddress *config_get_drv120_enable_pin(void);
 

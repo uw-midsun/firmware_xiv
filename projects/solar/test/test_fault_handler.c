@@ -33,14 +33,14 @@ StatusCode TEST_MOCK(relay_fsm_open)(void) {
 static StatusCode prv_handle_fault_can_msg(const CanMessage *msg, void *context,
                                            CanAckStatus *ack_reply) {
   s_num_fault_can_msgs++;
-  CAN_UNPACK_SOLAR_FAULT(msg, (uint8_t *)&s_last_can_fault, &s_last_can_fault_data);
+  CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, (uint8_t *)&s_last_can_fault, &s_last_can_fault_data);
   return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, SOLAR_CAN_EVENT_TX,
                                   SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT, prv_handle_fault_can_msg, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_5_MPPTS, prv_handle_fault_can_msg, NULL);
   s_times_relay_opened = 0;
   s_relay_open_ret = STATUS_CODE_OK;
   s_num_fault_can_msgs = 0;

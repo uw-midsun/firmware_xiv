@@ -40,7 +40,7 @@ StatusCode fault_handler_raise_fault(EESolarFault fault, uint8_t fault_data) {
     }
   }
 
-  StatusCode can_status = CAN_TRANSMIT_SOLAR_FAULT(fault, fault_data);
+  StatusCode can_status = CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault, fault_data);
   if (!status_ok(can_status)) status = can_status;
 
   return status;

@@ -25,7 +25,7 @@
 static CanStorage s_can_storage;
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, SOLAR_CAN_EVENT_TX,
                                   SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
   data_store_init();
   adc_init(ADC_MODE_SINGLE);
@@ -40,7 +40,7 @@ void test_initializing_library_config(void) {
   TEST_ASSERT_OK(i2c_init(I2C_PORT_1, config_get_i2c1_settings()));
   TEST_ASSERT_OK(i2c_init(I2C_PORT_2, config_get_i2c2_settings()));
   TEST_ASSERT_OK(spi_init(SPI_PORT_2, config_get_spi_settings()));
-  TEST_ASSERT_OK(can_init(&s_can_storage, config_get_can_settings()));
+  TEST_ASSERT_OK(can_init(&s_can_storage, config_get_can_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_sense_settings|

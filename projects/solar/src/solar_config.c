@@ -87,8 +87,8 @@ static const SpiSettings s_spi_settings = {
   .cs = SOLAR_UNUSED_PIN,
 };
 
-static const CanSettings s_can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+static const CanSettings s_can_settings_5_mppts = {
+  .device_id = SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,
@@ -98,7 +98,18 @@ static const CanSettings s_can_settings = {
   .loopback = false,
 };
 
-static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const CanSettings s_can_settings_6_mppts = {
+  .device_id = SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+  .bitrate = CAN_HW_BITRATE_500KBPS,
+  .rx_event = SOLAR_CAN_EVENT_RX,
+  .tx_event = SOLAR_CAN_EVENT_TX,
+  .fault_event = SOLAR_CAN_EVENT_FAULT,
+  .rx = SOLAR_CAN_RX_PIN,
+  .tx = SOLAR_CAN_TX_PIN,
+  .loopback = false,
+};
+
+static const GpioAddress s_drv120_relay_pin = RELAY_EN_PIN;
 static const GpioAddress s_drv120_status_pin = { GPIO_PORT_A, 6 };
 
 static const SenseSettings s_sense_settings = {
@@ -132,8 +143,11 @@ const SpiSettings *config_get_spi_settings(void) {
   return &s_spi_settings;
 }
 
-const CanSettings *config_get_can_settings(void) {
-  return &s_can_settings;
+const CanSettings *config_get_can_settings(SolarMpptCount mppt_count) {
+  if(mppt_count == SOLAR_BOARD_6_MPPTS)
+    return &s_can_settings_6_mppts;
+  else
+    return &s_can_settings_5_mppts;
 }
 
 const GpioAddress *config_get_drv120_enable_pin(void) {

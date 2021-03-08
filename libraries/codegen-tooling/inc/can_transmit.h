@@ -299,6 +299,14 @@
     status;                                              \
   })
 
+#define CAN_TRANSMIT_SOLAR_DATA_6_MPPTS(data_point_type_u32, data_value_u32)    \
+  ({                                                                            \
+    CanMessage msg = { 0 };                                                     \
+    CAN_PACK_SOLAR_DATA_6_MPPTS(&msg, (data_point_type_u32), (data_value_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                               \
+    status;                                                                     \
+  })
+
 #define CAN_TRANSMIT_AUX_DCDC_VC(aux_voltage_u16, aux_current_u16, dcdc_voltage_u16,     \
                                  dcdc_current_u16)                                       \
   ({                                                                                     \
@@ -323,6 +331,14 @@
     CAN_PACK_UV_CUTOFF_NOTIFICATION(&msg);        \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
+  })
+
+#define CAN_TRANSMIT_SOLAR_FAULT_6_MPPTS(fault_u8, fault_data_u8)    \
+  ({                                                                 \
+    CanMessage msg = { 0 };                                          \
+    CAN_PACK_SOLAR_FAULT_6_MPPTS(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);                    \
+    status;                                                          \
   })
 
 #define CAN_TRANSMIT_CHARGER_INFO(current_u16, voltage_u16, status_bitset_u16)      \
@@ -425,20 +441,20 @@
     status;                                                \
   })
 
-#define CAN_TRANSMIT_SOLAR_DATA(data_point_type_u32, data_value_u32)    \
-  ({                                                                    \
-    CanMessage msg = { 0 };                                             \
-    CAN_PACK_SOLAR_DATA(&msg, (data_point_type_u32), (data_value_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                       \
-    status;                                                             \
+#define CAN_TRANSMIT_SOLAR_DATA_5_MPPTS(data_point_type_u32, data_value_u32)    \
+  ({                                                                            \
+    CanMessage msg = { 0 };                                                     \
+    CAN_PACK_SOLAR_DATA_5_MPPTS(&msg, (data_point_type_u32), (data_value_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                               \
+    status;                                                                     \
   })
 
-#define CAN_TRANSMIT_SOLAR_FAULT(fault_u8, fault_data_u8)    \
-  ({                                                         \
-    CanMessage msg = { 0 };                                  \
-    CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);            \
-    status;                                                  \
+#define CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault_u8, fault_data_u8)    \
+  ({                                                                 \
+    CanMessage msg = { 0 };                                          \
+    CAN_PACK_SOLAR_FAULT_5_MPPTS(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);                    \
+    status;                                                          \
   })
 
 #define CAN_TRANSMIT_REAR_FAN_FAULT(fault_data_u16, enclosure_temp_data_u16, dcdc_temp_data_u16, \
