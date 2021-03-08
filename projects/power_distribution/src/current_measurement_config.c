@@ -58,11 +58,11 @@ const PowerDistributionCurrentHardwareConfig FRONT_CURRENT_MEASUREMENT_HW_CONFIG
               .mux_selection = 1,
           },
           {
-              .dsel_pin = FRONT_PIN_STEERING_PEDAL_DSEL,
-              .en0_pin = FRONT_PIN_STEERING_EN,
-              .en1_pin = FRONT_PIN_PEDAL_EN,
-              .current_0 = FRONT_CURRENT_STEERING,
-              .current_1 = FRONT_CURRENT_PEDAL,
+              .dsel_pin = FRONT_PIN_PEDAL_STEERING_DSEL,
+              .en0_pin = FRONT_PIN_PEDAL_EN,
+              .en1_pin = FRONT_PIN_STEERING_EN,
+              .current_0 = FRONT_CURRENT_PEDAL,
+              .current_1 = FRONT_CURRENT_STEERING,
               .mux_selection = 6,
           },
           {
