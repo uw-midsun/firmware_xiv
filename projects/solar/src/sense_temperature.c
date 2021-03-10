@@ -27,7 +27,7 @@ static void prv_sense_callback(void *context) {
   StatusCode status = adc_read_converted(data->adc_channel, &converted_reading);
 
   // Convert converted_reading into Volts
-  converted_reading *= 1000;
+  converted_reading = converted_reading / 1000;
 
   // Based on the type of thermistor, convert the converted reading (V) to degrees Celcius
   switch (data->thermistor_type) {
