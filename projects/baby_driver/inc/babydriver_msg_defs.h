@@ -39,6 +39,19 @@ typedef enum {
   // Message data: uint8 id, 7 * uint8 data
   BABYDRIVER_MESSAGE_I2C_WRITE_DATA = 9,
 
+  // The spi_exchange metadata IDs
+  // Python will send two metadata messages
+  // First message data: uint8 id, port, mode, tx_len, rx_len, cs_port, cs_pin, use_cs
+  // Second message data: uint8 id, uint32 baudrate
+  BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_1 = 10,
+  BABYDRIVER_MESSAGE_SPI_EXCHANGE_METADATA_2 = 11,
+
+  // The spi_exchange ID for receiving and sending spi data
+  // Data will be received in ceil(tx_len/7) messages and sent out in ceil(rx_len/7) messages
+  // Message data: uint8 ID, 7 * uint8 data
+  BABYDRIVER_MESSAGE_SPI_EXCHANGE_TX_DATA = 12,
+  BABYDRIVER_MESSAGE_SPI_EXCHANGE_RX_DATA = 13,
+
   // The gpio interrupts register command message, received when the Python gpio interrupts function
   // is called to register a gpio interrupt.
   // Message data: uint8 id, uint8 port, uint8 pin, uint8 edge
