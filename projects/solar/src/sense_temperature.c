@@ -23,7 +23,7 @@ static ThermistorData s_thermistor_data[MAX_THERMISTORS];
 
 static void prv_sense_callback(void *context) {
   ThermistorData *data = context;
-  uint16_t converted_reading;
+  int16_t converted_reading;
   StatusCode status = adc_read_converted(data->adc_channel, &converted_reading);
 
   // Convert converted_reading into Volts
@@ -52,7 +52,7 @@ static void prv_sense_callback(void *context) {
   }
 
   if (status_ok(status)) {
-    data_store_set(data->data_point, converted_reading);
+    data_store_set_signed(data->data_point, converted_reading);
   } else {
     LOG_WARN("sense_temperature failed to read from ADC for data point %d: code %d\n",
              data->data_point, status);
