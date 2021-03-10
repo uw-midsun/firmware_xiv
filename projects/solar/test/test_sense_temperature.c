@@ -11,7 +11,11 @@
 #include "unity.h"
 
 #define TEST_ADC_RAW_READING 0x800
+
+// The two test variables below are calculated from inputting 0x800 into the relative conversion
+// formulae (see sense_temperature.c)
 #define TEST_RTD_CONVERTED_READING -59
+#define TEST_NTC_CONVERTED_READING 28
 
 static SenseCallback s_sense_callbacks[MAX_THERMISTORS];
 static void *s_sense_callback_contexts[MAX_THERMISTORS];
@@ -105,7 +109,23 @@ void test_max_thermistors_cycle(void) {
     data_store_get_is_set(DATA_POINT_TEMPERATURE(thermistor), &is_set);
     TEST_ASSERT_TRUE(is_set);
     data_store_get_signed(DATA_POINT_TEMPERATURE(thermistor), &set_value);
-    TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, set_value);
+
+    switch (settings.thermistor_settings[thermistor].thermistor_type) {
+      case NTC_THERMISTOR:
+        TEST_ASSERT_EQUAL(TEST_NTC_CONVERTED_READING, set_value);
+        break;
+      case RTD_THERMISTOR:
+        TEST_ASSERT_EQUAL(TEST_RTD_CONVERTED_READING, set_value);
+        break;
+      case FAN_CONTROL_THERMISTOR:
+        // Not implemented (NEED TO FIX)
+        TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, set_value);
+        break;
+      case NUM_THERMISTOR_TYPES:
+        // No type
+        TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, set_value);
+        break;
+    }
   }
 }
 
