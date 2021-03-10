@@ -11,6 +11,7 @@
 #include "unity.h"
 
 #define TEST_ADC_RAW_READING 0x800
+#define TEST_RTD_CONVERTED_READING -59
 
 static SenseCallback s_sense_callbacks[MAX_THERMISTORS];
 static void *s_sense_callback_contexts[MAX_THERMISTORS];
@@ -52,7 +53,7 @@ void teardown_test(void) {}
 // Test that everything works correctly for a sense cycle with a single thermistor.
 void test_single_thermistor_cycle(void) {
   bool is_set;
-  uint32_t set_value;
+  int32_t set_value;
   SenseTemperatureSettings settings = {
     .thermistor_settings = { { RTD_THERMISTOR, { GPIO_PORT_A, 0 } } },
     .num_thermistors = 1,
@@ -72,14 +73,14 @@ void test_single_thermistor_cycle(void) {
   TEST_ASSERT_EQUAL(adc_channel, s_adc_channel_passed);
   data_store_get_is_set(DATA_POINT_TEMPERATURE(0), &is_set);
   TEST_ASSERT_TRUE(is_set);
-  data_store_get(DATA_POINT_TEMPERATURE(0), &set_value);
-  TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, set_value);
+  data_store_get_signed(DATA_POINT_TEMPERATURE(0), &set_value);
+  TEST_ASSERT_EQUAL(TEST_RTD_CONVERTED_READING, set_value);
 }
 
 // Test that everything works correctly for a single cycle with the max number of thermistors.
 void test_max_thermistors_cycle(void) {
   bool is_set;
-  uint32_t set_value;
+  int32_t set_value;
   SenseTemperatureSettings settings = {
     .num_thermistors = MAX_THERMISTORS,
   };
@@ -103,7 +104,7 @@ void test_max_thermistors_cycle(void) {
   for (uint8_t thermistor = 0; thermistor < MAX_THERMISTORS; thermistor++) {
     data_store_get_is_set(DATA_POINT_TEMPERATURE(thermistor), &is_set);
     TEST_ASSERT_TRUE(is_set);
-    data_store_get(DATA_POINT_TEMPERATURE(thermistor), &set_value);
+    data_store_get_signed(DATA_POINT_TEMPERATURE(thermistor), &set_value);
     TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, set_value);
   }
 }
@@ -111,7 +112,7 @@ void test_max_thermistors_cycle(void) {
 // Test that we can recover after a temporary fault (single thermistor).
 void test_adc_read_fail(void) {
   bool is_set;
-  uint32_t set_value;
+  int32_t set_value;
   SenseTemperatureSettings settings = {
     .thermistor_settings = { { RTD_THERMISTOR, { GPIO_PORT_A, 0 } } },
     .num_thermistors = 1,
@@ -133,8 +134,8 @@ void test_adc_read_fail(void) {
   TEST_ASSERT_EQUAL(adc_channel, s_adc_channel_passed);
   data_store_get_is_set(DATA_POINT_TEMPERATURE(0), &is_set);
   TEST_ASSERT_TRUE(is_set);
-  data_store_get(DATA_POINT_TEMPERATURE(0), &set_value);
-  TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, set_value);
+  data_store_get_signed(DATA_POINT_TEMPERATURE(0), &set_value);
+  TEST_ASSERT_EQUAL(TEST_RTD_CONVERTED_READING, set_value);
 }
 
 // Test that we fail gracefully when passed invalid settings.
