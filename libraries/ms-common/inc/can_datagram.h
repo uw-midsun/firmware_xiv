@@ -8,6 +8,7 @@
 
 #define CAN_DATAGRAM_VERSION 1
 
+
 #define ID_START_MASK (1 << 7)
 
 typedef StatusCode (*CanDatagramCb)(uint8_t *data, size_t len, bool start_message);
@@ -30,7 +31,7 @@ typedef enum {
 } CanDatagramMode;
 
 
-typedef struct {
+typedef struct CanDatagram{
   int protocol_version;
   uint32_t crc;
 
@@ -39,20 +40,20 @@ typedef struct {
 
   uint16_t data_len;
   uint8_t *data;
-
 } CanDatagram;
 
 typedef struct CanDatagramSettings {
   CanDatagramCb tx_cb;
-  CanDatagramCb rx_cb;
   CanDatagramMode mode;
 } CanDatagramSettings;
 
 typedef struct CanDatagramStorage {
-  CanDatagramCb tx_cb;
-  CanDatagramMode mode;
   CanDatagram dt;
-  CanDatagramEvent state;
+  CanDatagramMode mode;
+  CanDatagramCb tx_cb; // Add watchdog error handler?
+  uint8_t rx_bytes_to_read;
+  uint16_t rx_bytes_read;
+  CanDatagramEvent event;
 } CanDatagramStorage;
 
 /** Sets the structure field to default values. */
