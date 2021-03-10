@@ -1,0 +1,747 @@
+# Message Definitions in plaintext are on the wiki at:
+# https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/50003973/CAN+Message+Definitions
+#
+# If you are making changes to this file please update the corresponding entry
+# on the wiki. If you need to add a new message use a reasonable
+# reserved ID. The higher ID the lower the priority. Generally
+# - 0-13: Critical messages (have ACK)
+# - 14-30: Actionable messages (trigger a change in another system)
+# - 30-63: Data messages (usually not actionable by an onboard device)
+
+msg {
+  id: 0
+  source: BMS_CARRIER
+  target: "CENTRE_CONSOLE"
+  msg_name: "bps heartbeat"
+  is_critical: true
+  can_data {
+    u8 {
+      field_name_1: "status"
+    }
+  }
+}
+
+msg {
+  id: 1
+  source: CENTRE_CONSOLE
+  target: "BMS_CARRIER, SOLAR, MOTOR_CONTROLLER"
+  msg_name: "set relay states"
+  is_critical: true
+  can_data {
+    u16 {
+      field_name_1: "relay_mask"
+      field_name_2: "relay_state"
+    }
+  }
+}
+
+msg {
+  id: 3
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, PEDAL"
+  msg_name: "powertrain heartbeat"
+  is_critical: true
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 4
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, PEDAL"
+  msg_name: "get aux status"
+  is_critical: true
+  can_data {
+    u8 {
+      field_name_1: "aux_bat_ov_flag"
+      field_name_2: "aux_bat_uv_flag"
+      field_name_2: "aux_bat_ot_flag"
+      field_name_2: "aux_bat_ut_flag"
+    }
+  }
+}
+
+msg {
+  id: 5
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, PEDAL"
+  msg_name: "fault sequence"
+  is_critical: true
+  can_data {
+    u16 {
+      field_name_1: "sequence"
+    }
+  }
+}
+
+msg {
+  id: 6
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, PEDAL"
+  msg_name: "power on main sequence"
+  is_critical: true
+  can_data {
+    u16 {
+      field_name_1: "sequence"
+    }
+  }
+}
+
+msg {
+  id: 7
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, PEDAL"
+  msg_name: "power off sequence"
+  is_critical: true
+  can_data {
+    u16 {
+      field_name_1: "sequence"
+    }
+  }
+}
+
+msg {
+  id: 8
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, PEDAL"
+  msg_name: "power on aux sequence"
+  is_critical: true
+  can_data {
+    u16 {
+      field_name_1: "sequence"
+    }
+  }
+}
+
+msg {
+  id: 9
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER"
+  msg_name: "drive output"
+  is_critical: true
+  can_data {
+    u16 {
+      field_name_1: "drive_output"
+    }
+  }
+}
+
+msg {
+  id: 10
+  source: CENTRE_CONSOLE
+  target: ""
+  msg_name: "set ebrake state"
+  is_critical: true
+  can_data {
+    u8 {
+      field_name_1: "ebrake_state"
+    }
+  }
+}
+
+# IDs: 12-15 Reserved
+
+msg {
+  id: 16
+  source: POWER_DISTRIBUTION_REAR
+  target: ""
+  msg_name: "ovuv dcdc aux"
+  msg_readable_name: "ov uv dcdc and aux bat"
+  can_data {
+    u8 {
+      field_name_1: "dcdc_ov_flag"
+      field_name_2: "dcdc_uv_flag"
+      field_name_3: "aux_bat_ov_flag"
+      field_name_4: "aux_bat_uv_flag"
+    }
+  }
+}
+
+msg {
+  id: 17
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "mc error limits"
+  msg_readable_name: "motor controller error and limits"
+  can_data {
+    u16 {
+      field_name_1: "error_id"
+      field_name_2: "limits"
+    }
+  }
+}
+
+msg {
+  id: 18
+  source: PEDAL
+  target: "MOTOR_INTERFACE"
+  msg_name: "pedal output"
+  can_data {
+    u32 {
+      field_name_1: "throttle_output"
+      field_name_2: "brake_output"
+    }
+  }
+}
+
+msg {
+  id: 19
+  source: STEERING
+  target: "DRIVER_DISPLAY, MOTOR_CONTROLLER"
+  msg_name: "cruise_target"
+  can_data {
+    u8 {
+      field_name_2: "target speed"
+    }
+  }
+}
+
+msg {
+  id: 20
+  source: PEDAL
+  target: "MOTOR_INTERFACE",
+  msg_name: "brake"
+  can_data {
+    u16 {
+      field_name_1: "brake_state"
+    }
+  }
+}
+
+msg {
+  id: 21
+  source: CENTRE_CONSOLE
+  target: "MOTOR_INTERFACE"
+  msg_name: "front power"
+  can_data {
+    u16 {
+      field_name_1: "power_bitset"
+    }
+  }
+}
+
+msg {
+  id: 22
+  source: MOTOR_CONTROLLER
+  target: ""
+  msg_name: "drive state"
+  can_data {
+    u16 {
+      field_name_1: "drive_state"
+    }
+  }
+}
+
+msg {
+  id: 23
+  source: POWER_DISTRIBUTION_REAR
+  target: "LIGHTS_FRONT"
+  msg_name: "lights sync"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 24
+  source: STEERING
+  target: "LIGHTS"
+  msg_name: "lights"
+  can_data {
+    u8 {
+      field_name_1: "lights_id"
+      field_name_2: "state"
+    }
+  }
+}
+
+msg {
+  id: 25
+  source: STEERING
+  target: "LIGHTS"
+  msg_name: "horn"
+  can_data {
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+msg {
+  id: 26
+  source: CHARGER
+  target: "CENTRE CONSOLE"
+  msg_name: "get charger connection state"
+  can_data {
+    u8 {
+      field_name_1: "is_connected"
+    }
+  }
+}
+
+msg {
+  id: 27
+  source: CENTRE_CONSOLE
+  target: "CHARGER"
+  msg_name: "set charger relay"
+  can_data {
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+msg {
+  id: 28
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER"
+  msg_name: "begin precharge"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 29
+  source: MOTOR_CONTROLLER
+  target: "CENTRE_CONSOLE"
+  msg_name: "precharge completed"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 30
+  source: CENTRE_CONSOLE
+  msg_name: "hazard"
+  # hazard
+  can_data {
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+msg {
+  id: 31
+  source: CENTRE_CONSOLE
+  msg_name: "discharge precharge"
+  target: "MOTOR_CONTROLLER"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 32
+  source: BMS_CARRIER
+  target: "TELEMETRY"
+  msg_name: "battery vt"
+  msg_readable_name: "battery voltage temperature"
+  can_data {
+    u16 {
+      field_name_1: "module_id"
+      field_name_2: "voltage"
+      field_name_3: "temperature"
+    }
+  }
+}
+
+msg {
+  id: 33
+  source: BMS_CARRIER
+  target: "TELEMETRY"
+  msg_name: "battery aggregate vc"
+  msg_readable_name: "battery aggregate voltage and current"
+  can_data {
+    u32 {
+      field_name_1: "voltage"
+      field_name_2: "current"
+    }
+  }
+}
+
+msg {
+  id: 34
+  source: CENTRE_CONSOLE
+  target: "TELEMETRY"
+  msg_name: "state transition fault"
+  msg_readable_name: "motor controller voltage current"
+  can_data {
+    u16 {
+      field_name_1: "state_machine"
+      field_name_2: "fault_reason"
+    }
+  }
+}
+
+msg {
+  id: 35
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor controller vc"
+  msg_readable_name: "motor controller voltage current"
+  can_data {
+    u16 {
+      field_name_1: "mc_voltage_1"
+      field_name_2: "mc_current_1"
+      field_name_3: "mc_voltage_2"
+      field_name_4: "mc_current_2"
+    }
+  }
+}
+
+msg {
+  id: 36
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor velocity"
+  can_data {
+    u16 {
+      field_name_1: "vehicle_velocity_left"
+      field_name_2: "vehicle_velocity_right"
+    }
+  }
+}
+
+msg {
+  id: 37
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor debug"
+  can_data {
+    u64 {
+      field_name_1: "data"
+    }
+  }
+}
+
+msg {
+  id: 38
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor temps"
+  can_data {
+    u32 {
+      field_name_1: "motor_temp_l"
+      field_name_2: "motor_temp_r"
+    }
+  }
+}
+
+msg {
+  id: 39
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor amp hr"
+  can_data {
+    u32 {
+      field_name_1: "motor_amp_hr_l"
+      field_name_2: "motor_amp_hr_r"
+    }
+  }
+}
+
+msg {
+  id: 40
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "odometer"
+  can_data {
+    u32 {
+      field_name_1: "odometer_val"
+    }
+  }
+}
+
+msg {
+  id: 41
+  source: STEERING
+  target: "TELEMETRY"
+  msg_name: "cruise control command"
+  can_data {
+    u8 {
+      field_name_1: "command"
+    }
+  }
+}
+
+# IDs: 42 Reserved
+
+msg {
+  id: 43
+  source: POWER_DISTRIBUTION_REAR
+  msg_name: "aux dcdc vc"
+  msg_readable_name: "aux bat and dcdc voltage current"
+  can_data {
+    u16 {
+      field_name_1: "aux_voltage"
+      field_name_2: "aux_current"
+      field_name_3: "dcdc_voltage"
+      field_name_4: "dcdc_current"
+    }
+  }
+}
+
+msg {
+  id: 44
+  source: POWER_DISTRIBUTION_REAR
+  target: "TELEMETRY"
+  msg_name: "dcdc temps"
+  can_data {
+    u16 {
+      field_name_1: "temp_1"
+      field_name_2: "temp_2"
+    }
+  }
+}
+
+msg {
+  id: 45
+  source: POWER_DISTRIBUTION_FRONT
+  target: "TELEMETRY"
+  msg_name: "uv cutoff notification"
+  can_data {
+    empty {
+      
+    }
+  }
+}
+
+# IDs 46: Reserved
+
+msg {
+  id: 47
+  source: CHARGER
+  target: "telemetry"
+  msg_name: "charger info"
+  can_data {
+    u16 {
+      field_name_1: "current"
+      field_name_2: "voltage"
+      field_name_3: "status_bitset"
+    }
+  }
+}
+
+msg {
+  id: 48
+  source: CHARGER
+  target: "CENTER_CONSOLE"
+  msg_name: "request to charge"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 49
+  source: CENTRE_CONSOLE
+  target: "CHARGER"
+  msg_name: "allow charging"
+  can_data {
+    empty{
+    }
+  }
+}
+
+msg {
+  id: 50
+  source: CHARGER
+  msg_name: "charger connected state"
+  can_data {
+    u8 {
+      field_name_1: "is_connected"
+    }
+  }
+}
+
+msg {
+  id: 51
+  source: IMU
+  target: "TELEMETRY"
+  msg_name: "linear acceleration"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 52
+  source: IMU
+  target: "TELEMETRY"
+  msg_name: "angular rotation"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 53
+  source: CHARGER
+  target: "TELEMETRY"
+  msg_name: "charger fault"
+  can_data {
+    u8 {
+      field_name_1: "fault"
+    }
+  }
+}
+
+msg {
+  id: 54
+  source: POWER_DISTRIBUTION_FRONT
+  target: "CENTRE_CONSOLE"
+  msg_name: "front current measurement"
+  can_data {
+    u16 {
+      field_name_1: "current_id"
+      field_name_2: "current"
+    }
+  }
+}
+
+msg {
+  id: 55
+  source: POWER_DISTRIBUTION_REAR
+  target: "CENTRE_CONSOLE"
+  msg_name: "rear current measurement"
+  can_data {
+    u16 {
+      field_name_1: "current_id"
+      field_name_2: "current"
+    }
+  }
+}
+
+msg {
+  id: 56
+  source: POWER_SELECTION
+  target: ""
+  msg_name: "aux battery status"
+  can_data {
+    u16 {
+      field_name_1: "aux_battery_volt"
+      field_name_2: "aux_battery_temp"
+      field_name_3: "dcdc_status"
+    }
+  }
+}
+
+msg {
+  id: 57
+  source: BMS_CARRIER
+  target: ""
+  msg_name: "battery fan state"
+  can_data {
+    u8 {
+      field_name_1: "fan_1"
+      field_name_2: "fan_2"
+      field_name_3: "fan_3"
+      field_name_4: "fan_4"
+      field_name_5: "fan_5"
+      field_name_6: "fan_6"
+      field_name_7: "fan_7"
+      field_name_8: "fan_8"
+    }
+  }
+}
+
+msg {
+  id: 58
+  source: BMS_CARRIER
+  target: ""
+  msg_name: "battery relay state"
+  can_data {
+    u8 {
+      field_name_1: "hv"
+      field_name_2: "gnd"
+    }
+  }
+}
+
+msg {
+  id: 59
+  source: SOLAR
+  target: "TELEMETRY"
+  msg_name: "solar data"
+  can_data {
+    u32 {
+      field_name_1: "data_point_type"
+      field_name_2: "data_value"
+    }
+  }
+}
+
+msg {
+  id: 60
+  source: SOLAR
+  target: "TELEMETRY, CENTRE_CONSOLE"
+  msg_name: "solar fault"
+  can_data {
+    u8 {
+      field_name_1: "fault"
+      field_name_2: "fault_data"
+    }
+  }
+}
+
+msg {
+  id: 61
+  source: POWER_DISTRIBUTION_REAR
+  target: "CENTRE_CONSOLE"
+  msg_name: "rear pd fault"
+  can_data {
+    u16 {
+      field_name_1: "Fault data"
+      field_name_2: "enclosure temp data"
+      field_name_3: "dcdc temp data"
+      field_name_4: "reference voltage"
+    }
+  }
+}
+
+msg {
+  id: 62
+  source: POWER_DISTRIBUTION_FRONT
+  target: "CENTRE_CONSOLE"
+  msg_name: "front pd fault"
+  can_data {
+    u16 {
+      field_name_1: "fault_data"
+    }
+  }
+}
+
+
+# Common message format for all babydriver messages: see https://uwmidsun.atlassian.net/l/c/XHjUAAK2
+msg {
+  id: 63
+  source: BABYDRIVER
+  target: "BABYDRIVER"
+  msg_name: "babydriver"
+  can_data {
+    u8 {
+      field_name_1: "id"
+      field_name_2: "data0"
+      field_name_3: "data1"
+      field_name_4: "data2"
+      field_name_5: "data3"
+      field_name_6: "data4"
+      field_name_7: "data5"
+      field_name_8: "data6"
+    }
+  }
+}
+
+# No ID may exceed 63.
