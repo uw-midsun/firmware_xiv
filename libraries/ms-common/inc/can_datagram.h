@@ -3,20 +3,17 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "event_queue.h"
+#include "status.h"
 
 #define CAN_DATAGRAM_VERSION 1
 
 #define ID_START_MASK (1 << 7)
 
-typedef enum {
-  DATAGRAM_CAN_EVENT_TX = 0,
-  DATAGRAM_CAN_EVENT_RX,
-  DATAGRAM_CAN_EVENT_FAULT,
-  NUM_DATAGRAM_CAN_EVENTS,
-} CanDatagramCanEvent;
+typedef StatusCode (*CanDatagramCb)(uint8_t *data, size_t len, bool start_message);
 
 typedef enum {
-  DATAGRAM_EVENT_PROTOCOL_VERSION = NUM_DATAGRAM_CAN_EVENTS + 1;,
+  DATAGRAM_EVENT_PROTOCOL_VERSION = 0,
   DATAGRAM_EVENT_CRC,
   DATAGRAM_EVENT_DST_LEN,
   DATAGRAM_EVENT_DST,
@@ -33,8 +30,6 @@ typedef enum {
 } CanDatagramMode;
 
 
-StatusCode (*DatagramCallback)(uint8_t *data, size_t len, bool start_message);
-
 typedef struct {
   int protocol_version;
   uint32_t crc;
@@ -42,54 +37,54 @@ typedef struct {
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
 
-  uint32_t data_len;
+  uint16_t data_len;
   uint8_t *data;
 
-} can_datagram_t;
+} CanDatagram;
 
 typedef struct CanDatagramSettings {
-  DatagramCallback tx_cb;
-  DatagramCallback rx_cb;
+  CanDatagramCb tx_cb;
+  CanDatagramCb rx_cb;
   CanDatagramMode mode;
-  can_datagram_t dt; // TODO: This may be better to pass as pointer
 } CanDatagramSettings;
 
 typedef struct CanDatagramStorage {
-  DatagramCallback cb;
+  CanDatagramCb tx_cb;
   CanDatagramMode mode;
-  can_datagram_t * dt;
+  CanDatagram dt;
   CanDatagramEvent state;
-}
+} CanDatagramStorage;
 
 /** Sets the structure field to default values. */
-void can_datagram_init(can_datagram_t *dt);
+StatusCode can_datagram_init(CanDatagramSettings *settings);
+
+void can_datagram_start_tx(void);
+
+bool can_datagram_process_event(Event *e);
 
 /** Sets the buffer to use to store destination addresses. */
-void can_datagram_set_address_buffer(can_datagram_t *dt, uint8_t *buf);
+StatusCode can_datagram_set_address_buffer(uint8_t *dst, size_t num_dst_nodes);
 
 /** Sets the buffer to use for data storage. */
-void can_datagram_set_data_buffer(can_datagram_t *dt, uint8_t *buf, size_t buf_size);
-
-/** Inputs a byte into the datagram. */
-void can_datagram_input_byte(can_datagram_t *dt, uint8_t val);
+StatusCode can_datagram_set_data_buffer(uint8_t *data, size_t data_len);
 
 /** Returns true if the datagram is complete (all data were read). */
-bool can_datagram_is_complete(can_datagram_t *dt);
+bool can_datagram_tx_complete(void);
 
 /** Returns true if the datagram is valid (complete and CRC match). */
-bool can_datagram_is_valid(can_datagram_t *dt);
+bool can_datagram_is_valid(CanDatagram *dt);
 
 /** Signals to the parser that we are at the start of a datagram.
  *
  * The start of datagram comes from the Message ID (physical layer).
  */
-void can_datagram_start(can_datagram_t *dt);
+void can_datagram_start(CanDatagram *dt);
 
 /** Encodes the datagram in the buffer. */
-int can_datagram_output_bytes(can_datagram_t *dt, char *buffer, size_t buffer_len);
+int can_datagram_output_bytes(CanDatagram *dt, char *buffer, size_t buffer_len);
 
 /** Computes the CRC32 of the datagram. */
-uint32_t can_datagram_compute_crc(can_datagram_t *dt);
+uint32_t can_datagram_compute_crc(CanDatagram *dt);
 
 /** Returns true if the ID has the start of datagram field set. */
 bool can_datagram_id_start_is_set(unsigned int id);
