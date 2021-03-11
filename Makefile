@@ -176,12 +176,14 @@ lint:
 	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
+	@cd codegen && pylint --disable=F0401 scripts/
 
 #Quick lint on ONLY changed/new files
 .PHONY: lint_quick
 lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
+	@cd codegen && pylint --disable=F0401 scripts/
 
 # Disable import error
 .PHONY: pylint
@@ -243,6 +245,31 @@ new:
 .PHONY: clean
 clean:
 	@rm -rf $(BUILD_DIR)
+	@cd codegen && rm -rf genfiles out
+
+.PHONY: codegen
+codegen: codegen_protos
+	@echo "Generating from templates..."
+	@cd codegen && python scripts/build.py 
+	@cd codegen && find out -type f \( -iname '*.[ch]' -o -iname '*.ts' \) | xargs -r clang-format -i -fallback-style=Google
+	@cd codegen && find out -type f \( -iname '*.go'  \) | xargs -r gofmt -w
+	@cp -v codegen/out/* libraries/codegen-tooling/inc/
+
+.PHONY: codegen_dbc
+codegen_dbc:
+	@echo "Generating DBC file"
+	@cd codegen && python scripts/build_dbc.py
+
+.PHONY: codegen_protos 
+codegen_protos:
+	@echo "Compiling protos..."
+	@cd codegen && mkdir -p genfiles
+	@cd codegen && protoc -I=schema --python_out=genfiles --go_out=genfiles schema/can.proto
+
+.PHONY: codegen_test
+codegen_test: codegen
+	@echo "Testing..."
+	@python -m unittest discover -s codegen/scripts
 
 .PHONY: remake
 remake: clean all
@@ -255,10 +282,6 @@ socketcan:
 	@sudo ip link add dev vcan0 type vcan || true
 	@sudo ip link set up vcan0 || true
 	@ip link show vcan0
-
-.PHONY: update_codegen
-update_codegen:
-	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
 
 .PHONY: pytest
 pytest:

@@ -1,19 +1,19 @@
 .PHONY: gen
 gen: protos
 	@echo "Generating from templates..."
-	@python codegen/build.py 
+	@python scripts/build.py 
 	@find out -type f \( -iname '*.[ch]' -o -iname '*.ts' \) | xargs -r clang-format -i -fallback-style=Google
 	@find out -type f \( -iname '*.go'  \) | xargs -r gofmt -w
 
 .PHONY: gen-dbc
 gen-dbc:
 	@echo "Generating DBC file"
-	@python codegen/build_dbc.py
+	@python scripts/build_dbc.py
 
 .PHONY: lint
 lint:
 	@echo "Linting..."
-	@pylint --disable=F0401 codegen/
+	@pylint --disable=F0401 scripts/
 
 .PHONY: protos 
 protos:
@@ -24,7 +24,7 @@ protos:
 .PHONY: test
 test: gen
 	@echo "Testing..."
-	@python -m unittest discover -s codegen
+	@python -m unittest discover -s scripts
 
 .PHONY: clean
 clean:

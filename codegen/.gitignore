@@ -163,6 +163,7 @@ pip-selfcheck.json
 !.vscode/extensions.json
 
 # Build artifacts
+!scripts/
 out/
 genfiles/
 
