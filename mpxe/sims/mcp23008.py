@@ -31,4 +31,5 @@ class Mcp23008(sim.Sim):
     # Compares pin state against store
     # pylint: disable=unused-argument
     def assert_store_value_reading(self, proj, pin, state):
-        assert self.states[pin] == state
+        for _i in range(NUM_MCP_PINS):
+            assert self.states[pin] == state
