@@ -23,20 +23,15 @@
       ${field}_${frame.ftype} \
     % endfor 
     ) \
-    ({ \
-    CanMessage msg = { 0 }; \
+    ({
+  CanMessage msg = { 0 };
     CAN_PACK_${frame.msg_name}(&msg \
     % for field in frame.fields: 
       , (${field}_${frame.ftype}) \
     % endfor
-    ); \
-    StatusCode status = can_transmit(&msg \
-    % if frame.is_critical:
-      , (ack_ptr) \
-    % else:
-      , NULL \
-    % endif
-    ); \
+    );
+    StatusCode status = can_transmit(&msg % if frame.is_critical:, (ack_ptr) % else
+                                     :, NULL % endif);
     status; \
     })
 % endfor

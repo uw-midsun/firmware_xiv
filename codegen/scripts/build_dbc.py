@@ -26,6 +26,7 @@ FIELDS_LEN = {
 SIGNED_MESSAGES = []
 ACKABLE_MESSAGES = {}
 
+
 def build_arbitration_id(msg_type, source_id, msg_id):
     """
     typedef union CanId {
@@ -38,8 +39,9 @@ def build_arbitration_id(msg_type, source_id, msg_id):
     } CanId;
     """
     return ((source_id & ((0x1 << 4) - 1)) << (0)) | \
-            ((msg_type & ((0x1 << 1) - 1)) << (4)) | \
-            ((msg_id & ((0x1 << 6) - 1)) << (4 + 1))
+        ((msg_type & ((0x1 << 1) - 1)) << (4)) | \
+        ((msg_id & ((0x1 << 6) - 1)) << (4 + 1))
+
 
 def main():
     """The main entry-point of the program"""
@@ -75,10 +77,10 @@ def main():
     for msg_id, can_frame in can_messages.items():
         source = get_key_by_val(device_enum, can_frame.source)
         # Checks for critical messages to make sure an ACK is added later
-        if can_frame.is_critical != None and can_frame.is_critical:
+        if can_frame.is_critical is not None and can_frame.is_critical:
             ACKABLE_MESSAGES[msg_id] = ((can_frame.target).replace(" ", "")).split(",")
         # Checks for signed messages
-        if can_frame.is_signed != None and can_frame.is_signed:
+        if can_frame.is_signed is not None and can_frame.is_signed:
             SIGNED_MESSAGES.append(str(can_frame.msg_name))
 
         # All these message types must be Data messages. ACK messages are
@@ -96,10 +98,10 @@ def main():
             length = FIELDS_LEN[can_frame.ftype]
 
             if can_frame.msg_name in SIGNED_MESSAGES \
-                and not field == 'voltage':
+                    and not field == 'voltage':
                 signal = cantools.database.can.Signal(
                     name=field,
-                    start=index*length,
+                    start=index * length,
                     length=length,
                     is_signed=True
                 )
@@ -107,7 +109,7 @@ def main():
                 # battery voltage is unsigned
                 signal = cantools.database.can.Signal(
                     name=field,
-                    start=index*length,
+                    start=index * length,
                     length=length,
                     is_signed=False
                 )
@@ -174,6 +176,7 @@ def main():
     with open('system_can.dbc', 'w') as file_handle:
         file_handle.write(database.as_dbc_string())
     return
+
 
 if __name__ == '__main__':
     main()

@@ -69,8 +69,17 @@ jobs:
         run: |
           pip install --user pylint
           pip install --user autopep8
+          pip install --upgrade pip
+          pip install --upgrade setuptools
           # Install dependencies from all requirements.txt in the repo
           make install_requirements
+
+      - name: Install Go
+        run: |
+          git clone https://github.com/udhos/update-golang
+          cd update-golang
+          sudo ./update-golang.sh
+          cd ..
 
       - name: Force PATH to update
         run: hash -r
@@ -89,6 +98,7 @@ jobs:
           clang-format --version
           pylint --version
           autopep8 --version
+          go version
 
       - name: Format and lint
         run: |
@@ -104,3 +114,5 @@ jobs:
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+          make codegen_test
+          make codegen_dbc

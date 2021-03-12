@@ -1,10 +1,10 @@
 """Parsing and data-related functions"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import sys
 import os
-
 from collections import defaultdict, namedtuple
+
+import can_pb2  # pylint: disable=import-error,wrong-import-position
 
 from constants import NUM_CAN_DEVICES, NUM_CAN_MESSAGES, NUM_FIELDS, NUM_DLC_BYTES  # pylint: disable=unused-import
 from google.protobuf import text_format
@@ -13,7 +13,6 @@ import validator
 sys.path.append(
     os.path.abspath(
         os.path.dirname(os.path.realpath(__file__)) + '/../genfiles'))
-import can_pb2  # pylint: disable=import-error,wrong-import-position
 
 CanFrame = namedtuple('CanFrame', [
     'msg_name', 'source', 'target', 'ftype', 'fields', 'is_critical', 'is_signed', 'dlc'
@@ -69,7 +68,7 @@ def parse_can_message_enum(can_messages_file):
         identifier = to_identifier(can_message.msg_name)
         if validator.valid_can_id(can_message.id) is False:
             raise Exception('Invalid CAN id')
-        if messages[can_message.id] != None:
+        if messages[can_message.id] is not None:
             raise Exception('Duplicate CAN id %s' % can_message.id)
         if identifier in messages.values():
             raise Exception('Duplicate message name %s' % can_message.msg_name)
@@ -94,7 +93,7 @@ def parse_can_frames(can_messages_file):
         identifier = to_identifier(can_message.msg_name)
         if validator.valid_can_id(can_message.id) is False:
             raise Exception('Invalid CAN id')
-        if messages[can_message.id] != None:
+        if messages[can_message.id] is not None:
             raise Exception('Duplicate CAN id %s' % can_message.id)
         oneof = can_message.can_data.WhichOneof('frame')
         fields = [

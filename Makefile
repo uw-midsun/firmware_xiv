@@ -167,7 +167,7 @@ FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
-FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h'
+FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
 FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
@@ -176,7 +176,6 @@ lint:
 	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
-	@cd codegen && pylint --disable=F0401 scripts/
 
 #Quick lint on ONLY changed/new files
 .PHONY: lint_quick
@@ -192,6 +191,8 @@ pylint:
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
+	@echo "Linting codegen"
+	@cd codegen && pylint --disable=F0401 scripts/
 
 .PHONY: format_quick
 format_quick:
@@ -271,6 +272,11 @@ codegen_test: codegen
 	@echo "Testing codegen..."
 	@python -m unittest discover -s codegen/scripts
 
+.PHONY: mock_can_data
+mock_can_data: 
+	@sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0
+	@cd codegen && python3 mock_can_data.py
+
 .PHONY: remake
 remake: clean all
 
@@ -298,6 +304,10 @@ pytest_all:
 
 .PHONY: install_requirements
 install_requirements:
+	@sudo add-apt-repository ppa:maarten-fonville/protobuf
+	@sudo apt-get update
+	@sudo apt-get install protobuf-compiler
+	@go get -u github.com/golang/protobuf/protoc-gen-go
 	@for i in $$(find projects -name "requirements.txt"); 		\
 	do															\
 		pip install -r $$i;										\
