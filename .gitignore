@@ -68,3 +68,6 @@ logs/
 ### Vagrant Patch ###
 *.box
 .idea
+
+# Python stuff
+.venv/
