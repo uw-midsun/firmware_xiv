@@ -34,7 +34,7 @@ def read_protobuf_data(filename):
             text_format.Merge(asciipb.read(), can_messages)
     except Exception as excep:
         raise Exception('Could not parse ASCII Protobuf file %s: %s' %
-                        (filename, excep))
+                        (filename, excep)) from excep
     return can_messages.msg
 
 

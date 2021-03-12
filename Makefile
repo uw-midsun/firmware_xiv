@@ -181,7 +181,7 @@ lint:
 .PHONY: lint_quick
 lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
-	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
+	@$(FIND_MOD_NEW) | xargs -r python3 lint.py
 	@cd codegen && pylint --disable=F0401 scripts/
 
 # Disable import error
@@ -208,6 +208,8 @@ format:
 	@$(FIND) | xargs -r clang-format -i -style=file
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
+	@echo $(AUTOPEP8_CONFIG)
+	@echo $(FIND_PY_FILES)
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
 # Tests that all files have been run through the format target mainly for CI usage

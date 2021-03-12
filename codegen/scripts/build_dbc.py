@@ -175,7 +175,6 @@ def main():
     # Save as a DBC file
     with open('system_can.dbc', 'w') as file_handle:
         file_handle.write(database.as_dbc_string())
-    return
 
 
 if __name__ == '__main__':
