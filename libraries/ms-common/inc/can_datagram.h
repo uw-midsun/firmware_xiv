@@ -8,13 +8,19 @@
 
 #define CAN_DATAGRAM_VERSION 1
 
-
 #define ID_START_MASK (1 << 7)
 
 typedef StatusCode (*CanDatagramCb)(uint8_t *data, size_t len, bool start_message);
 
 typedef enum {
-  DATAGRAM_EVENT_PROTOCOL_VERSION = 0,
+    CAN_DATAGRAM_EVENT_RX = 0,
+    CAN_DATAGRAM_EVENT_TX,
+    CAN_DATAGRAM_EVENT_FAULT,
+    NUM_CAN_DATAGRAM_EVENTS,
+} CanDatagramCanEvent;
+
+typedef enum {
+  DATAGRAM_EVENT_PROTOCOL_VERSION = NUM_CAN_DATAGRAM_EVENTS + 1,
   DATAGRAM_EVENT_CRC,
   DATAGRAM_EVENT_DST_LEN,
   DATAGRAM_EVENT_DST,
@@ -32,7 +38,7 @@ typedef enum {
 
 
 typedef struct CanDatagram{
-  int protocol_version;
+  uint8_t protocol_version;
   uint32_t crc;
 
   uint8_t destination_nodes_len;
@@ -60,6 +66,8 @@ typedef struct CanDatagramStorage {
 StatusCode can_datagram_init(CanDatagramSettings *settings);
 
 void can_datagram_start_tx(void);
+
+StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message);
 
 bool can_datagram_process_event(Event *e);
 
