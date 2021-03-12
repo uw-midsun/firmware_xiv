@@ -12,11 +12,17 @@
 #define CAN_BUFFER_SIZE 8
 #define CRC_SIZE_BYTES 4
 #define U16_DATA_LENGTH_SIZE_BYTES 2
+#define DEST_NODE_MAX_SIZE 255
+#define DATA_MAX_SIZE 2048
+
+#define CRC_TEST_VALUE 0x121212
 
 static Fsm s_dt_fsm;
 static CanDatagramStorage s_store;
 static uint8_t s_can_buffer[CAN_BUFFER_SIZE];
 static WatchdogStorage s_watchdog;
+static uint8_t s_rx_dest_nodes_buf[DEST_NODE_MAX_SIZE];
+static uint8_t s_rx_data_buf[DATA_MAX_SIZE];
 
 
 // If we want to have multiple instances of can datagram stores then this will need to be changed
@@ -77,6 +83,7 @@ static void prv_process_protocol_version(Fsm *fsm, const Event *e, void *context
 static void prv_process_crc(Fsm *fsm, const Event *e, void *context) { // TODO: decide if sizeof is ok or should we do #defines
   LOG_DEBUG("crc\n");
   CanDatagram *dt = context;
+  dt->crc = CRC_TEST_VALUE;
   memset(s_can_buffer, 0, CAN_BUFFER_SIZE*sizeof(uint8_t));
   if(s_store.mode == CAN_DATAGRAM_MODE_TX) {
     for(uint8_t byte = 0; byte < CRC_SIZE_BYTES; byte++) {
@@ -120,10 +127,11 @@ static void prv_process_dst(Fsm *fsm, const Event *e, void *context) {
         s_can_buffer[byte] = dt->destination_nodes[dst_bytes_sent];
         dst_bytes_sent++;
       }
-      s_store.tx_cb(s_can_buffer, sizeof(dt->destination_nodes_len), false);
+      s_store.tx_cb(s_can_buffer, dst_bytes_to_send, false);
     }
     event_raise_no_data(DATAGRAM_EVENT_DATA_LEN);
   } else {
+    dt->destination_nodes = s_rx_dest_nodes_buf;
     for(uint8_t byte = 0; byte < s_store.rx_bytes_to_read; byte++) {
       dt->destination_nodes[s_store.rx_bytes_read] = s_can_buffer[byte];
       s_store.rx_bytes_read++;
@@ -166,11 +174,12 @@ static void prv_process_data(Fsm *fsm, const Event *e, void *context) {
         s_can_buffer[byte] = dt->destination_nodes[data_bytes_sent];
         data_bytes_sent++;
       }
-      s_store.tx_cb(s_can_buffer, sizeof(dt->destination_nodes_len), false);
+      s_store.tx_cb(s_can_buffer, data_bytes_to_send, false);
     }
     s_store.event = DATAGRAM_EVENT_COMPLETE;
     event_raise_no_data(DATAGRAM_EVENT_COMPLETE);
   } else {
+    dt->data = s_rx_data_buf;
     for(uint8_t byte = 0; byte < s_store.rx_bytes_to_read; byte++) {
       dt->destination_nodes[s_store.rx_bytes_read] = s_can_buffer[byte];
       s_store.rx_bytes_read++;
@@ -206,7 +215,8 @@ StatusCode can_datagram_init(CanDatagramSettings * settings) {
 
   if(s_store.mode == CAN_DATAGRAM_MODE_TX) {
     dt->protocol_version = CAN_DATAGRAM_VERSION; // what to do with different protocol version values?
-	  s_store.tx_cb(NULL, 0, true); // TODO: move to proto, use proper start message
+    uint8_t init = 0;
+	  s_store.tx_cb(&init, 0, true); // TODO: move to proto, use proper start message
   }
 
   prv_init_fsm((void*)dt);
@@ -231,7 +241,7 @@ StatusCode can_datagram_set_address_buffer(uint8_t *dst, size_t num_dst_nodes) {
     s_store.dt.destination_nodes = dst;
   }
   return STATUS_CODE_OK;
-} 
+}
 
 void can_datagram_start_tx(void) {
   // do error checking here before commencing
@@ -244,11 +254,11 @@ StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message) {
   }
 
   if (start_message) {
-    watchdog_start(&s_watchdog, RX_WATCHDOG_TIMEOUT_MS, prv_rx_watchdog_expiry_cb, NULL);
+    // watchdog_start(&s_watchdog, RX_WATCHDOG_TIMEOUT_MS, prv_rx_watchdog_expiry_cb, NULL);
     s_store.event = DATAGRAM_EVENT_PROTOCOL_VERSION;
-  } else {
-    watchdog_kick(&s_watchdog);
-  }
+  } /*else {
+    // watchdog_kick(&s_watchdog);
+  }*/
 
   s_store.rx_bytes_to_read = len;
   for(uint8_t byte = 0; byte < len; byte++) {
@@ -256,6 +266,7 @@ StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message) {
   }
   event_raise_no_data(s_store.event);
   return STATUS_CODE_OK;
+  watchdog_start(&s_watchdog, RX_WATCHDOG_TIMEOUT_MS, prv_rx_watchdog_expiry_cb, NULL);
 }
 
 bool can_datagram_tx_complete(void) {
