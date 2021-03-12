@@ -6,6 +6,7 @@
 #include "fsm.h"
 #include "log.h"
 #include "status.h"
+#include "critical_section.h"
 
 FSM_DECLARE_STATE(power_state_main);
 FSM_DECLARE_STATE(power_state_off);
@@ -64,6 +65,8 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   } else {
     power_fsm->previous_state = POWER_STATE_OFF;
     event_raise(CENTRE_CONSOLE_POWER_EVENT_OFF, 0);
+    CAN_TRANSMIT_DISCHARGE_PRECHARGE();
+    critical_section_start();
   }
 }
 
