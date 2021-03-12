@@ -4,15 +4,16 @@ import sys
 import os
 from collections import defaultdict, namedtuple
 
-import can_pb2  # pylint: disable=import-error,wrong-import-position
-
 from constants import NUM_CAN_DEVICES, NUM_CAN_MESSAGES, NUM_FIELDS, NUM_DLC_BYTES  # pylint: disable=unused-import
 from google.protobuf import text_format
+
+import can_pb2  # pylint: disable=import-error,wrong-import-position
 
 import validator
 sys.path.append(
     os.path.abspath(
         os.path.dirname(os.path.realpath(__file__)) + '/../genfiles'))
+
 
 CanFrame = namedtuple('CanFrame', [
     'msg_name', 'source', 'target', 'ftype', 'fields', 'is_critical', 'is_signed', 'dlc'
