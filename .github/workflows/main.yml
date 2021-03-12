@@ -69,6 +69,7 @@ jobs:
         run: |
           pip install --user pylint
           pip install --user autopep8
+          pip install --user virtualenv
           # Install dependencies from all requirements.txt in the repo
           make install_requirements
 
