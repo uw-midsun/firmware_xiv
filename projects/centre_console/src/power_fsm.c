@@ -2,11 +2,11 @@
 #include "can_transmit.h"
 #include "centre_console_events.h"
 #include "centre_console_fault_reason.h"
+#include "critical_section.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
 #include "status.h"
-#include "critical_section.h"
 
 FSM_DECLARE_STATE(power_state_main);
 FSM_DECLARE_STATE(power_state_off);
