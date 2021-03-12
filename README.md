@@ -61,6 +61,12 @@ make pytest_all
 
 # Intall python requirements for every project
 make install_requirements 
+
+# Run codegen
+make codegen
+
+# Generate dbc file
+make codegen_dbc
 ```
 
 We use [GNU Make](https://www.gnu.org/software/make/manual/) for our build system. See [Managing Projects with GNU Make, 3.Xth Edition](http://wanderinghorse.net/computing/make/book/ManagingProjectsWithGNUMake-3.1.3.pdf) for a fantastic supplement to the manual.

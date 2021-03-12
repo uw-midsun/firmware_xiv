@@ -268,7 +268,7 @@ codegen_protos:
 
 .PHONY: codegen_test
 codegen_test: codegen
-	@echo "Testing..."
+	@echo "Testing codegen..."
 	@python -m unittest discover -s codegen/scripts
 
 .PHONY: remake
@@ -285,6 +285,8 @@ socketcan:
 
 .PHONY: pytest
 pytest:
+	@echo $(PROJ_DIR)/$(PROJECT)
+	@echo $(TEST)
 	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
 
 .PHONY: pytest_all
