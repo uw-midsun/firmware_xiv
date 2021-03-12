@@ -161,7 +161,7 @@ IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity.*
 # Find all python files excluding library files in project env (./venv)
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find -path ./venv -prune -o -name '*.py')
+FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . -path ./.venv -prune -o -name '*.py')
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
@@ -205,6 +205,7 @@ format:
 	@$(FIND) | xargs -r clang-format -i -style=file
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
+	@echo $(FIND_PY_FILES)
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
 # Tests that all files have been run through the format target mainly for CI usage
