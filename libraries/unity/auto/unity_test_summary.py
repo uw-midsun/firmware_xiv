@@ -86,13 +86,9 @@ class UnityTestSummary:
         results = { 'failures': [], 'ignores': [], 'successes': [] }
         for line in lines:
             parts = line.split(':')
-            if len(parts) == 5:
-                src_file,src_line,test_name,status,msg = parts
-            elif len(parts) == 4:
-                src_file,src_line,test_name,status = parts
-                msg = ''
-            else:
+            if len(parts) != 5:
                 continue
+            src_file,src_line,test_name,status,msg = parts
             if len(self.root) > 0:
                 line_out = "%s%s" % (self.root, line)
             else:
@@ -121,7 +117,7 @@ if __name__ == '__main__':
         targets_dir = sys.argv[1]
     else:
         targets_dir = './'
-    targets = list(map(lambda x: x.replace('\\', '/'), glob(targets_dir + '**/*.test*', recursive=True)))
+    targets = list(map(lambda x: x.replace('\\', '/'), glob(targets_dir + '*.test*')))
     if len(targets) == 0:
         raise Exception("No *.testpass or *.testfail files found in '%s'" % targets_dir)
     uts.set_targets(targets)
