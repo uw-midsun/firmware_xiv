@@ -56,7 +56,7 @@ class ProjectManager:
             return poll
 
         def handle_poll_res(fd, event):
-            if (event & select.POLLIN) == 0:
+            if not event & select.POLLIN:
                 raise InvalidPollError
             proj = self.fd_to_proj[fd]
             # Check if we should check stdout or ctop
@@ -79,8 +79,8 @@ class ProjectManager:
                 res_list = p.poll(POLL_TIMEOUT)
                 for fd, event in res_list:
                     handle_poll_res(fd, event)
-        except InvalidPollError:
-            return
+        except InvalidPollError as e:
+            return e
 
     def end(self):
         self.killed = True

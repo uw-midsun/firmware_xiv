@@ -4,8 +4,8 @@ from mpxe.sims import sim
 
 class Adt7476a(sim.Sim):
     def __init__(self):
-        self.speed = [0, 0, 0]
-        self.status = [0, 0, 0]
+        self.speed = None
+        self.status = None
 
     def handle_update(self, pm, proj):
         stores  = proj.stores
