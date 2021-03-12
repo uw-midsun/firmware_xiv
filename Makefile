@@ -195,7 +195,7 @@ pylint:
 format_quick:
 	@echo "Quick format on ONlY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
-	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -243,6 +243,7 @@ new:
 .PHONY: clean
 clean:
 	@rm -rf $(BUILD_DIR)
+	@rm -rf .venv
 
 .PHONY: remake
 remake: clean all
@@ -269,14 +270,13 @@ pytest_all:
 	@for i in $$(find projects -name "test_*.py"); 													\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done			
+	done		
 
 .PHONY: install_requirements
 install_requirements:
-	@for i in $$(find projects -name "requirements.txt"); 		\
-	do															\
-		pip install -r $$i;										\
-	done								
+	@rm -rf .venv
+	@virtualenv .venv
+	@pip install -r requirements.txt									
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
