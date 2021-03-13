@@ -213,8 +213,6 @@
   { GPIO_PORT_A, 0 }
 #define REAR_PIN_DCDC_THERM \
   { GPIO_PORT_A, 1 }
-#define REAR_PIN_SMBALERT \
-  { GPIO_PORT_A, 0 }
 
 #define FRONT_OR_REAR_RECOGNITION_PIN \
   { GPIO_PORT_A, 8 }

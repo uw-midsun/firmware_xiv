@@ -145,7 +145,7 @@ void test_fan_ctrl_init(void) {
 void test_fan_err_rear(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, false));
-  gpio_it_trigger_interrupt(&(GpioAddress)REAR_PIN_SMBALERT);
+  gpio_it_trigger_interrupt(&(GpioAddress)PD_SMBALERT_PIN);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
   MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
   TEST_ASSERT_TRUE(((s_fan_ctrl_msg[0]) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
