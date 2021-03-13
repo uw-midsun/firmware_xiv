@@ -6,6 +6,7 @@
 #include "can_msg_defs.h"
 #include "can_rx_event_mapper.h"
 #include "can_rx_event_mapper_config.h"
+#include "can_transmit.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
 #include "front_uv_detector.h"
@@ -13,6 +14,7 @@
 #include "lights_signal_fsm.h"
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
+#include "pd_error_defs.h"
 #include "pd_events.h"
 #include "pd_fan_ctrl.h"
 #include "pd_gpio.h"
@@ -21,11 +23,13 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "voltage_regulator.h"
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
 #define STROBE_BLINK_INTERVAL_US 100000         // 0.1s between blinks of the strobe light
 #define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
+#define VOLTAGE_REGULATOR_DELAY_MS 25
 
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
@@ -74,6 +78,19 @@ static void prv_init_can(bool is_front_power_distribution) {
   can_init(&s_can_storage, &can_settings);
 }
 
+static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void *context) {
+  uint16_t pd_err_flags = (error == VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON)
+                              ? (PD_5V_REG_ERROR | PD_5V_REG_DATA)
+                              : PD_5V_REG_ERROR;
+  bool is_front_pd = *(bool *)context;
+
+  if (is_front_pd) {
+    CAN_TRANSMIT_FRONT_PD_FAULT(pd_err_flags);
+  } else {
+    CAN_TRANSMIT_REAR_PD_FAULT(pd_err_flags, 0, 0, 0);
+  }
+}
+
 static void prv_current_measurement_data_ready_callback(void *context) {
   // called when current_measurement has new data: send it to publish_data for publishing
   PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
@@ -107,6 +124,18 @@ int main(void) {
   power_distribution_publish_data_init(is_front_power_distribution
                                            ? FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG
                                            : REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG);
+
+  // Initialize Voltage Regulator
+  VoltageRegulatorSettings vreg_set = {
+    .enable_pin = POWER_DISTRIBUTION_5V_REG_ENABLE,
+    .monitor_pin = POWER_DISTRIBUTION_5V_REG_MONITOR,
+    .timer_callback_delay_ms = VOLTAGE_REGULATOR_DELAY_MS,
+    .error_callback = prv_voltage_monitor_error_callback,
+    .error_callback_context = (const void *)(&is_front_power_distribution),
+  };
+  VoltageRegulatorStorage vreg_store = { 0 };
+  voltage_regulator_init(&vreg_store, &vreg_set);
+  voltage_regulator_set_enabled(&vreg_store, true);
 
   // initialize current_measurement
   PowerDistributionCurrentSettings current_measurement_settings = {
