@@ -19,6 +19,8 @@
 #include "unity.h"
 
 #define TEST_HEARTBEAT_RX_CAN_DEVICE_ID 10
+#define TEST_HEARTBEAT_STATUS 0
+
 
 typedef enum {
   TEST_HEARTBEAT_RX_RX_CAN_RX = 10,
@@ -40,7 +42,7 @@ static StatusCode prv_ack_callback(CanMessageId msg_id, uint16_t device, CanAckS
                                    uint16_t num_remaining, void *context) {
   (void)num_remaining;
   CanAckStatus *expected_status = context;
-  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT, msg_id);
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_BPS_HEARTBEAT, msg_id);
   TEST_ASSERT_EQUAL(TEST_HEARTBEAT_RX_CAN_DEVICE_ID, device);
   TEST_ASSERT_EQUAL(*expected_status, status);
   return STATUS_CODE_OK;
@@ -76,13 +78,13 @@ void teardown_test(void) {}
 
 void test_heartbeat_rx(void) {
   TestHeartbeatRxHandlerCtx context = {
-    .expected_msg_id = SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT,
+    .expected_msg_id = SYSTEM_CAN_MESSAGE_BPS_HEARTBEAT,
     .ret_code = true,
     .executed = false,
   };
 
   HeartbeatRxHandlerStorage hb_storage = {};
-  TEST_ASSERT_OK(heartbeat_rx_register_handler(&hb_storage, SYSTEM_CAN_MESSAGE_POWERTRAIN_HEARTBEAT,
+  TEST_ASSERT_OK(heartbeat_rx_register_handler(&hb_storage, SYSTEM_CAN_MESSAGE_BPS_HEARTBEAT,
                                                prv_heartbeat_rx_handler, (void *)&context));
   CanAckStatus expected_status = CAN_ACK_STATUS_OK;
   CanAckRequest req = {
@@ -91,13 +93,13 @@ void test_heartbeat_rx(void) {
     .expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_HEARTBEAT_RX_CAN_DEVICE_ID),
   };
 
-  CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(&req);
+  CAN_TRANSMIT_BPS_HEARTBEAT(&req,TEST_HEARTBEAT_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_HEARTBEAT_RX_RX_CAN_TX, TEST_HEARTBEAT_RX_RX_CAN_RX);
   TEST_ASSERT_TRUE(context.executed);
 
   expected_status = CAN_ACK_STATUS_INVALID;
   context.ret_code = false;
-  CAN_TRANSMIT_POWERTRAIN_HEARTBEAT(&req);
+  CAN_TRANSMIT_BPS_HEARTBEAT(&req,TEST_HEARTBEAT_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(TEST_HEARTBEAT_RX_RX_CAN_TX, TEST_HEARTBEAT_RX_RX_CAN_RX);
   TEST_ASSERT_TRUE(context.executed);
 }
