@@ -7,3 +7,5 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
+
+$(T)_test_power_select_MOCKS := adc_read_converted_pin gpio_get_state

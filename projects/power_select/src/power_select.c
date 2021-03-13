@@ -4,6 +4,8 @@
 
 static PowerSelectStorage s_storage;
 
+static bool s_measure = false;
+
 // Gpio settings for sense pins
 static const GpioSettings SENSE_SETTINGS = {
   GPIO_DIR_IN,
@@ -66,6 +68,10 @@ static StatusCode prv_broadcast_measurements(void) {
 // Note to self: might be easier to store these values as floats instead
 // and then cast them to uint16s when sending over CAN
 void prv_periodic_measure(SoftTimerId timer_id, void *context) {
+  if (s_measure == false) {
+    LOG_DEBUG("Stopping periodic measure\n");
+    return;
+  }
   LOG_DEBUG("Reading measurements...\n");
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP; valid pins active-low\n");
@@ -121,6 +127,8 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
       if (s_storage.currents[i] > MAX_CURRENTS[i]) {
         s_storage.fault_bitset |= 1 << fault;
         prv_broadcast_fault();
+        // note: should probably broadcast this at the end of this cycle 
+        // so if there's multiple faults we don't broadcast them multiple times
       } else {
         s_storage.fault_bitset &= ~(1 << fault);
       }
@@ -130,11 +138,12 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Current %d: %d\n", (int)i, (int)s_storage.currents[i]);
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
-    (adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &s_storage.temps[i]));
+    uint16_t temp = 0;
+    (adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &temp));
 
     // just using the old power selection thermistor functions for now.
     // pretty sure temp_to_res should be named voltage_to_res
-    s_storage.temps[i] = (uint16_t)resistance_to_temp(voltage_to_res(s_storage.temps[i]));
+    s_storage.temps[i] = (int32_t)resistance_to_temp(voltage_to_res(temp));
     LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
   }
 
@@ -183,8 +192,9 @@ static StatusCode prv_init_fault_pin(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  return gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING, prv_handle_fault_it,
+  gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING, prv_handle_fault_it,
                                     &s_storage);
+  return STATUS_CODE_OK; // TEMP CHANGE DO NOT LEAVE IN
 }
 
 // Initialize valid pins (mainly for debugging purposes)
@@ -225,8 +235,14 @@ StatusCode power_select_init(void) {
 // Start periodically measuring from the pins
 StatusCode power_select_start(
     void) {  // do we even need this? or is it fine if we just expose prv_periodic_measure
+  s_measure = true;
   prv_periodic_measure(SOFT_TIMER_INVALID_TIMER, &s_storage);
+  
   return STATUS_CODE_OK;
+}
+
+void power_select_stop(void) {
+  s_measure = false;
 }
 
 uint16_t power_select_get_fault_bitset(void) {
@@ -235,4 +251,8 @@ uint16_t power_select_get_fault_bitset(void) {
 
 uint8_t power_select_get_valid_bitset(void) {
   return s_storage.valid_bitset;
+}
+
+PowerSelectStorage power_select_get_storage(void) {
+  return s_storage;
 }

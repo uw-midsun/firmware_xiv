@@ -22,18 +22,22 @@ typedef enum {
   POWER_SELECT_AUX = 0,
   POWER_SELECT_DCDC,
   POWER_SELECT_PWR_SUP,
-  NUM_POWER_SELECT_MEASUREMENTS,
+  NUM_POWER_SELECT_MEASUREMENT_TYPES,
 } PowerSelectMeasurement;
 
-#define NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS (NUM_POWER_SELECT_MEASUREMENTS)
-#define NUM_POWER_SELECT_CURRENT_MEASUREMENTS (NUM_POWER_SELECT_MEASUREMENTS)
-#define NUM_POWER_SELECT_TEMP_MEASUREMENTS (NUM_POWER_SELECT_MEASUREMENTS - 1)
+#define NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS (NUM_POWER_SELECT_MEASUREMENT_TYPES)
+#define NUM_POWER_SELECT_CURRENT_MEASUREMENTS (NUM_POWER_SELECT_MEASUREMENT_TYPES)
+#define NUM_POWER_SELECT_TEMP_MEASUREMENTS (NUM_POWER_SELECT_MEASUREMENT_TYPES - 1)
+
+#define NUM_POWER_SELECT_MEASUREMENTS (NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + \
+                                    NUM_POWER_SELECT_CURRENT_MEASUREMENTS + \
+                                    NUM_POWER_SELECT_TEMP_MEASUREMENTS)
 
 // Storage for previous measurements
 typedef struct {
   uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
   uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
-  uint16_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];
+  int32_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];
   uint16_t fault_bitset;
   uint8_t valid_bitset;  // valid pins
 } PowerSelectStorage;
@@ -44,8 +48,14 @@ StatusCode power_select_init(void);
 // Start periodically measuring sense values
 StatusCode power_select_start(void);
 
+// Stop measuring sense values
+void power_select_stop(void);
+
 // Return the fault bitset
 uint16_t power_select_get_fault_bitset(void);
 
 // Return the valid bitset
 uint8_t power_select_get_valid_bitset(void);
+
+// Return the storage (mainly for testing)
+PowerSelectStorage power_select_get_storage(void);
