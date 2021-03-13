@@ -1,5 +1,4 @@
-// If pins 30 and 31 haven't been grounded on rear power distribution yet, uncomment this line
-// and it'll force firmware to run as rear power distribution.
+// Uncomment this line to force firmware to run as rear power distribution.
 // #define FORCE_REAR_POWER_DISTRIBUTION
 
 #include "adc.h"
