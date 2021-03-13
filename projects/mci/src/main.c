@@ -93,6 +93,7 @@ int main(void) {
   soft_timer_init();
   gpio_init();
   gpio_it_init();
+
   LOG_DEBUG("here 1\n");
 
   prv_setup_system_can();

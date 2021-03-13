@@ -4,6 +4,7 @@
 #include "can_ack.h"
 #include "can_unpack.h"
 #include "exported_enums.h"
+#include "log.h"
 
 static void prv_pedal_watchdog(SoftTimerId timer_id, void *context) {
   PedalRxStorage *storage = context;
@@ -26,12 +27,14 @@ static StatusCode prv_kick_watchdog(PedalRxStorage *storage) {
 
 static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
                                           CanAckStatus *ack_reply) {
+  LOG_DEBUG("got pedal output\n");
   PedalRxStorage *storage = context;
   PedalValues *pedal_values = &storage->pedal_values;
 
   uint32_t throttle_msg;
   uint32_t brake_msg;
   CAN_UNPACK_PEDAL_OUTPUT(msg, &throttle_msg, &brake_msg);
+  LOG_DEBUG("throttle: %d brake: %d\n", (int)throttle_msg, (int)brake_msg);
 
   pedal_values->throttle = (float)(throttle_msg) / EE_PEDAL_VALUE_DENOMINATOR;
   pedal_values->brake = (float)(brake_msg) / EE_PEDAL_VALUE_DENOMINATOR;
