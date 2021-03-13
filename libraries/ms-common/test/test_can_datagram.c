@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include "status.h"
+#include "soft_timer.h"
 #include "test_helpers.h"
-#include "ms_test_helpers.h"
 #include "ms_test_helpers.h"
 #include "unity.h"
 #include "log.h"
@@ -32,10 +32,12 @@ static uint8_t s_data[16] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 
 static uint8_t s_dst[8] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
 static uint8_t data_lengths[] = { 1, 4, 1, 8, 2, 8};
-static uint8_t rx_data_counter;
+static uint8_t num_msgs_to_tx_rx;
 
 void setup_test(void) {
     event_queue_init();
+    interrupt_init();
+    soft_timer_init();
 }
 
 typedef union test_datagram_msg { // Should I include this in the library?
@@ -47,17 +49,21 @@ typedef union test_datagram_msg { // Should I include this in the library?
 void teardown_test(void) {}
 
 static StatusCode prv_tx_callback(uint8_t *data, size_t len, bool start_message) {
+    if (start_message) {
+        return STATUS_CODE_OK;
+    }
     LOG_DEBUG("TX CALLBACK %ld\n", len);
-    CanMessage msg;
+    /*CanMessage msg;
     test_datagram_msg msg_data = { 0 };
     for(uint8_t i = 0; i < len; i++) {
         msg_data.data_u8[i] = data[i];
     }
-
     can_pack_impl_u64(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_DT_MSG_ID, len, msg_data.data_u64);
     can_transmit(&msg, NULL);
     MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
-    return STATUS_CODE_OK;
+    num_msgs_to_tx_rx++;*/
+
+    return STATUS_CODE_OK;  
 }
 
 static void prv_initialize_can() {
@@ -79,10 +85,10 @@ static StatusCode prv_can_datagram_rx_handler(const CanMessage *msg, void *conte
     test_datagram_msg data = { 0 };
 
     can_unpack_impl_u64(msg, msg->dlc, &data.data_u64);
-    for(uint8_t i = 0; i < msg->dlc; i++) {
+    /*for(uint8_t i = 0; i < msg->dlc; i++) {
         uint8_t chr = data.data_u8[i];
         LOG_DEBUG("Data %d = %c\n", i, chr);
-    }
+    }*/
 
     return STATUS_CODE_OK;
 }
@@ -101,15 +107,12 @@ void test_can_datagram_tx(void) {
     can_register_rx_handler(TEST_CAN_DT_MSG_ID, prv_can_datagram_rx_handler, NULL); 
 
     can_datagram_start_tx();
-    delay_ms(25);
+    
     Event e = { 0 };
     while(!can_datagram_tx_complete()) {
-      while (event_process(&e) != STATUS_CODE_OK) {
-          can_process_event(&e);
-      }
+        while(event_process(&e) != STATUS_CODE_OK) {}
         can_datagram_process_event(&e);
-    }
-    
+    }    
 }
 
 

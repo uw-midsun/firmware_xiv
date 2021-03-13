@@ -45,7 +45,7 @@ typedef struct CanDatagram{
   uint8_t *destination_nodes;
 
   uint16_t data_len;
-  uint8_t *data;
+  uint8_t *data; // union needed here with u64?s
 } CanDatagram;
 
 typedef struct CanDatagramSettings {

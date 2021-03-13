@@ -1,5 +1,5 @@
 #include "can_datagram.h"
-// #include <crc/crc32.h>
+#include "crc32.h"
 #include <stdlib.h>
 #include <string.h>
 #include "fsm.h"
@@ -278,10 +278,7 @@ bool can_datagram_process_event(Event *e) {
 } 
 
 
-
-#if 0
-
-uint32_t can_datagram_compute_crc(can_datagram_t *dt) {
+StatusCode can_datagram_compute_crc(void) {
   uint32_t crc;
   uint8_t tmp[4];
   crc = crc32(0, &dt->destination_nodes_len, 1);
@@ -298,7 +295,6 @@ uint32_t can_datagram_compute_crc(can_datagram_t *dt) {
   return crc;
 }
 
-#endif
 bool can_datagram_id_start_is_set(unsigned int id) {
   return id & ID_START_MASK;
 }
