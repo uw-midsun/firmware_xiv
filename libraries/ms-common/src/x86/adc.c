@@ -78,8 +78,6 @@ static void prv_periodic_continous_cb(SoftTimerId id, void *context) {
 }
 
 void adc_init(AdcMode adc_mode) {
-  interrupt_init();
-  soft_timer_init();
   if (adc_mode == ADC_MODE_CONTINUOUS) {
     soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
   }
