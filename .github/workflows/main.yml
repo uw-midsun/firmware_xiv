@@ -19,16 +19,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # TODO: cache all the setup
-
       - name: Setup directories
         run: |
           # create directory that will be on the PATH
           mkdir -p ~/.local/bin
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
+      
+      - uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - name: Install gcc, clang, clang-format
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
@@ -51,6 +56,7 @@ jobs:
           MAKE_PATH: make-4.1
           MAKE_ARCHIVE_PATH: make-4.1.tar.gz
           MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           wget -nv $MAKE_URL
           tar xvf $MAKE_ARCHIVE_PATH
@@ -66,6 +72,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install Python tooling
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           pip install --user pylint
           pip install --user autopep8
@@ -90,17 +97,34 @@ jobs:
           pylint --version
           autopep8 --version
 
-      - name: Format and lint
+      - name: Format
         run: |
           make test_format
+
+      - name: Lint
           make lint
+
+      - name: Pylint
           make pylint
 
-      - name: Build and test
+      - name: Build stm32f0xx
         run: |
           make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
           make clean
+
+      - name: Build x86
+        run: |
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+
+      - name: Test x86
+        run: |
+          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+          
+      - name: Pytest
+        run: |
           make pytest_all
+
+      - name: Build x86 with clang
+        run: |
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
