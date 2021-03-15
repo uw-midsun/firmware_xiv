@@ -100,7 +100,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
       s_storage.voltages[i] = (uint16_t)temp_reading;
 
       // Check for fault, clear fault otherwise
-      PowerSelectFault fault = 1 + i;  // todo: make this nicer
+      PowerSelectFault fault = i;
       if (s_storage.voltages[i] > MAX_VOLTAGES[i]) {
         s_storage.fault_bitset |= 1 << fault;
         prv_broadcast_fault();
@@ -123,7 +123,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
       s_storage.currents[i] = (uint16_t)temp_reading;
 
       // check for fault
-      PowerSelectFault fault = 1 + 3 + i;  // todo: make this nicer
+      PowerSelectFault fault = i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS;
       if (s_storage.currents[i] > MAX_CURRENTS[i]) {
         s_storage.fault_bitset |= 1 << fault;
         prv_broadcast_fault();

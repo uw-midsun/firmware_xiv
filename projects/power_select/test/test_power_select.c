@@ -122,6 +122,9 @@ void teardown_test(void) {
   memset(s_test_gpio_read_states, GPIO_STATE_LOW, NUM_POWER_SELECT_VALID_PINS * sizeof(GpioState));
 
   power_select_stop();
+
+  s_test_adc_read_index = 0;
+  s_test_gpio_read_index = 0;
 }
 
 void test_power_select_init_works(void) {
@@ -266,14 +269,22 @@ void test_power_select_faults_handled(void) {
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
   // set aux to overvoltage + overcurrent
-  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_MV;
-  s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] = TEST_FAULT_CURRENT_MA;
+  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
+  s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] = TEST_FAULT_CURRENT_SCALED_MA;
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
   
   uint16_t expected_fault_bitset = 0;
-  expected_fault_bitset |= 1 << POWER_SELECT_AUX;
-  expected_fault_bitset |= 1 << (POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES);
+  expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERVOLTAGE;
+  expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERCURRENT;
   TEST_ASSERT_EQUAL(expected_fault_bitset, power_select_get_fault_bitset());
+
+  // set values back to good
+  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_GOOD_VOLTAGE_SCALED_MV;
+  s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] = TEST_GOOD_CURRENT_SCALED_MA;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  // should now be no faults
+  TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 }
 
 void test_power_select_broadcast_works(void) {
