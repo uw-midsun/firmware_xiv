@@ -8,10 +8,20 @@
 #include "delay.h"
 #include "string.h"
 #include "thermistor.h"
+#include "exported_enums.h"
 
 #define TEST_CAN_ID 0x1
 
 #define TEST_TEMP_VOLTAGE_MV 1100
+
+// make test faster 
+// currently, uncommenting this causes failures
+/*
+#ifdef POWER_SELECT_MEASUREMENT_INTERVAL_MS
+#undef POWER_SELECT_MEASUREMENT_INTERVAL_MS
+#define POWER_SELECT_MEASUREMENT_INTERVAL_MS 20
+#endif
+*/ 
 
 static CanStorage s_can_storage = { 0 };
 static CanSettings s_can_settings = {
@@ -301,7 +311,121 @@ void test_power_select_faults_handled(void) {
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 }
 
-void test_power_select_broadcast_works(void) {
-  // todo
+static bool s_expect_ack = false;
+
+// make sure ACK is as expected
+static StatusCode prv_test_can_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+                                     uint16_t num_remaining, void *context) {
+  if(s_expect_ack) {
+    TEST_ASSERT_NOT_EQUAL(CAN_ACK_STATUS_OK, status);
+  } else {
+    TEST_ASSERT_EQUAL(CAN_ACK_STATUS_OK, status);
+  }
+  return STATUS_CODE_OK;
+}
+
+void test_power_select_power_on_sequence(void) {
+  CanAckRequest ack_req = { 0 };
+  ack_req.callback = prv_test_can_ack;
+
+  TEST_ASSERT_OK(power_select_init());
+
+  prv_set_voltages_good();
+  prv_set_all_pins_valid();
+  
+  TEST_ASSERT_OK(power_select_start());
+
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+
+  // aux fault
+  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  s_expect_ack = false;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+
+  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_GOOD_VOLTAGE_SCALED_MV;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  // should be good now
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+
+  // invalid 
+  s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_HIGH;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  s_expect_ack = false;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+
+  s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_LOW;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  // should be good now
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+
+  // same, but for DCDC
+  // dcdc fault
+  s_test_adc_read_values[POWER_SELECT_DCDC] = TEST_FAULT_VOLTAGE_SCALED_MV;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  s_expect_ack = false;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+
+  s_test_adc_read_values[POWER_SELECT_DCDC] = TEST_GOOD_VOLTAGE_SCALED_MV;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  // should be good now
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+
+  // invalid 
+  s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_HIGH;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  s_expect_ack = false;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+
+  s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_LOW;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  // should be good now
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+
+  // make sure both nack if both are invalid
+  s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_HIGH;
+  s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_HIGH;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  s_expect_ack = false;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+
+  s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_LOW;
+  s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_LOW;
+  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+
+  // should be good now
+  s_expect_ack = true;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
 }
 
