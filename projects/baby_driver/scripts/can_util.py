@@ -51,6 +51,11 @@ def get_bus_reader(channel=None):
     return get_bus_data(channel).reader
 
 
+def get_bus_notifier(channel=None):
+    """Returns a Python-CAN Notifier to listen for can messages."""
+    return get_bus_data(channel).notifier
+
+
 class Message:
     """
     An immutable wrapper over Python-CAN's can.Message to support our message and device ID
