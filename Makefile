@@ -202,9 +202,18 @@ lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
-# Disable import error
-PYLINT_DISABLE := F0401 duplicate-code
+# Globally disable the following pylint messages:
+PYLINT_DISABLE := \
+	import-error redefined-outer-name unused-argument \
+	too-few-public-methods duplicate-code no-self-use
+
+# Disable these additional pylint messages for MPXE:
+MPXE_PYLINT_DISABLE := \
+	missing-module-docstring missing-class-docstring \
+	missing-function-docstring invalid-name
+
 PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE))
+MPXE_PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE)) $(addprefix --disable=,$(MPXE_PYLINT_DISABLE))
 
 # Lints Python files, excluding MPXE generated files
 .PHONY: pylint
@@ -213,7 +222,7 @@ pylint:
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r $(PYLINT)
 	@$(FIND:"*.[ch]"="*.py") | xargs -r $(PYLINT)
-	@find $(MPXE_DIR) -path $(MPXE_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(PYLINT)
+	@find $(MPXE_DIR) -path $(MPXE_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(MPXE_PYLINT)
 
 .PHONY: format_quick
 format_quick:

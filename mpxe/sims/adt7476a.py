@@ -1,9 +1,12 @@
 from mpxe.protogen import stores_pb2
-from mpxe.protogen import adt7476a_pb2
 
 from mpxe.sims import sim
 
 class Adt7476a(sim.Sim):
+    def __init__(self):
+        self.speed = [0, 0, 0]
+        self.status = [0, 0, 0]
+
     def handle_update(self, pm, proj):
         stores  = proj.stores
         if (stores_pb2.MxStoreType.ADT7476A, 0) in stores:
@@ -12,7 +15,9 @@ class Adt7476a(sim.Sim):
             self.status = [adt.status[i] for i in range(len(adt.status)) if i < 3]
 
     def assert_store_values(self, proj, speed, status, channel):
-        # you need to make sure the store has been initialized before calling this
+        # make sure the store has been initialized before calling this
+
         real_speed = speed / 0.39
-        assert(self.speed[channel]  == int(real_speed))   # because real_speed is what's actually passed
-        assert(self.status[channel] == status)
+        # real_speed is what's actually passed
+        assert self.speed[channel]  == int(real_speed)
+        assert self.status[channel] == status

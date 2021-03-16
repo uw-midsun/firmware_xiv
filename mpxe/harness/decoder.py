@@ -1,7 +1,6 @@
 import sys
 
 from mpxe.protogen import stores_pb2
-from mpxe.harness import pm
 
 MODULE_NAME_FORMAT = 'mpxe.protogen.{}_pb2'
 STORE_TYPE_NAME_FORMAT = 'Mx{}Store'

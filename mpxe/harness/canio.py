@@ -1,8 +1,8 @@
+import threading
+
+from collections import deque, namedtuple
 import can
 import cantools
-import threading
-from collections import deque, namedtuple
-
 from mpxe.harness import pm
 
 DBC_PATH = pm.REPO_ROOT_DIR + 'system_can.dbc'
@@ -28,7 +28,7 @@ class CanIO:
     def send(self, name, data):
         msg_type = self.db.get_message_by_name(name)
         encoded_data = msg_type.encode(data)
-        msg = can.Message(arbitration_id=msg_type.frame_id, 
+        msg = can.Message(arbitration_id=msg_type.frame_id,
             is_extended_id=False, data=encoded_data)
         self.bus.send(msg)
 
