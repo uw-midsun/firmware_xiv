@@ -24,7 +24,7 @@ static CanSettings s_can_settings = {
     .loopback = true,
 };
 
-// Pin defs
+// Pin defs, copy-pasted from power_select.c
 static const GpioAddress VOLTAGE_MEASUREMENT_PINS[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS] = {
   [POWER_SELECT_AUX] = POWER_SELECT_AUX_VSENSE_ADDR,
   [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_VSENSE_ADDR,
@@ -62,19 +62,34 @@ static const GpioAddress VALID_PINS[NUM_POWER_SELECT_VALID_PINS] = {
 
 // set value returned on ADC read
 static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
-static uint8_t s_test_adc_read_index = 0;
+
+static bool prv_gpio_addr_is_eq(GpioAddress addr0, GpioAddress addr1) {
+  return (addr0.pin == addr1.pin) && (addr0.port == addr1.port);
+}
 
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
-    LOG_DEBUG("mocking reading index %d\n", s_test_adc_read_index);
-    *reading = s_test_adc_read_values[s_test_adc_read_index];
-
-    if(s_test_adc_read_index == NUM_POWER_SELECT_MEASUREMENTS - 1) {
-      s_test_adc_read_index = 0;
-    } else {
-      s_test_adc_read_index++;
+    // Find correct reading to return
+    for(int i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
+      if(prv_gpio_addr_is_eq(VOLTAGE_MEASUREMENT_PINS[i], address)) {
+        *reading = s_test_adc_read_values[i];
+        return STATUS_CODE_OK;    
+      }
     }
-
-    return STATUS_CODE_OK;
+    for(int i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
+      if(prv_gpio_addr_is_eq(CURRENT_MEASUREMENT_PINS[i], address)) {
+        *reading = s_test_adc_read_values[i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
+        return STATUS_CODE_OK;    
+      }
+    }
+    for(int i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
+      if(prv_gpio_addr_is_eq(TEMP_MEASUREMENT_PINS[i], address)) {
+        *reading = s_test_adc_read_values[i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
+        return STATUS_CODE_OK;    
+      }
+    }
+  
+  // should never get here
+  return STATUS_CODE_INVALID_ARGS;
 }
 
 // set value returned on GPIO read
@@ -123,7 +138,6 @@ void teardown_test(void) {
 
   power_select_stop();
 
-  s_test_adc_read_index = 0;
   s_test_gpio_read_index = 0;
 }
 
