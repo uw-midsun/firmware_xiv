@@ -65,21 +65,17 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Python tooling
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.13.1'
+
+      - name: Install Python/Go tooling
         run: |
           pip install --user pylint
           pip install --user autopep8
           pip install --upgrade pip
           pip install --upgrade setuptools
-          # Install dependencies from all requirements.txt in the repo
           make install_requirements
-
-      - name: Install Go
-        run: |
-          git clone https://github.com/udhos/update-golang
-          cd update-golang
-          sudo ./update-golang.sh
-          cd ..
 
       - name: Force PATH to update
         run: hash -r

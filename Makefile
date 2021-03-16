@@ -41,6 +41,7 @@ PROJ_DIR := projects
 PLATFORMS_DIR := platform
 LIB_DIR := libraries
 MAKE_DIR := make
+CODEGEN_DIR := codegen
 
 PLATFORM ?= stm32f0xx
 
@@ -160,8 +161,8 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity.*
-# Find all python files excluding library files in project env (./venv)
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find -path ./venv -prune -o -name '*.py')
+# Find all python files excluding library files in project env (./.venv)
+FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find -path ./.venv -prune -o -name '*.py')
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
@@ -181,18 +182,16 @@ lint:
 .PHONY: lint_quick
 lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
-	@$(FIND_MOD_NEW) | xargs -r python3 lint.py
-	@cd codegen && pylint --disable=F0401 scripts/
+	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
+	@$(FIND_MOD_NEW_PY) | xargs -r pylint --disable=F0401
 
 # Disable import error
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR), $(CODEGEN_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
+	@find $(MAKE_DIR) $(PLATFORMS_DIR) $(CODEGEN_DIR)/scripts -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
-	@echo "Linting codegen"
-	@cd codegen && pylint --disable=F0401 scripts/
 
 .PHONY: format_quick
 format_quick:
@@ -248,34 +247,35 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@cd codegen && rm -rf genfiles out
 
+# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command 
 .PHONY: codegen
 codegen: codegen_protos
 	@echo "Generating from templates..."
-	@cd codegen && python scripts/build.py 
-	@cd codegen && find out -type f \( -iname '*.[ch]' -o -iname '*.ts' \) | xargs -r clang-format -i -fallback-style=Google
-	@cd codegen && find out -type f \( -iname '*.go'  \) | xargs -r gofmt -w
-	@cp -v codegen/out/* libraries/codegen-tooling/inc/
+	@cd $(CODEGEN_DIR) && python scripts/build.py 
+	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' -o -iname '*.ts' \) | xargs -r clang-format -i -fallback-style=Google
+	@find $(CODEGEN_DIR)/out -type f \( -iname '*.go'  \) | xargs -r gofmt -w
+	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
 
+# Note: build_dbc has same issue as build.by with local paths
 .PHONY: codegen_dbc
 codegen_dbc:
 	@echo "Generating DBC file"
-	@cd codegen && python scripts/build_dbc.py
+	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
 
 .PHONY: codegen_protos 
 codegen_protos:
 	@echo "Compiling protos..."
-	@cd codegen && mkdir -p genfiles
-	@cd codegen && protoc -I=schema --python_out=genfiles --go_out=genfiles schema/can.proto
+	@mkdir -p $(CODEGEN_DIR)/genfiles
+	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
 
 .PHONY: codegen_test
 codegen_test: codegen
 	@echo "Testing codegen..."
-	@python -m unittest discover -s codegen/scripts
+	@python -m unittest discover -s $(CODEGEN_DIR)/scripts
 
 .PHONY: mock_can_data
-mock_can_data: 
-	@sudo modprobe vcan && sudo ip link add dev vcan0 type vcan && sudo ip link set up vcan0
-	@cd codegen && python3 mock_can_data.py
+mock_can_data: socketcan
+	@python3 $(CODEGEN_DIR)/mock_can_data.py
 
 .PHONY: remake
 remake: clean all
@@ -291,13 +291,11 @@ socketcan:
 
 .PHONY: pytest
 pytest:
-	@echo $(PROJ_DIR)/$(PROJECT)
-	@echo $(TEST)
 	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
 
 .PHONY: pytest_all
 pytest_all:
-	@for i in $$(find projects -name "test_*.py"); 													\
+	@for i in $$(find . -path ./.venv -prune -false -o -name "test_*.py"); 													\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
 	done			

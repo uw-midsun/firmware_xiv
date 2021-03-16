@@ -59,7 +59,7 @@ make pytest PROJECT=test_project
 # Run every python test in the scripts directory for all projects
 make pytest_all
 
-# Intall package requirements for every project
+# Install package requirements for every project
 make install_requirements 
 
 # Run codegen
