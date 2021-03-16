@@ -1,6 +1,7 @@
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import gpio_pb2
 
+
 class Sim:
     def handle_update(self, pm, proj):
         pass

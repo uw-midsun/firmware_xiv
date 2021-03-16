@@ -4,6 +4,7 @@ import time
 from mpxe.integration_tests import int_test
 from mpxe.sims.pedal_board import PedalBoard
 
+
 class TestPedal(int_test.IntTest):
     def setUp(self):
         super().setUp()
@@ -19,6 +20,7 @@ class TestPedal(int_test.IntTest):
         time.sleep(0.5)
         # ads1015 reading is nonzero so throttle should be nonzero
         self.assert_can_data('PEDAL_OUTPUT', 'throttle_output', 50)
+
 
 if __name__ == '__main__':
     unittest.main()

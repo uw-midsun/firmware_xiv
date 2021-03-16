@@ -7,6 +7,7 @@ from mpxe.sims import sim
 GPIO_KEY = (stores_pb2.MxStoreType.GPIO, 0)
 MCP2515_KEY = (stores_pb2.MxStoreType.MCP2515, 0)
 
+
 class Mci(sim.Sim):
     def __init__(self):
         super().__init__()
@@ -17,7 +18,7 @@ class Mci(sim.Sim):
 
     def handle_update(self, pm, proj):
         # Upon precharge enable (PA9) going high, set PB0 and PA10 to mock precharge
-        if not self.precharge_enable and self.get_gpio(proj, 'a',  9):
+        if not self.precharge_enable and self.get_gpio(proj, 'a', 9):
             self.precharge_enable = self.get_gpio(proj, 'a', 9)
             time.sleep(0.1)
             # update precharge monitor and latch out

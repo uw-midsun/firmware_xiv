@@ -4,6 +4,7 @@ import time
 from mpxe.integration_tests import int_test
 from mpxe.sims.adt7476a import Adt7476a
 
+
 class TestAdt7476a(int_test.IntTest):
     def setUp(self):
         super().setUp()
@@ -16,6 +17,7 @@ class TestAdt7476a(int_test.IntTest):
             self.adt7476a.sim.assert_store_values(self.adt7476a, x * 10, 0, 0)
             # this is for ADT_PWM_PORT_2
             self.adt7476a.sim.assert_store_values(self.adt7476a, 0, 0, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

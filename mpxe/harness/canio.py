@@ -10,6 +10,7 @@ BUS_RECV_TIMEOUT = 0.5
 
 Msg = namedtuple('Msg', ['name', 'data'])
 
+
 class CanIO:
     def __init__(self):
         self.messages = deque()
@@ -29,7 +30,7 @@ class CanIO:
         msg_type = self.db.get_message_by_name(name)
         encoded_data = msg_type.encode(data)
         msg = can.Message(arbitration_id=msg_type.frame_id,
-            is_extended_id=False, data=encoded_data)
+                          is_extended_id=False, data=encoded_data)
         self.bus.send(msg)
 
     def stop(self):

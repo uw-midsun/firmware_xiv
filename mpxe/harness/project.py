@@ -8,6 +8,7 @@ from mpxe.harness import pm
 
 BIN_DIR_FORMAT = pm.REPO_ROOT_DIR + 'firmware_xiv/build/bin/x86/{}'
 
+
 class Project:
     def __init__(self, name, sim):
         self.name = name
@@ -16,7 +17,7 @@ class Project:
 
         cmd = BIN_DIR_FORMAT.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=False)
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=False)
         self.ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
         while not os.path.exists(self.ctop_fifo_path):
             pass

@@ -4,6 +4,7 @@ import time
 from mpxe.integration_tests import int_test
 from mpxe.sims.mci import Mci
 
+
 class TestMci(int_test.IntTest):
     def setUp(self):
         super().setUp()
@@ -27,6 +28,7 @@ class TestMci(int_test.IntTest):
         self.can_send('PEDAL_OUTPUT', {'throttle_output': 50, 'brake_output': 0})
         time.sleep(1)
         self.assertNotEqual(self.mci.sim.tx_data, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,6 +2,7 @@ import unittest
 
 from mpxe.harness.pm import ProjectManager
 
+
 class IntTest(unittest.TestCase):
     def setUp(self):
         print("Running test", self._testMethodName)

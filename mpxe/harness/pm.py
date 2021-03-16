@@ -15,8 +15,10 @@ POLL_TIMEOUT = 0.5
 STORE_LOCK_SIGNAL = signal.SIGUSR1
 LOG_LOCK_SIGNAL = signal.SIGUSR2
 
+
 class InvalidPollError(Exception):
     pass
+
 
 class ProjectManager:
     def __init__(self):

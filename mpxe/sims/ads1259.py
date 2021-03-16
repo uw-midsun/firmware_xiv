@@ -5,6 +5,7 @@ from mpxe.sims import sim
 
 ADS1259_KEY = (stores_pb2.MxStoreType.ADS1259, 0)
 
+
 class Ads1259(sim.Sim):
 
     def update_ads_reading(self, proj, reading):

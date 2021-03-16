@@ -4,6 +4,7 @@ import time
 from mpxe.integration_tests import int_test
 from mpxe.sims.pca9539r import Pca9539r
 
+
 class TestPca9539r(int_test.IntTest):
     def setUp(self):
         super().setUp()
@@ -19,6 +20,7 @@ class TestPca9539r(int_test.IntTest):
             time.sleep(1)
             self.pca9539r.sim.assert_store_values(self, value)
             value = not value
+
 
 if __name__ == '__main__':
     unittest.main()

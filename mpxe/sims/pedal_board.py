@@ -3,6 +3,7 @@ from mpxe.protogen import ads1015_pb2
 
 from mpxe.sims import sim
 
+
 class PedalBoard(sim.Sim):
     def update_ads_reading(self, proj, val, channel):
         ads1015_msg = ads1015_pb2.MxAds1015Store()
