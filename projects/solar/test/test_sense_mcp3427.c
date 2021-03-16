@@ -58,6 +58,7 @@ static void prv_get_max_mcp3427s_settings(SenseMcp3427Settings *settings) {
     settings->mcp3427s[i].mcp3427_settings = s_test_mcp3427_settings;
     settings->mcp3427s[i].data_point = prv_get_test_data_point(i);
     settings->mcp3427s[i].scaling_factor = 1.0f;
+    settings->mcp3427s[i].bias = 0.0f;
 
     // Generate a unique port/address pin combo for each MCP3427.
     // There are 2 I2C ports and 8 address pin combos (low & low is the same as float & float).
@@ -374,7 +375,6 @@ void test_sense_mcp3427_negative_handling(void) {
 
 // Test that the scaling factor is correctly handled.
 void test_sense_mcp3427_scaling_factor(void) {
-  uint32_t set_value = 0;
   SenseMcp3427Settings settings = {
     .mcp3427s = { {
         .data_point = TEST_DATA_POINT,
@@ -390,6 +390,27 @@ void test_sense_mcp3427_scaling_factor(void) {
   prv_test_value_transform(&settings, 10, 2, "Truncating 10->2 (factor 0.25) failed.");
   // -1025 * 0.25f = -256.25f is truncated to -256, which is 0xFFFFFF000 in 32 bits
   prv_test_value_transform(&settings, -1025, 0xFFFFFF00, "-1025->0xFFFFFF00 (factor 0.25) failed.");
+}
+
+// Test that the bias is also correctly handled.
+void test_sense_mcp3427_bias(void) {
+  SenseMcp3427Settings settings = {
+    .mcp3427s = { {
+        .data_point = TEST_DATA_POINT,
+        .scaling_factor = 3.5f,
+        .bias = 4.5f,
+    } },
+    .num_mcp3427s = 1,
+  };
+  settings.mcp3427s[0].mcp3427_settings = s_test_mcp3427_settings;
+  TEST_ASSERT_OK(sense_mcp3427_init(&settings));
+  TEST_ASSERT_OK(sense_mcp3427_start());
+
+  prv_test_value_transform(&settings, 20, 65, "20->65 (factor 3.5, bias 4.5) failed.");
+  prv_test_value_transform(&settings, 21, 69, "21->69 (factor 3.5, bias 4.5) failed.");
+  // -1024 * 3.5f - 4.5f = -3588.5f is truncated to -3588, which is 0xFFFFF1FC in 32 bits.
+  prv_test_value_transform(&settings, -1024, 0xFFFFF1FC,
+                           "-1024->0xFFFFF1FC (factor 3.5, bias 4.5) failed.");
 }
 
 // Test that initializing with NULL settings fails gracefully.

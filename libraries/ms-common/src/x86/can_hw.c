@@ -19,7 +19,12 @@
 #include "log.h"
 #include "x86_interrupt.h"
 
+#ifdef CAN_HW_DEV_USE_CAN0
+#define CAN_HW_DEV_INTERFACE "can0"
+#else
 #define CAN_HW_DEV_INTERFACE "vcan0"
+#endif
+
 #define CAN_HW_MAX_FILTERS 14
 #define CAN_HW_TX_FIFO_LEN 8
 // Check for thread exit once every 10ms
@@ -89,6 +94,8 @@ static void *prv_rx_thread(void *arg) {
             s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
       }
 
+      // Wakes the main thread
+      x86_interrupt_wake();
       // Limit how often we can receive messages to simulate bus speed
       usleep(s_socket_data.delay_us);
     }
@@ -110,6 +117,7 @@ static void *prv_tx_thread(void *arg) {
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
     // Wait until the producer has created an item
     sem_wait(&s_tx_sem);
+    x86_interrupt_wake();
     fifo_pop(&s_socket_data.tx_fifo, &frame);
     int bytes = write(s_socket_data.can_fd, &frame, sizeof(frame));
 

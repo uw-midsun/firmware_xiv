@@ -6,24 +6,30 @@
 #include "can_msg_defs.h"
 #include "can_rx_event_mapper.h"
 #include "can_rx_event_mapper_config.h"
+#include "can_transmit.h"
 #include "current_measurement.h"
 #include "current_measurement_config.h"
+#include "front_uv_detector.h"
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
+#include "pd_error_defs.h"
 #include "pd_events.h"
+#include "pd_fan_ctrl.h"
 #include "pd_gpio.h"
 #include "pd_gpio_config.h"
 #include "pin_defs.h"
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "voltage_regulator.h"
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
 #define STROBE_BLINK_INTERVAL_US 100000         // 0.1s between blinks of the strobe light
 #define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
+#define VOLTAGE_REGULATOR_DELAY_MS 25
 
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
@@ -32,20 +38,19 @@ static bool prv_determine_is_front_power_distribution(void) {
 #ifdef FORCE_REAR_POWER_DISTRIBUTION
   return false;
 #else
-  // initialize pin 30 (PC13) as pull-up, it's shorted on rear
-  GpioAddress board_test_pin = { .port = GPIO_PORT_C, .pin = 13 };
+  // initialize PA8
+  GpioAddress board_test_pin = FRONT_OR_REAR_RECOGNITION_PIN;
   GpioSettings board_test_settings = {
-    .direction = GPIO_DIR_IN,
-    .resistor = GPIO_RES_PULLUP,
-    .alt_function = GPIO_ALTFN_NONE,
+    .direction = GPIO_DIR_IN, .resistor = GPIO_RES_NONE, .alt_function = GPIO_ALTFN_NONE
   };
+
   gpio_init_pin(&board_test_pin, &board_test_settings);
 
-  // we're on front if it's high and rear if it's low
-  GpioState state = GPIO_STATE_HIGH;  // default to front since we can force rear
+  // we're on front if it's low and rear if it's high
+  GpioState state = GPIO_STATE_LOW;
   gpio_get_state(&board_test_pin, &state);
 
-  return state == GPIO_STATE_HIGH;
+  return state == GPIO_STATE_LOW;
 #endif
 }
 
@@ -73,6 +78,19 @@ static void prv_init_can(bool is_front_power_distribution) {
   can_init(&s_can_storage, &can_settings);
 }
 
+static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void *context) {
+  uint16_t pd_err_flags = (error == VOLTAGE_REGULATOR_ERROR_OFF_WHEN_SHOULD_BE_ON)
+                              ? (PD_5V_REG_ERROR | PD_5V_REG_DATA)
+                              : PD_5V_REG_ERROR;
+  bool is_front_pd = *(bool *)context;
+
+  if (is_front_pd) {
+    CAN_TRANSMIT_FRONT_PD_FAULT(pd_err_flags);
+  } else {
+    CAN_TRANSMIT_REAR_PD_FAULT(pd_err_flags, 0, 0, 0);
+  }
+}
+
 static void prv_current_measurement_data_ready_callback(void *context) {
   // called when current_measurement has new data: send it to publish_data for publishing
   PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
@@ -84,6 +102,7 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   gpio_init();
+  gpio_it_init();
   event_queue_init();
   adc_init(ADC_MODE_SINGLE);
   prv_init_i2c();
@@ -105,6 +124,18 @@ int main(void) {
   power_distribution_publish_data_init(is_front_power_distribution
                                            ? FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG
                                            : REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG);
+
+  // Initialize Voltage Regulator
+  VoltageRegulatorSettings vreg_set = {
+    .enable_pin = POWER_DISTRIBUTION_5V_REG_ENABLE,
+    .monitor_pin = POWER_DISTRIBUTION_5V_REG_MONITOR,
+    .timer_callback_delay_ms = VOLTAGE_REGULATOR_DELAY_MS,
+    .error_callback = prv_voltage_monitor_error_callback,
+    .error_callback_context = (const void *)(&is_front_power_distribution),
+  };
+  VoltageRegulatorStorage vreg_store = { 0 };
+  voltage_regulator_init(&vreg_store, &vreg_set);
+  voltage_regulator_set_enabled(&vreg_store, true);
 
   // initialize current_measurement
   PowerDistributionCurrentSettings current_measurement_settings = {
@@ -130,9 +161,32 @@ int main(void) {
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
+#ifndef FAN_CONTROL_NOT_ACTIVATED
+  // initialize fan ctrl
+  if (is_front_power_distribution) {
+    FanCtrlSettings fan_settings = {
+      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+      .fan_pwm1 = FRONT_PD_PWM_1,
+      .fan_pwm2 = FRONT_PD_PWM_2,
+      .i2c_address = ADT7476A_I2C_ADDRESS,
+    };
+    pd_fan_ctrl_init(&fan_settings, true);
+  } else {
+    FanCtrlSettings fan_settings = {
+      .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
+      .fan_pwm1 = REAR_ENC_VENT_PWM,
+      .fan_pwm2 = REAR_DCDC_PWM,
+      .i2c_address = ADT7476A_I2C_ADDRESS,
+    };
+    pd_fan_ctrl_init(&fan_settings, false);
+  }
+#endif
 
-  // initialize strobe_blinker on rear
-  if (!is_front_power_distribution) {
+  if (is_front_power_distribution) {
+    // initialize UV cutoff detector
+    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
+  } else {
+    // initialize strobe_blinker on rear
     RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };

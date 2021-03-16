@@ -160,27 +160,6 @@ void test_power_distribution_publish_data_invalid_config_errors(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(bad_config));
 }
 
-static StatusCode prv_internal_error_callback(PowerDistributionCurrent current_id,
-                                              uint16_t current_data) {
-  return STATUS_CODE_INTERNAL_ERROR;
-}
-
-// Test that returning a non-OK status code from the transmitter causes publish to do the same.
-void test_power_distribution_publish_data_mirrors_transmitter_error(void) {
-  PowerDistributionPublishConfig config = {
-    .transmitter = &prv_internal_error_callback,
-    .currents_to_publish = (PowerDistributionCurrent[]){ TEST_CURRENT_ID_1 },
-    .num_currents_to_publish = 1,
-  };
-  TEST_ASSERT_OK(power_distribution_publish_data_init(config));
-
-  uint16_t test_current_measurements[NUM_POWER_DISTRIBUTION_CURRENTS] = {
-    [TEST_CURRENT_ID_1] = TEST_CURRENT_DATA_1,
-  };
-  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR,
-                    power_distribution_publish_data_publish(test_current_measurements));
-}
-
 // Test that the standard configs initialize correctly.
 void test_power_distribution_publish_data_standard_configs_initialize(void) {
   TEST_ASSERT_OK(

@@ -51,6 +51,8 @@ x86_flash
 .vs/
 build/
 *.DS_Store
+.project
+*.code-workspace
 
 # Vim
 tags

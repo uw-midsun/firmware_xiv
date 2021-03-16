@@ -6,7 +6,7 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 // x86 implementation very similar to STM32F0 implementation.
-// adc_read_raw should always return 4090.
+// adc_read_raw should always return 2500.
 // Vdda locked at 3300 mV.
 // adc_read_converted should always return close to 2V
 // temperature reading always returns 293 kelvin.
@@ -124,8 +124,6 @@ void adc_init(AdcMode adc_mode) {
   prv_init_store();
 #endif
 
-  interrupt_init();
-  soft_timer_init();
   if (adc_mode == ADC_MODE_CONTINUOUS) {
     soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
   }

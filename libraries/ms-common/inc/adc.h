@@ -1,6 +1,7 @@
 #pragma once
 // Analog to Digital Converter HAL Inteface
 // Requires GPIO and interrupts to be initialized.
+// If using continuous mode on x86, soft timers must be initialized.
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -55,10 +56,13 @@ StatusCode adc_set_channel_pin(GpioAddress address, bool new_state);
 // completes a conversion
 StatusCode adc_register_callback_pin(GpioAddress address, AdcPinCallback callback, void *context);
 
+// Do not call |adc_read_raw/converted| or |adc_read_raw/converted_pin| from an interrupt callback
+// with INTERRUPT_PRIORITY_HIGH, as it will cause deadlock.
+
 // Obtain the raw 12-bit value read by the specified pin
 StatusCode adc_read_raw_pin(GpioAddress address, uint16_t *reading);
 
-// Obtain the converted value at the specified pin
+// Obtain the converted value at the specified pin, in mV
 StatusCode adc_read_converted_pin(GpioAddress address, uint16_t *reading);
 
 // Following code and functions use adc channels as seen below
@@ -83,5 +87,5 @@ StatusCode adc_register_callback(AdcChannel adc_channel, AdcCallback callback, v
 StatusCode adc_read_raw(AdcChannel adc_channel, uint16_t *reading);
 
 // Deprecated in favour of GpioAddress version
-// Obtain the converted value at the specified channel
+// Obtain the converted value at the specified channel, in mV
 StatusCode adc_read_converted(AdcChannel adc_channel, uint16_t *reading);

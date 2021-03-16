@@ -17,6 +17,11 @@
 #define POWER_DISTRIBUTION_CAN_RX_PIN \
   { GPIO_PORT_A, 11 }
 
+#define POWER_DISTRIBUTION_5V_REG_MONITOR \
+  { GPIO_PORT_B, 1 }
+#define POWER_DISTRIBUTION_5V_REG_ENABLE \
+  { GPIO_PORT_B, 2 }
+
 // Front power distribution
 #define FRONT_PIN_CTR_CONSL_EN \
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_1, .pin = PCA9539R_PIN_IO1_5 }
@@ -80,6 +85,16 @@
 #define FRONT_PIN_5V_SPARE_DSEL \
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_0, .pin = PCA9539R_PIN_IO0_3 }
 
+// Front fan ctrl pins
+// TODO(SOFT-373): must be updated by HW
+#define FRONT_PIN_FAN_POT \
+  { GPIO_PORT_A, 0 }
+#define FRONT_PIN_SMBALERT \
+  { GPIO_PORT_A, 1 }
+
+#define FRONT_UV_COMPARATOR_PIN \
+  { GPIO_PORT_B, 0 }
+
 // Rear power distribution
 #define REAR_PIN_MOTOR_INTERFACE_EN \
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_1, .pin = PCA9539R_PIN_IO1_4 }
@@ -142,3 +157,15 @@
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_0, .pin = PCA9539R_PIN_IO0_3 }
 #define REAR_PIN_SPARE_8_9_DSEL \
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_1, .pin = PCA9539R_PIN_IO1_2 }
+
+// Rear fan ctrl pins
+// TODO(SOFT-373): must be updated by HW
+#define REAR_PIN_ENC_VENT_THERM \
+  { GPIO_PORT_A, 0 }
+#define REAR_PIN_DCDC_THERM \
+  { GPIO_PORT_A, 1 }
+#define REAR_PIN_SMBALERT \
+  { GPIO_PORT_A, 0 }
+
+#define FRONT_OR_REAR_RECOGNITION_PIN \
+  { GPIO_PORT_A, 8 }
