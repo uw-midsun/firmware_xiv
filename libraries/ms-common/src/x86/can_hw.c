@@ -19,7 +19,12 @@
 #include "log.h"
 #include "x86_interrupt.h"
 
+#ifdef CAN_HW_DEV_USE_CAN0
+#define CAN_HW_DEV_INTERFACE "can0"
+#else
 #define CAN_HW_DEV_INTERFACE "vcan0"
+#endif
+
 #define CAN_HW_MAX_FILTERS 14
 #define CAN_HW_TX_FIFO_LEN 8
 // Check for thread exit once every 10ms

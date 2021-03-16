@@ -69,7 +69,7 @@ int main() {
     .fault_event = TEST_CAN_EVENT_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
-    .loopback = true,
+    .loopback = false,
   };
 
   can_init(&s_can_storage, &can_settings);

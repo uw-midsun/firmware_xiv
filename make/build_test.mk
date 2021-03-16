@@ -56,7 +56,7 @@ $($(T)_TESTS): $($(T)_TEST_BIN_DIR)/%_runner$(PLATFORM_EXT): \
 	@$(CC) $($(firstword $|)_CFLAGS) -Wl,-Map=$(lastword $|)/$(notdir $(@:%$(PLATFORM_EXT)=%.map)) \
     $(addprefix -Wl$(COMMA)-wrap$(COMMA),$($(firstword $|)_$(notdir $(@:%_runner$(PLATFORM_EXT)=%))_MOCKS)) $^ -o $@ \
     -L$(STATIC_LIB_DIR) $(addprefix -l,$(foreach lib,$($(firstword $|)_TEST_DEPS),$($(lib)_DEPS))) \
-    $(LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS) $(unity_INC_DIRS))
+    $($(T)_LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS) $(unity_INC_DIRS))
 
 .PHONY: test test_ test_$(T)
 

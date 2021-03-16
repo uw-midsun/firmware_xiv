@@ -8,6 +8,7 @@ from message_defs import BABYDRIVER_DEVICE_ID
 # pylint: disable=invalid-name
 dbc_database = None
 
+
 def can_send_raw(msg_id, data, device_id=BABYDRIVER_DEVICE_ID, channel=None):
     """
     A wrapper over can_utils.send_message providing a friendlier interface to can_util.send_message.
@@ -25,6 +26,7 @@ def can_send_raw(msg_id, data, device_id=BABYDRIVER_DEVICE_ID, channel=None):
         device_id=device_id,
     )
 
+
 def load_dbc(dbc_filename):
     """
     Creates a Database object from an existing DBC file used to encode CAN messages.
@@ -34,6 +36,7 @@ def load_dbc(dbc_filename):
     # pylint: disable=global-statement
     global dbc_database
     dbc_database = cantools.database.load_file(dbc_filename)
+
 
 def can_send(msg_name, channel=None, **data):
     """
