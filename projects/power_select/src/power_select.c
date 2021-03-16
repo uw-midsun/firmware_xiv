@@ -92,7 +92,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     // Only measure + store the value if the input pin is valid
     if (s_storage.valid_bitset & 1 << i) {
-      (adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]));
+      adc_read_converted_pin(VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]);
       // convert
       temp_reading = s_storage.voltages[i];
       temp_reading /= POWER_SELECT_VSENSE_SCALING;
@@ -115,7 +115,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   for (uint8_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
     // Only measure + store the value if the input pin is valid
     if (s_storage.valid_bitset & 1 << i) {
-      (adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]));
+      adc_read_converted_pin(CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]);
       // convert
       temp_reading = s_storage.currents[i];
       temp_reading *= A_TO_MA;
@@ -139,7 +139,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   }
   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
     uint16_t temp = 0;
-    (adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &temp));
+    adc_read_converted_pin(TEMP_MEASUREMENT_PINS[i], &temp);
 
     // just using the old power selection thermistor functions for now.
     // pretty sure temp_to_res should be named voltage_to_res

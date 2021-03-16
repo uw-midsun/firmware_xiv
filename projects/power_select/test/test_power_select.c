@@ -13,6 +13,20 @@
 
 #define TEST_TEMP_VOLTAGE_MV 1100
 
+#define TEST_GOOD_VOLTAGE_MV 3000
+#define TEST_GOOD_CURRENT_MA 4000
+
+// account for scaling 
+#define TEST_GOOD_VOLTAGE_SCALED_MV (TEST_GOOD_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
+#define TEST_GOOD_CURRENT_SCALED_MA (TEST_GOOD_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
+
+#define TEST_FAULT_VOLTAGE_MV 20000
+#define TEST_FAULT_CURRENT_MA 40000
+
+// account for scaling
+#define TEST_FAULT_VOLTAGE_SCALED_MV (TEST_FAULT_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
+#define TEST_FAULT_CURRENT_SCALED_MA (TEST_FAULT_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
+
 static CanStorage s_can_storage = { 0 };
 static CanSettings s_can_settings = {
     .device_id = TEST_CAN_ID,
@@ -63,6 +77,7 @@ static const GpioAddress VALID_PINS[NUM_POWER_SELECT_VALID_PINS] = {
 // set value returned on ADC read
 static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
 
+// helper to compare two GpioAddresses
 static bool prv_gpio_addr_is_eq(GpioAddress addr0, GpioAddress addr1) {
   return (addr0.pin == addr1.pin) && (addr0.port == addr1.port);
 }
@@ -108,19 +123,32 @@ StatusCode TEST_MOCK(gpio_get_state)(GpioAddress *address, GpioState *input_stat
     return STATUS_CODE_OK;
 }
 
-#define TEST_GOOD_VOLTAGE_MV 3000
-#define TEST_GOOD_CURRENT_MA 4000
+// lazy, rework this at some point
+static void prv_set_voltages_good(void) {
+  for(uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
+    s_test_adc_read_values[i] = TEST_GOOD_VOLTAGE_SCALED_MV;
+  }
+  s_test_adc_read_values[3] = TEST_GOOD_CURRENT_SCALED_MA;
+  s_test_adc_read_values[5] = TEST_GOOD_CURRENT_SCALED_MA;
+  s_test_adc_read_values[4] = TEST_GOOD_CURRENT_SCALED_MA;
+  s_test_adc_read_values[6] = TEST_TEMP_VOLTAGE_MV;
+  s_test_adc_read_values[7] = TEST_TEMP_VOLTAGE_MV;
+}
 
-// account for scaling 
-#define TEST_GOOD_VOLTAGE_SCALED_MV (TEST_GOOD_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
-#define TEST_GOOD_CURRENT_SCALED_MA (TEST_GOOD_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
+static void prv_set_all_pins_valid(void) {
+  for(uint16_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
+    s_test_gpio_read_states[i] = GPIO_STATE_LOW;
+  }
+}
 
-#define TEST_FAULT_VOLTAGE_MV 20000
-#define TEST_FAULT_CURRENT_MA 40000
+static uint16_t s_test_expected_readings[NUM_POWER_SELECT_MEASUREMENTS];
 
-// account for scaling
-#define TEST_FAULT_VOLTAGE_SCALED_MV (TEST_FAULT_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
-#define TEST_FAULT_CURRENT_SCALED_MA (TEST_FAULT_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
+/*
+// Confirm whether CAN TX's as expected
+static StatusCode prv_test_measurement_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  return STATUS_CODE_OK;
+}
+*/
 
 void setup_test(void) {
     gpio_init();
@@ -154,25 +182,6 @@ void test_power_select_periodic_measure_works(void) {
     delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
 
     power_select_stop();
-}
-
-
-// lazy, rework this at some point
-static void prv_set_voltages_good(void) {
-  for(uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    s_test_adc_read_values[i] = TEST_GOOD_VOLTAGE_SCALED_MV;
-  }
-  s_test_adc_read_values[3] = TEST_GOOD_CURRENT_SCALED_MA;
-  s_test_adc_read_values[5] = TEST_GOOD_CURRENT_SCALED_MA;
-  s_test_adc_read_values[4] = TEST_GOOD_CURRENT_SCALED_MA;
-  s_test_adc_read_values[6] = TEST_TEMP_VOLTAGE_MV;
-  s_test_adc_read_values[7] = TEST_TEMP_VOLTAGE_MV;
-}
-
-static void prv_set_all_pins_valid(void) {
-  for(uint16_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
-    s_test_gpio_read_states[i] = GPIO_STATE_LOW;
-  }
 }
 
 void test_power_select_periodic_measure_reports_correctly(void) {
@@ -301,7 +310,6 @@ void test_power_select_faults_handled(void) {
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 }
 
-void test_power_select_broadcast_works(void) {
+void test_power_select_power_on_sequencing_works(void) {
   // todo
 }
-
