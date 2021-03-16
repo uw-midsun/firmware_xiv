@@ -15,7 +15,7 @@ class TestPca9539r(int_test.IntTest):
         time.sleep(0.1)
         self.pca9539r.sim.assert_store_values(self, False)
         value = True
-        for _x in range(3):
+        for _ in range(3):
             time.sleep(1)
             self.pca9539r.sim.assert_store_values(self, value)
             value = not value
