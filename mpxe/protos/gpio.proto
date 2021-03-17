@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message MxGpioStore {
+  repeated bool state = 1;
+}

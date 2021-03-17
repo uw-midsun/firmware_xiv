@@ -31,7 +31,6 @@ const CanSettings can_settings = {
 };
 
 int main() {
-  LOG_DEBUG("Welcome to Pedal!\n");
   // initialize all the modules
   gpio_init();
   interrupt_init();
