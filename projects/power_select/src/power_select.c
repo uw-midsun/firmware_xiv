@@ -73,7 +73,6 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     return;
   }
   LOG_DEBUG("Reading measurements...\n");
-  AdcChannel sense_channel = NUM_ADC_CHANNELS;
   LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP; valid pins active-low\n");
 
   for (uint8_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
@@ -144,7 +143,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     // just using the old power selection thermistor functions for now.
     // pretty sure temp_to_res should be named voltage_to_res
     s_storage.temps[i] = (int32_t)resistance_to_temp(voltage_to_res(temp));
-    LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
+    LOG_DEBUG("Temp %d: %d\n", (int)i, (int)s_storage.temps[i]);
   }
 
   LOG_DEBUG("Send measurements result: %d\n", prv_broadcast_measurements());
@@ -232,9 +231,8 @@ StatusCode power_select_init(void) {
   return STATUS_CODE_OK;
 }
 
-// Start periodically measuring from the pins
-StatusCode power_select_start(
-    void) {  // do we even need this? or is it fine if we just expose prv_periodic_measure
+StatusCode power_select_start(void) {  
+  // do we even need this? or is it fine if we just expose prv_periodic_measure
   s_measure = true;
   prv_periodic_measure(SOFT_TIMER_INVALID_TIMER, &s_storage);
   
