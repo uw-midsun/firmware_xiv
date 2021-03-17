@@ -1,7 +1,9 @@
 #include "power_select.h"
 #include "power_select_events.h"
+#include "power_select_can.h" // give this its own separate test later!!!
 
 #include "test_helpers.h"
+#include "ms_test_helpers.h"
 #include "log.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -25,10 +27,11 @@
 
 static CanStorage s_can_storage = { 0 };
 static CanSettings s_can_settings = {
-    .device_id = TEST_CAN_ID,
+    .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = POWER_SELECT_CAN_EVENT_RX,
     .tx_event = POWER_SELECT_CAN_EVENT_TX,
+    .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
     .loopback = true,
@@ -321,12 +324,17 @@ static StatusCode prv_test_can_ack(CanMessageId msg_id, uint16_t device, CanAckS
   } else {
     TEST_ASSERT_EQUAL(CAN_ACK_STATUS_OK, status);
   }
+  LOG_DEBUG("actually gets here\n");
   return STATUS_CODE_OK;
 }
 
 void test_power_select_power_on_sequence(void) {
+  TEST_ASSERT_OK(power_select_can_init());
+
   CanAckRequest ack_req = { 0 };
   ack_req.callback = prv_test_can_ack;
+
+  MS_TEST_HELPER_CAN_TX_RX(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
   TEST_ASSERT_OK(power_select_init());
 

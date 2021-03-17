@@ -143,7 +143,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     // just using the old power selection thermistor functions for now.
     // pretty sure temp_to_res should be named voltage_to_res
     s_storage.temps[i] = (int32_t)resistance_to_temp(voltage_to_res(temp));
-    LOG_DEBUG("Temp %d: %d\n", (int)i, s_storage.temps[i]);
+    LOG_DEBUG("Temp %d: %d\n", (int)i, (int)s_storage.temps[i]);
   }
 
   LOG_DEBUG("Send measurements result: %d\n", prv_broadcast_measurements());
