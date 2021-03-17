@@ -160,9 +160,10 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 # This uses regex
-IGNORE_PY_FILES := ./lint.py ./libraries/unity.*
+IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
 # Find all python files excluding library files in project env (./.venv)
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find -path ./.venv -prune -o -name '*.py')
+TEST := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
+FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(TEST) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
@@ -183,7 +184,6 @@ lint:
 lint_quick:
 	@echo "Quick linting on ONLY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
-	@$(FIND_MOD_NEW_PY) | xargs -r pylint --disable=F0401
 
 # Disable import error
 .PHONY: pylint
@@ -193,10 +193,19 @@ pylint:
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) $(CODEGEN_DIR)/scripts -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
 	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
 
+.PHONY: pylint_quick
+pylint_quick:
+	@echo "Quick linting changed/new Python files"
+	@$(FIND_MOD_NEW_PY) | xargs -r pylint --disable=F0401
+
 .PHONY: format_quick
 format_quick:
 	@echo "Quick format on ONlY changed/new files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
+	
+.PHONY: pyformat_quick
+pyformat_quick: 
+	@echo "Quick format on changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
