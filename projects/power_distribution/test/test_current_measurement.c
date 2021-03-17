@@ -235,7 +235,7 @@ void test_power_distribution_current_measurement_get_pins(void) {
   PowerDistributionCurrentSettings settings = {
     .interval_us = 2000,
     .callback = &prv_increment_callback,
-    .hw_config = FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
+    .hw_config = FRONT_CURRENT_MEASUREMENT_HW_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 

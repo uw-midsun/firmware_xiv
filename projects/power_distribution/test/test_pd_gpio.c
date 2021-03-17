@@ -58,7 +58,7 @@ void setup_test(void) {
 
   // only so that pd_gpio tests pass with the horrendous bts7xxx pin hack
   PowerDistributionCurrentSettings current_settings = {
-    .hw_config = FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
+    .hw_config = FRONT_CURRENT_MEASUREMENT_HW_CONFIG,
   };
   power_distribution_current_measurement_init(&current_settings);
 }
