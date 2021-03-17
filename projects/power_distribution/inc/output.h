@@ -2,9 +2,11 @@
 
 #include <stdint.h>
 
+#include "gpio.h"
+#include "pca9539r_gpio_expander.h"
 #include "status.h"
 
-// General-use module for manipulating the outputs that power distribution controls.
+// General-purpose module for manipulating the outputs that power distribution controls.
 // An output is an abstraction of "something that PD can turn on and off".
 // This module provides a uniform interface for manipulating outputs implemented through GPIO or
 // an IO expander, and through a BTS7200 or BTS7040 load switch or not.
@@ -62,13 +64,58 @@ typedef enum {
   REAR_OUTPUT_SPARE_8, // driver display load switch port
   REAR_OUTPUT_SPARE_9, // centre console load switch port
   REAR_OUTPUT_SPARE_10, // rear display load switch port
+
+  NUM_OUTPUTS,
 } Output;
+
+// these structs should really go in a separate file, like output_impl.h or something
+typedef enum {
+  OUTPUT_TYPE_GPIO = 0,
+  OUTPUT_TYPE_BTS7200,
+  OUTPUT_TYPE_BTS7040,
+  NUM_OUTPUT_TYPES,
+} OutputType;
+
+typedef struct OutputGpioSpec {
+  GpioAddress address;
+} OutputGpioSpec;
+
+// there is one OutputBts7200Info per BTS7200, they're pointed to by OutputBts7200Spec
+typedef struct OutputBts7200Info {
+  // We assume they're all on PCA9539R
+  Pca9539rGpioAddress enable_0_pin;
+  Pca9539rGpioAddress enable_1_pin;
+  Pca9539rGpioAddress dsel_pin;
+  uint8_t mux_selection; // what should we select on the mux to read current from the BTS7200?
+} OutputBts7200Info;
+
+typedef struct OutputBts7200Spec {
+  uint8_t channel; // 0 or 1, which enable pin/output channel is it? TODO - separate type?
+  OutputBts7200Info *bts7200_info;
+} OutputBts7200Spec;
+
+typedef struct OutputBts7040Spec {
+  Pca9539rGpioAddress enable_pin;
+  uint8_t mux_selection; // what should we select on the mux to read current from the BTS7040?
+} OutputBts7040Spec;
+
+typedef struct OutputSpec {
+  OutputType type;
+  void *spec; // must point to an OutputXSpec corresponding to the type
+} OutputSpec;
+
+typedef struct OutputConfig {
+  OutputSpec specs[NUM_OUTPUTS];
+} OutputConfig;
 
 typedef enum {
   OUTPUT_STATE_OFF = 0,
   OUTPUT_STATE_ON,
   NUM_OUTPUT_STATES,
 } OutputState;
+
+// Initialize the module.
+StatusCode output_init(OutputConfig *config);
 
 // Set whether the output is on or off.
 StatusCode output_set_state(Output output, OutputState state);
