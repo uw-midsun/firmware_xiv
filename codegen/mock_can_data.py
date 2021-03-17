@@ -24,6 +24,7 @@ CAN_MESSAGES = []
 
 try:
     DB = cantools.database.load_file('system_can.dbc')
+# pylint: disable=broad-except
 except BaseException:
     print("Must generate DBC file first")
     print("Run make codegen && make codegen_dbc")

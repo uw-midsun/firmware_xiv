@@ -162,8 +162,8 @@ IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
 # Find all python files excluding library files in project env (./.venv)
-TEST := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(TEST) \) -prune -o -name '*.py' -print)
+IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
+FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
@@ -214,6 +214,9 @@ format:
 	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
+
+.PHONY: pyformat
+pyformat: 
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
@@ -314,7 +317,6 @@ install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@go get -u github.com/golang/protobuf/protoc-gen-go
 	@for i in $$(find projects -name "requirements.txt"); 		\
 	do															\
 		pip install -r $$i;										\
