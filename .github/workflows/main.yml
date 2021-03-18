@@ -25,24 +25,71 @@ jobs:
           mkdir -p ~/.local/bin
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
+     
+      - uses: actions/cache@v2
+        id: cache-gcc
+        with:
+          path: ~/.local/bin/gcc
+          key: ${{ runner.os }}-gcc
+
+      - uses: actions/cache@v2
+        id: cache-clang
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-clang
       
       - uses: actions/cache@v2
-        id: cache
+        id: cache-clang-format
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-clang-format
+
+      - uses: actions/cache@v2
+        id: cache-libc6-i386
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-libc6-i386
+
+      - uses: actions/cache@v2
+        id: cache-linux-module
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-linux-module
+
+      - uses: actions/cache@v2
+        id: cache-make
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-make
+
+      - uses: actions/cache@v2
+        id: cache-pip
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - name: Install gcc, clang, clang-format
-        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-fast -y install gcc-6
-          sudo apt-fast -y install clang-5.0
-          sudo apt-fast -y install clang-format-5.0
-          sudo apt-fast -y install libc6-i386
-          # for vcan module
-          sudo apt-fast -y install linux-modules-extra-$(uname -r)
+        
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install gcc-6
+
+        if: steps.cache-clang.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install clang-5.0
+
+        if: steps.cache-clang-format.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install clang-format-5.0
+
+        if: steps.cache-libc6-i386.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install libc6-i386
+
+        # for vcan module
+        if: steps.cache-linux-module.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install linux-modules-extra-$(uname -r)
+
+        run: |
           ln -sf `which gcc-6` ~/.local/bin/gcc
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
@@ -56,7 +103,7 @@ jobs:
           MAKE_PATH: make-4.1
           MAKE_ARCHIVE_PATH: make-4.1.tar.gz
           MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-make.outputs.cache-hit != 'true'
         run: |
           wget -nv $MAKE_URL
           tar xvf $MAKE_ARCHIVE_PATH
@@ -72,7 +119,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install Python tooling
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-pip.outputs.cache-hit != 'true'
         run: |
           pip install --user pylint
           pip install --user autopep8
@@ -115,7 +162,6 @@ jobs:
       - name: Build x86
         run: |
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
-          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
 
       - name: Test x86
         run: |
