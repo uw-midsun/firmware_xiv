@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message MxAdt7476aStore {
+  repeated uint32 speed = 1;
+  repeated bool  status = 2;
+}

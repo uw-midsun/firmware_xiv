@@ -23,9 +23,32 @@ typedef enum {
 #define LOG_WARN(fmt, ...) LOG(LOG_LEVEL_WARN, fmt, ##__VA_ARGS__)
 #define LOG_CRITICAL(fmt, ...) LOG(LOG_LEVEL_CRITICAL, fmt, ##__VA_ARGS__)
 
+#ifndef MPXE
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
       printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
     }                                                                         \
   } while (0)
+#else
+#include <pthread.h>
+#include <stdbool.h>
+
+#include "store.h"
+
+extern bool store_lib_inited;
+
+// fflush necessary for printing through pipes
+#define LOG(level, fmt, ...)                                                  \
+  do {                                                                        \
+    if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
+      log_mutex_lock();                                                       \
+      printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
+      fflush(stdout);                                                         \
+      if (store_lib_inited) {                                                 \
+        log_mutex_lock();                                                     \
+      }                                                                       \
+      log_mutex_unlock();                                                     \
+    }                                                                         \
+  } while (0)
+#endif
