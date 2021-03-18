@@ -30,40 +30,24 @@ typedef enum {
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
   FRONT_OUTPUT_SPEAKER,
   FRONT_OUTPUT_HORN,
+  // FRONT_OUTPUT_FRONT_FAN? TODO(SOFT-396)
   FRONT_OUTPUT_FAN_1,
   FRONT_OUTPUT_FAN_2,
-  FRONT_OUTPUT_5V_SPARE_1,
-  FRONT_OUTPUT_5V_SPARE_2,
-  FRONT_OUTPUT_SPARE_1,
-  FRONT_OUTPUT_SPARE_2,
-  FRONT_OUTPUT_SPARE_3,
-  FRONT_OUTPUT_SPARE_4,  // MCI load switch port
+  // spares omitted
 
   // Outputs for rear power distribution
   REAR_OUTPUT_BMS,
   REAR_OUTPUT_MCI,
   REAR_OUTPUT_CHARGER,
   REAR_OUTPUT_SOLAR_SENSE,
-  REAR_OUTPUT_TELEMETRY,
   REAR_OUTPUT_REAR_CAMERA,
   REAR_OUTPUT_LEFT_REAR_TURN_LIGHT,
   REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
   REAR_OUTPUT_BRAKE_LIGHT,
-  REAR_OUTPUT_STROBE,
+  REAR_OUTPUT_STROBE_LIGHT,
   REAR_OUTPUT_FAN_1,
   REAR_OUTPUT_FAN_2,
-  REAR_OUTPUT_5V_SPARE_1,
-  REAR_OUTPUT_5V_SPARE_2,
-  REAR_OUTPUT_SPARE_1,
-  REAR_OUTPUT_SPARE_2,
-  REAR_OUTPUT_SPARE_3,
-  REAR_OUTPUT_SPARE_4,   // steering load switch port
-  REAR_OUTPUT_SPARE_5,   // pedal load switch port
-  REAR_OUTPUT_SPARE_6,   // right camera load switch port
-  REAR_OUTPUT_SPARE_7,   // main pi (driver display/telemetry pi) load switch port
-  REAR_OUTPUT_SPARE_8,   // driver display load switch port
-  REAR_OUTPUT_SPARE_9,   // centre console load switch port
-  REAR_OUTPUT_SPARE_10,  // rear display load switch port
+  // spares omitted
 
   NUM_OUTPUTS,
 } Output;
