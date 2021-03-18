@@ -16,8 +16,8 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_SENSED_CH1_VALUE 0x1337
-#define TEST_SENSED_CH2_VALUE 0xDEAD
+#define TEST_SENSED_CH1_VALUE (int16_t)0x1337
+#define TEST_SENSED_CH2_VALUE (int16_t)0xDEAD
 #define TEST_STORED_VALUE TEST_SENSED_CH1_VALUE  // only CH1 is used
 
 // there must be MAX_SOLAR_MCP3427 valid data points after and including this data point

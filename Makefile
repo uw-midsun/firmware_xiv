@@ -355,8 +355,7 @@ pytest_all: codegen_test
 	@for i in $$(find . -path ./.venv -prune -false -o -name "test_*.py"); 													\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done	
-	@echo "Testing codegen..."		
+	done			
 
 .PHONY: install_requirements
 install_requirements:

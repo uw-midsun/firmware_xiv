@@ -38,16 +38,16 @@ static StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStat
   relay_err_rx_cb_called = true;
   uint8_t solar_fault;
   uint8_t fault_data;
-  CAN_UNPACK_SOLAR_FAULT(msg, &solar_fault, &fault_data);
+  CAN_UNPACK_SOLAR_FAULT_5_MPPTS(msg, &solar_fault, &fault_data);
   TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_DRV120, solar_fault);
   TEST_ASSERT_EQUAL(0, fault_data);
   return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
-                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT, prv_err_rx_cb, NULL);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS,
+                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_5_MPPTS, prv_err_rx_cb, NULL);
   event_queue_init();
   gpio_it_init();
   TEST_ASSERT_OK(relay_fsm_init(&s_storage));

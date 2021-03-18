@@ -88,7 +88,7 @@ static const SpiSettings s_spi_settings = {
 };
 
 static const CanSettings s_can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+  .device_id = SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,

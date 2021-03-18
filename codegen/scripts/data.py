@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 import os
 from collections import defaultdict, namedtuple
-import validator
 from google.protobuf import text_format
+import validator
 from constants import NUM_CAN_DEVICES, NUM_CAN_MESSAGES, NUM_FIELDS, NUM_DLC_BYTES  # pylint: disable=unused-import
 
 sys.path.append(
