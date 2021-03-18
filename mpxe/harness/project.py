@@ -3,10 +3,10 @@ import os
 import fcntl
 
 from mpxe.harness import decoder
+from mpxe.harness.dir_config import REPO_DIR
 from mpxe.protogen import stores_pb2
-from mpxe.harness import pm
 
-BIN_DIR_FORMAT = pm.REPO_ROOT_DIR + 'firmware_xiv/build/bin/x86/{}'
+BIN_DIR_FORMAT = os.path.join(REPO_DIR, 'build/bin/x86/{}')
 
 
 class Project:
