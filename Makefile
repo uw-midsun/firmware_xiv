@@ -359,13 +359,17 @@ pytest_all: codegen_test
 
 .PHONY: install_requirements
 install_requirements:
-	@sudo add-apt-repository ppa:maarten-fonville/protobuf
+	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
+	@for i in $$(find codegen -name "requirements.txt"); 		\
+	do															\
+		pip install -r $$i;										\
+	done		
 	@for i in $$(find projects -name "requirements.txt"); 		\
 	do															\
 		pip install -r $$i;										\
-	done								
+	done						
 
 MPXE_PROJS := 
 -include $(MPXE_DIR)/integration_tests/deps.mk
