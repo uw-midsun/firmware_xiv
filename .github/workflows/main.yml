@@ -108,7 +108,7 @@ jobs:
           make clean
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+          make codegen
+          make codegen_dbc
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
-          make codegen_test
-          make codegen_dbc
