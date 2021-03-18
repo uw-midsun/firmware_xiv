@@ -1,6 +1,6 @@
 """Parsing and data-related functions"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import can_pb2  # pylint: disable=import-error,wrong-import-order
+import can_pb2  # pylint: disable=import-error, wrong-import-order
 import sys
 import os
 from collections import defaultdict, namedtuple
