@@ -69,7 +69,7 @@ jobs:
         with:
           go-version: '^1.13.1'
 
-      - name: Install Python/Go tooling
+      - name: Install Python tooling
         run: |
           pip install --user pylint
           pip install --user autopep8
