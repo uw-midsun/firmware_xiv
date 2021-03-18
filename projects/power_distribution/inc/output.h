@@ -54,7 +54,8 @@ typedef enum {
 
 // these structs should really go in a separate file, like output_impl.h or something
 typedef enum {
-  OUTPUT_TYPE_GPIO = 0,
+  OUTPUT_TYPE_IGNORE = 0, // so that unspecified OutputSpecs default to ignore
+  OUTPUT_TYPE_GPIO,
   OUTPUT_TYPE_BTS7200,
   OUTPUT_TYPE_BTS7040,
   NUM_OUTPUT_TYPES,
