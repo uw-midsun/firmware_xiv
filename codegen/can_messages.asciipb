@@ -1,3 +1,6 @@
+# Message Definitions in plaintext are on the wiki at:
+# https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/50003973/CAN+Message+Definitions
+#
 # If you are making changes to this file please update the corresponding entry
 # on the wiki. If you need to add a new message use a reasonable
 # reserved ID. The higher ID the lower the priority. Generally
@@ -21,7 +24,7 @@ msg {
 msg {
   id: 1
   source: CENTRE_CONSOLE
-  target: "BMS_CARRIER, SOLAR, MOTOR_CONTROLLER"
+  target: "BMS_CARRIER, SOLAR_5_MPPTS, SOLAR_6_MPPTS, MOTOR_CONTROLLER"
   msg_name: "set relay states"
   is_critical: true
   can_data {
@@ -32,46 +35,7 @@ msg {
   }
 }
 
-msg {
-  id: 3
-  source: CENTRE_CONSOLE
-  target: "MOTOR_CONTROLLER, PEDAL"
-  msg_name: "powertrain heartbeat"
-  is_critical: true
-  can_data {
-    empty {
-    }
-  }
-}
-
-msg {
-  id: 4
-  source: CENTRE_CONSOLE
-  target: "MOTOR_CONTROLLER, PEDAL"
-  msg_name: "get aux status"
-  is_critical: true
-  can_data {
-    u8 {
-      field_name_1: "aux_bat_ov_flag"
-      field_name_2: "aux_bat_uv_flag"
-      field_name_2: "aux_bat_ot_flag"
-      field_name_2: "aux_bat_ut_flag"
-    }
-  }
-}
-
-msg {
-  id: 5
-  source: CENTRE_CONSOLE
-  target: "MOTOR_CONTROLLER, PEDAL"
-  msg_name: "fault sequence"
-  is_critical: true
-  can_data {
-    u16 {
-      field_name_1: "sequence"
-    }
-  }
-}
+# IDs: 2-5 Reserved
 
 msg {
   id: 6
@@ -138,37 +102,7 @@ msg {
   }
 }
 
-# IDs: 12-15 Reserved
-
-msg {
-  id: 16
-  source: POWER_DISTRIBUTION_REAR
-  target: ""
-  msg_name: "ovuv dcdc aux"
-  msg_readable_name: "ov uv dcdc and aux bat"
-  can_data {
-    u8 {
-      field_name_1: "dcdc_ov_flag"
-      field_name_2: "dcdc_uv_flag"
-      field_name_3: "aux_bat_ov_flag"
-      field_name_4: "aux_bat_uv_flag"
-    }
-  }
-}
-
-msg {
-  id: 17
-  source: MOTOR_CONTROLLER
-  target: "TELEMETRY"
-  msg_name: "mc error limits"
-  msg_readable_name: "motor controller error and limits"
-  can_data {
-    u16 {
-      field_name_1: "error_id"
-      field_name_2: "limits"
-    }
-  }
-}
+# IDs: 11-17 Reserved
 
 msg {
   id: 18
@@ -183,29 +117,7 @@ msg {
   }
 }
 
-msg {
-  id: 19
-  source: STEERING
-  target: "DRIVER_DISPLAY, MOTOR_CONTROLLER"
-  msg_name: "cruise_target"
-  can_data {
-    u8 {
-      field_name_2: "target speed"
-    }
-  }
-}
-
-msg {
-  id: 20
-  source: PEDAL
-  target: "MOTOR_INTERFACE",
-  msg_name: "brake"
-  can_data {
-    u16 {
-      field_name_1: "brake_state"
-    }
-  }
-}
+# IDs: 19-20 Reserved
 
 msg {
   id: 21
@@ -267,29 +179,7 @@ msg {
   }
 }
 
-msg {
-  id: 26
-  source: CHARGER
-  target: "CENTRE CONSOLE"
-  msg_name: "get charger connection state"
-  can_data {
-    u8 {
-      field_name_1: "is_connected"
-    }
-  }
-}
-
-msg {
-  id: 27
-  source: CENTRE_CONSOLE
-  target: "CHARGER"
-  msg_name: "set charger relay"
-  can_data {
-    u8 {
-      field_name_1: "state"
-    }
-  }
-}
+# IDs: 26-27 Reserved
 
 msg {
   id: 28
@@ -408,17 +298,7 @@ msg {
   }
 }
 
-msg {
-  id: 37
-  source: MOTOR_CONTROLLER
-  target: "TELEMETRY"
-  msg_name: "motor debug"
-  can_data {
-    u64 {
-      field_name_1: "data"
-    }
-  }
-}
+# IDs: 37 Reserved
 
 msg {
   id: 38
@@ -433,30 +313,7 @@ msg {
   }
 }
 
-msg {
-  id: 39
-  source: MOTOR_CONTROLLER
-  target: "TELEMETRY"
-  msg_name: "motor amp hr"
-  can_data {
-    u32 {
-      field_name_1: "motor_amp_hr_l"
-      field_name_2: "motor_amp_hr_r"
-    }
-  }
-}
-
-msg {
-  id: 40
-  source: MOTOR_CONTROLLER
-  target: "TELEMETRY"
-  msg_name: "odometer"
-  can_data {
-    u32 {
-      field_name_1: "odometer_val"
-    }
-  }
-}
+# IDs: 39-40 Reserved
 
 msg {
   id: 41
@@ -470,35 +327,7 @@ msg {
   }
 }
 
-# IDs: 42 Reserved
-
-msg {
-  id: 43
-  source: POWER_DISTRIBUTION_REAR
-  msg_name: "aux dcdc vc"
-  msg_readable_name: "aux bat and dcdc voltage current"
-  can_data {
-    u16 {
-      field_name_1: "aux_voltage"
-      field_name_2: "aux_current"
-      field_name_3: "dcdc_voltage"
-      field_name_4: "dcdc_current"
-    }
-  }
-}
-
-msg {
-  id: 44
-  source: POWER_DISTRIBUTION_REAR
-  target: "TELEMETRY"
-  msg_name: "dcdc temps"
-  can_data {
-    u16 {
-      field_name_1: "temp_1"
-      field_name_2: "temp_2"
-    }
-  }
-}
+# IDs: 42-44 Reserved
 
 msg {
   id: 45
@@ -507,26 +336,12 @@ msg {
   msg_name: "uv cutoff notification"
   can_data {
     empty {
-      
+
     }
   }
 }
 
-# IDs 46: Reserved
-
-msg {
-  id: 47
-  source: CHARGER
-  target: "telemetry"
-  msg_name: "charger info"
-  can_data {
-    u16 {
-      field_name_1: "current"
-      field_name_2: "voltage"
-      field_name_3: "status_bitset"
-    }
-  }
-}
+# IDs 46-47: Reserved
 
 msg {
   id: 48
@@ -563,22 +378,26 @@ msg {
 
 msg {
   id: 51
-  source: IMU
+  source: SOLAR_6_MPPTS
   target: "TELEMETRY"
-  msg_name: "linear acceleration"
+  msg_name: "solar data 6 mppts"
   can_data {
-    empty {
+    u32 {
+      field_name_1: "data_point_type"
+      field_name_2: "data_value"
     }
   }
 }
 
 msg {
   id: 52
-  source: IMU
-  target: "TELEMETRY"
-  msg_name: "angular rotation"
+  source: SOLAR_6_MPPTS
+  target: "TELEMETRY, CENTRE_CONSOLE"
+  msg_name: "solar fault 6 mppts"
   can_data {
-    empty {
+    u8 {
+      field_name_1: "fault"
+      field_name_2: "fault_data"
     }
   }
 }
@@ -669,9 +488,9 @@ msg {
 
 msg {
   id: 59
-  source: SOLAR
+  source: SOLAR_5_MPPTS
   target: "TELEMETRY"
-  msg_name: "solar data"
+  msg_name: "solar data 5 mppts"
   can_data {
     u32 {
       field_name_1: "data_point_type"
@@ -682,9 +501,9 @@ msg {
 
 msg {
   id: 60
-  source: SOLAR
+  source: SOLAR_5_MPPTS
   target: "TELEMETRY, CENTRE_CONSOLE"
-  msg_name: "solar fault"
+  msg_name: "solar fault 5 mppts"
   can_data {
     u8 {
       field_name_1: "fault"

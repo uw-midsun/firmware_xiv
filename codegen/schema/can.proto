@@ -58,7 +58,8 @@ message CanMsg {
     MOTOR_CONTROLLER = 5;
     PEDAL = 6;
     STEERING = 7;
-    SOLAR = 8;
+    SOLAR_5_MPPTS = 8;
+    SOLAR_6_MPPTS = 9;
     CHARGER = 10;
     IMU = 11;
     POWER_SELECTION = 12;
