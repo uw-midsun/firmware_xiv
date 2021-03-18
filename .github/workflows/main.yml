@@ -75,6 +75,7 @@ jobs:
           pip install --user autopep8
           pip install --upgrade pip
           pip install --upgrade setuptools
+          pip install --upgrade virtualenv
           virtualenv .venv
           source .venv/bin/activate
           make install_requirements
