@@ -1,18 +1,19 @@
 """Parsing and data-related functions"""
+# autopep8 complains about import order in this block but we need it in this order
+# autopep8: off
 from __future__ import absolute_import, division, print_function, unicode_literals
-import can_pb2  # pylint: disable=import-error, wrong-import-order
 import sys
 import os
 from collections import defaultdict, namedtuple
-
-from constants import NUM_CAN_DEVICES, NUM_CAN_MESSAGES, NUM_FIELDS, NUM_DLC_BYTES  # pylint: disable=unused-import
-from google.protobuf import text_format
-
 import validator
+from google.protobuf import text_format
+from constants import NUM_CAN_DEVICES, NUM_CAN_MESSAGES, NUM_FIELDS, NUM_DLC_BYTES  # pylint: disable=unused-import
+
 sys.path.append(
     os.path.abspath(
         os.path.dirname(os.path.realpath(__file__)) + '/../genfiles'))
-
+import can_pb2  # pylint: disable=import-error, wrong-import-order, wrong-import-position
+# autopep8: on
 
 CanFrame = namedtuple('CanFrame', [
     'msg_name', 'source', 'target', 'ftype', 'fields', 'is_critical', 'is_signed', 'dlc'
