@@ -1,6 +1,3 @@
-# Message Definitions in plaintext are on the wiki at:
-# https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/50003973/CAN+Message+Definitions
-#
 # If you are making changes to this file please update the corresponding entry
 # on the wiki. If you need to add a new message use a reasonable
 # reserved ID. The higher ID the lower the priority. Generally

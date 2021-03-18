@@ -127,14 +127,6 @@ More information can be found by reading our [.travis.yml](.travis.yml) file.
 - GNU ARM Embedded toolchain
 - GNU Make 4.0 or above
 - [Unity&mdash;Throw the Switch](http://www.throwtheswitch.org/unity/): our C unit testing framework
-- Go 1.10.4 or above 
-  - If your Go version is out of date (which it probably will be if you installed the default box) you can update it via the [update-golang](https://github.com/udhos/update-golang) script, preferably outside the current repository (e.g in your vagrant box shared folder)
-    ```
-    cd ..
-    git clone https://github.com/udhos/update-golang
-    cd update-golang
-    sudo ./update-golang.sh
-    ```
 
 ### Optional Dependencies
 

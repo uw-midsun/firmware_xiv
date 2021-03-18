@@ -351,11 +351,12 @@ pytest:
 	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
 
 .PHONY: pytest_all
-pytest_all:
+pytest_all: codegen_test
 	@for i in $$(find . -path ./.venv -prune -false -o -name "test_*.py"); 													\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done			
+	done	
+	@echo "Testing codegen..."		
 
 .PHONY: install_requirements
 install_requirements:
