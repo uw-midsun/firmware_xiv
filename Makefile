@@ -266,8 +266,8 @@ pyformat:
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
 test_format: format
-	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
-	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT | xargs -r -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -r -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
 # Builds the project or library
 .PHONY: build
