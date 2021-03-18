@@ -1,9 +1,9 @@
 import threading
 from collections import deque, namedtuple
-import can
-import cantools
 import os
 
+import can
+import cantools
 from mpxe.harness.dir_config import REPO_PARENT_DIR
 
 DBC_PATH = os.path.join(REPO_PARENT_DIR, 'system_can.dbc')
