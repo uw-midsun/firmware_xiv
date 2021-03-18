@@ -1,5 +1,4 @@
 from mpxe.protogen import stores_pb2
-from mpxe.protogen import pca9539r_pb2
 
 from mpxe.sims import sim
 

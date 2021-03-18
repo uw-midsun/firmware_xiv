@@ -1,6 +1,4 @@
 from mpxe.protogen import stores_pb2
-from mpxe.protogen import adt7476a_pb2
-
 from mpxe.sims import sim
 
 
