@@ -78,6 +78,8 @@ def get_templates(base, pattern):
             matches.append(os.path.join(root, filename))
     return matches
 
+# pylint: disable=inconsistent-return-statements
+
 
 def render(filename, **context):
     """Render a Mako template
