@@ -3,11 +3,11 @@ import threading
 import select
 import signal
 
+REPO_ROOT_DIR = '/home/vagrant/shared/'
+
 from mpxe.harness import canio
 from mpxe.harness import project
 from mpxe.sims.sim import Sim
-
-REPO_ROOT_DIR = '/home/vagrant/shared/'
 
 POLL_TIMEOUT = 0.5
 
