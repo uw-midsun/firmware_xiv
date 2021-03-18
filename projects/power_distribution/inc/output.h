@@ -20,11 +20,11 @@ typedef enum {
   FRONT_OUTPUT_LEFT_CAMERA,
   FRONT_OUTPUT_RIGHT_CAMERA,
   FRONT_OUTPUT_DRIVER_DISPLAY,
-  FRONT_OUTPUT_INFOTAINMENT_DISPLAY, // aka main display
+  FRONT_OUTPUT_INFOTAINMENT_DISPLAY,  // aka main display
   FRONT_OUTPUT_REAR_DISPLAY,
   FRONT_OUTPUT_LEFT_DISPLAY,
   FRONT_OUTPUT_RIGHT_DISPLAY,
-  FRONT_OUTPUT_MAIN_PI, // driver display + telemetry pi
+  FRONT_OUTPUT_MAIN_PI,  // driver display + telemetry pi
   FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
@@ -37,7 +37,7 @@ typedef enum {
   FRONT_OUTPUT_SPARE_1,
   FRONT_OUTPUT_SPARE_2,
   FRONT_OUTPUT_SPARE_3,
-  FRONT_OUTPUT_SPARE_4, // MCI load switch port
+  FRONT_OUTPUT_SPARE_4,  // MCI load switch port
 
   // Outputs for rear power distribution
   REAR_OUTPUT_BMS,
@@ -57,13 +57,13 @@ typedef enum {
   REAR_OUTPUT_SPARE_1,
   REAR_OUTPUT_SPARE_2,
   REAR_OUTPUT_SPARE_3,
-  REAR_OUTPUT_SPARE_4, // steering load switch port
-  REAR_OUTPUT_SPARE_5, // pedal load switch port
-  REAR_OUTPUT_SPARE_6, // right camera load switch port
-  REAR_OUTPUT_SPARE_7, // main pi (driver display/telemetry pi) load switch port
-  REAR_OUTPUT_SPARE_8, // driver display load switch port
-  REAR_OUTPUT_SPARE_9, // centre console load switch port
-  REAR_OUTPUT_SPARE_10, // rear display load switch port
+  REAR_OUTPUT_SPARE_4,   // steering load switch port
+  REAR_OUTPUT_SPARE_5,   // pedal load switch port
+  REAR_OUTPUT_SPARE_6,   // right camera load switch port
+  REAR_OUTPUT_SPARE_7,   // main pi (driver display/telemetry pi) load switch port
+  REAR_OUTPUT_SPARE_8,   // driver display load switch port
+  REAR_OUTPUT_SPARE_9,   // centre console load switch port
+  REAR_OUTPUT_SPARE_10,  // rear display load switch port
 
   NUM_OUTPUTS,
 } Output;
@@ -86,22 +86,26 @@ typedef struct OutputBts7200Info {
   Pca9539rGpioAddress enable_0_pin;
   Pca9539rGpioAddress enable_1_pin;
   Pca9539rGpioAddress dsel_pin;
-  uint8_t mux_selection; // what should we select on the mux to read current from the BTS7200?
+  uint8_t mux_selection;  // what should we select on the mux to read current from the BTS7200?
 } OutputBts7200Info;
 
 typedef struct OutputBts7200Spec {
-  uint8_t channel; // 0 or 1, which enable pin/output channel is it? TODO - separate type?
+  uint8_t channel;  // 0 or 1, which enable pin/output channel is it? TODO - separate type?
   OutputBts7200Info *bts7200_info;
 } OutputBts7200Spec;
 
 typedef struct OutputBts7040Spec {
   Pca9539rGpioAddress enable_pin;
-  uint8_t mux_selection; // what should we select on the mux to read current from the BTS7040?
+  uint8_t mux_selection;  // what should we select on the mux to read current from the BTS7040?
 } OutputBts7040Spec;
 
 typedef struct OutputSpec {
   OutputType type;
-  void *spec; // must point to an OutputXSpec corresponding to the type
+  union {
+    OutputGpioSpec gpio_spec;
+    OutputBts7200Spec bts7200_spec;
+    OutputBts7040Spec bts7040_spec;
+  };
 } OutputSpec;
 
 typedef struct OutputConfig {
