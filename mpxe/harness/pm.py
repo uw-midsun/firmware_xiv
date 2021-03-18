@@ -13,6 +13,7 @@ POLL_TIMEOUT = 0.5
 # signals are set in python and C, change in both places if changing
 STORE_LOCK_SIGNAL = signal.SIGUSR1
 LOG_LOCK_SIGNAL = signal.SIGUSR2
+INIT_LOCK_SIGNAL = signal.SIGRTMIN
 
 
 class InvalidPollError(Exception):
@@ -30,13 +31,17 @@ class ProjectManager:
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
         self.can = canio.CanIO()
-
-    def start(self, name, sim=None):
+        
+    def start(self, name, sim=None, startup_messages=()):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.ctop_fifo.fileno()] = proj
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
+
+        if startup_messages: # tuple format is (msg, mask, key)
+            proj.write_store(startup_messages[0], startup_messages[1], startup_messages[2])
+        proj.popen.send_signal(INIT_LOCK_SIGNAL)
         return proj
 
     def stop(self, proj):

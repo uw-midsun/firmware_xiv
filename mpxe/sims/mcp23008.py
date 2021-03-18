@@ -1,5 +1,6 @@
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import mcp23008_pb2
+from mpxe.integration_tests.init_cond import mcp23008_init_conditions
 
 from mpxe.sims import sim
 

@@ -11,6 +11,7 @@
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
+#   IC: [INIT_COND=] - Specifies whether initial conditions to be used for MPXE tests
 #
 # Usage:
 #   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
@@ -95,6 +96,13 @@ MPXE_PROTOS_DIR := $(MPXE_DIR)/protos
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
+
+# Check if mpxe initial conditions are to be used
+ifeq (TRUE, $(INIT_COND))
+export MPXE_INIT_COND=True
+else
+export MPXE_INIT_COND=False
+endif
 
 # Please don't touch anything below this line
 ###################################################################################################

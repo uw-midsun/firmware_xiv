@@ -18,6 +18,8 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_PINS];
 
+static int mpxe_initial_conditions;  // If 1, read init conditions from store
+
 #ifdef MPXE
 
 static MxPca9539rStore s_stores[MAX_I2C_ADDRESSES];
@@ -70,16 +72,19 @@ static void prv_init_store(uint8_t address) {
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
 #ifdef MPXE
   prv_init_store(i2c_address);
+  mpxe_initial_conditions = read_init_conditions();
 #endif
   s_i2c_port = i2c_port;
 
-  // Set each pin to the default settings
-  Pca9539rGpioSettings default_settings = {
-    .direction = PCA9539R_GPIO_DIR_IN,
-    .state = PCA9539R_GPIO_STATE_LOW,
-  };
-  for (Pca9539rPinAddress i = 0; i < NUM_PCA9539R_GPIO_PINS; i++) {
-    s_pin_settings[i2c_address][i] = default_settings;
+  if (mpxe_initial_conditions != 1) {
+    // Set each pin to the default settings
+    Pca9539rGpioSettings default_settings = {
+      .direction = PCA9539R_GPIO_DIR_IN,
+      .state = PCA9539R_GPIO_STATE_LOW,
+    };
+    for (Pca9539rPinAddress i = 0; i < NUM_PCA9539R_GPIO_PINS; i++) {
+      s_pin_settings[i2c_address][i] = default_settings;
+    }
   }
 #ifdef MPXE
   prv_export((void *)(intptr_t)i2c_address);

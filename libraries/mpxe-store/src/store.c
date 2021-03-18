@@ -35,6 +35,9 @@ static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t s_log_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_init_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
@@ -43,6 +46,10 @@ static void prv_sigusr(int signo) {
 
 static void prv_sigusr2(int signo) {
   pthread_mutex_unlock(&s_log_lock);
+}
+
+static void prv_sigrtmin(int signo) {
+  pthread_mutex_unlock(&s_init_lock);
 }
 
 Store *prv_get_first_empty() {
@@ -60,30 +67,38 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   mx_store_update__free_unpacked(update, NULL);
 }
 
-// handles getting an update from python, runs as thread
-static void *prv_poll_update(void *arg) {
+static int prv_poll_stdin(void) {
   // read protos from stdin
   // compare using second proto as 'mask'
-  struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
-  while (true) {
-    int res = poll(&pfd, 1, -1);
-    if (res == -1) {
-      // interrupted
-      continue;
-    } else if (res == 0) {
-      continue;  // nothing to read
-    } else {
-      if (pfd.revents & POLLIN) {
-        static uint8_t buf[MAX_STORE_SIZE_BYTES];
-        ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
-        if (len == -1) {
-          LOG_DEBUG("read error while polling\n");
-        }
-        prv_handle_store_update(buf, len);
-      } else {
-        LOG_DEBUG("pollhup\n");
+  int res = poll(&pfd, 1, -1);
+  if (res == -1) {
+    // interrupted
+    return res;
+  } else if (res == 0) {
+    return res;  // nothing to read
+  } else {
+    if (pfd.revents & POLLIN) {
+      static uint8_t buf[MAX_STORE_SIZE_BYTES];
+      ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
+      if (len == -1) {
+        LOG_DEBUG("read error while polling\n");
       }
+      prv_handle_store_update(buf, len);
+    } else {
+      LOG_DEBUG("pollhup\n");
     }
+    return res;
+  }
+}
+
+// handles getting an update from python, runs as thread
+static void *prv_poll_update(void *arg) {
+  pthread_mutex_lock(&s_init_lock);
+  pthread_mutex_lock(&s_init_lock);
+  pthread_mutex_unlock(&s_init_lock);  // poll update needs to block while initial messages are sent
+  LOG_DEBUG("STDIN UNLOCKED\n");
+  while (true) {
+    prv_poll_stdin();
   }
   return NULL;
 }
@@ -97,6 +112,7 @@ void store_config(void) {
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
   signal(SIGUSR2, prv_sigusr2);
+  signal(SIGRTMIN, prv_sigrtmin);
 
   // set up polling thread
   pthread_t poll_thread;
@@ -170,6 +186,10 @@ void store_export(MxStoreType type, void *store, void *key) {
   // free memory
   free(export_buf);
   free(store_buf);
+}
+
+int read_init_conditions(void) {
+  return prv_poll_stdin();
 }
 
 void log_mutex_lock() {
