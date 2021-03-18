@@ -3,8 +3,6 @@ import threading
 import select
 import signal
 
-REPO_ROOT_DIR = '/home/vagrant/shared/'
-
 from mpxe.harness import canio
 from mpxe.harness import project
 from mpxe.harness.dir_config import REPO_DIR
