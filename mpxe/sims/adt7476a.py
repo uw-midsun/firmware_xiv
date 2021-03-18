@@ -22,6 +22,6 @@ class Adt7476a(sim.Sim):
             real_speed = 0
         else:
             real_speed = speed / 0.39 - 1
-        
+
         assert self.speed[channel] == int(real_speed)
         assert self.status[channel] == status
