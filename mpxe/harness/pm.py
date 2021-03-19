@@ -5,9 +5,8 @@ import signal
 
 from mpxe.harness import canio
 from mpxe.harness import project
+from mpxe.harness.dir_config import REPO_DIR
 from mpxe.sims.sim import Sim
-
-REPO_ROOT_DIR = '/home/vagrant/shared/'
 
 POLL_TIMEOUT = 0.5
 
@@ -25,7 +24,7 @@ class ProjectManager:
         # index projects by stdout and ctop_fifo fd
         # ctop_fifo is the child-to-parent fifo created by the C program
         self.fd_to_proj = {}
-        self.proj_name_list = os.listdir(REPO_ROOT_DIR + 'firmware_xiv/projects')
+        self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.killed = False
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)

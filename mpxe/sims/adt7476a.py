@@ -1,5 +1,4 @@
 from mpxe.protogen import stores_pb2
-
 from mpxe.sims import sim
 
 
@@ -17,8 +16,10 @@ class Adt7476a(sim.Sim):
 
     def assert_store_values(self, proj, speed, status, channel):
         # make sure the store has been initialized before calling this
+        if speed / 0.39 - 1 < 0:
+            real_speed = 0
+        else:
+            real_speed = speed / 0.39 - 1
 
-        real_speed = speed / 0.39
-        # real_speed is what's actually passed
         assert self.speed[channel] == int(real_speed)
         assert self.status[channel] == status

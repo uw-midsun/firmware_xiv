@@ -1,11 +1,12 @@
 import threading
-
 from collections import deque, namedtuple
+import os
+
 import can
 import cantools
-from mpxe.harness import pm
+from mpxe.harness.dir_config import REPO_PARENT_DIR
 
-DBC_PATH = pm.REPO_ROOT_DIR + 'system_can.dbc'
+DBC_PATH = os.path.join(REPO_PARENT_DIR, 'system_can.dbc')
 BUS_RECV_TIMEOUT = 0.5
 
 Msg = namedtuple('Msg', ['name', 'data'])

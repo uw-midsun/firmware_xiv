@@ -2,13 +2,13 @@ import unittest
 import time
 
 from mpxe.integration_tests import int_test
-from mpxe.sims.controller_board_blinking_leds import Leds
+from mpxe.sims.leds import Leds
 
 
 class TestLeds(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.leds = self.manager.start('controller_board_blinking_leds', Leds())
+        self.leds = self.manager.start('leds', Leds())
 
     def test_leds(self):
         time.sleep(1)
