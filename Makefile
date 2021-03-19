@@ -366,7 +366,7 @@ install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@for i in $$(find projects -name "requirements.txt"); 		\
+	@for i in $$(find . -name "requirements.txt"); 		\
 	do															\
 		pip install -r $$i;										\
 	done								
