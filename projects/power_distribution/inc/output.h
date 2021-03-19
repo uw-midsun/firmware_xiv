@@ -31,9 +31,7 @@ typedef enum {
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
   FRONT_OUTPUT_SPEAKER,
   FRONT_OUTPUT_HORN,
-  // FRONT_OUTPUT_FRONT_FAN? TODO(SOFT-396)
-  FRONT_OUTPUT_FAN_1,
-  FRONT_OUTPUT_FAN_2,
+  FRONT_OUTPUT_FAN, // on UV cutoff, not on load switch
   // spares omitted
 
   // Outputs for rear power distribution
@@ -46,7 +44,7 @@ typedef enum {
   REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
   REAR_OUTPUT_BRAKE_LIGHT,
   REAR_OUTPUT_STROBE_LIGHT,
-  REAR_OUTPUT_FAN_1,
+  REAR_OUTPUT_FAN_1, // these are on the load switch, not UV cutoff
   REAR_OUTPUT_FAN_2,
   // spares omitted
 

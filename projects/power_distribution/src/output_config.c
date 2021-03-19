@@ -48,13 +48,6 @@ static const OutputBts7200Info s_front_left_right_turn_light_front_bts7200 = {
   .mux_selection = FRONT_MUX_SEL_FRONT_LEFT_RIGHT_TURN_LIGHT,
 };
 
-static const OutputBts7200Info s_fan_1_2_front_bts7200 = {
-  .enable_0_pin = FRONT_PIN_FAN_1_EN,
-  .enable_1_pin = FRONT_PIN_FAN_2_EN,
-  .dsel_pin = FRONT_PIN_FAN_1_2_DSEL,
-  .mux_selection = FRONT_MUX_SEL_FAN_1_2,
-};
-
 // Rear power distribution BTS7200s
 
 static const OutputBts7200Info s_charger_strobe_rear_bts7200 = {
@@ -216,20 +209,11 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
         .address = FRONT_PIN_HORN_EN, // TODO(SOFT-396) UV_VBAT_IS
       },
     },
-    [FRONT_OUTPUT_FAN_1] = {
-      .type = OUTPUT_TYPE_BTS7200,
+    [FRONT_OUTPUT_FAN] = {
+      .type = OUTPUT_TYPE_GPIO,
       .on_front = true,
-      .bts7200_spec = {
-        .bts7200_info = &s_fan_1_2_front_bts7200,
-        .channel = 0,
-      },
-    },
-    [FRONT_OUTPUT_FAN_2] = {
-      .type = OUTPUT_TYPE_BTS7200,
-      .on_front = true,
-      .bts7200_spec = {
-        .bts7200_info = &s_fan_1_2_front_bts7200,
-        .channel = 1,
+      .gpio_spec = {
+        .address = FRONT_PIN_FAN_EN,
       },
     },
 
