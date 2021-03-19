@@ -22,17 +22,19 @@ void prv_timing_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %i\n", counters->counter_b);
   }
 
-  // starts timer again after callback function completes
+  // starts timer again
   soft_timer_start_millis(500, prv_timing_callback, counters, NULL);
 }
 
 int main(void) {
   LOG_DEBUG("Timer FW102 HW\n");
 
-  interrupt_init();   // i dont understand how these inits work
-  soft_timer_init();  // but imma do some research
+  // init interrupt and timer
+  interrupt_init();
+  soft_timer_init();
 
-  Counters counters = { 0 };  // initialize the struct to be all 0
+  // initialize the struct to be all 0
+  Counters counters = { 0 };
 
   soft_timer_start_millis(500, prv_timing_callback, &counters, NULL);
 
