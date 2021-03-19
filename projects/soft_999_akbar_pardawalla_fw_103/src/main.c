@@ -4,20 +4,12 @@
 #include "interrupt.h"
 #include "log.h"
 
-void adc_callback(AdcChannel addr, void *context);
-
-void bttn_callback(const GpioAddress *address, void *context) {
+static void prv_bttn_callback(const GpioAddress *address, void *context) {
   AdcChannel *channel = context;
-  adc_register_callback(*channel, adc_callback, address);
-}
-
-void adc_callback(AdcChannel addr, void *context) {
   uint16_t reading = 0;
-  GpioAddress *address = context;
 
-  adc_read_converted(addr, &reading);
-
-  LOG_DEBUG("Converted Logic: %d", reading);
+  adc_read_converted(*channel, &reading);
+  LOG_DEBUG("Converted Logic: %d\n", reading);
 
   gpio_it_trigger_interrupt(address);
 }
@@ -53,7 +45,7 @@ int main(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
 
-  gpio_it_register_interrupt(&bttn_addr, &event_settings, INTERRUPT_EDGE_RISING, bttn_callback,
+  gpio_it_register_interrupt(&bttn_addr, &event_settings, INTERRUPT_EDGE_FALLING, prv_bttn_callback,
                              &channel);
 
   gpio_it_trigger_interrupt(&bttn_addr);
