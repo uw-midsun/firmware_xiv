@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "gpio.h"
@@ -86,6 +87,7 @@ typedef struct OutputBts7040Spec {
 
 typedef struct OutputSpec {
   OutputType type;
+  bool on_front;
   union {
     OutputGpioSpec gpio_spec;
     OutputBts7200Spec bts7200_spec;
@@ -104,7 +106,7 @@ typedef enum {
 } OutputState;
 
 // Initialize the module.
-StatusCode output_init(OutputConfig *config);
+StatusCode output_init(OutputConfig *config, bool is_front_power_distro);
 
 // Set whether the output is on or off.
 StatusCode output_set_state(Output output, OutputState state);

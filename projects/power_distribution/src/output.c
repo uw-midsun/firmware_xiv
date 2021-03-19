@@ -1,5 +1,6 @@
 #include "output.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "gpio.h"
@@ -79,7 +80,7 @@ static StatusCode prv_init_bts7040(OutputBts7040Spec *spec) {
   return bts7040_init_pca9539r(storage, settings);
 }
 
-StatusCode output_init(OutputConfig *config) {
+StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
   if (config == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -91,6 +92,10 @@ StatusCode output_init(OutputConfig *config) {
 
   for (Output output = 0; output < NUM_OUTPUTS; output++) {
     OutputSpec *spec = &s_config->specs[output];
+    if (is_front_power_distro != spec->on_front) {
+      // not for this board 
+      continue;
+    }
     switch (spec->type) {
       case OUTPUT_TYPE_GPIO:
         status_ok_or_return(prv_init_gpio(&spec->gpio_spec));
@@ -102,7 +107,7 @@ StatusCode output_init(OutputConfig *config) {
         status_ok_or_return(prv_init_bts7040(&spec->bts7040_spec));
         break;
       default:
-        // ignore with a warning
+        // probably because it wasn't specified in the config: ignore with a warning
         LOG_WARN("Warning: output %d is unspecified\n", output);
         break;
     }
