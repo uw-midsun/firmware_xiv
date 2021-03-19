@@ -189,7 +189,7 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mpxe-gen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
-# Find all python files excluding library files in project env (./.venv)
+# Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
@@ -198,7 +198,9 @@ FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py'
+# ignore MPXE since it has a different pylint
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mpxe/*.py'
+FIND_MOD_NEW_MPXE_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mpxe/*.py'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -238,7 +240,8 @@ pylint:
 .PHONY: pylint_quick
 pylint_quick:
 	@echo "Quick linting changed/new Python files"
-	@$(FIND_MOD_NEW_PY) | xargs -r pylint --disable=F0401
+	@$(FIND_MOD_NEW_PY) | xargs -r $(PYLINT)
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r $(MPXE_PYLINT)
 
 .PHONY: format_quick
 format_quick:
@@ -249,6 +252,7 @@ format_quick:
 pyformat_quick: 
 	@echo "Quick format on changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -266,8 +270,8 @@ pyformat:
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
 test_format: format
-	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
-	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT | xargs -r -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -r -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
 # Builds the project or library
 .PHONY: build
@@ -355,8 +359,7 @@ pytest_all: codegen_test
 	@for i in $$(find . -path ./.venv -prune -false -o -name "test_*.py"); 													\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done	
-	@echo "Testing codegen..."		
+	done			
 
 .PHONY: install_requirements
 install_requirements:

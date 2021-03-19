@@ -65,11 +65,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '^1.13.1'
-
-      - name: Install Python/Go tooling
+      - name: Install Python tooling
         run: |
           pip install --user pylint
           pip install --user autopep8
@@ -94,7 +90,6 @@ jobs:
           clang-format --version
           pylint --version
           autopep8 --version
-          go version
 
       - name: Format and lint
         run: |
@@ -104,11 +99,11 @@ jobs:
 
       - name: Build and test
         run: |
+          make codegen
+          make codegen_dbc
           make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
           make clean
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
-          make codegen_test
-          make codegen_dbc
