@@ -212,7 +212,7 @@ lint:
 # Quick lint on ONLY changed/new files
 .PHONY: lint_quick
 lint_quick:
-	@echo "Quick linting on ONLY changed/new files"
+	@echo "Quick linting on ONLY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
 # Globally disable the following pylint messages:
@@ -239,18 +239,18 @@ pylint:
 
 .PHONY: pylint_quick
 pylint_quick:
-	@echo "Quick linting changed/new Python files"
+	@echo "Quick linting ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs -r $(PYLINT)
 	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r $(MPXE_PYLINT)
 
 .PHONY: format_quick
 format_quick:
-	@echo "Quick format on ONlY changed/new files"
+	@echo "Quick format on ONlY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
 	
 .PHONY: pyformat_quick
 pyformat_quick: 
-	@echo "Quick format on changed/new Python files"
+	@echo "Quick format on ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
 	@$(FIND_MOD_NEW_MPXE_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
 
