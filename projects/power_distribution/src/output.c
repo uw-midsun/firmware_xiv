@@ -46,6 +46,11 @@ static uint8_t s_num_bts7200_storages;
 static Bts7040Storage s_bts7040_storage[NUM_BTS7040];
 static uint8_t s_num_bts7040_storages;
 
+static union {
+  Bts7200Storage *bts7200;
+  Bts7040Storage *bts7040;
+} s_output_to_storage[NUM_OUTPUTS] = { 0 };
+
 static OutputConfig *s_config;
 
 static StatusCode prv_init_gpio(OutputGpioSpec *spec) {
@@ -58,17 +63,47 @@ static StatusCode prv_init_gpio(OutputGpioSpec *spec) {
   return gpio_init_pin(&spec->address, &settings);
 }
 
-static StatusCode prv_init_bts7200(OutputBts7200Spec *spec) {
-  // TODO(SOFT-396): look and see if this bts7200 has already been done
-  // and maintain an output => bts7200 storage mapping
-  return STATUS_CODE_OK;
+static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool is_front_pd) {
+  // linear search to see if we've got the same bts7200 earlier
+  // this makes initialization quadratic on the number of outputs but that's okay
+  Bts7200Storage *storage = NULL;
+  for (Output prev_output = 0; prev_output < output; prev_output++) {
+    OutputSpec *prev_spec = &s_config->specs[prev_output];
+    if (prev_spec->on_front != is_front_pd || prev_spec->type != OUTPUT_TYPE_BTS7200) continue;
+    if (prev_spec->bts7200_spec.bts7200_info == spec->bts7200_info) {
+      storage = s_output_to_storage[prev_output].bts7200;
+      break;
+    }
+  }
+  if (storage == NULL) {
+    // we didn't find a previous output on the same bts7200 - use a new storage
+    if (s_num_bts7200_storages >= NUM_BTS7200) {
+      return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
+    }
+    storage = &s_bts7200_storage[s_num_bts7200_storages++];
+  }
+  s_output_to_storage[output] = storage;
+
+  Bts7200Pca9539rSettings settings = {
+    .enable_0_pin = &spec->bts7200_info->enable_0_pin,
+    .enable_1_pin = &spec->bts7200_info->enable_1_pin,
+    .select_pin = &spec->bts7200_info->dsel_pin,
+    // .sense_pin = &s_hw_config.mux_output_pin, // TODO(SOFT-396): mux
+    .resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR,
+    .bias = POWER_DISTRIBUTION_BTS7200_BIAS,
+    .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV,
+    .max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV,
+  };
+  return bts7200_init_pca9539r(storage, &settings);
 }
 
-static StatusCode prv_init_bts7040(OutputBts7040Spec *spec) {
+static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
   if (s_num_bts7040_storages >= NUM_BTS7040) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
   }
   Bts7040Storage *storage = &s_bts7040_storage[s_num_bts7040_storages++];
+  s_output_to_storage[output] = storage;
+
   Bts7040Pca9539rSettings settings = {
     .enable_pin = &spec->enable_pin,
     // .sense_pin = &s_hw_config.mux_output_pin, // TODO(SOFT-396): mux
@@ -77,7 +112,7 @@ static StatusCode prv_init_bts7040(OutputBts7040Spec *spec) {
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV,
     .max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV,
   };
-  return bts7040_init_pca9539r(storage, settings);
+  return bts7040_init_pca9539r(storage, &settings);
 }
 
 StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
@@ -92,7 +127,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
 
   for (Output output = 0; output < NUM_OUTPUTS; output++) {
     OutputSpec *spec = &s_config->specs[output];
-    if (is_front_power_distro != spec->on_front) {
+    if (spec->on_front != is_front_power_distro) {
       // not for this board 
       continue;
     }
@@ -101,10 +136,10 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
         status_ok_or_return(prv_init_gpio(&spec->gpio_spec));
         break;
       case OUTPUT_TYPE_BTS7200:
-        status_ok_or_return(prv_init_bts7200(&spec->bts7200_spec));
+        status_ok_or_return(prv_init_bts7200(output, &spec->bts7200_spec, is_front_power_distro));
         break;
       case OUTPUT_TYPE_BTS7040:
-        status_ok_or_return(prv_init_bts7040(&spec->bts7040_spec));
+        status_ok_or_return(prv_init_bts7040(output, &spec->bts7040_spec));
         break;
       default:
         // probably because it wasn't specified in the config: ignore with a warning
