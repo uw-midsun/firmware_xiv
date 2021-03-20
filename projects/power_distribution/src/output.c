@@ -88,7 +88,7 @@ static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool 
     .enable_0_pin = &spec->bts7200_info->enable_0_pin,
     .enable_1_pin = &spec->bts7200_info->enable_1_pin,
     .select_pin = &spec->bts7200_info->dsel_pin,
-    // .sense_pin = &s_hw_config.mux_output_pin, // TODO(SOFT-396): mux
+    .sense_pin = &s_config->mux_output_pin,
     .resistor = POWER_DISTRIBUTION_BTS7200_SENSE_RESISTOR,
     .bias = POWER_DISTRIBUTION_BTS7200_BIAS,
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV,
@@ -106,7 +106,7 @@ static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
 
   Bts7040Pca9539rSettings settings = {
     .enable_pin = &spec->enable_pin,
-    // .sense_pin = &s_hw_config.mux_output_pin, // TODO(SOFT-396): mux
+    .sense_pin = &s_config->mux_output_pin,
     .resistor = POWER_DISTRIBUTION_BTS7040_SENSE_RESISTOR,
     .bias = POWER_DISTRIBUTION_BTS7040_BIAS,
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV,
@@ -123,8 +123,22 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
   s_num_bts7200_storages = 0;
   s_num_bts7040_storages = 0;
 
-  // TODO(SOFT-396): initialize PCA9539R, mux
+  // initialize PCA9539Rs, mux
+  for (uint8_t i = 0; i < s_config->num_i2c_addresses; i++) {
+    status_ok_or_return(pca9539r_gpio_init(config->i2c_port, config->i2c_addresses[i]));
+  }
+  mux_init(&s_config->mux_address);
 
+  // initialize the mux enable pin to low - CD74HC4067M96's enable pin is active-low
+  GpioSettings mux_enable_pin_settings = {
+    .direction = GPIO_DIR_OUT,
+    .state = GPIO_STATE_LOW,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
+  };
+  status_ok_or_return(gpio_init_pin(&s_config->mux_enable_pin, &mux_enable_pin_settings));
+
+  // initialize all the outputs on this board
   for (Output output = 0; output < NUM_OUTPUTS; output++) {
     OutputSpec *spec = &s_config->specs[output];
     if (spec->on_front != is_front_power_distro) {

@@ -4,7 +4,9 @@
 #include <stdint.h>
 
 #include "gpio.h"
+#include "i2c.h"
 #include "pca9539r_gpio_expander.h"
+#include "mux.h"
 #include "status.h"
 
 // General-purpose module for manipulating the outputs that power distribution controls.
@@ -94,6 +96,15 @@ typedef struct OutputSpec {
 } OutputSpec;
 
 typedef struct OutputConfig {
+  I2CPort i2c_port;
+
+  I2CAddress *i2c_addresses; // all i2c addresses on which there are PCA9539Rs
+  uint8_t num_i2c_addresses; // length of preceding array
+
+  MuxAddress mux_address;
+  GpioAddress mux_output_pin;
+  GpioAddress mux_enable_pin;
+
   OutputSpec specs[NUM_OUTPUTS];
 } OutputConfig;
 

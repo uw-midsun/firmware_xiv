@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 
+#include "i2c.h"
 #include "pin_defs.h"
 
 // Front power distribution BTS7200s
@@ -80,6 +81,23 @@ static const OutputBts7200Info s_fan_1_2_rear_bts7200 = {
 
 // clang-format off
 const OutputConfig COMBINED_OUTPUT_CONFIG = {
+  .i2c_port = PD_I2C_PORT,
+  .i2c_addresses = (I2CAddress[]){
+    PD_PCA9539R_I2C_ADDRESS_0,
+    PD_PCA9539R_I2C_ADDRESS_1,
+  },
+  .num_i2c_addresses = 2,
+  .mux_address = {
+    .bit_width = 4,
+    .sel_pins = {
+      PD_MUX_SEL1_PIN,
+      PD_MUX_SEL2_PIN,
+      PD_MUX_SEL3_PIN,
+      PD_MUX_SEL4_PIN,
+    },
+  },
+  .mux_output_pin = PD_MUX_OUTPUT_PIN,
+  .mux_enable_pin = PD_MUX_ENABLE_PIN,
   .specs = {
     // Front power distribution outputs
     [FRONT_OUTPUT_CENTRE_CONSOLE] = {
