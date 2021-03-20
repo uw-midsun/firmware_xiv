@@ -20,6 +20,7 @@
 #include "mcp2515.h"
 #include "soft_timer.h"
 #include "status.h"
+#include "log.h"
 
 #include "mci_events.h"
 #include "motor_can.h"
@@ -30,7 +31,10 @@
 
 typedef enum {
   TEST_MCI_VELOCITY_MESSAGE = 0,
-  TEST_MCI_BUS_MEASUREMENT_MESSAGE = 1,
+  TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+  TEST_MCI_STATUS_MESSAGE, 
+  TEST_MCI_MOTOR_TEMP_MESSAGE,
+  TEST_MCI_DSP_TEMP_MESSAGE,
   NUM_TEST_MCI_MESSAGES
 } TestMciMessage;
 
@@ -70,6 +74,18 @@ static MotorCanFrameId s_frame_id_map[] = {
       MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID,
   [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_BUS_MEASUREMENT_MESSAGE] =
       MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID,
+  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_STATUS_MESSAGE] = 
+      LEFT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
+  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_STATUS_MESSAGE] = 
+      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
+  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_MOTOR_TEMP_MESSAGE] = 
+      LEFT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP_OFFSET,
+  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_MOTOR_TEMP_MESSAGE] = 
+      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP_OFFSET,
+  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_DSP_TEMP_MESSAGE] = 
+      LEFT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET,
+  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_DSP_TEMP_MESSAGE] = 
+      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET,
 };
 
 static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
@@ -96,6 +112,7 @@ static StatusCode prv_handle_bus_measurement(const CanMessage *msg, void *contex
 
 static void prv_send_measurements(MotorController controller, TestMciMessage message_type,
                                   MotorControllerMeasurements *measurements) {
+  
   WaveSculptorCanData can_data = { 0 };
   if (message_type == TEST_MCI_VELOCITY_MESSAGE) {
     can_data.velocity_measurement.motor_velocity_rpm = 0;
@@ -113,12 +130,16 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
     .extended = false,
   };
   memcpy(&msg.data, &can_data, sizeof(can_data));
-  generic_can_tx((GenericCan *)&s_motor_can, &msg);
+  LOG_DEBUG("before gcantx\n");
+  mcp2515_tx(&s_motor_can_storage, msg.id, msg.extended, msg.data, msg.dlc);
+  // generic_can_tx((GenericCan *)&s_motor_can, &msg);
+  LOG_DEBUG("after\n");
 }
 
 // Mocks what the mci_broadcast does when receiving messages through the MCP2515.
 StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                                  size_t dlc) {
+  LOG_DEBUG("in mcp2515 tx mock\n");
   if (storage->rx_cb != NULL) {
     GenericCanMsg msg = {
       .id = id,
@@ -126,8 +147,10 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
       .extended = extended,
       .dlc = dlc,
     };
-    // storage->rx_cb(id, extended, data, dlc, storage->context);
-
+    LOG_DEBUG("before rx cb\n");
+    storage->rx_cb(id, extended, data, dlc, storage->context);
+    LOG_DEBUG("after rx cb \n");
+    /*
     if (id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID ||
         id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
       s_broadcast_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY](&msg, &s_broadcast_storage);
@@ -135,6 +158,7 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
                id == MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
       s_broadcast_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS](&msg, &s_broadcast_storage);
     }
+    */
   }
   return STATUS_CODE_OK;
 }
@@ -177,6 +201,7 @@ static void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
 }
 
+/*
 static void prv_assert_double_broadcast() {
   MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
@@ -184,11 +209,23 @@ static void prv_assert_double_broadcast() {
   MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
+*/
 
+static void prv_assert_num_broadcasts(uint16_t broadcasts) {
+  for(uint16_t i = 0; i < broadcasts; i++) {
+    MS_TEST_HELPER_CAN_TX(MCI_CAN_EVENT_TX);
+  }
+  for(uint16_t i = 0; i < broadcasts; i++) {
+    MS_TEST_HELPER_CAN_RX(MCI_CAN_EVENT_RX);
+  }
+}
+
+/*
 static void prv_assert_single_broadcast() {
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
+*/
 
 void setup_test(void) {
   event_queue_init();
@@ -218,8 +255,10 @@ void teardown_test(void) {
 
 // Test 1: lb rv lv rb (check 2 output)
 void test_all_measurements_lb_rv_lv_rb() {
+  LOG_DEBUG("start of test all\n");
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
   mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
+  LOG_DEBUG("after broadcast init\n");
   MotorControllerMeasurements expected_measurements = {
     .bus_measurements =
         {
@@ -240,14 +279,33 @@ void test_all_measurements_lb_rv_lv_rb() {
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
   };
+  LOG_DEBUG("before prv send\n");
+  // need to send in this order so filter works correctly
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
-  delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_double_broadcast();
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE,
+                        &expected_measurements);
+
+  LOG_DEBUG("after, before delay\n");
+  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  // prv_assert_double_broadcast();
+  prv_assert_num_broadcasts(4);
   TEST_ASSERT_TRUE(s_recieved_velocity);
   TEST_ASSERT_TRUE(s_recieved_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
@@ -260,6 +318,7 @@ void test_all_measurements_lb_rv_lv_rb() {
   }
 }
 
+/*
 // Test 2: lb rb lv rv (check 2 output)
 void test_all_measurements_lb_rb_lv_rv() {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
@@ -647,3 +706,4 @@ void test_all_measurements_rv_lv_then_rb_lb() {
                       s_test_measurements.vehicle_velocity[motor_id]);
   }
 }
+*/
