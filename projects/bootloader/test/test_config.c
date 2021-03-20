@@ -36,6 +36,7 @@ static BootloaderConfig test_input_config = { .crc32 = 1,
                                               .application_crc32 = 1,
                                               .application_size = 1 };
 
+// This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
 
@@ -172,7 +173,6 @@ void test_config_commit_works(void) {
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &test_input_config, sizeof(BootloaderConfig));
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_2, &s_test_config_1, sizeof(BootloaderConfig));
 }
-
 
 void test_config_commit_corruption(void) {
   // Testing if page 1 is reset when the input config was corrupted
