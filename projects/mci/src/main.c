@@ -74,7 +74,7 @@ void prv_mci_storage_init(void *context) {
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
     .precharge_monitor2 = { .port = GPIO_PORT_A, .pin = 10 },
   };
-  // precharge_control_init(&precharge_settings);
+  LOG_DEBUG("precharge init: %d\n", precharge_control_init(&precharge_settings));
 
   MotorControllerBroadcastSettings broadcast_settings =
       { .motor_can = &s_can_mcp2515,

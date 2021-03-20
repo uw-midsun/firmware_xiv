@@ -11,6 +11,7 @@
 #include "log.h"
 #include "motor_controller.h"
 #include "status.h"
+#include "delay.h"
 
 static PrechargeControlStorage s_precharge_storage = { 0 };
 
@@ -73,6 +74,7 @@ StatusCode precharge_control_init(const PrechargeControlSettings *settings) {
   InterruptSettings monitor_it_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                             .priority = INTERRUPT_PRIORITY_NORMAL };
   status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_control, &control_settings));
+  /*
   status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_monitor, &monitor_settings));
   status_ok_or_return(gpio_init_pin(&s_precharge_storage.precharge_monitor2, &monitor_settings));
   status_ok_or_return(gpio_it_register_interrupt(&s_precharge_storage.precharge_monitor,
@@ -85,5 +87,7 @@ StatusCode precharge_control_init(const PrechargeControlSettings *settings) {
                                               &s_precharge_storage));
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_DISCHARGE_PRECHARGE,
                                               prv_discharge_rx, &s_precharge_storage));
+  */
+  status_ok_or_return(prv_set_precharge_control(&s_precharge_storage, GPIO_STATE_HIGH));
   return STATUS_CODE_OK;
 }

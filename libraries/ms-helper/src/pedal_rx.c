@@ -27,7 +27,7 @@ static StatusCode prv_kick_watchdog(PedalRxStorage *storage) {
 
 static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
                                           CanAckStatus *ack_reply) {
-  LOG_DEBUG("got pedal output\n");
+  LOG_DEBUG("GOT PEDAL OUTPUT!!!\n");
   PedalRxStorage *storage = context;
   PedalValues *pedal_values = &storage->pedal_values;
 
