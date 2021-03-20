@@ -162,9 +162,11 @@ jobs:
           make test_format
 
       - name: Lint
+        run:
           make lint
 
       - name: Pylint
+        run:
           make pylint
 
       - name: Build stm32f0xx
