@@ -64,9 +64,9 @@
 #define FRONT_PIN_SPARE_4_EN \
   { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_6 }  // on MCI's BTS7040
 #define FRONT_PIN_SPARE_5_EN \
-  { PD_PCA9539R_I2C_ADDRESS_1, PCA9539R_PIN_IO1_7 } // on rear fan 1's BTS7200 slot
+  { PD_PCA9539R_I2C_ADDRESS_1, PCA9539R_PIN_IO1_7 }  // on rear fan 1's BTS7200 slot
 #define FRONT_PIN_SPARE_6_EN \
-  { PD_PCA9539R_I2C_ADDRESS_1, PCA9539R_PIN_IO0_3 } // on rear fan 2's BTS7200 slot
+  { PD_PCA9539R_I2C_ADDRESS_1, PCA9539R_PIN_IO0_3 }  // on rear fan 2's BTS7200 slot
 
 // note these are on GPIO rather than PCA9539R since they're on UV cutoff
 #define FRONT_PIN_HORN_EN \
@@ -109,7 +109,7 @@
 #define FRONT_MUX_SEL_SPARE_1 11
 #define FRONT_MUX_SEL_LEFT_RIGHT_CAMERA 12
 #define FRONT_MUX_SEL_INFOTAINMENT_DISPLAY 13  // aka main display
-#define FRONT_MUX_SEL_SPARE_5_6 14 // on rear fan 1 & 2's BTS7200
+#define FRONT_MUX_SEL_SPARE_5_6 14             // on rear fan 1 & 2's BTS7200
 #define FRONT_MUX_SEL_UV_VBAT 15
 
 // Rear power distribution

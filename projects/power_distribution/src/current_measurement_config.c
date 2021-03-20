@@ -65,14 +65,14 @@ const PowerDistributionCurrentHardwareConfig FRONT_CURRENT_MEASUREMENT_HW_CONFIG
               .current_1 = FRONT_CURRENT_STEERING,
               .mux_selection = FRONT_MUX_SEL_PEDAL_STEERING,
           },
-        //   {
-        //       .dsel_pin = FRONT_PIN_FAN_1_2_DSEL,
-        //       .en0_pin = FRONT_PIN_FAN_1_EN,
-        //       .en1_pin = FRONT_PIN_FAN_2_EN,
-        //       .current_0 = FRONT_CURRENT_FAN_1,
-        //       .current_1 = FRONT_CURRENT_FAN_2,
-        //       .mux_selection = FRONT_MUX_SEL_FAN_1_2,
-        //   },
+          //   {
+          //       .dsel_pin = FRONT_PIN_FAN_1_2_DSEL,
+          //       .en0_pin = FRONT_PIN_FAN_1_EN,
+          //       .en1_pin = FRONT_PIN_FAN_2_EN,
+          //       .current_0 = FRONT_CURRENT_FAN_1,
+          //       .current_1 = FRONT_CURRENT_FAN_2,
+          //       .mux_selection = FRONT_MUX_SEL_FAN_1_2,
+          //   },
       },
   .num_bts7200_channels = 7,
   .bts7040s =

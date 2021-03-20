@@ -5,8 +5,8 @@
 
 #include "gpio.h"
 #include "i2c.h"
-#include "pca9539r_gpio_expander.h"
 #include "mux.h"
+#include "pca9539r_gpio_expander.h"
 #include "status.h"
 
 // General-purpose module for manipulating the outputs that power distribution controls.
@@ -33,7 +33,7 @@ typedef enum {
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
   FRONT_OUTPUT_SPEAKER,
   FRONT_OUTPUT_HORN,
-  FRONT_OUTPUT_FAN, // on UV cutoff, not on load switch
+  FRONT_OUTPUT_FAN,  // on UV cutoff, not on load switch
   // spares omitted
 
   // Outputs for rear power distribution
@@ -46,7 +46,7 @@ typedef enum {
   REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
   REAR_OUTPUT_BRAKE_LIGHT,
   REAR_OUTPUT_STROBE_LIGHT,
-  REAR_OUTPUT_FAN_1, // these are on the load switch, not UV cutoff
+  REAR_OUTPUT_FAN_1,  // these are on the load switch, not UV cutoff
   REAR_OUTPUT_FAN_2,
   // spares omitted
 
@@ -55,7 +55,7 @@ typedef enum {
 
 // these structs should really go in a separate file, like output_impl.h or something
 typedef enum {
-  OUTPUT_TYPE_IGNORE = 0, // so that unspecified OutputSpecs default to ignore
+  OUTPUT_TYPE_IGNORE = 0,  // so that unspecified OutputSpecs default to ignore
   OUTPUT_TYPE_GPIO,
   OUTPUT_TYPE_BTS7200,
   OUTPUT_TYPE_BTS7040,
@@ -98,8 +98,8 @@ typedef struct OutputSpec {
 typedef struct OutputConfig {
   I2CPort i2c_port;
 
-  I2CAddress *i2c_addresses; // all i2c addresses on which there are PCA9539Rs
-  uint8_t num_i2c_addresses; // length of preceding array
+  I2CAddress *i2c_addresses;  // all i2c addresses on which there are PCA9539Rs
+  uint8_t num_i2c_addresses;  // length of preceding array
 
   MuxAddress mux_address;
   GpioAddress mux_output_pin;

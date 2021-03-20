@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "gpio.h"
 #include "bts7040_load_switch.h"
 #include "bts7200_load_switch.h"
+#include "gpio.h"
 #include "log.h"
 #include "status.h"
 
@@ -39,7 +39,7 @@
 // Not all are used, some are only for spares.
 // TODO(SOFT-396): should these be here?
 #define NUM_BTS7200 9
-#define NUM_BTS7040 7 // including 2 on UV cutoff
+#define NUM_BTS7040 7  // including 2 on UV cutoff
 
 static Bts7200Storage s_bts7200_storage[NUM_BTS7200];
 static uint8_t s_num_bts7200_storages;
@@ -127,7 +127,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
   for (uint8_t i = 0; i < s_config->num_i2c_addresses; i++) {
     status_ok_or_return(pca9539r_gpio_init(config->i2c_port, config->i2c_addresses[i]));
   }
-  mux_init(&s_config->mux_address);
+  status_ok_or_return(mux_init(&s_config->mux_address));
 
   // initialize the mux enable pin to low - CD74HC4067M96's enable pin is active-low
   GpioSettings mux_enable_pin_settings = {
@@ -142,7 +142,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
   for (Output output = 0; output < NUM_OUTPUTS; output++) {
     OutputSpec *spec = &s_config->specs[output];
     if (spec->on_front != is_front_power_distro) {
-      // not for this board 
+      // not for this board
       continue;
     }
     switch (spec->type) {
@@ -157,7 +157,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
         break;
       default:
         // probably because it wasn't specified in the config: ignore with a warning
-        LOG_WARN("Warning: output %d is unspecified\n", output);
+        LOG_WARN("Warning: output %d is unspecified, not initializing\n", output);
         break;
     }
   }
@@ -165,8 +165,37 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_set_state_gpio(GpioAddress *address, OutputState state) {
+  // assume active-high always
+  GpioState gpio_state = (state == OUTPUT_STATE_ON) ? GPIO_STATE_HIGH : GPIO_STATE_LOW;
+  return gpio_set_state(address, state);
+}
+
+static StatusCode prv_set_state_bts7xxx(Bts7xxxEnablePin *en_pin, OutputState state) {
+  // again assume active-high
+  if (state == GPIO_STATE_HIGH) {
+    return bts7xxx_enable_pin(en_pin);
+  } else {
+    return bts7xxx_disable_pin(en_pin);
+  }
+}
+
 StatusCode output_set_state(Output output, OutputState state) {
-  return STATUS_CODE_OK;
+  OutputSpec *spec = &s_config->specs[output];
+  switch (spec->type) {
+    case OUTPUT_TYPE_GPIO:
+      return prv_set_state_gpio(&spec->gpio_spec.address, state);
+    case OUTPUT_TYPE_BTS7040:
+      return prv_set_state_bts7xxx(&s_output_to_storage[output].bts7040->enable_pin, state);
+    case OUTPUT_TYPE_BTS7200:
+      Bts7200Storage *storage = &s_output_to_storage[output].bts7200;
+      Bts7xxxEnablePin *en_pin =
+          (spec->bts7200_spec.channel == 0) ? storage->enable_pin_0 : storage->enable_pin_1;
+      return prv_set_state_bts7xxx(en_pin, state);
+    default:
+      LOG_WARN("Warning: output %d is unspecified, not setting to on=%d\n", output, state);
+      return STATUS_CODE_INVALID_ARGS;
+  }
 }
 
 StatusCode output_read_current(Output output, uint16_t *current) {

@@ -169,14 +169,14 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .address = FRONT_PIN_RIGHT_CAMERA_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
-                    //   {
-                    //       .address = FRONT_PIN_FAN_1_EN,
-                    //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                    //   },
-                    //   {
-                    //       .address = FRONT_PIN_FAN_2_EN,
-                    //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                    //   },
+                      //   {
+                      //       .address = FRONT_PIN_FAN_1_EN,
+                      //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      //   },
+                      //   {
+                      //       .address = FRONT_PIN_FAN_2_EN,
+                      //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      //   },
                   },
               .num_outputs = 14,
           },
@@ -220,14 +220,14 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .address = FRONT_PIN_INFOTAINMENT_DISPLAY_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
                       },
-                    //   {
-                    //       .address = FRONT_PIN_FAN_1_EN,
-                    //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                    //   },
-                    //   {
-                    //       .address = FRONT_PIN_FAN_2_EN,
-                    //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                    //   },
+                      //   {
+                      //       .address = FRONT_PIN_FAN_1_EN,
+                      //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      //   },
+                      //   {
+                      //       .address = FRONT_PIN_FAN_2_EN,
+                      //       .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                      //   },
                       {
                           .address = FRONT_PIN_LEFT_DISPLAY_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
@@ -315,14 +315,14 @@ const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
                           .address = FRONT_PIN_FRONT_RIGHT_TURN_LIGHT_EN,
                           .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
                       },
-                    //   {
-                    //       .address = FRONT_PIN_FAN_1_EN,
-                    //       .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
-                    //   },
-                    //   {
-                    //       .address = FRONT_PIN_FAN_2_EN,
-                    //       .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
-                    //   },
+                      //   {
+                      //       .address = FRONT_PIN_FAN_1_EN,
+                      //       .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                      //   },
+                      //   {
+                      //       .address = FRONT_PIN_FAN_2_EN,
+                      //       .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                      //   },
                   },
               .num_outputs = 17,
           },
