@@ -14,7 +14,25 @@ static BootloaderConfig s_config_2_blob = { 0 };
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
 
+static uint32_t prv_compute_crc32(BootloaderConfig *config){
+  // This function temporarily saves the current CRC, then sets it to 0
+  // It then uses the crc32_arr function to calculate the crc of the blob
+  // The CRC is then set back to its original value and the calculated is returned
+  uint32_t temp_crc = config->crc32;
+  config->crc32 = 0;
+  uint32_t calculated_crc = crc32_arr((uint8_t *)config, sizeof(BootloaderConfig));
+  config->crc32 = temp_crc;
+
+  return calculated_crc;
+}
+
 StatusCode config_init(void) {
+  // This function makes sure that both config pages will not end up corrupted
+  // The saftey functions are that if a page is corrupted but the other is not then
+  // the "safe" page is copied over the corrupted page
+  // If both are corrupted then a critical error is returned
+
+  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
   status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
                                    &s_config_1_blob, sizeof(BootloaderConfig), false));
   status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
@@ -23,34 +41,23 @@ StatusCode config_init(void) {
                                    &s_config_2_blob, sizeof(BootloaderConfig), false));
   status_ok_or_return(persist_ctrl_periodic(&s_config_2_persist, false));
 
-  uint32_t config_1_crc = s_config_1_blob.crc32;
-  s_config_1_blob.crc32 = 0;
+  uint32_t config_1_check_crc = prv_compute_crc32(&s_config_1_blob);
+  uint32_t config_2_check_crc = prv_compute_crc32(&s_config_2_blob);
 
-  uint32_t config_2_crc = s_config_2_blob.crc32;
-  s_config_2_blob.crc32 = 0;
+  bool is_config_1_corrupted = !(s_config_1_blob.crc32 == config_1_check_crc);
+  bool is_config_2_corrupted = !(s_config_2_blob.crc32 == config_2_check_crc);
 
-  uint32_t config_1_check_crc = crc32_arr((uint8_t *)&s_config_1_blob, sizeof(BootloaderConfig));
-  uint32_t config_2_check_crc = crc32_arr((uint8_t *)&s_config_2_blob, sizeof(BootloaderConfig));
-
-  bool is_config_1_equal = config_1_crc == config_1_check_crc;
-  bool is_config_2_equal = config_2_crc == config_2_check_crc;
-
-  if (is_config_1_equal && is_config_2_equal) {
-    s_config_1_blob.crc32 = config_1_crc;
-    s_config_2_blob.crc32 = config_2_crc;
-  } else if (!is_config_1_equal && !is_config_2_equal) {
+  // memcpy copies one page to the other ("restoring" the corrupted page)
+  if (is_config_1_corrupted && is_config_2_corrupted) {
     LOG_CRITICAL("ERROR: Both config pages corrupted \n");
     return STATUS_CODE_INTERNAL_ERROR;
-  } else if (is_config_1_equal) {
-    s_config_1_blob.crc32 = config_1_crc;
+  } else if (is_config_2_corrupted) {
     memcpy(&s_config_2_blob, &s_config_1_blob, sizeof(BootloaderConfig));
     persist_commit(&s_config_2_persist);
   } else {
-    s_config_2_blob.crc32 = config_2_crc;
     memcpy(&s_config_1_blob, &s_config_2_blob, sizeof(BootloaderConfig));
     persist_commit(&s_config_1_persist);
   }
-
   return STATUS_CODE_OK;
 }
 
@@ -60,20 +67,27 @@ void config_get(BootloaderConfig *config) {
 }
 
 StatusCode config_commit(BootloaderConfig *input_config) {
-  input_config->crc32 = 0;
-  uint32_t input_config_crc = crc32_arr((uint8_t *)input_config, sizeof(BootloaderConfig));
-  input_config->crc32 = input_config_crc;
+  // This function sets the current config page 1 to the input config
+  // To prevent corruption, if page 1 is corrupted during the transfer, then
+  // page 2 is immediately copied over to page 1 and an error is returned
+  // If page 1 is not corrupted then page 1 is copied over to page 2
 
+  input_config->crc32 = prv_compute_crc32(input_config);
+
+  // This memcpy copies over the input config onto the config page 1
+  // This copy is commited into the storage, to change s_config_1_blob
+  // a persist_init will be called
   memcpy(&s_config_1_blob, input_config, sizeof(BootloaderConfig));
   persist_commit(&s_config_1_persist);
 
+  // This persist_init updates the s_config_1_blob by pulling from the flash
   status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
                                    &s_config_1_blob, sizeof(BootloaderConfig), false));
 
-  bool input_equals_config_1 =
-      memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) == 0;
+  bool config_1_corrupted =
+      !(memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) == 0);
 
-  if (input_equals_config_1) {
+  if (!config_1_corrupted) {
     memcpy(&s_config_2_blob, &s_config_1_blob, sizeof(BootloaderConfig));
     persist_commit(&s_config_2_persist);
   } else {
