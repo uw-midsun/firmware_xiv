@@ -198,6 +198,27 @@ StatusCode output_set_state(Output output, OutputState state) {
   }
 }
 
+static StatusCode prv_read_current_bts7040(Output output, uint16_t *current) {
+  uint8_t mux_selection = s_config->specs[output].bts7040_spec.mux_selection;
+  status_ok_or_return(mux_set(s_config->mux_address, mux_selection));
+  return bts7040_get_measurement(&s_output_to_storage[output].bts7040, current);
+}
+
+static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
+  // todo: get single output from bts7200
+  return STATUS_CODE_UNIMPLEMENTED;
+}
+
 StatusCode output_read_current(Output output, uint16_t *current) {
-  return STATUS_CODE_OK;
+  switch (s_config->specs[output].type) {
+    case OUTPUT_TYPE_GPIO:
+      return STATUS_CODE_UNIMPLEMENTED;  // TODO(SOFT-396): UV_VBAT_IS
+    case OUTPUT_TYPE_BTS7040:
+      return prv_read_current_bts7040(output, current);
+    case OUTPUT_TYPE_BTS7200:
+      return prv_read_current_bts7200(output, current);
+    default:
+      LOG_WARN("Warning: output %d is unspecified, not reading current\n", output);
+      return STATUS_CODE_INVALID_ARGS;
+  }
 }
