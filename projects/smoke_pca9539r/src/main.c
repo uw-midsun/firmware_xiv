@@ -98,6 +98,7 @@ static void prv_soft_timer_callback_output(SoftTimerId timer_id, void *context) 
 }
 
 int main() {
+  LOG_DEBUG("Testing your mom...\n");
   gpio_init();
   interrupt_init();
   soft_timer_init();

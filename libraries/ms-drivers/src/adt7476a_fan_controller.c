@@ -9,7 +9,6 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 
-static int mpxe_initial_conditions;  // If 1, read init conditions from store
 
 #ifdef MPXE
 #include <stdlib.h>
@@ -116,7 +115,6 @@ StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
 StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
 #ifdef MPXE
   prv_init_store();
-  mpxe_initial_conditions = read_init_conditions();
 #endif
   if (storage == NULL || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);

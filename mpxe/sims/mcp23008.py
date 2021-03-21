@@ -11,10 +11,12 @@ NUM_MCP_PINS = 8
 class Mcp23008(sim.Sim):
 
     def __init__(self):
-        self.states = None
+        #init_states = mcp23008_init_conditions()[0]
+        self.states = None #[bool(init_states.state[i]) for i in range(len(init_states.state))]
 
     # pylint: disable=unused-argument
     def handle_update(self, pm, proj):
+        print("HANDLE UPDATE CALLED")
         stores = proj.stores
         if MCP23008_KEY in stores:
             mcp = stores[MCP23008_KEY]
@@ -33,4 +35,5 @@ class Mcp23008(sim.Sim):
     # Compares pin state against store
     # pylint: disable=unused-argument
     def assert_store_value_reading(self, proj, pin, state):
+        print(self.states[pin], state)
         assert self.states[pin] == state

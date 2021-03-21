@@ -10,6 +10,7 @@ class TestPca9539r(int_test.IntTest):
         super().setUp()
         self.pca9539r = self.manager.start('smoke_pca9539r', Pca9539r())
 
+
     def test_pca9539r(self):
         time.sleep(0.1)
         self.pca9539r.sim.assert_store_values(self, True)

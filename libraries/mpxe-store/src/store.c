@@ -28,6 +28,8 @@ bool store_lib_inited = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
+static MxStoreUpdate *s_init_cond[MAX_STORE_COUNT];
+
 // Child to parent fifo - used to talk to harness
 static int s_ctop_fifo;
 
@@ -48,10 +50,6 @@ static void prv_sigusr2(int signo) {
   pthread_mutex_unlock(&s_log_lock);
 }
 
-static void prv_sigrtmin(int signo) {
-  pthread_mutex_unlock(&s_init_lock);
-}
-
 Store *prv_get_first_empty() {
   for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
     if (s_stores[i].key == NULL && s_stores[i].store == NULL) {
@@ -63,13 +61,13 @@ Store *prv_get_first_empty() {
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
-  s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+  s_func_table[update->type].update_store(update->msg, update->mask, (void *)(intptr_t)update->key);
   mx_store_update__free_unpacked(update, NULL);
 }
 
 static int prv_poll_stdin(void) {
   // read protos from stdin
-  // compare using second proto as 'mask'
+  // compare using second proto as 'mask`'
   int res = poll(&pfd, 1, -1);
   if (res == -1) {
     // interrupted
@@ -93,9 +91,6 @@ static int prv_poll_stdin(void) {
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
-  pthread_mutex_lock(&s_init_lock);
-  pthread_mutex_lock(&s_init_lock);
-  pthread_mutex_unlock(&s_init_lock);  // poll update needs to block while initial messages are sent
   LOG_DEBUG("STDIN UNLOCKED\n");
   while (true) {
     prv_poll_stdin();
@@ -112,11 +107,6 @@ void store_config(void) {
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
   signal(SIGUSR2, prv_sigusr2);
-  signal(SIGRTMIN, prv_sigrtmin);
-
-  // set up polling thread
-  pthread_t poll_thread;
-  pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
 
   // set up store pool
   memset(&s_stores, 0, sizeof(s_stores));
@@ -126,6 +116,34 @@ void store_config(void) {
   snprintf(fifo_path, sizeof(fifo_path), "/tmp/%d_ctop", getpid());
   mkfifo(fifo_path, 0666);
   s_ctop_fifo = open(fifo_path, O_WRONLY);
+
+  int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+  fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+  pthread_mutex_lock(&s_sig_lock);
+  static uint8_t buf[MAX_STORE_SIZE_BYTES];
+  while(true) {
+    memset(buf, 0, MAX_STORE_SIZE_BYTES);
+    ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
+    LOG_DEBUG("LENGTH: %ld\n", len);
+    if (len != -1) {
+      MxStoreUpdate **update = s_init_cond;
+      while(update != NULL) {
+        update++;
+      }
+      *update = mx_store_update__unpack(NULL, (size_t)len, buf);
+      LOG_DEBUG("STORE TYPE: %d, STORE KEY %ld\n", (*update)->type, (long int)(*update)->key);
+    } else {
+      if (pthread_mutex_trylock(&s_sig_lock) == 0) {
+        pthread_mutex_unlock(&s_sig_lock);
+        break;
+      }
+    }
+  }
+
+  // set up polling thread
+  pthread_t poll_thread;
+  pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
 
   store_lib_inited = true;
 }
@@ -141,6 +159,19 @@ void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) 
   local_store->type = type;
   local_store->store = store;
   local_store->key = key;
+  // Update store with init conditions
+  LOG_DEBUG("START OF STORE REGISTER\n");
+  for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
+    if(s_init_cond[i] != NULL) {
+      LOG_DEBUG("STORE TYPE: %d, STORE KEY %ld, INIT TYPE %d, INIT KEY %ld\n", type, (long int)key, s_init_cond[i]->type, (long int)s_init_cond[i]->key);
+      if (s_init_cond[i]->type == type && (void*)(intptr_t)s_init_cond[i]->key == key) {
+        LOG_DEBUG("STORE UPDATE CALLED FROM INIT\n");
+        s_func_table[s_init_cond[i]->type].update_store(s_init_cond[i]->msg, s_init_cond[i]->mask, (void*)(intptr_t)s_init_cond[i]->key);
+      }
+    } else {
+      break;
+    }
+  }
 }
 
 void *store_get(MxStoreType type, void *key) {
@@ -186,10 +217,6 @@ void store_export(MxStoreType type, void *store, void *key) {
   // free memory
   free(export_buf);
   free(store_buf);
-}
-
-int read_init_conditions(void) {
-  return prv_poll_stdin();
 }
 
 void log_mutex_lock() {

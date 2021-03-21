@@ -8,6 +8,13 @@ from mpxe.protogen import stores_pb2
 
 BIN_DIR_FORMAT = os.path.join(REPO_DIR, 'build/bin/x86/{}')
 
+class StoreUpdate:
+    def __init__(self, msg, mask, store_type, key):
+        self.msg = msg
+        self.mask = mask
+        self.store_type = store_type
+        self.key = key # use for update stores in sims, init conditions and pm.py
+
 
 class Project:
     def __init__(self, name, sim):
@@ -18,10 +25,10 @@ class Project:
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       universal_newlines=False)
-        self.ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
+        self.ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid) 
         while not os.path.exists(self.ctop_fifo_path):
             pass
-
+        
         # Subprocess is expected to create child to parent fifo, open in raw bytes mode
         self.ctop_fifo = open(self.ctop_fifo_path, 'rb')
         if self.ctop_fifo is None:
@@ -45,16 +52,17 @@ class Project:
         os.unlink(self.ctop_fifo_path)
         self.killed = True
 
-    def write_store(self, msg, mask, store_type, key=0):
+    def write_store(self, store_update):
         update = stores_pb2.MxStoreUpdate()
-        update.key = key
-        update.type = store_type
-        update.msg = msg.SerializeToString()
-        update.mask = mask.SerializeToString()
+        print(store_update)
+        update.key = store_update.key
+        update.type = store_update.store_type
+        update.msg = store_update.msg.SerializeToString()
+        update.mask = store_update.mask.SerializeToString()
         self.write(update.SerializeToString())
 
     def write(self, msg):
-        self.popen.stdin.write(msg)
+        print("Results of Write", self.popen.stdin.write(msg))
         self.popen.stdin.flush()
 
     def handle_store(self, pm, msg):

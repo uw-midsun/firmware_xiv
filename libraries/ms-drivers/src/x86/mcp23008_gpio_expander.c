@@ -8,7 +8,7 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Mcp23008GpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_MCP23008_GPIO_PINS];
 
-static int mpxe_initial_conditions;  // If 1, read init conditions from store
+#include "log.h"
 
 #ifdef MPXE
 #include <stdlib.h>
@@ -50,6 +50,7 @@ static void prv_init_store(void) {
   };
   s_store.n_state = NUM_MCP23008_GPIO_PINS;
   s_store.state = malloc(NUM_MCP23008_GPIO_PINS * sizeof(protobuf_c_boolean));
+  LOG_DEBUG("REGISTERING STORE\n");
   store_register(MX_STORE_TYPE__MCP23008, funcs, &s_store, NULL);
 }
 
@@ -62,23 +63,19 @@ static void prv_export() {
 #endif
 
 StatusCode mcp23008_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
+  s_i2c_port = i2c_port;
+  // Set each pin to the default settings
+  Mcp23008GpioSettings default_settings = {
+    .direction = MCP23008_GPIO_DIR_IN,
+    .state = MCP23008_GPIO_STATE_LOW,
+  };
+  for (Mcp23008PinAddress i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
+    s_pin_settings[i2c_address][i] = default_settings;
+  }
+
 #ifdef MPXE
   mpxe_address = i2c_address;
   prv_init_store();
-  mpxe_initial_conditions = read_init_conditions();
-#endif
-  s_i2c_port = i2c_port;
-  if (mpxe_initial_conditions != 1) {
-    // Set each pin to the default settings
-    Mcp23008GpioSettings default_settings = {
-      .direction = MCP23008_GPIO_DIR_IN,
-      .state = MCP23008_GPIO_STATE_LOW,
-    };
-    for (Mcp23008PinAddress i = 0; i < NUM_MCP23008_GPIO_PINS; i++) {
-      s_pin_settings[i2c_address][i] = default_settings;
-    }
-  }
-#ifdef MPXE
   prv_export();
 #endif
   return STATUS_CODE_OK;

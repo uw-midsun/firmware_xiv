@@ -72,7 +72,6 @@ static void prv_init_store(uint8_t address) {
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
 #ifdef MPXE
   prv_init_store(i2c_address);
-  mpxe_initial_conditions = read_init_conditions();
 #endif
   s_i2c_port = i2c_port;
 

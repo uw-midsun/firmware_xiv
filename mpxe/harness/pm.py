@@ -32,16 +32,25 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.CanIO()
         
-    def start(self, name, sim=None, startup_messages=()):
+    def start(self, name, sim=None, init_conds=None):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
+
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.ctop_fifo.fileno()] = proj
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
 
-        if startup_messages: # tuple format is (msg, mask, key)
-            proj.write_store(startup_messages[0], startup_messages[1], startup_messages[2])
-        proj.popen.send_signal(INIT_LOCK_SIGNAL)
+        wait_conds = []
+        if init_conds:
+            for condition in init_conds: 
+                proj.write_store(condition)
+                wait_conds.append((condition.store_type, condition.key))
+        proj.popen.send_signal(STORE_LOCK_SIGNAL)
+
+        while wait_conds:
+            if wait_conds[0] in proj.stores:
+                wait_conds.pop(0)
+        #print("This is project stores", proj.stores)
         return proj
 
     def stop(self, proj):
