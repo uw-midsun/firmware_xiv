@@ -1,9 +1,9 @@
 #include <stdint.h>
+#include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
-#include "gpio.h"
 
 #define SECOND_MS 1000
 #define HALF_SECOND_MS 500
@@ -11,14 +11,14 @@
 typedef struct Counters {
   uint16_t counter_a;
   uint16_t counter_b;
-  
+
 } Counters;
 
 static void prv_increment(SoftTimerId timer_id, void *context) {
   Counters *storage = context;
   storage->counter_a++;
   LOG_DEBUG("%d\n", storage->counter_a);
-  if(storage->counter_a % 2 == 0){
+  if (storage->counter_a % 2 == 0) {
     storage->counter_b++;
     LOG_DEBUG("%d\n", storage->counter_b);
   }
