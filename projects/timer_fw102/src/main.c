@@ -1,16 +1,19 @@
 #include <stdbool.h>
+
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
 
+#define TIMER_PERIOD_MS 500
+
 typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-void prv_timing_callback(SoftTimerId timer_id, void *context) {
+static void prv_timing_callback(SoftTimerId timer_id, void *context) {
   Counters *counters = context;
 
   counters->counter_a++;  // increments a
@@ -23,7 +26,7 @@ void prv_timing_callback(SoftTimerId timer_id, void *context) {
   }
 
   // starts timer again
-  soft_timer_start_millis(500, prv_timing_callback, counters, NULL);
+  soft_timer_start_millis(TIMER_PERIOD_MS, prv_timing_callback, counters, NULL);
 }
 
 int main(void) {
@@ -36,7 +39,7 @@ int main(void) {
   // initialize the struct to be all 0
   Counters counters = { 0 };
 
-  soft_timer_start_millis(500, prv_timing_callback, &counters, NULL);
+  soft_timer_start_millis(TIMER_PERIOD_MS, prv_timing_callback, &counters, NULL);
 
   while (true) {
     wait();
