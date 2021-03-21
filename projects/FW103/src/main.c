@@ -1,4 +1,5 @@
 #include <stdint.h>
+
 #include "adc.h"
 #include "gpio.h"
 #include "gpio_it.h"
@@ -6,32 +7,32 @@
 #include "log.h"
 #include "soft_timer.h"
 
-GpioAddress reading_addr = { .port = GPIO_PORT_A, .pin = 6 };
-GpioAddress button_addr = { .port = GPIO_PORT_B, .pin = 2 };
-
-GpioSettings reading_settings = { .direction = GPIO_DIR_IN,
-                                  .state = GPIO_STATE_LOW,
-                                  .alt_function = GPIO_ALTFN_NONE,
-                                  .resistor = GPIO_RES_NONE };
-
-GpioSettings button_settings = { .direction = GPIO_DIR_IN,
-                                 .state = GPIO_STATE_LOW,
-                                 .alt_function = GPIO_ALTFN_NONE,
-                                 .resistor = GPIO_RES_NONE };
-
-InterruptSettings interrupt_settings = {
-  .type = INTERRUPT_TYPE_INTERRUPT,
-  .priority = INTERRUPT_PRIORITY_NORMAL,
-};
-
 void interrupt_handler(const GpioAddress *address, void *context) {
-  AdcChannel *reading_channel = (AdcChannel *)context;
+  AdcChannel *reading_channel = context;
   uint16_t data = 0;
-  adc_read_raw(*reading_channel, &data);
+  adc_read_converted(*reading_channel, &data);
   LOG_DEBUG("%d\n", data);
 }
 
 int main(void) {
+  GpioAddress reading_addr = { .port = GPIO_PORT_A, .pin = 6 };
+  GpioAddress button_addr = { .port = GPIO_PORT_B, .pin = 2 };
+
+  GpioSettings reading_settings = { .direction = GPIO_DIR_IN,
+                                    .state = GPIO_STATE_LOW,
+                                    .alt_function = GPIO_ALTFN_NONE,
+                                    .resistor = GPIO_RES_NONE };
+
+  GpioSettings button_settings = { .direction = GPIO_DIR_IN,
+                                   .state = GPIO_STATE_LOW,
+                                   .alt_function = GPIO_ALTFN_NONE,
+                                   .resistor = GPIO_RES_NONE };
+
+  InterruptSettings interrupt_settings = {
+    .type = INTERRUPT_TYPE_INTERRUPT,
+    .priority = INTERRUPT_PRIORITY_NORMAL,
+  };
+
   interrupt_init();
   soft_timer_init();
   gpio_init();
