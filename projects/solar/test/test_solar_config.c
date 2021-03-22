@@ -84,13 +84,19 @@ void test_initializing_fault_monitor_config(void) {
 }
 
 // Test that we can initialize the config returned by |config_get_fault_handler_settings|.
-void test_initializing_fault_handler_config(void) {
-  TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings()));
+void test_initializing_fault_handler_config_5_mppts(void) {
+  TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_5_MPPTS)));
+}
+void test_initializing_fault_handler_config_6_mppts(void) {
+  TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_fault_handler_settings|.
-void test_initializing_data_tx_config(void) {
-  TEST_ASSERT_OK(data_tx_init(config_get_data_tx_settings()));
+void test_initializing_data_tx_config_5_mppts(void) {
+  TEST_ASSERT_OK(data_tx_init(config_get_data_tx_settings(SOLAR_BOARD_5_MPPTS)));
+}
+void test_initializing_data_tx_config_6_mppts(void) {
+  TEST_ASSERT_OK(data_tx_init(config_get_data_tx_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that passing an invalid MPPT count returns NULL.
