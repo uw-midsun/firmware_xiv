@@ -38,21 +38,30 @@ static void prv_sense_callback(void *context) {
           (1 /
            ((ln(0.56 * converted_reading / (3.3 - converted_reading)) / 3428.0) + 1.0 / 298.15)) -
           273.15;
+
+      // Convert from Celsius to deciCelsius
+      converted_reading = converted_reading * 10;
+
       break;
     case RTD_THERMISTOR:
       // RTD: ΔT = (33 * V / (87.45 - V) - 1) / 0.00385
       converted_reading = (33.0 * converted_reading / (87.45 - converted_reading) - 1.0) / 0.00385;
+
+      // Convert from Celsius to deciCelsius
+      converted_reading = converted_reading * 10;
       break;
     case FAN_CONTROL_THERMISTOR:
       // TODO(SOFT-280): Continuation, T = ΔV * q / (n * k * ln(10)), get two readings from fan and
       // convert readings.
+
+      // As of now, leave unmodified.
+      converted_reading = adc_voltage_reading;
       break;
     case NUM_THERMISTOR_TYPES:
+      // As of now, leave unmodified.
+      converted_reading = adc_voltage_reading;
       break;
   }
-
-  // Convert from Celsius to deciCelsius
-  converted_reading = converted_reading * 10;
 
   if (status_ok(status)) {
     data_store_set(data->data_point, (uint32_t)converted_reading);
@@ -77,7 +86,7 @@ StatusCode sense_temperature_init(SenseTemperatureSettings *settings) {
   for (uint8_t i = 0; i < settings->num_thermistors; i++) {
     ThermistorData *data = &s_thermistor_data[i];
     data->data_point = DATA_POINT_TEMPERATURE(i);
-    data->thermistor_type = settings->thermistor_settings[i]->thermistor_type;
+    data->thermistor_type = settings->thermistor_settings[i].thermistor_type;
     status_ok_or_return(gpio_init_pin(&settings->thermistor_settings[i].thermistor_address,
                                       &thermistor_pin_settings));
     status_ok_or_return(
