@@ -77,7 +77,7 @@ StatusCode sense_temperature_init(SenseTemperatureSettings *settings) {
   for (uint8_t i = 0; i < settings->num_thermistors; i++) {
     ThermistorData *data = &s_thermistor_data[i];
     data->data_point = DATA_POINT_TEMPERATURE(i);
-    data->thermistor_type = settings->thermistor_settings->thermistor_type;
+    data->thermistor_type = settings->thermistor_settings[i]->thermistor_type;
     status_ok_or_return(gpio_init_pin(&settings->thermistor_settings[i].thermistor_address,
                                       &thermistor_pin_settings));
     status_ok_or_return(
