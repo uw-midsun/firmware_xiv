@@ -19,19 +19,10 @@ class Project:
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       universal_newlines=False)
-        self.ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
-        while not os.path.exists(self.ctop_fifo_path):
-            pass
 
-        # Subprocess is expected to create child to parent fifo, open in raw bytes mode
-        self.ctop_fifo = open(self.ctop_fifo_path, 'rb')
-        if self.ctop_fifo is None:
-            raise IOError('failed to open ctop fifo')
-
-        # Set the flag O_NONBLOCK on the ctop-fifo fd, necessary for reading from running projects
-        ctop_fd = self.ctop_fifo.fileno()
-        ctop_fl = fcntl.fcntl(ctop_fd, fcntl.F_GETFL)
-        fcntl.fcntl(ctop_fd, fcntl.F_SETFL, ctop_fl | os.O_NONBLOCK)
+        # Set the flag O_NONBLOCK on stdout, necessary for reading from running projects
+        flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
+        fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
         self.sim = sim
 
@@ -42,8 +33,6 @@ class Project:
         self.popen.wait()
         self.popen.stdout.close()
         self.popen.stdin.close()
-        self.ctop_fifo.close()
-        os.unlink(self.ctop_fifo_path)
         self.killed = True
 
     def write_store(self, msg, mask, store_type, key=0):

@@ -28,9 +28,6 @@ bool store_lib_inited = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
-// Child to parent fifo - used to talk to harness
-static int s_ctop_fifo;
-
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -101,12 +98,6 @@ void store_config(void) {
   // set up store pool
   memset(&s_stores, 0, sizeof(s_stores));
 
-  // open fifo
-  char fifo_path[64];
-  snprintf(fifo_path, sizeof(fifo_path), "/tmp/%d_ctop", getpid());
-  mkfifo(fifo_path, 0666);
-  s_ctop_fifo = open(fifo_path, O_WRONLY);
-
   // set up functions for logging
   StoreFuncs log_funcs = {
     (GetPackedSizeFunc)mx_log__get_packed_size,
@@ -164,7 +155,7 @@ void store_export(MxStoreType type, void *store, void *key) {
 
   pthread_mutex_lock(&s_sig_lock);
   // write proto to fifo
-  ssize_t written = write(s_ctop_fifo, export_buf, export_size);
+  ssize_t written = write(STDOUT_FILENO, export_buf, export_size);
   // wait for signal that parent got message
   pthread_mutex_lock(&s_sig_lock);
   pthread_mutex_unlock(&s_sig_lock);
