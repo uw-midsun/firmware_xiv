@@ -89,7 +89,7 @@ static void *prv_rx_thread(void *arg) {
     if (FD_ISSET(s_socket_data.can_fd, &input_fds)) {
       int bytes =
           read(s_socket_data.can_fd, &s_socket_data.rx_frame, sizeof(s_socket_data.rx_frame));
-      s_socket_data.rx_frame_valid = true;
+      s_socket_data.rx_frame_valid = (bytes != -1);
 
       if (s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
         s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(

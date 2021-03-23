@@ -48,6 +48,7 @@ static StatusCode prv_ack_callback_status(CanMessageId msg_id, uint16_t device, 
 }
 
 static void prv_clock_tx(void) {
+  LOG_DEBUG("prv_clock_tx called\n");
   Event e = { 0 };
   StatusCode ret = event_process(&e);
   TEST_ASSERT_OK(ret);
