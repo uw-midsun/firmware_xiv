@@ -7,7 +7,7 @@
 #include "log.h"
 #include "soft_timer.h"
 
-void interrupt_handler(const GpioAddress *address, void *context) {
+static void prv_interrupt_handler(const GpioAddress *address, void *context) {
   AdcChannel *reading_channel = context;
   uint16_t data = 0;
   adc_read_converted(*reading_channel, &data);
@@ -45,7 +45,7 @@ int main(void) {
   adc_get_channel(reading_addr, &reading_channel);
   adc_set_channel(reading_channel, true);
   gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING,
-                             interrupt_handler, &reading_channel);
+                             prv_interrupt_handler, &reading_channel);
   while (true) {
   }
 
