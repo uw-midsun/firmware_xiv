@@ -60,9 +60,11 @@ class Project:
 
     def handle_store(self, pm, msg):
         store_info = decoder.decode_store_info(msg)
-        key = (store_info.type, store_info.key)
-        self.stores[key] = decoder.decode_store(store_info)
-        self.sim.handle_update(pm, self)
-
-    def handle_log(self, pm, log):
-        self.sim.handle_log(pm, self, log)
+        if store_info.type == stores_pb2.LOG:
+            mxlog = stores_pb2.MxLog()
+            mxlog.ParseFromString(store_info.msg)
+            self.sim.handle_log(pm, self, mxlog.log.decode('utf-8').rstrip())
+        else:
+            key = (store_info.type, store_info.key)
+            self.stores[key] = decoder.decode_store(store_info)
+            self.sim.handle_update(pm, self)
