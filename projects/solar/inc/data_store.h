@@ -69,9 +69,6 @@ StatusCode data_store_init(void);
 // Overwrites the value of the data point with |value|.
 StatusCode data_store_set(DataPoint data_point, uint32_t value);
 
-// A signed version of data_store_set
-StatusCode data_store_set_signed(DataPoint data_point, int32_t value);
-
 // Call this when you're done a session of calling |data_store_set| and you want data consumers
 // to be notified. Raises a DATA_READY_EVENT. Every data point should have been overwritten from
 // its initial garbage when this is called.
@@ -80,9 +77,6 @@ StatusCode data_store_done(void);
 // Puts the value of the data point in |value|. Warning: if the data point is not set in the store,
 // this will put garbage in |value|. Check |data_store_get_is_set| before every call.
 StatusCode data_store_get(DataPoint data_point, uint32_t *value);
-
-// A signed version of data_store_get
-StatusCode data_store_get_signed(DataPoint data_point, int32_t *value);
 
 // Puts whether the data point is set in the data store in |is_set|.
 StatusCode data_store_get_is_set(DataPoint data_point, bool *is_set);

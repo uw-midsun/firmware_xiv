@@ -26,27 +26,22 @@ static void prv_sense_callback(void *context) {
   uint16_t adc_voltage_reading;
   StatusCode status = adc_read_converted(data->adc_channel, &adc_voltage_reading);
 
-  // A signed converted_reading variable is used to get the converted reading in Celcius
-  int32_t converted_reading = (int32_t)adc_voltage_reading;
+  // Convert converted_reading into Volts
+  double converted_reading = adc_voltage_reading / 1000.0;
 
-  // Convert converted_reading into Volts (NOTE TO SELF: INTEGER ROUNDING LOSS HERE, IS THERE ANY
-  // WAY TO PREVENT?)
-  adc_voltage_reading = adc_voltage_reading / 1000;
-
-  // Based on the type of thermistor, convert the converted reading (V) to degrees Celcius
+  // Based on the type of thermistor, convert the converted reading (V) to degrees Celsius
   switch (data->thermistor_type) {
     case NTC_THERMISTOR:
-      // NTC: T = 1 / ( ( ln(0.56 * V / (3.3 - V)) / 3428 ) + 1/298.15 ) in KELVIN. For Celcius,
+      // NTC: T = 1 / ( ( ln(0.56 * V / (3.3 - V)) / 3428 ) + 1/298.15 ) in KELVIN. For Celsius,
       // subtract 273.15
       converted_reading =
-          (1 / ((ln(0.56 * adc_voltage_reading / (3.3 - adc_voltage_reading)) / 3428.0) +
-                1.0 / 298.15)) -
+          (1 /
+           ((ln(0.56 * converted_reading / (3.3 - converted_reading)) / 3428.0) + 1.0 / 298.15)) -
           273.15;
       break;
     case RTD_THERMISTOR:
       // RTD: ΔT = (33 * V / (87.45 - V) - 1) / 0.00385
-      converted_reading =
-          (33.0 * adc_voltage_reading / (87.45 - adc_voltage_reading) - 1.0) / 0.00385;
+      converted_reading = (33.0 * converted_reading / (87.45 - converted_reading) - 1.0) / 0.00385;
       break;
     case FAN_CONTROL_THERMISTOR:
       // TODO(SOFT-280): Continuation, T = ΔV * q / (n * k * ln(10)), get two readings from fan and
@@ -56,8 +51,11 @@ static void prv_sense_callback(void *context) {
       break;
   }
 
+  // Convert from Celsius to deciCelsius
+  converted_reading = converted_reading * 10;
+
   if (status_ok(status)) {
-    data_store_set_signed(data->data_point, converted_reading);
+    data_store_set(data->data_point, (uint32_t)converted_reading);
   } else {
     LOG_WARN("sense_temperature failed to read from ADC for data point %d: code %d\n",
              data->data_point, status);
