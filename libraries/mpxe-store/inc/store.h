@@ -14,6 +14,9 @@ typedef void (*FreeUnpackedFunc)(void *msg, ProtobufCAllocator *allocator);
 // around to avoid adding functions to headers
 typedef void (*UpdateStoreFunc)(ProtobufCBinaryData msg, ProtobufCBinaryData mask, void *key);
 
+// Store command callback function -> mapped in store.c and called upon receiving command
+typedef void (*MxCmdCallback)(void *context);
+
 // Each module registers a StoreFuncs set for the store library to work with
 typedef struct StoreFuncs {
   GetPackedSizeFunc get_packed_size;

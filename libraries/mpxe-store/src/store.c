@@ -34,6 +34,18 @@ static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static MxLog s_mxlog = MX_LOG__INIT;
 
+// MxCmd callback table and function prototypes
+static void prv_handle_finish_conditions(void *context);
+static MxCmdCallback s_cmd_cb_lookup[] = {
+  [MX_CMD_TYPE__NO_CMD] = NULL,
+  [MX_CMD_TYPE__FINISH_INIT_CONDS] = prv_handle_finish_conditions,
+};
+
+static void prv_handle_finish_conditions(void *context) {
+  LOG_DEBUG("HELLO BIG WORLD\n");
+  // pthread_mutex_unlock(s_sig_lock);
+}
+
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
   pthread_mutex_unlock(&s_sig_lock);
@@ -50,6 +62,13 @@ Store *prv_get_first_empty() {
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
+  LOG_DEBUG("HANDLE UPDATE!\n");
+  if (update->type == MX_STORE_TYPE__CMD) {
+    MxCmd *cmd = mx_cmd__unpack(NULL, (size_t)update->msg.len, update->msg.data);
+    if (cmd->cmd == MX_CMD_TYPE__FINISH_INIT_CONDS) {
+      s_cmd_cb_lookup[MX_CMD_TYPE__FINISH_INIT_CONDS](NULL);
+    }
+  }
   s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
   mx_store_update__free_unpacked(update, NULL);
 }
@@ -107,6 +126,7 @@ void store_config(void) {
     (UpdateStoreFunc)NULL,
   };
   store_register(MX_STORE_TYPE__LOG, log_funcs, &s_mxlog, NULL);
+  LOG_DEBUG("LOGS INITED!\n");
 
   store_lib_inited = true;
 }

@@ -43,6 +43,14 @@ class Project:
         update.mask = mask.SerializeToString()
         self.write(update.SerializeToString())
 
+    def send_command(self, cmd):
+        mxcmd_msg = stores_pb2.MxCmd()
+        mxcmd_msg.cmd = cmd
+        update = stores_pb2.MxStoreUpdate()
+        update.type = stores_pb2.MxStoreType.CMD
+        update.msg = mxcmd_msg.SerializeToString()
+        self.write(update.SerializeToString())
+
     def write(self, msg):
         self.popen.stdin.write(msg)
         self.popen.stdin.flush()
