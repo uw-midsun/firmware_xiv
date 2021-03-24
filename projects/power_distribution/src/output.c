@@ -214,7 +214,8 @@ static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
 StatusCode output_read_current(Output output, uint16_t *current) {
   switch (s_config->specs[output].type) {
     case OUTPUT_TYPE_GPIO:
-      return STATUS_CODE_UNIMPLEMENTED;  // TODO(SOFT-396): UV_VBAT_IS
+      // we can't current sense from a gpio output - UV_VBAT_IS uses BTS7040 (really a BTS7004)
+      return STATUS_CODE_UNIMPLEMENTED;
     case OUTPUT_TYPE_BTS7040:
       return prv_read_current_bts7040(output, current);
     case OUTPUT_TYPE_BTS7200:

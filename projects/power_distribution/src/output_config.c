@@ -234,6 +234,15 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
         .address = FRONT_PIN_FAN_EN,
       },
     },
+    [FRONT_OUTPUT_UV_VBAT] = {
+      // We don't control UV VBAT, but we read its current through a BTS7040 (actually a BTS7004)
+      .type = OUTPUT_TYPE_BTS7040,
+      .on_front = true,
+      .bts7040_spec = {
+        .enable_pin = INVALID_PCA9539R_PIN,
+        .mux_selection = FRONT_MUX_SEL_UV_VBAT,
+      },
+    },
 
     // Rear power distribution outputs
     [REAR_OUTPUT_BMS] = {

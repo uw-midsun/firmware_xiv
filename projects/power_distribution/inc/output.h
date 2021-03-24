@@ -32,8 +32,9 @@ typedef enum {
   FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
   FRONT_OUTPUT_SPEAKER,
-  FRONT_OUTPUT_HORN,
-  FRONT_OUTPUT_FAN,  // on UV cutoff, not on load switch
+  FRONT_OUTPUT_HORN,     // on UV cutoff, no current sense
+  FRONT_OUTPUT_FAN,      // on UV cutoff (not on load switch), no current sense
+  FRONT_OUTPUT_UV_VBAT,  // on UV cutoff, current sense only
   // spares omitted
 
   // Outputs for rear power distribution
