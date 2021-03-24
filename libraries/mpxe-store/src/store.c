@@ -169,8 +169,6 @@ void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) 
        i++) {  // Need to check each index, as freed and set to NULL once used
     if (s_init_cond[i] != NULL) {
       if (s_init_cond[i]->type == type && (void *)(intptr_t)s_init_cond[i]->key == key) {
-        LOG_DEBUG("type %d\n", type);
-        LOG_DEBUG("STORE UPDATE CALLED FROM INIT %d\n", i);
         s_func_table[s_init_cond[i]->type].update_store(s_init_cond[i]->msg, s_init_cond[i]->mask,
                                                         (void *)(intptr_t)s_init_cond[i]->key);
         mx_store_update__free_unpacked(s_init_cond[i], NULL);
