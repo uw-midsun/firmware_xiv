@@ -31,24 +31,22 @@ typedef enum {
     }                                                                         \
   } while (0)
 #else
-#include <pthread.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "store.h"
 
-extern bool store_lib_inited;
+#define MAX_LOG_LEN 256
+static char s_log_buf[MAX_LOG_LEN];
 
 // fflush necessary for printing through pipes
-#define LOG(level, fmt, ...)                                                  \
-  do {                                                                        \
-    if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
-      log_mutex_lock();                                                       \
-      printf("[%u] %s:%u: " fmt, (level), __FILE__, __LINE__, ##__VA_ARGS__); \
-      fflush(stdout);                                                         \
-      if (store_lib_inited) {                                                 \
-        log_mutex_lock();                                                     \
-      }                                                                       \
-      log_mutex_unlock();                                                     \
-    }                                                                         \
+#define LOG(level, fmt, ...)                                                                  \
+  do {                                                                                        \
+    if ((level) >= LOG_LEVEL_VERBOSITY) {                                                     \
+      memset(s_log_buf, 0, sizeof(s_log_buf));                                                \
+      int len = snprintf(s_log_buf, sizeof(s_log_buf), "[%u] %s:%u: " fmt, (level), __FILE__, \
+                         __LINE__, ##__VA_ARGS__);                                            \
+      log_export(s_log_buf, len);                                                             \
+    }                                                                                         \
   } while (0)
 #endif

@@ -28,21 +28,15 @@ bool store_lib_inited = false;
 
 static Store s_stores[MAX_STORE_COUNT];
 
-// Child to parent fifo - used to talk to harness
-static int s_ctop_fifo;
-
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t s_log_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static MxLog s_mxlog = MX_LOG__INIT;
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
   pthread_mutex_unlock(&s_sig_lock);
-}
-
-static void prv_sigusr2(int signo) {
-  pthread_mutex_unlock(&s_log_lock);
 }
 
 Store *prv_get_first_empty() {
@@ -96,7 +90,6 @@ void store_config(void) {
 
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
-  signal(SIGUSR2, prv_sigusr2);
 
   // set up polling thread
   pthread_t poll_thread;
@@ -105,11 +98,15 @@ void store_config(void) {
   // set up store pool
   memset(&s_stores, 0, sizeof(s_stores));
 
-  // open fifo
-  char fifo_path[64];
-  snprintf(fifo_path, sizeof(fifo_path), "/tmp/%d_ctop", getpid());
-  mkfifo(fifo_path, 0666);
-  s_ctop_fifo = open(fifo_path, O_WRONLY);
+  // set up functions for logging
+  StoreFuncs log_funcs = {
+    (GetPackedSizeFunc)mx_log__get_packed_size,
+    (PackFunc)mx_log__pack,
+    (UnpackFunc)NULL,
+    (FreeUnpackedFunc)NULL,
+    (UpdateStoreFunc)NULL,
+  };
+  store_register(MX_STORE_TYPE__LOG, log_funcs, &s_mxlog, NULL);
 
   store_lib_inited = true;
 }
@@ -158,7 +155,7 @@ void store_export(MxStoreType type, void *store, void *key) {
 
   pthread_mutex_lock(&s_sig_lock);
   // write proto to fifo
-  ssize_t written = write(s_ctop_fifo, export_buf, export_size);
+  ssize_t written = write(STDOUT_FILENO, export_buf, export_size);
   // wait for signal that parent got message
   pthread_mutex_lock(&s_sig_lock);
   pthread_mutex_unlock(&s_sig_lock);
@@ -172,10 +169,8 @@ void store_export(MxStoreType type, void *store, void *key) {
   free(store_buf);
 }
 
-void log_mutex_lock() {
-  pthread_mutex_lock(&s_log_lock);
-}
-
-void log_mutex_unlock() {
-  pthread_mutex_unlock(&s_log_lock);
+void log_export(char *buf, uint16_t len) {
+  s_mxlog.log.len = len;
+  s_mxlog.log.data = (uint8_t *)buf;
+  store_export(MX_STORE_TYPE__LOG, &s_mxlog, NULL);
 }
