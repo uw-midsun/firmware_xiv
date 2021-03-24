@@ -14,7 +14,11 @@
 
 #include "power_select_defs.h"
 #include "power_select_thermistor.h"
-#include "power_select_can.h"
+#include "power_select_events.h"
+// #include "power_select_can.h"
+#include "exported_enums.h"
+#include "can_pack.h"
+#include "can_unpack.h"
 
 #define POWER_SELECT_MEASUREMENT_INTERVAL_MS 1000
 #define POWER_SELECT_MEASUREMENT_INTERVAL_US (POWER_SELECT_MEASUREMENT_INTERVAL_MS * 1000)
@@ -41,6 +45,7 @@ typedef struct {
   int32_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];
   uint16_t fault_bitset;
   uint8_t valid_bitset;  // valid pins
+  SoftTimerId timer_id;
 } PowerSelectStorage;
 
 // Initialize power selection
@@ -50,7 +55,7 @@ StatusCode power_select_init(void);
 StatusCode power_select_start(void);
 
 // Stop measuring sense values
-void power_select_stop(void);
+bool power_select_stop(void);
 
 // Return the fault bitset
 uint16_t power_select_get_fault_bitset(void);
@@ -60,3 +65,6 @@ uint8_t power_select_get_valid_bitset(void);
 
 // Return the storage (mainly for testing)
 PowerSelectStorage power_select_get_storage(void);
+
+// Initialize CAN to respond to POWER_ON_MAIN_SEQUENCE
+StatusCode power_select_can_init(void);

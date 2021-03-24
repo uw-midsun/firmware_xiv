@@ -10,7 +10,7 @@ static CanSettings s_can_settings = {
   .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
   .tx = { GPIO_PORT_A, 12 },
   .rx = { GPIO_PORT_A, 11 },
-  .loopback = false,
+  .loopback = true,
 };
 
 // Handles CAN message from centre console during startup.

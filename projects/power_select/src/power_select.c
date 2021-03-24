@@ -51,6 +51,7 @@ static const uint16_t MAX_CURRENTS[NUM_POWER_SELECT_CURRENT_MEASUREMENTS] = {
 
 // Broadcast the fault bitset
 void prv_broadcast_fault(void) {
+  // LOG_DEBUG("TEST NOT SENDING FAULT\n");
   CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset);
 }
 // Broadcast sense measurements from storage.
@@ -148,7 +149,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
 
   LOG_DEBUG("Send measurements result: %d\n", prv_broadcast_measurements());
   soft_timer_start(POWER_SELECT_MEASUREMENT_INTERVAL_US, prv_periodic_measure, &s_storage,
-                   &timer_id);
+                   &s_storage.timer_id);
 }
 
 // Initialize all sense pins as ADC
@@ -228,19 +229,23 @@ StatusCode power_select_init(void) {
   // Note: not using this atm
   status_ok_or_return(gpio_init_pin(&shdn_pin, &shdn_settings));
 
+  s_storage.timer_id = SOFT_TIMER_INVALID_TIMER;
+
   return STATUS_CODE_OK;
 }
 
 StatusCode power_select_start(void) {  
   // do we even need this? or is it fine if we just expose prv_periodic_measure
   s_measure = true;
-  prv_periodic_measure(SOFT_TIMER_INVALID_TIMER, &s_storage);
+  prv_periodic_measure(s_storage.timer_id, &s_storage);
   
   return STATUS_CODE_OK;
 }
 
-void power_select_stop(void) {
-  s_measure = false;
+bool power_select_stop(void) {
+  bool status = soft_timer_cancel(s_storage.timer_id);
+  s_storage.timer_id =  SOFT_TIMER_INVALID_TIMER;
+  return status;
 }
 
 uint16_t power_select_get_fault_bitset(void) {
@@ -253,4 +258,59 @@ uint8_t power_select_get_valid_bitset(void) {
 
 PowerSelectStorage power_select_get_storage(void) {
   return s_storage;
+}
+
+// CAN
+static CanStorage s_can_storage;
+
+static CanSettings s_can_settings = {
+  .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
+  .bitrate = CAN_HW_BITRATE_500KBPS,
+  .tx_event = POWER_SELECT_CAN_EVENT_TX,
+  .rx_event = POWER_SELECT_CAN_EVENT_RX,
+  .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
+  .tx = { GPIO_PORT_A, 12 },
+  .rx = { GPIO_PORT_A, 11 },
+  .loopback = true,
+};
+
+// Handles CAN message from centre console during startup.
+// TODO(SOFT-341): move this out of main
+static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  LOG_DEBUG("got rx\n");
+  uint16_t sequence = 0;
+  CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &sequence);
+  uint16_t fault_bitset = power_select_get_fault_bitset();
+  if (sequence == EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS) {
+    LOG_DEBUG("confirm aux status\n");
+    uint8_t valid_bitset = power_select_get_valid_bitset();
+    if (!(valid_bitset & 1 << POWER_SELECT_AUX_VALID) ||
+        fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT ||
+        fault_bitset & 1 << POWER_SELECT_AUX_OVERVOLTAGE) {
+      *ack_reply = CAN_ACK_STATUS_INVALID;
+    } else {
+      LOG_DEBUG("acking\n");
+      *ack_reply = CAN_ACK_STATUS_OK;
+    }
+  }
+  if (sequence == EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC) {
+    LOG_DEBUG("confirm dcdc\n");
+    uint8_t valid_bitset = power_select_get_valid_bitset();
+    if (!(valid_bitset & 1 << POWER_SELECT_DCDC_VALID) ||
+        fault_bitset & 1 << POWER_SELECT_DCDC_OVERCURRENT ||
+        fault_bitset & 1 << POWER_SELECT_DCDC_OVERVOLTAGE) {
+      *ack_reply = CAN_ACK_STATUS_INVALID;
+    } else {
+      LOG_DEBUG("acking\n");
+      *ack_reply = CAN_ACK_STATUS_OK;
+    }
+  }
+
+  return STATUS_CODE_OK;
+}
+
+StatusCode power_select_can_init(void) {
+    // status_ok_or_return(can_init(&s_can_storage, &s_can_settings));
+
+    return can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_rx_callback, NULL);
 }

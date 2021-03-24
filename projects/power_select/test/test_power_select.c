@@ -1,6 +1,6 @@
 #include "power_select.h"
 #include "power_select_events.h"
-#include "power_select_can.h" // give this its own separate test later!!!
+// #include "power_select_can.h" // give this its own separate test later!!!
 
 #include "test_helpers.h"
 #include "ms_test_helpers.h"
@@ -32,10 +32,10 @@
 
 // make test faster 
 // currently, uncommenting this causes failures
-#ifdef POWER_SELECT_MEASUREMENT_INTERVAL_MS
-#undef POWER_SELECT_MEASUREMENT_INTERVAL_MS
-#define POWER_SELECT_MEASUREMENT_INTERVAL_MS 20
-#endif
+// #ifdef POWER_SELECT_MEASUREMENT_INTERVAL_MS
+// #undef POWER_SELECT_MEASUREMENT_INTERVAL_MS
+// #define POWER_SELECT_MEASUREMENT_INTERVAL_MS 20
+// #endif
 
 static CanStorage s_can_storage = { 0 };
 static CanSettings s_can_settings = {
@@ -166,7 +166,8 @@ void setup_test(void) {
     interrupt_init();
     soft_timer_init();
     adc_init(ADC_MODE_SINGLE);
-    //can_init(&s_can_storage, &s_can_settings);
+    event_queue_init();
+    can_init(&s_can_storage, &s_can_settings);
 }
 
 void teardown_test(void) {
@@ -197,7 +198,7 @@ void test_power_select_periodic_measure_works(void) {
 
 void test_power_select_periodic_measure_reports_correctly(void) {
   TEST_ASSERT_OK(power_select_init());
-  TEST_ASSERT_OK(power_select_can_init());
+  // TEST_ASSERT_OK(power_select_can_init());
 
   prv_set_voltages_good();
   prv_set_all_pins_valid();
@@ -322,124 +323,212 @@ void test_power_select_faults_handled(void) {
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 }
 
+
 static bool s_expect_ack = false;
 
 // make sure ACK is as expected
 static StatusCode prv_test_can_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                                      uint16_t num_remaining, void *context) {
   if(s_expect_ack) {
-    TEST_ASSERT_NOT_EQUAL(CAN_ACK_STATUS_OK, status);
-  } else {
     TEST_ASSERT_EQUAL(CAN_ACK_STATUS_OK, status);
+  } else {
+    TEST_ASSERT_NOT_EQUAL(CAN_ACK_STATUS_OK, status);
   }
-  LOG_DEBUG("actually gets here\n");
   return STATUS_CODE_OK;
 }
 
+static void prv_test_measure_once(void) {
+  TEST_ASSERT_OK(power_select_start());
+  delay_ms(50); // wait for measurement to complete
+  TEST_ASSERT_TRUE(power_select_stop());
+}
+
+static void prv_test_can_tx_then_rx_num_times(uint16_t num) {
+  for(uint16_t i = 0; i < num; i++) {
+    MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
+  }
+  for(uint16_t i = 0; i < num; i++) {
+    MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
+  }
+}
+
+static CanAckRequests s_ack_requests;
+
 void test_power_select_power_on_sequence(void) {
   TEST_ASSERT_OK(power_select_can_init());
+  can_ack_init(&s_ack_requests);
 
   CanAckRequest ack_req = { 0 };
   ack_req.callback = prv_test_can_ack;
+  ack_req.expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_SELECTION);
+  ack_req.context = &s_expect_ack;
 
   TEST_ASSERT_OK(power_select_init());
 
   prv_set_voltages_good();
   prv_set_all_pins_valid();
-  
-  TEST_ASSERT_OK(power_select_start());
 
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  s_expect_ack = true;
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
+
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);  
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  // aux fault
+  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts + fault
+  prv_test_can_tx_then_rx_num_times(3); 
+
+  s_expect_ack = false;
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-
-  // aux fault
-  s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
-
-  s_expect_ack = false;
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
-  s_expect_ack = true;
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
 
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_GOOD_VOLTAGE_SCALED_MV;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   // should be good now
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
-  // invalid 
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  // invalid    
   s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_HIGH;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   s_expect_ack = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
+  // change back to valid
   s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_LOW;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   // should be good now
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
-  // same, but for DCDC
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  // same, but for DCDC:
   // dcdc fault
   s_test_adc_read_values[POWER_SELECT_DCDC] = TEST_FAULT_VOLTAGE_SCALED_MV;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts + fault
+  prv_test_can_tx_then_rx_num_times(3);
 
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
   s_expect_ack = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
+  // no longer faulting
   s_test_adc_read_values[POWER_SELECT_DCDC] = TEST_GOOD_VOLTAGE_SCALED_MV;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   // should be good now
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
   // invalid 
   s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_HIGH;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
   s_expect_ack = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
+
+  // valid now
   s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_LOW;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   // should be good now
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
   // make sure both nack if both are invalid
   s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_HIGH;
   s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_HIGH;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   s_expect_ack = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
-  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
+  CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  // change both back to valid
   s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_LOW;
   s_test_gpio_read_states[POWER_SELECT_DCDC] = GPIO_STATE_LOW;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  prv_test_measure_once();
+
+  // TX (and later RX) both measurement broadcasts
+  prv_test_can_tx_then_rx_num_times(2);
 
   // should be good now
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 }
