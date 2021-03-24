@@ -82,7 +82,7 @@ static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool 
     }
     storage = &s_bts7200_storage[s_num_bts7200_storages++];
   }
-  s_output_to_storage[output] = storage;
+  s_output_to_storage[output].bts7200 = storage;
 
   Bts7200Pca9539rSettings settings = {
     .enable_0_pin = &spec->bts7200_info->enable_0_pin,
@@ -102,7 +102,7 @@ static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
     return status_code(STATUS_CODE_RESOURCE_EXHAUSTED);
   }
   Bts7040Storage *storage = &s_bts7040_storage[s_num_bts7040_storages++];
-  s_output_to_storage[output] = storage;
+  s_output_to_storage[output].bts7040 = storage;
 
   Bts7040Pca9539rSettings settings = {
     .enable_pin = &spec->enable_pin,
@@ -190,7 +190,7 @@ StatusCode output_set_state(Output output, OutputState state) {
     case OUTPUT_TYPE_BTS7200:
       Bts7200Storage *storage = &s_output_to_storage[output].bts7200;
       Bts7xxxEnablePin *en_pin =
-          (spec->bts7200_spec.channel == 0) ? storage->enable_pin_0 : storage->enable_pin_1;
+          (spec->bts7200_spec.channel == 0) ? &storage->enable_pin_0 : &storage->enable_pin_1;
       return prv_set_state_bts7xxx(en_pin, state);
     default:
       LOG_WARN("Warning: output %d is unspecified, not setting to on=%d\n", output, state);
@@ -200,13 +200,15 @@ StatusCode output_set_state(Output output, OutputState state) {
 
 static StatusCode prv_read_current_bts7040(Output output, uint16_t *current) {
   uint8_t mux_selection = s_config->specs[output].bts7040_spec.mux_selection;
-  status_ok_or_return(mux_set(s_config->mux_address, mux_selection));
+  status_ok_or_return(mux_set(&s_config->mux_address, mux_selection));
   return bts7040_get_measurement(&s_output_to_storage[output].bts7040, current);
 }
 
 static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
-  // todo: get single output from bts7200
-  return STATUS_CODE_UNIMPLEMENTED;
+  uint8_t mux_selection = s_config->specs[output].bts7200_spec.bts7200_info->mux_selection;
+  status_ok_or_return(mux_set(&s_config->mux_address, mux_selection));
+  return bts7200_get_measurement_channel(&s_output_to_storage[output].bts7200, current,
+                                         s_config->specs[output].bts7200_spec.channel);
 }
 
 StatusCode output_read_current(Output output, uint16_t *current) {

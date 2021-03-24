@@ -14,6 +14,7 @@
 #include "gpio.h"
 #include "pca9539r_gpio_expander.h"
 #include "soft_timer.h"
+#include "status.h"
 
 // Upper maximum for the possible leakage voltage that may be read from the SENSE pin at
 // T(env) < 80 C (see p.g. 27 of BTS7200 datasheet)
@@ -97,6 +98,9 @@ StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSetting
 // implementation, the pointer to storage has to be valid for BTS7200_FAULT_RESTART_DELAY_MS.
 // Otherwise, bts7200_stop must be called before the pointer is freed to prevent segfaults.
 StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
+
+// TODO(SOFT-396): deprecate the other one and make this the only one
+StatusCode bts7200_get_measurement_channel(Bts7200Storage *storage, uint16_t *meas, uint8_t pin);
 
 // Enable output 0.
 StatusCode bts7200_enable_output_0(Bts7200Storage *storage);
