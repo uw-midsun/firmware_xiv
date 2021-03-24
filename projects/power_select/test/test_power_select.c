@@ -38,6 +38,7 @@
 // #endif
 
 static CanStorage s_can_storage = { 0 };
+
 static CanSettings s_can_settings = {
     .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
     .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -154,13 +155,6 @@ static void prv_set_all_pins_valid(void) {
 
 static uint16_t s_test_expected_readings[NUM_POWER_SELECT_MEASUREMENTS];
 
-/*
-// Confirm whether CAN TX's as expected
-static StatusCode prv_test_measurement_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  return STATUS_CODE_OK;
-}
-*/
-
 void setup_test(void) {
     gpio_init();
     interrupt_init();
@@ -191,7 +185,7 @@ void test_power_select_periodic_measure_works(void) {
     TEST_ASSERT_OK(power_select_start());
 
     // Make sure it doesn't break while running
-    delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+    delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2); 
 
     power_select_stop();
 }

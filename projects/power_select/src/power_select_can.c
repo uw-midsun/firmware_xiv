@@ -49,7 +49,5 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 }
 
 StatusCode power_select_can_init(void) {
-    status_ok_or_return(can_init(&s_can_storage, &s_can_settings));
-
     return can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_rx_callback, NULL);
 }
