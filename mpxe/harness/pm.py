@@ -7,6 +7,7 @@ from mpxe.harness import canio
 from mpxe.harness import project
 from mpxe.harness.dir_config import REPO_DIR
 from mpxe.sims.sim import Sim
+from mpxe.protogen import stores_pb2
 
 POLL_TIMEOUT = 0.5
 
@@ -35,6 +36,8 @@ class ProjectManager:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
+
+        proj.send_command(stores_pb2.MxCmdType.FINISH_INIT_CONDS)
         return proj
 
     def stop(self, proj):
