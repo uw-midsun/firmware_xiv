@@ -41,7 +41,6 @@ class ProjectManager:
             for update in init_conds:
                 proj.write_store(update)
                 sleep(0.1)
-        sleep(0.1)  # needed to ensure both init and command messages send
         proj.send_command(stores_pb2.MxCmdType.FINISH_INIT_CONDS)
 
         return proj
