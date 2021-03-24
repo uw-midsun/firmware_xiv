@@ -10,5 +10,5 @@
 #include "can_unpack.h"
 #include "log.h"
 
-// Initialize CAN to respond to POWER_ON_MAIN_SEQUENCE
+// Initialize CAN to respond to POWER_ON_MAIN_SEQUENCE messages
 StatusCode power_select_can_init(void);
