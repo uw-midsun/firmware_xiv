@@ -3,12 +3,13 @@ import time
 
 from mpxe.integration_tests import int_test
 from mpxe.sims.mcp23008 import Mcp23008, NUM_MCP_PINS
+from mpxe.integration_tests.init_cond import mcp23008_init_conditions
 
 
 class TestMcp23008(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.mcp23008 = self.manager.start('smoke_mcp23008', Mcp23008())
+        self.mcp23008 = self.manager.start('smoke_mcp23008', Mcp23008(), mcp23008_init_conditions())
 
     def test_mcp23008(self):
         time.sleep(0.1)

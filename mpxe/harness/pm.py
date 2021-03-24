@@ -32,13 +32,18 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.CanIO()
 
-    def start(self, name, sim=None):
+    def start(self, name, sim=None, init_conds=None):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
-
+        if init_conds:
+            for update in init_conds:
+                proj.write_store(update)
+                sleep(0.1)
+        sleep(0.1)  # needed to ensure both init and command messages send
         proj.send_command(stores_pb2.MxCmdType.FINISH_INIT_CONDS)
+
         return proj
 
     def stop(self, proj):
