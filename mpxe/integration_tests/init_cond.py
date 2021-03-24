@@ -1,6 +1,4 @@
 import mpxe
-from mpxe.protogen import mcp23008_pb2, pca9539r_pb2
-
 from mpxe.protogen import stores_pb2
 from mpxe.harness.project import StoreUpdate
 
