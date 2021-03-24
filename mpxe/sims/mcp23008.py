@@ -1,5 +1,6 @@
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import mcp23008_pb2
+from mpxe.harness.project import StoreUpdate
 
 from mpxe.sims import sim
 
@@ -27,7 +28,13 @@ class Mcp23008(sim.Sim):
         mcp23008_mask = mcp23008_pb2.MxMcp23008Store()
         mcp23008_mask.state[pin] = 1
 
-        proj.write_store(mcp23008_msg, mcp23008_mask, stores_pb2.MxStoreType.MCP23008)
+        mcp23008_update = StoreUpdate(
+            mcp23008_msg,
+            mcp23008_mask,
+            stores_pb2.MxStoreType.MCP23008,
+            0)
+
+        proj.write_store(mcp23008_update)
 
     # Compares pin state against store
     # pylint: disable=unused-argument

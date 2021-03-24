@@ -4,6 +4,8 @@ from mpxe.protogen import stores_pb2
 from mpxe.protogen import mcp2515_pb2
 from mpxe.sims import sim
 
+from mpxe.harness.project import StoreUpdate
+
 GPIO_KEY = (stores_pb2.MxStoreType.GPIO, 0)
 MCP2515_KEY = (stores_pb2.MxStoreType.MCP2515, 0)
 
@@ -41,5 +43,5 @@ class Mci(sim.Sim):
 
         mcp2515_mask = mcp2515_pb2.MxMcp2515Store()
         mcp2515_mask.rx_id = 1
-
-        proj.write_store(mcp2515_msg, mcp2515_mask, stores_pb2.MxStoreType.MCP2515)
+        mcp2515_update = StoreUpdate(mcp2515_msg, mcp2515_mask, stores_pb2.MxStoreType.MCP2515, 0)
+        proj.write_store(mcp2515_update)
