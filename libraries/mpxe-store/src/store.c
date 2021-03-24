@@ -32,6 +32,8 @@ static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
 
+static pthread_mutex_t s_init_lock = PTHREAD_MUTEX_INITIALIZER;
+
 static MxLog s_mxlog = MX_LOG__INIT;
 
 // MxCmd callback table and function prototypes
@@ -43,7 +45,7 @@ static MxCmdCallback s_cmd_cb_lookup[] = {
 
 static void prv_handle_finish_conditions(void *context) {
   LOG_DEBUG("HELLO BIG WORLD\n");
-  // pthread_mutex_unlock(s_sig_lock);
+  pthread_mutex_unlock(&s_init_lock);
 }
 
 // signal handler for catching parent
@@ -62,19 +64,21 @@ Store *prv_get_first_empty() {
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
-  LOG_DEBUG("HANDLE UPDATE!\n");
-  if (update->type == MX_STORE_TYPE__CMD) {
+  if (update->type == MX_STORE_TYPE__CMD) {  // Abstract out into another s_func_table func?
+    LOG_DEBUG("CMD RECEIVED!!!\n");
     MxCmd *cmd = mx_cmd__unpack(NULL, (size_t)update->msg.len, update->msg.data);
     if (cmd->cmd == MX_CMD_TYPE__FINISH_INIT_CONDS) {
       s_cmd_cb_lookup[MX_CMD_TYPE__FINISH_INIT_CONDS](NULL);
     }
+  } else {
+    s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+    mx_store_update__free_unpacked(update, NULL);
   }
-  s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
-  mx_store_update__free_unpacked(update, NULL);
 }
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
+  LOG_DEBUG("POLL CALLED\n");
   // read protos from stdin
   // compare using second proto as 'mask'
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
@@ -127,6 +131,10 @@ void store_config(void) {
   };
   store_register(MX_STORE_TYPE__LOG, log_funcs, &s_mxlog, NULL);
   LOG_DEBUG("LOGS INITED!\n");
+  pthread_mutex_lock(
+      &s_init_lock);  // Lock for initial conditions, continue when FINISH_INIT_CONDS recv'd
+  pthread_mutex_lock(&s_init_lock);
+  pthread_mutex_unlock(&s_init_lock);
 
   store_lib_inited = true;
 }
