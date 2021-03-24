@@ -45,7 +45,6 @@ static MxCmdCallback s_cmd_cb_lookup[] = {
 };
 
 static void prv_handle_finish_conditions(void *context) {
-  LOG_DEBUG("HELLO BIG WORLD\n");
   s_init_cond_complete = true;
   pthread_mutex_unlock(&s_init_lock);
 }
@@ -65,7 +64,6 @@ Store *prv_get_first_empty() {
 }
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
-  LOG_DEBUG("HANDLE UPDATE\n");
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
   if (update->type == MX_STORE_TYPE__CMD) {  // Abstract out into another s_func_table func?
     MxCmd *cmd = mx_cmd__unpack(NULL, (size_t)update->msg.len, update->msg.data);
@@ -77,7 +75,6 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
       s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
       mx_store_update__free_unpacked(update, NULL);
     } else {
-      LOG_DEBUG("INIT CONDITION\n");
       for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
         if (s_init_cond[i] == NULL) {
           s_init_cond[i] = update;
@@ -102,9 +99,6 @@ static void *prv_poll_update(void *arg) {
       continue;  // nothing to read
     } else {
       if (pfd.revents & POLLIN) {
-        if (s_init_cond_complete == false) {
-          LOG_DEBUG("POLL INIT CONDITIONS\n");
-        }
         static uint8_t buf[MAX_STORE_SIZE_BYTES];
         ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
         if (len == -1) {
