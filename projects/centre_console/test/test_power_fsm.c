@@ -146,13 +146,15 @@ void test_bps_faults_to_off(void) {
   TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
   prv_assert_current_state(POWER_STATE_AUX);
 
-  FaultReason fault = { .fields = { .area = EE_CONSOLE_FAULT_AREA_BPS_HEARTBEAT, .reason = 0 } };
-  e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
-  e.data = fault.raw;
-  TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, CENTRE_CONSOLE_POWER_EVENT_OFF);
-  prv_assert_current_state(POWER_STATE_FAULT);
-  TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
-  prv_assert_current_state(POWER_STATE_TRANSITIONING);
-  TEST_ASSERT_TRUE(s_power_fsm_storage.destination_state == POWER_STATE_OFF);
+  // commenting this out because we lock up firmware if we have a bps fault
+
+  // FaultReason fault = { .fields = { .area = EE_CONSOLE_FAULT_AREA_BPS_HEARTBEAT, .reason = 0 } };
+  // e.id = CENTRE_CONSOLE_POWER_EVENT_FAULT;
+  // e.data = fault.raw;
+  // TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
+  // MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, CENTRE_CONSOLE_POWER_EVENT_OFF);
+  // prv_assert_current_state(POWER_STATE_FAULT);
+  // TEST_ASSERT_TRUE(power_fsm_process_event(&s_power_fsm_storage, &e));
+  // prv_assert_current_state(POWER_STATE_TRANSITIONING);
+  // TEST_ASSERT_TRUE(s_power_fsm_storage.destination_state == POWER_STATE_OFF);
 }
