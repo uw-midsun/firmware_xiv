@@ -1,5 +1,5 @@
 #include <string.h>
-
+#include <time.h>
 #include "bms_events.h"
 #include "bps_heartbeat.h"
 #include "can.h"
@@ -48,6 +48,24 @@ StatusCode TEST_MOCK(fault_bps_clear)(uint8_t fault_bitmask) {
   return STATUS_CODE_OK;
 }
 
+bool time_assert(uint8_t value_to_compare, uint8_t *value_to_test, double time, double tolerance) {
+  double elapsed = 0;
+  double upper_bound = (double)(time + tolerance) / 1000.0;
+  double lower_bound = (double)(time - tolerance) / 1000.0;
+  clock_t headstart = 30000;
+  clock_t begin = clock() - headstart;
+  while (elapsed < upper_bound) {
+    elapsed = ((double)(clock() - begin)) / (CLOCKS_PER_SEC);
+    // LOG_DEBUG("value_to_test = %d @ elapsed = %f\n",*value_to_test,elapsed);
+    if (value_to_compare == *value_to_test && elapsed > lower_bound) {
+      // LOG_DEBUG("SUCCESS! Elapsed time = %f\n",elapsed);
+      return true;
+    }
+  }
+  // LOG_DEBUG("FAIL: Elapsed time = %f\n",elapsed);
+  return false;
+}
+
 void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_BMS_CARRIER, BMS_CAN_EVENT_TX,
                                   BMS_CAN_EVENT_RX, BMS_CAN_EVENT_FAULT);
@@ -73,11 +91,11 @@ void test_hb_repeats(void) {
   s_ack_status = CAN_ACK_STATUS_OK;
   TEST_ASSERT_OK(bps_heartbeat_init(&s_storage, TEST_BPS_HEARTBEAT_PERIOD_MS));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
+  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
+  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
+  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS);
 
   TEST_ASSERT_EQUAL(3, s_hb_count);
 }
@@ -95,16 +113,16 @@ void test_hb_fails_then_faults(void) {
   s_ack_status = CAN_ACK_STATUS_TIMEOUT;
   TEST_ASSERT_OK(bps_heartbeat_init(&s_storage, TEST_BPS_HEARTBEAT_PERIOD_MS));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
-  TEST_ASSERT_EQUAL(1, s_storage.ack_fail_count);
+  TEST_ASSERT_TRUE(
+      time_assert(1, &s_storage.ack_fail_count, TEST_BPS_HEARTBEAT_PERIOD_MS, BUFFER_TIME_MS));
 
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
-  TEST_ASSERT_EQUAL(2, s_storage.ack_fail_count);
+  TEST_ASSERT_TRUE(
+      time_assert(2, &s_storage.ack_fail_count, TEST_BPS_HEARTBEAT_PERIOD_MS, BUFFER_TIME_MS));
 
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
-  TEST_ASSERT_EQUAL(3, s_storage.ack_fail_count);
+  TEST_ASSERT_TRUE(
+      time_assert(3, &s_storage.ack_fail_count, TEST_BPS_HEARTBEAT_PERIOD_MS, BUFFER_TIME_MS));
 
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_ACK_TIMEOUT, s_fault_bps_bitmask);
   TEST_ASSERT_EQUAL(false, s_fault_bps_clear);
