@@ -45,6 +45,7 @@
     MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX); /* for the ack */            \
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                                                     \
   })
+  
 typedef enum {
   TEST_CAN_MESSAGE_0 = 20,
   TEST_CAN_MESSAGE_1,
