@@ -204,7 +204,7 @@ StatusCode bts7200_get_measurement_channel(Bts7200Storage *storage, uint16_t *me
 
   status_ok_or_return(adc_read_converted_pin(*storage->sense_pin, meas));
 
-  bool fault = storage->min_fault_voltage_mv <= meas && meas <= storage->max_fault_voltage_mv;
+  bool fault = storage->min_fault_voltage_mv <= *meas && *meas <= storage->max_fault_voltage_mv;
   prv_convert_voltage_to_current(storage, meas);
   if (fault) {
     if (storage->fault_callback != NULL) {

@@ -7,6 +7,7 @@
 #include "bts7200_load_switch.h"
 #include "gpio.h"
 #include "log.h"
+#include "pca9539r_gpio_expander.h"
 #include "status.h"
 
 // Experimentally determined, more accurate resistor value to convert BTS7200 sensed current
@@ -173,11 +174,19 @@ static StatusCode prv_set_state_gpio(GpioAddress *address, OutputState state) {
 
 static StatusCode prv_set_state_bts7xxx(Bts7xxxEnablePin *en_pin, OutputState state) {
   // again assume active-high
-  if (state == GPIO_STATE_HIGH) {
+  if (state == OUTPUT_STATE_ON) {
     return bts7xxx_enable_pin(en_pin);
   } else {
     return bts7xxx_disable_pin(en_pin);
   }
+}
+
+static StatusCode prv_set_state_bts7200(Output output, OutputState state) {
+  OutputSpec *spec = &s_config->specs[output];
+  Bts7200Storage *storage = s_output_to_storage[output].bts7200;
+  Bts7xxxEnablePin *en_pin =
+      (spec->bts7200_spec.channel == 0) ? &storage->enable_pin_0 : &storage->enable_pin_1;
+  return prv_set_state_bts7xxx(en_pin, state);
 }
 
 StatusCode output_set_state(Output output, OutputState state) {
@@ -188,10 +197,7 @@ StatusCode output_set_state(Output output, OutputState state) {
     case OUTPUT_TYPE_BTS7040:
       return prv_set_state_bts7xxx(&s_output_to_storage[output].bts7040->enable_pin, state);
     case OUTPUT_TYPE_BTS7200:
-      Bts7200Storage *storage = &s_output_to_storage[output].bts7200;
-      Bts7xxxEnablePin *en_pin =
-          (spec->bts7200_spec.channel == 0) ? &storage->enable_pin_0 : &storage->enable_pin_1;
-      return prv_set_state_bts7xxx(en_pin, state);
+      return prv_set_state_bts7200(output, state);
     default:
       LOG_WARN("Warning: output %d is unspecified, not setting to on=%d\n", output, state);
       return STATUS_CODE_INVALID_ARGS;
@@ -201,13 +207,13 @@ StatusCode output_set_state(Output output, OutputState state) {
 static StatusCode prv_read_current_bts7040(Output output, uint16_t *current) {
   uint8_t mux_selection = s_config->specs[output].bts7040_spec.mux_selection;
   status_ok_or_return(mux_set(&s_config->mux_address, mux_selection));
-  return bts7040_get_measurement(&s_output_to_storage[output].bts7040, current);
+  return bts7040_get_measurement(s_output_to_storage[output].bts7040, current);
 }
 
 static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
   uint8_t mux_selection = s_config->specs[output].bts7200_spec.bts7200_info->mux_selection;
   status_ok_or_return(mux_set(&s_config->mux_address, mux_selection));
-  return bts7200_get_measurement_channel(&s_output_to_storage[output].bts7200, current,
+  return bts7200_get_measurement_channel(s_output_to_storage[output].bts7200, current,
                                          s_config->specs[output].bts7200_spec.channel);
 }
 
@@ -224,4 +230,11 @@ StatusCode output_read_current(Output output, uint16_t *current) {
       LOG_WARN("Warning: output %d is unspecified, not reading current\n", output);
       return STATUS_CODE_INVALID_ARGS;
   }
+}
+
+Bts7200Storage *test_output_get_bts7200_storage(Output output) {
+  if (s_config->specs[output].type != OUTPUT_TYPE_BTS7200) {
+    return NULL;
+  }
+  return s_output_to_storage[output].bts7200;
 }

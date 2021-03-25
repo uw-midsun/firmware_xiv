@@ -1,18 +1,21 @@
 #pragma once
 
+// General-purpose module for manipulating the outputs that power distribution controls.
+// Requires GPIO, interrupts, soft timers, ADC, and I2C to be initialized.
+//
+// An output is an abstraction of "something that PD can turn on and off".
+// This module provides a uniform interface for manipulating outputs implemented through GPIO or
+// an IO expander, and through a BTS7200 or BTS7040 load switch or not.
+
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "bts7200_load_switch.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "mux.h"
 #include "pca9539r_gpio_expander.h"
 #include "status.h"
-
-// General-purpose module for manipulating the outputs that power distribution controls.
-// An output is an abstraction of "something that PD can turn on and off".
-// This module provides a uniform interface for manipulating outputs implemented through GPIO or
-// an IO expander, and through a BTS7200 or BTS7040 load switch or not.
 
 // TODO(SOFT-396): update the currents confluence page
 typedef enum {
@@ -124,3 +127,7 @@ StatusCode output_set_state(Output output, OutputState state);
 // Read the current that the output is drawing into |*current| in mA.
 // STATUS_CODE_INVALID_ARGS is returned if current sense isn't supported by this output.
 StatusCode output_read_current(Output output, uint16_t *current);
+
+// Get the BTS7200 storage associated with an output, or NULL if it isn't OUTPUT_TYPE_BTS7200.
+// For testing purposes, do not use outside tests.
+Bts7200Storage *test_output_get_bts7200_storage(Output output);
