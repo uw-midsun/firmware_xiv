@@ -42,10 +42,9 @@
     TEST_RX_EVENT_COMMON(msg, can_msg_id, can_data_0, can_data_1);                               \
     Event e = { 0, 0 };                                                                          \
     MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (event_id), (event_data));                               \
-    MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX); /* for the ack */            \
+    MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX); // for the ack               \
     MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                                                     \
   })
-
 typedef enum {
   TEST_CAN_MESSAGE_0 = 20,
   TEST_CAN_MESSAGE_1,
