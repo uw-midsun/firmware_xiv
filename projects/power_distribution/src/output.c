@@ -94,6 +94,7 @@ static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool 
     .bias = POWER_DISTRIBUTION_BTS7200_BIAS,
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV,
     .max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV,
+    // TODO(SOFT-396): .fault_callback
   };
   return bts7200_init_pca9539r(storage, &settings);
 }

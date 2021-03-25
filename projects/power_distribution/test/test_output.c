@@ -1,6 +1,7 @@
 #include "output.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "adc.h"
 #include "gpio.h"
@@ -14,6 +15,8 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+#define TEST_ADC_READING 1000
+
 #define TEST_OUTPUT 3
 #define TEST_OUTPUT_2 5
 
@@ -26,9 +29,26 @@
     TEST_ASSERT_EQUAL((expected_state), actual_state);                  \
   })
 
+#define TEST_ASSERT_EQUAL_GPIO_ADDRESS(expected, actual)                                        \
+  ({                                                                                            \
+    TEST_ASSERT_EQUAL_MESSAGE((expected).port, (actual).port, "GpioAddress ports don't match"); \
+    TEST_ASSERT_EQUAL_MESSAGE((expected).pin, (actual).pin, "GpioAddress pins don't match");    \
+  })
+
 static Pca9539rGpioAddress s_test_dsel_pin = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_0 };
 static Pca9539rGpioAddress s_test_en_pin_0 = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_1 };
 static Pca9539rGpioAddress s_test_en_pin_1 = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_1 };
+static GpioAddress s_test_mux_output_pin = PD_MUX_OUTPUT_PIN;
+
+static GpioAddress s_read_address;
+static size_t s_times_adc_read = 0;
+
+StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
+  s_times_adc_read++;
+  s_read_address = address;
+  *reading = TEST_ADC_READING;
+  return STATUS_CODE_OK;
+}
 
 static const I2CAddress s_i2c_addrs[] = { PD_PCA9539R_I2C_ADDRESS_0, PD_PCA9539R_I2C_ADDRESS_1 };
 
@@ -47,7 +67,7 @@ static void prv_set_config_boilerplate(OutputConfig *config) {
         },
   };
   config->mux_enable_pin = (GpioAddress)PD_MUX_ENABLE_PIN;
-  config->mux_output_pin = (GpioAddress)PD_MUX_OUTPUT_PIN;
+  config->mux_output_pin = s_test_mux_output_pin;
 }
 
 void setup_test(void) {
@@ -62,8 +82,14 @@ void setup_test(void) {
     .sda = PD_I2C_SDA_PIN,
   };
   i2c_init(PD_I2C_PORT, &settings);
+
+  s_times_adc_read = 0;
 }
 void teardown_test(void) {}
+
+void test_output_init_enables_mux(void) {
+  // TODO(SOFT-396): maybe mock gpio_init_pin...
+}
 
 // Test that BTS7200 outputs with the same OutputBts7200Info use the same storage.
 void test_output_bts7200_storage_combined(void) {
@@ -149,6 +175,7 @@ void test_output_bts7200_storage_combined(void) {
   TEST_ASSERT_EQUAL_PTR(test_output_get_bts7200_storage(2), test_output_get_bts7200_storage(5));
 }
 
+// Test that output_set_state works for BTS7200 outputs.
 void test_output_set_state_bts7200(void) {
   OutputBts7200Info bts7200_info = {
     .dsel_pin = s_test_dsel_pin,
@@ -200,4 +227,65 @@ void test_output_set_state_bts7200(void) {
 
   TEST_ASSERT_OK(output_set_state(TEST_OUTPUT_2, OUTPUT_STATE_OFF));
   TEST_ASSERT_PCA9539R_STATE(s_test_en_pin_1, PCA9539R_GPIO_STATE_LOW);
+}
+
+// Test that output_read_current works for BTS7200 outputs.
+void test_output_read_current_bts7200(void) {
+  OutputBts7200Info bts7200_info = {
+    .dsel_pin = s_test_dsel_pin,
+    .enable_0_pin = s_test_en_pin_0,
+    .enable_1_pin = s_test_en_pin_1,
+    .mux_selection = TEST_MUX_SEL,
+  };
+  OutputConfig config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_BTS7200,
+                    .on_front = true,
+                    .bts7200_spec =
+                        {
+                            .bts7200_info = &bts7200_info,
+                            .channel = 0,
+                        },
+                },
+            [TEST_OUTPUT_2] =
+                {
+                    .type = OUTPUT_TYPE_BTS7200,
+                    .on_front = true,
+                    .bts7200_spec =
+                        {
+                            .bts7200_info = &bts7200_info,
+                            .channel = 1,
+                        },
+                },
+        },
+  };
+  prv_set_config_boilerplate(&config);
+  TEST_ASSERT_OK(output_init(&config, true));
+
+  // first, dsel pin must go low to read from channel 0
+  uint16_t current = 0;
+  TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
+  TEST_ASSERT_PCA9539R_STATE(s_test_dsel_pin, PCA9539R_GPIO_STATE_LOW);
+  TEST_ASSERT_EQUAL(1, s_times_adc_read);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_NOT_EQUAL(0, current);
+
+  // then it goes high when we read from channel 1
+  current = 0;
+  TEST_ASSERT_OK(output_read_current(TEST_OUTPUT_2, &current));
+  TEST_ASSERT_PCA9539R_STATE(s_test_dsel_pin, PCA9539R_GPIO_STATE_HIGH);
+  TEST_ASSERT_EQUAL(2, s_times_adc_read);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_NOT_EQUAL(0, current);
+
+  // and back to low when we read from channel 0 again
+  current = 0;
+  TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
+  TEST_ASSERT_PCA9539R_STATE(s_test_dsel_pin, PCA9539R_GPIO_STATE_LOW);
+  TEST_ASSERT_EQUAL(3, s_times_adc_read);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_NOT_EQUAL(0, current);
 }
