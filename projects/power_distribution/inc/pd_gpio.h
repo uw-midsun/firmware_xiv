@@ -25,14 +25,14 @@ typedef struct {
 } PdGpioOutputSpec;
 
 typedef struct {
-  EventId event_id;                          // the event to act upon
+  EventId event_id;           // the event to act upon
   PdGpioOutputSpec *outputs;  // an array of outputs specs to use when received
-  uint8_t num_outputs;                       // length of preceding array
+  uint8_t num_outputs;        // length of preceding array
 } PdGpioEventSpec;
 
 typedef struct {
   PdGpioEventSpec *events;  // an array of all event specifications to use
-  uint8_t num_events;                      // length of preceding array
+  uint8_t num_events;       // length of preceding array
 } PdGpioConfig;
 
 StatusCode power_distribution_gpio_init(PdGpioConfig *config);

@@ -437,9 +437,10 @@ void test_invalid_config(void) {
   invalid_config.specs[TEST_OUTPUT] = (OutputSpec){
     .type = OUTPUT_TYPE_GPIO,
     .on_front = false,
-    .gpio_spec = {
-      .address = { NUM_GPIO_PORTS, 99 },
-    },
+    .gpio_spec =
+        {
+            .address = { NUM_GPIO_PORTS, 99 },
+        },
   };
   TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
 
@@ -447,10 +448,11 @@ void test_invalid_config(void) {
   invalid_config.specs[TEST_OUTPUT] = (OutputSpec){
     .type = OUTPUT_TYPE_BTS7200,
     .on_front = false,
-    .bts7200_spec = {
-      .channel = 0,
-      .bts7200_info = NULL,
-    },
+    .bts7200_spec =
+        {
+            .channel = 0,
+            .bts7200_info = NULL,
+        },
   };
   TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
 
@@ -469,10 +471,11 @@ void test_invalid_config(void) {
   invalid_config.specs[TEST_OUTPUT] = (OutputSpec){
     .type = OUTPUT_TYPE_BTS7200,
     .on_front = false,
-    .bts7040_spec = {
-      .enable_pin = invalid_pca9539r_pin,
-      .mux_selection = 0,
-    },
+    .bts7040_spec =
+        {
+            .enable_pin = invalid_pca9539r_pin,
+            .mux_selection = 0,
+        },
   };
   TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
 }

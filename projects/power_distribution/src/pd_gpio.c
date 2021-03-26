@@ -69,7 +69,7 @@ StatusCode power_distribution_gpio_process_event(Event *e) {
     StatusCode code = output_set_state(output_spec->output, state);
     if (!status_ok(code)) {
       LOG_WARN("WARNING: got status %d setting output %d to state %d via spec on event id %d\n",
-        code, output_spec->output, state, id);
+               code, output_spec->output, state, id);
     }
   }
 

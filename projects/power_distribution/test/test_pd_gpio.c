@@ -1,12 +1,12 @@
 #include "pd_gpio.h"
 
-#include "gpio.h"
 #include "event_queue.h"
+#include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
 #include "output.h"
-#include "pin_defs.h"
 #include "pd_gpio_config.h"
+#include "pin_defs.h"
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
@@ -39,11 +39,11 @@ typedef enum {
     Event e = { .id = (event_id), .data = (event_data) };      \
     TEST_ASSERT_OK(power_distribution_gpio_process_event(&e)); \
   })
-#define TEST_ASSERT_GPIO_STATE(address, expected_state)                 \
-  ({                                                                    \
-    GpioState actual_state = NUM_GPIO_STATES;          \
+#define TEST_ASSERT_GPIO_STATE(address, expected_state)        \
+  ({                                                           \
+    GpioState actual_state = NUM_GPIO_STATES;                  \
     TEST_ASSERT_OK(gpio_get_state(&(address), &actual_state)); \
-    TEST_ASSERT_EQUAL((expected_state), actual_state);                  \
+    TEST_ASSERT_EQUAL((expected_state), actual_state);         \
   })
 
 void setup_test(void) {
@@ -60,31 +60,38 @@ void setup_test(void) {
   i2c_init(TEST_I2C_PORT, &i2c_settings);
 
   OutputConfig test_output_config = {
-    .specs = {
-      [TEST_OUTPUT_0] = {
-        .type = OUTPUT_TYPE_GPIO,
-        .on_front = true,
-        .gpio_spec = {
-          .address = s_test_address_0,
+    .specs =
+        {
+            [TEST_OUTPUT_0] =
+                {
+                    .type = OUTPUT_TYPE_GPIO,
+                    .on_front = true,
+                    .gpio_spec =
+                        {
+                            .address = s_test_address_0,
+                        },
+                },
+            [TEST_OUTPUT_1] =
+                {
+                    .type = OUTPUT_TYPE_GPIO,
+                    .on_front = true,
+                    .gpio_spec =
+                        {
+                            .address = s_test_address_1,
+                        },
+                },
         },
-      },
-      [TEST_OUTPUT_1] = {
-        .type = OUTPUT_TYPE_GPIO,
-        .on_front = true,
-        .gpio_spec = {
-          .address = s_test_address_1,
+    .mux_address =
+        {
+            .bit_width = 4,
+            .sel_pins =
+                {
+                    PD_MUX_SEL1_PIN,
+                    PD_MUX_SEL2_PIN,
+                    PD_MUX_SEL3_PIN,
+                    PD_MUX_SEL4_PIN,
+                },
         },
-      },
-    },
-    .mux_address = {
-      .bit_width = 4,
-      .sel_pins = {
-        PD_MUX_SEL1_PIN,
-        PD_MUX_SEL2_PIN,
-        PD_MUX_SEL3_PIN,
-        PD_MUX_SEL4_PIN,
-      },
-    },
     .mux_output_pin = PD_MUX_OUTPUT_PIN,
     .mux_enable_pin = PD_MUX_ENABLE_PIN,
     .i2c_addresses = (I2CAddress[]){},
@@ -131,7 +138,7 @@ void test_power_distribution_gpio_basic(void) {
 
   // make sure it initialized correctly
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
-  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);
+  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);
 
   // trigger each one at a time
   SEND_TEST_EVENT(TEST_EVENT_0, 0);
@@ -176,7 +183,7 @@ void test_power_distribution_gpio_multiple_outputs(void) {
 
   // make sure it initialized correctly
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
-  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);
+  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);
 
   // make sure it sets correctly
   SEND_TEST_EVENT(TEST_EVENT_0, 0xBE);  // not responsive to data
@@ -224,24 +231,24 @@ void test_power_distribution_gpio_same_opposite(void) {
 
   // make sure it initialized correctly
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
-  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);
+  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);
 
   // make sure SAME_AS_DATA functions correctly (and the other doesn't change)
   SEND_TEST_EVENT(TEST_EVENT_0, 1);  // set to high
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_HIGH);
-  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);  // doesn't change
-  SEND_TEST_EVENT(TEST_EVENT_0, 0);                                    // set to low
+  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);  // doesn't change
+  SEND_TEST_EVENT(TEST_EVENT_0, 0);                           // set to low
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
-  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);  // doesn't change
+  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);  // doesn't change
   SEND_TEST_EVENT(TEST_EVENT_0, 0xFF);  // anything nonzero is mapped to 1 => set to high
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_HIGH);
-  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);  // doesn't change
+  TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);  // doesn't change
 
   // make sure OPPOSITE_TO_DATA functions correctly (and the other doesn't change)
   SEND_TEST_EVENT(TEST_EVENT_1, 1);  // set to low
   TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_HIGH);  // doesn't change
-  SEND_TEST_EVENT(TEST_EVENT_1, 0);                                    // set to high
+  SEND_TEST_EVENT(TEST_EVENT_1, 0);                           // set to high
   TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_HIGH);
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_HIGH);  // doesn't change
   SEND_TEST_EVENT(TEST_EVENT_1, 0xFF);  // anything nonzero is mapped to 1 => set to low
