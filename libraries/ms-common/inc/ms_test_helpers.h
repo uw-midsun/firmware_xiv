@@ -87,3 +87,8 @@
                        .data = (ack_status) };                                                     \
     TEST_ASSERT_OK(can_ack_handle_msg(&(can_storage).ack_requests, &msg));                         \
   })
+
+// Returns STATUS_CODE_OK if the *value_to_test == value_to_compare within a certain time +- the
+// tolerance
+StatusCode time_assert(uint8_t value_to_compare, uint8_t *value_to_test, double time_ms,
+                       double tolerance_ms);
