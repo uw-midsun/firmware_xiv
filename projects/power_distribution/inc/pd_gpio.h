@@ -1,17 +1,18 @@
 #pragma once
 
 // Receive events and set the PCA9539R GPIO pin states as specified.
-// Requires the event queue, GPIO, I2C, and PCA9539R to be initialized.
+// Requires the event queue, GPIO, interrupts, soft timers, ADC, I2C, and output to be initialized.
 
 #include "event_queue.h"
+#include "output.h"
 #include "pca9539r_gpio_expander.h"
 
 typedef enum {
-  POWER_DISTRIBUTION_GPIO_STATE_LOW = 0,
-  POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+  POWER_DISTRIBUTION_GPIO_STATE_OFF = 0,
+  POWER_DISTRIBUTION_GPIO_STATE_ON,
 
   // The following states depend on the value in the event's data field.
-  // We map 0 in the event data to LOW and any nonzero value there to HIGH.
+  // We map 0 in the event data to OFF and any nonzero value there to ON.
   POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,      // use the same state as in the event data
   POWER_DISTRIBUTION_GPIO_STATE_OPPOSITE_TO_DATA,  // use the opposite state as in the event data
 
@@ -19,7 +20,7 @@ typedef enum {
 } PowerDistributionGpioState;
 
 typedef struct {
-  Pca9539rGpioAddress address;       // GPIO address to turn on/off
+  Output output;
   PowerDistributionGpioState state;  // state to set it to
 } PowerDistributionGpioOutputSpec;
 
@@ -40,6 +41,6 @@ typedef struct {
   uint8_t num_addresses;
 } PowerDistributionGpioConfig;
 
-StatusCode power_distribution_gpio_init(PowerDistributionGpioConfig config);
+StatusCode power_distribution_gpio_init(PowerDistributionGpioConfig *config);
 
 StatusCode power_distribution_gpio_process_event(Event *e);
