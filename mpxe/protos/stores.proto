@@ -15,8 +15,9 @@ enum MxStoreType {
 }
 
 enum MxCmdType {
-  NO_CMD = 0;
+  NOP = 0;
   FINISH_INIT_CONDS = 1;
+  NUM_CMDS = 3;
 }
 
 message MxLog {

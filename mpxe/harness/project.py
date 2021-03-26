@@ -27,6 +27,7 @@ class Project:
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       universal_newlines=False)
+        print(self.popen.pid)
 
         # Set the flag O_NONBLOCK on stdout, necessary for reading from running projects
         flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
