@@ -170,7 +170,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
 static StatusCode prv_set_state_gpio(GpioAddress *address, OutputState state) {
   // assume active-high always
   GpioState gpio_state = (state == OUTPUT_STATE_ON) ? GPIO_STATE_HIGH : GPIO_STATE_LOW;
-  return gpio_set_state(address, state);
+  return gpio_set_state(address, gpio_state);
 }
 
 static StatusCode prv_set_state_bts7xxx(Bts7xxxEnablePin *en_pin, OutputState state) {

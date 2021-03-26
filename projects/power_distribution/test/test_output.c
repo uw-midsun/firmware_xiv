@@ -35,10 +35,15 @@
     TEST_ASSERT_EQUAL_MESSAGE((expected).pin, (actual).pin, "GpioAddress pins don't match");    \
   })
 
+static GpioAddress s_test_mux_output_pin = PD_MUX_OUTPUT_PIN;
+
+// for BTS7200
 static Pca9539rGpioAddress s_test_dsel_pin = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_0 };
 static Pca9539rGpioAddress s_test_en_pin_0 = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_1 };
-static Pca9539rGpioAddress s_test_en_pin_1 = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_1 };
-static GpioAddress s_test_mux_output_pin = PD_MUX_OUTPUT_PIN;
+static Pca9539rGpioAddress s_test_en_pin_1 = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_2 };
+
+// for BTS7040
+static Pca9539rGpioAddress s_test_en_pin = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_2 };
 
 static GpioAddress s_read_address;
 static size_t s_times_adc_read = 0;
@@ -89,6 +94,7 @@ void teardown_test(void) {}
 
 void test_output_init_enables_mux(void) {
   // TODO(SOFT-396): maybe mock gpio_init_pin...
+  // really we need a suite of output_init tests
 }
 
 // Test that BTS7200 outputs with the same OutputBts7200Info use the same storage.
@@ -101,71 +107,61 @@ void test_output_bts7200_storage_combined(void) {
     bts7200_info[i].enable_1_pin = s_test_en_pin_1;
     bts7200_info[i].mux_selection = TEST_MUX_SEL;
   }
+  // for my sanity I have to disable clang-format's inane formatting for this struct
+  // clang-format off
   OutputConfig config = {
-    .specs =
-        {
-            [0] =
-                {
-                    .type = OUTPUT_TYPE_BTS7200,
-                    .on_front = true,
-                    .bts7200_spec =
-                        {
-                            .bts7200_info = &bts7200_info[0],
-                            .channel = 0,
-                        },
-                },
-            [1] =
-                {
-                    .type = OUTPUT_TYPE_BTS7200,
-                    .on_front = true,
-                    .bts7200_spec =
-                        {
-                            .bts7200_info = &bts7200_info[1],
-                            .channel = 0,
-                        },
-                },
-            [2] =
-                {
-                    .type = OUTPUT_TYPE_BTS7200,
-                    .on_front = true,
-                    .bts7200_spec =
-                        {
-                            .bts7200_info = &bts7200_info[2],
-                            .channel = 0,
-                        },
-                },
-            [3] =
-                {
-                    .type = OUTPUT_TYPE_BTS7200,
-                    .on_front = true,
-                    .bts7200_spec =
-                        {
-                            .bts7200_info = &bts7200_info[0],
-                            .channel = 1,
-                        },
-                },
-            [4] =
-                {
-                    .type = OUTPUT_TYPE_BTS7200,
-                    .on_front = true,
-                    .bts7200_spec =
-                        {
-                            .bts7200_info = &bts7200_info[1],
-                            .channel = 1,
-                        },
-                },
-            [5] =
-                {
-                    .type = OUTPUT_TYPE_BTS7200,
-                    .on_front = true,
-                    .bts7200_spec =
-                        {
-                            .bts7200_info = &bts7200_info[2],
-                            .channel = 3,
-                        },
-                },
+    .specs = {
+      [0] = {
+        .type = OUTPUT_TYPE_BTS7200,
+        .on_front = true,
+        .bts7200_spec = {
+          .bts7200_info = &bts7200_info[0],
+          .channel = 0,
         },
+      },
+      [1] = {
+        .type = OUTPUT_TYPE_BTS7200,
+        .on_front = true,
+        .bts7200_spec = {
+          .bts7200_info = &bts7200_info[1],
+          .channel = 0,
+        },
+      },
+      [2] = {
+        .type = OUTPUT_TYPE_BTS7200,
+        .on_front = true,
+        .bts7200_spec = {
+          .bts7200_info = &bts7200_info[2],
+          .channel = 0,
+        },
+      },
+      [3] = {
+        .type = OUTPUT_TYPE_BTS7200,
+        .on_front = true,
+        .bts7200_spec = {
+          .bts7200_info = &bts7200_info[0],
+          .channel = 1,
+        },
+      },
+      [4] = {
+        .type = OUTPUT_TYPE_BTS7200,
+        .on_front = true,
+        .bts7200_spec = {
+          .bts7200_info = &bts7200_info[1],
+          .channel = 1,
+        },
+      },
+      [5] = {
+        .type = OUTPUT_TYPE_BTS7200,
+        .on_front = true,
+        .bts7200_spec = {
+          .bts7200_info = &bts7200_info[2],
+          .channel = 3,
+        },
+      },
+    },
   };
+  // clang-format on
   prv_set_config_boilerplate(&config);
   TEST_ASSERT_OK(output_init(&config, true));
 
@@ -288,4 +284,34 @@ void test_output_read_current_bts7200(void) {
   TEST_ASSERT_EQUAL(3, s_times_adc_read);
   TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
   TEST_ASSERT_NOT_EQUAL(0, current);
+}
+
+// Test that output_set_state works for a BTS7040 output.
+void test_output_set_state_bts7040(void) {
+  OutputConfig config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_BTS7040,
+                    .on_front = true,
+                    .bts7040_spec =
+                        {
+                            .enable_pin = s_test_en_pin,
+                            .mux_selection = TEST_MUX_SEL,
+                        },
+                },
+        },
+  };
+  prv_set_config_boilerplate(&config);
+  TEST_ASSERT_OK(output_init(&config, true));
+
+  TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_ON));
+  TEST_ASSERT_PCA9539R_STATE(s_test_en_pin, PCA9539R_GPIO_STATE_HIGH);
+
+  TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_OFF));
+  TEST_ASSERT_PCA9539R_STATE(s_test_en_pin, PCA9539R_GPIO_STATE_LOW);
+
+  TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_ON));
+  TEST_ASSERT_PCA9539R_STATE(s_test_en_pin, PCA9539R_GPIO_STATE_HIGH);
 }
