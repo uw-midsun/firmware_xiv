@@ -45,13 +45,25 @@ static Pca9539rGpioAddress s_test_en_pin_1 = { PD_PCA9539R_I2C_ADDRESS_0, PCA953
 // for BTS7040
 static Pca9539rGpioAddress s_test_en_pin = { PD_PCA9539R_I2C_ADDRESS_0, PCA9539R_PIN_IO0_2 };
 
-static GpioAddress s_read_address;
+// for GPIO
+static GpioAddress s_test_gpio_pin = { GPIO_PORT_B, 2 };
+
+static GpioAddress s_adc_read_address;
 static size_t s_times_adc_read = 0;
 
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
   s_times_adc_read++;
-  s_read_address = address;
+  s_adc_read_address = address;
   *reading = TEST_ADC_READING;
+  return STATUS_CODE_OK;
+}
+
+static const GpioAddress *s_gpio_set_address;
+static GpioState s_set_gpio_state;
+
+StatusCode TEST_MOCK(gpio_set_state)(const GpioAddress *address, GpioState state) {
+  s_gpio_set_address = address;
+  s_set_gpio_state = state;
   return STATUS_CODE_OK;
 }
 
@@ -89,6 +101,8 @@ void setup_test(void) {
   i2c_init(PD_I2C_PORT, &settings);
 
   s_times_adc_read = 0;
+  s_gpio_set_address = NULL;
+  s_set_gpio_state = NUM_GPIO_STATES;
 }
 void teardown_test(void) {}
 
@@ -267,7 +281,7 @@ void test_output_read_current_bts7200(void) {
   TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
   TEST_ASSERT_PCA9539R_STATE(s_test_dsel_pin, PCA9539R_GPIO_STATE_LOW);
   TEST_ASSERT_EQUAL(1, s_times_adc_read);
-  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_adc_read_address);
   TEST_ASSERT_NOT_EQUAL(0, current);
 
   // then it goes high when we read from channel 1
@@ -275,7 +289,7 @@ void test_output_read_current_bts7200(void) {
   TEST_ASSERT_OK(output_read_current(TEST_OUTPUT_2, &current));
   TEST_ASSERT_PCA9539R_STATE(s_test_dsel_pin, PCA9539R_GPIO_STATE_HIGH);
   TEST_ASSERT_EQUAL(2, s_times_adc_read);
-  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_adc_read_address);
   TEST_ASSERT_NOT_EQUAL(0, current);
 
   // and back to low when we read from channel 0 again
@@ -283,7 +297,7 @@ void test_output_read_current_bts7200(void) {
   TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
   TEST_ASSERT_PCA9539R_STATE(s_test_dsel_pin, PCA9539R_GPIO_STATE_LOW);
   TEST_ASSERT_EQUAL(3, s_times_adc_read);
-  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_adc_read_address);
   TEST_ASSERT_NOT_EQUAL(0, current);
 }
 
@@ -341,6 +355,34 @@ void test_output_read_current_bts7040(void) {
   uint16_t current;
   TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
   TEST_ASSERT_EQUAL(1, s_times_adc_read);
-  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_adc_read_address);
   TEST_ASSERT_NOT_EQUAL(0, current);
+}
+
+// Test that output_set_state works for a GPIO output.
+void test_output_set_state_gpio(void) {
+  OutputConfig  config = {
+    .specs = {
+      [TEST_OUTPUT] = {
+        .type = OUTPUT_TYPE_GPIO,
+        .on_front = true,
+        .gpio_spec = {
+          .address = s_test_gpio_pin,
+        },
+      },
+    },
+  };
+  prv_set_config_boilerplate(&config);
+  TEST_ASSERT_OK(output_init(&config, true));
+
+  TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_ON));
+  TEST_ASSERT_NOT_NULL(s_gpio_set_address);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_gpio_pin, *s_gpio_set_address);
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_set_gpio_state);
+
+  TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_OFF));
+  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_set_gpio_state);
+
+  TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_ON));
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_set_gpio_state);
 }
