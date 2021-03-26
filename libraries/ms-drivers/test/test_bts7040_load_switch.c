@@ -49,10 +49,10 @@ static void prv_fault_callback_increment(void *context) {
 // Storage is global so we can call bts7040_stop to stop soft timers and avoid segfaults
 static Bts7040Storage s_storage = { 0 };
 
-// Mocks adc_read_converted to allow for changing the reading during testing.
+// Mocks adc_read_converted_pin to allow for changing the reading during testing.
 // Note that this removes some of the interrupt functionality of the x86 adc implementation,
 // but this shouldn't matter in this case.
-StatusCode TEST_MOCK(adc_read_converted)(AdcChannel adc_channel, uint16_t *reading) {
+StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress addr, uint16_t *reading) {
   *reading = s_adc_measurement;
 
   return STATUS_CODE_OK;

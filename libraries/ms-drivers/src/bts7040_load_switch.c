@@ -117,10 +117,7 @@ static void prv_convert_voltage_to_current(Bts7040Storage *storage, uint16_t *me
 }
 
 StatusCode bts7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
-  AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
-
-  status_ok_or_return(adc_read_converted(sense_channel, meas));
+  status_ok_or_return(adc_read_converted_pin(*storage->sense_pin, meas));
 
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
   // Check for faults, call callback and handle fault if voltage is within fault range

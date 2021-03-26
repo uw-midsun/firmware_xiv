@@ -226,6 +226,7 @@ void test_output_set_state_bts7200(void) {
 }
 
 // Test that output_read_current works for BTS7200 outputs.
+// Note that we don't test the actual value read since it's based on hardware-dependent parameters.
 void test_output_read_current_bts7200(void) {
   OutputBts7200Info bts7200_info = {
     .dsel_pin = s_test_dsel_pin,
@@ -314,4 +315,32 @@ void test_output_set_state_bts7040(void) {
 
   TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_ON));
   TEST_ASSERT_PCA9539R_STATE(s_test_en_pin, PCA9539R_GPIO_STATE_HIGH);
+}
+
+// Test that output_read_current works for a BTS7040 output.
+// Again we don't test the actual value read because it's based on hardware-dependent parameters.
+void test_output_read_current_bts7040(void) {
+  OutputConfig config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_BTS7040,
+                    .on_front = true,
+                    .bts7040_spec =
+                        {
+                            .enable_pin = s_test_en_pin,
+                            .mux_selection = TEST_MUX_SEL,
+                        },
+                },
+        },
+  };
+  prv_set_config_boilerplate(&config);
+  TEST_ASSERT_OK(output_init(&config, true));
+
+  uint16_t current;
+  TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
+  TEST_ASSERT_EQUAL(1, s_times_adc_read);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_read_address);
+  TEST_ASSERT_NOT_EQUAL(0, current);
 }
