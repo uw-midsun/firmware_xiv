@@ -71,7 +71,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-arm
         with:
-          path: /tmp/tmp-13551GHF3OobAX4iW/gcc-6-2017-q2/bin
+          path: ~/.arm-none-eabi-gcc-cache
           key: ${{ runner.os }}-arm
       
       - name: Add repo and update
@@ -110,6 +110,7 @@ jobs:
         uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
+          directory: ~/.arm-none-eabi-gcc-cache
 
       - name: Install GNU Make 4.1
         env:
@@ -158,16 +159,13 @@ jobs:
           autopep8 --version
 
       - name: Format
-        run: |
-          make test_format
+        run: make test_format
 
       - name: Lint
-        run:
-          make lint
+        run: make lint
 
       - name: Pylint
-        run:
-          make pylint
+        run: make pylint
 
       - name: Build stm32f0xx
         run: |
@@ -175,17 +173,13 @@ jobs:
           make clean
 
       - name: Build x86
-        run: |
-          make build_all PLATFORM=x86 DEFINE="${DEFINES}"
+        run: make build_all PLATFORM=x86 DEFINE="${DEFINES}"
 
       - name: Test x86
-        run: |
-          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+        run: make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           
       - name: Pytest
-        run: |
-          make pytest_all
+        run: make pytest_all
 
       - name: Build x86 with clang
-        run: |
-          make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+        run: make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
