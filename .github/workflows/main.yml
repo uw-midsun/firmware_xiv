@@ -108,7 +108,7 @@ jobs:
   
       - name: Make arm cache directory
         run:
-          mkdir -p ~/source
+          mkdir -p ~/.arm-none-eabi-gcc-cache
 
       - if: steps.cache-arm.outputs.cache-hit != 'true'
         uses: fiam/arm-none-eabi-gcc@v1
