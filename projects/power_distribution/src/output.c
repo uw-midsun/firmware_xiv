@@ -194,6 +194,9 @@ static StatusCode prv_set_state_bts7200(Output output, OutputState state) {
 }
 
 StatusCode output_set_state(Output output, OutputState state) {
+  if (output >= NUM_OUTPUTS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
   OutputSpec *spec = &s_config->specs[output];
   switch (spec->type) {
     case OUTPUT_TYPE_GPIO:
@@ -222,6 +225,9 @@ static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
 }
 
 StatusCode output_read_current(Output output, uint16_t *current) {
+  if (output >= NUM_OUTPUTS) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
   switch (s_config->specs[output].type) {
     case OUTPUT_TYPE_GPIO:
       // we can't current sense from a gpio output - UV_VBAT_IS uses BTS7040 (really a BTS7004)

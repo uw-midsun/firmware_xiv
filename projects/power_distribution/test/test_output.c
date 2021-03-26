@@ -476,3 +476,14 @@ void test_invalid_config(void) {
   };
   TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
 }
+
+// Test that the various output functions reject an invalid output.
+void test_invalid_output(void) {
+  OutputConfig config = { 0 };
+  prv_set_config_boilerplate(&config);
+  TEST_ASSERT_OK(output_init(&config, false));
+
+  TEST_ASSERT_NOT_OK(output_set_state(NUM_OUTPUTS, OUTPUT_STATE_OFF));
+  uint16_t current;
+  TEST_ASSERT_NOT_OK(output_read_current(NUM_OUTPUTS, &current));
+}

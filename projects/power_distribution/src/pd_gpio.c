@@ -4,7 +4,6 @@
 
 #include "log.h"
 #include "output.h"
-#include "pca9539r_gpio_expander.h"
 #include "pd_events.h"
 #include "status.h"
 
@@ -67,7 +66,11 @@ StatusCode power_distribution_gpio_process_event(Event *e) {
         // should be impossible, we verified in init that all states are valid
         return status_code(STATUS_CODE_UNREACHABLE);
     }
-    output_set_state(output_spec->output, state);
+    StatusCode code = output_set_state(output_spec->output, state);
+    if (!status_ok(code)) {
+      LOG_WARN("WARNING: got status %d setting output %d to state %d via spec on event id %d\n",
+        code, output_spec->output, state, id);
+    }
   }
 
   return STATUS_CODE_OK;
