@@ -65,6 +65,10 @@ static StatusCode prv_init_gpio(OutputGpioSpec *spec) {
 }
 
 static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool is_front_pd) {
+  if (spec->bts7200_info == NULL) {
+    return status_code(STATUS_CODE_INVALID_ARGS);
+  }
+
   // linear search to see if we've got the same bts7200 earlier
   // this makes initialization quadratic on the number of outputs but that's okay
   Bts7200Storage *storage = NULL;

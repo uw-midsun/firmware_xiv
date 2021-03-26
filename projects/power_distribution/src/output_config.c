@@ -240,7 +240,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7040_spec = {
         // hacky workaround to use the BTS7040 driver for current reading without a valid en pin
-        .enable_pin = INVALID_PCA9539R_PIN,
+        .enable_pin = NONEXISTENT_PCA9539R_PIN,
         .mux_selection = FRONT_MUX_SEL_UV_VBAT,
       },
     },

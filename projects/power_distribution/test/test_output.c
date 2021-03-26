@@ -336,7 +336,7 @@ void test_output_read_current_bts7040(void) {
             [TEST_OUTPUT] =
                 {
                     .type = OUTPUT_TYPE_BTS7040,
-                    .on_front = true,
+                    .on_front = false,
                     .bts7040_spec =
                         {
                             .enable_pin = s_test_en_pin,
@@ -346,7 +346,7 @@ void test_output_read_current_bts7040(void) {
         },
   };
   prv_set_config_boilerplate(&config);
-  TEST_ASSERT_OK(output_init(&config, true));
+  TEST_ASSERT_OK(output_init(&config, false));
 
   uint16_t current;
   TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &current));
@@ -408,8 +408,71 @@ void test_output_read_current_gpio_doesnt_work(void) {
   TEST_ASSERT_NOT_OK(output_read_current(TEST_OUTPUT, &current));
 }
 
+// Test that the real output config initializes correctly.
 TEST_CASE(true)
 TEST_CASE(false)
 void test_init_with_real_config(bool is_front) {
   TEST_ASSERT_OK(output_init(&COMBINED_OUTPUT_CONFIG, is_front));
+}
+
+// Test that we fail gracefully with invalid config to output_init.
+void test_invalid_config(void) {
+  TEST_ASSERT_NOT_OK(output_init(NULL, false));
+
+  OutputConfig invalid_config = { 0 };
+  prv_set_config_boilerplate(&invalid_config);
+  // normally ok with no outputs specified
+  TEST_ASSERT_OK(output_init(&invalid_config, false));
+
+  // invalid mux pins
+  GpioAddress invalid_address = { NUM_GPIO_PORTS, 0 };
+  invalid_config.mux_enable_pin = invalid_address;
+  TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
+  invalid_config.mux_enable_pin = (GpioAddress)PD_MUX_ENABLE_PIN;
+  invalid_config.mux_address.sel_pins[0] = invalid_address;
+  TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
+  invalid_config.mux_address.sel_pins[0] = (GpioAddress)PD_MUX_SEL1_PIN;
+
+  // GPIO: invalid address
+  invalid_config.specs[TEST_OUTPUT] = (OutputSpec){
+    .type = OUTPUT_TYPE_GPIO,
+    .on_front = false,
+    .gpio_spec = {
+      .address = { NUM_GPIO_PORTS, 99 },
+    },
+  };
+  TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
+
+  // BTS7200: null bts7200 info
+  invalid_config.specs[TEST_OUTPUT] = (OutputSpec){
+    .type = OUTPUT_TYPE_BTS7200,
+    .on_front = false,
+    .bts7200_spec = {
+      .channel = 0,
+      .bts7200_info = NULL,
+    },
+  };
+  TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
+
+  // invalid pin in bts7200 info
+  Pca9539rGpioAddress invalid_pca9539r_pin = { PD_PCA9539R_I2C_ADDRESS_0, NUM_PCA9539R_GPIO_PINS };
+  OutputBts7200Info invalid_bts7200_info = {
+    .enable_0_pin = invalid_pca9539r_pin,
+    .enable_1_pin = invalid_pca9539r_pin,
+    .dsel_pin = invalid_pca9539r_pin,
+    .mux_selection = 0,
+  };
+  invalid_config.specs[TEST_OUTPUT].bts7200_spec.bts7200_info = &invalid_bts7200_info;
+  TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
+
+  // BTS7040: invalid pin
+  invalid_config.specs[TEST_OUTPUT] = (OutputSpec){
+    .type = OUTPUT_TYPE_BTS7200,
+    .on_front = false,
+    .bts7040_spec = {
+      .enable_pin = invalid_pca9539r_pin,
+      .mux_selection = 0,
+    },
+  };
+  TEST_ASSERT_NOT_OK(output_init(&invalid_config, false));
 }

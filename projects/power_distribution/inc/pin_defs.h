@@ -20,7 +20,7 @@
 #define POWER_DISTRIBUTION_5V_REG_ENABLE \
   { GPIO_PORT_B, 2 }
 
-#define INVALID_PCA9539R_PIN \
+#define NONEXISTENT_PCA9539R_PIN \
   { 0xff, PCA9539R_PIN_IO0_0 }
 
 // Front power distribution
