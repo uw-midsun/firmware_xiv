@@ -158,8 +158,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
         status_ok_or_return(prv_init_bts7040(output, &spec->bts7040_spec));
         break;
       default:
-        // probably because it wasn't specified in the config: ignore with a warning
-        LOG_WARN("Warning: output %d is unspecified, not initializing\n", output);
+        // probably because it wasn't specified in the config: just ignore it
         break;
     }
   }

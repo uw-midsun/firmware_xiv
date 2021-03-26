@@ -9,6 +9,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "misc.h"
+#include "output_config.h"
 #include "pca9539r_gpio_expander.h"
 #include "pin_defs.h"
 #include "soft_timer.h"
@@ -105,11 +106,6 @@ void setup_test(void) {
   s_set_gpio_state = NUM_GPIO_STATES;
 }
 void teardown_test(void) {}
-
-void test_output_init_enables_mux(void) {
-  // TODO(SOFT-396): maybe mock gpio_init_pin...
-  // really we need a suite of output_init tests
-}
 
 // Test that BTS7200 outputs with the same OutputBts7200Info use the same storage.
 void test_output_bts7200_storage_combined(void) {
@@ -361,16 +357,19 @@ void test_output_read_current_bts7040(void) {
 
 // Test that output_set_state works for a GPIO output.
 void test_output_set_state_gpio(void) {
-  OutputConfig  config = {
-    .specs = {
-      [TEST_OUTPUT] = {
-        .type = OUTPUT_TYPE_GPIO,
-        .on_front = true,
-        .gpio_spec = {
-          .address = s_test_gpio_pin,
+  OutputConfig config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_GPIO,
+                    .on_front = true,
+                    .gpio_spec =
+                        {
+                            .address = s_test_gpio_pin,
+                        },
+                },
         },
-      },
-    },
   };
   prv_set_config_boilerplate(&config);
   TEST_ASSERT_OK(output_init(&config, true));
@@ -385,4 +384,32 @@ void test_output_set_state_gpio(void) {
 
   TEST_ASSERT_OK(output_set_state(TEST_OUTPUT, OUTPUT_STATE_ON));
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_set_gpio_state);
+}
+
+// Test that we can't read current from a GPIO output.
+void test_output_read_current_gpio_doesnt_work(void) {
+  OutputConfig config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_GPIO,
+                    .on_front = true,
+                    .gpio_spec =
+                        {
+                            .address = s_test_gpio_pin,
+                        },
+                },
+        },
+  };
+  prv_set_config_boilerplate(&config);
+  TEST_ASSERT_OK(output_init(&config, true));
+  uint16_t current;
+  TEST_ASSERT_NOT_OK(output_read_current(TEST_OUTPUT, &current));
+}
+
+TEST_CASE(true)
+TEST_CASE(false)
+void test_init_with_real_config(bool is_front) {
+  TEST_ASSERT_OK(output_init(&COMBINED_OUTPUT_CONFIG, is_front));
 }

@@ -21,7 +21,7 @@
   { GPIO_PORT_B, 2 }
 
 #define INVALID_PCA9539R_PIN \
-  { 0xff, NUM_PCA9539R_GPIO_PINS }
+  { 0xff, PCA9539R_PIN_IO0_0 }
 
 // Front power distribution
 #define FRONT_PIN_CENTRE_CONSOLE_EN \
