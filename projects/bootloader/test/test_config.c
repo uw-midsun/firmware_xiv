@@ -9,9 +9,13 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+// A self defined test to check if memory is not equal
+#define TEST_ASSERT_NOT_EQUAL_MEMORY(expected, actual, len) \
+  prv_test_not_equal_memory((uint8_t *)(expected), (uint8_t *)(actual), (len))
+
 // This is so the real persist_init can be used in the mock function
-// Normally when a mock function uses the original function, it is given
-// a name "__wrap_..." here I am simply renaming it to __real_persist_init
+// You can't use __real_persist_init without telling the gcc its signiture
+// hence the declaration
 extern StatusCode __real_persist_init(PersistStorage *persist, FlashPage page, void *blob,
                                       size_t blob_size, bool overwrite);
 // This a function pointer that will set itself to prv_change_config_page for
@@ -25,8 +29,9 @@ static PersistStorage s_test_persist_storage_2 = { 0 };
 static BootloaderConfig s_test_config_2 = { 0 };
 
 // I need to create an input config to give config_commit();
+// For test_config_commit_works();
 // I use random values for the input_config
-static BootloaderConfig test_input_config = { .crc32 = 1,
+static BootloaderConfig test_input_config_works = { .crc32 = 1,
                                               .controller_board_id = 1,
                                               .controller_board_name = "a",
                                               .project_present = true,
@@ -35,6 +40,19 @@ static BootloaderConfig test_input_config = { .crc32 = 1,
                                               .git_version = "a",
                                               .application_crc32 = 1,
                                               .application_size = 1 };
+
+// I need to create an input config to give config_commit();
+// For test_config_commit_corruption();
+// I use random values for the input_config
+static BootloaderConfig test_input_config_corruption = { .crc32 = 1,
+                                              .controller_board_id = 2,
+                                              .controller_board_name = "b",
+                                              .project_present = false,
+                                              .project_name = "b",
+                                              .project_info = "b",
+                                              .git_version = "b",
+                                              .application_crc32 = 2,
+                                              .application_size = 2 };
 
 // This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
@@ -49,6 +67,16 @@ static void prv_change_config_page(void) {
   s_test_config_1.application_size = 6;
   persist_commit(&s_test_persist_storage_1);
   persist_commit(&s_test_persist_storage_1);
+}
+
+static void prv_test_not_equal_memory(uint8_t *expected, uint8_t *actual, size_t len){
+  // This function is the implementation of the TEST_ASSERT_NOT_EQUAL_MEMORY
+  bool equal_memory = true;
+  for(size_t i = 0; i < len; i++){
+    if(!(expected[i] == actual[i]))
+    equal_memory = false;
+  }
+  TEST_ASSERT_FALSE_MESSAGE(equal_memory, "Expected unequal memory");
 }
 
 void setup_test(void) {
@@ -160,7 +188,7 @@ void test_config_get(void) {
 
 void test_config_commit_works(void) {
   // Testing if page 2 and page 1 are both the new page
-  config_commit(&test_input_config);
+  config_commit(&test_input_config_works);
 
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
                sizeof(BootloaderConfig), false);
@@ -170,14 +198,14 @@ void test_config_commit_works(void) {
                sizeof(BootloaderConfig), false);
   persist_ctrl_periodic(&s_test_persist_storage_2, false);
 
-  TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &test_input_config, sizeof(BootloaderConfig));
+  TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &test_input_config_works, sizeof(BootloaderConfig));
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_2, &s_test_config_1, sizeof(BootloaderConfig));
 }
 
 void test_config_commit_corruption(void) {
   // Testing if page 1 is reset when the input config was corrupted
   s_function_pointer_hook = prv_change_config_page;
-  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_commit(&test_input_config));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_commit(&test_input_config_corruption));
   s_function_pointer_hook = NULL;
 
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
@@ -189,6 +217,7 @@ void test_config_commit_corruption(void) {
   persist_ctrl_periodic(&s_test_persist_storage_2, false);
 
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_2, &s_test_config_1, sizeof(BootloaderConfig));
+  TEST_ASSERT_NOT_EQUAL_MEMORY(&s_test_config_2, &test_input_config_corruption, sizeof(BootloaderConfig));
 }
 
 StatusCode TEST_MOCK(persist_init)(PersistStorage *persist, FlashPage page, void *blob,
