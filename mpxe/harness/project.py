@@ -27,7 +27,6 @@ class Project:
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       universal_newlines=False)
-        print(self.popen.pid)
 
         # Set the flag O_NONBLOCK on stdout, necessary for reading from running projects
         flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
@@ -73,4 +72,4 @@ class Project:
         else:
             key = (store_info.type, store_info.key)
             self.stores[key] = decoder.decode_store(store_info)
-            self.sim.handle_update(pm, self)
+            self.sim.handle_update(pm, self, key)

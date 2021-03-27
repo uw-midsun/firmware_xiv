@@ -36,6 +36,7 @@ static MxLog s_mxlog = MX_LOG__INIT;
 
 static bool s_init_cond_complete = false;
 static MxStoreUpdate *s_init_cond[MAX_STORE_COUNT];
+static int s_num_init_conds;
 
 // MxCmd callback table and function prototypes
 // If you are adding a command, you must declare it below and add it to the lookup table
@@ -78,11 +79,11 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
       s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
       mx_store_update__free_unpacked(update, NULL);
     } else {  // Store initial conditions to be used in store_register
-      for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
-        if (s_init_cond[i] == NULL) {
-          s_init_cond[i] = update;
-          break;
-        }
+      if (s_num_init_conds < MAX_STORE_COUNT) {
+        s_init_cond[s_num_init_conds] = update;
+        s_num_init_conds++;
+      } else {
+        LOG_WARN("MPXE INITIAL CONDITIONS OVERFLOW!\n");
       }
     }
   }
@@ -90,6 +91,9 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
+  // Signal parent process after poll thread created
+  pid_t ppid = getppid();
+  kill(ppid, SIGUSR2);
   // read protos from stdin
   // compare using second proto as 'mask'
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
@@ -141,10 +145,6 @@ void store_config(void) {
   // set up polling thread
   pthread_t poll_thread;
   pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
-
-  // Signal parent process after poll thread created
-  pid_t ppid = getppid();
-  kill(ppid, SIGUSR2);
 
   // Lock for initial conditions, continue when FINISH_INIT_CONDS recv'd
   pthread_mutex_lock(&s_init_lock);

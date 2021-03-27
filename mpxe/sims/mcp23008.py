@@ -14,7 +14,7 @@ class Mcp23008(sim.Sim):
         self.states = None
 
     # pylint: disable=unused-argument
-    def handle_update(self, pm, proj):
+    def handle_update(self, pm, proj, key):
         stores = proj.stores
         if MCP23008_KEY in stores:
             mcp = stores[MCP23008_KEY]
@@ -22,19 +22,14 @@ class Mcp23008(sim.Sim):
 
     # Update the store with a new pin state
     def update_pin_state(self, proj, pin, state):
-        mcp23008_msg = mcp23008_pb2.MxMcp23008Store()
-        mcp23008_msg.state[pin] = state
+        msg = mcp23008_pb2.MxMcp23008Store()
+        msg.state[pin] = state
 
-        mcp23008_mask = mcp23008_pb2.MxMcp23008Store()
-        mcp23008_mask.state[pin] = 1
+        mask = mcp23008_pb2.MxMcp23008Store()
+        mask.state[pin] = 1
 
-        mcp23008_update = StoreUpdate(
-            mcp23008_msg,
-            mcp23008_mask,
-            stores_pb2.MxStoreType.MCP23008,
-            0)
-
-        proj.write_store(mcp23008_update)
+        update = StoreUpdate(msg, mask, stores_pb2.MxStoreType.MCP23008, 0)
+        proj.write_store(update)
 
     # Compares pin state against store
     # pylint: disable=unused-argument

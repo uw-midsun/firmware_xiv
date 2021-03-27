@@ -28,6 +28,7 @@ class ProjectManager:
         self.fd_to_proj = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.killed = False
+
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
@@ -39,7 +40,6 @@ class ProjectManager:
         signal.signal(INIT_LOCK_SIGNAL, self.init_lock_signal)
 
     def init_lock_signal(self, signum, stack_frame):
-        print("INIT SIGNAL RECEIVED")
         self.init_lock.release()
 
     def start(self, name, sim=None, init_conds=None):
@@ -55,6 +55,8 @@ class ProjectManager:
         if init_conds:
             for update in init_conds:
                 proj.write_store(update)
+                sleep(0.1)  # needed in between sequential updates
+
         proj.send_command(stores_pb2.MxCmdType.FINISH_INIT_CONDS)
 
         return proj

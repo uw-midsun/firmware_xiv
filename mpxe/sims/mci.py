@@ -18,7 +18,7 @@ class Mci(sim.Sim):
         self.tx_id = 0
         self.tx_data = 0
 
-    def handle_update(self, pm, proj):
+    def handle_update(self, pm, proj, key):
         # Upon precharge enable (PA9) going high, set PB0 and PA10 to mock precharge
         if not self.precharge_enable and self.get_gpio(proj, 'a', 9):
             self.precharge_enable = self.get_gpio(proj, 'a', 9)

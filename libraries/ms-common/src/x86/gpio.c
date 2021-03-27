@@ -78,9 +78,6 @@ static void prv_init_store(void) {
 #endif
 
 StatusCode gpio_init(void) {
-#ifdef MPXE
-  prv_init_store();
-#endif
   GpioSettings default_settings = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
@@ -92,6 +89,7 @@ StatusCode gpio_init(void) {
     s_gpio_pin_input_value[i] = 0;
   }
 #ifdef MPXE
+  prv_init_store();
   prv_export();
 #endif
   return STATUS_CODE_OK;

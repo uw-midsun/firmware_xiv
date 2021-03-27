@@ -68,19 +68,6 @@ static StatusCode prv_mcp23008_check_pin_states(Mcp23008GpioState state) {
   return STATUS_CODE_OK;
 }
 
-#ifdef MPXE
-static void prv_check_initial_states(void) {  // Should only be for x86!
-  Mcp23008GpioState get_state;
-  Mcp23008GpioAddress address = { .i2c_address = MCP23008_I2C_ADDRESS };
-
-  for (Mcp23008PinAddress pin = 0; pin < NUM_MCP23008_GPIO_PINS; pin++) {
-    address.pin = pin;
-    mcp23008_gpio_get_state(&address, &get_state);
-    LOG_DEBUG("Initial State for PIN %d == %d\n", pin, get_state);
-  }
-}
-#endif
-
 static void prv_periodic_gpio_toggle_and_check(SoftTimerId timer_id, void *context) {
   Mcp23008GpioState *state = (Mcp23008GpioState *)context;
   Mcp23008GpioState get_state;
@@ -112,9 +99,6 @@ int main() {
   setup_i2c_and_mcp23008_gpio();
 
   LOG_DEBUG("Testing GPIO initialization...\n");
-#ifdef MPXE
-  prv_check_initial_states();
-#endif
   LOG_DEBUG("Initializing all pins out...\n");
   prv_mcp23008_init_all_pins(MCP23008_GPIO_DIR_OUT);
   prv_mcp23008_check_pin_states(MCP23008_GPIO_STATE_HIGH);

@@ -26,7 +26,7 @@
 #define PIN_I2C_SDA \
   { GPIO_PORT_B, 11 }
 
-void setup_test(void) {
+static void prv_setup_test(void) {
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
     .sda = PIN_I2C_SDA,
@@ -34,27 +34,6 @@ void setup_test(void) {
   };
   i2c_init(I2C_PORT, &i2c_settings);
   pca9539r_gpio_init(I2C_PORT, PCA9539_I2C_ADDRESS);
-#ifdef MPXE  // used to test double initial conditions
-  Pca9539rGpioState in_state;
-  Pca9539rGpioAddress address = { .i2c_address = PCA9539_I2C_ADDRESS };
-  for (Pca9539rPinAddress pin = PCA9539R_PIN_IO0_0; pin < NUM_PCA9539R_GPIO_PINS; pin++) {
-    address.pin = pin;
-    pca9539r_gpio_get_state(&address, &in_state);
-    LOG_DEBUG("State for First PCA9539R pin %d_%d == %d\n", address.pin / 8, address.pin % 8,
-              in_state);
-  }
-
-#define PCA9539_I2C_ADDRESS2 0x75  // PCA9539 address 2
-  pca9539r_gpio_init(I2C_PORT, PCA9539_I2C_ADDRESS2);
-  address.i2c_address = PCA9539_I2C_ADDRESS2;
-  for (Pca9539rPinAddress pin = PCA9539R_PIN_IO0_0; pin < NUM_PCA9539R_GPIO_PINS; pin++) {
-    address.pin = pin;
-    pca9539r_gpio_get_state(&address, &in_state);
-    LOG_DEBUG("State for Second PCA9539R pin %d_%d == %d\n", address.pin / 8, address.pin % 8,
-              in_state);
-  }
-
-#endif
 }
 
 // initialize all pins to in/out - must be called after pca9539r_gpio_init
@@ -123,14 +102,14 @@ int main() {
   gpio_init();
   interrupt_init();
   soft_timer_init();
-  setup_test();
+  prv_setup_test();
 
   LOG_DEBUG("Testing GPIO initialization...\n");
   LOG_DEBUG("Initializing all pins out...\n");
   prv_pca9539r_init_all_pins(PCA9539R_GPIO_DIR_OUT);
   prv_pca9539r_check_all_pin_states(PCA9539R_GPIO_STATE_HIGH);
   LOG_DEBUG("GPIO initialization complete. Now beginning toggling of GPIO states\n");
-  Pca9539rGpioState state;
+  Pca9539rGpioState state = PCA9539R_GPIO_STATE_LOW;
 
   // Toggles gpio, compares expected values against registers, first read should be ignored
   soft_timer_start_millis(100, prv_soft_timer_callback_output, &state, NULL);
