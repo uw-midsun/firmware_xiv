@@ -3,11 +3,11 @@
 #include "current_measurement.h"
 #include "output.h"
 
-// Definitions of the hardware configs declared in the header
+// Definitions of the configs declared in the header
 
 // TODO(SOFT-396): maybe change this so it doesn't require counting
 
-const PowerDistributionCurrentHardwareConfig FRONT_CURRENT_MEASUREMENT_HW_CONFIG = {
+const CurrentMeasurementConfig FRONT_CURRENT_MEASUREMENT_CONFIG = {
   .outputs_to_read =
       (Output[]){
           FRONT_OUTPUT_CENTRE_CONSOLE,
@@ -30,7 +30,7 @@ const PowerDistributionCurrentHardwareConfig FRONT_CURRENT_MEASUREMENT_HW_CONFIG
   .num_outputs_to_read = 16,
 };
 
-const PowerDistributionCurrentHardwareConfig REAR_CURRENT_MEASUREMENT_HW_CONFIG = {
+const CurrentMeasurementConfig REAR_CURRENT_MEASUREMENT_CONFIG = {
   .outputs_to_read =
       (Output[]){
           REAR_OUTPUT_BMS,

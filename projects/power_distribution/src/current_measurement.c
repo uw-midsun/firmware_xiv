@@ -6,18 +6,18 @@
 #include "log.h"
 #include "output.h"
 
-static PowerDistributionCurrentHardwareConfig *s_hw_config;
-static PowerDistributionCurrentStorage s_storage = { 0 };
+static CurrentMeasurementConfig *s_config;
+static CurrentMeasurementStorage s_storage = { 0 };
 static SoftTimerId s_timer_id;
 
 static uint32_t s_interval_us;
-static PowerDistributionCurrentMeasurementCallback s_callback;
+static CurrentMeasurementCallback s_callback;
 static void *s_callback_context;
 
 static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   // read from each output
-  for (uint8_t i = 0; i < s_hw_config->num_outputs_to_read; i++) {
-    Output output = s_hw_config->outputs_to_read[i];
+  for (uint8_t i = 0; i < s_config->num_outputs_to_read; i++) {
+    Output output = s_config->outputs_to_read[i];
     if (output >= NUM_OUTPUTS) {
       // shouldn't be possible, we caught them in init
       continue;
@@ -38,8 +38,8 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   }
 }
 
-StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentSettings *settings) {
-  s_hw_config = settings->hw_config;
+StatusCode power_distribution_current_measurement_init(CurrentMeasurementSettings *settings) {
+  s_config = settings->hw_config;
   s_interval_us = settings->interval_us;
   s_callback = settings->callback;
   s_callback_context = settings->callback_context;
@@ -47,8 +47,8 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   memset(&s_storage, 0, sizeof(s_storage));
 
   // catch any invalid outputs early for fast failure
-  for (uint8_t i = 0; i < s_hw_config->num_outputs_to_read; i++) {
-    if (s_hw_config->outputs_to_read[i] >= NUM_OUTPUTS) {
+  for (uint8_t i = 0; i < s_config->num_outputs_to_read; i++) {
+    if (s_config->outputs_to_read[i] >= NUM_OUTPUTS) {
       return status_code(STATUS_CODE_INVALID_ARGS);
     }
   }
@@ -59,7 +59,7 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   return STATUS_CODE_OK;
 }
 
-PowerDistributionCurrentStorage *power_distribution_current_measurement_get_storage(void) {
+CurrentMeasurementStorage *power_distribution_current_measurement_get_storage(void) {
   return &s_storage;
 }
 
