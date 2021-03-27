@@ -62,12 +62,12 @@ static StatusCode prv_single_current_callback(Output output, uint16_t current_da
 
 // Test that we can initialize and publish a single current
 void test_power_distribution_publish_data_publish_single_current(void) {
-  PowerDistributionPublishConfig config = {
+  PublishDataConfig config = {
     .transmitter = prv_single_current_callback,
     .outputs_to_publish = (Output[]){ TEST_OUTPUT_1 },
     .num_outputs_to_publish = 1,
   };
-  TEST_ASSERT_OK(power_distribution_publish_data_init(config));
+  TEST_ASSERT_OK(power_distribution_publish_data_init(&config));
 
   s_single_received_output = 0;
   s_single_received_current_data = 0;
@@ -106,7 +106,7 @@ static StatusCode prv_multiple_currents_callback(Output output, uint16_t current
 void test_power_distribution_publish_data_publish_multiple_currents(void) {
   const uint8_t num_outputs = 3;
 
-  PowerDistributionPublishConfig config = {
+  PublishDataConfig config = {
     .transmitter = prv_multiple_currents_callback,
     .outputs_to_publish =
         (Output[]){
@@ -116,7 +116,7 @@ void test_power_distribution_publish_data_publish_multiple_currents(void) {
         },
     .num_outputs_to_publish = num_outputs,
   };
-  TEST_ASSERT_OK(power_distribution_publish_data_init(config));
+  TEST_ASSERT_OK(power_distribution_publish_data_init(&config));
 
   s_times_multiple_callback_called = 0;
   for (uint8_t i = 0; i < num_outputs; i++) {
@@ -142,21 +142,21 @@ void test_power_distribution_publish_data_publish_multiple_currents(void) {
 // Test that invalid config gives an error.
 void test_power_distribution_publish_data_invalid_config_errors(void) {
   // null transmitter
-  PowerDistributionPublishConfig bad_config = {
+  PublishDataConfig bad_config = {
     .transmitter = NULL,
     .outputs_to_publish = (Output[]){ TEST_OUTPUT_1 },
     .num_outputs_to_publish = 1,
   };
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(bad_config));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(&bad_config));
 
   // invalid currents
   bad_config.transmitter = prv_single_current_callback;
   bad_config.outputs_to_publish[0] = NUM_OUTPUTS;
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(bad_config));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(&bad_config));
 
   // null currents
   bad_config.outputs_to_publish = NULL;
-  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(bad_config));
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(&bad_config));
 }
 
 static StatusCode prv_internal_error_callback(Output current_id, uint16_t current_data) {
@@ -165,12 +165,12 @@ static StatusCode prv_internal_error_callback(Output current_id, uint16_t curren
 
 // Test that returning a non-OK status code from the transmitter causes publish to do the same.
 void test_power_distribution_publish_data_mirrors_transmitter_error(void) {
-  PowerDistributionPublishConfig config = {
+  PublishDataConfig config = {
     .transmitter = prv_internal_error_callback,
     .outputs_to_publish = (Output[]){ TEST_OUTPUT_1 },
     .num_outputs_to_publish = 1,
   };
-  TEST_ASSERT_OK(power_distribution_publish_data_init(config));
+  TEST_ASSERT_OK(power_distribution_publish_data_init(&config));
 
   uint16_t test_current_measurements[NUM_OUTPUTS] = {
     [TEST_OUTPUT_1] = TEST_CURRENT_DATA_1,
@@ -182,15 +182,15 @@ void test_power_distribution_publish_data_mirrors_transmitter_error(void) {
 // Test that the standard configs initialize correctly.
 void test_power_distribution_publish_data_standard_configs_initialize(void) {
   TEST_ASSERT_OK(
-      power_distribution_publish_data_init(FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
-  TEST_ASSERT_OK(power_distribution_publish_data_init(REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+      power_distribution_publish_data_init(&FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+  TEST_ASSERT_OK(power_distribution_publish_data_init(&REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
 }
 
 // Test that we actually send CAN messages on front.
 void test_power_distribution_publish_data_send_can_msgs_front(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
   TEST_ASSERT_OK(
-      power_distribution_publish_data_init(FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+      power_distribution_publish_data_init(&FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
 
   // the values aren't important
   uint16_t test_current_measurements[NUM_OUTPUTS] = { 0 };
@@ -207,7 +207,7 @@ void test_power_distribution_publish_data_send_can_msgs_front(void) {
 // Test that we actually send CAN messages on rear.
 void test_power_distribution_publish_data_send_can_msgs_rear(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
-  TEST_ASSERT_OK(power_distribution_publish_data_init(REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
+  TEST_ASSERT_OK(power_distribution_publish_data_init(&REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG));
 
   // the values aren't important
   uint16_t test_current_measurements[NUM_OUTPUTS] = { 0 };

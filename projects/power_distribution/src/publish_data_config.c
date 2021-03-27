@@ -1,4 +1,5 @@
 #include "publish_data_config.h"
+
 #include "can_transmit.h"
 
 static StatusCode prv_publish_front_current_measurement(Output output, uint16_t current_data) {
@@ -11,7 +12,7 @@ static StatusCode prv_publish_rear_current_measurement(Output output, uint16_t c
 
 // TODO(SOFT_396): these are the same as current_measurement...
 
-const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
+const PublishDataConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
   .transmitter = prv_publish_front_current_measurement,
   .outputs_to_publish =
       (Output[]){
@@ -35,7 +36,7 @@ const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFI
   .num_outputs_to_publish = 16,
 };
 
-const PowerDistributionPublishConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
+const PublishDataConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
   .transmitter = prv_publish_rear_current_measurement,
   .outputs_to_publish =
       (Output[]){

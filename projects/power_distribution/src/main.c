@@ -121,8 +121,8 @@ int main(void) {
   power_distribution_gpio_init(is_front_power_distribution ? &FRONT_POWER_DISTRIBUTION_GPIO_CONFIG
                                                            : &REAR_POWER_DISTRIBUTION_GPIO_CONFIG);
   power_distribution_publish_data_init(is_front_power_distribution
-                                           ? FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG
-                                           : REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG);
+                                           ? &FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG
+                                           : &REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG);
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {

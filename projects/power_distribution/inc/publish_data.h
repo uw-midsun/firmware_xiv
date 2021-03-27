@@ -9,19 +9,19 @@
 #include "status.h"
 
 // A callback which actually transmits the data over CAN.
-typedef StatusCode (*PowerDistributionDataTransmitter)(Output output, uint16_t current_data);
+typedef StatusCode (*DataTransmitter)(Output output, uint16_t current_data);
 
-typedef struct PowerDistributionPublishConfig {
+typedef struct PublishDataConfig {
   // Called to transmit the data, should call a CAN_TRANSMIT_POWER_DISTRIBUTION_* macro.
-  PowerDistributionDataTransmitter transmitter;
+  DataTransmitter transmitter;
 
   // Outputs in this array will be published (in order), others will be ignored.
   Output *outputs_to_publish;
   uint16_t num_outputs_to_publish;  // length of preceding array
-} PowerDistributionPublishConfig;
+} PublishDataConfig;
 
 // Initialize the module with the specified config.
-StatusCode power_distribution_publish_data_init(PowerDistributionPublishConfig config);
+StatusCode power_distribution_publish_data_init(PublishDataConfig *config);
 
 // Publish the given set of current measurements.
 // This should be called from a current_measurement callback.
