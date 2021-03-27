@@ -116,10 +116,10 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
   output_init(&COMBINED_OUTPUT_CONFIG, true);
 
   uint32_t interval_us = 2000;
-  PowerDistributionCurrentSettings settings = {
+  CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &FRONT_CURRENT_MEASUREMENT_HW_CONFIG,
+    .hw_config = &FRONT_CURRENT_MEASUREMENT_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -141,10 +141,10 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
   output_init(&COMBINED_OUTPUT_CONFIG, false);
 
   uint32_t interval_us = 2000;
-  PowerDistributionCurrentSettings settings = {
+  CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &REAR_CURRENT_MEASUREMENT_HW_CONFIG,
+    .hw_config = &REAR_CURRENT_MEASUREMENT_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -166,10 +166,10 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
   output_init(&COMBINED_OUTPUT_CONFIG, true);
 
   uint32_t interval_us = 2000;
-  PowerDistributionCurrentSettings settings = {
+  CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &FRONT_CURRENT_MEASUREMENT_HW_CONFIG,
+    .hw_config = &FRONT_CURRENT_MEASUREMENT_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -181,7 +181,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // make sure we can get the storage
-  PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
+  CurrentMeasurementStorage *storage = power_distribution_current_measurement_get_storage();
   TEST_ASSERT_NOT_NULL(storage);
 
   // print out the storage for debugging
@@ -197,10 +197,10 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
   output_init(&COMBINED_OUTPUT_CONFIG, false);
 
   uint32_t interval_us = 2000;
-  PowerDistributionCurrentSettings settings = {
+  CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &REAR_CURRENT_MEASUREMENT_HW_CONFIG,
+    .hw_config = &REAR_CURRENT_MEASUREMENT_CONFIG,
   };
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
 
@@ -212,7 +212,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // make sure we can get the storage
-  PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
+  CurrentMeasurementStorage *storage = power_distribution_current_measurement_get_storage();
   TEST_ASSERT_NOT_NULL(storage);
 
   // print out the storage for debugging
@@ -225,7 +225,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
 
 // Test that init errors with invalid hardware config.
 void test_power_distribution_current_measurement_invalid_hw_config(void) {
-  PowerDistributionCurrentHardwareConfig hw_config = {
+  CurrentMeasurementConfig hw_config = {
     .outputs_to_read =
         (Output[]){
             TEST_OUTPUT_0,
@@ -233,7 +233,7 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
         },
     .num_outputs_to_read = 2,
   };
-  PowerDistributionCurrentSettings settings = {
+  CurrentMeasurementSettings settings = {
     .interval_us = 2000,
     .hw_config = &hw_config,
   };
@@ -252,14 +252,14 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
 // We can't actually test for the presence of the warnings, but look for them :)
 void test_warns_with_no_current_output(void) {
   uint32_t interval_us = 2000;
-  PowerDistributionCurrentHardwareConfig hw_config = {
+  CurrentMeasurementConfig hw_config = {
     .outputs_to_read =
         (Output[]){
             TEST_NO_CURRENT_SENSE_OUTPUT,
         },
     .num_outputs_to_read = 1,
   };
-  PowerDistributionCurrentSettings settings = {
+  CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .hw_config = &hw_config,
     .callback = prv_increment_callback,
