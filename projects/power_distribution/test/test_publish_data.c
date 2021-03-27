@@ -159,26 +159,6 @@ void test_power_distribution_publish_data_invalid_config_errors(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, power_distribution_publish_data_init(&bad_config));
 }
 
-static StatusCode prv_internal_error_callback(Output current_id, uint16_t current_data) {
-  return STATUS_CODE_INTERNAL_ERROR;
-}
-
-// Test that returning a non-OK status code from the transmitter causes publish to do the same.
-void test_power_distribution_publish_data_mirrors_transmitter_error(void) {
-  PublishDataConfig config = {
-    .transmitter = prv_internal_error_callback,
-    .outputs_to_publish = (Output[]){ TEST_OUTPUT_1 },
-    .num_outputs_to_publish = 1,
-  };
-  TEST_ASSERT_OK(power_distribution_publish_data_init(&config));
-
-  uint16_t test_current_measurements[NUM_OUTPUTS] = {
-    [TEST_OUTPUT_1] = TEST_CURRENT_DATA_1,
-  };
-  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR,
-                    power_distribution_publish_data_publish(test_current_measurements));
-}
-
 // Test that the standard configs initialize correctly.
 void test_power_distribution_publish_data_standard_configs_initialize(void) {
   TEST_ASSERT_OK(power_distribution_publish_data_init(&FRONT_PUBLISH_DATA_CONFIG));
@@ -211,7 +191,7 @@ void test_power_distribution_publish_data_send_can_msgs_rear(void) {
   TEST_ASSERT_OK(power_distribution_publish_data_publish(test_current_measurements));
 
   // make sure we can tx all of them
-  for (uint16_t i = 0; i < FRONT_PUBLISH_DATA_CONFIG.num_outputs_to_publish; i++) {
+  for (uint16_t i = 0; i < REAR_PUBLISH_DATA_CONFIG.num_outputs_to_publish; i++) {
     MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   }
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();  // and no extras
