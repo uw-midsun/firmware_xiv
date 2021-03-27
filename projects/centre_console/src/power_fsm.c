@@ -57,7 +57,7 @@ FSM_STATE_TRANSITION(power_state_fault) {
 // we discharge main and switch to aux
 // we the lockup firmware with an infinite loop
 // until the fault is resolved and the car's been power cycled
-static void prv_bps_fault() {
+static void prv_bps_fault(void) {
   CAN_TRANSMIT_DISCHARGE_PRECHARGE();
   critical_section_start();
   while (true) {
