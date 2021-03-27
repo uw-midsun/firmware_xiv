@@ -38,7 +38,6 @@
 
 // These are the number of BTS7200 and BTS7040 slots physically present on the board.
 // Not all are used, some are only for spares.
-// TODO(SOFT-396): should these be here?
 #define NUM_BTS7200 9
 #define NUM_BTS7040 7  // including 2 on UV cutoff
 
