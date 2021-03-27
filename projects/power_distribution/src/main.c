@@ -2,6 +2,7 @@
 // #define FORCE_REAR_POWER_DISTRIBUTION
 
 #include "adc.h"
+#include "bps_watcher.h"
 #include "can_msg_defs.h"
 #include "can_rx_event_mapper.h"
 #include "can_rx_event_mapper_config.h"
@@ -113,7 +114,8 @@ int main(void) {
 
   prv_init_can(is_front_power_distribution);
 
-  // initialize output, can_rx_event_mapper, gpio, publish_data
+  // initialize bps watcher, output, can_rx_event_mapper, gpio, publish_data
+  bps_watcher_init();
   output_init(&COMBINED_OUTPUT_CONFIG, is_front_power_distribution);
   power_distribution_can_rx_event_mapper_init(is_front_power_distribution ? &FRONT_CAN_RX_CONFIG
                                                                           : &REAR_CAN_RX_CONFIG);

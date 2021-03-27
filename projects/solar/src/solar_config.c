@@ -87,8 +87,8 @@ static const SpiSettings s_spi_settings = {
   .cs = SOLAR_UNUSED_PIN,
 };
 
-static const CanSettings s_can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+// |device_id| is set dynamically by |config_get_can_settings|
+static CanSettings s_can_settings = {
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,
@@ -98,14 +98,15 @@ static const CanSettings s_can_settings = {
   .loopback = false,
 };
 
-static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_relay_pin = RELAY_EN_PIN;
 static const GpioAddress s_drv120_status_pin = { GPIO_PORT_A, 6 };
 
 static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
 };
 
-static const FaultHandlerSettings s_fault_handler_settings = {
+// |mppt_count| is set dynamically by |config_get_fault_handler_settings|
+static FaultHandlerSettings s_fault_handler_settings = {
   .relay_open_faults =
       {
           EE_SOLAR_FAULT_OVERCURRENT,
@@ -115,7 +116,8 @@ static const FaultHandlerSettings s_fault_handler_settings = {
   .num_relay_open_faults = 3,
 };
 
-static const DataTxSettings s_data_tx_settings = {
+// |mppt_count| is set dynamically by |config_get_data_tx_settings|
+static DataTxSettings s_data_tx_settings = {
   .wait_between_tx_in_millis = DATA_TX_WAIT_TIME_MS,
   .msgs_per_tx_iteration = DATA_TX_MSGS_PER_TX_ITERATION,
 };
@@ -132,7 +134,14 @@ const SpiSettings *config_get_spi_settings(void) {
   return &s_spi_settings;
 }
 
-const CanSettings *config_get_can_settings(void) {
+const CanSettings *config_get_can_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  } else if (mppt_count == SOLAR_BOARD_6_MPPTS) {
+    s_can_settings.device_id = SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS;
+  } else {
+    s_can_settings.device_id = SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS;
+  }
   return &s_can_settings;
 }
 
@@ -148,11 +157,20 @@ const SenseSettings *config_get_sense_settings(void) {
   return &s_sense_settings;
 }
 
-const FaultHandlerSettings *config_get_fault_handler_settings(void) {
+const FaultHandlerSettings *config_get_fault_handler_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  }
+  s_fault_handler_settings.mppt_count = mppt_count;
   return &s_fault_handler_settings;
 }
 
-const DataTxSettings *config_get_data_tx_settings(void) {
+const DataTxSettings *config_get_data_tx_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  }
+  s_data_tx_settings.mppt_count = mppt_count;
+
   return &s_data_tx_settings;
 }
 

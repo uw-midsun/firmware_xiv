@@ -5,15 +5,13 @@ import signal
 
 from mpxe.harness import canio
 from mpxe.harness import project
+from mpxe.harness.dir_config import REPO_DIR
 from mpxe.sims.sim import Sim
-
-REPO_ROOT_DIR = '/home/vagrant/shared/'
 
 POLL_TIMEOUT = 0.5
 
 # signals are set in python and C, change in both places if changing
 STORE_LOCK_SIGNAL = signal.SIGUSR1
-LOG_LOCK_SIGNAL = signal.SIGUSR2
 
 
 class InvalidPollError(Exception):
@@ -25,7 +23,7 @@ class ProjectManager:
         # index projects by stdout and ctop_fifo fd
         # ctop_fifo is the child-to-parent fifo created by the C program
         self.fd_to_proj = {}
-        self.proj_name_list = os.listdir(REPO_ROOT_DIR + 'firmware_xiv/projects')
+        self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.killed = False
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
@@ -36,12 +34,10 @@ class ProjectManager:
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
-        self.fd_to_proj[proj.ctop_fifo.fileno()] = proj
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
         return proj
 
     def stop(self, proj):
-        del self.fd_to_proj[proj.ctop_fifo.fileno()]
         del self.fd_to_proj[proj.popen.stdout.fileno()]
         proj.stop()
 
@@ -61,17 +57,11 @@ class ProjectManager:
             if (event & select.POLLIN) == 0:
                 raise InvalidPollError
             proj = self.fd_to_proj[fd]
-            # Check if we should check stdout or ctop
-            if fd == proj.popen.stdout.fileno():
-                s = proj.popen.stdout.readline().rstrip()
-                proj.handle_log(self, s.decode('utf-8'))
-                proj.popen.send_signal(LOG_LOCK_SIGNAL)
-            elif fd == proj.ctop_fifo.fileno():
-                # Currently assume all messages are storeinfo,
-                # will need other message types
-                msg = proj.ctop_fifo.read()
-                proj.handle_store(self, msg)
-                proj.popen.send_signal(STORE_LOCK_SIGNAL)
+            # Currently assume all messages are storeinfo,
+            # might need other message types
+            msg = proj.popen.stdout.read()
+            proj.handle_store(self, msg)
+            proj.popen.send_signal(STORE_LOCK_SIGNAL)
 
         try:
             while not self.killed:
