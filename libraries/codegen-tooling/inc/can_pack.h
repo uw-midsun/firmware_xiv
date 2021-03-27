@@ -139,6 +139,17 @@
       (is_connected_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,    \
       CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_SOLAR_DATA_6_MPPTS(msg_ptr, data_point_type_u32, data_value_u32)    \
+  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,                      \
+                    SYSTEM_CAN_MESSAGE_SOLAR_DATA_6_MPPTS, 8, (data_point_type_u32), \
+                    (data_value_u32))
+
+#define CAN_PACK_SOLAR_FAULT_6_MPPTS(msg_ptr, fault_u8, fault_data_u8)                     \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,                             \
+                   SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, 2, (fault_u8), (fault_data_u8), \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,          \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_CHARGER_FAULT(msg_ptr, fault_u8)                                             \
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_CHARGER_FAULT, 1, \
                    (fault_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
@@ -173,15 +184,16 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_SOLAR_DATA(msg_ptr, data_point_type_u32, data_value_u32)                 \
-  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_DATA, 8, \
-                    (data_point_type_u32), (data_value_u32))
+#define CAN_PACK_SOLAR_DATA_5_MPPTS(msg_ptr, data_point_type_u32, data_value_u32)    \
+  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS,                      \
+                    SYSTEM_CAN_MESSAGE_SOLAR_DATA_5_MPPTS, 8, (data_point_type_u32), \
+                    (data_value_u32))
 
-#define CAN_PACK_SOLAR_FAULT(msg_ptr, fault_u8, fault_data_u8)                            \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR, SYSTEM_CAN_MESSAGE_SOLAR_FAULT, 2, \
-                   (fault_u8), (fault_data_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
-                   CAN_PACK_IMPL_EMPTY)
+#define CAN_PACK_SOLAR_FAULT_5_MPPTS(msg_ptr, fault_u8, fault_data_u8)                     \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS,                             \
+                   SYSTEM_CAN_MESSAGE_SOLAR_FAULT_5_MPPTS, 2, (fault_u8), (fault_data_u8), \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,          \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_REAR_PD_FAULT(msg_ptr, fault_data_u16, enclosure_temp_data_u16, \
                                dcdc_temp_data_u16, reference_voltage_u16)        \
