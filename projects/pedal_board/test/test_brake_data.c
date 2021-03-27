@@ -74,14 +74,14 @@ void teardown_test(void) {}
 void test_brake_data(void) {
   int16_t brake_data = INT16_MAX;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
   changeable_value = 15;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
   changeable_value = 25;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
   changeable_value = 0;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
 }

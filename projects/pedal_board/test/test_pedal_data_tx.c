@@ -91,29 +91,29 @@ void test_pedal_rx_handler(void) {
   changeable_value = 32;
   TEST_ASSERT_EQUAL(counter, 1);
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 15;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
 
   delay_ms(100);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
   TEST_ASSERT_EQUAL(counter, 2);
   changeable_value = 2;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 34;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
 
   delay_ms(95);
   TEST_ASSERT_EQUAL(counter, 2);
   changeable_value = 0;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 3;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
   delay_ms(5);
   MS_TEST_HELPER_CAN_TX_RX(PEDAL_CAN_TX, PEDAL_CAN_RX);
 
@@ -126,9 +126,9 @@ void test_pedal_rx_handler(void) {
   TEST_ASSERT_EQUAL(counter, 6);
   changeable_value = 33;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
 
   delay_ms(75);
   TEST_ASSERT_EQUAL(counter, 6);
@@ -137,8 +137,8 @@ void test_pedal_rx_handler(void) {
   TEST_ASSERT_EQUAL(counter, 7);
   changeable_value = 23;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 21;
   TEST_ASSERT_OK(get_brake_data(&brake_data));
-  TEST_ASSERT_EQUAL(brake_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(brake_data, changeable_value);
 }

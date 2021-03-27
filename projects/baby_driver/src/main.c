@@ -47,10 +47,10 @@ static CanSettings s_can_settings = {
 
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
+  interrupt_init();
   gpio_init();
   gpio_it_init();
   event_queue_init();
-  interrupt_init();
   soft_timer_init();
   adc_init(ADC_MODE_SINGLE);
 

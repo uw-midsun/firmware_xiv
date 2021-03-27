@@ -9,13 +9,16 @@ LIGHTS_ID_NAME = [
     'Left Turn', 'Right Turn', 'Hazards', 'BPS Strobe'
 ]
 
+
 def data_relay(state):
     """Relay state data format"""
     return 'close' if state else 'open'
 
+
 def data_power_state(state):
     """Power state data format"""
     return DATA_POWER_STATE[state]
+
 
 def data_lights_state(light_id, state):
     """Lights state data format"""
@@ -23,17 +26,21 @@ def data_lights_state(light_id, state):
     state_name = 'on' if state else 'off'
     return '{}: {}'.format(id_name, state_name)
 
+
 def data_battery_vt(module, voltage, temperature):
     """Battery V/T data format"""
     return 'C{}: {:.1f}mV aux {:.1f}mV'.format(module, voltage / 10, temperature / 10)
+
 
 def data_battery_voltage_current(voltage, current):
     """Battery total voltage/current data format"""
     return '{:.4f}V {:.4f}A'.format(voltage / 10000, current / 1000000)
 
+
 def data_dump(*args):
     """Generic data dump format"""
     return ' '.join(['{}'.format(arg) for arg in args])
+
 
 SOURCE_LOOKUP = [
     'RESERVED',
@@ -88,6 +95,7 @@ class CanMessage:
         can_id: Raw standard CAN ID.
         can_data: Message data. Up to 8 bytes.
     """
+
     def __init__(self, can_id, can_data):
         self._can_id = can_id
         self._can_data = can_data
