@@ -42,8 +42,7 @@ StatusCode fault_handler_raise_fault(EESolarFault fault, uint8_t fault_data) {
     }
   }
 
-  LOG_DEBUG("%d \n", (int)s_mppt_count);
-  StatusCode can_status = STATUS_CODE_EMPTY;
+  StatusCode can_status = STATUS_CODE_UNINITIALIZED;
   if (s_mppt_count == SOLAR_BOARD_5_MPPTS) {
     can_status = CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault, fault_data);
   } else if (s_mppt_count == SOLAR_BOARD_6_MPPTS) {
