@@ -148,8 +148,8 @@ void test_fan_err_rear(void) {
   gpio_it_trigger_interrupt(&(GpioAddress)PD_SMBALERT_PIN);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
   MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE(((s_fan_ctrl_msg[0]) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
+  TEST_ASSERT_EQUAL(ERR_VCC_EXCEEDED, s_fan_ctrl_msg[0] & ERR_VCC_EXCEEDED);
+  TEST_ASSERT_EQUAL(FAN_ERR_FLAGS, s_fan_ctrl_msg[0] & FAN_ERR_FLAGS);
 }
 
 // Test Gpio interrupt on front smbalert pin triggered
@@ -160,8 +160,8 @@ void test_fan_err_front(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_PD_FAULT, prv_front_can_fan_ctrl_rx_handler,
                           NULL);
   MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE((((s_fan_ctrl_msg[0])) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
+  TEST_ASSERT_EQUAL(ERR_VCC_EXCEEDED, s_fan_ctrl_msg[0] & ERR_VCC_EXCEEDED);
+  TEST_ASSERT_EQUAL(FAN_ERR_FLAGS, s_fan_ctrl_msg[0] & FAN_ERR_FLAGS);
 }
 
 void test_rear_pd_fan_ctrl_temp(void) {
