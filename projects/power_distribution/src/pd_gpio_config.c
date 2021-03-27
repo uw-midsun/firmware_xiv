@@ -67,18 +67,17 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                   },
               .num_outputs = 1,
           },
-          // TODO(SOFT-396): allow normal gpio for horn
-          // {
-          //     .event_id = POWER_DISTRIBUTION_GPIO_EVENT_HORN,
-          //     .outputs =
-          //         (PdGpioOutputSpec[]){
-          //             {
-          //                 .output = FRONT_OUTPUT_HORN,
-          //                 .state = PD_GPIO_STATE_SAME_AS_DATA,
-          //             },
-          //         },
-          //     .num_outputs = 1,
-          // },
+          {
+              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_HORN,
+              .outputs =
+                  (PdGpioOutputSpec[]){
+                      {
+                          .output = FRONT_OUTPUT_HORN,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
+                      },
+                  },
+              .num_outputs = 1,
+          },
           {
               .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
               .outputs =
@@ -256,7 +255,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                       // Turn on (or keep on): centre console, pedal
                       // Turn off: driver display, steering, speaker, left display, right display,
                       // infotainment, rear display, main rPi, left camera, right camera, daytime
-                      // running lights, front left turn light, front right turn light, fans 1 & 2
+                      // running lights, front left turn light, front right turn light, fan
                       {
                           .output = FRONT_OUTPUT_CENTRE_CONSOLE,
                           .state = PD_GPIO_STATE_ON,
@@ -317,16 +316,12 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                           .output = FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
                           .state = PD_GPIO_STATE_OFF,
                       },
-                      //   {
-                      //       .output = FRONT_OUTPUT_FAN_1,
-                      //       .state = PD_GPIO_STATE_OFF,
-                      //   },
-                      //   {
-                      //       .output = FRONT_OUTPUT_FAN_2,
-                      //       .state = PD_GPIO_STATE_OFF,
-                      //   },
+                      {
+                          .output = FRONT_OUTPUT_FAN,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
                   },
-              .num_outputs = 17,
+              .num_outputs = 16,
           },
       },
   .num_events = 11,
