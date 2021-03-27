@@ -1,4 +1,3 @@
-import unittest
 import time
 
 from mpxe.integration_tests import int_test
@@ -11,7 +10,6 @@ from mpxe.harness.project import StoreUpdate
 
 class TestMpxeInit(int_test.IntTest):
     def setUp(self):
-        NUM_PCA_PINS = 16
         super().setUp()
         self.pca9539r = self.manager.start(
             'mpxe_init_conds', Pca9539r(), self.pca9539r_init_conditions())
