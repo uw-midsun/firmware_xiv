@@ -9,7 +9,7 @@
 
 // TODO(SOFT-396): review all of these
 
-const PdGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
+const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){
           {
@@ -332,7 +332,7 @@ const PdGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
   .num_events = 11,
 };
 
-const PdGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG = {
+const PdGpioConfig REAR_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){
           {
