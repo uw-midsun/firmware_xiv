@@ -117,11 +117,10 @@ int main(void) {
   output_init(&COMBINED_OUTPUT_CONFIG, is_front_power_distribution);
   power_distribution_can_rx_event_mapper_init(is_front_power_distribution ? &FRONT_CAN_RX_CONFIG
                                                                           : &REAR_CAN_RX_CONFIG);
-  power_distribution_gpio_init(is_front_power_distribution ? &FRONT_POWER_DISTRIBUTION_GPIO_CONFIG
-                                                           : &REAR_POWER_DISTRIBUTION_GPIO_CONFIG);
-  power_distribution_publish_data_init(is_front_power_distribution
-                                           ? &FRONT_PUBLISH_DATA_CONFIG
-                                           : &REAR_PUBLISH_DATA_CONFIG);
+  power_distribution_gpio_init(is_front_power_distribution ? &FRONT_PD_GPIO_CONFIG
+                                                           : &REAR_PD_GPIO_CONFIG);
+  power_distribution_publish_data_init(is_front_power_distribution ? &FRONT_PUBLISH_DATA_CONFIG
+                                                                   : &REAR_PUBLISH_DATA_CONFIG);
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {
