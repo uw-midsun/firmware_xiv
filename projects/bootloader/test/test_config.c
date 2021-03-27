@@ -32,27 +32,27 @@ static BootloaderConfig s_test_config_2 = { 0 };
 // For test_config_commit_works();
 // I use random values for the input_config
 static BootloaderConfig test_input_config_works = { .crc32 = 1,
-                                              .controller_board_id = 1,
-                                              .controller_board_name = "a",
-                                              .project_present = true,
-                                              .project_name = "a",
-                                              .project_info = "a",
-                                              .git_version = "a",
-                                              .application_crc32 = 1,
-                                              .application_size = 1 };
+                                                    .controller_board_id = 1,
+                                                    .controller_board_name = "a",
+                                                    .project_present = true,
+                                                    .project_name = "a",
+                                                    .project_info = "a",
+                                                    .git_version = "a",
+                                                    .application_crc32 = 1,
+                                                    .application_size = 1 };
 
 // I need to create an input config to give config_commit();
 // For test_config_commit_corruption();
 // I use random values for the input_config
 static BootloaderConfig test_input_config_corruption = { .crc32 = 1,
-                                              .controller_board_id = 2,
-                                              .controller_board_name = "b",
-                                              .project_present = false,
-                                              .project_name = "b",
-                                              .project_info = "b",
-                                              .git_version = "b",
-                                              .application_crc32 = 2,
-                                              .application_size = 2 };
+                                                         .controller_board_id = 2,
+                                                         .controller_board_name = "b",
+                                                         .project_present = false,
+                                                         .project_name = "b",
+                                                         .project_info = "b",
+                                                         .git_version = "b",
+                                                         .application_crc32 = 2,
+                                                         .application_size = 2 };
 
 // This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
@@ -69,12 +69,11 @@ static void prv_change_config_page(void) {
   persist_commit(&s_test_persist_storage_1);
 }
 
-static void prv_test_not_equal_memory(uint8_t *expected, uint8_t *actual, size_t len){
+static void prv_test_not_equal_memory(uint8_t *expected, uint8_t *actual, size_t len) {
   // This function is the implementation of the TEST_ASSERT_NOT_EQUAL_MEMORY
   bool equal_memory = true;
-  for(size_t i = 0; i < len; i++){
-    if(!(expected[i] == actual[i]))
-    equal_memory = false;
+  for (size_t i = 0; i < len; i++) {
+    if (!(expected[i] == actual[i])) equal_memory = false;
   }
   TEST_ASSERT_FALSE_MESSAGE(equal_memory, "Expected unequal memory");
 }
@@ -217,7 +216,8 @@ void test_config_commit_corruption(void) {
   persist_ctrl_periodic(&s_test_persist_storage_2, false);
 
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_2, &s_test_config_1, sizeof(BootloaderConfig));
-  TEST_ASSERT_NOT_EQUAL_MEMORY(&s_test_config_2, &test_input_config_corruption, sizeof(BootloaderConfig));
+  TEST_ASSERT_NOT_EQUAL_MEMORY(&s_test_config_2, &test_input_config_corruption,
+                               sizeof(BootloaderConfig));
 }
 
 StatusCode TEST_MOCK(persist_init)(PersistStorage *persist, FlashPage page, void *blob,
