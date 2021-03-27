@@ -3,9 +3,9 @@
 #include "exported_enums.h"
 #include "pd_events.h"
 
-const PowerDistributionCanRxEventMapperConfig FRONT_POWER_DISTRIBUTION_CAN_RX_CONFIG = {
+const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
   .msg_specs =
-      (PowerDistributionCanRxEventMapperMsgSpec[]){
+      (CanRxEventMapperMsgSpec[]){
           {
               // manual control of front power outputs
               .msg_id = SYSTEM_CAN_MESSAGE_FRONT_POWER,
@@ -130,9 +130,9 @@ const PowerDistributionCanRxEventMapperConfig FRONT_POWER_DISTRIBUTION_CAN_RX_CO
   .num_msg_specs = 7,
 };
 
-const PowerDistributionCanRxEventMapperConfig REAR_POWER_DISTRIBUTION_CAN_RX_CONFIG = {
+const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
   .msg_specs =
-      (PowerDistributionCanRxEventMapperMsgSpec[]){
+      (CanRxEventMapperMsgSpec[]){
           // should there be a SYSTEM_CAN_MESSAGE_REAR_POWER for manual control of rear power
           // outputs
           // a la SYSTEM_CAN_MESSAGE_FRONT_POWER?

@@ -28,12 +28,11 @@ typedef struct {
 
   // Should we ack the message?
   bool ack;
-} PowerDistributionCanRxEventMapperMsgSpec;
+} CanRxEventMapperMsgSpec;
 
 typedef struct {
-  PowerDistributionCanRxEventMapperMsgSpec *msg_specs;
+  CanRxEventMapperMsgSpec *msg_specs;
   uint8_t num_msg_specs;
-} PowerDistributionCanRxEventMapperConfig;
+} CanRxEventMapperConfig;
 
-StatusCode power_distribution_can_rx_event_mapper_init(
-    PowerDistributionCanRxEventMapperConfig config);
+StatusCode power_distribution_can_rx_event_mapper_init(CanRxEventMapperConfig config);

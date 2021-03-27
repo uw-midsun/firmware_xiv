@@ -1,5 +1,7 @@
-#include "can.h"
 #include "can_rx_event_mapper.h"
+
+#include "can.h"
+#include "can_rx_event_mapper_config.h"
 #include "delay.h"
 #include "event_queue.h"
 #include "interrupt.h"
@@ -95,10 +97,10 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 // Test that we can specify types but no states and no ack.
-void test_can_rx_event_mapper_type_state_no_ack_works() {
-  PowerDistributionCanRxEventMapperConfig test_config = {
+void test_can_rx_event_mapper_type_state_no_ack_works(void) {
+  CanRxEventMapperConfig test_config = {
     .msg_specs =
-        (PowerDistributionCanRxEventMapperMsgSpec[]){
+        (CanRxEventMapperMsgSpec[]){
             {
                 // type and state, no ack
                 .msg_id = TEST_CAN_MESSAGE_0,
@@ -140,10 +142,10 @@ void test_can_rx_event_mapper_type_state_no_ack_works() {
 }
 
 // Test that we can specify a type without a state and no ack.
-void test_can_rx_event_mapper_type_no_state_no_ack_works() {
-  PowerDistributionCanRxEventMapperConfig test_config = {
+void test_can_rx_event_mapper_type_no_state_no_ack_works(void) {
+  CanRxEventMapperConfig test_config = {
     .msg_specs =
-        (PowerDistributionCanRxEventMapperMsgSpec[]){
+        (CanRxEventMapperMsgSpec[]){
             {
                 // type, no state, no ack
                 .msg_id = TEST_CAN_MESSAGE_1,
@@ -183,10 +185,10 @@ void test_can_rx_event_mapper_type_no_state_no_ack_works() {
 }
 
 // Test that we can specify a state with no type and no ack.
-void test_can_rx_event_mapper_state_no_type_no_ack_works() {
-  PowerDistributionCanRxEventMapperConfig test_config = {
+void test_can_rx_event_mapper_state_no_type_no_ack_works(void) {
+  CanRxEventMapperConfig test_config = {
     .msg_specs =
-        (PowerDistributionCanRxEventMapperMsgSpec[]){
+        (CanRxEventMapperMsgSpec[]){
             {
                 // state, no type, no ack
                 .msg_id = TEST_CAN_MESSAGE_2,
@@ -215,10 +217,10 @@ void test_can_rx_event_mapper_state_no_type_no_ack_works() {
 }
 
 // Test that we can specify no state, no type, but test ack true and false.
-void test_can_rx_event_mapper_no_type_no_state_with_varying_ack_works() {
-  PowerDistributionCanRxEventMapperConfig test_config = {
+void test_can_rx_event_mapper_no_type_no_state_with_varying_ack_works(void) {
+  CanRxEventMapperConfig test_config = {
     .msg_specs =
-        (PowerDistributionCanRxEventMapperMsgSpec[]){
+        (CanRxEventMapperMsgSpec[]){
             {
                 // no state or type, no ack
                 .msg_id = TEST_CAN_MESSAGE_2,
@@ -256,4 +258,12 @@ void test_can_rx_event_mapper_no_type_no_state_with_varying_ack_works() {
   TEST_RX_TO_EVENT_WITH_ACK(msg, TEST_CAN_MESSAGE_3_ACKABLE, 0, 0, TEST_EVENT_0, 0);
   TEST_RX_TO_EVENT_WITH_ACK(msg, TEST_CAN_MESSAGE_3_ACKABLE, 1, 4, TEST_EVENT_0, 0);
   TEST_RX_TO_EVENT_WITH_ACK(msg, TEST_CAN_MESSAGE_3_ACKABLE, 10, 5, TEST_EVENT_0, 0);
+}
+
+void test_real_front_config_works(void) {
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init(FRONT_CAN_RX_CONFIG));
+}
+
+void test_real_rear_config_works(void) {
+  TEST_ASSERT_OK(power_distribution_can_rx_event_mapper_init(REAR_CAN_RX_CONFIG));
 }

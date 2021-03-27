@@ -92,7 +92,7 @@ static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void
 
 static void prv_current_measurement_data_ready_callback(void *context) {
   // called when current_measurement has new data: send it to publish_data for publishing
-  PowerDistributionCurrentStorage *storage = power_distribution_current_measurement_get_storage();
+  CurrentMeasurementStorage *storage = power_distribution_current_measurement_get_storage();
   power_distribution_publish_data_publish(storage->measurements);
 }
 
@@ -116,8 +116,8 @@ int main(void) {
 
   // initialize can_rx_event_mapper, gpio, publish_data
   power_distribution_can_rx_event_mapper_init(is_front_power_distribution
-                                                  ? FRONT_POWER_DISTRIBUTION_CAN_RX_CONFIG
-                                                  : REAR_POWER_DISTRIBUTION_CAN_RX_CONFIG);
+                                                  ? FRONT_CAN_RX_CONFIG
+                                                  : REAR_CAN_RX_CONFIG);
   power_distribution_gpio_init(is_front_power_distribution ? &FRONT_POWER_DISTRIBUTION_GPIO_CONFIG
                                                            : &REAR_POWER_DISTRIBUTION_GPIO_CONFIG);
   power_distribution_publish_data_init(is_front_power_distribution
@@ -137,9 +137,9 @@ int main(void) {
   voltage_regulator_set_enabled(&vreg_store, true);
 
   // initialize current_measurement
-  PowerDistributionCurrentSettings current_measurement_settings = {
-    .hw_config = is_front_power_distribution ? &FRONT_CURRENT_MEASUREMENT_HW_CONFIG
-                                             : &REAR_CURRENT_MEASUREMENT_HW_CONFIG,
+  CurrentMeasurementSettings current_measurement_settings = {
+    .hw_config = is_front_power_distribution ? &FRONT_CURRENT_MEASUREMENT_CONFIG
+                                             : &REAR_CURRENT_MEASUREMENT_CONFIG,
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
   };
