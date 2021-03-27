@@ -10,7 +10,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_ADC_RAW_READING 0x800
+#define TEST_ADC_CONVERTED_READING 0x800
 
 // The two test variables below are calculated from inputting 0x800 into the relative conversion
 // formulae (see sense_temperature.c)
