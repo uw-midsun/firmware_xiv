@@ -12,6 +12,8 @@
 #include "interrupt.h"
 #include "lights_signal_fsm.h"
 #include "log.h"
+#include "output.h"
+#include "output_config.h"
 #include "pca9539r_gpio_expander.h"
 #include "pd_error_defs.h"
 #include "pd_events.h"
@@ -106,15 +108,13 @@ int main(void) {
   adc_init(ADC_MODE_SINGLE);
   prv_init_i2c();
 
-  pca9539r_gpio_init(PD_I2C_PORT, PD_PCA9539R_I2C_ADDRESS_0);
-  pca9539r_gpio_init(PD_I2C_PORT, PD_PCA9539R_I2C_ADDRESS_1);
-
   // test if it's front or rear power distribution
   bool is_front_power_distribution = prv_determine_is_front_power_distribution();
 
   prv_init_can(is_front_power_distribution);
 
-  // initialize can_rx_event_mapper, gpio, publish_data
+  // initialize output, can_rx_event_mapper, gpio, publish_data
+  output_init(&COMBINED_OUTPUT_CONFIG, is_front_power_distribution);
   power_distribution_can_rx_event_mapper_init(is_front_power_distribution ? &FRONT_CAN_RX_CONFIG
                                                                           : &REAR_CAN_RX_CONFIG);
   power_distribution_gpio_init(is_front_power_distribution ? &FRONT_POWER_DISTRIBUTION_GPIO_CONFIG

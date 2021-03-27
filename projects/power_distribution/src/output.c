@@ -193,6 +193,9 @@ static StatusCode prv_set_state_bts7200(Output output, OutputState state) {
 }
 
 StatusCode output_set_state(Output output, OutputState state) {
+  if (s_config == NULL) {
+    return status_code(STATUS_CODE_UNINITIALIZED);
+  }
   if (output >= NUM_OUTPUTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -224,6 +227,9 @@ static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
 }
 
 StatusCode output_read_current(Output output, uint16_t *current) {
+  if (s_config == NULL) {
+    return status_code(STATUS_CODE_UNINITIALIZED);
+  }
   if (output >= NUM_OUTPUTS) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -242,7 +248,7 @@ StatusCode output_read_current(Output output, uint16_t *current) {
 }
 
 Bts7200Storage *test_output_get_bts7200_storage(Output output) {
-  if (s_config->specs[output].type != OUTPUT_TYPE_BTS7200) {
+  if (s_config == NULL || s_config->specs[output].type != OUTPUT_TYPE_BTS7200) {
     return NULL;
   }
   return s_output_to_storage[output].bts7200;
