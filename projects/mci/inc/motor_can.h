@@ -47,8 +47,10 @@ typedef uint32_t MotorCanDeviceId;
 
 /* Frame ids. */
 typedef uint32_t MotorCanFrameId;
-#define MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID (0x21u)
+// #define MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID (0x21u)
+#define MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID (0x501u) // 0x500 should be base addr going off other motor controller config
 #define MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID (0x41u)
+// #define MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID (0x401u)
 #define MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID (0x402u)
 #define MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID (0x403u)
 #define MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID (0x202u)

@@ -415,6 +415,7 @@ void test_all_measurements_rb_lb_lv_rv() {
   }
 }
 
+*/
 // Test 4: rb (check no output)
 void test_no_measurements_rb() {
   // motor_can tx and rx should happen immedietly

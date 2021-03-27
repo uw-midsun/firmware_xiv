@@ -29,7 +29,7 @@ static const uint16_t
         };
 
 // Uncomment when using with only the left motor controller
-// #define RIGHT_MOTOR_CONTROLLER_UNUSED
+#define RIGHT_MOTOR_CONTROLLER_UNUSED
 
 #ifdef RIGHT_MOTOR_CONTROLLER_UNUSED
 #define NUM_MOTOR_CONTROLLERS 1
