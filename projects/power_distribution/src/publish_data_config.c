@@ -12,7 +12,7 @@ static StatusCode prv_publish_rear_current_measurement(Output output, uint16_t c
 
 // TODO(SOFT_396): these are the same as current_measurement...
 
-const PublishDataConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
+const PublishDataConfig FRONT_PUBLISH_DATA_CONFIG = {
   .transmitter = prv_publish_front_current_measurement,
   .outputs_to_publish =
       (Output[]){
@@ -36,7 +36,7 @@ const PublishDataConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
   .num_outputs_to_publish = 16,
 };
 
-const PublishDataConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG = {
+const PublishDataConfig REAR_PUBLISH_DATA_CONFIG = {
   .transmitter = prv_publish_rear_current_measurement,
   .outputs_to_publish =
       (Output[]){

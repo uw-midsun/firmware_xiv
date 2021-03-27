@@ -4,5 +4,5 @@
 
 #include "publish_data.h"
 
-extern const PowerDistributionPublishConfig FRONT_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG;
-extern const PowerDistributionPublishConfig REAR_POWER_DISTRIBUTION_PUBLISH_DATA_CONFIG;
+extern const PublishDataConfig FRONT_PUBLISH_DATA_CONFIG;
+extern const PublishDataConfig REAR_PUBLISH_DATA_CONFIG;
