@@ -13,7 +13,7 @@ typedef void (*PowerDistributionCurrentMeasurementCallback)(void *context);
 typedef struct {
   // An array of all outputs from which to read.
   Output *outputs_to_read;
-  uint8_t num_outputs_to_read; // length of preceding array
+  uint8_t num_outputs_to_read;  // length of preceding array
 } PowerDistributionCurrentHardwareConfig;
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
 // Initialize the module with the given settings and set up a soft timer to read currents.
 StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentSettings *settings);
 
-// Return a storage struct containing the latest measurements.
+// Return a storage struct containing the latest measurements in mA.
 PowerDistributionCurrentStorage *power_distribution_current_measurement_get_storage(void);
 
 // Stop periodically reading currents.

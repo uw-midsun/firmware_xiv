@@ -1,6 +1,7 @@
 #include "current_measurement.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include "log.h"
 #include "output.h"
@@ -17,13 +18,17 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   // read from each output
   for (uint8_t i = 0; i < s_hw_config->num_outputs_to_read; i++) {
     Output output = s_hw_config->outputs_to_read[i];
+    if (output >= NUM_OUTPUTS) {
+      // shouldn't be possible, we caught them in init
+      continue;
+    }
     StatusCode code = output_read_current(output, &s_storage.measurements[output]);
     if (!status_ok(code)) {
       LOG_WARN("Could not read current from output %d (index %d): code %d\n", output, i, code);
     }
   }
 
-  if (s_callback) {
+  if (s_callback != NULL) {
     s_callback(s_callback_context);
   }
 
@@ -38,6 +43,15 @@ StatusCode power_distribution_current_measurement_init(PowerDistributionCurrentS
   s_interval_us = settings->interval_us;
   s_callback = settings->callback;
   s_callback_context = settings->callback_context;
+
+  memset(&s_storage, 0, sizeof(s_storage));
+
+  // catch any invalid outputs early for fast failure
+  for (uint8_t i = 0; i < s_hw_config->num_outputs_to_read; i++) {
+    if (s_hw_config->outputs_to_read[i] >= NUM_OUTPUTS) {
+      return status_code(STATUS_CODE_INVALID_ARGS);
+    }
+  }
 
   // measure the currents immediately; the callback doesn't use the timer id it's passed
   prv_measure_currents(SOFT_TIMER_INVALID_TIMER, NULL);

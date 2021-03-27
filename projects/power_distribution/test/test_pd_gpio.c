@@ -13,16 +13,13 @@
 
 // Note: since output handles bts7200/bts7040 outputs for us, we test only with gpio outputs.
 
-#define TEST_I2C_PORT I2C_PORT_2
-#define TEST_I2C_ADDRESS 0x74
+#define TEST_ADDRESS_0 \
+  { GPIO_PORT_A, 0 }
+#define TEST_ADDRESS_1 \
+  { GPIO_PORT_A, 1 }
 
-#define TEST_CONFIG_PIN_I2C_SCL \
-  { GPIO_PORT_B, 10 }
-#define TEST_CONFIG_PIN_I2C_SDA \
-  { GPIO_PORT_B, 11 }
-
-static const GpioAddress s_test_address_0 = { GPIO_PORT_A, 0 };
-static const GpioAddress s_test_address_1 = { GPIO_PORT_A, 1 };
+static const GpioAddress s_test_address_0 = TEST_ADDRESS_0;
+static const GpioAddress s_test_address_1 = TEST_ADDRESS_1;
 
 #define TEST_OUTPUT_0 0
 #define TEST_OUTPUT_1 1
@@ -46,6 +43,46 @@ typedef enum {
     TEST_ASSERT_EQUAL((expected_state), actual_state);         \
   })
 
+static OutputConfig s_test_output_config = {
+  .specs =
+      {
+          [TEST_OUTPUT_0] =
+              {
+                  .type = OUTPUT_TYPE_GPIO,
+                  .on_front = true,
+                  .gpio_spec =
+                      {
+                          .address = TEST_ADDRESS_0,
+                      },
+              },
+          [TEST_OUTPUT_1] =
+              {
+                  .type = OUTPUT_TYPE_GPIO,
+                  .on_front = true,
+                  .gpio_spec =
+                      {
+                          .address = TEST_ADDRESS_1,
+                      },
+              },
+      },
+  .mux_address =
+      {
+          .bit_width = 4,
+          .sel_pins =
+              {
+                  PD_MUX_SEL1_PIN,
+                  PD_MUX_SEL2_PIN,
+                  PD_MUX_SEL3_PIN,
+                  PD_MUX_SEL4_PIN,
+              },
+      },
+  .mux_output_pin = PD_MUX_OUTPUT_PIN,
+  .mux_enable_pin = PD_MUX_ENABLE_PIN,
+  .i2c_addresses = (I2CAddress[]){},
+  .num_i2c_addresses = 0,
+  .i2c_port = PD_I2C_PORT,
+};
+
 void setup_test(void) {
   event_queue_init();
   gpio_init();
@@ -54,51 +91,12 @@ void setup_test(void) {
 
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
-    .scl = TEST_CONFIG_PIN_I2C_SCL,
-    .sda = TEST_CONFIG_PIN_I2C_SDA,
+    .scl = PD_I2C_SCL_PIN,
+    .sda = PD_I2C_SDA_PIN,
   };
-  i2c_init(TEST_I2C_PORT, &i2c_settings);
+  i2c_init(PD_I2C_PORT, &i2c_settings);
 
-  OutputConfig test_output_config = {
-    .specs =
-        {
-            [TEST_OUTPUT_0] =
-                {
-                    .type = OUTPUT_TYPE_GPIO,
-                    .on_front = true,
-                    .gpio_spec =
-                        {
-                            .address = s_test_address_0,
-                        },
-                },
-            [TEST_OUTPUT_1] =
-                {
-                    .type = OUTPUT_TYPE_GPIO,
-                    .on_front = true,
-                    .gpio_spec =
-                        {
-                            .address = s_test_address_1,
-                        },
-                },
-        },
-    .mux_address =
-        {
-            .bit_width = 4,
-            .sel_pins =
-                {
-                    PD_MUX_SEL1_PIN,
-                    PD_MUX_SEL2_PIN,
-                    PD_MUX_SEL3_PIN,
-                    PD_MUX_SEL4_PIN,
-                },
-        },
-    .mux_output_pin = PD_MUX_OUTPUT_PIN,
-    .mux_enable_pin = PD_MUX_ENABLE_PIN,
-    .i2c_addresses = (I2CAddress[]){},
-    .num_i2c_addresses = 0,
-    .i2c_port = PD_I2C_PORT,
-  };
-  output_init(&test_output_config, true);
+  output_init(&s_test_output_config, true);
 }
 void teardown_test(void) {}
 
@@ -237,7 +235,7 @@ void test_power_distribution_gpio_same_opposite(void) {
   SEND_TEST_EVENT(TEST_EVENT_0, 1);  // set to high
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_HIGH);
   TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);  // doesn't change
-  SEND_TEST_EVENT(TEST_EVENT_0, 0);                           // set to low
+  SEND_TEST_EVENT(TEST_EVENT_0, 0);                          // set to low
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
   TEST_ASSERT_GPIO_STATE(s_test_address_1, GPIO_STATE_LOW);  // doesn't change
   SEND_TEST_EVENT(TEST_EVENT_0, 0xFF);  // anything nonzero is mapped to 1 => set to high

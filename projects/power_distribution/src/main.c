@@ -138,8 +138,8 @@ int main(void) {
 
   // initialize current_measurement
   PowerDistributionCurrentSettings current_measurement_settings = {
-    .hw_config = is_front_power_distribution ? FRONT_CURRENT_MEASUREMENT_HW_CONFIG
-                                             : REAR_CURRENT_MEASUREMENT_HW_CONFIG,
+    .hw_config = is_front_power_distribution ? &FRONT_CURRENT_MEASUREMENT_HW_CONFIG
+                                             : &REAR_CURRENT_MEASUREMENT_HW_CONFIG,
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
   };

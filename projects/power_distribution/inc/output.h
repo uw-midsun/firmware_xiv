@@ -57,7 +57,7 @@ typedef enum {
   NUM_OUTPUTS,
 } Output;
 
-// these structs should really go in a separate file, like output_impl.h or something
+// TODO(SOFT-396): these structs should really go in a separate file, like output_impl.h or sth
 typedef enum {
   OUTPUT_TYPE_IGNORE = 0,  // so that unspecified OutputSpecs default to ignore
   OUTPUT_TYPE_GPIO,
