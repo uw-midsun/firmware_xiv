@@ -120,10 +120,6 @@ static void prv_periodic_continous_cb(SoftTimerId id, void *context) {
 }
 
 void adc_init(AdcMode adc_mode) {
-#ifdef MPXE
-  prv_init_store();
-#endif
-
   if (adc_mode == ADC_MODE_CONTINUOUS) {
     soft_timer_start_millis(ADC_CONTINUOUS_CB_FREQ_MS, prv_periodic_continous_cb, NULL, NULL);
   }
@@ -131,6 +127,9 @@ void adc_init(AdcMode adc_mode) {
     prv_reset_channel(i);
   }
   adc_set_channel(ADC_CHANNEL_REF, true);
+#ifdef MPXE
+  prv_init_store();
+#endif
 }
 
 StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {

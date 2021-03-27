@@ -5,7 +5,7 @@ from mpxe.harness.project import StoreUpdate
 
 
 class Sim:
-    def handle_update(self, pm, proj):
+    def handle_update(self, pm, proj, key):
         pass
 
     def handle_log(self, pm, proj, log):
