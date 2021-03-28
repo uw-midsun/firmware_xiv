@@ -34,7 +34,7 @@ static StatusCode s_adc_read_converted_ret;
 
 StatusCode TEST_MOCK(adc_read_converted)(AdcChannel adc_channel, uint16_t *reading) {
   s_adc_channel_passed = adc_channel;
-  *reading = TEST_ADC_RAW_READING;
+  *reading = TEST_ADC_CONVERTED_READING;
   return s_adc_read_converted_ret;
 }
 
@@ -122,11 +122,11 @@ void test_max_thermistors_cycle(void) {
         break;
       case FAN_CONTROL_THERMISTOR:
         // Not implemented (NEED TO FIX)
-        TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, (int32_t)set_value);
+        TEST_ASSERT_EQUAL(TEST_ADC_CONVERTED_READING, (int32_t)set_value);
         break;
       case NUM_THERMISTOR_TYPES:
         // No type
-        TEST_ASSERT_EQUAL(TEST_ADC_RAW_READING, (int32_t)set_value);
+        TEST_ASSERT_EQUAL(TEST_ADC_CONVERTED_READING, (int32_t)set_value);
         break;
     }
   }
