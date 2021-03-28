@@ -300,20 +300,30 @@ const SenseMcp3427Settings *config_get_sense_mcp3427_settings(SolarMpptCount mpp
 
 // |num_thermistors| is set dynamically by |config_get_sense_temperature_settings|
 static SenseTemperatureSettings s_sense_temperature_settings =
-    { .thermistor_pins = {
-          { GPIO_PORT_A, 0 },
-          { GPIO_PORT_A, 1 },
-          { GPIO_PORT_A, 2 },
-          { GPIO_PORT_A, 3 },
-          { GPIO_PORT_A, 4 },
-          { GPIO_PORT_A, 5 },  // not used on 5 MPPT board
+    { .thermistor_settings = {
+          { RTD_THERMISTOR, { GPIO_PORT_A, 0 } },
+          { RTD_THERMISTOR, { GPIO_PORT_A, 1 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 2 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 3 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 4 } },
+          { NUM_THERMISTOR_TYPES, { GPIO_PORT_A, 5 } },  // A5 depends on the number of MPPT
       } };
 
 const SenseTemperatureSettings *config_get_sense_temperature_settings(SolarMpptCount mppt_count) {
   if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
     return NULL;
   }
+
   s_sense_temperature_settings.num_thermistors = mppt_count;  // we have one thermistor per MPPT
+
+  if (mppt_count == SOLAR_BOARD_5_MPPTS) {
+    // On the 5 MPPT board, port A5 is BJT
+    s_sense_temperature_settings.thermistor_settings[5].thermistor_type = FAN_CONTROL_THERMISTOR;
+  } else if (mppt_count == SOLAR_BOARD_6_MPPTS) {
+    // On the 5 MPPT board, port A5 is NTC
+    s_sense_temperature_settings.thermistor_settings[5].thermistor_type = NTC_THERMISTOR;
+  }
+
   return &s_sense_temperature_settings;
 }
 

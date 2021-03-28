@@ -48,7 +48,7 @@ ifeq (clang,$(COMPILER))
 endif
 
 # Linker flags
-LDFLAGS := -lrt
+LDFLAGS := -lrt -lm
 
 CFLAGS += -I/usr/local/include
 
