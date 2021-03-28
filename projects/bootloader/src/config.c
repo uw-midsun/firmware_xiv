@@ -65,7 +65,7 @@ StatusCode config_init(void) {
 
 void config_get(BootloaderConfig *config) {
   // Please persist any changes
-  if(config == NULL) {
+  if (config == NULL) {
     return;
   }
   memcpy(config, &s_config_1_blob, sizeof(BootloaderConfig));
@@ -77,7 +77,7 @@ StatusCode config_commit(BootloaderConfig *input_config) {
   // page 2 is immediately copied over to page 1 and an error is returned
   // If page 1 is not corrupted then page 1 is copied over to page 2
 
-  if(input_config == NULL) {
+  if (input_config == NULL) {
     return STATUS_CODE_INVALID_ARGS;
   }
 
@@ -95,8 +95,7 @@ StatusCode config_commit(BootloaderConfig *input_config) {
   status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
 
   // checks to see if blob 1 and input config are different to detect corruption
-  bool config_1_corrupted =
-      (memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) != 0);
+  bool config_1_corrupted = (memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) != 0);
 
   if (!config_1_corrupted) {
     memcpy(&s_config_2_blob, &s_config_1_blob, sizeof(BootloaderConfig));
