@@ -28,9 +28,15 @@ CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 					-ffunction-sections -fdata-sections \
 					$(ARCH_CFLAGS) $(addprefix -D,$(CDEFINES))
 
-# Linker flags
-LDFLAGS := -L$(LDSCRIPT_DIR) -Tstm32f0.ld -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
+# Linker flags - linker script set per target
+LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
            --specs=nosys.specs --specs=nano.specs -lm
+
+# temporary build mechanism for applications: set DEFAULT_LINKER_SCRIPT=stm32f0_application.ld
+DEFAULT_LINKER_SCRIPT ?= stm32f0_default.ld
+ifeq ($(MAKECMDGOALS),temp-bootloader-write)
+DEFAULT_LINKER_SCRIPT := stm32f0_application.ld
+endif
 
 # Device openocd config file
 # Use PROBE=stlink-v2 for discovery boards
@@ -47,7 +53,7 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
 CHANNEL ?= can0
 
 # Platform targets
-.PHONY: program gdb target babydriver
+.PHONY: program gdb target babydriver temp-bootloader-write
 
 babydriver:
 	@make program PROJECT=baby_driver
@@ -63,6 +69,14 @@ gdb: $(TARGET_BINARY)
 	@setsid $(OPENOCD) $(OPENOCD_CFG) > /dev/null 2>&1 &
 	@$(GDB) $< -x "$(SCRIPT_DIR)/gdb_flash"
 	@pkill $(OPENOCD)
+
+# ABSOLUTELY, COMPLETELY, ENTIRELY TEMPORARY: build + flash the bootloader preloaded with an application
+# ONCE IT IS NO LONGER NECESSARY, REMOVE THIS AND ALL ITS REFERENCES
+# application code starts at 16K (bootloader) + 2K (config page 1) + 2K (config page 2) = 20480
+temp-bootloader-write: $(TARGET_BINARY:$(PLATFORM_EXT)=.bin) $(BIN_DIR)/bootloader.bin
+	@cp $(BIN_DIR)/bootloader.bin $(BIN_DIR)/bootloader-ready.bin
+	@dd if=$(TARGET_BINARY:$(PLATFORM_EXT)=.bin) of=$(BIN_DIR)/bootloader-ready.bin bs=1 seek=20480
+	@$(OPENOCD) $(OPENOCD_CFG) -c "stm_flash $(BIN_DIR)/bootloader-ready.bin" -c shutdown
 
 define session_wrapper
 pkill $(OPENOCD) || true
@@ -91,7 +105,7 @@ test_all: unsupported
 test: run_ssh
 
 # Host is macOS so we can't pass the programmer through - do it all through SSH
-program gdb:
+program gdb temp-bootloader-write:
 	@echo "Running command through SSH"
 	@$(SSH_CMD)
 

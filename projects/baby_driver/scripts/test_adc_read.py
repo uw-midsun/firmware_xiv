@@ -9,6 +9,7 @@ from message_defs import BabydriverMessageId
 
 OK_STATUS = 0
 
+
 class TestADCRead(unittest.TestCase):
     """Test Babydriver's adc_read function"""
 
@@ -92,6 +93,7 @@ class TestADCRead(unittest.TestCase):
         bad_next_data = can_pack(bad_next_data)
         mock_next_message.return_value = Message(data=bad_next_data)
         self.assertRaises(Exception, adc_read, GpioPort.A, 0, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
