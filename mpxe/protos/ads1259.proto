@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message MxAds1259Store {
+  uint32 reading = 1;
+}
