@@ -203,8 +203,6 @@ void test_config_commit_works(void) {
 void test_config_commit_corruption(void) {
   // Testing if page 1 is reset when the input config was corrupted
   s_function_pointer_hook = prv_change_config_page;
-  // This persist_commit doesn't actually commit anything but it's here because
-  // otherwise the changes in prv_change_config_page() won't update in the module
   TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_commit(&test_input_config_corruption));
   s_function_pointer_hook = NULL;
 
