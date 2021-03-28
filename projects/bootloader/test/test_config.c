@@ -20,7 +20,7 @@ extern StatusCode __real_persist_init(PersistStorage *persist, FlashPage page, v
                                       size_t blob_size, bool overwrite);
 // This a function pointer that will set itself to prv_change_config_page for
 // test_config_commit_corruption to mimic a corruption in page 1
-static void (*s_function_pointer_hook)(void) = NULL;
+static void (*s_function_pointer_hook)(PersistStorage *persist, BootloaderConfig *config) = NULL;
 
 static PersistStorage s_test_persist_storage_1 = { 0 };
 static BootloaderConfig s_test_config_1 = { 0 };
@@ -58,15 +58,14 @@ static BootloaderConfig test_input_config_corruption = { .crc32 = 1,
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
 
-static void prv_change_config_page(void) {
-  // This function changes the values in config page 1
+static void prv_change_config_page(PersistStorage *persist, BootloaderConfig *config) {
+  // This function changes the values in the input config
   // This is to mimic the event in which page 1 gets corrupted
   // during config_commit
-  s_test_config_1.controller_board_id = 6;
-  s_test_config_1.application_crc32 = 6;
-  s_test_config_1.application_size = 6;
-  persist_commit(&s_test_persist_storage_1);
-  persist_commit(&s_test_persist_storage_1);
+  config->controller_board_id = 6;
+  config->application_crc32 = 6;
+  config->application_size = 6;
+  persist_commit(persist);
 }
 
 static void prv_test_not_equal_memory(uint8_t *expected, uint8_t *actual, size_t len) {
@@ -100,8 +99,8 @@ void setup_test(void) {
   s_test_config_2.crc32 = 0;
 
   s_test_config_1.crc32 = crc32_arr((uint8_t *)&s_test_config_1, sizeof(BootloaderConfig));
-  s_test_config_2.crc32 = crc32_arr((uint8_t *)&s_test_config_2, sizeof(BootloaderConfig));
   persist_commit(&s_test_persist_storage_1);
+  s_test_config_2.crc32 = crc32_arr((uint8_t *)&s_test_config_2, sizeof(BootloaderConfig));
   persist_commit(&s_test_persist_storage_2);
 
   TEST_ASSERT_OK(config_init());
@@ -204,6 +203,8 @@ void test_config_commit_works(void) {
 void test_config_commit_corruption(void) {
   // Testing if page 1 is reset when the input config was corrupted
   s_function_pointer_hook = prv_change_config_page;
+  // This persist_commit doesn't actually commit anything but it's here because
+  // otherwise the changes in prv_change_config_page() won't update in the module
   TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_commit(&test_input_config_corruption));
   s_function_pointer_hook = NULL;
 
@@ -220,9 +221,14 @@ void test_config_commit_corruption(void) {
                                sizeof(BootloaderConfig));
 }
 
+void test_config_commit_input_null(void) {
+  // Testing if STATUS_CODE_INVALID_ARGS is called when input_config is null
+  TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, config_commit(NULL));
+}
+
 StatusCode TEST_MOCK(persist_init)(PersistStorage *persist, FlashPage page, void *blob,
                                    size_t blob_size, bool overwrite) {
-  if (s_function_pointer_hook != NULL) (s_function_pointer_hook)();
+  if (s_function_pointer_hook != NULL) (s_function_pointer_hook)(persist, blob);
 
   return __real_persist_init(persist, page, blob, blob_size, overwrite);
 }

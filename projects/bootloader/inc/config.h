@@ -29,10 +29,14 @@ typedef struct BootloaderConfig {
 StatusCode config_init(void);
 
 // Gets the config for page 1, and memcpys it to the input config pointer
+// If config is NULL, function will return early to avoid a segfault
 // Please persist any changes you make
 void config_get(BootloaderConfig *config);
 
 // Will add the input config as the new config
 // If the config is corrupted during transfer, then the
 // module will use the old redundant page to "reset" the config
+// If the function fails it will return a STATUS_CODE_INTERNAL_ERROR
+// The function will calculate and set the crc so the user does not need one as input
+// If input_config is equal to NULL, it will return STATUS_CODE_INVALID_ARGS
 StatusCode config_commit(BootloaderConfig *input_config);

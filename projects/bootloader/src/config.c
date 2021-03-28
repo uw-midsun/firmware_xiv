@@ -29,7 +29,7 @@ static uint32_t prv_compute_crc32(BootloaderConfig *config) {
 
 StatusCode config_init(void) {
   // This function makes sure that both config pages will not end up corrupted
-  // The saftey functions are that if a page is corrupted but the other is not then
+  // The safety functions are that if a page is corrupted but the other is not then
   // the "safe" page is copied over the corrupted page
   // If both are corrupted then a critical error is returned
 
@@ -56,7 +56,7 @@ StatusCode config_init(void) {
   } else if (is_config_2_corrupted) {
     memcpy(&s_config_2_blob, &s_config_1_blob, sizeof(BootloaderConfig));
     persist_commit(&s_config_2_persist);
-  } else {
+  } else if (is_config_1_corrupted || config_1_check_crc != config_2_check_crc) {
     memcpy(&s_config_1_blob, &s_config_2_blob, sizeof(BootloaderConfig));
     persist_commit(&s_config_1_persist);
   }
@@ -65,6 +65,9 @@ StatusCode config_init(void) {
 
 void config_get(BootloaderConfig *config) {
   // Please persist any changes
+  if(config == NULL) {
+    return;
+  }
   memcpy(config, &s_config_1_blob, sizeof(BootloaderConfig));
 }
 
@@ -73,6 +76,10 @@ StatusCode config_commit(BootloaderConfig *input_config) {
   // To prevent corruption, if page 1 is corrupted during the transfer, then
   // page 2 is immediately copied over to page 1 and an error is returned
   // If page 1 is not corrupted then page 1 is copied over to page 2
+
+  if(input_config == NULL) {
+    return STATUS_CODE_INVALID_ARGS;
+  }
 
   input_config->crc32 = prv_compute_crc32(input_config);
 
@@ -85,10 +92,11 @@ StatusCode config_commit(BootloaderConfig *input_config) {
   // This persist_init updates the s_config_1_blob by pulling from the flash
   status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
                                    &s_config_1_blob, sizeof(BootloaderConfig), false));
+  status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
 
   // checks to see if blob 1 and input config are different to detect corruption
   bool config_1_corrupted =
-      !(memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) == 0);
+      (memcmp(&s_config_1_blob, input_config, sizeof(BootloaderConfig)) != 0);
 
   if (!config_1_corrupted) {
     memcpy(&s_config_2_blob, &s_config_1_blob, sizeof(BootloaderConfig));
@@ -98,6 +106,5 @@ StatusCode config_commit(BootloaderConfig *input_config) {
     persist_commit(&s_config_1_persist);
     return STATUS_CODE_INTERNAL_ERROR;
   }
-
   return STATUS_CODE_OK;
 }
