@@ -3,6 +3,7 @@ import unittest
 
 from can_util import can_pack
 
+
 class TestCanPack(unittest.TestCase):
     """Test Can Util data_pack function"""
 
@@ -50,6 +51,7 @@ class TestCanPack(unittest.TestCase):
         # test that val not greater than max allowed by number of bytes
         self.assertRaises(ValueError, can_pack, [(256, 1)])
         self.assertRaises(ValueError, can_pack, [(65536, 2)])
+
 
 if __name__ == '__main__':
     unittest.main()

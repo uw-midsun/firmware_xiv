@@ -10,6 +10,7 @@ from gpio_port import GpioPort
 import can_util
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
+
 class TestGpioGet(unittest.TestCase):
     """Test Babydriver's gpio_get function"""
 
@@ -40,7 +41,7 @@ class TestGpioGet(unittest.TestCase):
         mock_next_message.side_effect = [gpio_pin_msg, status_msg]
         self.assertTrue(gpio_get('a', 0))
 
-        gpio_pin_data =  can_util.can_pack([(BABYDRIVER_CAN_MESSAGE_ID, 1), (0, 1)])
+        gpio_pin_data = can_util.can_pack([(BABYDRIVER_CAN_MESSAGE_ID, 1), (0, 1)])
         gpio_pin_msg = can_util.Message(
             message_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
@@ -83,7 +84,7 @@ class TestGpioGet(unittest.TestCase):
         mock_next_message.side_effect = [gpio_pin_msg, status_msg]
         self.assertTrue(gpio_get('f', 15))
 
-        gpio_pin_data =  can_util.can_pack([(BABYDRIVER_CAN_MESSAGE_ID, 1), (0, 1)])
+        gpio_pin_data = can_util.can_pack([(BABYDRIVER_CAN_MESSAGE_ID, 1), (0, 1)])
         gpio_pin_msg = can_util.Message(
             message_id=BABYDRIVER_CAN_MESSAGE_ID,
             device_id=BABYDRIVER_DEVICE_ID,
@@ -98,7 +99,6 @@ class TestGpioGet(unittest.TestCase):
 
         mock_next_message.side_effect = [gpio_pin_msg, status_msg]
         self.assertFalse(gpio_get('f', 15))
-
 
     @patch('can_util.send_message')
     @patch('can_util.next_message')

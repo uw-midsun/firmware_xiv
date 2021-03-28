@@ -4,6 +4,7 @@ from math import ceil
 import can_util
 from message_defs import BabydriverMessageId
 
+
 def i2c_read(port, address, rx_len, reg=None):
     """
     Reads a number of bytes over I2C
@@ -31,14 +32,14 @@ def i2c_read(port, address, rx_len, reg=None):
         raise ValueError("Expected an uint8 register between 0 and 255")
 
     # shift port to 0 or 1, and send can message
-    data_pack = can_util.can_pack([(port-1, 1), (address, 1), (rx_len, 1), (is_reg, 1), (reg, 1)])
+    data_pack = can_util.can_pack([(port - 1, 1), (address, 1), (rx_len, 1), (is_reg, 1), (reg, 1)])
     can_util.send_message(
         babydriver_id=BabydriverMessageId.I2C_READ_COMMAND,
         data=data_pack
     )
 
     read_data = []
-    num_msgs = ceil(rx_len/7)
+    num_msgs = ceil(rx_len / 7)
     # Loop to receive the ceil(rx_len/7) CAN messages, with only the
     # last 7 bytes of each msg being data and storing only rx_len bytes
     # of data to the read_data list
