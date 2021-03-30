@@ -189,7 +189,7 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mpxe-gen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
-# Find all python files excluding library files in project env (./.venv)
+# Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
@@ -198,7 +198,9 @@ FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py'
+# ignore MPXE since it has a different pylint
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mpxe/*.py'
+FIND_MOD_NEW_MPXE_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mpxe/*.py'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -210,7 +212,7 @@ lint:
 # Quick lint on ONLY changed/new files
 .PHONY: lint_quick
 lint_quick:
-	@echo "Quick linting on ONLY changed/new files"
+	@echo "Quick linting on ONLY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
 # Globally disable the following pylint messages:
@@ -237,18 +239,20 @@ pylint:
 
 .PHONY: pylint_quick
 pylint_quick:
-	@echo "Quick linting changed/new Python files"
-	@$(FIND_MOD_NEW_PY) | xargs -r pylint --disable=F0401
+	@echo "Quick linting ONLY changed/new Python files"
+	@$(FIND_MOD_NEW_PY) | xargs -r $(PYLINT)
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r $(MPXE_PYLINT)
 
 .PHONY: format_quick
 format_quick:
-	@echo "Quick format on ONlY changed/new files"
+	@echo "Quick format on ONlY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
 	
 .PHONY: pyformat_quick
 pyformat_quick: 
-	@echo "Quick format on changed/new Python files"
+	@echo "Quick format on ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -362,11 +366,7 @@ install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@for i in $$(find codegen -name "requirements.txt"); 		\
-	do															\
-		pip install -r $$i;										\
-	done		
-	@for i in $$(find projects -name "requirements.txt"); 		\
+	@for i in $$(find . -name "requirements.txt"); 		\
 	do															\
 		pip install -r $$i;										\
 	done						

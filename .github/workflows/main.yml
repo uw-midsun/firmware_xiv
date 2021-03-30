@@ -65,10 +65,13 @@ jobs:
         with:
           python-version: '3.x'
 
+<<<<<<< HEAD
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.13.1'
 
+=======
+>>>>>>> a0f67b1bb4cb5fd106132c6cffa04401390dc8c7
       - name: Install Python tooling
         run: |
           pip install --user pylint
@@ -94,7 +97,6 @@ jobs:
           clang-format --version
           pylint --version
           autopep8 --version
-          go version
 
       - name: Format and lint
         run: |
