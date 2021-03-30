@@ -7,8 +7,6 @@
 // Enable pins on front power distribution without dedicated events (probably fine):
 // left and right display, main and rear pi, left and right camera, speaker, rear display, spares
 
-// TODO(SOFT-396): review all of these
-
 const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){
@@ -121,7 +119,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                   (PdGpioOutputSpec[]){
                       // Turn on: driver display, steering, centre console, pedal, speaker,
                       // left display, right display, infotainment, rear display, left camera, right
-                      // camera, main (telemetry/driver display) rPi, fan 1, fan 2
+                      // camera, main (telemetry/driver display) rPi, fans
                       {
                           .output = FRONT_OUTPUT_DRIVER_DISPLAY,
                           .state = PD_GPIO_STATE_ON,
@@ -170,23 +168,19 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                           .output = FRONT_OUTPUT_RIGHT_CAMERA,
                           .state = PD_GPIO_STATE_ON,
                       },
-                      //   {
-                      //       .output = FRONT_OUTPUT_FAN_1,
-                      //       .state = PD_GPIO_STATE_ON,
-                      //   },
-                      //   {
-                      //       .output = FRONT_OUTPUT_FAN_2,
-                      //       .state = PD_GPIO_STATE_ON,
-                      //   },
+                      {
+                          .output = FRONT_OUTPUT_FAN,
+                          .state = PD_GPIO_STATE_ON,
+                      },
                   },
-              .num_outputs = 14,
+              .num_outputs = 13,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: driver display, steering, centre console, pedal, speaker,
-                      // rear display, main (telemetry/driver display) rPi, infotainment, fans 1 & 2
+                      // rear display, main (telemetry/driver display) rPi, infotainment, fans
                       // Turn off: left camera, right camera, left display, right display
                       // (in case we go from on to aux)
                       {
@@ -221,14 +215,10 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                           .output = FRONT_OUTPUT_INFOTAINMENT_DISPLAY,
                           .state = PD_GPIO_STATE_ON,
                       },
-                      //   {
-                      //       .output = FRONT_OUTPUT_FAN_1,
-                      //       .state = PD_GPIO_STATE_ON,
-                      //   },
-                      //   {
-                      //       .output = FRONT_OUTPUT_FAN_2,
-                      //       .state = PD_GPIO_STATE_ON,
-                      //   },
+                      {
+                          .output = FRONT_OUTPUT_FAN,
+                          .state = PD_GPIO_STATE_ON,
+                      },
                       {
                           .output = FRONT_OUTPUT_LEFT_DISPLAY,
                           .state = PD_GPIO_STATE_OFF,
@@ -246,7 +236,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
                           .state = PD_GPIO_STATE_OFF,
                       },
                   },
-              .num_outputs = 14,
+              .num_outputs = 13,
           },
           {
               .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,

@@ -75,7 +75,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
           },
           {
               // main power-on sequence
-              // need to do any others?
               .msg_id = SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE,
               .has_type = true,
               .has_state = false,
@@ -93,7 +92,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
           },
           {
               // aux power-on sequence
-              // need to do anything on confirm aux status?
               .msg_id = SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE,
               .has_type = true,
               .has_state = false,
@@ -111,7 +109,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
           },
           {
               // power-off sequence
-              // need to do any others?
               .msg_id = SYSTEM_CAN_MESSAGE_POWER_OFF_SEQUENCE,
               .has_type = true,
               .has_state = false,
@@ -134,9 +131,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
 const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
   .msg_specs =
       (CanRxEventMapperMsgSpec[]){
-          // should there be a SYSTEM_CAN_MESSAGE_REAR_POWER for manual control of rear power
-          // outputs
-          // a la SYSTEM_CAN_MESSAGE_FRONT_POWER?
           {
               // manual lights control + signals
               .msg_id = SYSTEM_CAN_MESSAGE_LIGHTS,
@@ -171,7 +165,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
           },
           {
               // main power-on sequence
-              // need to do any others?
               .msg_id = SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE,
               .has_type = true,
               .has_state = false,
@@ -189,7 +182,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
           },
           {
               // aux power-on sequence
-              // need to do anything on confirm aux status?
               .msg_id = SYSTEM_CAN_MESSAGE_POWER_ON_AUX_SEQUENCE,
               .has_type = true,
               .has_state = false,
@@ -207,7 +199,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
           },
           {
               // power-off sequence
-              // need to do any others?
               .msg_id = SYSTEM_CAN_MESSAGE_POWER_OFF_SEQUENCE,
               .has_type = true,
               .has_state = false,
