@@ -42,16 +42,12 @@ StatusCode fault_handler_raise_fault(EESolarFault fault, uint8_t fault_data) {
     }
   }
 
-<<<<<<< HEAD
-  StatusCode can_status = CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault, fault_data);
-=======
   StatusCode can_status = STATUS_CODE_UNINITIALIZED;
   if (s_mppt_count == SOLAR_BOARD_5_MPPTS) {
     can_status = CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault, fault_data);
   } else if (s_mppt_count == SOLAR_BOARD_6_MPPTS) {
     can_status = CAN_TRANSMIT_SOLAR_FAULT_6_MPPTS(fault, fault_data);
   }
->>>>>>> master
   if (!status_ok(can_status)) status = can_status;
 
   return status;
