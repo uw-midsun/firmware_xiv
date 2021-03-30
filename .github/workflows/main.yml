@@ -114,7 +114,7 @@ jobs:
         uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
-          directory: ~/.arm-none-eabi-gcc-cache
+          directory: /home/runner/.arm-none-eabi-gcc-cache
 
       - name: Install GNU Make 4.1
         env:
