@@ -41,6 +41,5 @@ void *store_get(MxStoreType type, void *key);
 // Call at every store update to export store to parent.
 void store_export(MxStoreType type, void *store, void *key);
 
-// Locking for logs
-void log_mutex_lock();
-void log_mutex_unlock();
+// Logging also happens via store, but it's a special case
+void log_export(char *buf, uint16_t len);

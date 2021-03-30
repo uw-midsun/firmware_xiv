@@ -10,6 +10,7 @@
 
 static EESolarFault s_relay_open_faults[MAX_RELAY_OPEN_FAULTS];
 static size_t s_num_relay_open_faults = 0;
+static SolarMpptCount s_mppt_count;
 
 StatusCode fault_handler_init(FaultHandlerSettings *settings) {
   if (settings == NULL || settings->num_relay_open_faults > MAX_RELAY_OPEN_FAULTS) {
@@ -20,6 +21,7 @@ StatusCode fault_handler_init(FaultHandlerSettings *settings) {
     s_relay_open_faults[i] = settings->relay_open_faults[i];
   }
   s_num_relay_open_faults = settings->num_relay_open_faults;
+  s_mppt_count = settings->mppt_count;
 
   return STATUS_CODE_OK;
 }
@@ -40,7 +42,16 @@ StatusCode fault_handler_raise_fault(EESolarFault fault, uint8_t fault_data) {
     }
   }
 
+<<<<<<< HEAD
   StatusCode can_status = CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault, fault_data);
+=======
+  StatusCode can_status = STATUS_CODE_UNINITIALIZED;
+  if (s_mppt_count == SOLAR_BOARD_5_MPPTS) {
+    can_status = CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault, fault_data);
+  } else if (s_mppt_count == SOLAR_BOARD_6_MPPTS) {
+    can_status = CAN_TRANSMIT_SOLAR_FAULT_6_MPPTS(fault, fault_data);
+  }
+>>>>>>> master
   if (!status_ok(can_status)) status = can_status;
 
   return status;

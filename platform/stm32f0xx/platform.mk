@@ -30,7 +30,7 @@ CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 
 # Linker flags - linker script set per target
 LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
-           --specs=nosys.specs --specs=nano.specs
+           --specs=nosys.specs --specs=nano.specs -lm
 
 # temporary build mechanism for applications: set DEFAULT_LINKER_SCRIPT=stm32f0_application.ld
 DEFAULT_LINKER_SCRIPT ?= stm32f0_default.ld

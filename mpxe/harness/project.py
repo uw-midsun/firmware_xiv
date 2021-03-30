@@ -3,10 +3,10 @@ import os
 import fcntl
 
 from mpxe.harness import decoder
+from mpxe.harness.dir_config import REPO_DIR
 from mpxe.protogen import stores_pb2
-from mpxe.harness import pm
 
-BIN_DIR_FORMAT = pm.REPO_ROOT_DIR + 'firmware_xiv/build/bin/x86/{}'
+BIN_DIR_FORMAT = os.path.join(REPO_DIR, 'build/bin/x86/{}')
 
 
 class Project:
@@ -19,19 +19,10 @@ class Project:
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       universal_newlines=False)
-        self.ctop_fifo_path = '/tmp/{}_ctop'.format(self.popen.pid)
-        while not os.path.exists(self.ctop_fifo_path):
-            pass
 
-        # Subprocess is expected to create child to parent fifo, open in raw bytes mode
-        self.ctop_fifo = open(self.ctop_fifo_path, 'rb')
-        if self.ctop_fifo is None:
-            raise IOError('failed to open ctop fifo')
-
-        # Set the flag O_NONBLOCK on the ctop-fifo fd, necessary for reading from running projects
-        ctop_fd = self.ctop_fifo.fileno()
-        ctop_fl = fcntl.fcntl(ctop_fd, fcntl.F_GETFL)
-        fcntl.fcntl(ctop_fd, fcntl.F_SETFL, ctop_fl | os.O_NONBLOCK)
+        # Set the flag O_NONBLOCK on stdout, necessary for reading from running projects
+        flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
+        fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
         self.sim = sim
 
@@ -42,8 +33,6 @@ class Project:
         self.popen.wait()
         self.popen.stdout.close()
         self.popen.stdin.close()
-        self.ctop_fifo.close()
-        os.unlink(self.ctop_fifo_path)
         self.killed = True
 
     def write_store(self, msg, mask, store_type, key=0):
@@ -60,9 +49,11 @@ class Project:
 
     def handle_store(self, pm, msg):
         store_info = decoder.decode_store_info(msg)
-        key = (store_info.type, store_info.key)
-        self.stores[key] = decoder.decode_store(store_info)
-        self.sim.handle_update(pm, self)
-
-    def handle_log(self, pm, log):
-        self.sim.handle_log(pm, self, log)
+        if store_info.type == stores_pb2.LOG:
+            mxlog = stores_pb2.MxLog()
+            mxlog.ParseFromString(store_info.msg)
+            self.sim.handle_log(pm, self, mxlog.log.decode('utf-8').rstrip())
+        else:
+            key = (store_info.type, store_info.key)
+            self.stores[key] = decoder.decode_store(store_info)
+            self.sim.handle_update(pm, self)
