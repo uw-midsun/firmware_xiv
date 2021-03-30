@@ -69,7 +69,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - uses: actions/cache@v2
-        id: cache-arm
+        id: cache-arm-v1
         with:
           path: /home/runner/.arm-none-eabi-gcc-cache
           key: ${{ runner.os }}-arm-v1
@@ -110,7 +110,7 @@ jobs:
         run:
           mkdir -p /home/runner/.arm-none-eabi-gcc-cache
 
-      - if: steps.cache-arm.outputs.cache-hit != 'true'
+      - if: steps.cache-arm-v1.outputs.cache-hit != 'true'
         uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
