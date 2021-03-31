@@ -23,21 +23,21 @@ typedef enum {
   FRONT_OUTPUT_CENTRE_CONSOLE = 0,
   FRONT_OUTPUT_PEDAL,
   FRONT_OUTPUT_STEERING,
-  FRONT_OUTPUT_LEFT_CAMERA,
-  FRONT_OUTPUT_RIGHT_CAMERA,
   FRONT_OUTPUT_DRIVER_DISPLAY,
   FRONT_OUTPUT_INFOTAINMENT_DISPLAY,  // aka main display
-  FRONT_OUTPUT_REAR_DISPLAY,
   FRONT_OUTPUT_LEFT_DISPLAY,
   FRONT_OUTPUT_RIGHT_DISPLAY,
+  FRONT_OUTPUT_REAR_DISPLAY,
+  FRONT_OUTPUT_LEFT_CAMERA,
+  FRONT_OUTPUT_RIGHT_CAMERA,
   FRONT_OUTPUT_MAIN_PI,  // driver display + telemetry pi
+  FRONT_OUTPUT_SPEAKER,
+  FRONT_OUTPUT_FAN,      // on UV cutoff (not on load switch), no current sense
   FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
-  FRONT_OUTPUT_SPEAKER,
   FRONT_OUTPUT_HORN,     // on UV cutoff, no current sense
-  FRONT_OUTPUT_FAN,      // on UV cutoff (not on load switch), no current sense
-  FRONT_OUTPUT_UV_VBAT,  // on UV cutoff, current sense only
+  FRONT_OUTPUT_UV_VBAT,  // on UV cutoff, current sense ONLY
   // spares omitted
 
   // Outputs for rear power distribution
@@ -46,12 +46,12 @@ typedef enum {
   REAR_OUTPUT_CHARGER,
   REAR_OUTPUT_SOLAR_SENSE,
   REAR_OUTPUT_REAR_CAMERA,
+  REAR_OUTPUT_FAN_1,  // these are on the load switch, not UV cutoff
+  REAR_OUTPUT_FAN_2,
   REAR_OUTPUT_LEFT_REAR_TURN_LIGHT,
   REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
   REAR_OUTPUT_BRAKE_LIGHT,
   REAR_OUTPUT_STROBE_LIGHT,
-  REAR_OUTPUT_FAN_1,  // these are on the load switch, not UV cutoff
-  REAR_OUTPUT_FAN_2,
   // spares omitted
 
   NUM_OUTPUTS,
