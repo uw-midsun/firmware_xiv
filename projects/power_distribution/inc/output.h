@@ -32,7 +32,7 @@ typedef enum {
   FRONT_OUTPUT_RIGHT_CAMERA,
   FRONT_OUTPUT_MAIN_PI,  // driver display + telemetry pi
   FRONT_OUTPUT_SPEAKER,
-  FRONT_OUTPUT_FAN,      // on UV cutoff (not on load switch), no current sense
+  FRONT_OUTPUT_FAN,  // on UV cutoff (not on load switch), no current sense
   FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,

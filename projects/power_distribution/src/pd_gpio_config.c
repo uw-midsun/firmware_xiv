@@ -128,7 +128,9 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
-                      // On: centre console, pedal, steering, driver display, infotainment display, rear/left/right display, left/right camera, main (telemetry/driver display) pi, speaker, fan
+                      // On: centre console, pedal, steering, driver display, infotainment display,
+                      // rear/left/right display, left/right camera, main (telemetry/driver display)
+                      // pi, speaker, fan
                       {
                           .output = FRONT_OUTPUT_CENTRE_CONSOLE,
                           .state = PD_GPIO_STATE_ON,
@@ -189,7 +191,8 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .event_id = PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
-                      // On: centre console, pedal, steering, driver display, infotainment display, main pi, speaker, fan
+                      // On: centre console, pedal, steering, driver display, infotainment display,
+                      // main pi, speaker, fan
                       // Off: rear/left/right display, left/right camera
                       {
                           .output = FRONT_OUTPUT_CENTRE_CONSOLE,
@@ -251,7 +254,9 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .outputs =
                   (PdGpioOutputSpec[]){
                       // On: centre console, pedal
-                      // Off: steering, driver display, infotainment display, rear/left/right display, left/right camera, main pi, speaker, front turn lights, daytime running lights
+                      // Off: steering, driver display, infotainment display, rear/left/right
+                      // display, left/right camera, main pi, speaker, front turn lights, daytime
+                      // running lights
                       {
                           .output = FRONT_OUTPUT_CENTRE_CONSOLE,
                           .state = PD_GPIO_STATE_ON,
@@ -495,8 +500,8 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
                           .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                        .output = REAR_OUTPUT_REAR_CAMERA,
-                        .state = PD_GPIO_STATE_OFF,
+                          .output = REAR_OUTPUT_REAR_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
                           .output = REAR_OUTPUT_FAN_1,
