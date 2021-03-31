@@ -28,7 +28,7 @@ StatusCode pd_gpio_init(PdGpioConfig *config) {
 }
 
 StatusCode pd_gpio_process_event(Event *e) {
-  PowerDistributionGpioEvent id = e->id;
+  PdGpioEvent id = e->id;
 
   // find the event spec or ignore if it isn't there
   PdGpioEventSpec *event_spec = NULL;

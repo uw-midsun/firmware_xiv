@@ -15,11 +15,11 @@ StatusCode rear_strobe_blinker_init(RearStrobeBlinkerSettings *settings) {
 }
 
 StatusCode rear_strobe_blinker_process_event(Event *e) {
-  if (e->id != POWER_DISTRIBUTION_STROBE_EVENT) return STATUS_CODE_OK;
+  if (e->id != PD_STROBE_EVENT) return STATUS_CODE_OK;
 
   bool blinker_on = (e->data != 0);  // coalesce nonzero data to on
   if (blinker_on) {
-    return blink_event_generator_start(&s_blinker_storage, POWER_DISTRIBUTION_GPIO_EVENT_STROBE);
+    return blink_event_generator_start(&s_blinker_storage, PD_GPIO_EVENT_STROBE);
   } else {
     blink_event_generator_stop(&s_blinker_storage);
     return STATUS_CODE_OK;

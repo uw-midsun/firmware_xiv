@@ -71,9 +71,9 @@ static void prv_init_can(bool is_front_power_distribution) {
                                              : SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,
     .loopback = false,
     .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = POWER_DISTRIBUTION_CAN_EVENT_RX,
-    .tx_event = POWER_DISTRIBUTION_CAN_EVENT_TX,
-    .fault_event = POWER_DISTRIBUTION_CAN_EVENT_FAULT,
+    .rx_event = PD_CAN_EVENT_RX,
+    .tx_event = PD_CAN_EVENT_TX,
+    .fault_event = PD_CAN_EVENT_FAULT,
     .rx = PD_CAN_RX_PIN,
     .tx = PD_CAN_TX_PIN,
   };
@@ -146,16 +146,16 @@ int main(void) {
 
   // initialize lights_signal_fsm
   SignalFsmSettings lights_signal_fsm_settings = {
-    .signal_left_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
-    .signal_right_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
-    .signal_hazard_input_event = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
-    .signal_left_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
-    .signal_right_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
-    .signal_hazard_output_event = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
+    .signal_left_input_event = PD_SIGNAL_EVENT_LEFT,
+    .signal_right_input_event = PD_SIGNAL_EVENT_RIGHT,
+    .signal_hazard_input_event = PD_SIGNAL_EVENT_HAZARD,
+    .signal_left_output_event = PD_GPIO_EVENT_SIGNAL_LEFT,
+    .signal_right_output_event = PD_GPIO_EVENT_SIGNAL_RIGHT,
+    .signal_hazard_output_event = PD_GPIO_EVENT_SIGNAL_HAZARD,
     .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
     .sync_behaviour = is_front_power_distribution ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
                                                   : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
-    .sync_event = POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS,
+    .sync_event = PD_SYNC_EVENT_LIGHTS,
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);

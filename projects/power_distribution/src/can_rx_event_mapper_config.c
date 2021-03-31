@@ -24,14 +24,12 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY] =
-                          POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY,
-                      [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING] =
-                          POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
+                          PD_GPIO_EVENT_DRIVER_DISPLAY,
+                      [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING] = PD_GPIO_EVENT_STEERING,
                       [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE] =
-                          POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE,
-                      [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL] =
-                          POWER_DISTRIBUTION_GPIO_EVENT_PEDAL,
-                      [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL] = POWER_DISTRIBUTION_GPIO_EVENT_DRL,
+                          PD_GPIO_EVENT_CENTRE_CONSOLE,
+                      [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL] = PD_GPIO_EVENT_PEDAL,
+                      [EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL] = PD_GPIO_EVENT_DRL,
                   },
               .ack = false,
           },
@@ -50,10 +48,10 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .num_types = 4,
               .type_to_event_id =
                   (EventId[]){
-                      [EE_LIGHT_TYPE_DRL] = POWER_DISTRIBUTION_GPIO_EVENT_DRL,
-                      [EE_LIGHT_TYPE_SIGNAL_RIGHT] = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
-                      [EE_LIGHT_TYPE_SIGNAL_LEFT] = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
-                      [EE_LIGHT_TYPE_SIGNAL_HAZARD] = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
+                      [EE_LIGHT_TYPE_DRL] = PD_GPIO_EVENT_DRL,
+                      [EE_LIGHT_TYPE_SIGNAL_RIGHT] = PD_SIGNAL_EVENT_RIGHT,
+                      [EE_LIGHT_TYPE_SIGNAL_LEFT] = PD_SIGNAL_EVENT_LEFT,
+                      [EE_LIGHT_TYPE_SIGNAL_HAZARD] = PD_SIGNAL_EVENT_HAZARD,
                   },
               .ack = false,
           },
@@ -62,7 +60,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .msg_id = SYSTEM_CAN_MESSAGE_HORN,
               .has_type = false,
               .has_state = true,
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_HORN,
+              .event_id = PD_GPIO_EVENT_HORN,
               .ack = false,
           },
           {
@@ -70,7 +68,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .msg_id = SYSTEM_CAN_MESSAGE_LIGHTS_SYNC,
               .has_type = false,
               .has_state = false,
-              .event_id = POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS,
+              .event_id = PD_SYNC_EVENT_LIGHTS,
               .ack = false,
           },
           {
@@ -86,7 +84,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
-                          POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
                   },
               .ack = true,
           },
@@ -103,7 +101,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] =
-                          POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
                   },
               .ack = true,
           },
@@ -120,7 +118,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING] =
-                          POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+                          PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
                   },
               .ack = true,
           },
@@ -147,11 +145,11 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .num_types = 5,
               .type_to_event_id =
                   (EventId[]){
-                      [EE_LIGHT_TYPE_STROBE] = POWER_DISTRIBUTION_STROBE_EVENT,
-                      [EE_LIGHT_TYPE_BRAKES] = POWER_DISTRIBUTION_GPIO_EVENT_BRAKE_LIGHT,
-                      [EE_LIGHT_TYPE_SIGNAL_RIGHT] = POWER_DISTRIBUTION_SIGNAL_EVENT_RIGHT,
-                      [EE_LIGHT_TYPE_SIGNAL_LEFT] = POWER_DISTRIBUTION_SIGNAL_EVENT_LEFT,
-                      [EE_LIGHT_TYPE_SIGNAL_HAZARD] = POWER_DISTRIBUTION_SIGNAL_EVENT_HAZARD,
+                      [EE_LIGHT_TYPE_STROBE] = PD_STROBE_EVENT,
+                      [EE_LIGHT_TYPE_BRAKES] = PD_GPIO_EVENT_BRAKE_LIGHT,
+                      [EE_LIGHT_TYPE_SIGNAL_RIGHT] = PD_SIGNAL_EVENT_RIGHT,
+                      [EE_LIGHT_TYPE_SIGNAL_LEFT] = PD_SIGNAL_EVENT_LEFT,
+                      [EE_LIGHT_TYPE_SIGNAL_HAZARD] = PD_SIGNAL_EVENT_HAZARD,
                   },
               .ack = false,
           },
@@ -160,7 +158,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .msg_id = SYSTEM_CAN_MESSAGE_LIGHTS_SYNC,
               .has_type = false,
               .has_state = false,
-              .event_id = POWER_DISTRIBUTION_SYNC_EVENT_LIGHTS,
+              .event_id = PD_SYNC_EVENT_LIGHTS,
               .ack = false,
           },
           {
@@ -176,7 +174,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
-                          POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
                   },
               .ack = true,
           },
@@ -193,7 +191,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] =
-                          POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
                   },
               .ack = true,
           },
@@ -210,7 +208,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING] =
-                          POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+                          PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
                   },
               .ack = true,
           },

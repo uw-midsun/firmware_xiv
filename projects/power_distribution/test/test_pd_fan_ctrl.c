@@ -108,9 +108,9 @@ static void prv_initialize_can(SystemCanDevice can_device) {
     .device_id = can_device,
     .loopback = true,
     .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = POWER_DISTRIBUTION_CAN_EVENT_RX,
-    .tx_event = POWER_DISTRIBUTION_CAN_EVENT_TX,
-    .fault_event = POWER_DISTRIBUTION_CAN_EVENT_FAULT,
+    .rx_event = PD_CAN_EVENT_RX,
+    .tx_event = PD_CAN_EVENT_TX,
+    .fault_event = PD_CAN_EVENT_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
   };
@@ -147,7 +147,7 @@ void test_fan_err_rear(void) {
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, false));
   gpio_it_trigger_interrupt(&(GpioAddress)PD_SMBALERT_PIN);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(ERR_VCC_EXCEEDED, s_fan_ctrl_msg[0] & ERR_VCC_EXCEEDED);
   TEST_ASSERT_EQUAL(FAN_ERR_FLAGS, s_fan_ctrl_msg[0] & FAN_ERR_FLAGS);
 }
@@ -159,7 +159,7 @@ void test_fan_err_front(void) {
   gpio_it_trigger_interrupt(&(GpioAddress)PD_SMBALERT_PIN);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_PD_FAULT, prv_front_can_fan_ctrl_rx_handler,
                           NULL);
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(ERR_VCC_EXCEEDED, s_fan_ctrl_msg[0] & ERR_VCC_EXCEEDED);
   TEST_ASSERT_EQUAL(FAN_ERR_FLAGS, s_fan_ctrl_msg[0] & FAN_ERR_FLAGS);
 }
@@ -189,7 +189,7 @@ void test_rear_pd_fan_ctrl_temp(void) {
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
+  MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(ADC_MAX_VAL, s_fan_ctrl_msg[3]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1], s_fan_ctrl_msg[2]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1],

@@ -11,7 +11,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY,
+              .event_id = PD_GPIO_EVENT_DRIVER_DISPLAY,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -22,7 +22,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
+              .event_id = PD_GPIO_EVENT_STEERING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -33,7 +33,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE,
+              .event_id = PD_GPIO_EVENT_CENTRE_CONSOLE,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -44,7 +44,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_DRL,
+              .event_id = PD_GPIO_EVENT_DRL,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -55,7 +55,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_PEDAL,
+              .event_id = PD_GPIO_EVENT_PEDAL,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -66,7 +66,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_HORN,
+              .event_id = PD_GPIO_EVENT_HORN,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -77,7 +77,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
+              .event_id = PD_GPIO_EVENT_SIGNAL_LEFT,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -88,7 +88,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
+              .event_id = PD_GPIO_EVENT_SIGNAL_RIGHT,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -99,7 +99,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
+              .event_id = PD_GPIO_EVENT_SIGNAL_HAZARD,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -114,7 +114,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 2,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: driver display, steering, centre console, pedal, speaker,
@@ -176,7 +176,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 13,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: driver display, steering, centre console, pedal, speaker,
@@ -239,7 +239,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 13,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on (or keep on): centre console, pedal
@@ -321,7 +321,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_BRAKE_LIGHT,
+              .event_id = PD_GPIO_EVENT_BRAKE_LIGHT,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -332,7 +332,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
+              .event_id = PD_GPIO_EVENT_SIGNAL_LEFT,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -343,7 +343,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
+              .event_id = PD_GPIO_EVENT_SIGNAL_RIGHT,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -354,7 +354,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
+              .event_id = PD_GPIO_EVENT_SIGNAL_HAZARD,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -369,7 +369,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 2,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_STROBE,
+              .event_id = PD_GPIO_EVENT_STROBE,
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
@@ -380,7 +380,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: BMS, MCI, solar sense, charger, rear camera, fan 1 & 2
@@ -416,7 +416,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 7,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: BMS, solar sense, charger
@@ -453,7 +453,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 7,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on (or keep on): BMS carrier, solar sense, charger

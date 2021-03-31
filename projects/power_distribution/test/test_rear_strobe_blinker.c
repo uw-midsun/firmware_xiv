@@ -10,8 +10,8 @@
 
 #define TEST_BLINK_DELAY_US 20000
 
-static const Event s_start_event = { .id = POWER_DISTRIBUTION_STROBE_EVENT, .data = 1 };
-static const Event s_stop_event = { .id = POWER_DISTRIBUTION_STROBE_EVENT, .data = 0 };
+static const Event s_start_event = { .id = PD_STROBE_EVENT, .data = 1 };
+static const Event s_stop_event = { .id = PD_STROBE_EVENT, .data = 0 };
 
 void setup_test() {
   interrupt_init();
@@ -36,29 +36,29 @@ void test_rear_power_distribution_strobe_blinker_works(void) {
   Event e = { 0 };
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_start_event));
   // starts immediately, initial is on
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 1);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_us(TEST_BLINK_DELAY_US);
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 0);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_us(TEST_BLINK_DELAY_US);
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 1);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // It stops blinking when we stop it
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_stop_event));
   // emits a final event to bring back to off
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 0);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_us(2 * TEST_BLINK_DELAY_US);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // We can restart it and stop immediately
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_start_event));
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 1);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_stop_event));
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 0);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_us(2 * TEST_BLINK_DELAY_US);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -73,18 +73,18 @@ void test_rear_power_distribution_strobe_blinker_coalesces_nonzero_to_on(void) {
 
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  Event weird_start_event = { .id = POWER_DISTRIBUTION_STROBE_EVENT, .data = 0x80 };
+  Event weird_start_event = { .id = PD_STROBE_EVENT, .data = 0x80 };
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&weird_start_event));
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 1);
 
   // stop it
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_stop_event));
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 0);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 0);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
-// Test that the strobe blinker ignores events other than POWER_DISTRIBUTION_STROBE_EVENT.
+// Test that the strobe blinker ignores events other than PD_STROBE_EVENT.
 void test_rear_power_distribution_strobe_blinker_ignores_other_events(void) {
   RearStrobeBlinkerSettings settings = {
     .strobe_blink_delay_us = TEST_BLINK_DELAY_US,
@@ -94,7 +94,7 @@ void test_rear_power_distribution_strobe_blinker_ignores_other_events(void) {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
   // doesn't start it
-  Event other_event = { .id = POWER_DISTRIBUTION_STROBE_EVENT + 1, .data = 1 };
+  Event other_event = { .id = PD_STROBE_EVENT + 1, .data = 1 };
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&other_event));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_us(2 * TEST_BLINK_DELAY_US);
@@ -102,14 +102,14 @@ void test_rear_power_distribution_strobe_blinker_ignores_other_events(void) {
 
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_start_event));
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 1);
 
   // doesn't stop it
-  Event other_event2 = { .id = POWER_DISTRIBUTION_STROBE_EVENT + 1, .data = 0 };
+  Event other_event2 = { .id = PD_STROBE_EVENT + 1, .data = 0 };
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&other_event2));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   delay_us(TEST_BLINK_DELAY_US);
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_GPIO_EVENT_STROBE, 0);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_GPIO_EVENT_STROBE, 0);
 
   // stop it
   TEST_ASSERT_OK(rear_strobe_blinker_process_event(&s_stop_event));

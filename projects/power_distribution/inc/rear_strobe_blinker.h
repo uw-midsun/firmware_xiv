@@ -1,6 +1,6 @@
 #pragma once
 
-// Blinks the strobe light, controlled by POWER_DISTRIBUTION_STROBE_EVENT.
+// Blinks the strobe light, controlled by PD_STROBE_EVENT.
 // This should only be called in rear power distribution.
 // Requires interrupts, soft timers, and the event queue to be initialized.
 
