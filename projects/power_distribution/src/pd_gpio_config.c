@@ -11,61 +11,6 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){
           {
-              .event_id = PD_GPIO_EVENT_DRIVER_DISPLAY,
-              .outputs =
-                  (PdGpioOutputSpec[]){
-                      {
-                          .output = FRONT_OUTPUT_DRIVER_DISPLAY,
-                          .state = PD_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = PD_GPIO_EVENT_STEERING,
-              .outputs =
-                  (PdGpioOutputSpec[]){
-                      {
-                          .output = FRONT_OUTPUT_STEERING,
-                          .state = PD_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = PD_GPIO_EVENT_CENTRE_CONSOLE,
-              .outputs =
-                  (PdGpioOutputSpec[]){
-                      {
-                          .output = FRONT_OUTPUT_CENTRE_CONSOLE,
-                          .state = PD_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = PD_GPIO_EVENT_DRL,
-              .outputs =
-                  (PdGpioOutputSpec[]){
-                      {
-                          .output = FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
-                          .state = PD_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = PD_GPIO_EVENT_PEDAL,
-              .outputs =
-                  (PdGpioOutputSpec[]){
-                      {
-                          .output = FRONT_OUTPUT_PEDAL,
-                          .state = PD_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
               .event_id = PD_GPIO_EVENT_HORN,
               .outputs =
                   (PdGpioOutputSpec[]){
@@ -325,7 +270,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 16,
           },
       },
-  .num_events = 13,
+  .num_events = 8,
 };
 
 const PdGpioConfig REAR_PD_GPIO_CONFIG = {
