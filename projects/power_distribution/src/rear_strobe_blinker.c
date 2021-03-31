@@ -4,7 +4,7 @@
 
 static BlinkEventGeneratorStorage s_blinker_storage;
 
-StatusCode rear_strobe_blinker_init(RearPowerDistributionStrobeBlinkerSettings *settings) {
+StatusCode rear_strobe_blinker_init(RearStrobeBlinkerSettings *settings) {
   // Set up the blinker
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->strobe_blink_delay_us,

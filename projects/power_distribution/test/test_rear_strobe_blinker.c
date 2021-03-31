@@ -22,7 +22,7 @@ void teardown_test() {}
 
 // Comprehensive happy-path test - we can turn it on and off with the correct events
 void test_rear_power_distribution_strobe_blinker_works(void) {
-  RearPowerDistributionStrobeBlinkerSettings settings = {
+  RearStrobeBlinkerSettings settings = {
     .strobe_blink_delay_us = TEST_BLINK_DELAY_US,
   };
   TEST_ASSERT_OK(rear_strobe_blinker_init(&settings));
@@ -66,7 +66,7 @@ void test_rear_power_distribution_strobe_blinker_works(void) {
 
 // Test that the strobe blinker interprets any nonzero data as on.
 void test_rear_power_distribution_strobe_blinker_coalesces_nonzero_to_on(void) {
-  RearPowerDistributionStrobeBlinkerSettings settings = {
+  RearStrobeBlinkerSettings settings = {
     .strobe_blink_delay_us = TEST_BLINK_DELAY_US,
   };
   TEST_ASSERT_OK(rear_strobe_blinker_init(&settings));
@@ -86,7 +86,7 @@ void test_rear_power_distribution_strobe_blinker_coalesces_nonzero_to_on(void) {
 
 // Test that the strobe blinker ignores events other than POWER_DISTRIBUTION_STROBE_EVENT.
 void test_rear_power_distribution_strobe_blinker_ignores_other_events(void) {
-  RearPowerDistributionStrobeBlinkerSettings settings = {
+  RearStrobeBlinkerSettings settings = {
     .strobe_blink_delay_us = TEST_BLINK_DELAY_US,
   };
   TEST_ASSERT_OK(rear_strobe_blinker_init(&settings));

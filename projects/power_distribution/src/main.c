@@ -125,8 +125,8 @@ int main(void) {
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {
-    .enable_pin = POWER_DISTRIBUTION_5V_REG_ENABLE,
-    .monitor_pin = POWER_DISTRIBUTION_5V_REG_MONITOR,
+    .enable_pin = PD_5V_REG_ENABLE,
+    .monitor_pin = PD_5V_REG_MONITOR_PIN,
     .timer_callback_delay_ms = VOLTAGE_REGULATOR_DELAY_MS,
     .error_callback = prv_voltage_monitor_error_callback,
     .error_callback_context = (const void *)(&is_front_power_distribution),
@@ -185,7 +185,7 @@ int main(void) {
     front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
   } else {
     // initialize strobe_blinker on rear
-    RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
+    RearStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
     rear_strobe_blinker_init(&strobe_blinker_settings);
