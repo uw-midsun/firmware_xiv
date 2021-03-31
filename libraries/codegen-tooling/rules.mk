@@ -9,4 +9,3 @@
 # https://github.com/uw-midsun/codegen-tooling
 
 $(T)_DEPS := ms-common
-
