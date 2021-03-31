@@ -52,9 +52,10 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .has_state = false,
               .all_types =
                   (uint16_t[]){
+                      EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS,
                       EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING,
                   },
-              .num_types = 1,
+              .num_types = 2,
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS] =
@@ -121,8 +122,10 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .num_types = 5,
               .type_to_event_id =
                   (EventId[]){
-                      [EE_LIGHT_TYPE_STROBE] = PD_STROBE_EVENT,
                       [EE_LIGHT_TYPE_BRAKES] = PD_GPIO_EVENT_BRAKE_LIGHT,
+                      // note: PD_STROBE_EVENT is normally raised by bps_watcher
+                      // this is just for completeness
+                      [EE_LIGHT_TYPE_STROBE] = PD_STROBE_EVENT,
                       [EE_LIGHT_TYPE_SIGNAL_RIGHT] = PD_SIGNAL_EVENT_RIGHT,
                       [EE_LIGHT_TYPE_SIGNAL_LEFT] = PD_SIGNAL_EVENT_LEFT,
                       [EE_LIGHT_TYPE_SIGNAL_HAZARD] = PD_SIGNAL_EVENT_HAZARD,
@@ -144,11 +147,14 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .has_state = false,
               .all_types =
                   (uint16_t[]){
+                      EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS,
                       EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING,
                   },
-              .num_types = 1,
+              .num_types = 2,
               .type_to_event_id =
                   (EventId[]){
+                      [EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS] =
+                          PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_DRIVER_DISPLAY_BMS,
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
                           PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },

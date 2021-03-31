@@ -4,9 +4,6 @@
 #include "pd_events.h"
 #include "pin_defs.h"
 
-// Enable pins on front power distribution without dedicated events (probably fine):
-// left and right display, main and rear pi, left and right camera, speaker, rear display, spares
-
 const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
   .events =
       (PdGpioEventSpec[]){

@@ -1,6 +1,10 @@
 #include "publish_data_config.h"
 
+#include <stdint.h>
+
 #include "can_transmit.h"
+#include "output.h"
+#include "status.h"
 
 static StatusCode prv_publish_front_current_measurement(Output output, uint16_t current_data) {
   return CAN_TRANSMIT_FRONT_CURRENT_MEASUREMENT((uint16_t)output, current_data);

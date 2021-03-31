@@ -1,7 +1,7 @@
 #pragma once
 
 // Map CAN messages to events.
-// Requires CAN and the event queue to be initialized.
+// Requires GPIO, interrupts, soft timers, the event queue, and CAN to be initialized.
 
 #include "can.h"
 #include "event_queue.h"
