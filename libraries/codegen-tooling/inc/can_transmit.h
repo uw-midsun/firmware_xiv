@@ -403,7 +403,7 @@
                                                             dcdc_temp_u16, main_current_u16)     \
   ({                                                                                             \
     CanMessage msg = { 0 };                                                                      \
-    CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(&msg, (dcdc_voltage_u16), (dcdc_current_u16), \
+    CAN_PACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(&msg, (dcdc_voltage_u16), (dcdc_current_u16), \
                                                    (dcdc_temp_u16), (main_current_u16));         \
     StatusCode status = can_transmit(&msg, NULL);                                                \
     status;                                                                                      \

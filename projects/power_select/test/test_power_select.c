@@ -30,12 +30,13 @@
 #define TEST_FAULT_VOLTAGE_SCALED_MV (TEST_FAULT_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
 #define TEST_FAULT_CURRENT_SCALED_MA (TEST_FAULT_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
 
-// make test faster 
-// currently, uncommenting this causes failures
-// #ifdef POWER_SELECT_MEASUREMENT_INTERVAL_MS
-// #undef POWER_SELECT_MEASUREMENT_INTERVAL_MS
-// #define POWER_SELECT_MEASUREMENT_INTERVAL_MS 20
-// #endif
+static void prv_force_measurement(void) {
+  power_select_start();
+  
+  // wait for measurement to finish
+  delay_ms(20);
+  power_select_stop();
+}
 
 static CanStorage s_can_storage = { 0 };
 
@@ -86,13 +87,12 @@ static const GpioAddress VALID_PINS[NUM_POWER_SELECT_VALID_PINS] = {
   POWER_SELECT_PWR_SUP_VALID_ADDR,
 };
 
-// set value returned on ADC read
-static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
-
-// helper to compare two GpioAddresses
 static bool prv_gpio_addr_is_eq(GpioAddress addr0, GpioAddress addr1) {
   return (addr0.pin == addr1.pin) && (addr0.port == addr1.port);
 }
+
+// set value returned on ADC read
+static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
 
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
     // Find correct reading to return
@@ -135,7 +135,6 @@ StatusCode TEST_MOCK(gpio_get_state)(GpioAddress *address, GpioState *input_stat
     return STATUS_CODE_OK;
 }
 
-// lazy, rework this at some point
 static void prv_set_voltages_good(void) {
   for(uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     s_test_adc_read_values[i] = TEST_GOOD_VOLTAGE_SCALED_MV;
@@ -153,7 +152,31 @@ static void prv_set_all_pins_valid(void) {
   }
 }
 
-static uint16_t s_test_expected_readings[NUM_POWER_SELECT_MEASUREMENTS];
+// For testing CAN broadcast
+static uint16_t s_ab_mv_measurements[4];
+
+static StatusCode prv_power_select_ab_mv_cb(const CanMessage *msg, void *context,
+                                         CanAckStatus *ack_reply) {  
+  CAN_UNPACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(msg, &s_ab_mv_measurements[0], &s_ab_mv_measurements[1], &s_ab_mv_measurements[2], &s_ab_mv_measurements[3]);
+  return STATUS_CODE_OK;
+}
+
+static uint16_t s_db_mc_measurements[4];
+
+static StatusCode prv_power_select_db_mc_cb(const CanMessage *msg, void *context,
+                                         CanAckStatus *ack_reply) {  
+  CAN_UNPACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(msg, &s_db_mc_measurements[0], &s_db_mc_measurements[1], &s_db_mc_measurements[2], &s_db_mc_measurements[3]);
+  return STATUS_CODE_OK;
+}
+
+static uint64_t s_fault_measurement;
+
+static StatusCode prv_power_select_fault_cb(const CanMessage *msg, void *context,
+                                         CanAckStatus *ack_reply) {  
+  CAN_UNPACK_POWER_SELECT_FAULT(msg, &s_fault_measurement);
+  return STATUS_CODE_OK;
+}
+
 
 void setup_test(void) {
     gpio_init();
@@ -315,4 +338,74 @@ void test_power_select_faults_handled(void) {
 
   // should now be no faults
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+}
+
+
+// Make sure the DCDC fault pin works as expected
+void test_power_select_dcdc_fault_works(void) {
+  TEST_ASSERT_OK(power_select_init());
+
+  prv_set_voltages_good();
+  prv_set_all_pins_valid();
+
+  prv_force_measurement();
+
+  // all pins should be valid, no faults
+  TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
+  TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+
+  // Trigger a DCDC fault interrupt
+  s_test_gpio_read_states[0] = GPIO_STATE_HIGH;
+  GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
+  gpio_it_trigger_interrupt(&pin); // doesn't work
+
+  TEST_ASSERT_EQUAL((1 << POWER_SELECT_DCDC_FAULT), power_select_get_fault_bitset());
+
+  // Back to normal
+  s_test_gpio_read_states[0] = GPIO_STATE_LOW;
+  gpio_it_trigger_interrupt(&pin);
+
+  TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+}
+
+// Make sure values get broadcast over CAN as expected
+void test_power_select_broadcast_works(void) {
+  TEST_ASSERT_OK(power_select_init());
+
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, prv_power_select_ab_mv_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS, prv_power_select_db_mc_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT, prv_power_select_fault_cb, NULL);
+
+  memset(s_ab_mv_measurements, 0, sizeof(s_db_mc_measurements));
+  memset(s_db_mc_measurements, 0, sizeof(s_db_mc_measurements));
+  s_fault_measurement = 0;
+  
+  prv_set_voltages_good();
+  prv_set_all_pins_valid();
+
+  prv_force_measurement();
+
+  // 3 total broadcasts from measurement (2x measurements + fault)
+  MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
+  MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
+  MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
+
+   // first rx should be SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS
+  MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_ab_mv_measurements[0]); // aux voltage
+  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_ab_mv_measurements[1]); // aux current
+  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_ab_mv_measurements[3]); // main voltage
+
+  // second rx should be SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS
+  MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_db_mc_measurements[0]); // dcdc voltage
+  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_db_mc_measurements[1]); // dcdc current
+  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_db_mc_measurements[3]); // main current
+  
+  // third rx should be SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
+  MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(0, s_fault_measurement);
+  
+  // should be no events
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }

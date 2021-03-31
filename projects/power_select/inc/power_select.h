@@ -46,6 +46,7 @@ typedef struct {
   uint16_t fault_bitset;
   uint8_t valid_bitset;  // valid pins
   SoftTimerId timer_id;
+  bool measurement_in_progress;
 } PowerSelectStorage;
 
 // Initialize power selection
@@ -65,6 +66,3 @@ uint8_t power_select_get_valid_bitset(void);
 
 // Return the storage (mainly for testing)
 PowerSelectStorage power_select_get_storage(void);
-
-// Initialize CAN to respond to POWER_ON_MAIN_SEQUENCE
-StatusCode power_select_can_init(void);

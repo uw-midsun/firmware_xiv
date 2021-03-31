@@ -245,7 +245,7 @@
     msg_ptr, dcdc_voltage_u16, dcdc_current_u16, dcdc_temp_u16, main_current_u16)  \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                  \
                     SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS, 8, (dcdc_voltage_u16), \
-                    (aux_current_u16), (aux_temp_u16), (main_current_u16))
+                    (dcdc_current_u16), (dcdc_temp_u16), (main_current_u16))
 
 #define CAN_PACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64)        \
   can_pack_impl_u64((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION, \
