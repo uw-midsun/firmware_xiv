@@ -61,7 +61,7 @@ void teardown_test(void) {
 }
 
 // Test that "overtemperature" & "fan fail" faults are raised properly
-void test_fan_fail_fault_handling(void){
+void test_fan_fail_fault_handling(void) {
   FanControlSettingsSolar settings = {
     .overtemp_addr = s_overtemp_addr,
     .fan_fail_addr = s_fan_fail_addr,
@@ -83,9 +83,9 @@ void test_fan_fail_fault_handling(void){
   MS_TEST_HELPER_ASSERT_EVENT(s_e, EE_SOLAR_FAULT_FAN_FAIL, 0);
 }
 
-// Test that overtemperature fault/pins & full speed pins are raised correctly 
+// Test that overtemperature fault/pins & full speed pins are raised correctly
 // Case 1: Temperature below threshold for all MPPTs
-void test_fan_overtemp_fault_fullspeed_handling_case_belowtemp(void){
+void test_fan_overtemp_fault_fullspeed_handling_case_belowtemp(void) {
   FanControlSettingsSolar settings = {
     .overtemp_addr = s_overtemp_addr,
     .fan_fail_addr = s_fan_fail_addr,
@@ -97,21 +97,21 @@ void test_fan_overtemp_fault_fullspeed_handling_case_belowtemp(void){
   // Ensure fan_control_init works
   TEST_ASSERT_OK(fan_control_init(&settings));
 
-  for (Mppt i = 1; i <= 6; i++){
+  for (Mppt i = 1; i <= 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), 2);
   }
   data_store_done();
 
   // Overtemperature fault should not be raised
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  
+
   // Full Speed pin should be high to disable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_gpio_state);
 }
 
 // Case 2: Temperature above threshold for one MPPT
-void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void){
+void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void) {
   FanControlSettingsSolar settings = {
     .overtemp_addr = s_overtemp_addr,
     .fan_fail_addr = s_fan_fail_addr,
@@ -121,24 +121,24 @@ void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void){
   };
   TEST_ASSERT_OK(fan_control_init(&settings));
 
-  for (Mppt i = 1; i <= 5; i++){
+  for (Mppt i = 1; i <= 5; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), 2);
   }
   data_store_set(DATA_POINT_TEMPERATURE(6), 4);
   data_store_done();
 
   // Overtemperature fault should be raised
-  TEST_ASSERT_OK(event_process(&s_e)); // Make sure an event exists
+  TEST_ASSERT_OK(event_process(&s_e));  // Make sure an event exists
   // Should fail by default if event_process(&e) fails
   MS_TEST_HELPER_ASSERT_EVENT(s_e, EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, 0);
-  
+
   // Full Speed pin should be low to enable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_gpio_state);
 }
 
 // Case 3: Temperature above threshold for multiple MPPTs
-void test_fan_overtemp_fault_fullspeed_handling_case_multipleabovetemp(void){
+void test_fan_overtemp_fault_fullspeed_handling_case_multipleabovetemp(void) {
   FanControlSettingsSolar settings = {
     .overtemp_addr = s_overtemp_addr,
     .fan_fail_addr = s_fan_fail_addr,
@@ -148,22 +148,22 @@ void test_fan_overtemp_fault_fullspeed_handling_case_multipleabovetemp(void){
   };
   TEST_ASSERT_OK(fan_control_init(&settings));
 
-  for (Mppt i = 1; i <= 6; i++){
+  for (Mppt i = 1; i <= 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), 5);
   }
   data_store_done();
 
   // Overtemperature fault should be raised
-  TEST_ASSERT_OK(event_process(&s_e)); // Make sure an event exists
+  TEST_ASSERT_OK(event_process(&s_e));  // Make sure an event exists
   MS_TEST_HELPER_ASSERT_EVENT(s_e, EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, 0);
-  
+
   // Full Speed pin should be low to enable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_gpio_state);
 }
 
 // Case 4: Overtemperature status on any MPPT should set full speed pin low
-void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void){
+void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void) {
   FanControlSettingsSolar settings = {
     .overtemp_addr = s_overtemp_addr,
     .fan_fail_addr = s_fan_fail_addr,
@@ -174,7 +174,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void){
   TEST_ASSERT_OK(fan_control_init(&settings));
 
   // Set mppt(6)'s status to overtemperature
-  data_store_set(DATA_POINT_MPPT_STATUS(6), 2); // "0000010"
+  data_store_set(DATA_POINT_MPPT_STATUS(6), 2);  // "0000010"
 
   // Full Speed pin should be low to enable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
@@ -182,7 +182,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void){
 }
 
 // Test that full_speed set inactive (high) when MPPTs are no longer overtemp
-void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void){
+void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void) {
   FanControlSettingsSolar settings = {
     .overtemp_addr = s_overtemp_addr,
     .fan_fail_addr = s_fan_fail_addr,
@@ -193,17 +193,17 @@ void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void){
   TEST_ASSERT_OK(fan_control_init(&settings));
 
   // First cause full_speed pin to go active
-  for (Mppt i = 1; i <= 6; i++){
+  for (Mppt i = 1; i <= 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), 10);
   }
   data_store_done();
-  
+
   // Test that the full_speed pin is indeed active low
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_gpio_state);
 
   // Set temperatures below overtemp threshold
-  for (Mppt i = 1; i <= 6; i++){
+  for (Mppt i = 1; i <= 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), 1);
   }
   data_store_done();

@@ -99,7 +99,7 @@ bool fan_control_process_event(Event *e) {
         return true;
       }
     }
-    gpio_set_state(&s_settings.full_speed_addr, GPIO_STATE_HIGH); // raised twice
+    gpio_set_state(&s_settings.full_speed_addr, GPIO_STATE_HIGH);  // raised twice
     return true;
   }
   return false;
