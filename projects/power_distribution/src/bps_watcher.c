@@ -11,7 +11,7 @@ StatusCode prv_bps_watcher_callback_handler(const CanMessage *msg, void *context
   uint8_t data = 0;
   CAN_UNPACK_BPS_HEARTBEAT(msg, &data);
   if (data != NO_FAULT) {
-    event_raise(PD_STROBE_EVENT, 1);
+    event_raise_priority(EVENT_PRIORITY_HIGH, PD_STROBE_EVENT, 1);
     // raising a TURN EVERYTHING AUX because we need to turn main off and switch to aux
     // in the case of BPS fault
     event_raise(PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING, 1);
