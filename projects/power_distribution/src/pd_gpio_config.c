@@ -114,7 +114,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 2,
           },
           {
-              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: driver display, steering, centre console, pedal, speaker,
@@ -176,7 +176,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 13,
           },
           {
-              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+              .event_id = PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: driver display, steering, centre console, pedal, speaker,
@@ -239,7 +239,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 13,
           },
           {
-              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .event_id = PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on (or keep on): centre console, pedal
@@ -380,7 +380,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 1,
           },
           {
-              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: BMS, MCI, solar sense, charger, rear camera, fan 1 & 2
@@ -416,7 +416,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 7,
           },
           {
-              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+              .event_id = PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on: BMS, solar sense, charger
@@ -453,7 +453,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 7,
           },
           {
-              .event_id = PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .event_id = PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
                       // Turn on (or keep on): BMS carrier, solar sense, charger

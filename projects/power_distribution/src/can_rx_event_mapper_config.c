@@ -84,7 +84,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
-                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+                          PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
               .ack = true,
           },
@@ -101,7 +101,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] =
-                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+                          PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
               .ack = true,
           },
@@ -118,7 +118,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING] =
-                          PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+                          PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
                   },
               .ack = true,
           },
@@ -174,7 +174,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
-                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+                          PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
               .ack = true,
           },
@@ -191,7 +191,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] =
-                          PD_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+                          PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
               .ack = true,
           },
@@ -208,7 +208,7 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .type_to_event_id =
                   (EventId[]){
                       [EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING] =
-                          PD_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+                          PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
                   },
               .ack = true,
           },
