@@ -83,6 +83,8 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .num_types = 1,
               .type_to_event_id =
                   (EventId[]){
+                      [EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS] =
+                          PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_DRIVER_DISPLAY_BMS,
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
                           PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },

@@ -114,6 +114,17 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 2,
           },
           {
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_DRIVER_DISPLAY_BMS,
+              .outputs =
+                  (PdGpioOutputSpec[]){
+                      {
+                          .output = FRONT_OUTPUT_DRIVER_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
+                      },
+                  },
+              .num_outputs = 1,
+          },
+          {
               .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
                   (PdGpioOutputSpec[]){
@@ -314,7 +325,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
               .num_outputs = 16,
           },
       },
-  .num_events = 11,
+  .num_events = 13,
 };
 
 const PdGpioConfig REAR_PD_GPIO_CONFIG = {
@@ -375,6 +386,19 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
                       {
                           .output = REAR_OUTPUT_STROBE_LIGHT,
                           .state = PD_GPIO_STATE_SAME_AS_DATA,
+                      },
+                  },
+              .num_outputs = 1,
+          },
+          {
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_DRIVER_DISPLAY_BMS,
+              .outputs =
+                  (PdGpioOutputSpec[]){
+                      {
+                          // BMS *should* be on already because we run through the off sequence at
+                          // startup, but let's be safe
+                          .output = REAR_OUTPUT_BMS,
+                          .state = PD_GPIO_STATE_ON,
                       },
                   },
               .num_outputs = 1,
@@ -499,5 +523,5 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .num_outputs = 9,
           },
       },
-  .num_events = 8,
+  .num_events = 9,
 };
