@@ -36,7 +36,7 @@
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
 
-static bool prv_determine_is_front_power_distribution(void) {
+static bool prv_determine_is_front_pd(void) {
 #ifdef FORCE_REAR_POWER_DISTRIBUTION
   return false;
 #else
@@ -65,9 +65,9 @@ static void prv_init_i2c(void) {
   i2c_init(PD_I2C_PORT, &i2c_settings);
 }
 
-static void prv_init_can(bool is_front_power_distribution) {
+static void prv_init_can(bool is_front_pd) {
   CanSettings can_settings = {
-    .device_id = is_front_power_distribution ? SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT
+    .device_id = is_front_pd ? SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT
                                              : SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,
     .loopback = false,
     .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -110,17 +110,17 @@ int main(void) {
   prv_init_i2c();
 
   // test if it's front or rear power distribution
-  bool is_front_power_distribution = prv_determine_is_front_power_distribution();
+  bool is_front_pd = prv_determine_is_front_pd();
 
-  prv_init_can(is_front_power_distribution);
+  prv_init_can(is_front_pd);
 
   // initialize bps watcher, output, can_rx_event_mapper, gpio, publish_data
   bps_watcher_init();
-  output_init(&COMBINED_OUTPUT_CONFIG, is_front_power_distribution);
-  can_rx_event_mapper_init(is_front_power_distribution ? &FRONT_CAN_RX_CONFIG
+  output_init(&COMBINED_OUTPUT_CONFIG, is_front_pd);
+  can_rx_event_mapper_init(is_front_pd ? &FRONT_CAN_RX_CONFIG
                                                        : &REAR_CAN_RX_CONFIG);
-  pd_gpio_init(is_front_power_distribution ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG);
-  publish_data_init(is_front_power_distribution ? &FRONT_PUBLISH_DATA_CONFIG
+  pd_gpio_init(is_front_pd ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG);
+  publish_data_init(is_front_pd ? &FRONT_PUBLISH_DATA_CONFIG
                                                 : &REAR_PUBLISH_DATA_CONFIG);
 
   // Initialize Voltage Regulator
@@ -129,7 +129,7 @@ int main(void) {
     .monitor_pin = PD_5V_REG_MONITOR_PIN,
     .timer_callback_delay_ms = VOLTAGE_REGULATOR_DELAY_MS,
     .error_callback = prv_voltage_monitor_error_callback,
-    .error_callback_context = (const void *)(&is_front_power_distribution),
+    .error_callback_context = (const void *)(&is_front_pd),
   };
   VoltageRegulatorStorage vreg_store = { 0 };
   voltage_regulator_init(&vreg_store, &vreg_set);
@@ -137,7 +137,7 @@ int main(void) {
 
   // initialize current_measurement
   CurrentMeasurementSettings current_measurement_settings = {
-    .hw_config = is_front_power_distribution ? &FRONT_CURRENT_MEASUREMENT_CONFIG
+    .hw_config = is_front_pd ? &FRONT_CURRENT_MEASUREMENT_CONFIG
                                              : &REAR_CURRENT_MEASUREMENT_CONFIG,
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
@@ -153,7 +153,7 @@ int main(void) {
     .signal_right_output_event = PD_GPIO_EVENT_SIGNAL_RIGHT,
     .signal_hazard_output_event = PD_GPIO_EVENT_SIGNAL_HAZARD,
     .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
-    .sync_behaviour = is_front_power_distribution ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
+    .sync_behaviour = is_front_pd ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
                                                   : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
     .sync_event = PD_SYNC_EVENT_LIGHTS,
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
@@ -161,7 +161,7 @@ int main(void) {
   lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
 #ifndef FAN_CONTROL_NOT_ACTIVATED
   // initialize fan ctrl
-  if (is_front_power_distribution) {
+  if (is_front_pd) {
     FanCtrlSettings fan_settings = {
       .i2c_port = PD_I2C_PORT,
       .fan_pwm1 = FRONT_PD_PWM_1,
@@ -180,8 +180,8 @@ int main(void) {
   }
 #endif
 
-  if (is_front_power_distribution) {
-    // initialize UV cutoff detector
+  if (is_front_pd) {
+    // initialize UV cutoff detector on front
     front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
   } else {
     // initialize strobe_blinker on rear
@@ -192,7 +192,7 @@ int main(void) {
   }
 
   LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
-            is_front_power_distribution ? "front" : "rear");
+            is_front_pd ? "front" : "rear");
 
   // process events
   Event e = { 0 };
@@ -201,7 +201,7 @@ int main(void) {
       can_process_event(&e);
       pd_gpio_process_event(&e);
       lights_signal_fsm_process_event(&s_lights_signal_fsm_storage, &e);
-      if (!is_front_power_distribution) {
+      if (!is_front_pd) {
         rear_strobe_blinker_process_event(&e);
       }
     }
