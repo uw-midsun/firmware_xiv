@@ -384,7 +384,7 @@ const PdGpioConfig REAR_PD_GPIO_CONFIG = {
               .outputs =
                   (PdGpioOutputSpec[]){
                       {
-                          .output = REAR_OUTPUT_STROBE_LIGHT,
+                          .output = REAR_OUTPUT_BPS_STROBE_LIGHT,
                           .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },

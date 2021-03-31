@@ -310,7 +310,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
         .mux_selection = REAR_MUX_SEL_BRAKE_LIGHT,
       },
     },
-    [REAR_OUTPUT_STROBE_LIGHT] = {
+    [REAR_OUTPUT_BPS_STROBE_LIGHT] = {
       .type = OUTPUT_TYPE_BTS7200,
       .on_front = false,
       .bts7200_spec = {

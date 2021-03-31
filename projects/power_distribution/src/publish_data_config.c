@@ -50,7 +50,7 @@ const PublishDataConfig REAR_PUBLISH_DATA_CONFIG = {
           REAR_OUTPUT_LEFT_REAR_TURN_LIGHT,
           REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
           REAR_OUTPUT_BRAKE_LIGHT,
-          REAR_OUTPUT_STROBE_LIGHT,
+          REAR_OUTPUT_BPS_STROBE_LIGHT,
       },
   .num_outputs_to_publish = 11,
 };
