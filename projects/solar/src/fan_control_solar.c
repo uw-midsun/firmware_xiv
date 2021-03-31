@@ -48,7 +48,6 @@ static void prv_check_temperature(uint8_t thermistor) {
     data_store_get(DATA_POINT_TEMPERATURE(thermistor), &value);
     if (value >= s_settings.full_speed_temp_threshold) {
       gpio_set_state(&s_settings.full_speed_addr, GPIO_STATE_LOW);
-      fault_handler_raise_fault(EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, thermistor);
     }
   }
 }
@@ -100,7 +99,7 @@ bool fan_control_process_event(Event *e) {
         return true;
       }
     }
-    gpio_set_state(&s_settings.full_speed_addr, GPIO_STATE_HIGH);
+    gpio_set_state(&s_settings.full_speed_addr, GPIO_STATE_HIGH); // raised twice
     return true;
   }
   return false;
