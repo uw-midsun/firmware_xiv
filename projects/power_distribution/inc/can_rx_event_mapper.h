@@ -25,9 +25,6 @@ typedef struct {
   // else, we look for it in the first u16 slot. The state will be 1 if the state slot is nonzero
   // and 0 if it is zero.
   bool has_state;
-
-  // Should we ack the message?
-  bool ack;
 } CanRxEventMapperMsgSpec;
 
 typedef struct {

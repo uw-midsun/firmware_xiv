@@ -27,7 +27,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
                       [EE_LIGHT_TYPE_SIGNAL_LEFT] = PD_SIGNAL_EVENT_LEFT,
                       [EE_LIGHT_TYPE_SIGNAL_HAZARD] = PD_SIGNAL_EVENT_HAZARD,
                   },
-              .ack = false,
           },
           {
               // horn
@@ -35,7 +34,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .has_type = false,
               .has_state = true,
               .event_id = PD_GPIO_EVENT_HORN,
-              .ack = false,
           },
           {
               // lights sync
@@ -43,7 +41,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
               .has_type = false,
               .has_state = false,
               .event_id = PD_SYNC_EVENT_LIGHTS,
-              .ack = false,
           },
           {
               // main power-on sequence
@@ -63,7 +60,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
                           PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
-              .ack = true,
           },
           {
               // aux power-on sequence
@@ -80,7 +76,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
                       [EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] =
                           PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
-              .ack = true,
           },
           {
               // power-off sequence
@@ -97,7 +92,6 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
                       [EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING] =
                           PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
                   },
-              .ack = true,
           },
       },
   .num_msg_specs = 6,
@@ -130,7 +124,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
                       [EE_LIGHT_TYPE_SIGNAL_LEFT] = PD_SIGNAL_EVENT_LEFT,
                       [EE_LIGHT_TYPE_SIGNAL_HAZARD] = PD_SIGNAL_EVENT_HAZARD,
                   },
-              .ack = false,
           },
           {
               // lights sync
@@ -138,7 +131,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
               .has_type = false,
               .has_state = false,
               .event_id = PD_SYNC_EVENT_LIGHTS,
-              .ack = false,
           },
           {
               // main power-on sequence
@@ -158,7 +150,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
                       [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] =
                           PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
-              .ack = true,
           },
           {
               // aux power-on sequence
@@ -175,7 +166,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
                       [EE_POWER_AUX_SEQUENCE_TURN_ON_EVERYTHING] =
                           PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
                   },
-              .ack = true,
           },
           {
               // power-off sequence
@@ -192,7 +182,6 @@ const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
                       [EE_POWER_OFF_SEQUENCE_TURN_OFF_EVERYTHING] =
                           PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
                   },
-              .ack = true,
           },
       },
   .num_msg_specs = 5,

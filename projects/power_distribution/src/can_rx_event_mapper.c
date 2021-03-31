@@ -41,10 +41,6 @@ static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStat
 
   status_ok_or_return(event_raise_priority(CAN_RX_EVENT_PRIORITY, event_id, data));
 
-  if (spec->ack) {
-    *ack = CAN_ACK_STATUS_OK;
-  }
-
   return STATUS_CODE_OK;
 }
 
