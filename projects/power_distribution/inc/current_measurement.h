@@ -30,10 +30,10 @@ typedef struct {
 } CurrentMeasurementStorage;
 
 // Initialize the module with the given settings and set up a soft timer to read currents.
-StatusCode power_distribution_current_measurement_init(CurrentMeasurementSettings *settings);
+StatusCode current_measurement_init(CurrentMeasurementSettings *settings);
 
 // Return a storage struct containing the latest measurements in mA.
-CurrentMeasurementStorage *power_distribution_current_measurement_get_storage(void);
+CurrentMeasurementStorage *current_measurement_get_storage(void);
 
 // Stop periodically reading currents.
-StatusCode power_distribution_current_measurement_stop(void);
+StatusCode current_measurement_stop(void);

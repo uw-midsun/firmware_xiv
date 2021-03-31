@@ -21,8 +21,8 @@ typedef struct PublishDataConfig {
 } PublishDataConfig;
 
 // Initialize the module with the specified config.
-StatusCode power_distribution_publish_data_init(PublishDataConfig *config);
+StatusCode publish_data_init(PublishDataConfig *config);
 
 // Publish the given set of current measurements.
 // This should be called from a current_measurement callback.
-StatusCode power_distribution_publish_data_publish(uint16_t current_measurements[NUM_OUTPUTS]);
+StatusCode publish_data_publish(uint16_t current_measurements[NUM_OUTPUTS]);

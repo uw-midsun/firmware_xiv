@@ -121,7 +121,7 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
     .callback = prv_increment_callback,
     .hw_config = &FRONT_CURRENT_MEASUREMENT_CONFIG,
   };
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_OK(current_measurement_init(&settings));
 
   // init should read values immediately
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -131,7 +131,7 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // stop it and make sure the callback is no longer called
-  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
+  TEST_ASSERT_OK(current_measurement_stop());
   delay_us(interval_us * 2);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
@@ -146,7 +146,7 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
     .callback = prv_increment_callback,
     .hw_config = &REAR_CURRENT_MEASUREMENT_CONFIG,
   };
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_OK(current_measurement_init(&settings));
 
   // init should read values immediately
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -156,7 +156,7 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // stop it and make sure the callback is no longer called
-  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
+  TEST_ASSERT_OK(current_measurement_stop());
   delay_us(interval_us * 2);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
@@ -171,7 +171,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
     .callback = prv_increment_callback,
     .hw_config = &FRONT_CURRENT_MEASUREMENT_CONFIG,
   };
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_OK(current_measurement_init(&settings));
 
   // init should read values immediately
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -181,7 +181,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // make sure we can get the storage
-  CurrentMeasurementStorage *storage = power_distribution_current_measurement_get_storage();
+  CurrentMeasurementStorage *storage = current_measurement_get_storage();
   TEST_ASSERT_NOT_NULL(storage);
 
   // print out the storage for debugging
@@ -189,7 +189,7 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
     LOG_DEBUG("front hw config: output %d's current is %d mA\n", i, storage->measurements[i]);
   }
 
-  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
+  TEST_ASSERT_OK(current_measurement_stop());
 }
 
 // Test that we can successfully get measurements with the rear hardware config.
@@ -202,7 +202,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
     .callback = prv_increment_callback,
     .hw_config = &REAR_CURRENT_MEASUREMENT_CONFIG,
   };
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_OK(current_measurement_init(&settings));
 
   // init should read values immediately
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
@@ -212,7 +212,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // make sure we can get the storage
-  CurrentMeasurementStorage *storage = power_distribution_current_measurement_get_storage();
+  CurrentMeasurementStorage *storage = current_measurement_get_storage();
   TEST_ASSERT_NOT_NULL(storage);
 
   // print out the storage for debugging
@@ -220,7 +220,7 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
     LOG_DEBUG("rear hw config: output %d's current is %d mA\n", i, storage->measurements[i]);
   }
 
-  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
+  TEST_ASSERT_OK(current_measurement_stop());
 }
 
 // Test that init errors with invalid hardware config.
@@ -240,12 +240,12 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
 
   // invalid number of outputs
   hw_config.num_outputs_to_read = NUM_OUTPUTS + 1;
-  TEST_ASSERT_NOT_OK(power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_NOT_OK(current_measurement_init(&settings));
   hw_config.num_outputs_to_read = 2;
 
   // otherwise valid
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
-  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
+  TEST_ASSERT_OK(current_measurement_init(&settings));
+  TEST_ASSERT_OK(current_measurement_stop());
 }
 
 // Test that we don't stop, but a warning is issued, when an output doesn't support current sense.
@@ -267,7 +267,7 @@ void test_warns_with_no_current_output(void) {
 
   // read occurs immediately
   LOG_WARN("Warning about no current sense on output %d expected:\n", TEST_NO_CURRENT_SENSE_OUTPUT);
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
+  TEST_ASSERT_OK(current_measurement_init(&settings));
   TEST_ASSERT_EQUAL(1, s_times_callback_called);
 
   // and we can read again even after a no-current-sense output
@@ -276,7 +276,7 @@ void test_warns_with_no_current_output(void) {
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   // we stop correctly even with a no-current-sense output
-  TEST_ASSERT_OK(power_distribution_current_measurement_stop());
+  TEST_ASSERT_OK(current_measurement_stop());
   delay_us(interval_us * 2);
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }

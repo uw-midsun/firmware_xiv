@@ -35,6 +35,6 @@ typedef struct {
   uint8_t num_events;       // length of preceding array
 } PdGpioConfig;
 
-StatusCode power_distribution_gpio_init(PdGpioConfig *config);
+StatusCode pd_gpio_init(PdGpioConfig *config);
 
-StatusCode power_distribution_gpio_process_event(Event *e);
+StatusCode pd_gpio_process_event(Event *e);

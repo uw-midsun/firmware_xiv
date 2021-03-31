@@ -9,7 +9,7 @@
 
 static PdGpioConfig *s_config;
 
-StatusCode power_distribution_gpio_init(PdGpioConfig *config) {
+StatusCode pd_gpio_init(PdGpioConfig *config) {
   if (config == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -27,7 +27,7 @@ StatusCode power_distribution_gpio_init(PdGpioConfig *config) {
   return STATUS_CODE_OK;
 }
 
-StatusCode power_distribution_gpio_process_event(Event *e) {
+StatusCode pd_gpio_process_event(Event *e) {
   PowerDistributionGpioEvent id = e->id;
 
   // find the event spec or ignore if it isn't there

@@ -38,7 +38,7 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
   }
 }
 
-StatusCode power_distribution_current_measurement_init(CurrentMeasurementSettings *settings) {
+StatusCode current_measurement_init(CurrentMeasurementSettings *settings) {
   s_config = settings->hw_config;
   s_interval_us = settings->interval_us;
   s_callback = settings->callback;
@@ -59,11 +59,11 @@ StatusCode power_distribution_current_measurement_init(CurrentMeasurementSetting
   return STATUS_CODE_OK;
 }
 
-CurrentMeasurementStorage *power_distribution_current_measurement_get_storage(void) {
+CurrentMeasurementStorage *current_measurement_get_storage(void) {
   return &s_storage;
 }
 
-StatusCode power_distribution_current_measurement_stop(void) {
+StatusCode current_measurement_stop(void) {
   soft_timer_cancel(s_timer_id);
   s_timer_id = SOFT_TIMER_INVALID_TIMER;
 

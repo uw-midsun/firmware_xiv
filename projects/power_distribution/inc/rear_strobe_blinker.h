@@ -12,7 +12,6 @@ typedef struct {
   uint32_t strobe_blink_delay_us;
 } RearPowerDistributionStrobeBlinkerSettings;
 
-StatusCode rear_power_distribution_strobe_blinker_init(
-    RearPowerDistributionStrobeBlinkerSettings *settings);
+StatusCode rear_strobe_blinker_init(RearPowerDistributionStrobeBlinkerSettings *settings);
 
-StatusCode rear_power_distribution_strobe_blinker_process_event(Event *e);
+StatusCode rear_strobe_blinker_process_event(Event *e);

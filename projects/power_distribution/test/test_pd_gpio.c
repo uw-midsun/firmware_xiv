@@ -31,10 +31,10 @@ typedef enum {
   NUM_TEST_EVENTS,
 } TestEvents;
 
-#define SEND_TEST_EVENT(event_id, event_data)                  \
-  ({                                                           \
-    Event e = { .id = (event_id), .data = (event_data) };      \
-    TEST_ASSERT_OK(power_distribution_gpio_process_event(&e)); \
+#define SEND_TEST_EVENT(event_id, event_data)             \
+  ({                                                      \
+    Event e = { .id = (event_id), .data = (event_data) }; \
+    TEST_ASSERT_OK(pd_gpio_process_event(&e));            \
   })
 #define TEST_ASSERT_GPIO_STATE(address, expected_state)        \
   ({                                                           \
@@ -132,7 +132,7 @@ void test_power_distribution_gpio_basic(void) {
     .num_events = 2,
   };
 
-  TEST_ASSERT_OK(power_distribution_gpio_init(&test_config));
+  TEST_ASSERT_OK(pd_gpio_init(&test_config));
 
   // make sure it initialized correctly
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
@@ -177,7 +177,7 @@ void test_power_distribution_gpio_multiple_outputs(void) {
     .num_events = 1,
   };
 
-  TEST_ASSERT_OK(power_distribution_gpio_init(&test_config));
+  TEST_ASSERT_OK(pd_gpio_init(&test_config));
 
   // make sure it initialized correctly
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
@@ -225,7 +225,7 @@ void test_power_distribution_gpio_same_opposite(void) {
     .num_events = 2,
   };
 
-  TEST_ASSERT_OK(power_distribution_gpio_init(&test_config));
+  TEST_ASSERT_OK(pd_gpio_init(&test_config));
 
   // make sure it initialized correctly
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
@@ -274,7 +274,7 @@ void test_power_distribution_gpio_ignore_unspecified_event(void) {
     .num_events = 1,
   };
 
-  TEST_ASSERT_OK(power_distribution_gpio_init(&test_config));
+  TEST_ASSERT_OK(pd_gpio_init(&test_config));
 
   TEST_ASSERT_GPIO_STATE(s_test_address_0, GPIO_STATE_LOW);
   SEND_TEST_EVENT(NUM_TEST_EVENTS, 0);  // unspecified event
@@ -303,19 +303,19 @@ void test_power_distribution_gpio_invalid_config(void) {
 
   // invalid output state
   test_config.events[0].outputs[0].state = NUM_PD_GPIO_STATES;
-  TEST_ASSERT_NOT_OK(power_distribution_gpio_init(&test_config));
+  TEST_ASSERT_NOT_OK(pd_gpio_init(&test_config));
   test_config.events[0].outputs[0].state = PD_GPIO_STATE_ON;
 
   // otherwise valid
-  TEST_ASSERT_OK(power_distribution_gpio_init(&test_config));
+  TEST_ASSERT_OK(pd_gpio_init(&test_config));
 }
 
 // Test that FRONT_PD_GPIO_CONFIG is valid.
 void test_front_power_distribution_gpio_config_valid(void) {
-  TEST_ASSERT_OK(power_distribution_gpio_init(&FRONT_PD_GPIO_CONFIG));
+  TEST_ASSERT_OK(pd_gpio_init(&FRONT_PD_GPIO_CONFIG));
 }
 
 // Test that REAR_PD_GPIO_CONFIG is valid.
 void test_rear_power_distribution_gpio_config_valid(void) {
-  TEST_ASSERT_OK(power_distribution_gpio_init(&REAR_PD_GPIO_CONFIG));
+  TEST_ASSERT_OK(pd_gpio_init(&REAR_PD_GPIO_CONFIG));
 }

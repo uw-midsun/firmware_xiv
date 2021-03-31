@@ -14,7 +14,7 @@
 static PublishDataConfig *s_config = { 0 };
 static uint16_t *s_current_measurements = NULL;
 
-StatusCode power_distribution_publish_data_init(PublishDataConfig *config) {
+StatusCode publish_data_init(PublishDataConfig *config) {
   if (config->transmitter == NULL || config->outputs_to_publish == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -58,7 +58,7 @@ static void prv_partially_publish(SoftTimerId timer_id, void *context) {
   }
 }
 
-StatusCode power_distribution_publish_data_publish(uint16_t current_measurements[NUM_OUTPUTS]) {
+StatusCode publish_data_publish(uint16_t current_measurements[NUM_OUTPUTS]) {
   if (s_config->outputs_to_publish == NULL) {
     return status_code(STATUS_CODE_UNINITIALIZED);
   }

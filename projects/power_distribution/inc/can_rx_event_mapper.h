@@ -35,4 +35,4 @@ typedef struct {
   uint8_t num_msg_specs;
 } CanRxEventMapperConfig;
 
-StatusCode power_distribution_can_rx_event_mapper_init(CanRxEventMapperConfig *config);
+StatusCode can_rx_event_mapper_init(CanRxEventMapperConfig *config);

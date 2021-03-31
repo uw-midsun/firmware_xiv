@@ -95,8 +95,8 @@ static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void
 
 static void prv_current_measurement_data_ready_callback(void *context) {
   // called when current_measurement has new data: send it to publish_data for publishing
-  CurrentMeasurementStorage *storage = power_distribution_current_measurement_get_storage();
-  power_distribution_publish_data_publish(storage->measurements);
+  CurrentMeasurementStorage *storage = current_measurement_get_storage();
+  publish_data_publish(storage->measurements);
 }
 
 int main(void) {
@@ -117,12 +117,11 @@ int main(void) {
   // initialize bps watcher, output, can_rx_event_mapper, gpio, publish_data
   bps_watcher_init();
   output_init(&COMBINED_OUTPUT_CONFIG, is_front_power_distribution);
-  power_distribution_can_rx_event_mapper_init(is_front_power_distribution ? &FRONT_CAN_RX_CONFIG
-                                                                          : &REAR_CAN_RX_CONFIG);
-  power_distribution_gpio_init(is_front_power_distribution ? &FRONT_PD_GPIO_CONFIG
-                                                           : &REAR_PD_GPIO_CONFIG);
-  power_distribution_publish_data_init(is_front_power_distribution ? &FRONT_PUBLISH_DATA_CONFIG
-                                                                   : &REAR_PUBLISH_DATA_CONFIG);
+  can_rx_event_mapper_init(is_front_power_distribution ? &FRONT_CAN_RX_CONFIG
+                                                       : &REAR_CAN_RX_CONFIG);
+  pd_gpio_init(is_front_power_distribution ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG);
+  publish_data_init(is_front_power_distribution ? &FRONT_PUBLISH_DATA_CONFIG
+                                                : &REAR_PUBLISH_DATA_CONFIG);
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {
@@ -143,7 +142,7 @@ int main(void) {
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
   };
-  power_distribution_current_measurement_init(&current_measurement_settings);
+  current_measurement_init(&current_measurement_settings);
 
   // initialize lights_signal_fsm
   SignalFsmSettings lights_signal_fsm_settings = {
@@ -189,7 +188,7 @@ int main(void) {
     RearPowerDistributionStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
-    rear_power_distribution_strobe_blinker_init(&strobe_blinker_settings);
+    rear_strobe_blinker_init(&strobe_blinker_settings);
   }
 
   LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
@@ -200,10 +199,10 @@ int main(void) {
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
       can_process_event(&e);
-      power_distribution_gpio_process_event(&e);
+      pd_gpio_process_event(&e);
       lights_signal_fsm_process_event(&s_lights_signal_fsm_storage, &e);
       if (!is_front_power_distribution) {
-        rear_power_distribution_strobe_blinker_process_event(&e);
+        rear_strobe_blinker_process_event(&e);
       }
     }
   }

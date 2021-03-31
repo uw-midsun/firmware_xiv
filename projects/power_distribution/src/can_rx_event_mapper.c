@@ -48,7 +48,7 @@ static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStat
   return STATUS_CODE_OK;
 }
 
-StatusCode power_distribution_can_rx_event_mapper_init(CanRxEventMapperConfig *config) {
+StatusCode can_rx_event_mapper_init(CanRxEventMapperConfig *config) {
   s_config = config;
 
   for (uint8_t i = 0; i < config->num_msg_specs; i++) {

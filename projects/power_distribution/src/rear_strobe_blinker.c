@@ -4,8 +4,7 @@
 
 static BlinkEventGeneratorStorage s_blinker_storage;
 
-StatusCode rear_power_distribution_strobe_blinker_init(
-    RearPowerDistributionStrobeBlinkerSettings *settings) {
+StatusCode rear_strobe_blinker_init(RearPowerDistributionStrobeBlinkerSettings *settings) {
   // Set up the blinker
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->strobe_blink_delay_us,
@@ -15,7 +14,7 @@ StatusCode rear_power_distribution_strobe_blinker_init(
   return blink_event_generator_init(&s_blinker_storage, &blinker_settings);
 }
 
-StatusCode rear_power_distribution_strobe_blinker_process_event(Event *e) {
+StatusCode rear_strobe_blinker_process_event(Event *e) {
   if (e->id != POWER_DISTRIBUTION_STROBE_EVENT) return STATUS_CODE_OK;
 
   bool blinker_on = (e->data != 0);  // coalesce nonzero data to on
