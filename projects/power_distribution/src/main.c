@@ -1,5 +1,5 @@
-// Uncomment this line to force firmware to run as rear power distribution.
-// #define FORCE_REAR_POWER_DISTRIBUTION
+// Uncomment this line to force firmware to run as front or rear power distribution.
+// #define FORCE_IS_FRONT_POWER_DISTRIBUTION true
 
 #include "adc.h"
 #include "bps_watcher.h"
@@ -37,8 +37,8 @@ static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
 
 static bool prv_determine_is_front_pd(void) {
-#ifdef FORCE_REAR_POWER_DISTRIBUTION
-  return false;
+#ifdef FORCE_IS_FRONT_POWER_DISTRIBUTION
+  return FORCE_IS_FRONT_POWER_DISTRIBUTION;
 #else
   // initialize PA8
   GpioAddress board_test_pin = FRONT_OR_REAR_RECOGNITION_PIN;
@@ -68,7 +68,7 @@ static void prv_init_i2c(void) {
 static void prv_init_can(bool is_front_pd) {
   CanSettings can_settings = {
     .device_id = is_front_pd ? SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT
-                                             : SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,
+                             : SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,
     .loopback = false,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = PD_CAN_EVENT_RX,
@@ -117,11 +117,9 @@ int main(void) {
   // initialize bps watcher, output, can_rx_event_mapper, gpio, publish_data
   bps_watcher_init();
   output_init(&COMBINED_OUTPUT_CONFIG, is_front_pd);
-  can_rx_event_mapper_init(is_front_pd ? &FRONT_CAN_RX_CONFIG
-                                                       : &REAR_CAN_RX_CONFIG);
+  can_rx_event_mapper_init(is_front_pd ? &FRONT_CAN_RX_CONFIG : &REAR_CAN_RX_CONFIG);
   pd_gpio_init(is_front_pd ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG);
-  publish_data_init(is_front_pd ? &FRONT_PUBLISH_DATA_CONFIG
-                                                : &REAR_PUBLISH_DATA_CONFIG);
+  publish_data_init(is_front_pd ? &FRONT_PUBLISH_DATA_CONFIG : &REAR_PUBLISH_DATA_CONFIG);
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {
@@ -137,8 +135,7 @@ int main(void) {
 
   // initialize current_measurement
   CurrentMeasurementSettings current_measurement_settings = {
-    .hw_config = is_front_pd ? &FRONT_CURRENT_MEASUREMENT_CONFIG
-                                             : &REAR_CURRENT_MEASUREMENT_CONFIG,
+    .hw_config = is_front_pd ? &FRONT_CURRENT_MEASUREMENT_CONFIG : &REAR_CURRENT_MEASUREMENT_CONFIG,
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
   };
@@ -154,7 +151,7 @@ int main(void) {
     .signal_hazard_output_event = PD_GPIO_EVENT_SIGNAL_HAZARD,
     .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
     .sync_behaviour = is_front_pd ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
-                                                  : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
+                                  : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
     .sync_event = PD_SYNC_EVENT_LIGHTS,
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
@@ -191,8 +188,7 @@ int main(void) {
     rear_strobe_blinker_init(&strobe_blinker_settings);
   }
 
-  LOG_DEBUG("Hello from power distribution, initialized as %s\r\n",
-            is_front_pd ? "front" : "rear");
+  LOG_DEBUG("Hello from power distribution, initialized as %s\r\n", is_front_pd ? "front" : "rear");
 
   // process events
   Event e = { 0 };
