@@ -21,7 +21,9 @@ static uint8_t prv_pin_bit(const Pca9539rPinAddress pin) {
 }
 
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
-  s_i2c_port = i2c_port;
+  if (s_i2c_port == NUM_I2C_PORTS) {
+    s_i2c_port = i2c_port;
+  }
   return STATUS_CODE_OK;
 }
 

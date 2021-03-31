@@ -25,8 +25,8 @@
 static CanStorage s_can_storage;
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
-                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
   data_store_init();
   adc_init(ADC_MODE_SINGLE);
 
@@ -40,7 +40,7 @@ void test_initializing_library_config(void) {
   TEST_ASSERT_OK(i2c_init(I2C_PORT_1, config_get_i2c1_settings()));
   TEST_ASSERT_OK(i2c_init(I2C_PORT_2, config_get_i2c2_settings()));
   TEST_ASSERT_OK(spi_init(SPI_PORT_2, config_get_spi_settings()));
-  TEST_ASSERT_OK(can_init(&s_can_storage, config_get_can_settings()));
+  TEST_ASSERT_OK(can_init(&s_can_storage, config_get_can_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_sense_settings|
@@ -90,13 +90,19 @@ void test_initializing_fan_control_config(void) {
 }
 
 // Test that we can initialize the config returned by |config_get_fault_handler_settings|.
-void test_initializing_fault_handler_config(void) {
-  TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings()));
+void test_initializing_fault_handler_config_5_mppts(void) {
+  TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_5_MPPTS)));
+}
+void test_initializing_fault_handler_config_6_mppts(void) {
+  TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that we can initialize the config returned by |config_get_fault_handler_settings|.
-void test_initializing_data_tx_config(void) {
-  TEST_ASSERT_OK(data_tx_init(config_get_data_tx_settings()));
+void test_initializing_data_tx_config_5_mppts(void) {
+  TEST_ASSERT_OK(data_tx_init(config_get_data_tx_settings(SOLAR_BOARD_5_MPPTS)));
+}
+void test_initializing_data_tx_config_6_mppts(void) {
+  TEST_ASSERT_OK(data_tx_init(config_get_data_tx_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
 // Test that passing an invalid MPPT count returns NULL.

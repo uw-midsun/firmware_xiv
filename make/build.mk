@@ -17,6 +17,8 @@ $(T)_OBJ_ROOT := $(OBJ_CACHE)/$(T)
 $(T)_INC_DIRS := $($(T)_DIR)/inc $($(T)_DIR)/inc/$(PLATFORM)
 
 $(T)_CFLAGS := $(CFLAGS)
+$(T)_LINKER_SCRIPT := $(DEFAULT_LINKER_SCRIPT)
+$(T)_LDFLAGS := $(LDFLAGS)
 $(T)_DEPS :=
 
 # Include library variables - we expect to have $(T)_SRC, $(T)_INC, $(T)_DEPS, and $(T)_CFLAGS
@@ -28,6 +30,11 @@ ifeq (,$($(T)_SRC))
 $(T)_SRC := $(wildcard $($(T)_SRC_ROOT)/*.c) \
             $(wildcard $($(T)_SRC_ROOT)/$(PLATFORM)/*.c) \
             $(wildcard $($(T)_SRC_ROOT)/*.s)
+endif
+
+# On stm32f0xx, update LDFLAGS with the selected linker script
+ifeq (stm32f0xx,$(PLATFORM))
+$(T)_LDFLAGS += $(addprefix -T,$($(T)_LINKER_SCRIPT))
 endif
 
 # Define objects and include generated dependencies
@@ -47,7 +54,7 @@ $(BIN_DIR)/$(T)$(PLATFORM_EXT): $($(T)_OBJ) $(call dep_to_lib,$($(T)_DEPS)) $(DE
 	@$(CC) $($(firstword $|)_CFLAGS) -Wl,-Map=$(BIN_DIR)/$(notdir $(@:%$(PLATFORM_EXT)=%.map)) \
 		$(filter-out $(DEP_VARS),$^) -o $@ \
 		-L$(STATIC_LIB_DIR) $(addprefix -l,$($(firstword $|)_DEPS)) \
-		$(LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS))
+		$($(firstword $|)_LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS))
 	@$(OBJDUMP) -St $@ >$(basename $@).lst
 	@$(SIZE) $@
 

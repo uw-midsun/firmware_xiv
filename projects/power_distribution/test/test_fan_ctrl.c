@@ -14,6 +14,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
+#include "pd_error_defs.h"
 #include "pd_events.h"
 #include "pd_fan_ctrl.h"
 #include "pin_defs.h"
@@ -35,7 +36,7 @@
 #define ADT7476A_PWM_1 0x30
 #define ADT7476A_PWM_3 0x32
 
-#define OVERTEMP_FLAGS (FAN_OVERTEMP_TRIGGERED | DCDC_OVERTEMP | ENCLOSURE_OVERTEMP)
+#define OVERTEMP_FLAGS (FAN_OVERTEMP | DCDC_OVERTEMP | ENCLOSURE_OVERTEMP)
 #define OVERVOLT_FLAGS (VCC_EXCEEDED | VCCP_EXCEEDED)
 #define FAN_ERR_FLAGS (FAN1_STATUS | FAN2_STATUS | FAN3_STATUS | FAN4_STATUS)
 
@@ -91,14 +92,14 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
 
 static StatusCode prv_front_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
                                                     CanAckStatus *ack_reply) {
-  CAN_UNPACK_FRONT_FAN_FAULT(msg, &s_fan_ctrl_msg[0]);
+  CAN_UNPACK_FRONT_PD_FAULT(msg, &s_fan_ctrl_msg[0]);
   return STATUS_CODE_OK;
 }
 
 static StatusCode prv_rear_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
                                                    CanAckStatus *ack_reply) {
-  CAN_UNPACK_REAR_FAN_FAULT(msg, &s_fan_ctrl_msg[0], &s_fan_ctrl_msg[1], &s_fan_ctrl_msg[2],
-                            &s_fan_ctrl_msg[3]);
+  CAN_UNPACK_REAR_PD_FAULT(msg, &s_fan_ctrl_msg[0], &s_fan_ctrl_msg[1], &s_fan_ctrl_msg[2],
+                           &s_fan_ctrl_msg[3]);
   return STATUS_CODE_OK;
 }
 
@@ -145,10 +146,9 @@ void test_fan_err_rear(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, false));
   gpio_it_trigger_interrupt(&(GpioAddress)REAR_PIN_SMBALERT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, prv_rear_can_fan_ctrl_rx_handler,
-                          NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
   MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE(((s_fan_ctrl_msg[0] >> 8) & OVERVOLT_FLAGS) == OVERVOLT_FLAGS);
+  TEST_ASSERT_TRUE(((s_fan_ctrl_msg[0]) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
   TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
 }
 
@@ -157,10 +157,10 @@ void test_fan_err_front(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, true));
   gpio_it_trigger_interrupt(&(GpioAddress)FRONT_PIN_SMBALERT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_FAN_FAULT, prv_front_can_fan_ctrl_rx_handler,
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_PD_FAULT, prv_front_can_fan_ctrl_rx_handler,
                           NULL);
   MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE((((s_fan_ctrl_msg[0]) >> 8) & OVERVOLT_FLAGS) == OVERVOLT_FLAGS);
+  TEST_ASSERT_TRUE((((s_fan_ctrl_msg[0])) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
   TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
 }
 
@@ -188,15 +188,14 @@ void test_rear_pd_fan_ctrl_temp(void) {
   delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_FAN_FAULT, prv_rear_can_fan_ctrl_rx_handler,
-                          NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
   MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(ADC_MAX_VAL, s_fan_ctrl_msg[3]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1], s_fan_ctrl_msg[2]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1],
                     FAN_OVERTEMP_FRACTION_TRANSMIT);  // FAN_OVERTEMP_VOLTAGE as a fraction of v_ref
   // Check Overtemp byte set correctly
-  TEST_ASSERT_EQUAL(OVERTEMP_FLAGS, ((s_fan_ctrl_msg[0] >> 8) & OVERTEMP_FLAGS));
+  TEST_ASSERT_EQUAL(OVERTEMP_FLAGS, ((s_fan_ctrl_msg[0]) & OVERTEMP_FLAGS));
 }
 
 void test_front_pd_fan_ctrl_pot(void) {
