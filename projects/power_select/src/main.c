@@ -28,6 +28,7 @@ static CanSettings s_can_settings = {
 int main() {
   interrupt_init();
   gpio_init();
+  gpio_it_init();
   soft_timer_init();
   adc_init(ADC_MODE_SINGLE);
 

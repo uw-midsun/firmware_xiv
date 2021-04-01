@@ -168,8 +168,7 @@ static StatusCode prv_init_sense_pins(void) {
   return STATUS_CODE_OK;
 }
 
-void prv_handle_fault_it(const GpioAddress *address, void *context) {
-  LOG_DEBUG("in fault it handling\n");
+void prv_handle_fault_it(const GpioAddress *address, void *context) {  
   // pin high on fault, low when cleared
   GpioState state = GPIO_STATE_HIGH;
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
@@ -188,7 +187,7 @@ void prv_handle_fault_it(const GpioAddress *address, void *context) {
 // DCDC_FAULT pin goes high on fault
 static StatusCode prv_init_fault_pin(void) {
   const GpioSettings settings = { .direction = GPIO_DIR_IN,
-                                    .state = GPIO_STATE_HIGH,
+                                    .state = GPIO_STATE_LOW,
                                     .alt_function = GPIO_ALTFN_NONE,
                                     .resistor = GPIO_RES_NONE };
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
@@ -199,8 +198,7 @@ static StatusCode prv_init_fault_pin(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING_FALLING, prv_handle_fault_it,
-                                    &s_storage);
+  gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING, prv_handle_fault_it, NULL);
   return STATUS_CODE_OK;
 }
 
