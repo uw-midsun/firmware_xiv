@@ -15,7 +15,11 @@ from gpio_interrupts import register_gpio_interrupt, unregister_gpio_interrupt, 
     init_notifier_gpio_it
 from can_send import can_send_raw, load_dbc, can_send
 
+def call_gpio_it():
+    
+    init_notifier_gpio_it()
 
+    
 def setup_default_channel():
     """Set up the default CAN channel."""
 
