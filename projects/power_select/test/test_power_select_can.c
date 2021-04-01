@@ -37,10 +37,12 @@ static CanSettings s_can_settings = {
 };
 
 static bool s_expect_ack = false;
+static uint16_t s_times_ack_called;
 
 // Make sure ACK is as expected
 static StatusCode prv_test_can_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                                      uint16_t num_remaining, void *context) {
+  s_times_ack_called++;
   if(s_expect_ack) {
     TEST_ASSERT_EQUAL(CAN_ACK_STATUS_OK, status);
   } else {
@@ -66,6 +68,8 @@ void setup_test(void) {
     s_ack_req.callback = prv_test_can_ack;
     s_ack_req.expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_SELECT);
     s_ack_req.context = &s_expect_ack;
+    
+    s_times_ack_called = 0;
 }
 
 void teardown_test(void) {
@@ -80,6 +84,8 @@ void test_power_select_power_on_sequence_works(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);  
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(2, s_times_ack_called);
 }
 
 void test_power_select_power_on_sequence_aux_fault(void) {
@@ -104,6 +110,8 @@ void test_power_select_power_on_sequence_aux_fault(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(4, s_times_ack_called);
 }
 
 void test_power_select_power_on_sequence_aux_invalid(void) {
@@ -128,10 +136,11 @@ void test_power_select_power_on_sequence_aux_invalid(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(4, s_times_ack_called);
 }
 
 // Same, but for DCDC:
-
 void test_power_select_power_on_sequence_dcdc_fault(void) {
   // DCDC fault
   s_test_fault_bitset = 1 << POWER_SELECT_DCDC_OVERVOLTAGE;
@@ -154,6 +163,8 @@ void test_power_select_power_on_sequence_dcdc_fault(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(4, s_times_ack_called);
 }
 
 void test_power_select_power_on_sequence_dcdc_invalid(void) {
@@ -178,6 +189,8 @@ void test_power_select_power_on_sequence_dcdc_invalid(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(4, s_times_ack_called);
 }
 
 void test_power_select_power_on_sequence_aux_dcdc_fault(void) {
@@ -201,6 +214,8 @@ void test_power_select_power_on_sequence_aux_dcdc_fault(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(4, s_times_ack_called);
 }
 
 void test_power_select_power_on_sequence_aux_dcdc_invalid(void) {
@@ -224,5 +239,7 @@ void test_power_select_power_on_sequence_aux_dcdc_invalid(void) {
 
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL(4, s_times_ack_called);
 }
 
