@@ -222,7 +222,7 @@ static StatusCode prv_read_current_bts7040(Output output, uint16_t *current) {
 static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
   uint8_t mux_selection = s_config->specs[output].bts7200_spec.bts7200_info->mux_selection;
   status_ok_or_return(mux_set(&s_config->mux_address, mux_selection));
-  return bts7200_get_measurement_channel(s_output_to_storage[output].bts7200, current,
+  return bts7200_get_measurement(s_output_to_storage[output].bts7200, current,
                                          s_config->specs[output].bts7200_spec.channel);
 }
 

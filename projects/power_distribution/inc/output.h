@@ -80,7 +80,7 @@ typedef struct OutputBts7200Info {
 } OutputBts7200Info;
 
 typedef struct OutputBts7200Spec {
-  uint8_t channel;  // 0 or 1, which enable pin/output channel is it? TODO - separate type?
+  Bts7200Channel channel;
   OutputBts7200Info *bts7200_info;
 } OutputBts7200Spec;
 

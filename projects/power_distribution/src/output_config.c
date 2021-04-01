@@ -224,7 +224,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .type = OUTPUT_TYPE_GPIO,
       .on_front = true,
       .gpio_spec = {
-        .address = FRONT_PIN_HORN_EN, // TODO(SOFT-396) UV_VBAT_IS
+        .address = FRONT_PIN_HORN_EN,
       },
     },
     [FRONT_OUTPUT_FAN] = {

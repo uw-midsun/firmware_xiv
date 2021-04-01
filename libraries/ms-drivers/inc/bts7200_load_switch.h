@@ -85,6 +85,9 @@ typedef struct {
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
 
+// Either 0 for the channel enabled by enable_pin_0 or 1 for the channel enabled by enable_pin_1.
+typedef uint8_t Bts7200Channel;
+
 // Initialize the BTS7200 with the given settings; the select and enable
 // pins are STM32 GPIO pins.
 StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *settings);
@@ -93,14 +96,12 @@ StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *set
 // pins are through a PCA9539R.
 StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSettings *settings);
 
-// Read the latest input current measurements, in mA. This does not get measurements from the
-// storage but instead reads them from the BTS7200 itself. Note that, due to the fault handling
-// implementation, the pointer to storage has to be valid for BTS7200_FAULT_RESTART_DELAY_MS.
-// Otherwise, bts7200_stop must be called before the pointer is freed to prevent segfaults.
-StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1);
-
-// TODO(SOFT-396): deprecate the other one and make this the only one
-StatusCode bts7200_get_measurement_channel(Bts7200Storage *storage, uint16_t *meas, uint8_t pin);
+// Read the latest input current measurement from the given channel, in mA. This does not get
+// measurements from the storage but instead reads them from the BTS7200 itself. Note that, due to
+// the fault handling implementation, the pointer to storage has to be valid for
+// BTS7200_FAULT_RESTART_DELAY_MS. Otherwise, bts7200_stop must be called before the pointer is
+// freed to prevent segfaults.
+StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas, Bts7200Channel channel);
 
 // Enable output 0.
 StatusCode bts7200_enable_output_0(Bts7200Storage *storage);

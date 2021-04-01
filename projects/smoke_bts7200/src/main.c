@@ -47,7 +47,8 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
     mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
-    bts7200_get_measurement(&s_bts7200_storages[i], &current_0, &current_1);
+    bts7200_get_measurement(&s_bts7200_storages[i], &current_0, 0);
+    bts7200_get_measurement(&s_bts7200_storages[i], &current_1, 1);
 
     LOG_DEBUG("Channel: %d; current_0: %d, current_1: %d\n", s_test_channels[i], current_0,
               current_1);

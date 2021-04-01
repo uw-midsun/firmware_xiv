@@ -5,6 +5,7 @@
 // I2C info - based on atd7276a pin13 high on powerup
 #define ADT7476A_I2C_ADDRESS 0x2E
 
+// TODO(SOFT-396): make sure fan control is accurate
 // TODO(SOFT-373): - confirm pwm ports with hardware
 // Pwm info - needs confirmation
 #define FRONT_PD_PWM_1 ADT_PWM_PORT_1

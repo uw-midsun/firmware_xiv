@@ -14,7 +14,7 @@ static StatusCode prv_publish_rear_current_measurement(Output output, uint16_t c
   return CAN_TRANSMIT_REAR_CURRENT_MEASUREMENT((uint16_t)output, current_data);
 }
 
-// TODO(SOFT_396): these are the same as current_measurement...
+// TODO(SOFT-396): these are the same as current_measurement...
 
 const PublishDataConfig FRONT_PUBLISH_DATA_CONFIG = {
   .transmitter = prv_publish_front_current_measurement,

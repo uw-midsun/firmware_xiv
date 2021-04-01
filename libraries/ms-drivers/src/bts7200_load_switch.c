@@ -2,7 +2,8 @@
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
-  bts7200_get_measurement(storage, &storage->reading_out_0, &storage->reading_out_1);
+  bts7200_get_measurement(storage, &storage->reading_out_0, 0);
+  bts7200_get_measurement(storage, &storage->reading_out_1, 1);
 
   if (storage->callback != NULL) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
@@ -34,27 +35,6 @@ static StatusCode prv_init_common(Bts7200Storage *storage) {
   AdcChannel sense_channel = NUM_ADC_CHANNELS;
   adc_get_channel(*storage->sense_pin, &sense_channel);
   adc_set_channel(sense_channel, true);
-  return STATUS_CODE_OK;
-}
-
-// Handle + clear faults. After fault is cleared, input pin is returned to its initial state.
-// Faults are cleared following the retry strategy on pg. 34 of the BTS7200 datasheet,
-// assuming a worst-case t(DELAY(CR)) of BTS7200_FAULT_RESTART_DELAY_MS (pg. 38)
-static StatusCode prv_bts7200_handle_fault(Bts7200Storage *storage, bool fault0, bool fault1) {
-  StatusCode status0 = STATUS_CODE_OK;
-  StatusCode status1 = STATUS_CODE_OK;
-
-  if (fault0) {
-    status0 = bts7xxx_handle_fault_pin(&storage->enable_pin_0);
-  }
-
-  if (fault1) {
-    status1 = bts7xxx_handle_fault_pin(&storage->enable_pin_1);
-  }
-
-  // Only return on non-OK status codes after trying to clear faults on both pins
-  status_ok_or_return(status0);
-  status_ok_or_return(status1);
   return STATUS_CODE_OK;
 }
 
@@ -188,19 +168,17 @@ static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *me
   }
 }
 
-StatusCode bts7200_get_measurement_channel(Bts7200Storage *storage, uint16_t *meas,
-                                           uint8_t channel) {
-  StatusCode ret;
+StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas,
+                                   Bts7200Channel channel) {
   if (storage->select_pin.pin_type == BTS7XXX_PIN_STM32) {
     GpioState state =
         (channel == 0) ? STM32_GPIO_STATE_SELECT_OUT_0 : STM32_GPIO_STATE_SELECT_OUT_1;
-    ret = gpio_set_state(storage->select_pin.select_pin_stm32, state);
+    status_ok_or_return(gpio_set_state(storage->select_pin.select_pin_stm32, state));
   } else {
     Pca9539rGpioState state =
         (channel == 0) ? PCA9539R_GPIO_STATE_SELECT_OUT_0 : PCA9539R_GPIO_STATE_SELECT_OUT_1;
-    ret = pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r, state);
+    status_ok_or_return(pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r, state));
   }
-  status_ok_or_return(ret);
 
   status_ok_or_return(adc_read_converted_pin(*storage->sense_pin, meas));
 
@@ -208,59 +186,12 @@ StatusCode bts7200_get_measurement_channel(Bts7200Storage *storage, uint16_t *me
   prv_convert_voltage_to_current(storage, meas);
   if (fault) {
     if (storage->fault_callback != NULL) {
-      // TODO(SOFT-396): make this not *horrible*, probably change fault callback
       storage->fault_callback(channel == 0, channel == 1, storage->fault_callback_context);
     }
     Bts7xxxEnablePin *en_pin = (channel == 0) ? &storage->enable_pin_0 : &storage->enable_pin_1;
     bts7xxx_handle_fault_pin(en_pin);
     return STATUS_CODE_INTERNAL_ERROR;
   }
-  return STATUS_CODE_OK;
-}
-
-StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas0, uint16_t *meas1) {
-  AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
-
-  if (storage->select_pin.pin_type == BTS7XXX_PIN_STM32) {
-    gpio_set_state(storage->select_pin.select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_0);
-  } else {
-    pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r,
-                            PCA9539R_GPIO_STATE_SELECT_OUT_0);
-  }
-
-  status_ok_or_return(adc_read_converted(sense_channel, meas0));
-
-  if (storage->select_pin.pin_type == BTS7XXX_PIN_STM32) {
-    gpio_set_state(storage->select_pin.select_pin_stm32, STM32_GPIO_STATE_SELECT_OUT_1);
-  } else {
-    pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r,
-                            PCA9539R_GPIO_STATE_SELECT_OUT_1);
-  }
-
-  status_ok_or_return(adc_read_converted(sense_channel, meas1));
-  // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
-  // Check for faults, call callback and handle fault if voltage is within fault range
-  bool fault0 =
-      (storage->min_fault_voltage_mv <= *meas0) && (*meas0 <= storage->max_fault_voltage_mv);
-  bool fault1 =
-      (storage->min_fault_voltage_mv <= *meas1) && (*meas1 <= storage->max_fault_voltage_mv);
-
-  prv_convert_voltage_to_current(storage, meas0);
-  prv_convert_voltage_to_current(storage, meas1);
-
-  if (fault0 || fault1) {
-    // Only call fault cb if it's not NULL
-    if (storage->fault_callback != NULL) {
-      storage->fault_callback(fault0, fault1, storage->fault_callback_context);
-    }
-    // Handle fault
-    prv_bts7200_handle_fault(storage, fault0, fault1);
-
-    // Return internal error on fault
-    return STATUS_CODE_INTERNAL_ERROR;
-  }
-
   return STATUS_CODE_OK;
 }
 
