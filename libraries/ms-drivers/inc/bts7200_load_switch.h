@@ -29,10 +29,12 @@
 
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
 
-typedef void (*Bts7200FaultCallback)(bool fault0, bool fault1, void *context);
+// If provided, this callback will be called when there's a protection event on faulting_channel.
+// See section 8.3 (p. 32) of BTS7200 datasheet.
+typedef void (*Bts7200FaultCallback)(Bts7200Channel faulting_channel, void *context);
 
 // Use when the select pin is an STM32 GPIO pin
-typedef struct {
+typedef struct Bts7200Stm32Settings {
   GpioAddress *select_pin;
   GpioAddress *sense_pin;
   GpioAddress *enable_0_pin;
@@ -49,7 +51,7 @@ typedef struct {
 } Bts7200Stm32Settings;
 
 // Use when the select pin is through a PCA9539R GPIO expander
-typedef struct {
+typedef struct Bts7200Pca9539rSettings {
   I2CPort i2c_port;
   Pca9539rGpioAddress *select_pin;
   GpioAddress *sense_pin;
@@ -66,7 +68,7 @@ typedef struct {
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Pca9539rSettings;
 
-typedef struct {
+typedef struct Bts7200Storage {
   uint16_t reading_out_0;  // Reading from IN0, in mA
   uint16_t reading_out_1;  // Reading from IN1, in mA
   Bts7xxxSelectPin select_pin;
@@ -85,8 +87,11 @@ typedef struct {
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
 
-// Either 0 for the channel enabled by enable_pin_0 or 1 for the channel enabled by enable_pin_1.
-typedef uint8_t Bts7200Channel;
+typedef enum {
+  BTS7200_CHANNEL_0 = 0,
+  BTS7200_CHANNEL_1,
+  NUM_BTS7200_CHANNELS,
+} Bts7200Channel;
 
 // Initialize the BTS7200 with the given settings; the select and enable
 // pins are STM32 GPIO pins.

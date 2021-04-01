@@ -105,7 +105,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_centre_console_rear_display_front_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [FRONT_OUTPUT_PEDAL] = {
@@ -113,7 +113,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_pedal_steering_front_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [FRONT_OUTPUT_STEERING] = {
@@ -121,7 +121,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_pedal_steering_front_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [FRONT_OUTPUT_LEFT_CAMERA] = {
@@ -129,7 +129,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_left_right_camera_front_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [FRONT_OUTPUT_RIGHT_CAMERA] = {
@@ -137,7 +137,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_left_right_camera_front_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [FRONT_OUTPUT_DRIVER_DISPLAY] = {
@@ -145,7 +145,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_main_pi_driver_display_front_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [FRONT_OUTPUT_INFOTAINMENT_DISPLAY] = {
@@ -161,7 +161,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_centre_console_rear_display_front_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [FRONT_OUTPUT_LEFT_DISPLAY] = {
@@ -169,7 +169,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_left_right_display_front_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [FRONT_OUTPUT_RIGHT_DISPLAY] = {
@@ -177,7 +177,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_left_right_display_front_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [FRONT_OUTPUT_MAIN_PI] = {
@@ -185,7 +185,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_main_pi_driver_display_front_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT] = {
@@ -193,7 +193,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_front_left_right_turn_light_front_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT] = {
@@ -201,7 +201,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = true,
       .bts7200_spec = {
         .bts7200_info = &s_front_left_right_turn_light_front_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS] = {
@@ -267,7 +267,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_charger_strobe_rear_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [REAR_OUTPUT_SOLAR_SENSE] = {
@@ -283,7 +283,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_rear_camera_spare_6_rear_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [REAR_OUTPUT_LEFT_REAR_TURN_LIGHT] = {
@@ -291,7 +291,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_rear_left_right_turn_light_rear_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT] = {
@@ -299,7 +299,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_rear_left_right_turn_light_rear_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [REAR_OUTPUT_BRAKE_LIGHT] = {
@@ -315,7 +315,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_charger_strobe_rear_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
     [REAR_OUTPUT_FAN_1] = {
@@ -323,7 +323,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_fan_1_2_rear_bts7200,
-        .channel = 0,
+        .channel = BTS7200_CHANNEL_0,
       },
     },
     [REAR_OUTPUT_FAN_2] = {
@@ -331,7 +331,7 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_fan_1_2_rear_bts7200,
-        .channel = 1,
+        .channel = BTS7200_CHANNEL_1,
       },
     },
   },

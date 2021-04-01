@@ -2,8 +2,8 @@
 
 static void prv_measure_current(SoftTimerId timer_id, void *context) {
   Bts7200Storage *storage = context;
-  bts7200_get_measurement(storage, &storage->reading_out_0, 0);
-  bts7200_get_measurement(storage, &storage->reading_out_1, 1);
+  bts7200_get_measurement(storage, &storage->reading_out_0, BTS7200_CHANNEL_0);
+  bts7200_get_measurement(storage, &storage->reading_out_1, BTS7200_CHANNEL_1);
 
   if (storage->callback != NULL) {
     storage->callback(storage->reading_out_0, storage->reading_out_1, storage->callback_context);
@@ -171,12 +171,12 @@ static void prv_convert_voltage_to_current(Bts7200Storage *storage, uint16_t *me
 StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas,
                                    Bts7200Channel channel) {
   if (storage->select_pin.pin_type == BTS7XXX_PIN_STM32) {
-    GpioState state =
-        (channel == 0) ? STM32_GPIO_STATE_SELECT_OUT_0 : STM32_GPIO_STATE_SELECT_OUT_1;
+    GpioState state = (channel == BTS7200_CHANNEL_0) ? STM32_GPIO_STATE_SELECT_OUT_0
+                                                     : STM32_GPIO_STATE_SELECT_OUT_1;
     status_ok_or_return(gpio_set_state(storage->select_pin.select_pin_stm32, state));
   } else {
-    Pca9539rGpioState state =
-        (channel == 0) ? PCA9539R_GPIO_STATE_SELECT_OUT_0 : PCA9539R_GPIO_STATE_SELECT_OUT_1;
+    Pca9539rGpioState state = (channel == BTS7200_CHANNEL_0) ? PCA9539R_GPIO_STATE_SELECT_OUT_0
+                                                             : PCA9539R_GPIO_STATE_SELECT_OUT_1;
     status_ok_or_return(pca9539r_gpio_set_state(storage->select_pin.select_pin_pca9539r, state));
   }
 
@@ -186,7 +186,7 @@ StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas,
   prv_convert_voltage_to_current(storage, meas);
   if (fault) {
     if (storage->fault_callback != NULL) {
-      storage->fault_callback(channel == 0, channel == 1, storage->fault_callback_context);
+      storage->fault_callback(channel, storage->fault_callback_context);
     }
     Bts7xxxEnablePin *en_pin = (channel == 0) ? &storage->enable_pin_0 : &storage->enable_pin_1;
     bts7xxx_handle_fault_pin(en_pin);

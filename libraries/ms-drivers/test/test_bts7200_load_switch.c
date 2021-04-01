@@ -34,6 +34,7 @@ static volatile uint16_t s_times_callback_called = 0;
 static void *s_received_context;
 
 static volatile uint16_t s_times_fault_callback_called = 0;
+static Bts7200Channel s_received_faulting_channel;
 static void *s_fault_received_context;
 
 static void prv_callback_increment(uint16_t reading0, uint16_t reading1, void *context) {
@@ -41,8 +42,9 @@ static void prv_callback_increment(uint16_t reading0, uint16_t reading1, void *c
   s_received_context = context;
 }
 
-static void prv_fault_callback_increment(bool fault0, bool fault1, void *context) {
+static void prv_fault_callback_increment(Bts7200Channel channel, void *context) {
   s_times_fault_callback_called++;
+  s_received_faulting_channel = channel;
   s_fault_received_context = context;
 }
 
@@ -85,6 +87,7 @@ void setup_test(void) {
   s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
   s_received_context = NULL;
+  s_received_faulting_channel = NUM_BTS7200_CHANNELS;
   s_fault_received_context = NULL;
 
   s_adc_measurement_second_read = false;
@@ -387,8 +390,8 @@ void test_bts7200_current_sense_get_measurement_stm32_valid(void) {
   TEST_ASSERT_OK(bts7200_init_stm32(&s_storage, &settings));
 
   uint16_t reading0 = 0, reading1 = 0;
-  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading0, 0));
-  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading1, 1));
+  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading0, BTS7200_CHANNEL_0));
+  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading1, BTS7200_CHANNEL_1));
   LOG_DEBUG("STM32 readings: %d, %d\n", reading0, reading1);
 }
 
@@ -417,8 +420,8 @@ void test_bts7200_current_sense_get_measurement_pca9539r_valid(void) {
   TEST_ASSERT_OK(bts7200_init_pca9539r(&s_storage, &settings));
 
   uint16_t reading0 = 0, reading1 = 0;
-  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading0, 0));
-  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading1, 1));
+  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading0, BTS7200_CHANNEL_0));
+  TEST_ASSERT_OK(bts7200_get_measurement(&s_storage, &reading1, BTS7200_CHANNEL_1));
   LOG_DEBUG("PCA9539R readings: %d, %d\n", reading0, reading1);
 }
 
@@ -591,9 +594,11 @@ void test_bts7200_faults_within_fault_range(void) {
   s_adc_measurement_1 = ADC_FAULT_VOLTAGE;
 
   uint16_t meas = 0;
-  bts7200_get_measurement(&s_storage, &meas, 0);
+  bts7200_get_measurement(&s_storage, &meas, BTS7200_CHANNEL_0);
 
   TEST_ASSERT_EQUAL(1, s_times_fault_callback_called);
+  TEST_ASSERT_EQUAL(BTS7200_CHANNEL_0, s_received_faulting_channel);
+  TEST_ASSERT_EQUAL_PTR(context_pointer, s_fault_received_context);
 }
 
 // Test that fault isn't called when voltage outside of fault range.
@@ -626,8 +631,8 @@ void test_bts7200_no_fault_outside_of_fault_range(void) {
   s_adc_measurement_1 = ADC_EXPECTED_OK_VOLTAGE;
 
   uint16_t meas0 = 0, meas1 = 0;
-  bts7200_get_measurement(&s_storage, &meas0, 0);
-  bts7200_get_measurement(&s_storage, &meas1, 1);
+  bts7200_get_measurement(&s_storage, &meas0, BTS7200_CHANNEL_0);
+  bts7200_get_measurement(&s_storage, &meas1, BTS7200_CHANNEL_1);
 
   TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
 }
@@ -759,9 +764,10 @@ void test_bts7200_fault_context_passed_on_fault(void) {
 
   // Measure to trigger fault, make sure context is passed okay.
   // Measurement should return STATUS_CODE_INTERNAL_ERROR since a fault is detected
-  TEST_ASSERT_NOT_OK(bts7200_get_measurement(&s_storage, &meas, 0));
+  TEST_ASSERT_NOT_OK(bts7200_get_measurement(&s_storage, &meas, BTS7200_CHANNEL_1));
   TEST_ASSERT_EQUAL(1, s_times_fault_callback_called);
-  TEST_ASSERT_EQUAL(context_pointer, s_fault_received_context);
+  TEST_ASSERT_EQUAL(BTS7200_CHANNEL_1, s_received_faulting_channel);
+  TEST_ASSERT_EQUAL_PTR(context_pointer, s_fault_received_context);
 }
 
 // Test that trying to enable a pin during fault doesn't work.

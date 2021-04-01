@@ -53,6 +53,16 @@ static union {
 
 static OutputConfig *s_config;
 
+static void prv_bts7200_fault_callback(Bts7200Channel channel, void *context) {
+  Output output = (Output)(uintptr_t)context;  // retrieve the output stuffed into the context
+  LOG_WARN("BTS7200 fault on output %d! Attempting recovery...\n", output);
+}
+
+static void prv_bts7040_fault_callback(void *context) {
+  Output output = (Output)(uintptr_t)context;
+  LOG_WARN("BTS7040 fault on output %d! Attempting recovery...\n", output);
+}
+
 static StatusCode prv_init_gpio(OutputGpioSpec *spec) {
   GpioSettings settings = {
     .direction = GPIO_DIR_OUT,
@@ -97,7 +107,8 @@ static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool 
     .bias = POWER_DISTRIBUTION_BTS7200_BIAS,
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MIN_FAULT_VOLTAGE_MV,
     .max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7200_MAX_FAULT_VOLTAGE_MV,
-    // TODO(SOFT-396): .fault_callback
+    .fault_callback = prv_bts7200_fault_callback,
+    .fault_callback_context = (void *)(uintptr_t)output,  // stuff the output into a void pointer
   };
   return bts7200_init_pca9539r(storage, &settings);
 }
@@ -116,6 +127,8 @@ static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
     .bias = POWER_DISTRIBUTION_BTS7040_BIAS,
     .min_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MIN_FAULT_VOLTAGE_MV,
     .max_fault_voltage_mv = POWER_DISTRIBUTION_BTS7040_MAX_FAULT_VOLTAGE_MV,
+    .fault_callback = prv_bts7040_fault_callback,
+    .fault_callback_context = (void *)(uintptr_t)output,
   };
   return bts7040_init_pca9539r(storage, &settings);
 }
@@ -223,7 +236,7 @@ static StatusCode prv_read_current_bts7200(Output output, uint16_t *current) {
   uint8_t mux_selection = s_config->specs[output].bts7200_spec.bts7200_info->mux_selection;
   status_ok_or_return(mux_set(&s_config->mux_address, mux_selection));
   return bts7200_get_measurement(s_output_to_storage[output].bts7200, current,
-                                         s_config->specs[output].bts7200_spec.channel);
+                                 s_config->specs[output].bts7200_spec.channel);
 }
 
 StatusCode output_read_current(Output output, uint16_t *current) {
