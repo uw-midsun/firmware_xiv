@@ -1,4 +1,6 @@
 #include "current_measurement_config.h"
+
+#include "current_measurement.h"
 #include "pin_defs.h"
 
 // Definitions of the hardware configs declared in the header

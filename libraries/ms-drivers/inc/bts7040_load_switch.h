@@ -41,7 +41,8 @@ typedef struct {
   void *callback_context;
   Bts7040FaultCallback fault_callback;
   void *fault_callback_context;
-  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7040Stm32Settings;
@@ -56,7 +57,8 @@ typedef struct {
   void *callback_context;
   Bts7040FaultCallback fault_callback;
   void *fault_callback_context;
-  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7040Pca9539rSettings;
@@ -71,7 +73,8 @@ typedef struct {
   void *callback_context;
   Bts7040FaultCallback fault_callback;
   void *fault_callback_context;
-  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7040Storage;
@@ -101,5 +104,5 @@ StatusCode bts7040_get_measurement(Bts7040Storage *storage, uint16_t *meas);
 // DO NOT USE if you are reading with bts7040_get_measurement.
 StatusCode bts7040_start(Bts7040Storage *storage);
 
-// Stop the timer associated with the storage and return whether stopping it was successful.
-bool bts7040_stop(Bts7040Storage *storage);
+// Stop the measurement and fault timers associated with the storage.
+void bts7040_stop(Bts7040Storage *storage);

@@ -41,7 +41,8 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
-  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Stm32Settings;
@@ -58,7 +59,8 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
-  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Pca9539rSettings;
@@ -76,7 +78,8 @@ typedef struct {
   void *callback_context;
   Bts7200FaultCallback fault_callback;
   void *fault_callback_context;
-  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE current to voltage
+  uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
+  int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
@@ -117,5 +120,5 @@ bool bts7200_get_output_1_enabled(Bts7200Storage *storage);
 // DO NOT USE if you are reading with bts7200_get_measurement.
 StatusCode bts7200_start(Bts7200Storage *storage);
 
-// Stop the timer associated with the storage and return whether it was successful.
-bool bts7200_stop(Bts7200Storage *storage);
+// Stop the timer and any active fault timers associated with the storage.
+void bts7200_stop(Bts7200Storage *storage);
