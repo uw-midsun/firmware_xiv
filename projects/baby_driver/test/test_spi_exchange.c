@@ -24,6 +24,10 @@
 
 #define TEST_BAUDRATE (6000000)
 
+#define TEST_SPI_EXCHANGE_DELAY_US 100
+// Timeout is 1000 times longer than delay
+#define TEST_SPI_EXCHANGE_TIMEOUT_MS TEST_SPI_EXCHANGE_DELAY_US
+
 typedef enum {
   TEST_CAN_EVENT_TX = 0,
   TEST_CAN_EVENT_RX,
@@ -56,6 +60,22 @@ static SpiSettings s_spi_settings_test_2 = { .baudrate = 6000000,
                                              .sclk = CONTROLLER_BOARD_ADDR_SPI2_SCK,
                                              .cs = CONTROLLER_BOARD_ADDR_SPI2_NSS };
 #define SPI_PORT_TEST_2 (SPI_PORT_2)
+
+static void prv_tx_rx_callback_msgs(uint16_t num_messages) {
+  // The ordering of events from babydriver callbacks is abnormal: CAN_TRANSMIT_BABYDRIVER
+  // is called in a rapidly firing callback, without event processing in between. So, we
+  // delay to let the callbacks fire, then process all TX events at once then all RX events
+  // at once.
+
+  // The +1 is to account for the initial delay before the module starts TXing
+  delay_us((uint32_t)(TEST_SPI_EXCHANGE_DELAY_US * (num_messages + 1)));
+  for (uint16_t i = 0; i < num_messages; i++) {
+    MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
+  }
+  for (uint16_t i = 0; i < num_messages; i++) {
+    MS_TEST_HELPER_CAN_RX(TEST_CAN_EVENT_RX);
+  }
+}
 
 static StatusCode prv_callback_spi_exchange_status(uint8_t data[2], void *context,
                                                    bool *tx_result) {
@@ -165,7 +185,7 @@ void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_BABYDRIVER, TEST_CAN_EVENT_TX,
                                   TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(dispatcher_init());
-  TEST_ASSERT_OK(spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY));
+  TEST_ASSERT_OK(spi_exchange_init(TEST_SPI_EXCHANGE_TIMEOUT_MS, TEST_SPI_EXCHANGE_DELAY_US));
 
   prv_clear_received_data_array();
   memset(s_received_data_status, 0, sizeof(s_received_data_status));
@@ -189,8 +209,7 @@ void test_valid_input(void) {
   prv_send_meta_data(0, 0, 7, 7, 0, 0, 1, TEST_BAUDRATE);
 
   prv_send_data(7);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  prv_tx_rx_callback_msgs(2);
 
   TEST_ASSERT_EQUAL(8, s_num_bytes);
   prv_test_equal_multiple_messages();
@@ -218,8 +237,8 @@ void test_valid_input(void) {
   prv_send_meta_data(0, 0, 7, 7, 0, 0, 0, TEST_BAUDRATE);
 
   prv_send_data(7);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  // wait for expected number of callbacks
+  prv_tx_rx_callback_msgs(2);
 
   TEST_ASSERT_EQUAL(8, s_num_bytes);
   prv_test_equal_multiple_messages();
@@ -255,8 +274,7 @@ void test_valid_input(void) {
   prv_send_meta_data(1, 3, 7, 7, 0, 0, 0, TEST_BAUDRATE);
 
   prv_send_data(7);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  prv_tx_rx_callback_msgs(2);
 
   TEST_ASSERT_EQUAL(8, s_num_bytes);
   prv_test_equal_multiple_messages();
@@ -285,9 +303,7 @@ void test_valid_input(void) {
 
   prv_send_data(7);
   prv_send_data(1);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  prv_tx_rx_callback_msgs(3);
 
   TEST_ASSERT_EQUAL(10, s_num_bytes);
   prv_test_equal_multiple_messages();

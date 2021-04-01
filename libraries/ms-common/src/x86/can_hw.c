@@ -45,6 +45,7 @@ typedef struct CanHwSocketData {
   size_t num_filters;
   CanHwEventHandler handlers[NUM_CAN_HW_EVENTS];
   uint32_t delay_us;
+  int loopback;
 } CanHwSocketData;
 
 static pthread_t s_rx_pthread_id;
@@ -155,15 +156,21 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
     pthread_join(s_tx_pthread_id, NULL);
   }
 
+  memset(&s_socket_data, 0, sizeof(s_socket_data));
+  s_socket_data.can_fd = -1;
+  s_socket_data.loopback = settings->loopback;
+  s_socket_data.delay_us = prv_get_delay(settings->bitrate);
+  fifo_init(&s_socket_data.tx_fifo, s_socket_data.tx_frames);
+
+  if (s_socket_data.loopback) {
+    return STATUS_CODE_OK;
+  }
+
   pthread_mutex_init(&s_keep_alive, NULL);
   // Init semaphore to thread-shared and locked
   sem_init(&s_tx_sem, 0, 0);
 
   pthread_mutex_lock(&s_keep_alive);
-
-  memset(&s_socket_data, 0, sizeof(s_socket_data));
-  s_socket_data.delay_us = prv_get_delay(settings->bitrate);
-  fifo_init(&s_socket_data.tx_fifo, s_socket_data.tx_frames);
 
   s_socket_data.can_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   if (s_socket_data.can_fd == -1) {
@@ -172,9 +179,8 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   }
 
   // Loopback - expects to receive its own messages
-  int loopback = settings->loopback;
-  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &loopback,
-                 sizeof(loopback)) < 0) {
+  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &s_socket_data.loopback,
+                 sizeof(s_socket_data.loopback)) < 0) {
     LOG_CRITICAL("CAN HW: Failed to set loopback mode on socket\n");
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to set loopback mode on socket");
   }
@@ -237,6 +243,10 @@ StatusCode can_hw_add_filter(uint32_t mask, uint32_t filter, bool extended) {
   s_socket_data.filters[s_socket_data.num_filters].can_mask = (mask & reg_mask) | CAN_EFF_FLAG;
   s_socket_data.num_filters++;
 
+  if (s_socket_data.loopback) {
+    return STATUS_CODE_OK;
+  }
+
   if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_FILTER, s_socket_data.filters,
                  sizeof(s_socket_data.filters[0]) * s_socket_data.num_filters) < 0) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to set raw filters");
@@ -260,8 +270,37 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
     // Fifo is full
     return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED, "CAN HW TX failed");
   }
-  // Unblock TX thread
-  sem_post(&s_tx_sem);
+
+  if (!s_socket_data.loopback) {
+    // Unblock TX thread
+    sem_post(&s_tx_sem);
+  } else {
+    // Call handlers directly
+    struct can_frame tx_frame = { 0 };
+    fifo_pop(&s_socket_data.tx_fifo, &tx_frame);
+    memcpy(&s_socket_data.rx_frame, &tx_frame, sizeof(tx_frame));
+
+    if (s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
+      s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback(
+          s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
+    }
+
+    s_socket_data.rx_frame_valid = true;
+
+    // Apply filters that would normally be applied within socketcan
+    for (size_t i = 0; i < s_socket_data.num_filters; i++) {
+      struct can_filter filter = s_socket_data.filters[i];
+      uint32_t filt_id = extended ? id | CAN_EFF_FLAG : id;
+      if ((filt_id & filter.can_mask) != (filter.can_id & filter.can_mask)) {
+        return STATUS_CODE_OK;
+      }
+    }
+
+    if (s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
+      s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
+          s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
+    }
+  }
 
   return STATUS_CODE_OK;
 }

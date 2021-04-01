@@ -20,10 +20,8 @@ static void prv_handle_rx(void *context) {
   }
 }
 
-static void prv_wait_rx(size_t wait_for) {
-  size_t expected = s_msg_rx + wait_for;
-
-  while (s_msg_rx != expected) {
+static void prv_wait_rx(size_t wait_until) {
+  while (s_msg_rx != wait_until) {
   }
 }
 
