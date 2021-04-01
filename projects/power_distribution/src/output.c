@@ -56,6 +56,7 @@ static OutputConfig *s_config;
 static void prv_bts7200_fault_callback(Bts7200Channel channel, void *context) {
   Output output = (Output)(uintptr_t)context;  // retrieve the output stuffed into the context
   LOG_WARN("BTS7200 fault on output %d! Attempting recovery...\n", output);
+  // TODO(SOFT-396): transmit a CAN message to notify telemetry of fault
 }
 
 static void prv_bts7040_fault_callback(void *context) {
