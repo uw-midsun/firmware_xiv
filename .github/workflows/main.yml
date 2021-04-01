@@ -29,32 +29,46 @@ jobs:
       - uses: actions/cache@v2
         id: cache-gcc
         with:
-          path: /var/cache/apt/apt-fast/gcc-6_6.5.0-2ubuntu1~16.04_amd64.deb
+          path: /usr/bin/gcc # might not find gcc-6
           key: ${{ runner.os }}-gcc
 
       - uses: actions/cache@v2
         id: cache-clang
         with:
-          path: /var/cache/apt/apt-fast/clang-5.0_1%3a5.0-3~16.04.1_amd64.deb
+          path: /usr/bin/clang-5.0
           key: ${{ runner.os }}-clang
       
       - uses: actions/cache@v2
         id: cache-clang-format
         with:
-          path: /var/cache/apt/apt-fast/clang-format-5.0_1%3a5.0-3~16.04.1_amd64.deb
+          path: /usr/bin/clang-format-5.0
           key: ${{ runner.os }}-clang-format
 
       - uses: actions/cache@v2
         id: cache-libc6-i386
         with:
-          path: /var/cache/apt/archives/libc6-i386_2.27-3ubuntu1_amd64.deb
+          path: /usr/share/doc/libc6-i386 
           key: ${{ runner.os }}-libc6-i386
+        # /usr/share/doc/libc6-i386
+        # /usr/share/lintian/overrides/libc6-i386
+
+        # /var/lib/dpkg/info/libc6-i386.shlibs
+        # /var/lib/dpkg/info/libc6-i386.triggers
+        # /var/lib/dpkg/info/libc6-i386.conffiles
+        # /var/lib/dpkg/info/libc6-i386.postrm
+        # /var/lib/dpkg/info/libc6-i386.list
+        # /var/lib/dpkg/info/libc6-i386.md5sums
+        # /var/lib/dpkg/info/libc6-i386.symbols
 
       - uses: actions/cache@v2
         id: cache-linux-module
         with:
-          path: /var/cache/apt/apt-fast/linux-modules-extra-4.15.0-1108-azure_4.15.0-1108.120~16.04.1_amd64.deb
+          path: /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic
           key: ${{ runner.os }}-linux-module
+        # /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic.postinst
+        # /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic.postrm
+        # /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic.list
+        # /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic.md5sums
 
       - uses: actions/cache@v2
         id: cache-make
