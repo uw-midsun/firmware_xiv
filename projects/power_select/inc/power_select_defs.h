@@ -6,6 +6,7 @@
 #define V_TO_MV 1000
 
 // Scaling factors
+// TODO: make sure these are correct during validation
 #define POWER_SELECT_PWR_SUP_ISENSE_SCALING 80   // mV/A
 #define POWER_SELECT_PWR_SUP_VSENSE_SCALING 190  // mV/V
 #define POWER_SELECT_DCDC_ISENSE_SCALING 80      // mV/A
@@ -15,9 +16,8 @@
 
 #define POWER_SELECT_VSENSE_SCALING 190  // mV/V
 #define POWER_SELECT_ISENSE_SCALING 80   // mV/A
-// note: scaling is different for aux, need to confirm the exact value (~60?)
 
-#define POWER_SELECT_AUX_VREF_MV 1624  // todo figure out if this is just for isense or
+#define POWER_SELECT_AUX_VREF_MV 1624
 
 // Maximium measurements
 #define POWER_SELECT_PWR_SUP_MAX_CURRENT_MA 37500

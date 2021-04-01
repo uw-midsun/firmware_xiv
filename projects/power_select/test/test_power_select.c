@@ -1,6 +1,5 @@
 #include "power_select.h"
 #include "power_select_events.h"
-// #include "power_select_can.h" // give this its own separate test later!!!
 
 #include "test_helpers.h"
 #include "ms_test_helpers.h"
@@ -12,28 +11,28 @@
 #include "thermistor.h"
 #include "exported_enums.h"
 
-#define TEST_CAN_ID 0x1
-
 #define TEST_TEMP_VOLTAGE_MV 1100
 
 #define TEST_GOOD_VOLTAGE_MV 3000
 #define TEST_GOOD_CURRENT_MA 4000
 
-// account for scaling 
+// Account for scaling 
 #define TEST_GOOD_VOLTAGE_SCALED_MV (TEST_GOOD_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
 #define TEST_GOOD_CURRENT_SCALED_MA (TEST_GOOD_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
 
 #define TEST_FAULT_VOLTAGE_MV 20000
 #define TEST_FAULT_CURRENT_MA 40000
 
-// account for scaling
+// Account for scaling
 #define TEST_FAULT_VOLTAGE_SCALED_MV (TEST_FAULT_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
 #define TEST_FAULT_CURRENT_SCALED_MA (TEST_FAULT_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
+
+#define EXPECTED_TEMP  ((uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV)))
 
 static void prv_force_measurement(void) {
   power_select_start();
   
-  // wait for measurement to finish
+  // Wait for measurement to finish
   delay_ms(20);
   power_select_stop();
 }
@@ -41,7 +40,7 @@ static void prv_force_measurement(void) {
 static CanStorage s_can_storage = { 0 };
 
 static CanSettings s_can_settings = {
-    .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
+    .device_id = SYSTEM_CAN_DEVICE_POWER_SELECT,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = POWER_SELECT_CAN_EVENT_RX,
     .tx_event = POWER_SELECT_CAN_EVENT_TX,
@@ -91,7 +90,7 @@ static bool prv_gpio_addr_is_eq(GpioAddress addr0, GpioAddress addr1) {
   return (addr0.pin == addr1.pin) && (addr0.port == addr1.port);
 }
 
-// set value returned on ADC read
+// Set value returned on ADC read
 static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
 
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
@@ -115,11 +114,11 @@ StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *read
       }
     }
   
-  // should never get here
+  // Should never get here
   return STATUS_CODE_INVALID_ARGS;
 }
 
-// set value returned on GPIO read
+// Set value returned on GPIO read
 static GpioState s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS];
 static uint8_t s_test_gpio_read_index = 0;
 
@@ -190,7 +189,7 @@ void setup_test(void) {
 void teardown_test(void) {
   memset(s_test_adc_read_values, 0, NUM_POWER_SELECT_MEASUREMENTS * sizeof(uint16_t));
 
-  // valid pins are active-low
+  // Valid pins are active-low
   memset(s_test_gpio_read_states, GPIO_STATE_LOW, NUM_POWER_SELECT_VALID_PINS * sizeof(GpioState));
 
   power_select_stop();
@@ -208,15 +207,18 @@ void test_power_select_periodic_measure_works(void) {
 
     TEST_ASSERT_OK(power_select_start());
 
+    // Shouldn't be possible to start twice
+    TEST_ASSERT_NOT_OK(power_select_start());
+
     // Make sure it doesn't break while running
     delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2); 
 
-    power_select_stop();
+    TEST_ASSERT_TRUE(power_select_stop());
+    TEST_ASSERT_FALSE(power_select_stop());
 }
 
 void test_power_select_periodic_measure_reports_correctly(void) {
   TEST_ASSERT_OK(power_select_init());
-  // TEST_ASSERT_OK(power_select_can_init());
 
   prv_set_voltages_good();
   prv_set_all_pins_valid();
@@ -225,22 +227,21 @@ void test_power_select_periodic_measure_reports_correctly(void) {
 
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
 
-  // all pins should be valid, no faults
+  // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
-  // check whether voltage readings as expected
+  // Check whether voltage readings as expected
   PowerSelectStorage test_storage = power_select_get_storage();
 
 
-  uint16_t expected_temp = (uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV));
   for(uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    // account for float rounding
+    // Account for float rounding
     TEST_ASSERT_TRUE(abs(test_storage.voltages[i] - TEST_GOOD_VOLTAGE_MV) < 50);
     TEST_ASSERT_TRUE(abs(test_storage.currents[i] - TEST_GOOD_CURRENT_MA) < 50);
     if(i < NUM_POWER_SELECT_TEMP_MEASUREMENTS) {
-      // confirm thermistor readings as expected
-      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - expected_temp) < 50);
+      // Confirm thermistor readings as expected
+      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - EXPECTED_TEMP) < 50);
     }
   }
 }
@@ -257,22 +258,21 @@ void test_power_select_invalid_pin_reading(void) {
 
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
 
-  // all pins should be valid, no faults
+  // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
-  // check whether voltage readings as expected
+  // Check whether voltage readings as expected
   PowerSelectStorage test_storage = power_select_get_storage();
 
 
-  uint16_t expected_temp = (uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV));
   for(uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    // account for float rounding
+    // Account for float rounding
     TEST_ASSERT_TRUE(abs(test_storage.voltages[i] - TEST_GOOD_VOLTAGE_MV) < 50);
     TEST_ASSERT_TRUE(abs(test_storage.currents[i] - TEST_GOOD_CURRENT_MA) < 50);
     if(i < NUM_POWER_SELECT_TEMP_MEASUREMENTS) {
-      // confirm thermistor readings as expected
-      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - expected_temp) < 50);
+      // Confirm thermistor readings as expected
+      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - EXPECTED_TEMP) < 50);
     }
   }
 
@@ -281,28 +281,27 @@ void test_power_select_invalid_pin_reading(void) {
 
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
 
-  // all pins should be valid except aux, no faults
+  // All pins should be valid except aux, no faults
   TEST_ASSERT_EQUAL(0b110, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
-  // check whether voltage readings as expected
+  // Check whether voltage readings as expected
   test_storage = power_select_get_storage();
 
-  expected_temp = (uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV));
   for(uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    // since aux invalid, both should be zero
+    // Since aux invalid, both should be zero
     if(i == POWER_SELECT_AUX) {
       TEST_ASSERT_EQUAL(0, test_storage.voltages[i]);
       TEST_ASSERT_EQUAL(0, test_storage.currents[i]);
     } else {
-      // account for float rounding
+      // Account for float rounding
       TEST_ASSERT_TRUE(abs(test_storage.voltages[i] - TEST_GOOD_VOLTAGE_MV) < 50);
       TEST_ASSERT_TRUE(abs(test_storage.currents[i] - TEST_GOOD_CURRENT_MA) < 50);
     }
 
     if(i < NUM_POWER_SELECT_TEMP_MEASUREMENTS) {
-      // confirm thermistor readings as expected
-      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - expected_temp) < 50);
+      // Confirm thermistor readings as expected
+      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - EXPECTED_TEMP) < 50);
     }
   }
 }
@@ -318,11 +317,11 @@ void test_power_select_faults_handled(void) {
 
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
 
-  // all pins should be valid, no faults
+  // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
-  // set aux to overvoltage + overcurrent
+  // Set aux to overvoltage + overcurrent
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
   s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] = TEST_FAULT_CURRENT_SCALED_MA;
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
@@ -332,12 +331,12 @@ void test_power_select_faults_handled(void) {
   expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERCURRENT;
   TEST_ASSERT_EQUAL(expected_fault_bitset, power_select_get_fault_bitset());
 
-  // set values back to good
+  // Set values back to good
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_GOOD_VOLTAGE_SCALED_MV;
   s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] = TEST_GOOD_CURRENT_SCALED_MA;
   delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
 
-  // should now be no faults
+  // Should now be no faults
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 }
 
@@ -350,19 +349,14 @@ void test_power_select_dcdc_fault_works(void) {
 
   prv_force_measurement();
 
-  // all pins should be valid, no faults
-  // TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
+  // All pins should be valid, no faults
+  TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
   // Trigger a DCDC fault interrupt
   s_test_gpio_read_states[0] = GPIO_STATE_HIGH;
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
-  gpio_set_state(&pin, GPIO_STATE_LOW);
-  gpio_it_trigger_interrupt(&pin); // doesn't work
-
-  gpio_set_state(&pin, GPIO_STATE_HIGH);
-
-  delay_ms(100);
+  gpio_it_trigger_interrupt(&pin);
 
   TEST_ASSERT_EQUAL((1 << POWER_SELECT_DCDC_FAULT), power_select_get_fault_bitset());
 
@@ -395,22 +389,24 @@ void test_power_select_broadcast_works(void) {
   MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
 
-   // first rx should be SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS
+   // First rx should be SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_ab_mv_measurements[0]); // aux voltage
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_ab_mv_measurements[1]); // aux current
+  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_ab_mv_measurements[2]); // aux temp
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_ab_mv_measurements[3]); // main voltage
 
-  // second rx should be SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS
+  // Second rx should be SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_db_mc_measurements[0]); // dcdc voltage
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_db_mc_measurements[1]); // dcdc current
+  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_db_mc_measurements[2]); // dcdc temp
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_db_mc_measurements[3]); // main current
   
-  // third rx should be SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
+  // Third rx should be SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(0, s_fault_measurement);
   
-  // should be no events
+  // Should be no events
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }

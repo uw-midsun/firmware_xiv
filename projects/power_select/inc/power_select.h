@@ -1,9 +1,7 @@
 #pragma once
-// Measures values from power selection to send over CAN and handles faults.
 
-// Requires gpio, interrupts, CAN, ADC (in ADC_MODE_SINGLE), and soft timers to be initialized.
-// TODO: Improve fault handling, disable LTC through driver (probably after powertrain
-// mockup)
+// Measures values from power selection to send over CAN and handles faults.
+// Requires gpio, interrupts, event queue, CAN, ADC (in ADC_MODE_SINGLE), and soft timers to be initialized.
 
 #include "adc.h"
 #include "can_transmit.h"
@@ -11,14 +9,14 @@
 #include "gpio_it.h"
 #include "soft_timer.h"
 #include "status.h"
+#include "exported_enums.h"
+#include "can_pack.h"
+#include "can_unpack.h"
 
 #include "power_select_defs.h"
 #include "power_select_thermistor.h"
 #include "power_select_events.h"
-// #include "power_select_can.h"
-#include "exported_enums.h"
-#include "can_pack.h"
-#include "can_unpack.h"
+
 
 #define POWER_SELECT_MEASUREMENT_INTERVAL_MS 1000
 #define POWER_SELECT_MEASUREMENT_INTERVAL_US (POWER_SELECT_MEASUREMENT_INTERVAL_MS * 1000)
@@ -58,10 +56,10 @@ StatusCode power_select_start(void);
 // Stop measuring sense values
 bool power_select_stop(void);
 
-// Return the fault bitset
+// Return the fault bitset 
 uint16_t power_select_get_fault_bitset(void);
 
-// Return the valid bitset
+// Return the valid bitset 
 uint8_t power_select_get_valid_bitset(void);
 
 // Return the storage (mainly for testing)

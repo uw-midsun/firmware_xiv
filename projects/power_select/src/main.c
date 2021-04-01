@@ -1,5 +1,4 @@
 // Power select FW implementation
-
 #include "can.h"
 #include "can_unpack.h"
 #include "exported_enums.h"
@@ -15,7 +14,7 @@
 static CanStorage s_can_storage = { 0 };
 
 static CanSettings s_can_settings = {
-    .device_id = SYSTEM_CAN_DEVICE_POWER_SELECTION,
+    .device_id = SYSTEM_CAN_DEVICE_POWER_SELECT,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = POWER_SELECT_CAN_EVENT_RX,
     .tx_event = POWER_SELECT_CAN_EVENT_TX,
@@ -36,8 +35,8 @@ int main() {
 
   can_init(&s_can_storage, &s_can_settings);
 
-  LOG_DEBUG("can init: %d\n", power_select_can_init());
-  LOG_DEBUG("init: %d\n", power_select_init());
+  power_select_can_init();
+  power_select_init();
   power_select_start();
 
   Event e = { 0 };

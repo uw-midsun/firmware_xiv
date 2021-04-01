@@ -169,7 +169,7 @@ static StatusCode prv_init_sense_pins(void) {
 }
 
 void prv_handle_fault_it(const GpioAddress *address, void *context) {  
-  // pin high on fault, low when cleared
+  // Pin high on fault, low when cleared
   GpioState state = GPIO_STATE_HIGH;
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
   gpio_get_state(&pin, &state);
@@ -202,7 +202,7 @@ static StatusCode prv_init_fault_pin(void) {
   return STATUS_CODE_OK;
 }
 
-// Initialize valid pins (mainly for debugging purposes)
+// Initialize valid pins
 static StatusCode prv_init_valid_pins(void) {
   const GpioSettings settings = {
     GPIO_DIR_IN,

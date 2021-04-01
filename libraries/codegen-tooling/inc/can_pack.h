@@ -237,18 +237,18 @@
 
 #define CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(msg_ptr, aux_voltage_u16, aux_current_u16, \
                                                        aux_temp_u16, main_voltage_u16)            \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                                 \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                                 \
                     SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 8, (aux_voltage_u16),                  \
                     (aux_current_u16), (aux_temp_u16), (main_voltage_u16))
 
 #define CAN_PACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(                           \
     msg_ptr, dcdc_voltage_u16, dcdc_current_u16, dcdc_temp_u16, main_current_u16)  \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                  \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                  \
                     SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS, 8, (dcdc_voltage_u16), \
                     (dcdc_current_u16), (dcdc_temp_u16), (main_current_u16))
 
 #define CAN_PACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64)        \
-  can_pack_impl_u64((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION, \
+  can_pack_impl_u64((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT, \
                     SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT, 1, fault_id_u64)
 
 #define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8,      \
