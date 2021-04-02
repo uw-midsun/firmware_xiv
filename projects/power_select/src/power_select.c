@@ -105,10 +105,10 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("Send measurements result: %d\n", prv_broadcast_measurements());
 
   // Send fault bitset if no faults
-  if(s_storage.fault_bitset == 0) {
+  if (s_storage.fault_bitset == 0) {
     prv_broadcast_fault();
   }
-  
+
   soft_timer_start(POWER_SELECT_MEASUREMENT_INTERVAL_US, prv_periodic_measure, &s_storage,
                    &s_storage.timer_id);
 }
@@ -133,14 +133,14 @@ static StatusCode prv_init_sense_pins(void) {
   return STATUS_CODE_OK;
 }
 
-void prv_handle_fault_it(const GpioAddress *address, void *context) {  
+void prv_handle_fault_it(const GpioAddress *address, void *context) {
   // Pin high on fault, low when cleared
   GpioState state = GPIO_STATE_HIGH;
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
   gpio_get_state(&pin, &state);
-  if(state == GPIO_STATE_HIGH) {
+  if (state == GPIO_STATE_HIGH) {
     LOG_DEBUG("DCDC FAULT\n");
-    s_storage.fault_bitset |= 1 << POWER_SELECT_DCDC_FAULT;  
+    s_storage.fault_bitset |= 1 << POWER_SELECT_DCDC_FAULT;
   } else {
     LOG_DEBUG("DCDC fault cleared\n");
     s_storage.fault_bitset &= ~(1 << POWER_SELECT_DCDC_FAULT);
@@ -152,9 +152,9 @@ void prv_handle_fault_it(const GpioAddress *address, void *context) {
 // DCDC_FAULT pin goes high on fault
 static StatusCode prv_init_fault_pin(void) {
   const GpioSettings settings = { .direction = GPIO_DIR_IN,
-                                    .state = GPIO_STATE_LOW,
-                                    .alt_function = GPIO_ALTFN_NONE,
-                                    .resistor = GPIO_RES_NONE };
+                                  .state = GPIO_STATE_LOW,
+                                  .alt_function = GPIO_ALTFN_NONE,
+                                  .resistor = GPIO_RES_NONE };
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
   status_ok_or_return(gpio_init_pin(&pin, &settings));
 
@@ -205,8 +205,8 @@ StatusCode power_select_init(void) {
   return STATUS_CODE_OK;
 }
 
-StatusCode power_select_start(void) { 
-  if(s_storage.measurement_in_progress == false) {
+StatusCode power_select_start(void) {
+  if (s_storage.measurement_in_progress == false) {
     s_storage.measurement_in_progress = true;
     prv_periodic_measure(s_storage.timer_id, &s_storage);
   } else {
@@ -218,7 +218,7 @@ StatusCode power_select_start(void) {
 bool power_select_stop(void) {
   bool status = soft_timer_cancel(s_storage.timer_id);
   s_storage.measurement_in_progress = false;
-  s_storage.timer_id =  SOFT_TIMER_INVALID_TIMER;
+  s_storage.timer_id = SOFT_TIMER_INVALID_TIMER;
   return status;
 }
 

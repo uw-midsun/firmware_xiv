@@ -7,21 +7,21 @@
 #include "log.h"
 
 #include "power_select.h"
+#include "power_select_can.h"
 #include "power_select_defs.h"
 #include "power_select_events.h"
-#include "power_select_can.h"
 
 static CanStorage s_can_storage = { 0 };
 
 static CanSettings s_can_settings = {
-    .device_id = SYSTEM_CAN_DEVICE_POWER_SELECT,
-    .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = POWER_SELECT_CAN_EVENT_RX,
-    .tx_event = POWER_SELECT_CAN_EVENT_TX,
-    .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
-    .tx = { GPIO_PORT_A, 12 },
-    .rx = { GPIO_PORT_A, 11 },
-    .loopback = false,
+  .device_id = SYSTEM_CAN_DEVICE_POWER_SELECT,
+  .bitrate = CAN_HW_BITRATE_500KBPS,
+  .rx_event = POWER_SELECT_CAN_EVENT_RX,
+  .tx_event = POWER_SELECT_CAN_EVENT_TX,
+  .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
+  .tx = { GPIO_PORT_A, 12 },
+  .rx = { GPIO_PORT_A, 11 },
+  .loopback = false,
 };
 
 int main() {
