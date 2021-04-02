@@ -112,9 +112,10 @@ void test_can_basic(void) {
 void test_can_filter(void) {
   volatile CanMessage rx_msg = { 0 };
   can_add_filter(0x2);
+  can_add_filter(0x3);
 
   can_register_rx_handler(0x1, prv_rx_callback, &rx_msg);
-  can_register_rx_handler(0x2, prv_rx_callback, &rx_msg);
+  can_register_rx_handler(0x3, prv_rx_callback, &rx_msg);
 
   CanMessage msg = {
     .msg_id = 0x1,               //
@@ -127,7 +128,7 @@ void test_can_filter(void) {
   TEST_ASSERT_OK(ret);
   prv_clock_tx();
 
-  msg.msg_id = 0x2;
+  msg.msg_id = 0x3;
   ret = can_transmit(&msg, NULL);
   TEST_ASSERT_OK(ret);
   prv_clock_tx();
