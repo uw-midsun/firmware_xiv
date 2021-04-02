@@ -1,6 +1,6 @@
 #pragma once
 
-// Measures values from power selection to send over CAN, including pin fault/valid status.
+// Measures values from power selection to send over CAN and handles faults.
 // Requires gpio, interrupts, event queue, CAN, ADC (in ADC_MODE_SINGLE), and soft timers to be
 // initialized.
 
