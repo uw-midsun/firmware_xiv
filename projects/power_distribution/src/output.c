@@ -5,9 +5,11 @@
 
 #include "bts7040_load_switch.h"
 #include "bts7200_load_switch.h"
+#include "can_transmit.h"
 #include "gpio.h"
 #include "log.h"
 #include "pca9539r_gpio_expander.h"
+#include "pd_error_defs.h"
 #include "status.h"
 
 // Experimentally determined, more accurate resistor value to convert BTS7200 sensed current
@@ -51,17 +53,27 @@ static union {
   Bts7040Storage *bts7040;
 } s_output_to_storage[NUM_OUTPUTS] = { 0 };
 
-static OutputConfig *s_config;
+static OutputConfig *s_config = NULL;
+static bool s_is_front_power_distro;
+
+static void prv_tx_fault(uint16_t fault_flag, Output output) {
+  if (s_is_front_power_distro) {
+    CAN_TRANSMIT_FRONT_PD_FAULT(fault_flag, output);
+  } else {
+    CAN_TRANSMIT_REAR_PD_FAULT(fault_flag, 0, 0, output);
+  }
+}
 
 static void prv_bts7200_fault_callback(Bts7200Channel channel, void *context) {
   Output output = (Output)(uintptr_t)context;  // retrieve the output stuffed into the context
   LOG_WARN("BTS7200 fault on output %d! Attempting recovery...\n", output);
-  // TODO(SOFT-396): transmit a CAN message to notify telemetry of fault
+  prv_tx_fault(BTS7200_FAULT, output);
 }
 
 static void prv_bts7040_fault_callback(void *context) {
   Output output = (Output)(uintptr_t)context;
   LOG_WARN("BTS7040 fault on output %d! Attempting recovery...\n", output);
+  prv_tx_fault(BTS7040_FAULT, output);
 }
 
 static StatusCode prv_init_gpio(OutputGpioSpec *spec) {
@@ -74,7 +86,7 @@ static StatusCode prv_init_gpio(OutputGpioSpec *spec) {
   return gpio_init_pin(&spec->address, &settings);
 }
 
-static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool is_front_pd) {
+static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec) {
   if (spec->bts7200_info == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -84,7 +96,9 @@ static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec, bool 
   Bts7200Storage *storage = NULL;
   for (Output prev_output = 0; prev_output < output; prev_output++) {
     OutputSpec *prev_spec = &s_config->specs[prev_output];
-    if (prev_spec->on_front != is_front_pd || prev_spec->type != OUTPUT_TYPE_BTS7200) continue;
+    if (prev_spec->on_front != s_is_front_power_distro || prev_spec->type != OUTPUT_TYPE_BTS7200) {
+      continue;
+    }
     if (prev_spec->bts7200_spec.bts7200_info == spec->bts7200_info) {
       storage = s_output_to_storage[prev_output].bts7200;
       break;
@@ -139,6 +153,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   s_config = config;
+  s_is_front_power_distro = is_front_power_distro;
   s_num_bts7200_storages = 0;
   s_num_bts7040_storages = 0;
 
@@ -169,7 +184,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro) {
         status_ok_or_return(prv_init_gpio(&spec->gpio_spec));
         break;
       case OUTPUT_TYPE_BTS7200:
-        status_ok_or_return(prv_init_bts7200(output, &spec->bts7200_spec, is_front_power_distro));
+        status_ok_or_return(prv_init_bts7200(output, &spec->bts7200_spec));
         break;
       case OUTPUT_TYPE_BTS7040:
         status_ok_or_return(prv_init_bts7040(output, &spec->bts7040_spec));

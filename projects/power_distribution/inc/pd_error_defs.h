@@ -2,8 +2,7 @@
 
 #include "adt7476a_fan_controller_defs.h"
 
-// See
-// https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/2219114569/Decoding+Power+Distribution+Error+Codes
+// See https://uwmidsun.atlassian.net/l/c/normaJUS.
 // PD fault flag defs - allows transmission of 16 bits of info stored in a uint16_t
 
 // Errors flags for PD voltage regulator
@@ -21,5 +20,9 @@
 #define DCDC_OVERTEMP 0x80        // DCDC over-temp condition
 #define ENCLOSURE_OVERTEMP 0x100  // ENCLOSURE VENTILATION over-temp condition
 #define ERR_VCC_EXCEEDED 0x200    // Indicated an overvoltage in the fan controller
+
+// BTS7200/BTS7040 output fault flags, set on overtemperature/overvoltage on a load switch output
+#define BTS7200_FAULT 0x400
+#define BTS7040_FAULT 0x800
 
 // More values can be added (up to 16 possible) below as needed
