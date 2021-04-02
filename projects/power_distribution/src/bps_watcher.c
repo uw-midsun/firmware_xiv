@@ -15,7 +15,8 @@ StatusCode prv_bps_watcher_callback_handler(const CanMessage *msg, void *context
     event_raise_priority(PD_BPS_STROBE_EVENT_PRIORITY, PD_STROBE_EVENT, 1);
     // raising a TURN EVERYTHING AUX because we need to turn main off and switch to aux
     // in the case of BPS fault
-    event_raise_priority(PD_ACTION_EVENT_PRIORITY, PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING, 1);
+    event_raise_priority(PD_ACTION_EVENT_PRIORITY, PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
+                         1);
   }
   return STATUS_CODE_OK;
 }

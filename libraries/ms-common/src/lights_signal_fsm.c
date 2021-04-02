@@ -145,7 +145,8 @@ StatusCode lights_signal_fsm_init(SignalFsmStorage *storage, const SignalFsmSett
     .callback = prv_blink_event_raised_callback,
     .callback_context = storage,
   };
-  status_ok_or_return(blink_event_generator_init(&storage->blink_event_generator, &blinker_settings));
+  status_ok_or_return(
+      blink_event_generator_init(&storage->blink_event_generator, &blinker_settings));
 
   fsm_init(&storage->fsm, "Lights Signal FSM", &state_none, storage);
   fsm_state_init(state_none, prv_state_none_output);

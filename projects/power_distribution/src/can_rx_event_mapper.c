@@ -45,7 +45,8 @@ static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStat
 
   StatusCode status = event_raise_priority(PD_ACTION_EVENT_PRIORITY, event_id, data);
   if (!status_ok(status)) {
-    LOG_WARN("WARNING: can_rx_event_mapper failed to raise event! id=%d, data=%d, status=%d\n", event_id, data, status);
+    LOG_WARN("WARNING: can_rx_event_mapper failed to raise event! id=%d, data=%d, status=%d\n",
+             event_id, data, status);
   }
   return status;
 }
