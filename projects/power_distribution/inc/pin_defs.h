@@ -20,10 +20,6 @@
 #define PD_5V_REG_ENABLE \
   { GPIO_PORT_B, 2 }
 
-// used in output config for a hack to specify an output with only current sense enabled
-#define NONEXISTENT_PCA9539R_PIN \
-  { 0xff, PCA9539R_PIN_IO0_0 }
-
 // Front power distribution
 #define FRONT_PIN_CENTRE_CONSOLE_EN \
   { PD_PCA9539R_I2C_ADDRESS_1, PCA9539R_PIN_IO1_4 }

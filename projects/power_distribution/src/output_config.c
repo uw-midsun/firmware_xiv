@@ -5,6 +5,10 @@
 #include "i2c.h"
 #include "pin_defs.h"
 
+// used for a hacky workaround to specify UV_VBAT as BTS7040 with only current sense enabled
+#define NONEXISTENT_PCA9539R_PIN \
+  { 0xff, PCA9539R_PIN_IO0_0 }
+
 // Front power distribution BTS7200s
 
 static const OutputBts7200Info s_centre_console_rear_display_front_bts7200 = {
