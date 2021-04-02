@@ -5,8 +5,6 @@
 
 // Definitions of the configs declared in the header
 
-// TODO(SOFT-396): maybe change this so it doesn't require counting
-
 const CurrentMeasurementConfig FRONT_CURRENT_MEASUREMENT_CONFIG = {
   .outputs_to_read =
       (Output[]){

@@ -17,7 +17,6 @@
 #include "pca9539r_gpio_expander.h"
 #include "status.h"
 
-// TODO(SOFT-396): update the currents confluence page
 // Please don't change the numerical values of the outputs so downstream tools can rely on them.
 // Add any new outputs at the end, and if a spare gets a proper name, just rename the spare output.
 typedef enum {
@@ -77,7 +76,6 @@ typedef enum {
   NUM_OUTPUTS,
 } Output;
 
-// TODO(SOFT-396): these structs should really go in a separate file, like output_impl.h or sth
 typedef enum {
   OUTPUT_TYPE_IGNORE = 0,  // so that unspecified OutputSpecs default to ignore
   OUTPUT_TYPE_GPIO,
