@@ -353,7 +353,7 @@ static FanControlSolarSettings s_fan_control_settings = {
   .overtemp_addr = { .port = GPIO_PORT_B, .pin = 5 },
   .fan_fail_addr = { .port = GPIO_PORT_B, .pin = 7 },
   .full_speed_addr = { .port = GPIO_PORT_B, .pin = 6 },
-  .full_speed_temp_threshold = SOLAR_OVERTEMPERATURE_THRESHOLD_dC,
+  .full_speed_temp_threshold_dC = SOLAR_OVERTEMPERATURE_THRESHOLD_dC,
 };
 
 const FanControlSolarSettings *config_get_fan_control_settings(SolarMpptCount mppt_count) {
