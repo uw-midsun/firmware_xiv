@@ -8,6 +8,7 @@ StatusCode rear_strobe_blinker_init(RearStrobeBlinkerSettings *settings) {
   // Set up the blinker
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->strobe_blink_delay_us,
+    .event_priority = PD_BPS_STROBE_EVENT_PRIORITY,
     .default_state = BLINKER_STATE_OFF,  // go back to off when we stop
     .callback = NULL,
   };

@@ -1,6 +1,9 @@
 // Uncomment this line to force firmware to run as front or rear power distribution.
 // #define FORCE_IS_FRONT_POWER_DISTRIBUTION true
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "adc.h"
 #include "bps_watcher.h"
 #include "can_msg_defs.h"
@@ -163,6 +166,7 @@ int main(void) {
     .signal_left_output_event = PD_GPIO_EVENT_SIGNAL_LEFT,
     .signal_right_output_event = PD_GPIO_EVENT_SIGNAL_RIGHT,
     .signal_hazard_output_event = PD_GPIO_EVENT_SIGNAL_HAZARD,
+    .event_priority = PD_ACTION_EVENT_PRIORITY,
     .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
     .sync_behaviour = is_front_pd ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
                                   : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,

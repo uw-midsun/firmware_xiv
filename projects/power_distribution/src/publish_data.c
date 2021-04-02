@@ -8,8 +8,12 @@
 #include "soft_timer.h"
 #include "status.h"
 
+// To avoid overwhelming the event queue, we TX messages in batches of NUM_MSG_PER_ITERATION
+// messages with ITERATION_WAIT_MS between batches.
+// These parameters should be good enough to not overwhelm the event queue, but they can be changed
+// if needed - just make sure that all messages are TXed within CURRENT_MEASUREMENT_INTERVAL_US.
 #define NUM_MSG_PER_ITERATION 8
-#define ITERATION_WAIT_MS 20
+#define ITERATION_WAIT_MS 100
 
 static PublishDataConfig *s_config = { 0 };
 static uint16_t *s_current_measurements = NULL;
