@@ -33,6 +33,16 @@
 #define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
 #define VOLTAGE_REGULATOR_DELAY_MS 25
 
+// Like status_ok_or_return, but logs on failure for easier debugging.
+#define VERIFY_INIT(call)                                                                       \
+  ({                                                                                            \
+    __typeof__(call) status = (call);                                                           \
+    if (status) {                                                                               \
+      LOG_CRITICAL("PD failed to initialize! Call returned status=%d:\n  %s\n", status, #call); \
+      return status;                                                                            \
+    }                                                                                           \
+  })
+
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
 
@@ -43,7 +53,9 @@ static bool prv_determine_is_front_pd(void) {
   // initialize PA8
   GpioAddress board_test_pin = FRONT_OR_REAR_RECOGNITION_PIN;
   GpioSettings board_test_settings = {
-    .direction = GPIO_DIR_IN, .resistor = GPIO_RES_NONE, .alt_function = GPIO_ALTFN_NONE
+    .direction = GPIO_DIR_IN,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
   };
 
   gpio_init_pin(&board_test_pin, &board_test_settings);
@@ -56,16 +68,16 @@ static bool prv_determine_is_front_pd(void) {
 #endif
 }
 
-static void prv_init_i2c(void) {
+static StatusCode prv_init_i2c(void) {
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
     .scl = PD_I2C_SCL_PIN,
     .sda = PD_I2C_SDA_PIN,
   };
-  i2c_init(PD_I2C_PORT, &i2c_settings);
+  return i2c_init(PD_I2C_PORT, &i2c_settings);
 }
 
-static void prv_init_can(bool is_front_pd) {
+static StatusCode prv_init_can(bool is_front_pd) {
   CanSettings can_settings = {
     .device_id = is_front_pd ? SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT
                              : SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,
@@ -77,7 +89,7 @@ static void prv_init_can(bool is_front_pd) {
     .rx = PD_CAN_RX_PIN,
     .tx = PD_CAN_TX_PIN,
   };
-  can_init(&s_can_storage, &can_settings);
+  return can_init(&s_can_storage, &can_settings);
 }
 
 static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void *context) {
@@ -103,23 +115,25 @@ int main(void) {
   // initialize all libraries
   interrupt_init();
   soft_timer_init();
-  gpio_init();
+  VERIFY_INIT(gpio_init());
   gpio_it_init();
   event_queue_init();
   adc_init(ADC_MODE_SINGLE);
-  prv_init_i2c();
+  VERIFY_INIT(prv_init_i2c());
 
-  // test if it's front or rear power distribution
+  // test if it's front or rear PD, and log for easier debugging if initialization fails
   bool is_front_pd = prv_determine_is_front_pd();
+  LOG_DEBUG("Detected %s power distribution board...", is_front_pd ? "front" : "rear");
 
-  prv_init_can(is_front_pd);
+  VERIFY_INIT(prv_init_can(is_front_pd));
 
   // initialize bps watcher, output, can_rx_event_mapper, gpio, publish_data
-  bps_watcher_init();
-  output_init(&COMBINED_OUTPUT_CONFIG, is_front_pd);
-  can_rx_event_mapper_init(is_front_pd ? &FRONT_CAN_RX_CONFIG : &REAR_CAN_RX_CONFIG);
-  pd_gpio_init(is_front_pd ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG);
-  publish_data_init(is_front_pd ? &FRONT_PUBLISH_DATA_CONFIG : &REAR_PUBLISH_DATA_CONFIG);
+  VERIFY_INIT(bps_watcher_init());
+  VERIFY_INIT(output_init(&COMBINED_OUTPUT_CONFIG, is_front_pd));
+  VERIFY_INIT(can_rx_event_mapper_init(is_front_pd ? &FRONT_CAN_RX_CONFIG : &REAR_CAN_RX_CONFIG));
+  VERIFY_INIT(pd_gpio_init(is_front_pd ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG));
+  VERIFY_INIT(
+      publish_data_init(is_front_pd ? &FRONT_PUBLISH_DATA_CONFIG : &REAR_PUBLISH_DATA_CONFIG));
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {
@@ -130,8 +144,8 @@ int main(void) {
     .error_callback_context = (const void *)(&is_front_pd),
   };
   VoltageRegulatorStorage vreg_store = { 0 };
-  voltage_regulator_init(&vreg_store, &vreg_set);
-  voltage_regulator_set_enabled(&vreg_store, true);
+  VERIFY_INIT(voltage_regulator_init(&vreg_store, &vreg_set));
+  VERIFY_INIT(voltage_regulator_set_enabled(&vreg_store, true));
 
   // initialize current_measurement
   CurrentMeasurementSettings current_measurement_settings = {
@@ -139,7 +153,7 @@ int main(void) {
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
   };
-  current_measurement_init(&current_measurement_settings);
+  VERIFY_INIT(current_measurement_init(&current_measurement_settings));
 
   // initialize lights_signal_fsm
   SignalFsmSettings lights_signal_fsm_settings = {
@@ -155,8 +169,8 @@ int main(void) {
     .sync_event = PD_SYNC_EVENT_LIGHTS,
     .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
   };
-  lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings);
-#ifndef FAN_CONTROL_NOT_ACTIVATED
+  VERIFY_INIT(lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings));
+
   // initialize fan ctrl
   if (is_front_pd) {
     FanCtrlSettings fan_settings = {
@@ -165,7 +179,7 @@ int main(void) {
       .fan_pwm2 = FRONT_PD_PWM_2,
       .i2c_address = ADT7476A_I2C_ADDRESS,
     };
-    pd_fan_ctrl_init(&fan_settings, true);
+    VERIFY_INIT(pd_fan_ctrl_init(&fan_settings, true));
   } else {
     FanCtrlSettings fan_settings = {
       .i2c_port = PD_I2C_PORT,
@@ -173,22 +187,21 @@ int main(void) {
       .fan_pwm2 = REAR_DCDC_PWM,
       .i2c_address = ADT7476A_I2C_ADDRESS,
     };
-    pd_fan_ctrl_init(&fan_settings, false);
+    VERIFY_INIT(pd_fan_ctrl_init(&fan_settings, false));
   }
-#endif
 
   if (is_front_pd) {
     // initialize UV cutoff detector on front
-    front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN);
+    VERIFY_INIT(front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN));
   } else {
     // initialize strobe_blinker on rear
     RearStrobeBlinkerSettings strobe_blinker_settings = {
       .strobe_blink_delay_us = STROBE_BLINK_INTERVAL_US,
     };
-    rear_strobe_blinker_init(&strobe_blinker_settings);
+    VERIFY_INIT(rear_strobe_blinker_init(&strobe_blinker_settings));
   }
 
-  LOG_DEBUG("Hello from power distribution, initialized as %s\r\n", is_front_pd ? "front" : "rear");
+  LOG_DEBUG("Power distribution successfully initialized as %s.\n", is_front_pd ? "front" : "rear");
 
   // process events
   Event e = { 0 };
