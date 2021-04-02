@@ -47,7 +47,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-libc6-i386
         with:
-          path: /usr/share/doc/libc6-i386 
+          path: /var/lib/dpkg/info/libc6-i386
           key: ${{ runner.os }}-libc6-i386
         # /usr/share/doc/libc6-i386
         # /usr/share/lintian/overrides/libc6-i386
