@@ -32,7 +32,7 @@ static uint16_t s_full_speed_temp_threshold = 3;  // arbitrarily selected value 
 static SolarMpptCount s_mppt_count;
 
 static GpioState s_gpio_state;
-static Event s_data_ready = {.id = DATA_READY_EVENT, .data = 0};
+static Event s_data_ready = { .id = DATA_READY_EVENT, .data = 0 };
 
 void setup_test(void) {
   event_queue_init();
