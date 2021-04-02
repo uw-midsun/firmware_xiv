@@ -273,21 +273,21 @@
     status;                                                                   \
   })
 
-#define CAN_TRANSMIT_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(aux_voltage_u16, aux_current_u16,   \
+#define CAN_TRANSMIT_AUX_STATUS_MAIN_VOLTAGE(aux_voltage_u16, aux_current_u16,   \
                                                            aux_temp_u16, main_voltage_u16)     \
   ({                                                                                           \
     CanMessage msg = { 0 };                                                                    \
-    CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(&msg, (aux_voltage_u16), (aux_current_u16), \
+    CAN_PACK_AUX_STATUS_MAIN_VOLTAGE(&msg, (aux_voltage_u16), (aux_current_u16), \
                                                    (aux_temp_u16), (main_voltage_u16));        \
     StatusCode status = can_transmit(&msg, NULL);                                              \
     status;                                                                                    \
   })
 
-#define CAN_TRANSMIT_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(dcdc_voltage_u16, dcdc_current_u16,  \
+#define CAN_TRANSMIT_DCDC_STATUS_MAIN_CURRENT(dcdc_voltage_u16, dcdc_current_u16,  \
                                                             dcdc_temp_u16, main_current_u16)     \
   ({                                                                                             \
     CanMessage msg = { 0 };                                                                      \
-    CAN_PACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(&msg, (dcdc_voltage_u16), (dcdc_current_u16), \
+    CAN_PACK_DCDC_STATUS_MAIN_CURRENT(&msg, (dcdc_voltage_u16), (dcdc_current_u16), \
                                                    (dcdc_temp_u16), (main_current_u16));         \
     StatusCode status = can_transmit(&msg, NULL);                                                \
     status;                                                                                      \

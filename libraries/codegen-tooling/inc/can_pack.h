@@ -166,16 +166,16 @@
                     SYSTEM_CAN_MESSAGE_REAR_CURRENT_MEASUREMENT, 4, (current_id_u16), \
                     (current_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(msg_ptr, aux_voltage_u16, aux_current_u16, \
+#define CAN_PACK_AUX_STATUS_MAIN_VOLTAGE(msg_ptr, aux_voltage_u16, aux_current_u16, \
                                                        aux_temp_u16, main_voltage_u16)            \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                                 \
-                    SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 8, (aux_voltage_u16),                  \
+                    SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE, 8, (aux_voltage_u16),                  \
                     (aux_current_u16), (aux_temp_u16), (main_voltage_u16))
 
-#define CAN_PACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(                           \
+#define CAN_PACK_DCDC_STATUS_MAIN_CURRENT(                           \
     msg_ptr, dcdc_voltage_u16, dcdc_current_u16, dcdc_temp_u16, main_current_u16)  \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                  \
-                    SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS, 8, (dcdc_voltage_u16), \
+                    SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT, 8, (dcdc_voltage_u16), \
                     (dcdc_current_u16), (dcdc_temp_u16), (main_current_u16))
 
 #define CAN_PACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64)        \

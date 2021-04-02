@@ -50,42 +50,6 @@ static CanSettings s_can_settings = {
     .loopback = true,
 };
 
-// Pin defs, copy-pasted from power_select.c
-static const GpioAddress VOLTAGE_MEASUREMENT_PINS[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS] = {
-  [POWER_SELECT_AUX] = POWER_SELECT_AUX_VSENSE_ADDR,
-  [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_VSENSE_ADDR,
-  [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_VSENSE_ADDR,
-};
-
-static const GpioAddress CURRENT_MEASUREMENT_PINS[NUM_POWER_SELECT_CURRENT_MEASUREMENTS] = {
-  [POWER_SELECT_AUX] = POWER_SELECT_AUX_ISENSE_ADDR,
-  [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_ISENSE_ADDR,
-  [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_ISENSE_ADDR,
-};
-
-static const GpioAddress TEMP_MEASUREMENT_PINS[NUM_POWER_SELECT_TEMP_MEASUREMENTS] = {
-  [POWER_SELECT_AUX] = POWER_SELECT_AUX_TEMP_ADDR,
-  [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_TEMP_ADDR,
-};
-
-static const uint16_t MAX_VOLTAGES[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS] = {
-  [POWER_SELECT_AUX] = POWER_SELECT_AUX_MAX_VOLTAGE_MV,
-  [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_MAX_VOLTAGE_MV,
-  [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_MAX_VOLTAGE_MV,
-};
-
-static const uint16_t MAX_CURRENTS[NUM_POWER_SELECT_CURRENT_MEASUREMENTS] = {
-  [POWER_SELECT_AUX] = POWER_SELECT_AUX_MAX_CURRENT_MA,
-  [POWER_SELECT_DCDC] = POWER_SELECT_DCDC_MAX_CURRENT_MA,
-  [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_MAX_CURRENT_MA,
-};
-
-static const GpioAddress VALID_PINS[NUM_POWER_SELECT_VALID_PINS] = {
-  POWER_SELECT_AUX_VALID_ADDR,
-  POWER_SELECT_DCDC_VALID_ADDR,
-  POWER_SELECT_PWR_SUP_VALID_ADDR,
-};
-
 static bool prv_gpio_addr_is_eq(GpioAddress addr0, GpioAddress addr1) {
   return (addr0.pin == addr1.pin) && (addr0.port == addr1.port);
 }
@@ -96,19 +60,19 @@ static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
     // Find correct reading to return
     for(int i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-      if(prv_gpio_addr_is_eq(VOLTAGE_MEASUREMENT_PINS[i], address)) {
+      if(prv_gpio_addr_is_eq(POWER_SELECT_VOLTAGE_MEASUREMENT_PINS[i], address)) {
         *reading = s_test_adc_read_values[i];
         return STATUS_CODE_OK;    
       }
     }
     for(int i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
-      if(prv_gpio_addr_is_eq(CURRENT_MEASUREMENT_PINS[i], address)) {
+      if(prv_gpio_addr_is_eq(POWER_SELECT_CURRENT_MEASUREMENT_PINS[i], address)) {
         *reading = s_test_adc_read_values[i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
         return STATUS_CODE_OK;    
       }
     }
     for(int i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
-      if(prv_gpio_addr_is_eq(TEMP_MEASUREMENT_PINS[i], address)) {
+      if(prv_gpio_addr_is_eq(POWER_SELECT_TEMP_MEASUREMENT_PINS[i], address)) {
         *reading = s_test_adc_read_values[i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
         return STATUS_CODE_OK;    
       }
@@ -152,19 +116,19 @@ static void prv_set_all_pins_valid(void) {
 }
 
 // For testing CAN broadcast
-static uint16_t s_ab_mv_measurements[4];
+static uint16_t s_aux_measurements[4];
 
-static StatusCode prv_power_select_ab_mv_cb(const CanMessage *msg, void *context,
+static StatusCode prv_power_select_aux_cb(const CanMessage *msg, void *context,
                                          CanAckStatus *ack_reply) {  
-  CAN_UNPACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(msg, &s_ab_mv_measurements[0], &s_ab_mv_measurements[1], &s_ab_mv_measurements[2], &s_ab_mv_measurements[3]);
+  CAN_UNPACK_AUX_STATUS_MAIN_VOLTAGE(msg, &s_aux_measurements[0], &s_aux_measurements[1], &s_aux_measurements[2], &s_aux_measurements[3]);
   return STATUS_CODE_OK;
 }
 
-static uint16_t s_db_mc_measurements[4];
+static uint16_t s_dcdc_measurements[4];
 
-static StatusCode prv_power_select_db_mc_cb(const CanMessage *msg, void *context,
+static StatusCode prv_power_select_dcdc_cb(const CanMessage *msg, void *context,
                                          CanAckStatus *ack_reply) {  
-  CAN_UNPACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(msg, &s_db_mc_measurements[0], &s_db_mc_measurements[1], &s_db_mc_measurements[2], &s_db_mc_measurements[3]);
+  CAN_UNPACK_DCDC_STATUS_MAIN_CURRENT(msg, &s_dcdc_measurements[0], &s_dcdc_measurements[1], &s_dcdc_measurements[2], &s_dcdc_measurements[3]);
   return STATUS_CODE_OK;
 }
 
@@ -371,12 +335,12 @@ void test_power_select_dcdc_fault_works(void) {
 void test_power_select_broadcast_works(void) {
   TEST_ASSERT_OK(power_select_init());
 
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, prv_power_select_ab_mv_cb, NULL);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS, prv_power_select_db_mc_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE, prv_power_select_aux_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT, prv_power_select_dcdc_cb, NULL);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT, prv_power_select_fault_cb, NULL);
 
-  memset(s_ab_mv_measurements, 0, sizeof(s_db_mc_measurements));
-  memset(s_db_mc_measurements, 0, sizeof(s_db_mc_measurements));
+  memset(s_aux_measurements, 0, sizeof(s_dcdc_measurements));
+  memset(s_dcdc_measurements, 0, sizeof(s_dcdc_measurements));
   s_fault_measurement = 0;
   
   prv_set_voltages_good();
@@ -389,19 +353,19 @@ void test_power_select_broadcast_works(void) {
   MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
   MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
 
-   // First rx should be SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS
+   // First rx should be SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_ab_mv_measurements[0]); // aux voltage
-  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_ab_mv_measurements[1]); // aux current
-  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_ab_mv_measurements[2]); // aux temp
-  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_ab_mv_measurements[3]); // main voltage
+  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[0]); // aux voltage
+  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_aux_measurements[1]); // aux current
+  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_aux_measurements[2]); // aux temp
+  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[3]); // main voltage
 
-  // Second rx should be SYSTEM_CAN_MESSAGE_DCDC_BATTERY_STATUS
+  // Second rx should be SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_db_mc_measurements[0]); // dcdc voltage
-  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_db_mc_measurements[1]); // dcdc current
-  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_db_mc_measurements[2]); // dcdc temp
-  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_db_mc_measurements[3]); // main current
+  TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_dcdc_measurements[0]); // dcdc voltage
+  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[1]); // dcdc current
+  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_dcdc_measurements[2]); // dcdc temp
+  TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[3]); // main current
   
   // Third rx should be SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
