@@ -71,14 +71,6 @@
     status;                                                                 \
   })
 
-#define CAN_TRANSMIT_FRONT_POWER(power_bitset_u16)  \
-  ({                                                \
-    CanMessage msg = { 0 };                         \
-    CAN_PACK_FRONT_POWER(&msg, (power_bitset_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);   \
-    status;                                         \
-  })
-
 #define CAN_TRANSMIT_DRIVE_STATE(drive_state_u16)  \
   ({                                               \
     CanMessage msg = { 0 };                        \

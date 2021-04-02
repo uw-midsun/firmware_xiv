@@ -44,11 +44,6 @@
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, 8, \
                     (throttle_output_u32), (brake_output_u32))
 
-#define CAN_PACK_FRONT_POWER(msg_ptr, power_bitset_u16)                                          \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_FRONT_POWER, \
-                    2, (power_bitset_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
-                    CAN_PACK_IMPL_EMPTY)
-
 #define CAN_PACK_DRIVE_STATE(msg_ptr, drive_state_u16)                                             \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_DRIVE_STATE, \
                     2, (drive_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                \
