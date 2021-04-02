@@ -46,4 +46,4 @@ const SenseMpptSettings *config_get_sense_mppt_settings(SolarMpptCount mppt_coun
 
 const FaultMonitorSettings *config_get_fault_monitor_settings(SolarMpptCount mppt_count);
 
-const FanControlSettingsSolar *config_get_fan_control_settings(SolarMpptCount mppt_count);
+const FanControlSolarSettings *config_get_fan_control_settings(SolarMpptCount mppt_count);
