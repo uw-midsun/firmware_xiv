@@ -24,10 +24,6 @@
 
 #define TEST_BAUDRATE (6000000)
 
-#define TEST_SPI_EXCHANGE_DELAY_US 100
-// Timeout is 1000 times longer than delay
-#define TEST_SPI_EXCHANGE_TIMEOUT_MS TEST_SPI_EXCHANGE_DELAY_US
-
 typedef enum {
   TEST_CAN_EVENT_TX = 0,
   TEST_CAN_EVENT_RX,
@@ -68,7 +64,7 @@ static void prv_tx_rx_callback_msgs(uint16_t num_messages) {
   // at once.
 
   // The +1 is to account for the initial delay before the module starts TXing
-  delay_us((uint32_t)(TEST_SPI_EXCHANGE_DELAY_US * (num_messages + 1)));
+  delay_us((uint32_t)(DEFAULT_SPI_EXCHANGE_TX_DELAY * (num_messages + 1)));
   for (uint16_t i = 0; i < num_messages; i++) {
     MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   }
@@ -185,7 +181,7 @@ void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_BABYDRIVER, TEST_CAN_EVENT_TX,
                                   TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(dispatcher_init());
-  TEST_ASSERT_OK(spi_exchange_init(TEST_SPI_EXCHANGE_TIMEOUT_MS, TEST_SPI_EXCHANGE_DELAY_US));
+  TEST_ASSERT_OK(spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY));
 
   prv_clear_received_data_array();
   memset(s_received_data_status, 0, sizeof(s_received_data_status));
