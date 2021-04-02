@@ -47,7 +47,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-libc6-i386
         with:
-          path: /var/lib/dpkg/info/libc6-i386
+          path: /var/cache/apt/archives/libc6-i386_2.27-3ubuntu1_amd64.deb
           key: ${{ runner.os }}-libc6-i386
         # /usr/share/doc/libc6-i386
         # /usr/share/lintian/overrides/libc6-i386
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-linux-module
         with:
-          path: /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic
+          path: /var/cache/apt/apt-fast/linux-modules-extra-4.15.0-1108-azure_4.15.0-1108.120~16.04.1_amd64.deb
           key: ${{ runner.os }}-linux-module
         # /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic.postinst
         # /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic.postrm
