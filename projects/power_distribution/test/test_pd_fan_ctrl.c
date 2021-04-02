@@ -92,7 +92,7 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
 
 static StatusCode prv_front_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
                                                     CanAckStatus *ack_reply) {
-  CAN_UNPACK_FRONT_PD_FAULT(msg, &s_fan_ctrl_msg[0]);
+  CAN_UNPACK_FRONT_PD_FAULT(msg, &s_fan_ctrl_msg[0], &s_fan_ctrl_msg[1]);
   return STATUS_CODE_OK;
 }
 
