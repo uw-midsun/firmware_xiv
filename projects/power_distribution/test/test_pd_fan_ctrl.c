@@ -190,7 +190,6 @@ void test_rear_pd_fan_ctrl_temp(void) {
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
   MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(ADC_MAX_VAL, s_fan_ctrl_msg[3]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1], s_fan_ctrl_msg[2]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1],
                     FAN_OVERTEMP_FRACTION_TRANSMIT);  // FAN_OVERTEMP_VOLTAGE as a fraction of v_ref
