@@ -17,6 +17,11 @@
 #define POWER_DISTRIBUTION_CAN_RX_PIN \
   { GPIO_PORT_A, 11 }
 
+#define POWER_DISTRIBUTION_5V_REG_MONITOR \
+  { GPIO_PORT_B, 1 }
+#define POWER_DISTRIBUTION_5V_REG_ENABLE \
+  { GPIO_PORT_B, 2 }
+
 // Front power distribution
 #define FRONT_PIN_CTR_CONSL_EN \
   { .i2c_address = POWER_DISTRIBUTION_I2C_ADDRESS_1, .pin = PCA9539R_PIN_IO1_5 }
@@ -86,6 +91,9 @@
   { GPIO_PORT_A, 0 }
 #define FRONT_PIN_SMBALERT \
   { GPIO_PORT_A, 1 }
+
+#define FRONT_UV_COMPARATOR_PIN \
+  { GPIO_PORT_B, 0 }
 
 // Rear power distribution
 #define REAR_PIN_MOTOR_INTERFACE_EN \
@@ -158,3 +166,6 @@
   { GPIO_PORT_A, 1 }
 #define REAR_PIN_SMBALERT \
   { GPIO_PORT_A, 0 }
+
+#define FRONT_OR_REAR_RECOGNITION_PIN \
+  { GPIO_PORT_A, 8 }
