@@ -9,7 +9,6 @@
 #include "ms_test_helpers.h"
 #include "string.h"
 #include "test_helpers.h"
-#include "thermistor.h"
 
 #define TEST_TEMP_VOLTAGE_MV 1100
 
@@ -37,6 +36,7 @@ static void prv_force_measurement(void) {
 
   // Stop after one set of measurements taken
   delay_ms(TEST_MEASUREMENT_INTERVAL_MS - 10);
+  power_select_stop();
 }
 
 static CanStorage s_can_storage = { 0 };

@@ -29,8 +29,6 @@ static StatusCode prv_broadcast_measurements(void) {
 }
 
 // Read current, voltage, and temp measurements to storage
-// Note to self: might be easier to store these values as floats instead
-// and then cast them to uint16s when sending over CAN
 void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("Reading measurements...\n");
   LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP; valid pins active-low\n");
@@ -52,7 +50,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     // Only measure + store the value if the input pin is valid
     if (s_storage.valid_bitset & 1 << i) {
       adc_read_converted_pin(POWER_SELECT_VOLTAGE_MEASUREMENT_PINS[i], &s_storage.voltages[i]);
-      // convert
+      // Convert
       temp_reading = s_storage.voltages[i];
       temp_reading /= POWER_SELECT_VSENSE_SCALING;
       temp_reading *= V_TO_MV;
@@ -75,13 +73,13 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     // Only measure + store the value if the input pin is valid
     if (s_storage.valid_bitset & 1 << i) {
       adc_read_converted_pin(POWER_SELECT_CURRENT_MEASUREMENT_PINS[i], &s_storage.currents[i]);
-      // convert
+      // Convert
       temp_reading = s_storage.currents[i];
       temp_reading *= A_TO_MA;
       temp_reading /= POWER_SELECT_ISENSE_SCALING;
       s_storage.currents[i] = (uint16_t)temp_reading;
 
-      // check for fault
+      // Check for fault, clear fault otherwise
       PowerSelectFault fault = i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS;
       if (s_storage.currents[i] > MAX_CURRENTS[i]) {
         s_storage.fault_bitset |= 1 << fault;
