@@ -12,17 +12,6 @@
   can_unpack_impl_u16((msg_ptr), 4, (relay_mask_u16_ptr), (relay_state_u16_ptr),      \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_POWERTRAIN_HEARTBEAT(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
-
-#define CAN_UNPACK_GET_AUX_STATUS(msg_ptr, aux_bat_ov_flag_u8_ptr, aux_bat_ut_flag_u8_ptr) \
-  can_unpack_impl_u8((msg_ptr), 2, (aux_bat_ov_flag_u8_ptr), (aux_bat_ut_flag_u8_ptr),     \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,  \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_FAULT_SEQUENCE(msg_ptr, sequence_u16_ptr)                   \
-  can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
 #define CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg_ptr, sequence_u16_ptr)           \
   can_unpack_impl_u16((msg_ptr), 2, (sequence_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
@@ -44,27 +33,8 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_OVUV_DCDC_AUX(msg_ptr, dcdc_ov_flag_u8_ptr, dcdc_uv_flag_u8_ptr,             \
-                                 aux_bat_ov_flag_u8_ptr, aux_bat_uv_flag_u8_ptr)                \
-  can_unpack_impl_u8((msg_ptr), 4, (dcdc_ov_flag_u8_ptr), (dcdc_uv_flag_u8_ptr),                \
-                     (aux_bat_ov_flag_u8_ptr), (aux_bat_uv_flag_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_MC_ERROR_LIMITS(msg_ptr, error_id_u16_ptr, limits_u16_ptr)                    \
-  can_unpack_impl_u16((msg_ptr), 4, (error_id_u16_ptr), (limits_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                      CAN_UNPACK_IMPL_EMPTY)
-
 #define CAN_UNPACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32_ptr, brake_output_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (throttle_output_u32_ptr), (brake_output_u32_ptr))
-
-#define CAN_UNPACK_CRUISE_TARGET(msg_ptr, target_speed_u8_ptr)                            \
-  can_unpack_impl_u8((msg_ptr), 1, (target_speed_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_BRAKE(msg_ptr, brake_state_u16_ptr)                            \
-  can_unpack_impl_u16((msg_ptr), 2, (brake_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_FRONT_POWER(msg_ptr, power_bitset_u16_ptr)                      \
   can_unpack_impl_u16((msg_ptr), 2, (power_bitset_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
@@ -82,16 +52,6 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_HORN(msg_ptr, state_u8_ptr)                                                   \
-  can_unpack_impl_u8((msg_ptr), 1, (state_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_GET_CHARGER_CONNECTION_STATE(msg_ptr, is_connected_u8_ptr)             \
-  can_unpack_impl_u8((msg_ptr), 1, (is_connected_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
-                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_SET_CHARGER_RELAY(msg_ptr, state_u8_ptr)                                      \
   can_unpack_impl_u8((msg_ptr), 1, (state_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,        \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
@@ -129,35 +89,15 @@
                       (vehicle_velocity_right_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_MOTOR_DEBUG(msg_ptr, data_u64_ptr) \
-  can_unpack_impl_u64((msg_ptr), 8, (data_u64_ptr))
-
 #define CAN_UNPACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32_ptr, motor_temp_r_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (motor_temp_l_u32_ptr), (motor_temp_r_u32_ptr))
-
-#define CAN_UNPACK_MOTOR_AMP_HR(msg_ptr, motor_amp_hr_l_u32_ptr, motor_amp_hr_r_u32_ptr) \
-  can_unpack_impl_u32((msg_ptr), 8, (motor_amp_hr_l_u32_ptr), (motor_amp_hr_r_u32_ptr))
-
-#define CAN_UNPACK_ODOMETER(msg_ptr, odometer_val_u32_ptr) \
-  can_unpack_impl_u32((msg_ptr), 4, (odometer_val_u32_ptr), CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_CRUISE_CONTROL_COMMAND(msg_ptr, command_u8_ptr)                                 \
   can_unpack_impl_u8((msg_ptr), 1, (command_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,          \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_AUX_DCDC_VC(msg_ptr, aux_voltage_u16_ptr, aux_current_u16_ptr, \
-                               dcdc_voltage_u16_ptr, dcdc_current_u16_ptr)        \
-  can_unpack_impl_u16((msg_ptr), 8, (aux_voltage_u16_ptr), (aux_current_u16_ptr), \
-                      (dcdc_voltage_u16_ptr), (dcdc_current_u16_ptr))
-
-#define CAN_UNPACK_DCDC_TEMPS(msg_ptr, temp_1_u16_ptr, temp_2_u16_ptr)                         \
-  can_unpack_impl_u16((msg_ptr), 4, (temp_1_u16_ptr), (temp_2_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                      CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_CHARGER_INFO(msg_ptr, current_u16_ptr, voltage_u16_ptr, status_bitset_u16_ptr)  \
-  can_unpack_impl_u16((msg_ptr), 6, (current_u16_ptr), (voltage_u16_ptr), (status_bitset_u16_ptr), \
-                      CAN_UNPACK_IMPL_EMPTY)
+#define CAN_UNPACK_UV_CUTOFF_NOTIFICATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_REQUEST_TO_CHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
@@ -168,9 +108,13 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_LINEAR_ACCELERATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+#define CAN_UNPACK_SOLAR_DATA_6_MPPTS(msg_ptr, data_point_type_u32_ptr, data_value_u32_ptr) \
+  can_unpack_impl_u32((msg_ptr), 8, (data_point_type_u32_ptr), (data_value_u32_ptr))
 
-#define CAN_UNPACK_ANGULAR_ROTATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+#define CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg_ptr, fault_u8_ptr, fault_data_u8_ptr)               \
+  can_unpack_impl_u8((msg_ptr), 2, (fault_u8_ptr), (fault_data_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,      \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_CHARGER_FAULT(msg_ptr, fault_u8_ptr)                                          \
   can_unpack_impl_u8((msg_ptr), 1, (fault_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
@@ -181,17 +125,17 @@
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),               \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(msg_ptr, aux_voltage_u16_ptr, aux_current_u16_ptr, \
-                                                       aux_temp_u16_ptr, main_voltage_u16_ptr) \
+#define CAN_UNPACK_AUX_BATTERY_STATUS_MAIN_POWER_VOLTAGE(                                      \
+    msg_ptr, aux_voltage_u16_ptr, aux_current_u16_ptr, aux_temp_u16_ptr, main_voltage_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 8, (aux_voltage_u16_ptr), (aux_current_u16_ptr),              \
                       (aux_temp_u16_ptr), (main_voltage_u16_ptr))
 
-#define CAN_UNPACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(msg_ptr, dcdc_voltage_u16_ptr, dcdc_current_u16_ptr, \
-                                                       dcdc_temp_u16_ptr, main_current_u16_ptr) \
-  can_unpack_impl_u16((msg_ptr), 8, (dcdc_voltage_u16_ptr), (dcdc_current_u16_ptr),              \
+#define CAN_UNPACK_DCDC_BATTERY_STATUS_MAIN_POWER_CURRENT(                                        \
+    msg_ptr, dcdc_voltage_u16_ptr, dcdc_current_u16_ptr, dcdc_temp_u16_ptr, main_current_u16_ptr) \
+  can_unpack_impl_u16((msg_ptr), 8, (dcdc_voltage_u16_ptr), (dcdc_current_u16_ptr),               \
                       (dcdc_temp_u16_ptr), (main_current_u16_ptr))
 
-#define CAN_UNPACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64_ptr)        \
+#define CAN_UNPACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64_ptr) \
   can_unpack_impl_u64((msg_ptr), 8, fault_id_u64_ptr)
 
 #define CAN_UNPACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
@@ -214,20 +158,20 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_SOLAR_DATA(msg_ptr, data_point_type_u32_ptr, data_value_u32_ptr) \
+#define CAN_UNPACK_SOLAR_DATA_5_MPPTS(msg_ptr, data_point_type_u32_ptr, data_value_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (data_point_type_u32_ptr), (data_value_u32_ptr))
 
-#define CAN_UNPACK_SOLAR_FAULT(msg_ptr, fault_u8_ptr, fault_data_u8_ptr)                       \
+#define CAN_UNPACK_SOLAR_FAULT_5_MPPTS(msg_ptr, fault_u8_ptr, fault_data_u8_ptr)               \
   can_unpack_impl_u8((msg_ptr), 2, (fault_u8_ptr), (fault_data_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,      \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_REAR_FAN_FAULT(msg_ptr, fault_data_u16_ptr, enclosure_temp_data_u16_ptr, \
-                                  dcdc_temp_data_u16_ptr, reference_voltage_u16_ptr)        \
-  can_unpack_impl_u16((msg_ptr), 8, (fault_data_u16_ptr), (enclosure_temp_data_u16_ptr),    \
+#define CAN_UNPACK_REAR_PD_FAULT(msg_ptr, fault_data_u16_ptr, enclosure_temp_data_u16_ptr, \
+                                 dcdc_temp_data_u16_ptr, reference_voltage_u16_ptr)        \
+  can_unpack_impl_u16((msg_ptr), 8, (fault_data_u16_ptr), (enclosure_temp_data_u16_ptr),   \
                       (dcdc_temp_data_u16_ptr), (reference_voltage_u16_ptr))
 
-#define CAN_UNPACK_FRONT_FAN_FAULT(msg_ptr, fault_data_u16_ptr)                  \
+#define CAN_UNPACK_FRONT_PD_FAULT(msg_ptr, fault_data_u16_ptr)                   \
   can_unpack_impl_u16((msg_ptr), 2, (fault_data_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 

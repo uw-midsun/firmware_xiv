@@ -6,7 +6,6 @@
 #define V_TO_MV 1000
 
 // Scaling factors
-// TODO: make sure these are correct during validation
 #define POWER_SELECT_PWR_SUP_ISENSE_SCALING 80   // mV/A
 #define POWER_SELECT_PWR_SUP_VSENSE_SCALING 190  // mV/V
 #define POWER_SELECT_DCDC_ISENSE_SCALING 80      // mV/A
@@ -29,8 +28,8 @@
 
 // Offsets to use in fault bitset
 typedef enum {
-  POWER_SELECT_AUX_OVERVOLTAGE = 0, 
-  POWER_SELECT_DCDC_OVERVOLTAGE, 
+  POWER_SELECT_AUX_OVERVOLTAGE = 0,
+  POWER_SELECT_DCDC_OVERVOLTAGE,
   POWER_SELECT_PWR_SUP_OVERVOLTAGE,
   POWER_SELECT_AUX_OVERCURRENT,
   POWER_SELECT_DCDC_OVERCURRENT,
@@ -92,3 +91,4 @@ typedef enum {
   POWER_SELECT_PWR_SUP_VALID,
   NUM_POWER_SELECT_VALID_PINS,
 } PowerSelectValidPin;
+

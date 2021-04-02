@@ -4,6 +4,7 @@
 #include "can_ack.h"
 #include "can_unpack.h"
 #include "exported_enums.h"
+#include "log.h"
 
 static void prv_pedal_watchdog(SoftTimerId timer_id, void *context) {
   PedalRxStorage *storage = context;
@@ -12,6 +13,7 @@ static void prv_pedal_watchdog(SoftTimerId timer_id, void *context) {
   pedal_values->throttle = 0.0f;
   pedal_values->brake = 0.0f;
   event_raise(storage->timeout_event, 0);
+  LOG_DEBUG("pedal_rx timeout\n");
 }
 
 static StatusCode prv_kick_watchdog(PedalRxStorage *storage) {
@@ -33,8 +35,8 @@ static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
   uint32_t brake_msg;
   CAN_UNPACK_PEDAL_OUTPUT(msg, &throttle_msg, &brake_msg);
 
-  pedal_values->throttle = (float)(throttle_msg) / EE_PEDAL_VALUE_DENOMINATOR;
-  pedal_values->brake = (float)(brake_msg) / EE_PEDAL_VALUE_DENOMINATOR;
+  pedal_values->throttle = (float)(throttle_msg);
+  pedal_values->brake = (float)(brake_msg);
   prv_kick_watchdog(storage);
   return STATUS_CODE_OK;
 }

@@ -1,22 +1,59 @@
 """This module implements a low-level wrapper over Python-CAN's CAN API specific to Babydriver."""
 
 import time
+from collections import namedtuple
+
 import can
 
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
 
-# The default CAN channel to use for this module. Changed dynamically by cli_setup.
-default_channel = "can0" # pylint: disable=invalid-name
+# The default CAN channel to use for this module. Changed dynamically by repl_setup.
+default_channel = "can0"  # pylint: disable=invalid-name
+
+# We use the standard 500kbps baudrate.
+CAN_BITRATE = 500000
+
+# A mapping for caching data about each channel, and a handy type used for the cached data.
+# We use a cache so that there's only one notifier thread running per channel.
+channels_to_data = {}
+ChannelData = namedtuple("ChannelData", ["bus", "reader", "notifier"])
 
 
-def get_bus(channel=None):
-    """Returns a new Python-CAN Bus for sending/receiving messages."""
+def get_bus_data(channel=None):
+    """Returns the memoized ChannelData for a given channel"""
 
     if channel is None:
         channel = default_channel
 
-    return can.interface.Bus(bustype="socketcan", channel=channel, bitrate=500000)
+    if channel not in channels_to_data:
+        bus = can.interface.Bus(bustype="socketcan", channel=channel, bitrate=CAN_BITRATE)
+
+        # We use a BufferedReader rather than reading straight from the Bus to prevent the scenario
+        # where the time for the second message to be tx'd exceeds the time taken to process the
+        # first message and start listening for the second one, which occurs if the C side is fast
+        # enough. By buffering, we never miss a message.
+        reader = can.BufferedReader()
+        notifier = can.Notifier(bus, [reader])
+
+        channels_to_data[channel] = ChannelData(bus, reader, notifier)
+
+    return channels_to_data[channel]
+
+
+def get_bus(channel=None):
+    """Returns a Python-CAN Bus for sending messages."""
+    return get_bus_data(channel).bus
+
+
+def get_bus_reader(channel=None):
+    """Returns a Python-CAN BufferedReader for reading from the specified channel."""
+    return get_bus_data(channel).reader
+
+
+def get_bus_notifier(channel=None):
+    """Returns a Python-CAN Notifier to listen for can messages."""
+    return get_bus_data(channel).notifier
 
 
 class Message:
@@ -149,17 +186,21 @@ def next_message(
     if isinstance(msg_id, int):
         msg_id = (msg_id,)
 
-    bus = get_bus(channel)
+    reader = get_bus_reader(channel)
 
     time_left = timeout
     current_time = time.time()
     msg = None
 
     while time_left > 0:
-        msg = bus.recv(timeout=time_left)
+        msg = reader.get_message(timeout=time_left)
         if msg is None:
-            # bus.recv timed out
+            # reader.get_message timed out
             break
+
+        # ignore anything sent before 100ms ago to avoid bad messages causing future errors
+        if msg.timestamp < current_time - 0.1:
+            continue
 
         msg = Message.from_msg(msg)
         if msg_id is None or msg.message_id in msg_id:
@@ -173,7 +214,7 @@ def next_message(
         current_time = new_time
 
     if msg is None:
-        raise TimeoutError()
+        raise TimeoutError
 
     if babydriver_id is not None and (not msg.data or msg.data[0] not in babydriver_id):
         raise ValueError("next_message expected babydriver ID {} but got {}".format(
@@ -182,6 +223,7 @@ def next_message(
         ))
 
     return msg
+
 
 def can_pack(data_list):
     """
@@ -210,5 +252,5 @@ def can_pack(data_list):
         for _ in range(len_in_bytes):
             int_out = val & 0xFF
             bytearr.append(int_out)
-            val = val>>8
+            val = val >> 8
     return bytearr

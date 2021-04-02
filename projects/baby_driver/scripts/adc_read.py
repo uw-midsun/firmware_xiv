@@ -7,6 +7,7 @@ from message_defs import BabydriverMessageId
 NUM_PINS_PER_PORT = 16
 OK_STATUS = 0
 
+
 def adc_read(port, pin, raw=False):
     """
     Reads a raw or converted ADC value.

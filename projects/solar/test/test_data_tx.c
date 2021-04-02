@@ -24,16 +24,17 @@ static uint32_t s_can_msg_values[2 * NUM_DATA_POINTS];
 static DataPoint s_can_msgs_data_points[2 * NUM_DATA_POINTS];
 static CanStorage s_can_storage = { 0 };
 static DataTxSettings s_data_tx_settings = {
-  .msgs_per_tx_iteration = 1,
-  .wait_between_tx_in_millis = 350,
+  .msgs_per_tx_iteration = 8,
+  .wait_between_tx_in_millis = 150,
+  .mppt_count = SOLAR_BOARD_6_MPPTS,
 };
 
 static StatusCode prv_test_data_tx_callback_handler(const CanMessage *msg, void *context,
                                                     CanAckStatus *ack_reply) {
-  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_SOLAR_DATA, msg->msg_id);
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_SOLAR_DATA_6_MPPTS, msg->msg_id);
   if (s_can_msg_count < 2 * NUM_DATA_POINTS) {
-    CAN_UNPACK_SOLAR_DATA(msg, (uint32_t *)&s_can_msgs_data_points[s_can_msg_count],
-                          &s_can_msg_values[s_can_msg_count]);
+    CAN_UNPACK_SOLAR_DATA_6_MPPTS(msg, (uint32_t *)&s_can_msgs_data_points[s_can_msg_count],
+                                  &s_can_msg_values[s_can_msg_count]);
     s_can_msg_count++;
     return STATUS_CODE_OK;
   }
@@ -57,6 +58,7 @@ static void prv_reset_arrays(void) {
 static void prv_process_can_events(SoftTimerId timer_id, void *context) {
   uint16_t msgs_for_this_iteration =
       MIN(s_data_tx_settings.msgs_per_tx_iteration, NUM_DATA_POINTS - s_can_msg_count);
+  LOG_DEBUG("processing can messages: s_can_msg_count=%d\n", s_can_msg_count);
   for (uint16_t msg = 0; msg < msgs_for_this_iteration; msg++) {
     MS_TEST_HELPER_CAN_TX(SOLAR_CAN_EVENT_TX);
   }
@@ -71,10 +73,10 @@ static void prv_process_can_events(SoftTimerId timer_id, void *context) {
 }
 
 void setup_test(void) {
-  TEST_ASSERT_OK(initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR,
+  TEST_ASSERT_OK(initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
                                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX,
                                                  SOLAR_CAN_EVENT_FAULT));
-  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_DATA,
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_DATA_6_MPPTS,
                                          prv_test_data_tx_callback_handler, NULL));
   TEST_ASSERT_OK(data_store_init());
 
