@@ -1,7 +1,5 @@
-#include "current_measurement.h"
-
 #include "adc.h"
-#include "bts7xxx_common.h"
+#include "current_measurement.h"
 #include "current_measurement_config.h"
 #include "delay.h"
 #include "gpio.h"
@@ -228,22 +226,4 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
   // otherwise valid
   TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
   TEST_ASSERT_OK(power_distribution_current_measurement_stop());
-}
-
-// Test that this function works. TODO(SOFT-336): improve/delete this.
-void test_power_distribution_current_measurement_get_pins(void) {
-  PowerDistributionCurrentSettings settings = {
-    .interval_us = 2000,
-    .callback = &prv_increment_callback,
-    .hw_config = FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
-  };
-  TEST_ASSERT_OK(power_distribution_current_measurement_init(&settings));
-
-  size_t num_pins;
-  Bts7xxxEnablePin **en_pins = power_distribution_current_measurement_get_pins(&num_pins);
-
-  TEST_ASSERT_EQUAL(22, num_pins);
-  for (size_t i = 0; i < num_pins; i++) {
-    TEST_ASSERT_EQUAL(BTS7XXX_PIN_PCA9539R, en_pins[i]->pin_type);
-  }
 }

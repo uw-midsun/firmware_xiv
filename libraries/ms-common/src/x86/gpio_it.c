@@ -10,7 +10,6 @@
 
 typedef struct GpioItInterrupt {
   uint8_t interrupt_id;
-  InterruptEdge edge;
   GpioAddress address;
   GpioItCallback callback;
   void *context;
@@ -38,14 +37,6 @@ void gpio_it_init(void) {
   }
 }
 
-StatusCode gpio_it_get_edge(const GpioAddress *address, InterruptEdge *edge) {
-  if (s_gpio_it_interrupts[address->pin].callback != NULL) {
-    *edge = s_gpio_it_interrupts[address->pin].edge;
-    return STATUS_CODE_OK;
-  }
-  return STATUS_CODE_UNINITIALIZED;
-}
-
 StatusCode gpio_it_register_interrupt(const GpioAddress *address, const InterruptSettings *settings,
                                       InterruptEdge edge, GpioItCallback callback, void *context) {
   if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
@@ -59,7 +50,6 @@ StatusCode gpio_it_register_interrupt(const GpioAddress *address, const Interrup
       x86_interrupt_register_interrupt(s_gpio_it_handler_id, settings, &interrupt_id));
 
   s_gpio_it_interrupts[address->pin].interrupt_id = interrupt_id;
-  s_gpio_it_interrupts[address->pin].edge = edge;
   s_gpio_it_interrupts[address->pin].address = *address;
   s_gpio_it_interrupts[address->pin].callback = callback;
   s_gpio_it_interrupts[address->pin].context = context;

@@ -15,7 +15,6 @@ static CanSettings s_can_settings = {
 
 // Handles CAN message from centre console during startup.
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  LOG_DEBUG("Received ack request\n");
   uint16_t sequence = 0;
   CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &sequence);
   uint16_t fault_bitset = power_select_get_fault_bitset();
@@ -24,10 +23,8 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
     if (!(valid_bitset & 1 << POWER_SELECT_AUX_VALID) ||
         fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT ||
         fault_bitset & 1 << POWER_SELECT_AUX_OVERVOLTAGE) {
-      LOG_DEBUG("Acking aux status\n");
       *ack_reply = CAN_ACK_STATUS_INVALID;
     } else {
-      LOG_DEBUG("Nacking aux status\n");
       *ack_reply = CAN_ACK_STATUS_OK;
     }
   }
@@ -36,10 +33,8 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
     if (!(valid_bitset & 1 << POWER_SELECT_DCDC_VALID) ||
         fault_bitset & 1 << POWER_SELECT_DCDC_OVERCURRENT ||
         fault_bitset & 1 << POWER_SELECT_DCDC_OVERVOLTAGE) {
-      LOG_DEBUG("Acking dcdc status\n");
       *ack_reply = CAN_ACK_STATUS_INVALID;
     } else {
-      LOG_DEBUG("Nacking dcdc status\n");
       *ack_reply = CAN_ACK_STATUS_OK;
     }
   }
@@ -48,5 +43,5 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 }
 
 StatusCode power_select_can_init(void) {
-  return can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_rx_callback, NULL);
+    return can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_ON_MAIN_SEQUENCE, prv_rx_callback, NULL);
 }

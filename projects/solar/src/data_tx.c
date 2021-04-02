@@ -33,16 +33,9 @@ static void prv_data_tx(SoftTimerId timer_id, void *context) {
     data_store_get_is_set(data_point, &data_is_set);
     if (data_is_set) {
       data_store_get(data_point, &data_value);
-      if (s_settings.mppt_count == SOLAR_BOARD_5_MPPTS) {
-        if (CAN_TRANSMIT_SOLAR_DATA_5_MPPTS((uint32_t)data_point, data_value) ==
-            STATUS_CODE_RESOURCE_EXHAUSTED) {
-          break;
-        }
-      } else if (s_settings.mppt_count == SOLAR_BOARD_6_MPPTS) {
-        if (CAN_TRANSMIT_SOLAR_DATA_6_MPPTS((uint32_t)data_point, data_value) ==
-            STATUS_CODE_RESOURCE_EXHAUSTED) {
-          break;
-        }
+      if (CAN_TRANSMIT_SOLAR_DATA((uint32_t)data_point, data_value) ==
+          STATUS_CODE_RESOURCE_EXHAUSTED) {
+        break;
       }
     }
     msgs_txed++;

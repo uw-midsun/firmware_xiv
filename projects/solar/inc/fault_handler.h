@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 #include "exported_enums.h"
-#include "solar_boards.h"
 #include "status.h"
 
 #define MAX_RELAY_OPEN_FAULTS NUM_EE_SOLAR_FAULTS
@@ -15,7 +14,6 @@ typedef struct FaultHandlerSettings {
   // Faults which cause the relay to open.
   EESolarFault relay_open_faults[MAX_RELAY_OPEN_FAULTS];
   size_t num_relay_open_faults;  // length of preceding array
-  SolarMpptCount mppt_count;
 } FaultHandlerSettings;
 
 StatusCode fault_handler_init(FaultHandlerSettings *settings);

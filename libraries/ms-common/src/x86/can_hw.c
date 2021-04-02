@@ -19,12 +19,7 @@
 #include "log.h"
 #include "x86_interrupt.h"
 
-#ifdef CAN_HW_DEV_USE_CAN0
-#define CAN_HW_DEV_INTERFACE "can0"
-#else
 #define CAN_HW_DEV_INTERFACE "vcan0"
-#endif
-
 #define CAN_HW_MAX_FILTERS 14
 #define CAN_HW_TX_FIFO_LEN 8
 // Check for thread exit once every 10ms
@@ -38,7 +33,6 @@ typedef struct CanHwEventHandler {
 typedef struct CanHwSocketData {
   int can_fd;
   struct can_frame rx_frame;
-  bool rx_frame_valid;
   Fifo tx_fifo;
   struct can_frame tx_frames[CAN_HW_TX_FIFO_LEN];
   struct can_filter filters[CAN_HW_MAX_FILTERS];
@@ -89,15 +83,12 @@ static void *prv_rx_thread(void *arg) {
     if (FD_ISSET(s_socket_data.can_fd, &input_fds)) {
       int bytes =
           read(s_socket_data.can_fd, &s_socket_data.rx_frame, sizeof(s_socket_data.rx_frame));
-      s_socket_data.rx_frame_valid = (bytes != -1);
 
       if (s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
         s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
             s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
       }
 
-      // Wakes the main thread
-      x86_interrupt_wake();
       // Limit how often we can receive messages to simulate bus speed
       usleep(s_socket_data.delay_us);
     }
@@ -119,7 +110,6 @@ static void *prv_tx_thread(void *arg) {
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
     // Wait until the producer has created an item
     sem_wait(&s_tx_sem);
-    x86_interrupt_wake();
     fifo_pop(&s_socket_data.tx_fifo, &frame);
     int bytes = write(s_socket_data.can_fd, &frame, sizeof(frame));
 
@@ -268,7 +258,8 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
 
 // Must be called within the RX handler, returns whether a message was processed
 bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
-  if (!s_socket_data.rx_frame_valid) {
+  if (s_socket_data.rx_frame.can_id == 0) {
+    // Assumes that we'll never transmit something with a CAN ID of all 0s
     return false;
   }
 
@@ -279,6 +270,5 @@ bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
   *len = s_socket_data.rx_frame.can_dlc;
 
   memset(&s_socket_data.rx_frame, 0, sizeof(s_socket_data.rx_frame));
-  s_socket_data.rx_frame_valid = false;
   return true;
 }

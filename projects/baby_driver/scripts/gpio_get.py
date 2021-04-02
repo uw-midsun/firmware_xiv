@@ -6,7 +6,6 @@ from message_defs import BabydriverMessageId
 
 GPIO_PINS_PER_PORT = 16
 
-
 def gpio_get(port, pin):
     '''
     Returns the state of the GPIO pin at the given port and pin number as a bool
@@ -41,6 +40,7 @@ def gpio_get(port, pin):
     status = status_msg.data[1]
     if status != 0:
         raise Exception("ERROR: Non-OK status returned: {}".format(status))
+
 
     raw_state = gpio_data_msg.data[1]
 

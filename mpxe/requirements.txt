@@ -1,3 +1,0 @@
-python-can==3.3.3
-cantools==35.3.0
-protobuf==3.12.2

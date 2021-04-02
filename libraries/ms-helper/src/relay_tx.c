@@ -18,8 +18,8 @@ static void prv_tx_relay_state(CanAckRequest *ack_ptr, void *context) {
 
 static SystemCanDevice s_device_lookup[NUM_EE_RELAY_IDS] = {
   [EE_RELAY_ID_BATTERY] = SYSTEM_CAN_DEVICE_BMS_CARRIER,
-  [EE_RELAY_ID_MOTOR_CONTROLLER] = SYSTEM_CAN_DEVICE_BMS_CARRIER
-  // EE_RELAY_ID_SOLAR omitted because it's not used
+  [EE_RELAY_ID_MOTOR_CONTROLLER] = SYSTEM_CAN_DEVICE_BMS_CARRIER,
+  [EE_RELAY_ID_SOLAR] = SYSTEM_CAN_DEVICE_SOLAR
 };
 
 SystemCanDevice *test_get_acking_device_lookup(void) {

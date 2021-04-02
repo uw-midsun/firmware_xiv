@@ -19,7 +19,6 @@
 #include "power_fsm.h"
 #include "power_main_sequence.h"
 #include "power_off_sequence.h"
-#include "race_switch.h"
 #include "soft_timer.h"
 #include "speed_monitor.h"
 #include "wait.h"
@@ -48,7 +47,6 @@ static PowerMainSequenceFsmStorage s_main_sequence_storage = { 0 };
 static PowerOffSequenceStorage s_off_sequence_storage = { 0 };
 static PowerFsmStorage s_power_fsm_storage = { 0 };
 static DriveFsmStorage s_drive_fsm_storage = { 0 };
-static RaceSwitchFsmStorage s_race_switch_fsm_storage = { 0 };
 
 void prv_init_fsms() {
   power_main_sequence_init(&s_main_sequence_storage);
@@ -56,7 +54,6 @@ void prv_init_fsms() {
   power_off_sequence_init(&s_off_sequence_storage);
   power_fsm_init(&s_power_fsm_storage);
   drive_fsm_init(&s_drive_fsm_storage);
-  race_switch_fsm_init(&s_race_switch_fsm_storage);
 }
 
 static MainEventGeneratorStorage s_main_event_generator = { 0 };
@@ -98,7 +95,6 @@ int main(void) {
       main_event_generator_process_event(&s_main_event_generator, &e);
       hazard_tx_process_event(&e);
       led_manager_process_event(&e);
-      race_switch_fsm_process_event(&s_race_switch_fsm_storage, &e);
     }
     wait();
   }

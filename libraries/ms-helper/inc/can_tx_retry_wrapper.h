@@ -6,11 +6,6 @@
 // the acknowledgement request. If retry_indefinitely is set, the module keeps
 // retrying that message.
 
-// Despite the ack_bitset field, this module only supports messages that require
-// a single ack. This is to avoid a distributed consensus problem where some
-// devices successfully ack and some don't, potentially causing unintended
-// side effects upon retrying message broadcast.
-
 // Requires CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
 
 #include "can_ack.h"

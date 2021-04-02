@@ -1,9 +1,7 @@
 #include "adc.h"
-
 #include "gpio.h"
 #include "interrupt.h"
 #include "log.h"
-#include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -79,7 +77,6 @@ void setup_test() {
 
   gpio_init();
   interrupt_init();
-  soft_timer_init();  // for x86
 
   for (uint8_t i = ADC_CHANNEL_0; i < ADC_CHANNEL_2; i++) {
     gpio_init_pin(&s_address[i], &settings);

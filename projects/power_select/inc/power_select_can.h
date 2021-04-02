@@ -3,9 +3,9 @@
 // Requires interrupts, can, soft timers, and event queue to be initialized.
 
 #include "can.h"
+#include "exported_enums.h"
 #include "can_pack.h"
 #include "can_unpack.h"
-#include "exported_enums.h"
 #include "log.h"
 
 #include "power_select.h"

@@ -3,7 +3,6 @@
 import sys
 import usb
 
-
 def scrape_devices(probe, devices):
     """Scrapes device list and associated discovered devices with the specified probe type.
 
@@ -21,7 +20,6 @@ def scrape_devices(probe, devices):
         serial = usb.util.get_string(dev, dev.iSerialNumber)
         options.append((probe, '{} {}'.format(manufacturer, product), serial))
     return options
-
 
 def get_options():
     """Retrieve connected programmers and print OpenOCD command"""
@@ -44,7 +42,6 @@ def get_options():
         print('Selected {} ({})'.format(name, serial), file=sys.stderr)
         print('{} {}'.format(cmd, serial))
 
-
 def main():
     """Main entry point"""
     if len(sys.argv) > 1:
@@ -52,7 +49,6 @@ def main():
         print('cmsis_dap_serial {}'.format(sys.argv[1]))
     else:
         get_options()
-
 
 if __name__ == '__main__':
     main()

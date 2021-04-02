@@ -10,7 +10,6 @@
 #include "stm32f0xx_syscfg.h"
 
 typedef struct GpioItInterrupt {
-  InterruptEdge edge;
   GpioAddress address;
   GpioItCallback callback;
   void *context;
@@ -35,14 +34,6 @@ static uint8_t prv_get_irq_channel(uint8_t pin) {
   return 7;
 }
 
-StatusCode gpio_it_get_edge(const GpioAddress *address, InterruptEdge *edge) {
-  if (s_gpio_it_interrupts[address->pin].callback != NULL) {
-    *edge = s_gpio_it_interrupts[address->pin].edge;
-    return STATUS_CODE_OK;
-  }
-  return STATUS_CODE_UNINITIALIZED;
-}
-
 StatusCode gpio_it_register_interrupt(const GpioAddress *address, const InterruptSettings *settings,
                                       InterruptEdge edge, GpioItCallback callback, void *context) {
   if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
@@ -53,7 +44,6 @@ StatusCode gpio_it_register_interrupt(const GpioAddress *address, const Interrup
 
   // Try to register on NVIC and EXTI. Both must succeed for the callback to be
   // set.
-  s_gpio_it_interrupts[address->pin].edge = edge;
   s_gpio_it_interrupts[address->pin].address = *address;
   s_gpio_it_interrupts[address->pin].callback = callback;
   s_gpio_it_interrupts[address->pin].context = context;

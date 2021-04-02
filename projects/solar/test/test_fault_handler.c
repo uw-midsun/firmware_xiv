@@ -33,14 +33,14 @@ StatusCode TEST_MOCK(relay_fsm_open)(void) {
 static StatusCode prv_handle_fault_can_msg(const CanMessage *msg, void *context,
                                            CanAckStatus *ack_reply) {
   s_num_fault_can_msgs++;
-  CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, (uint8_t *)&s_last_can_fault, &s_last_can_fault_data);
+  CAN_UNPACK_SOLAR_FAULT(msg, (uint8_t *)&s_last_can_fault, &s_last_can_fault_data);
   return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
-                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_handle_fault_can_msg, NULL);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
+                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT, prv_handle_fault_can_msg, NULL);
   s_times_relay_opened = 0;
   s_relay_open_ret = STATUS_CODE_OK;
   s_num_fault_can_msgs = 0;
@@ -54,7 +54,6 @@ void test_single_non_relay_open_fault(void) {
   FaultHandlerSettings settings = {
     .relay_open_faults = {},
     .num_relay_open_faults = 0,
-    .mppt_count = SOLAR_BOARD_6_MPPTS,
   };
   TEST_ASSERT_OK(fault_handler_init(&settings));
 
@@ -72,7 +71,6 @@ void test_single_relay_open_fault(void) {
   FaultHandlerSettings settings = {
     .relay_open_faults = { TEST_SOLAR_FAULT },
     .num_relay_open_faults = 1,
-    .mppt_count = SOLAR_BOARD_6_MPPTS,
   };
   TEST_ASSERT_OK(fault_handler_init(&settings));
 
@@ -92,7 +90,6 @@ void test_all_faults(void) {
     settings.relay_open_faults[fault] = fault;
   }
   settings.num_relay_open_faults = MAX_RELAY_OPEN_FAULTS;
-  settings.mppt_count = SOLAR_BOARD_6_MPPTS;
   TEST_ASSERT_OK(fault_handler_init(&settings));
 
   for (EESolarFault fault = 0; fault < NUM_EE_SOLAR_FAULTS; fault++) {
@@ -113,7 +110,6 @@ void test_relay_open_failure(void) {
   FaultHandlerSettings settings = {
     .relay_open_faults = { TEST_SOLAR_FAULT },
     .num_relay_open_faults = 1,
-    .mppt_count = SOLAR_BOARD_6_MPPTS,
   };
   TEST_ASSERT_OK(fault_handler_init(&settings));
 
@@ -142,7 +138,6 @@ void test_raising_invalid_fault(void) {
   FaultHandlerSettings settings = {
     .relay_open_faults = {},
     .num_relay_open_faults = 0,
-    .mppt_count = SOLAR_BOARD_6_MPPTS,
   };
   TEST_ASSERT_OK(fault_handler_init(&settings));
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, fault_handler_raise_fault(NUM_EE_SOLAR_FAULTS, 0));

@@ -10,21 +10,9 @@
 
 #define MAX_THERMISTORS MAX_SOLAR_BOARD_MPPTS
 
-typedef enum ThermistorType {
-  NTC_THERMISTOR = 0,
-  RTD_THERMISTOR,
-  FAN_CONTROL_THERMISTOR,
-  NUM_THERMISTOR_TYPES,
-} ThermistorType;
-
-typedef struct ThermistorSettings {
-  ThermistorType thermistor_type;
-  GpioAddress thermistor_address;
-} ThermistorSettings;
-
 typedef struct SenseTemperatureSettings {
   // The associated data point for the pin at index idx is DATA_POINT_TEMPERATURE(idx)
-  ThermistorSettings thermistor_settings[MAX_THERMISTORS];
+  GpioAddress thermistor_pins[MAX_THERMISTORS];
   uint8_t num_thermistors;
 } SenseTemperatureSettings;
 

@@ -2,7 +2,6 @@
 #include "can_transmit.h"
 #include "centre_console_events.h"
 #include "centre_console_fault_reason.h"
-#include "critical_section.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "log.h"
@@ -53,17 +52,6 @@ FSM_STATE_TRANSITION(power_state_fault) {
   FSM_ADD_TRANSITION(CENTRE_CONSOLE_POWER_EVENT_OFF, power_state_transitioning);
 }
 
-// This function is called when we catch a bps fault
-// we discharge main and switch to aux
-// we the lockup firmware with an infinite loop
-// until the fault is resolved and the car's been power cycled
-static void prv_bps_fault(void) {
-  CAN_TRANSMIT_DISCHARGE_PRECHARGE();
-  critical_section_start();
-  while (true) {
-  }
-}
-
 static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   // Go back to previous state
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
@@ -74,7 +62,8 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
     CAN_TRANSMIT_STATE_TRANSITION_FAULT(fault.fields.area, fault.fields.reason);
     event_raise(CENTRE_CONSOLE_POWER_EVENT_CLEAR_FAULT, power_fsm->previous_state);
   } else {
-    prv_bps_fault();
+    power_fsm->previous_state = POWER_STATE_OFF;
+    event_raise(CENTRE_CONSOLE_POWER_EVENT_OFF, 0);
   }
 }
 

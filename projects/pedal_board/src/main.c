@@ -16,12 +16,14 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+#define CAN_DEVICE_ID 0x1
+
 static Ads1015Storage s_ads1015_storage = { 0 };
 static PedalCalibBlob s_calib_blob = { 0 };
 
 static CanStorage s_can_storage = { 0 };
 const CanSettings can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_PEDAL,
+  .device_id = CAN_DEVICE_ID,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = PEDAL_CAN_RX,
   .tx_event = PEDAL_CAN_TX,
@@ -31,6 +33,7 @@ const CanSettings can_settings = {
 };
 
 int main() {
+  LOG_DEBUG("Welcome to Pedal!\n");
   // initialize all the modules
   gpio_init();
   interrupt_init();

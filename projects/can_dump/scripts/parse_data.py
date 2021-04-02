@@ -5,7 +5,6 @@ import csv
 
 from can_message import CanMessage
 
-
 def parse_data(file_name):
     """Read the CSV data and parse it"""
     log_reader = csv.reader(open(file_name, 'r'), delimiter=',')
@@ -21,7 +20,6 @@ def parse_data(file_name):
 
         print(timestamp)
         msg.parse()
-
 
 def main():
     """Main entry point"""

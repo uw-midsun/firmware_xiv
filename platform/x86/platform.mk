@@ -48,13 +48,7 @@ ifeq (clang,$(COMPILER))
 endif
 
 # Linker flags
-LDFLAGS := -lrt -lm
-
-CFLAGS += -I/usr/local/include
-
-ifneq (,$(IS_MPXE))
-  LDFLAGS += -L/usr/local/lib -lprotobuf-c
-endif
+LDFLAGS := -lrt
 
 # Shell environment variables
 FLASH_VAR := MIDSUN_X86_FLASH_FILE

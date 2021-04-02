@@ -18,7 +18,7 @@ void teardown_test(void) {}
 
 void test_can_message_convert(void) {
   CanMessage base_msg = { 0 };
-  CAN_PACK_LIGHTS_SYNC(&base_msg);
+  CAN_PACK_OVUV_DCDC_AUX(&base_msg, true, false, true, false);
 
   GenericCanMsg generic_msg = { 0 };
   TEST_ASSERT_OK(can_message_to_generic_can_message(&base_msg, &generic_msg));

@@ -10,7 +10,6 @@ void watchdog_start(WatchdogStorage *storage, WatchdogTimeout timeout_ms,
   storage->timeout_ms = timeout_ms;
   storage->callback = callback;
   storage->callback_context = context;
-  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
   watchdog_kick(storage);
 }
 

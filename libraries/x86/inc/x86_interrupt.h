@@ -26,9 +26,6 @@ StatusCode x86_interrupt_register_interrupt(uint8_t handler_id, const InterruptS
 // Triggers a software interrupt by interrupt_id.
 StatusCode x86_interrupt_trigger(uint8_t interrupt_id);
 
-// Wakes wait()
-void x86_interrupt_wake(void);
-
 // Configures the block mask on the signal handler for critical sections.
 void x86_interrupt_mask(void);
 void x86_interrupt_unmask(void);

@@ -75,13 +75,12 @@ static void prv_periodic_gpio_toggle_and_check(SoftTimerId timer_id, void *conte
 
   for (Mcp23008PinAddress pin = 0; pin < NUM_MCP23008_GPIO_PINS; pin++) {
     address.pin = pin;
-    mcp23008_gpio_get_state(&address, &get_state);
     mcp23008_gpio_toggle_state(&address);
     mcp23008_gpio_get_state(&address, &get_state);
     if (get_state == *state) {
       LOG_DEBUG("State for pin %d set and read correctly\n", pin);
     } else {
-      LOG_DEBUG("State for pin %d set and read incorrectly\n", pin);
+      LOG_DEBUG("State for pin %d incorrectly\n", pin);
     }
   }
 
@@ -104,7 +103,7 @@ int main() {
   prv_mcp23008_check_pin_states(MCP23008_GPIO_STATE_HIGH);
   LOG_DEBUG("GPIO initialization complete. Now beginning toggling of GPIO states \n");
 
-  Mcp23008GpioState state = MCP23008_GPIO_STATE_LOW;
+  Mcp23008GpioState state;
 
   soft_timer_start_millis(100, prv_periodic_gpio_toggle_and_check, &state, NULL);
 

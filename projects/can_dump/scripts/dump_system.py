@@ -13,7 +13,6 @@ from cobs import cobs
 
 from can_message import CanMessage
 
-
 def select_device():
     """User-provided serial device selector.
 
@@ -37,14 +36,12 @@ def select_device():
             print('Invalid device!')
             continue
 
-
 class CanDataSource:
     """An abstract class representing a CAN data source.
 
     A CAN data source is an interface that can be listened on for a CAN message
     representation.
     """
-
     def __init__(self, masked=None):
         self.masked = masked or []
 
@@ -79,8 +76,7 @@ class CanDataSource:
                 can_msg = CanMessage(can_id, data)
                 can_msg.parse()
 
-            # pylint: disable=logging-format-interpolation
-            logging.info('{},{},{}'.format(can_id, data, len(data)))
+            logging.info('{},{},{}'.format(can_id, data, len(data))) #pylint: disable=logging-format-interpolation
 
 
 class SocketCanDataSource(CanDataSource):
@@ -88,7 +84,6 @@ class SocketCanDataSource(CanDataSource):
     A CAN data source that reads from a bound SocketCAN interface (slcan0, can0, etc.)
     """
     CAN_FRAME_FMT = "<IB3x8s"
-
     def __init__(self, masked, device):
         super().__init__(masked)
         self.sock = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
@@ -102,12 +97,10 @@ class SocketCanDataSource(CanDataSource):
 
         return can_id, data
 
-
 class SerialCanDataSource(CanDataSource):
     """
     A CAN datasource that reads from a bound serial port interface.
     """
-
     def __init__(self, masked, device):
         super().__init__(masked)
         self.ser = serial.Serial(device, 115200)
@@ -155,7 +148,6 @@ class SerialCanDataSource(CanDataSource):
                 break
         return bytes(line)
 
-
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser()
@@ -177,7 +169,6 @@ def main():
         datasource = SerialCanDataSource(masked=args.mask, device=args.device)
 
     datasource.run()
-
 
 if __name__ == '__main__':
     main()

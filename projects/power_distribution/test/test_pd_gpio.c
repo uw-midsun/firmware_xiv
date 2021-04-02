@@ -1,11 +1,6 @@
-#include "pd_gpio.h"
-
-#include "current_measurement.h"
-#include "current_measurement_config.h"
-#include "interrupt.h"
 #include "log.h"
+#include "pd_gpio.h"
 #include "pd_gpio_config.h"
-#include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -18,9 +13,9 @@
   { GPIO_PORT_B, 11 }
 
 static const Pca9539rGpioAddress s_test_address_0 = { .i2c_address = TEST_I2C_ADDRESS,
-                                                      .pin = PCA9539R_PIN_IO0_1 };
+                                                      .pin = PCA9539R_PIN_IO0_0 };
 static const Pca9539rGpioAddress s_test_address_1 = { .i2c_address = TEST_I2C_ADDRESS,
-                                                      .pin = PCA9539R_PIN_IO0_2 };
+                                                      .pin = PCA9539R_PIN_IO0_1 };
 static const Pca9539rGpioAddress s_test_invalid_address = { .i2c_address = TEST_I2C_ADDRESS,
                                                             .pin = NUM_PCA9539R_GPIO_PINS };
 
@@ -45,8 +40,6 @@ typedef enum {
 void setup_test(void) {
   event_queue_init();
   gpio_init();
-  interrupt_init();
-  soft_timer_init();
 
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
@@ -55,12 +48,6 @@ void setup_test(void) {
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
   pca9539r_gpio_init(TEST_I2C_PORT, TEST_I2C_ADDRESS);
-
-  // only so that pd_gpio tests pass with the horrendous bts7xxx pin hack
-  PowerDistributionCurrentSettings current_settings = {
-    .hw_config = FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG,
-  };
-  power_distribution_current_measurement_init(&current_settings);
 }
 void teardown_test(void) {}
 

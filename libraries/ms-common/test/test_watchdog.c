@@ -23,20 +23,20 @@ const WatchdogSettings settings = {
   .callback = prv_expiry_callback,
 };
 
-static void prv_reset_callback(void) {
+static void prv_reset_callback() {
   s_expiry_called = false;
   s_passed_context = (void *)0;
 }
 
-void setup_test(void) {
+void setup_test() {
   interrupt_init();
   soft_timer_init();
   prv_reset_callback();
 }
 
-void teardown_test(void) {}
+void teardown_test() {}
 
-void test_watchdog_expiry(void) {
+void test_watchdog_expiry() {
   uint32_t context_data = 0xdeadbeef;
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
   TEST_ASSERT_FALSE(s_expiry_called);
@@ -47,7 +47,7 @@ void test_watchdog_expiry(void) {
   TEST_ASSERT_EQUAL(&context_data, s_passed_context);
 }
 
-void test_watchdog_kick(void) {
+void test_watchdog_kick() {
   uint32_t context_data = 0xdeadbeef;
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
 
@@ -63,7 +63,7 @@ void test_watchdog_kick(void) {
   TEST_ASSERT_EQUAL(&context_data, s_passed_context);
 }
 
-void test_watchdog_expired_does_not_call_callback_multiple_times(void) {
+void test_watchdog_expired_does_not_call_callback_multiple_times() {
   uint32_t context_data = 0xdeadbeef;
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
 
@@ -77,7 +77,7 @@ void test_watchdog_expired_does_not_call_callback_multiple_times(void) {
   TEST_ASSERT_FALSE(s_expiry_called);
 }
 
-void test_watchdog_expired_can_start_again(void) {
+void test_watchdog_expired_can_start_again() {
   uint32_t context_data = 0xdeadbeef;
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
 
