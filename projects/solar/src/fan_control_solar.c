@@ -45,6 +45,7 @@ static bool prv_check_temperature(uint8_t thermistor) {
       return false;
     }
   }
+  return false;
 }
 
 // Checks the temperature for all mppts and enables mppt pin accordingly

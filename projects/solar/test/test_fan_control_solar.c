@@ -32,6 +32,7 @@ static uint16_t s_full_speed_temp_threshold = 3;  // arbitrarily selected value 
 static SolarMpptCount s_mppt_count;
 
 static GpioState s_gpio_state;
+static Event s_data_ready = {.id = DATA_READY_EVENT, .data = 0};
 
 void setup_test(void) {
   event_queue_init();
@@ -92,7 +93,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_belowtemp(void) {
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
   }
-  fan_control_process_event(DATA_READY_EVENT);
+  fan_control_process_event(&s_data_ready);
 
   // Overtemperature fault should not be raised
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -117,7 +118,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
   }
   data_store_set(DATA_POINT_TEMPERATURE(6), ABOVE_TEMPERATURE_THRESHOLD_DC);
-  fan_control_process_event(DATA_READY_EVENT);
+  fan_control_process_event(&s_data_ready);
 
   Event e;
 
@@ -144,7 +145,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_multipleabovetemp(void) {
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), ABOVE_TEMPERATURE_THRESHOLD_DC);
   }
-  fan_control_process_event(DATA_READY_EVENT);
+  fan_control_process_event(&s_data_ready);
 
   Event e;
 
@@ -170,7 +171,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void) {
   // Set 6th mppt status to overtemperature
   data_store_set(DATA_POINT_MPPT_STATUS(5), SPV1020_OVT_MASK);
 
-  fan_control_process_event(DATA_READY_EVENT);
+  fan_control_process_event(&s_data_ready);
 
   // Full Speed pin should be low to enable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
@@ -192,7 +193,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void) {
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), ABOVE_TEMPERATURE_THRESHOLD_DC);
   }
-  fan_control_process_event(DATA_READY_EVENT);
+  fan_control_process_event(&s_data_ready);
 
   // Test that the full_speed pin is indeed active low
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
@@ -202,7 +203,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void) {
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
   }
-  fan_control_process_event(DATA_READY_EVENT);
+  fan_control_process_event(&s_data_ready);
 
   // Test that full_speed pin is inactive (high)
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
