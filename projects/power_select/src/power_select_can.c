@@ -49,7 +49,8 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
 }
 
 // Handles CAN message from centre console during aux power on.
-static StatusCode prv_rx_aux_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+static StatusCode prv_rx_aux_callback(const CanMessage *msg, void *context,
+                                      CanAckStatus *ack_reply) {
   uint16_t sequence = 0;
   CAN_UNPACK_POWER_ON_AUX_SEQUENCE(msg, &sequence);
   uint16_t fault_bitset = power_select_get_fault_bitset();
