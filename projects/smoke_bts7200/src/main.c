@@ -56,8 +56,8 @@ static void prv_read_and_log(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, s_hw_config, NULL);
 }
 
-static void prv_fault_callback(bool fault0, bool fault1, void *context) {
-  LOG_DEBUG("Fault! channel 0=%d, channel 1=%d\n", fault0, fault1);
+static void prv_fault_callback(Bts7200Channel channel, void *context) {
+  LOG_DEBUG("Fault on channel %d!\n", channel);
 }
 
 int main() {
