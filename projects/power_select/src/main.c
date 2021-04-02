@@ -37,7 +37,7 @@ int main() {
 
   power_select_can_init();
   power_select_init();
-  power_select_start();
+  power_select_start(POWER_SELECT_MEASUREMENT_INTERVAL_MS);
 
   Event e = { 0 };
   while (true) {

@@ -19,7 +19,7 @@
 #include "power_select_thermistor.h"
 
 #define POWER_SELECT_MEASUREMENT_INTERVAL_MS 1000
-#define POWER_SELECT_MEASUREMENT_INTERVAL_US (POWER_SELECT_MEASUREMENT_INTERVAL_MS * 1000)
+#define POWER_SELECT_MEASUREMENT_INTERVAL_US ((POWER_SELECT_MEASUREMENT_INTERVAL_MS)*1000)
 
 typedef enum {
   POWER_SELECT_AUX = 0,
@@ -83,13 +83,14 @@ typedef struct {
   uint8_t valid_bitset;  // valid pins
   SoftTimerId timer_id;
   bool measurement_in_progress;
+  uint32_t interval_us;
 } PowerSelectStorage;
 
 // Initialize power selection
 StatusCode power_select_init(void);
 
-// Start periodically measuring sense values
-StatusCode power_select_start(void);
+// Start periodically measuring sense values at the interval passed in
+StatusCode power_select_start(uint32_t interval_us);
 
 // Stop measuring sense values
 bool power_select_stop(void);

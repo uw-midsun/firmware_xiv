@@ -29,12 +29,14 @@
 
 #define EXPECTED_TEMP ((uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV)))
 
-static void prv_force_measurement(void) {
-  power_select_start();
+#define TEST_MEASUREMENT_INTERVAL_MS 50
+#define TEST_MEASUREMENT_INTERVAL_US ((TEST_MEASUREMENT_INTERVAL_MS)*1000)
 
-  // Wait for measurement to finish
-  delay_ms(20);
-  power_select_stop();
+static void prv_force_measurement(void) {
+  power_select_start(TEST_MEASUREMENT_INTERVAL_US);
+
+  // Stop after one set of measurements taken
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS - 10);
 }
 
 static CanStorage s_can_storage = { 0 };
@@ -171,13 +173,13 @@ void test_power_select_init_works(void) {
 void test_power_select_periodic_measure_works(void) {
   TEST_ASSERT_OK(power_select_init());
 
-  TEST_ASSERT_OK(power_select_start());
+  TEST_ASSERT_OK(power_select_start(TEST_MEASUREMENT_INTERVAL_US));
 
   // Shouldn't be possible to start twice
-  TEST_ASSERT_NOT_OK(power_select_start());
+  TEST_ASSERT_NOT_OK(power_select_start(TEST_MEASUREMENT_INTERVAL_US));
 
   // Make sure it doesn't break while running
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   TEST_ASSERT_TRUE(power_select_stop());
   TEST_ASSERT_FALSE(power_select_stop());
@@ -189,9 +191,9 @@ void test_power_select_periodic_measure_reports_correctly(void) {
   prv_set_voltages_good();
   prv_set_all_pins_valid();
 
-  TEST_ASSERT_OK(power_select_start());
+  TEST_ASSERT_OK(power_select_start(TEST_MEASUREMENT_INTERVAL_US));
 
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
@@ -219,9 +221,9 @@ void test_power_select_invalid_pin_reading(void) {
   prv_set_voltages_good();
   prv_set_all_pins_valid();
 
-  TEST_ASSERT_OK(power_select_start());
+  TEST_ASSERT_OK(power_select_start(TEST_MEASUREMENT_INTERVAL_US));
 
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
@@ -243,7 +245,7 @@ void test_power_select_invalid_pin_reading(void) {
   // Aux invalid
   s_test_gpio_read_states[POWER_SELECT_AUX] = GPIO_STATE_HIGH;
 
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   // All pins should be valid except aux, no faults
   TEST_ASSERT_EQUAL(0b110, power_select_get_valid_bitset());
@@ -277,9 +279,9 @@ void test_power_select_faults_handled(void) {
   prv_set_voltages_good();
   prv_set_all_pins_valid();
 
-  TEST_ASSERT_OK(power_select_start());
+  TEST_ASSERT_OK(power_select_start(TEST_MEASUREMENT_INTERVAL_US));
 
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
@@ -289,7 +291,7 @@ void test_power_select_faults_handled(void) {
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
   s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] =
       TEST_FAULT_CURRENT_SCALED_MA;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   uint16_t expected_fault_bitset = 0;
   expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERVOLTAGE;
@@ -300,7 +302,7 @@ void test_power_select_faults_handled(void) {
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_GOOD_VOLTAGE_SCALED_MV;
   s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] =
       TEST_GOOD_CURRENT_SCALED_MA;
-  delay_ms(POWER_SELECT_MEASUREMENT_INTERVAL_MS * 2);
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   // Should now be no faults
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
@@ -349,6 +351,8 @@ void test_power_select_broadcast_works(void) {
 
   prv_set_voltages_good();
   prv_set_all_pins_valid();
+
+  power_select_start(POWER_SELECT_MEASUREMENT_INTERVAL_US);
 
   prv_force_measurement();
 

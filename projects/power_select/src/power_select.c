@@ -109,8 +109,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     prv_broadcast_fault();
   }
 
-  soft_timer_start(POWER_SELECT_MEASUREMENT_INTERVAL_US, prv_periodic_measure, &s_storage,
-                   &s_storage.timer_id);
+  soft_timer_start(s_storage.interval_us, prv_periodic_measure, &s_storage, &s_storage.timer_id);
 }
 
 // Initialize all sense pins as ADC
@@ -201,11 +200,13 @@ StatusCode power_select_init(void) {
 
   s_storage.timer_id = SOFT_TIMER_INVALID_TIMER;
   s_storage.measurement_in_progress = false;
+  s_storage.interval_us = POWER_SELECT_MEASUREMENT_INTERVAL_US;
 
   return STATUS_CODE_OK;
 }
 
-StatusCode power_select_start(void) {
+StatusCode power_select_start(uint32_t interval_us) {
+  s_storage.interval_us = interval_us;
   if (s_storage.measurement_in_progress == false) {
     s_storage.measurement_in_progress = true;
     prv_periodic_measure(s_storage.timer_id, &s_storage);
