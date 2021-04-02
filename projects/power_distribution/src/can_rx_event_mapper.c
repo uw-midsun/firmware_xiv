@@ -1,8 +1,12 @@
 #include "can_rx_event_mapper.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "can.h"
 #include "event_queue.h"
-
-#define CAN_RX_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
+#include "log.h"
+#include "pd_events.h"
 
 static CanRxEventMapperConfig *s_config;
 
@@ -39,9 +43,11 @@ static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStat
     data = (raw_data == 0) ? 0 : 1;
   }
 
-  status_ok_or_return(event_raise_priority(CAN_RX_EVENT_PRIORITY, event_id, data));
-
-  return STATUS_CODE_OK;
+  StatusCode status = event_raise_priority(PD_ACTION_EVENT_PRIORITY, event_id, data);
+  if (!status_ok(status)) {
+    LOG_WARN("WARNING: can_rx_event_mapper failed to raise event! id=%d, data=%d, status=%d\n", event_id, data, status);
+  }
+  return status;
 }
 
 StatusCode can_rx_event_mapper_init(CanRxEventMapperConfig *config) {

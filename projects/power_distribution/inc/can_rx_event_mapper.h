@@ -3,8 +3,12 @@
 // Map CAN messages to events.
 // Requires GPIO, interrupts, soft timers, the event queue, and CAN to be initialized.
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "can.h"
 #include "event_queue.h"
+#include "status.h"
 
 typedef struct {
   // The CAN message id we're responding to.

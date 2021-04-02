@@ -1,5 +1,12 @@
 #pragma once
 
+#include "event_queue.h"
+
+// publish_data transmits a lot of CAN messages, so it might overwhelm the EVENT_PRIORITY_NORMAL
+// queue. To avoid losing important events, we transmit actionable events at a higher priority.
+#define PD_ACTION_EVENT_PRIORITY EVENT_PRIORITY_HIGH
+#define PD_BPS_STROBE_EVENT_PRIORITY EVENT_PRIORITY_HIGHEST
+
 typedef enum {
   PD_CAN_EVENT_RX = 0,
   PD_CAN_EVENT_TX,
