@@ -6,15 +6,15 @@
 #include "gpio_it.h"
 #include "solar_events.h"
 
-typedef struct FanControlSettingsSolar {
+typedef struct FanControlSolarSettings {
   GpioAddress overtemp_addr;
   GpioAddress fan_fail_addr;
   GpioAddress full_speed_addr;
-  uint16_t full_speed_temp_threshold;
+  uint16_t full_speed_temp_threshold_dC;  // in deciCelsius
 
   SolarMpptCount mppt_count;
-} FanControlSettingsSolar;
+} FanControlSolarSettings;
 
-StatusCode fan_control_init(FanControlSettingsSolar *settings);
+StatusCode fan_control_init(FanControlSolarSettings *settings);
 
 bool fan_control_process_event(Event *e);
