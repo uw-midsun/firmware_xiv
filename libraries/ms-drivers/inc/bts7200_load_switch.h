@@ -27,6 +27,12 @@
 #define BTS7200_FAULT_RESTART_DELAY_MS BTS7XXX_FAULT_RESTART_DELAY_MS
 #define BTS7200_FAULT_RESTART_DELAY_US (BTS7200_FAULT_RESTART_DELAY_MS * 1000)
 
+typedef enum {
+  BTS7200_CHANNEL_0 = 0,
+  BTS7200_CHANNEL_1,
+  NUM_BTS7200_CHANNELS,
+} Bts7200Channel;
+
 typedef void (*Bts7200DataCallback)(uint16_t reading_out_0, uint16_t reading_out_1, void *context);
 
 // If provided, this callback will be called when there's a protection event on faulting_channel.
@@ -86,12 +92,6 @@ typedef struct Bts7200Storage {
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
   uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
-
-typedef enum {
-  BTS7200_CHANNEL_0 = 0,
-  BTS7200_CHANNEL_1,
-  NUM_BTS7200_CHANNELS,
-} Bts7200Channel;
 
 // Initialize the BTS7200 with the given settings; the select and enable
 // pins are STM32 GPIO pins.
