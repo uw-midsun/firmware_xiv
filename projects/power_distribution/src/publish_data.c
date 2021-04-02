@@ -9,7 +9,7 @@
 #include "status.h"
 
 #define NUM_MSG_PER_ITERATION 8
-#define ITERATION_WAIT_MS 10
+#define ITERATION_WAIT_MS 20
 
 static PublishDataConfig *s_config = { 0 };
 static uint16_t *s_current_measurements = NULL;
@@ -44,7 +44,7 @@ static void prv_partially_publish(SoftTimerId timer_id, void *context) {
     Output current_id = s_config->outputs_to_publish[index];
     StatusCode tx_code = s_config->transmitter(current_id, s_current_measurements[current_id]);
     if (!status_ok(tx_code)) {
-      LOG_WARN("Failed to TX current %d: status code %d\n", current_id, tx_code);
+      LOG_WARN("Failed to TX output %d: status code %d\n", current_id, tx_code);
     }
     index++;
   }
