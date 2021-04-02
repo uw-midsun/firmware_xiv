@@ -49,6 +49,27 @@ static const OutputBts7200Info s_front_left_right_turn_light_front_bts7200 = {
   .mux_selection = FRONT_MUX_SEL_FRONT_LEFT_RIGHT_TURN_LIGHT,
 };
 
+static const OutputBts7200Info s_5v_spare_front_bts7200_info = {
+  .enable_0_pin = FRONT_PIN_5V_SPARE_1_EN,
+  .enable_1_pin = FRONT_PIN_5V_SPARE_2_EN,
+  .dsel_pin = FRONT_PIN_5V_SPARE_1_2_DSEL,
+  .mux_selection = FRONT_MUX_SEL_5V_SPARES,
+};
+
+static const OutputBts7200Info s_spare_2_3_front_bts7200_info = {
+  .enable_0_pin = FRONT_PIN_SPARE_2_EN,
+  .enable_1_pin = FRONT_PIN_SPARE_3_EN,
+  .dsel_pin = FRONT_PIN_SPARE_2_3_DSEL,
+  .mux_selection = FRONT_MUX_SEL_SPARE_2_3,
+};
+
+static const OutputBts7200Info s_spare_5_6_front_bts7200_info = {
+  .enable_0_pin = FRONT_PIN_SPARE_5_EN,
+  .enable_1_pin = FRONT_PIN_SPARE_6_EN,
+  .dsel_pin = FRONT_PIN_SPARE_5_6_DSEL,
+  .mux_selection = FRONT_MUX_SEL_SPARE_5_6,
+};
+
 // Rear power distribution BTS7200s
 
 static const OutputBts7200Info s_charger_strobe_rear_bts7200 = {
@@ -77,6 +98,41 @@ static const OutputBts7200Info s_fan_1_2_rear_bts7200 = {
   .enable_1_pin = REAR_PIN_FAN_2_EN,
   .dsel_pin = REAR_PIN_FAN_1_2_DSEL,
   .mux_selection = REAR_MUX_SEL_FAN_1_2,
+};
+
+static const OutputBts7200Info s_5v_spare_rear_bts7200_info = {
+  .enable_0_pin = REAR_PIN_5V_SPARE_1_EN,
+  .enable_1_pin = REAR_PIN_5V_SPARE_2_EN,
+  .dsel_pin = REAR_PIN_5V_SPARE_1_2_DSEL,
+  .mux_selection = REAR_MUX_SEL_5V_SPARES,
+};
+
+static const OutputBts7200Info s_spare_2_3_rear_bts7200_info = {
+  .enable_0_pin = REAR_PIN_SPARE_2_EN,
+  .enable_1_pin = REAR_PIN_SPARE_3_EN,
+  .dsel_pin = REAR_PIN_SPARE_2_3_DSEL,
+  .mux_selection = REAR_MUX_SEL_SPARE_2_3,
+};
+
+static const OutputBts7200Info s_spare_4_5_rear_bts7200_info = {
+  .enable_0_pin = REAR_PIN_SPARE_4_EN,
+  .enable_1_pin = REAR_PIN_SPARE_5_EN,
+  .dsel_pin = REAR_PIN_SPARE_4_5_DSEL,
+  .mux_selection = REAR_MUX_SEL_SPARE_4_5,
+};
+
+static const OutputBts7200Info s_spare_7_8_rear_bts7200_info = {
+  .enable_0_pin = REAR_PIN_SPARE_7_EN,
+  .enable_1_pin = REAR_PIN_SPARE_8_EN,
+  .dsel_pin = REAR_PIN_SPARE_7_8_DSEL,
+  .mux_selection = REAR_MUX_SEL_SPARE_7_8,
+};
+
+static const OutputBts7200Info s_spare_9_10_rear_bts7200_info = {
+  .enable_0_pin = REAR_PIN_SPARE_9_EN,
+  .enable_1_pin = REAR_PIN_SPARE_10_EN,
+  .dsel_pin = REAR_PIN_SPARE_9_10_DSEL,
+  .mux_selection = REAR_MUX_SEL_SPARE_9_10,
 };
 
 // clang-format off
@@ -244,6 +300,70 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
         .mux_selection = FRONT_MUX_SEL_UV_VBAT,
       },
     },
+    [FRONT_OUTPUT_5V_SPARE_1] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = true,
+      .bts7200_spec = {
+        .bts7200_info = &s_5v_spare_front_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [FRONT_OUTPUT_5V_SPARE_2] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = true,
+      .bts7200_spec = {
+        .bts7200_info = &s_5v_spare_front_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [FRONT_OUTPUT_SPARE_1] = {
+      .type = OUTPUT_TYPE_BTS7040,
+      .on_front = true,
+      .bts7040_spec = {
+        .enable_pin = FRONT_PIN_SPARE_1_EN,
+        .mux_selection = FRONT_MUX_SEL_SPARE_1,
+      },
+    },
+    [FRONT_OUTPUT_SPARE_2] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = true,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_2_3_front_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [FRONT_OUTPUT_SPARE_3] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = true,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_2_3_front_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [FRONT_OUTPUT_SPARE_4] = {
+      .type = OUTPUT_TYPE_BTS7040,
+      .on_front = true,
+      .bts7040_spec = {
+        .enable_pin = FRONT_PIN_SPARE_4_EN,
+        .mux_selection = FRONT_MUX_SEL_SPARE_4,
+      },
+    },
+    [FRONT_OUTPUT_SPARE_5] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = true,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_5_6_front_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [FRONT_OUTPUT_SPARE_6] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = true,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_5_6_front_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
 
     // Rear power distribution outputs
     [REAR_OUTPUT_BMS] = {
@@ -331,6 +451,102 @@ const OutputConfig COMBINED_OUTPUT_CONFIG = {
       .on_front = false,
       .bts7200_spec = {
         .bts7200_info = &s_fan_1_2_rear_bts7200,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [REAR_OUTPUT_5V_SPARE_1] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_5v_spare_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [REAR_OUTPUT_5V_SPARE_2] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_5v_spare_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [REAR_OUTPUT_SPARE_1] = {
+      .type = OUTPUT_TYPE_BTS7040,
+      .on_front = false,
+      .bts7040_spec = {
+        .enable_pin = REAR_PIN_SPARE_1_EN,
+        .mux_selection = REAR_MUX_SEL_SPARE_1,
+      },
+    },
+    [REAR_OUTPUT_SPARE_2] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_2_3_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [REAR_OUTPUT_SPARE_3] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_2_3_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [REAR_OUTPUT_SPARE_4] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_4_5_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [REAR_OUTPUT_SPARE_5] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_4_5_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [REAR_OUTPUT_SPARE_6] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_rear_camera_spare_6_rear_bts7200,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [REAR_OUTPUT_SPARE_7] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_7_8_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [REAR_OUTPUT_SPARE_8] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_7_8_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_1,
+      },
+    },
+    [REAR_OUTPUT_SPARE_9] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_9_10_rear_bts7200_info,
+        .channel = BTS7200_CHANNEL_0,
+      },
+    },
+    [REAR_OUTPUT_SPARE_10] = {
+      .type = OUTPUT_TYPE_BTS7200,
+      .on_front = false,
+      .bts7200_spec = {
+        .bts7200_info = &s_spare_9_10_rear_bts7200_info,
         .channel = BTS7200_CHANNEL_1,
       },
     },

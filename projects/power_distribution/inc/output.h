@@ -18,6 +18,8 @@
 #include "status.h"
 
 // TODO(SOFT-396): update the currents confluence page
+// Please don't change the numerical values of the outputs so downstream tools can rely on them.
+// Add any new outputs at the end, and if a spare gets a proper name, just rename the spare output.
 typedef enum {
   // Outputs for front power distribution
   FRONT_OUTPUT_CENTRE_CONSOLE = 0,
@@ -38,7 +40,14 @@ typedef enum {
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
   FRONT_OUTPUT_HORN,     // on UV cutoff, no current sense
   FRONT_OUTPUT_UV_VBAT,  // on UV cutoff, current sense ONLY
-  // spares omitted
+  FRONT_OUTPUT_5V_SPARE_1,
+  FRONT_OUTPUT_5V_SPARE_2,
+  FRONT_OUTPUT_SPARE_1,
+  FRONT_OUTPUT_SPARE_2,
+  FRONT_OUTPUT_SPARE_3,
+  FRONT_OUTPUT_SPARE_4,  // on MCI's BTS7040
+  FRONT_OUTPUT_SPARE_5,  // on rear fan 1's BTS7200 channel
+  FRONT_OUTPUT_SPARE_6,  // on rear fan 2's BTS7200 channel
 
   // Outputs for rear power distribution
   REAR_OUTPUT_BMS,
@@ -52,7 +61,18 @@ typedef enum {
   REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
   REAR_OUTPUT_BRAKE_LIGHT,
   REAR_OUTPUT_BPS_STROBE_LIGHT,
-  // spares omitted
+  REAR_OUTPUT_5V_SPARE_1,
+  REAR_OUTPUT_5V_SPARE_2,
+  REAR_OUTPUT_SPARE_1,
+  REAR_OUTPUT_SPARE_2,
+  REAR_OUTPUT_SPARE_3,
+  REAR_OUTPUT_SPARE_4,   // on pedal's BTS7200 channel
+  REAR_OUTPUT_SPARE_5,   // on steering's BTS7200 channel
+  REAR_OUTPUT_SPARE_6,   // on right camera's BTS7200 channel
+  REAR_OUTPUT_SPARE_7,   // on main pi's BTS7200 channel
+  REAR_OUTPUT_SPARE_8,   // on driver display's BTS7200 channel
+  REAR_OUTPUT_SPARE_9,   // on centre console's BTS7200 channel
+  REAR_OUTPUT_SPARE_10,  // on rear display's BTS7200 channel
 
   NUM_OUTPUTS,
 } Output;
