@@ -6,6 +6,7 @@
 #include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 #define TEST_CAN_UNKNOWN_MSG_ID 0xA
 #define TEST_CAN_DEVICE_ID 0x1
@@ -100,6 +101,7 @@ void test_can_basic(void) {
   Event e = { 0 };
   // Wait for RX
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   bool processed = can_process_event(&e);
@@ -135,6 +137,7 @@ void test_can_filter(void) {
 
   Event e = { 0 };
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   TEST_ASSERT_EQUAL(1, e.data);
@@ -173,6 +176,7 @@ void test_can_ack(void) {
   Event e = { 0 };
   // Handle RX of message and attempt transmit of ACK
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   bool processed = can_process_event(&e);
@@ -181,6 +185,7 @@ void test_can_ack(void) {
 
   // Handle RX of ACK
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   processed = can_process_event(&e);
@@ -208,6 +213,7 @@ void test_can_ack_expire(void) {
   TEST_ASSERT_OK(ret);
 
   while (ack_status == NUM_CAN_ACK_STATUSES) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(CAN_ACK_STATUS_TIMEOUT, ack_status);
@@ -238,6 +244,7 @@ void test_can_ack_status(void) {
   Event e = { 0 };
   // Handle RX of message and attempt transmit of ACK
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   bool processed = can_process_event(&e);
@@ -246,6 +253,7 @@ void test_can_ack_status(void) {
 
   // Handle RX of ACK
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   processed = can_process_event(&e);
@@ -272,6 +280,7 @@ void test_can_default(void) {
   Event e = { 0 };
   // Handle message RX
   while (event_process(&e) != STATUS_CODE_OK) {
+    wait();
   }
   TEST_ASSERT_EQUAL(TEST_CAN_EVENT_RX, e.id);
   bool processed = can_process_event(&e);
