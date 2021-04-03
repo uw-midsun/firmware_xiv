@@ -6,6 +6,7 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 static volatile size_t s_msg_rx;
 static volatile uint32_t s_rx_id;
@@ -22,6 +23,7 @@ static void prv_handle_rx(void *context) {
 
 static void prv_wait_rx(size_t wait_until) {
   while (s_msg_rx != wait_until) {
+    wait();
   }
 }
 
