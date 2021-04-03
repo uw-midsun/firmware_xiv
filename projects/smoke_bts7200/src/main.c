@@ -41,18 +41,18 @@ static uint8_t s_test_channels[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
 static Bts7200Storage s_bts7200_storages[MAX_TEST_CHANNELS];
 
 static void prv_read_and_log(SoftTimerId timer_id, void *context) {
-  PowerDistributionCurrentHardwareConfig *s_hw_config = context;
+  PowerDistributionCurrentHardwareConfig *s_config = context;
   uint16_t current_0, current_1;
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
-    mux_set(&s_hw_config->mux_address, s_hw_config->bts7200s[s_test_channels[i]].mux_selection);
+    mux_set(&s_config->mux_address, s_config->bts7200s[s_test_channels[i]].mux_selection);
     bts7200_get_measurement(&s_bts7200_storages[i], &current_0, BTS7200_CHANNEL_0);
     bts7200_get_measurement(&s_bts7200_storages[i], &current_1, BTS7200_CHANNEL_1);
 
     LOG_DEBUG("Channel: %d; current_0: %d, current_1: %d\n", s_test_channels[i], current_0,
               current_1);
   }
-  soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, s_hw_config, NULL);
+  soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, s_config, NULL);
 }
 
 static void prv_fault_callback(Bts7200Channel channel, void *context) {
@@ -71,11 +71,11 @@ int main() {
   };
   i2c_init(I2C_PORT, &i2c_settings);
 
-  PowerDistributionCurrentHardwareConfig s_hw_config =
-      IS_FRONT_POWER_DISTRO ? FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG
-                            : REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG;
+  PowerDistributionCurrentHardwareConfig s_config =
+      IS_FRONT_POWER_DISTRO ? FRONT_POWER_DISTRIBUTION_CURRENT_config
+                            : REAR_POWER_DISTRIBUTION_CURRENT_config;
 
-  status_ok_or_return(mux_init(&s_hw_config.mux_address));
+  status_ok_or_return(mux_init(&s_config.mux_address));
 
   // Initialize the mux enable pin to low - CD74HC4067M96's enable pin is active low on power distro
   GpioSettings mux_enable_pin_settings = {
@@ -84,12 +84,12 @@ int main() {
     .resistor = GPIO_RES_NONE,
     .alt_function = GPIO_ALTFN_NONE,
   };
-  status_ok_or_return(gpio_init_pin(&s_hw_config.mux_enable_pin, &mux_enable_pin_settings));
+  status_ok_or_return(gpio_init_pin(&s_config.mux_enable_pin, &mux_enable_pin_settings));
 
   // Initialize and start the BTS7200s
   Bts7200Pca9539rSettings bts7200_settings = {
-    .sense_pin = &s_hw_config.mux_output_pin,
-    .i2c_port = s_hw_config.i2c_port,
+    .sense_pin = &s_config.mux_output_pin,
+    .i2c_port = s_config.i2c_port,
     .fault_callback = prv_fault_callback,
     .resistor = SMOKE_BTS7200_SENSE_RESISTOR,
     .bias = SMOKE_BTS7200_BIAS,
@@ -97,9 +97,9 @@ int main() {
   };
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {
-    bts7200_settings.select_pin = &s_hw_config.bts7200s[s_test_channels[i]].dsel_pin;
-    bts7200_settings.enable_0_pin = &s_hw_config.bts7200s[s_test_channels[i]].en0_pin;
-    bts7200_settings.enable_1_pin = &s_hw_config.bts7200s[s_test_channels[i]].en1_pin;
+    bts7200_settings.select_pin = &s_config.bts7200s[s_test_channels[i]].dsel_pin;
+    bts7200_settings.enable_0_pin = &s_config.bts7200s[s_test_channels[i]].en0_pin;
+    bts7200_settings.enable_1_pin = &s_config.bts7200s[s_test_channels[i]].en1_pin;
     status_ok_or_return(bts7200_init_pca9539r(&s_bts7200_storages[i], &bts7200_settings));
   }
 
@@ -113,7 +113,7 @@ int main() {
   pca9539r_gpio_init_pin(&steering_en, &pca9539r_gpio_settings);
   pca9539r_gpio_init_pin(&front_left_light_en, &pca9539r_gpio_settings);
 
-  soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, &s_hw_config, NULL);
+  soft_timer_start_millis(CURRENT_MEASURE_INTERVAL_MS, prv_read_and_log, &s_config, NULL);
   while (true) {
     wait();
   }

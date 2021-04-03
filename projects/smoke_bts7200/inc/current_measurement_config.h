@@ -31,5 +31,5 @@ typedef struct {
   GpioAddress mux_enable_pin;
 } PowerDistributionCurrentHardwareConfig;
 
-extern const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG;
-extern const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG;
+extern const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_config;
+extern const PowerDistributionCurrentHardwareConfig REAR_POWER_DISTRIBUTION_CURRENT_config;

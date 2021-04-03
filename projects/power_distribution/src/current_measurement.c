@@ -39,7 +39,7 @@ static void prv_measure_currents(SoftTimerId timer_id, void *context) {
 }
 
 StatusCode current_measurement_init(CurrentMeasurementSettings *settings) {
-  s_config = settings->hw_config;
+  s_config = settings->config;
   s_interval_us = settings->interval_us;
   s_callback = settings->callback;
   s_callback_context = settings->callback_context;

@@ -112,14 +112,14 @@ static void prv_increment_callback(void *context) {
 }
 
 // Test that we can initialize, read a value, and stop with the front hardware configuration.
-void test_power_distribution_current_measurement_front_hw_config_init_valid(void) {
+void test_power_distribution_current_measurement_front_config_init_valid(void) {
   output_init(&g_combined_output_config, true);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &g_front_current_measurement_config,
+    .config = &g_front_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -137,14 +137,14 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
 }
 
 // Test that we can initialize, read a value, and stop with the rear hardware configuration.
-void test_power_distribution_current_measurement_rear_hw_config_init_valid(void) {
+void test_power_distribution_current_measurement_rear_config_init_valid(void) {
   output_init(&g_combined_output_config, false);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &g_rear_current_measurement_config,
+    .config = &g_rear_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -162,14 +162,14 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
 }
 
 // Test that we can successfully get measurements with the front hardware config.
-void test_power_distribution_current_measurement_front_hw_config_get_measurement_valid(void) {
+void test_power_distribution_current_measurement_front_config_get_measurement_valid(void) {
   output_init(&g_combined_output_config, true);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &g_front_current_measurement_config,
+    .config = &g_front_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -193,14 +193,14 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
 }
 
 // Test that we can successfully get measurements with the rear hardware config.
-void test_power_distribution_current_measurement_rear_hw_config_get_measurement_valid(void) {
+void test_power_distribution_current_measurement_rear_config_get_measurement_valid(void) {
   output_init(&g_combined_output_config, false);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &g_rear_current_measurement_config,
+    .config = &g_rear_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -224,8 +224,8 @@ void test_power_distribution_current_measurement_rear_hw_config_get_measurement_
 }
 
 // Test that init errors with invalid hardware config.
-void test_power_distribution_current_measurement_invalid_hw_config(void) {
-  CurrentMeasurementConfig hw_config = {
+void test_power_distribution_current_measurement_invalid_config(void) {
+  CurrentMeasurementConfig config = {
     .outputs_to_read =
         (Output[]){
             TEST_OUTPUT_0,
@@ -235,13 +235,13 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
   };
   CurrentMeasurementSettings settings = {
     .interval_us = 2000,
-    .hw_config = &hw_config,
+    .config = &config,
   };
 
   // invalid number of outputs
-  hw_config.num_outputs_to_read = NUM_OUTPUTS + 1;
+  config.num_outputs_to_read = NUM_OUTPUTS + 1;
   TEST_ASSERT_NOT_OK(current_measurement_init(&settings));
-  hw_config.num_outputs_to_read = 2;
+  config.num_outputs_to_read = 2;
 
   // otherwise valid
   TEST_ASSERT_OK(current_measurement_init(&settings));
@@ -252,7 +252,7 @@ void test_power_distribution_current_measurement_invalid_hw_config(void) {
 // We can't actually test for the presence of the warnings, but look for them :)
 void test_warns_with_no_current_output(void) {
   uint32_t interval_us = 2000;
-  CurrentMeasurementConfig hw_config = {
+  CurrentMeasurementConfig config = {
     .outputs_to_read =
         (Output[]){
             TEST_NO_CURRENT_SENSE_OUTPUT,
@@ -261,7 +261,7 @@ void test_warns_with_no_current_output(void) {
   };
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
-    .hw_config = &hw_config,
+    .config = &config,
     .callback = prv_increment_callback,
   };
 

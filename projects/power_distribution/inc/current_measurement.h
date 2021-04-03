@@ -17,7 +17,7 @@ typedef struct {
 } CurrentMeasurementConfig;
 
 typedef struct {
-  CurrentMeasurementConfig *hw_config;
+  CurrentMeasurementConfig *config;
   uint32_t interval_us;
   // If specified, this callback is called whenever current measurements are updated.
   CurrentMeasurementCallback callback;

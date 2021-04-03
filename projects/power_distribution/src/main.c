@@ -153,7 +153,7 @@ int main(void) {
 
   // initialize current_measurement
   CurrentMeasurementSettings current_measurement_settings = {
-    .hw_config =
+    .config =
         is_front_pd ? &g_front_current_measurement_config : &g_rear_current_measurement_config,
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
