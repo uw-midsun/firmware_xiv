@@ -54,7 +54,6 @@ StatusCode bts7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *set
   storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
-  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // Initialize the enable pin
   status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin));
@@ -79,7 +78,6 @@ StatusCode bts7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSetting
   storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
-  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->enable_pin.enable_pin_pca9539r->i2c_address);
@@ -121,7 +119,7 @@ StatusCode bts7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
 
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
   // Check for faults, call callback and handle fault if voltage is within fault range
-  if ((storage->min_fault_voltage_mv <= *meas) && (*meas <= storage->max_fault_voltage_mv)) {
+  if (*meas >= storage->min_fault_voltage_mv) {
     // We don't really need to convert the voltage here, but this is consistent with the BTS7200
     // driver's behaviour.
     prv_convert_voltage_to_current(storage, meas);

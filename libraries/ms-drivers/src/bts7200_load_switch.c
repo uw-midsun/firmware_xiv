@@ -63,7 +63,6 @@ StatusCode bts7200_init_stm32(Bts7200Storage *storage, Bts7200Stm32Settings *set
   storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
-  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // initialize the select and input pins
   GpioSettings select_enable_settings = {
@@ -106,7 +105,7 @@ StatusCode bts7200_init_pca9539r(Bts7200Storage *storage, Bts7200Pca9539rSetting
   storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
-  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
+
   // initialize PCA9539R on the relevant ports
   status_ok_or_return(
       pca9539r_gpio_init(settings->i2c_port, storage->select_pin.select_pin_pca9539r->i2c_address));
@@ -182,7 +181,8 @@ StatusCode bts7200_get_measurement(Bts7200Storage *storage, uint16_t *meas,
 
   status_ok_or_return(adc_read_converted_pin(*storage->sense_pin, meas));
 
-  bool fault = storage->min_fault_voltage_mv <= *meas && *meas <= storage->max_fault_voltage_mv;
+  // faults are indicated by high voltage on the sense pin
+  bool fault = *meas >= storage->min_fault_voltage_mv;
   prv_convert_voltage_to_current(storage, meas);
   if (fault) {
     if (storage->fault_callback != NULL) {

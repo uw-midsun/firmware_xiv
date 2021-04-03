@@ -17,10 +17,9 @@
 #define ADC_EXPECTED_OK_VOLTAGE 1600
 // Values are capped at this on power_distribution boards
 #define ADC_MIN_FAULT_VOLTAGE 3200
-#define ADC_MAX_FAULT_VOLTAGE 3300
 
-// Within fault range given
-#define ADC_FAULT_VOLTAGE 3250
+// Above fault voltage given
+#define ADC_FAULT_VOLTAGE 3300
 
 // Return ADC_EXPECTED_OK_VOLTAGE by default
 #define ADC_DEFAULT_RETURNED_VOLTAGE_RAW ADC_EXPECTED_OK_VOLTAGE
@@ -116,7 +115,6 @@ void test_bts7200_current_sense_timer_stm32_works(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -166,7 +164,6 @@ void test_bts7200_current_sense_timer_pca9539r_works(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     // no bias: should default to 0
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -215,7 +212,6 @@ void test_bts7200_current_sense_restart(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -276,7 +272,6 @@ void test_bts7200_current_sense_stm32_init_invalid_settings(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -319,7 +314,6 @@ void test_bts7200_current_sense_pca9539r_init_invalid_settings(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -361,7 +355,6 @@ void test_bts7200_current_sense_null_callback(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = NULL,
   };
 
@@ -388,7 +381,6 @@ void test_bts7200_current_sense_get_measurement_stm32_valid(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -418,7 +410,6 @@ void test_bts7200_current_sense_get_measurement_pca9539r_valid(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -449,7 +440,6 @@ void test_bts7200_current_sense_context_passed(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .callback_context = context_pointer,
   };
@@ -478,7 +468,6 @@ void test_bts7200_output_0_functions_work(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
   TEST_ASSERT_OK(bts7200_init_stm32(&s_storage, &settings));
@@ -532,7 +521,6 @@ void test_bts7200_output_1_functions_work(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -588,7 +576,6 @@ void test_bts7200_faults_within_fault_range(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,  // pass in random variable
@@ -625,7 +612,6 @@ void test_bts7200_no_fault_outside_of_fault_range(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,  // pass in random variable
@@ -662,7 +648,6 @@ void test_bts7200_fault_cb_called_from_start(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -697,7 +682,6 @@ void test_bts7200_handle_fault_clears_fault(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -756,7 +740,6 @@ void test_bts7200_fault_context_passed_on_fault(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
@@ -794,7 +777,6 @@ void test_bts7200_enable_fails_during_fault(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -854,7 +836,6 @@ void test_bts7200_single_input_faults(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -914,7 +895,6 @@ void test_bts7200_stop_works(void) {
     .resistor = BTS7200_TEST_RESISTOR,
     .bias = BTS7200_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };

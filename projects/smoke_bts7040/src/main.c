@@ -20,7 +20,6 @@
 #define SMOKE_BTS7040_BIAS 0
 
 #define SMOKE_BTS7040_MIN_FAULT_VOLTAGE_MV 3200
-#define SMOKE_BTS7040_MAX_FAULT_VOLTAGE_MV 10000
 
 // Smoke test settings. Can be modified to fit testing purpose.
 #define CURRENT_MEASURE_INTERVAL_MS 500  // Set wait time between each set of readings
@@ -93,7 +92,6 @@ int main() {
     .resistor = SMOKE_BTS7040_SENSE_RESISTOR,
     .bias = SMOKE_BTS7040_BIAS,
     .min_fault_voltage_mv = SMOKE_BTS7040_MIN_FAULT_VOLTAGE_MV,
-    .max_fault_voltage_mv = SMOKE_BTS7040_MAX_FAULT_VOLTAGE_MV,
   };
 
   for (uint8_t i = 0; i < SIZEOF_ARRAY(s_test_channels); i++) {

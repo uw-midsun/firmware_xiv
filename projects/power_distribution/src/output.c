@@ -27,16 +27,14 @@
 #define BTS7040_BIAS 0
 
 // Voltage at the SENSE pin is limited to a max of 3.3V by a diode.
-// Due to to this function, since any fault current will be at least 4.4 mA (see p.g. 49)
+// Due to to this function, since any fault current will be at least 4.4 mA (see Table 21, p.g. 49)
 // the resulting voltage will be 4.4 mA * 1.6 kOhm = ~7 V. Due to this,
 // voltages approaching 3.3V represent a fault, and should be treated as such.
 // Max doesn't matter much, so it's left as a high value to account for any errors.
 #define BTS7200_MIN_FAULT_VOLTAGE_MV 3200
-#define BTS7200_MAX_FAULT_VOLTAGE_MV 10000
 
-// Apply similar logic for the BTS7040s (see p.g. 49 of BTS7040 datasheet):
+// Apply similar logic for the BTS7040s, see Table 21 (p.g. 49) in BTS7040 datasheet
 #define BTS7040_MIN_FAULT_VOLTAGE_MV 3200
-#define BTS7040_MAX_FAULT_VOLTAGE_MV 10000
 
 // These are the number of BTS7200 and BTS7040 slots physically present on the board.
 // Not all are used, some are only for spares.
@@ -121,7 +119,6 @@ static StatusCode prv_init_bts7200(Output output, OutputBts7200Spec *spec) {
     .resistor = BTS7200_SENSE_RESISTOR,
     .bias = BTS7200_BIAS,
     .min_fault_voltage_mv = BTS7200_MIN_FAULT_VOLTAGE_MV,
-    .max_fault_voltage_mv = BTS7200_MAX_FAULT_VOLTAGE_MV,
     .fault_callback = prv_bts7200_fault_callback,
     .fault_callback_context = (void *)(uintptr_t)output,  // stuff the output into a void pointer
   };
@@ -141,7 +138,6 @@ static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
     .resistor = BTS7040_SENSE_RESISTOR,
     .bias = BTS7040_BIAS,
     .min_fault_voltage_mv = BTS7040_MIN_FAULT_VOLTAGE_MV,
-    .max_fault_voltage_mv = BTS7040_MAX_FAULT_VOLTAGE_MV,
     .fault_callback = prv_bts7040_fault_callback,
     .fault_callback_context = (void *)(uintptr_t)output,
   };

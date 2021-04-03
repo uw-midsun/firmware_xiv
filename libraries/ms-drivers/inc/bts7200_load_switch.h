@@ -52,8 +52,8 @@ typedef struct Bts7200Stm32Settings {
   void *fault_callback_context;
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
   int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
+  // Faults are indicated by high voltage on the sense pin, see section 8.3 of BTS7200 datasheet.
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
-  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Stm32Settings;
 
 // Use when the select pin is through a PCA9539R GPIO expander
@@ -70,8 +70,8 @@ typedef struct Bts7200Pca9539rSettings {
   void *fault_callback_context;
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
   int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
+  // Faults are indicated by high voltage on the sense pin, see section 8.3 of BTS7200 datasheet.
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
-  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Pca9539rSettings;
 
 typedef struct Bts7200Storage {
@@ -90,7 +90,6 @@ typedef struct Bts7200Storage {
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
   int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
-  uint16_t max_fault_voltage_mv;  // max voltage represending a fault, in mV
 } Bts7200Storage;
 
 // Initialize the BTS7200 with the given settings; the select and enable
