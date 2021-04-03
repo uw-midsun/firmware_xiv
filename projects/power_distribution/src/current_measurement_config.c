@@ -5,7 +5,7 @@
 
 // Definitions of the configs declared in the header
 
-const CurrentMeasurementConfig FRONT_CURRENT_MEASUREMENT_CONFIG = {
+const CurrentMeasurementConfig g_front_current_measurement_config = {
   .outputs_to_read =
       (Output[]){
           FRONT_OUTPUT_CENTRE_CONSOLE,
@@ -28,7 +28,7 @@ const CurrentMeasurementConfig FRONT_CURRENT_MEASUREMENT_CONFIG = {
   .num_outputs_to_read = 16,
 };
 
-const CurrentMeasurementConfig REAR_CURRENT_MEASUREMENT_CONFIG = {
+const CurrentMeasurementConfig g_rear_current_measurement_config = {
   .outputs_to_read =
       (Output[]){
           REAR_OUTPUT_BMS,

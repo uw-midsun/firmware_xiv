@@ -4,5 +4,5 @@
 
 #include "can_rx_event_mapper.h"
 
-extern const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG;
-extern const CanRxEventMapperConfig REAR_CAN_RX_CONFIG;
+extern const CanRxEventMapperConfig g_front_can_rx_config;
+extern const CanRxEventMapperConfig g_rear_can_rx_config;

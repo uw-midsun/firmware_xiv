@@ -4,7 +4,7 @@
 #include "pd_events.h"
 #include "pin_defs.h"
 
-const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
+const PdGpioConfig g_front_pd_gpio_config = {
   .events =
       (PdGpioEventSpec[]){
           {
@@ -270,7 +270,7 @@ const PdGpioConfig FRONT_PD_GPIO_CONFIG = {
   .num_events = 8,
 };
 
-const PdGpioConfig REAR_PD_GPIO_CONFIG = {
+const PdGpioConfig g_rear_pd_gpio_config = {
   .events =
       (PdGpioEventSpec[]){
           {

@@ -4,5 +4,5 @@
 
 #include "publish_data.h"
 
-extern const PublishDataConfig FRONT_PUBLISH_DATA_CONFIG;
-extern const PublishDataConfig REAR_PUBLISH_DATA_CONFIG;
+extern const PublishDataConfig g_front_publish_data_config;
+extern const PublishDataConfig g_rear_publish_data_config;

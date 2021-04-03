@@ -310,12 +310,12 @@ void test_power_distribution_gpio_invalid_config(void) {
   TEST_ASSERT_OK(pd_gpio_init(&test_config));
 }
 
-// Test that FRONT_PD_GPIO_CONFIG is valid.
+// Test that g_front_pd_gpio_config is valid.
 void test_front_power_distribution_gpio_config_valid(void) {
-  TEST_ASSERT_OK(pd_gpio_init(&FRONT_PD_GPIO_CONFIG));
+  TEST_ASSERT_OK(pd_gpio_init(&g_front_pd_gpio_config));
 }
 
-// Test that REAR_PD_GPIO_CONFIG is valid.
+// Test that g_rear_pd_gpio_config is valid.
 void test_rear_power_distribution_gpio_config_valid(void) {
-  TEST_ASSERT_OK(pd_gpio_init(&REAR_PD_GPIO_CONFIG));
+  TEST_ASSERT_OK(pd_gpio_init(&g_rear_pd_gpio_config));
 }

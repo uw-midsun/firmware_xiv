@@ -256,9 +256,9 @@ void test_can_rx_event_mapper_no_type_no_state_with_varying_ack_works(void) {
 }
 
 void test_real_front_config_works(void) {
-  TEST_ASSERT_OK(can_rx_event_mapper_init(&FRONT_CAN_RX_CONFIG));
+  TEST_ASSERT_OK(can_rx_event_mapper_init(&g_front_can_rx_config));
 }
 
 void test_real_rear_config_works(void) {
-  TEST_ASSERT_OK(can_rx_event_mapper_init(&REAR_CAN_RX_CONFIG));
+  TEST_ASSERT_OK(can_rx_event_mapper_init(&g_rear_can_rx_config));
 }

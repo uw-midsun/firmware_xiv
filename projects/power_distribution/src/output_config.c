@@ -140,7 +140,7 @@ static const OutputBts7200Info s_spare_9_10_rear_bts7200_info = {
 };
 
 // clang-format off
-const OutputConfig COMBINED_OUTPUT_CONFIG = {
+const OutputConfig g_combined_output_config = {
   .i2c_port = PD_I2C_PORT,
   .i2c_addresses = (I2CAddress[]){
     PD_PCA9539R_I2C_ADDRESS_0,

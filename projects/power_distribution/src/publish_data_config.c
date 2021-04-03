@@ -14,7 +14,7 @@ static StatusCode prv_publish_rear_current_measurement(Output output, uint16_t c
   return CAN_TRANSMIT_REAR_CURRENT_MEASUREMENT((uint16_t)output, current_data);
 }
 
-const PublishDataConfig FRONT_PUBLISH_DATA_CONFIG = {
+const PublishDataConfig g_front_publish_data_config = {
   .transmitter = prv_publish_front_current_measurement,
   .outputs_to_publish =
       (Output[]){
@@ -38,7 +38,7 @@ const PublishDataConfig FRONT_PUBLISH_DATA_CONFIG = {
   .num_outputs_to_publish = 16,
 };
 
-const PublishDataConfig REAR_PUBLISH_DATA_CONFIG = {
+const PublishDataConfig g_rear_publish_data_config = {
   .transmitter = prv_publish_rear_current_measurement,
   .outputs_to_publish =
       (Output[]){

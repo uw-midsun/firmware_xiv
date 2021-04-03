@@ -412,7 +412,7 @@ void test_output_read_current_gpio_doesnt_work(void) {
 TEST_CASE(true)
 TEST_CASE(false)
 void test_init_with_real_config(bool is_front) {
-  TEST_ASSERT_OK(output_init(&COMBINED_OUTPUT_CONFIG, is_front));
+  TEST_ASSERT_OK(output_init(&g_combined_output_config, is_front));
 }
 
 // Test that we fail gracefully with invalid config to output_init.

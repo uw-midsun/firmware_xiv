@@ -161,21 +161,21 @@ void test_power_distribution_publish_data_invalid_config_errors(void) {
 
 // Test that the standard configs initialize correctly.
 void test_power_distribution_publish_data_standard_configs_initialize(void) {
-  TEST_ASSERT_OK(publish_data_init(&FRONT_PUBLISH_DATA_CONFIG));
-  TEST_ASSERT_OK(publish_data_init(&REAR_PUBLISH_DATA_CONFIG));
+  TEST_ASSERT_OK(publish_data_init(&g_front_publish_data_config));
+  TEST_ASSERT_OK(publish_data_init(&g_rear_publish_data_config));
 }
 
 // Test that we actually send CAN messages on front.
 void test_power_distribution_publish_data_send_can_msgs_front(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
-  TEST_ASSERT_OK(publish_data_init(&FRONT_PUBLISH_DATA_CONFIG));
+  TEST_ASSERT_OK(publish_data_init(&g_front_publish_data_config));
 
   // the values aren't important
   uint16_t test_current_measurements[NUM_OUTPUTS] = { 0 };
   TEST_ASSERT_OK(publish_data_publish(test_current_measurements));
 
   // make sure we can tx all of them
-  for (uint16_t i = 0; i < FRONT_PUBLISH_DATA_CONFIG.num_outputs_to_publish; i++) {
+  for (uint16_t i = 0; i < g_front_publish_data_config.num_outputs_to_publish; i++) {
     MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   }
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();  // and no extras
@@ -184,14 +184,14 @@ void test_power_distribution_publish_data_send_can_msgs_front(void) {
 // Test that we actually send CAN messages on rear.
 void test_power_distribution_publish_data_send_can_msgs_rear(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
-  TEST_ASSERT_OK(publish_data_init(&REAR_PUBLISH_DATA_CONFIG));
+  TEST_ASSERT_OK(publish_data_init(&g_rear_publish_data_config));
 
   // the values aren't important
   uint16_t test_current_measurements[NUM_OUTPUTS] = { 0 };
   TEST_ASSERT_OK(publish_data_publish(test_current_measurements));
 
   // make sure we can tx all of them
-  for (uint16_t i = 0; i < REAR_PUBLISH_DATA_CONFIG.num_outputs_to_publish; i++) {
+  for (uint16_t i = 0; i < g_rear_publish_data_config.num_outputs_to_publish; i++) {
     MS_TEST_HELPER_CAN_TX(TEST_CAN_EVENT_TX);
   }
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();  // and no extras

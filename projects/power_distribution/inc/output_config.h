@@ -2,4 +2,4 @@
 
 #include "output.h"
 
-extern const OutputConfig COMBINED_OUTPUT_CONFIG;
+extern const OutputConfig g_combined_output_config;

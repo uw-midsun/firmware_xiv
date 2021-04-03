@@ -113,13 +113,13 @@ static void prv_increment_callback(void *context) {
 
 // Test that we can initialize, read a value, and stop with the front hardware configuration.
 void test_power_distribution_current_measurement_front_hw_config_init_valid(void) {
-  output_init(&COMBINED_OUTPUT_CONFIG, true);
+  output_init(&g_combined_output_config, true);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &FRONT_CURRENT_MEASUREMENT_CONFIG,
+    .hw_config = &g_front_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -138,13 +138,13 @@ void test_power_distribution_current_measurement_front_hw_config_init_valid(void
 
 // Test that we can initialize, read a value, and stop with the rear hardware configuration.
 void test_power_distribution_current_measurement_rear_hw_config_init_valid(void) {
-  output_init(&COMBINED_OUTPUT_CONFIG, false);
+  output_init(&g_combined_output_config, false);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &REAR_CURRENT_MEASUREMENT_CONFIG,
+    .hw_config = &g_rear_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -163,13 +163,13 @@ void test_power_distribution_current_measurement_rear_hw_config_init_valid(void)
 
 // Test that we can successfully get measurements with the front hardware config.
 void test_power_distribution_current_measurement_front_hw_config_get_measurement_valid(void) {
-  output_init(&COMBINED_OUTPUT_CONFIG, true);
+  output_init(&g_combined_output_config, true);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &FRONT_CURRENT_MEASUREMENT_CONFIG,
+    .hw_config = &g_front_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 
@@ -194,13 +194,13 @@ void test_power_distribution_current_measurement_front_hw_config_get_measurement
 
 // Test that we can successfully get measurements with the rear hardware config.
 void test_power_distribution_current_measurement_rear_hw_config_get_measurement_valid(void) {
-  output_init(&COMBINED_OUTPUT_CONFIG, false);
+  output_init(&g_combined_output_config, false);
 
   uint32_t interval_us = 2000;
   CurrentMeasurementSettings settings = {
     .interval_us = interval_us,
     .callback = prv_increment_callback,
-    .hw_config = &REAR_CURRENT_MEASUREMENT_CONFIG,
+    .hw_config = &g_rear_current_measurement_config,
   };
   TEST_ASSERT_OK(current_measurement_init(&settings));
 

@@ -132,11 +132,12 @@ int main(void) {
 
   // initialize bps watcher, output, can_rx_event_mapper, gpio, publish_data
   VERIFY_INIT(bps_watcher_init());
-  VERIFY_INIT(output_init(&COMBINED_OUTPUT_CONFIG, is_front_pd));
-  VERIFY_INIT(can_rx_event_mapper_init(is_front_pd ? &FRONT_CAN_RX_CONFIG : &REAR_CAN_RX_CONFIG));
-  VERIFY_INIT(pd_gpio_init(is_front_pd ? &FRONT_PD_GPIO_CONFIG : &REAR_PD_GPIO_CONFIG));
+  VERIFY_INIT(output_init(&g_combined_output_config, is_front_pd));
   VERIFY_INIT(
-      publish_data_init(is_front_pd ? &FRONT_PUBLISH_DATA_CONFIG : &REAR_PUBLISH_DATA_CONFIG));
+      can_rx_event_mapper_init(is_front_pd ? &g_front_can_rx_config : &g_rear_can_rx_config));
+  VERIFY_INIT(pd_gpio_init(is_front_pd ? &g_front_pd_gpio_config : &g_rear_pd_gpio_config));
+  VERIFY_INIT(
+      publish_data_init(is_front_pd ? &g_front_publish_data_config : &g_rear_publish_data_config));
 
   // Initialize Voltage Regulator
   VoltageRegulatorSettings vreg_set = {
@@ -152,7 +153,8 @@ int main(void) {
 
   // initialize current_measurement
   CurrentMeasurementSettings current_measurement_settings = {
-    .hw_config = is_front_pd ? &FRONT_CURRENT_MEASUREMENT_CONFIG : &REAR_CURRENT_MEASUREMENT_CONFIG,
+    .hw_config =
+        is_front_pd ? &g_front_current_measurement_config : &g_rear_current_measurement_config,
     .interval_us = CURRENT_MEASUREMENT_INTERVAL_US,
     .callback = &prv_current_measurement_data_ready_callback,
   };

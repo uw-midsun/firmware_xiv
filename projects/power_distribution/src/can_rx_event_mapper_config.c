@@ -4,7 +4,7 @@
 #include "exported_enums.h"
 #include "pd_events.h"
 
-const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
+const CanRxEventMapperConfig g_front_can_rx_config = {
   .msg_specs =
       (CanRxEventMapperMsgSpec[]){
           {
@@ -97,7 +97,7 @@ const CanRxEventMapperConfig FRONT_CAN_RX_CONFIG = {
   .num_msg_specs = 6,
 };
 
-const CanRxEventMapperConfig REAR_CAN_RX_CONFIG = {
+const CanRxEventMapperConfig g_rear_can_rx_config = {
   .msg_specs =
       (CanRxEventMapperMsgSpec[]){
           {
