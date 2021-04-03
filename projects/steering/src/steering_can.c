@@ -7,7 +7,7 @@
 #include "steering_digital_input.h"
 #include "steering_events.h"
 
-static bool enable_regen_braking = true;
+static bool s_enable_regen_braking = true;
 
 StatusCode steering_can_process_event(Event *e) {
   switch (e->id) {
@@ -35,9 +35,9 @@ StatusCode steering_can_process_event(Event *e) {
     case STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_RIGHT, (EELightState)e->data);
       break;
-    case STEERING_REGEN_BRAKE:
-      enable_regen_braking = !enable_regen_braking;
-      uint16_t state = enable_regen_braking ? 1 : 0;
+    case STEERING_REGEN_BRAKE_EVENT:
+      s_enable_regen_braking = !s_enable_regen_braking;
+      uint16_t state = s_enable_regen_braking ? 1 : 0;
       CAN_TRANSMIT_REGEN_BRAKING(state);
       break;
     default:
