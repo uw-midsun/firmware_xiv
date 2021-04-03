@@ -5,6 +5,7 @@
 #include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
 
@@ -131,6 +132,7 @@ void test_bts7200_current_sense_timer_stm32_works(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 1) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
@@ -179,6 +181,7 @@ void test_bts7200_current_sense_timer_pca9539r_works(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 1) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
@@ -221,6 +224,7 @@ void test_bts7200_current_sense_restart(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 1) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
@@ -239,6 +243,7 @@ void test_bts7200_current_sense_restart(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 3) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(4, s_times_callback_called);

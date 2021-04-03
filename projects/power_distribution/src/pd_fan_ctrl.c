@@ -5,6 +5,7 @@
 #include "can.h"
 #include "can_transmit.h"
 #include "log.h"
+#include "pd_error_defs.h"
 #include "pd_fan_ctrl.h"
 #include "pd_fan_ctrl_defs.h"
 #include "soft_timer.h"
@@ -22,11 +23,9 @@ static FanCtrlStorage s_fan_storage;
 
 // Transmit fan error message if overtemp
 static void prv_fan_overtemp_callback(void) {
-  uint16_t fan_flags = s_fan_storage.fan_err_flags;
-  fan_flags |= FAN_OVERTEMP_TRIGGERED;
   // Transmit stored ratio values for dcdc and enclosure based on ref reading
-  CAN_TRANSMIT_REAR_FAN_FAULT(fan_flags << 8, s_fan_storage.dcdc_reading,
-                              s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
+  CAN_TRANSMIT_REAR_PD_FAULT(s_fan_storage.fan_err_flags | FAN_OVERTEMP, s_fan_storage.dcdc_reading,
+                             s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
 }
 
 // Interrupt callback triggered when smbalert pin goes low
@@ -36,15 +35,18 @@ static void prv_fan_err_cb(const GpioAddress *address, void *context) {
   uint8_t reg2 = 0;
   uint16_t *err_data = &s_fan_storage.fan_err_flags;
   adt7476a_get_status(s_fan_storage.i2c_port, ADT7476A_I2C_ADDRESS, &reg1, &reg2);
-  reg1 &= (VCC_EXCEEDED | VCCP_EXCEEDED);                           // Take only voltage statuses
-  reg2 &= (FAN1_STATUS | FAN2_STATUS | FAN3_STATUS | FAN4_STATUS);  // Take only fan statuses
-  *err_data |= (reg1 << 8 | reg2);  // Compress to one uint16 fan_data
-  if (s_fan_storage.is_front_pd) {
-    CAN_TRANSMIT_FRONT_FAN_FAULT(*err_data);
-  } else {
-    CAN_TRANSMIT_REAR_FAN_FAULT(*err_data, s_fan_storage.dcdc_reading,
-                                s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
+  if (reg1 & (VCC_EXCEEDED | VCCP_EXCEEDED)) {
+    *err_data |= ERR_VCC_EXCEEDED;  // If overvoltage condition occured set flag
   }
+  reg2 &= (FAN1_ERR | FAN2_ERR | FAN3_ERR | FAN4_ERR);  // Take only fan statuses
+  *err_data |= (reg2);                                  // Compress to one uint16 fan_data
+  if (s_fan_storage.is_front_pd) {
+    CAN_TRANSMIT_FRONT_PD_FAULT(*err_data);
+  } else {
+    CAN_TRANSMIT_REAR_PD_FAULT(*err_data, s_fan_storage.dcdc_reading,
+                               s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
+  }
+  s_fan_storage.fan_err_flags = 0;
 }
 
 // Converts front pd adc reading of potentiometer to fan speed percent
@@ -55,7 +57,7 @@ static void prv_front_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_spee
 
 // Converts rear pd adc reading of thermistor to fan speed percent
 static void prv_rear_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_speed,
-                                         uint8_t overtemp_flag) {
+                                         uint16_t overtemp_flag) {
   uint16_t measured_res = 0;
   uint16_t v_ref = s_fan_storage.ref_reading;
 
@@ -81,7 +83,7 @@ static void prv_rear_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_speed
 }
 
 // Reads adc value for designated pin and sets fan speed at pwm accordingly
-static StatusCode prv_set_fan_speed(GpioAddress read_pin, AdtPwmPort pwm, uint8_t overtemp_flag) {
+static StatusCode prv_set_fan_speed(GpioAddress read_pin, AdtPwmPort pwm, uint16_t overtemp_flag) {
   uint16_t reading;
   uint8_t fan_speed;
 

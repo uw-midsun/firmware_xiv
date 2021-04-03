@@ -71,14 +71,14 @@ void teardown_test(void) {}
 void test_throttle_data(void) {
   int16_t throttle_data = INT16_MAX;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 15;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 25;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
   changeable_value = 0;
   TEST_ASSERT_OK(get_throttle_data(&throttle_data));
-  TEST_ASSERT_EQUAL(throttle_data, (int16_t)(changeable_value * EE_PEDAL_VALUE_DENOMINATOR));
+  TEST_ASSERT_EQUAL(throttle_data, changeable_value);
 }
