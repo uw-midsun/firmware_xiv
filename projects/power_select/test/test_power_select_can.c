@@ -10,6 +10,7 @@
 #include "ms_test_helpers.h"
 #include "string.h"
 #include "test_helpers.h"
+#include "controller_board_pins.h"
 
 static uint16_t s_test_fault_bitset;
 
@@ -31,8 +32,8 @@ static CanSettings s_can_settings = {
   .rx_event = POWER_SELECT_CAN_EVENT_RX,
   .tx_event = POWER_SELECT_CAN_EVENT_TX,
   .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
-  .tx = { GPIO_PORT_A, 12 },
-  .rx = { GPIO_PORT_A, 11 },
+  .tx = CONTROLLER_BOARD_ADDR_CAN_TX,
+  .rx = CONTROLLER_BOARD_ADDR_CAN_RX,
   .loopback = true,
 };
 

@@ -160,7 +160,8 @@ static StatusCode prv_init_fault_pin(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING, prv_handle_fault_it, NULL);
+  gpio_it_register_interrupt(&pin, &it_settings, INTERRUPT_EDGE_RISING_FALLING, prv_handle_fault_it,
+                             NULL);
   return STATUS_CODE_OK;
 }
 

@@ -1,18 +1,5 @@
 #include "power_select_can.h"
 
-static CanStorage s_can_storage;
-
-static CanSettings s_can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_POWER_SELECT,
-  .bitrate = CAN_HW_BITRATE_500KBPS,
-  .tx_event = POWER_SELECT_CAN_EVENT_TX,
-  .rx_event = POWER_SELECT_CAN_EVENT_RX,
-  .fault_event = POWER_SELECT_CAN_EVENT_FAULT,
-  .tx = { GPIO_PORT_A, 12 },
-  .rx = { GPIO_PORT_A, 11 },
-  .loopback = true,
-};
-
 static CanAckStatus prv_confirm_aux(uint16_t fault_bitset, uint8_t valid_bitset) {
   if (!(valid_bitset & 1 << POWER_SELECT_AUX_VALID) ||
       fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT ||

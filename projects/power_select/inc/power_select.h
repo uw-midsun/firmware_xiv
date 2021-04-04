@@ -74,7 +74,6 @@ static const uint16_t MAX_CURRENTS[NUM_POWER_SELECT_CURRENT_MEASUREMENTS] = {
   [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_MAX_CURRENT_MA,
 };
 
-// Storage for previous measurements
 typedef struct {
   uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
   uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
