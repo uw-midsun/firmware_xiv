@@ -102,6 +102,7 @@ static void *prv_rx_thread(void *arg) {
         s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
             s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
       }
+      x86_interrupt_wake();  // just to make sure wait() wakes up to process the message
 
       // Limit how often we can receive messages to simulate bus speed
       usleep(s_socket_data.delay_us);
@@ -300,6 +301,7 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
     if (filter_match && s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
       s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
           s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
+      x86_interrupt_wake();
     }
   }
 
