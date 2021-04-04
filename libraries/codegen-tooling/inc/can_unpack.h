@@ -36,10 +36,6 @@
 #define CAN_UNPACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32_ptr, brake_output_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (throttle_output_u32_ptr), (brake_output_u32_ptr))
 
-#define CAN_UNPACK_FRONT_POWER(msg_ptr, power_bitset_u16_ptr)                      \
-  can_unpack_impl_u16((msg_ptr), 2, (power_bitset_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
-                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
 #define CAN_UNPACK_DRIVE_STATE(msg_ptr, drive_state_u16_ptr)                      \
   can_unpack_impl_u16((msg_ptr), 2, (drive_state_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
@@ -159,12 +155,12 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_REAR_PD_FAULT(msg_ptr, fault_data_u16_ptr, enclosure_temp_data_u16_ptr, \
-                                 dcdc_temp_data_u16_ptr, reference_voltage_u16_ptr)        \
+                                 dcdc_temp_data_u16_ptr, faulting_output_u16_ptr)          \
   can_unpack_impl_u16((msg_ptr), 8, (fault_data_u16_ptr), (enclosure_temp_data_u16_ptr),   \
-                      (dcdc_temp_data_u16_ptr), (reference_voltage_u16_ptr))
+                      (dcdc_temp_data_u16_ptr), (faulting_output_u16_ptr))
 
-#define CAN_UNPACK_FRONT_PD_FAULT(msg_ptr, fault_data_u16_ptr)                   \
-  can_unpack_impl_u16((msg_ptr), 2, (fault_data_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
+#define CAN_UNPACK_FRONT_PD_FAULT(msg_ptr, fault_data_u16_ptr, faulting_output_u16_ptr) \
+  can_unpack_impl_u16((msg_ptr), 4, (fault_data_u16_ptr), (faulting_output_u16_ptr),    \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_BABYDRIVER(msg_ptr, id_u8_ptr, data0_u8_ptr, data1_u8_ptr, data2_u8_ptr,     \

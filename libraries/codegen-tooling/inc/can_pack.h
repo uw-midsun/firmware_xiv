@@ -44,11 +44,6 @@
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, 8, \
                     (throttle_output_u32), (brake_output_u32))
 
-#define CAN_PACK_FRONT_POWER(msg_ptr, power_bitset_u16)                                          \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_FRONT_POWER, \
-                    2, (power_bitset_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,             \
-                    CAN_PACK_IMPL_EMPTY)
-
 #define CAN_PACK_DRIVE_STATE(msg_ptr, drive_state_u16)                                             \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_DRIVE_STATE, \
                     2, (drive_state_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                \
@@ -202,14 +197,14 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_REAR_PD_FAULT(msg_ptr, fault_data_u16, enclosure_temp_data_u16, \
-                               dcdc_temp_data_u16, reference_voltage_u16)        \
+                               dcdc_temp_data_u16, faulting_output_u16)          \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,        \
                     SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, 8, (fault_data_u16),       \
-                    (enclosure_temp_data_u16), (dcdc_temp_data_u16), (reference_voltage_u16))
+                    (enclosure_temp_data_u16), (dcdc_temp_data_u16), (faulting_output_u16))
 
-#define CAN_PACK_FRONT_PD_FAULT(msg_ptr, fault_data_u16)                                         \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,                       \
-                    SYSTEM_CAN_MESSAGE_FRONT_PD_FAULT, 2, (fault_data_u16), CAN_PACK_IMPL_EMPTY, \
+#define CAN_PACK_FRONT_PD_FAULT(msg_ptr, fault_data_u16, faulting_output_u16)                      \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT,                         \
+                    SYSTEM_CAN_MESSAGE_FRONT_PD_FAULT, 4, (fault_data_u16), (faulting_output_u16), \
                     CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_BABYDRIVER(msg_ptr, id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, \
