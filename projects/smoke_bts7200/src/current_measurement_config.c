@@ -5,7 +5,7 @@
 
 #define POWER_DISTRIBUTION_I2C_PORT I2C_PORT_2
 
-const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_config = {
+const PowerDistributionCurrentHardwareConfig FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG = {
   .i2c_port = POWER_DISTRIBUTION_I2C_PORT,
   .dsel_i2c_addresses =
       (I2CAddress[]){

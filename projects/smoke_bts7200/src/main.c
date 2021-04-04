@@ -72,8 +72,8 @@ int main() {
   i2c_init(I2C_PORT, &i2c_settings);
 
   PowerDistributionCurrentHardwareConfig s_config =
-      IS_FRONT_POWER_DISTRO ? FRONT_POWER_DISTRIBUTION_CURRENT_config
-                            : REAR_POWER_DISTRIBUTION_CURRENT_config;
+      IS_FRONT_POWER_DISTRO ? FRONT_POWER_DISTRIBUTION_CURRENT_HW_CONFIG
+                            : REAR_POWER_DISTRIBUTION_CURRENT_HW_CONFIG;
 
   status_ok_or_return(mux_init(&s_config.mux_address));
 
