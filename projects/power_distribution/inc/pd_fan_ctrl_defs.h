@@ -1,8 +1,9 @@
 #pragma once
+
 #include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
 
-// I2C info - based on atd7276a pin13 high on powerup
+// I2C info - based on ADT7476A pin13 high on powerup
 #define ADT7476A_I2C_ADDRESS 0x2E
 
 // Pwm info
