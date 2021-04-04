@@ -12,6 +12,18 @@
 static Ads1259Storage s_ads1259_storage;
 static bool s_is_charging;
 
+#define LOG_CURRENT true
+
+static uint16_t log_counter = 0;
+static const uint16_t log_counter_mod = 10;
+
+static void prv_log_current(int16_t reading) {
+  if (LOG_CURRENT && log_counter % log_counter_mod == 0) {
+    LOG_DEBUG("current cA: %d\n", reading);
+  }
+  log_counter++;
+}
+
 static void prv_ads_error_cb(Ads1259StatusCode code, void *context) {
   if (code == ADS1259_STATUS_CODE_OUT_OF_RANGE) {
     LOG_WARN("ADS1259 ERROR: OUT OF RANGE\n");
@@ -35,6 +47,7 @@ static int16_t prv_voltage_to_current(double reading) {
 static void prv_periodic_ads_read(SoftTimerId id, void *context) {
   double reading = s_ads1259_storage.reading;
   int16_t val = prv_voltage_to_current(reading);
+  prv_log_current(val);
   CurrentStorage *storage = context;
   storage->readings_ring[storage->ring_idx] = val;
   storage->ring_idx = (storage->ring_idx + 1) % NUM_STORED_CURRENT_READINGS;

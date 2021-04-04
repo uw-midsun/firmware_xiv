@@ -8,7 +8,7 @@
 #include "soft_timer.h"
 
 // change this number to read for x cycles, 0 for infinite
-#define READ_CYCLE_NUM 2
+#define READ_CYCLE_NUM 0
 // change this number to read x times in a cycle
 #define READ_CYCLE_SIZE 3
 
@@ -34,7 +34,7 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
               (int)(EXTERNAL_VREF_V * 1000));
     ads1259_get_conversion_data(&s_storage);
     queue[s_index] = s_storage.reading;
-    LOG_DEBUG("%d mV\n", (uint16_t)(s_storage.reading * 1000));
+    LOG_DEBUG("%ld mA\n", (int32_t)(s_storage.reading * 100 * 1000));
     s_index++;
     soft_timer_start_millis(CONVERSION_TIME_MS, prv_periodic_read, queue, NULL);
   } else {
@@ -49,12 +49,12 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
 
 int main() {
   const Ads1259Settings settings = {
-    .spi_port = SPI_PORT_2,
+    .spi_port = SPI_PORT_1,
     .spi_baudrate = 600000,
-    .mosi = { .port = GPIO_PORT_B, 15 },
-    .miso = { .port = GPIO_PORT_B, 14 },
-    .sclk = { .port = GPIO_PORT_B, 13 },
-    .cs = { .port = GPIO_PORT_B, 12 },
+    .mosi = { .port = GPIO_PORT_A, 7 },
+    .miso = { .port = GPIO_PORT_A, 6 },
+    .sclk = { .port = GPIO_PORT_A, 5 },
+    .cs = { .port = GPIO_PORT_A, 4 },
     .handler = prv_rx_error_handler_cb,
   };
   interrupt_init();

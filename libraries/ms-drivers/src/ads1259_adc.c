@@ -35,9 +35,9 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   };
   // reset all register values to default
   prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
-  prv_send_command(storage, ADS1259_RESET);
-  delay_us(100);  // Needs 8 fclk cycles before next command
-  prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
+  // prv_send_command(storage, ADS1259_RESET);
+  // delay_us(100);  // Needs 8 fclk cycles before next command
+  // prv_send_command(storage, ADS1259_STOP_READ_DATA_CONTINUOUS);
   uint8_t payload[NUM_REGISTER_WRITE_COMM] = { (ADS1259_WRITE_REGISTER | ADS1259_ADDRESS_CONFIG0),
                                                NUM_CONFIG_REGISTERS - 1, register_lookup[0],
                                                register_lookup[1], register_lookup[2] };
@@ -102,7 +102,7 @@ StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings) {
   storage->error_context = settings->error_context;
   const SpiSettings spi_settings = {
     .baudrate = settings->spi_baudrate,
-    .mode = SPI_MODE_1,
+    .mode = SPI_MODE_3,
     .mosi = settings->mosi,
     .miso = settings->miso,
     .sclk = settings->sclk,

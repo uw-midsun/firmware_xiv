@@ -10,7 +10,7 @@
 #include "status.h"
 
 #define NUM_STORED_CURRENT_READINGS 20
-#define CURRENT_SENSE_SPI_PORT SPI_PORT_2
+#define CURRENT_SENSE_SPI_PORT SPI_PORT_1
 
 // slightly larger than conversion time of adc
 #define CONVERSION_TIME_MS 18
