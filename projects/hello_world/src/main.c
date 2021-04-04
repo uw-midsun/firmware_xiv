@@ -1,7 +1,7 @@
 #include "log.h"
 
 int main(void) {
-    LOG_DEBUG("Hello World!\n");
+  LOG_DEBUG("Hello World!\n");
 
-    return 0;
+  return 0;
 }
