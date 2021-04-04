@@ -111,6 +111,14 @@
     status;                                       \
   })
 
+#define CAN_TRANSMIT_REGEN_BRAKING(state_u8)      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));     \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_BEGIN_PRECHARGE()            \
   ({                                              \
     CanMessage msg = { 0 };                       \

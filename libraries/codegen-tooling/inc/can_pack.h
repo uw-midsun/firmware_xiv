@@ -70,6 +70,12 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
                    CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_REGEN_BRAKING(msg_ptr, state_u8)                                              \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, SYSTEM_CAN_MESSAGE_REGEN_BRAKING, 1, \
+                   (state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
+                   CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_BEGIN_PRECHARGE(msg_ptr)                          \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, \
                       SYSTEM_CAN_MESSAGE_BEGIN_PRECHARGE)
