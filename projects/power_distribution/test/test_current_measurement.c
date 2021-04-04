@@ -105,6 +105,7 @@ void setup_test(void) {
 
   s_times_callback_called = 0;
 }
+
 void teardown_test(void) {}
 
 static void prv_increment_callback(void *context) {

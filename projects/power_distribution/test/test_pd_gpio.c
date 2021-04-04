@@ -98,6 +98,7 @@ void setup_test(void) {
 
   output_init(&s_test_output_config, true);
 }
+
 void teardown_test(void) {}
 
 // Test simply successfully receiving two events.

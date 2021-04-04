@@ -105,6 +105,7 @@ void setup_test(void) {
   s_gpio_set_address = NULL;
   s_set_gpio_state = NUM_GPIO_STATES;
 }
+
 void teardown_test(void) {}
 
 // Test that BTS7200 outputs with the same OutputBts7200Info use the same storage.

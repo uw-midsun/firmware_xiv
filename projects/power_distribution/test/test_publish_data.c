@@ -47,6 +47,7 @@ void setup_test(void) {
   gpio_init();
   soft_timer_init();
 }
+
 void teardown_test(void) {}
 
 static Output s_single_received_output;

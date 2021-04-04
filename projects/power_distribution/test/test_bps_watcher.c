@@ -51,6 +51,7 @@ void setup_test(void) {
   bps_watcher_init();
   s_callback_acked = false;
 }
+
 void teardown_test(void) {}
 
 // test to make sure bps watcher does nothing if no fault

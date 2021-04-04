@@ -94,6 +94,7 @@ void setup_test(void) {
   };
   can_init(&s_can_storage, &can_settings);
 }
+
 void teardown_test(void) {}
 
 // Test that we can specify types but no states and no ack.

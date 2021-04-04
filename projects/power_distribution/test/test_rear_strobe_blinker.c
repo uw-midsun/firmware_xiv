@@ -18,6 +18,7 @@ void setup_test() {
   soft_timer_init();
   event_queue_init();
 }
+
 void teardown_test() {}
 
 // Comprehensive happy-path test - we can turn it on and off with the correct events
