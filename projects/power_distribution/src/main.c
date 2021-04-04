@@ -30,6 +30,7 @@
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
 #include "voltage_regulator.h"
+#include "wait.h"
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
@@ -211,6 +212,7 @@ int main(void) {
         rear_strobe_blinker_process_event(&e);
       }
     }
+    wait();
   }
 
   return 0;
