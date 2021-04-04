@@ -14,6 +14,7 @@
 
 import time
 import random
+import sys
 import cantools
 import can
 
@@ -26,8 +27,9 @@ try:
     DB = cantools.database.load_file('system_can.dbc')
 # pylint: disable=broad-except
 except BaseException:
-    print("Must generate DBC file first")
+    print("ERROR: Must generate DBC file first")
     print("Run make codegen && make codegen_dbc")
+    sys.exit(1)
 
 # This can be edited depending on the CAN interface
 CAN_BUS = can.interface.Bus('vcan0', bustype='socketcan')

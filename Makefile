@@ -24,7 +24,10 @@
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
 #   make pytest_all - Runs all python tests in the scripts directory of every project 
 #   make install_requirements - Installs python requirements for every project
-#   make update_codegen - Update the codegen-tooling release
+#   make codegen - Generates header files for CAN messages used in firmware
+# 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
+# 	make codegen_proto - Generates protobuf files 
+# 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86 
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mpxe [TE] - Build and run the specified MPXE integration test, or all integration tests if TE is not defined
 #   make fastmpxe [TE] - Don't build and just run the MPXE integration test, or all if TE is not defined.
@@ -251,8 +254,8 @@ format_quick:
 .PHONY: pyformat_quick
 pyformat_quick: 
 	@echo "Quick format on ONLY changed/new Python files"
-	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
-	@$(FIND_MOD_NEW_MPXE_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -266,6 +269,37 @@ pyformat:
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
+
+# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command 
+.PHONY: codegen
+codegen: codegen_protos
+	@echo "Generating from templates..."
+	@cd $(CODEGEN_DIR) && python scripts/build.py 
+	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' \) | xargs -r clang-format -i -fallback-style=Google
+	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
+
+# Note: build_dbc has same issue as build.py with local paths
+.PHONY: codegen_dbc
+codegen_dbc:
+	@echo "Generating DBC file"
+	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
+
+.PHONY: codegen_protos 
+codegen_protos:
+	@echo "Compiling protos..."
+	@mkdir -p $(CODEGEN_DIR)/genfiles
+	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
+
+.PHONY: pytest
+pytest:
+	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
+
+.PHONY: pytest_all
+pytest_all:
+	@for i in $$(find . -path ./.venv -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
+	do																								\
+		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
+	done	
 
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
@@ -308,35 +342,9 @@ clean:
 	@rm -f $(LIB_DIR)/mpxe-gen/src/*.pb-c.c
 	@rm -f $(MPXE_DIR)/protogen/*_pb2.py
 
-# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command 
-.PHONY: codegen
-codegen: codegen_protos
-	@echo "Generating from templates..."
-	@cd $(CODEGEN_DIR) && python scripts/build.py 
-	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' -o -iname '*.ts' \) | xargs -r clang-format -i -fallback-style=Google
-	@find $(CODEGEN_DIR)/out -type f \( -iname '*.go'  \) | xargs -r gofmt -w
-	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
-
-# Note: build_dbc has same issue as build.by with local paths
-.PHONY: codegen_dbc
-codegen_dbc:
-	@echo "Generating DBC file"
-	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
-
-.PHONY: codegen_protos 
-codegen_protos:
-	@echo "Compiling protos..."
-	@mkdir -p $(CODEGEN_DIR)/genfiles
-	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
-
-.PHONY: codegen_test
-codegen_test: codegen
-	@echo "Testing codegen..."
-	@python -m unittest discover -s $(CODEGEN_DIR)/scripts
-
 .PHONY: mock_can_data
 mock_can_data: socketcan
-	@python3 $(CODEGEN_DIR)/mock_can_data.py
+	@cd $(CODEGEN_DIR) && python3 mock_can_data.py
 
 .PHONY: remake
 remake: clean all
@@ -348,18 +356,7 @@ socketcan:
 	@sudo modprobe vcan
 	@sudo ip link add dev vcan0 type vcan || true
 	@sudo ip link set up vcan0 || true
-	@ip link show vcan0
-
-.PHONY: pytest
-pytest:
-	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
-
-.PHONY: pytest_all
-pytest_all: codegen_test
-	@for i in $$(find . -path ./.venv -prune -false -o -name "test_*.py"); 													\
-	do																								\
-		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done			
+	@ip link show vcan0		
 
 .PHONY: install_requirements
 install_requirements:
