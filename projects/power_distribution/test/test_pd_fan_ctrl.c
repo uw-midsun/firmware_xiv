@@ -92,7 +92,7 @@ StatusCode TEST_MOCK(i2c_read_reg)(I2CPort i2c, I2CAddress addr, uint8_t reg, ui
 
 static StatusCode prv_front_can_fan_ctrl_rx_handler(const CanMessage *msg, void *context,
                                                     CanAckStatus *ack_reply) {
-  CAN_UNPACK_FRONT_PD_FAULT(msg, &s_fan_ctrl_msg[0]);
+  CAN_UNPACK_FRONT_PD_FAULT(msg, &s_fan_ctrl_msg[0], &s_fan_ctrl_msg[1]);
   return STATUS_CODE_OK;
 }
 
@@ -108,9 +108,9 @@ static void prv_initialize_can(SystemCanDevice can_device) {
     .device_id = can_device,
     .loopback = true,
     .bitrate = CAN_HW_BITRATE_500KBPS,
-    .rx_event = POWER_DISTRIBUTION_CAN_EVENT_RX,
-    .tx_event = POWER_DISTRIBUTION_CAN_EVENT_TX,
-    .fault_event = POWER_DISTRIBUTION_CAN_EVENT_FAULT,
+    .rx_event = PD_CAN_EVENT_RX,
+    .tx_event = PD_CAN_EVENT_TX,
+    .fault_event = PD_CAN_EVENT_FAULT,
     .tx = { GPIO_PORT_A, 12 },
     .rx = { GPIO_PORT_A, 11 },
   };
@@ -145,23 +145,23 @@ void test_fan_ctrl_init(void) {
 void test_fan_err_rear(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, false));
-  gpio_it_trigger_interrupt(&(GpioAddress)REAR_PIN_SMBALERT);
+  gpio_it_trigger_interrupt(&(GpioAddress)PD_SMBALERT_PIN);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE(((s_fan_ctrl_msg[0]) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
+  MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(ERR_VCC_EXCEEDED, s_fan_ctrl_msg[0] & ERR_VCC_EXCEEDED);
+  TEST_ASSERT_EQUAL(FAN_ERR_FLAGS, s_fan_ctrl_msg[0] & FAN_ERR_FLAGS);
 }
 
 // Test Gpio interrupt on front smbalert pin triggered
 void test_fan_err_front(void) {
   prv_initialize_can(SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT);
   TEST_ASSERT_OK(pd_fan_ctrl_init(&s_fan_settings, true));
-  gpio_it_trigger_interrupt(&(GpioAddress)FRONT_PIN_SMBALERT);
+  gpio_it_trigger_interrupt(&(GpioAddress)PD_SMBALERT_PIN);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_FRONT_PD_FAULT, prv_front_can_fan_ctrl_rx_handler,
                           NULL);
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE((((s_fan_ctrl_msg[0])) & ERR_VCC_EXCEEDED) == ERR_VCC_EXCEEDED);
-  TEST_ASSERT_TRUE((s_fan_ctrl_msg[0] & FAN_ERR_FLAGS) == FAN_ERR_FLAGS);
+  MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(ERR_VCC_EXCEEDED, s_fan_ctrl_msg[0] & ERR_VCC_EXCEEDED);
+  TEST_ASSERT_EQUAL(FAN_ERR_FLAGS, s_fan_ctrl_msg[0] & FAN_ERR_FLAGS);
 }
 
 void test_rear_pd_fan_ctrl_temp(void) {
@@ -189,8 +189,7 @@ void test_rear_pd_fan_ctrl_temp(void) {
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REAR_PD_FAULT, prv_rear_can_fan_ctrl_rx_handler, NULL);
-  MS_TEST_HELPER_CAN_TX_RX(POWER_DISTRIBUTION_CAN_EVENT_TX, POWER_DISTRIBUTION_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(ADC_MAX_VAL, s_fan_ctrl_msg[3]);
+  MS_TEST_HELPER_CAN_TX_RX(PD_CAN_EVENT_TX, PD_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1], s_fan_ctrl_msg[2]);
   TEST_ASSERT_EQUAL(s_fan_ctrl_msg[1],
                     FAN_OVERTEMP_FRACTION_TRANSMIT);  // FAN_OVERTEMP_VOLTAGE as a fraction of v_ref
