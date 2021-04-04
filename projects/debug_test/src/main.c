@@ -48,7 +48,7 @@ static void prv_timeout_cb(SoftTimerId timer_id, void *context) {
   // Next LED
   storage->current_led = (storage->current_led + 1) % storage->num_leds;
  
-  soft_timer_start_millis(DEBUG_TEST_TIMEOUT_MS, prv_timeout_cb, &storage, NULL);
+  soft_timer_start_millis(DEBUG_TEST_TIMEOUT_MS, prv_timeout_cb, storage, NULL);
 }
  
 int main(void) {
