@@ -8,6 +8,7 @@
 #include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 static void prv_timeout_cb(SoftTimerId timer_id, void *context) {
   SoftTimerId *cb_id = context;
@@ -38,6 +39,7 @@ void test_soft_timer_basic(void) {
   TEST_ASSERT_TRUE(soft_timer_inuse());
 
   while (cb_id == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id, cb_id);
@@ -81,6 +83,7 @@ void test_soft_timer_preempt(void) {
   TEST_ASSERT_TRUE(soft_timer_inuse());
 
   while (cb_id_short == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id_short, cb_id_short);
@@ -89,6 +92,7 @@ void test_soft_timer_preempt(void) {
   TEST_ASSERT_NOT_EQUAL(id_longer, cb_id_longer);
 
   while (cb_id_medium == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id_medium, cb_id_medium);
@@ -96,12 +100,14 @@ void test_soft_timer_preempt(void) {
   TEST_ASSERT_NOT_EQUAL(id_longer, cb_id_longer);
 
   while (cb_id_long == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id_long, cb_id_long);
   TEST_ASSERT_NOT_EQUAL(id_longer, cb_id_longer);
 
   while (cb_id_longer == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id_longer, cb_id_longer);
@@ -130,6 +136,7 @@ void test_soft_timer_cancelled_timer(void) {
   soft_timer_cancel(id_short);
 
   while (cb_id_long == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id_long, cb_id_long);
@@ -193,6 +200,7 @@ void test_soft_timer_exhausted(void) {
   TEST_ASSERT_OK(ret);
 
   while (cb_id_single == SOFT_TIMER_INVALID_TIMER) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(id_single, cb_id_single);

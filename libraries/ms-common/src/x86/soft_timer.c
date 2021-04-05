@@ -1,58 +1,111 @@
+// Timers are implemented as a doubly linked list, sorted in order of remaining
+// time until expiry. Thus, the head of the list is always defined as the next
+// timer to expire, so we back the list with a linux interval timer that's always
+// set to the head's remaining time.
 #include "soft_timer.h"
 
 #include <signal.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "critical_section.h"
 #include "interrupt_def.h"
+#include "log.h"
+#include "objpool.h"
 #include "status.h"
 #include "x86_interrupt.h"
 
-typedef struct POSIXTimer {
-  timer_t timer_id;
+#define SOFT_TIMER_GET_ID(timer) ((timer)-s_storage)
+
+typedef struct SoftTimer {
+  uint32_t remainder;
   SoftTimerCallback callback;
   void *context;
-  volatile bool inuse;
-  bool created;
-} POSIXTimer;
+  struct SoftTimer *next;
+  struct SoftTimer *prev;
+} SoftTimer;
 
-static struct sigevent s_event;
-static POSIXTimer s_posix_timers[SOFT_TIMER_MAX_TIMERS];
-static volatile uint8_t s_active_timers = 0;
+typedef struct SoftTimerList {
+  SoftTimer *head;
+  ObjectPool pool;
+  timer_t timer_id;  // Single linux timer to back our soft timers
+  bool created;      // bool for tracking timer creation in case of re-initialization
+  struct sigevent event;
+} SoftTimerList;
 
-static void prv_soft_timer_interrupt(void) {
-  const bool critical = critical_section_start();
-  struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
-  for (uint16_t i = 0; i < SOFT_TIMER_MAX_TIMERS; i++) {
-    if (!s_active_timers) {
-      // No active timers left.
-      break;
-    }
-    if (s_posix_timers[i].inuse) {
-      timer_gettime(s_posix_timers[i].timer_id, &spec);
-      if (spec.it_value.tv_sec == 0 && spec.it_value.tv_nsec == 0) {
-        // Mark as no longer inuse in case a timer is cancelled within its
-        // callback resulting in underflow of |s_active_timers|.
-        s_posix_timers[i].inuse = false;
-        s_posix_timers[i].callback(i, s_posix_timers[i].context);
-        s_active_timers--;
-      }
-    }
-  }
-  critical_section_end(critical);
+static SoftTimerList s_list = { 0 };
+
+// Backing array for timer list objpool
+static volatile SoftTimer s_storage[SOFT_TIMER_MAX_TIMERS] = { 0 };
+
+// Set the linux timer to a new value. Checks for divide by zero.
+static void prv_set_timer(uint32_t val_us) {
+  // See timer_settime manual page for details
+  struct itimerspec spec = {
+    { 0, 0 },                                       //
+    { val_us / 1000000, val_us % 1000000 * 1000 },  //
+  };
+  timer_settime(s_list.timer_id, 0, &spec, NULL);
 }
 
+// Helper function for removing a cancelled or triggered timer from the list.
+// Expects to be wrapped in a critical section.
+static void prv_remove_timer(SoftTimer *node) {
+  if (node == s_list.head) {
+    // Get the actual elapsed time from the head timer in case it didn't complete (was cancelled)
+    uint32_t elapsed =
+        s_list.head->remainder - soft_timer_remaining_time(SOFT_TIMER_GET_ID(s_list.head));
+    // Keep the rest of the timers up to date with current the head
+    SoftTimer *cur = s_list.head->next;
+    while (cur != NULL) {
+      cur->remainder -= elapsed;
+      cur = cur->next;
+    }
+
+    s_list.head = node->next;
+  }
+  if (node->prev != NULL) {
+    node->prev->next = node->next;
+  }
+  if (node->next != NULL) {
+    node->next->prev = node->prev;
+  }
+
+  // Update the linux timer to the new head, or cancel it (set to 0) if the remainder is 0.
+  // The remainder can be zero if two timers were initialized with the same value.
+  prv_set_timer(s_list.head ? s_list.head->remainder : 0);
+
+  objpool_free_node(&s_list.pool, node);
+}
+
+// Interrupt handler for the timer signal
 static void prv_soft_timer_handler(uint8_t interrupt_id) {
-  // Run the interrupt since there is only one for this handler.
-  prv_soft_timer_interrupt();
+  SoftTimer *cur = s_list.head;
+  if (cur == NULL) {
+    return;
+  }
+  bool crit = critical_section_start();
+  // Always handle the triggered timer, then handle any following timers that were started
+  // at the same time with the same value as the first timer.
+  do {
+    SoftTimer temp = *s_list.head;
+    SoftTimerId temp_id = SOFT_TIMER_GET_ID(s_list.head);
+    // Remove the timer before calling the callback in case the callback starts a new timer,
+    // prv_remove_timer() updates all time values in the list.
+    prv_remove_timer(s_list.head);
+    temp.callback(temp_id, temp.context);
+    cur = s_list.head;
+  } while (cur != NULL && cur->remainder == 0);
+  critical_section_end(crit);
 }
 
 void soft_timer_init(void) {
-  // Set all timers to make none appear active.
+  s_list.head = NULL;
+  objpool_init(&s_list.pool, s_storage, NULL, NULL);
+  if (s_list.created) {
+    timer_delete(s_list.timer_id);
+    s_list.created = false;
+  }
 
   // Register a handler and interrupt.
   uint8_t handler_id;
@@ -65,82 +118,79 @@ void soft_timer_init(void) {
   x86_interrupt_register_interrupt(handler_id, &it_settings, &interrupt_id);
 
   // Create the event to trigger on.
-  s_event.sigev_value.sival_int = interrupt_id;
-  s_event.sigev_notify = SIGEV_SIGNAL;
-  s_event.sigev_signo = SIGRTMIN + INTERRUPT_PRIORITY_NORMAL;
+  s_list.event.sigev_value.sival_int = interrupt_id;
+  s_list.event.sigev_notify = SIGEV_SIGNAL;
+  s_list.event.sigev_signo = SIGRTMIN + INTERRUPT_PRIORITY_NORMAL;
 
-  // Clear all the statics and reset all the clocks.
-  s_active_timers = 0;
-  for (uint32_t i = 0; i < SOFT_TIMER_MAX_TIMERS; i++) {
-    s_posix_timers[i].inuse = false;
-    if (s_posix_timers[i].created) {
-      timer_delete(s_posix_timers[i].timer_id);
-    }
-    timer_create(CLOCK_MONOTONIC, &s_event, &s_posix_timers[i].timer_id);
-    s_posix_timers[i].created = true;
-  }
+  timer_create(CLOCK_MONOTONIC, &s_list.event, &s_list.timer_id);
+  s_list.created = true;
 }
 
 StatusCode soft_timer_start(uint32_t duration_us, SoftTimerCallback callback, void *context,
                             SoftTimerId *timer_id) {
   if (duration_us < SOFT_TIMER_MIN_TIME_US) {
-    return status_msg(STATUS_CODE_INVALID_ARGS, "Soft timer too short!");
+    return STATUS_CODE_INVALID_ARGS;
   }
-  // Start a critical section to prevent this section from being broken.
-  const bool critical = critical_section_start();
-  for (uint32_t i = 0; i < SOFT_TIMER_MAX_TIMERS; i++) {
-    if (!s_posix_timers[i].inuse) {
-      // Look for an empty timer.
+  SoftTimer *node = objpool_get_node(&s_list.pool);
+  if (node == NULL) {
+    return STATUS_CODE_RESOURCE_EXHAUSTED;
+  }
+  memset(node, 0, sizeof(*node));
 
-      // Set the timer with it_val.
-      struct itimerspec spec = { { 0, 0 },
-                                 { duration_us / 1000000, duration_us % 1000000 * 1000 } };
-      timer_settime(s_posix_timers[i].timer_id, 0, &spec, NULL);
-      s_posix_timers[i].inuse = true;
-      s_posix_timers[i].context = context;
-      s_posix_timers[i].callback = callback;
-      if (timer_id != NULL) {
-        *timer_id = i;
-      }
-      s_active_timers++;
-      critical_section_end(critical);
-      return STATUS_CODE_OK;
-    }
+  node->remainder = duration_us;
+  node->callback = callback;
+  node->context = context;
+
+  if (timer_id != NULL) {
+    *timer_id = SOFT_TIMER_GET_ID(node);
   }
 
-  // Out of timers.
-  critical_section_end(critical);
-  return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED, "Out of software timers.");
-}
-
-bool soft_timer_inuse(void) {
-  if (s_active_timers > 0) {
-    return true;
+  bool crit = critical_section_start();
+  SoftTimer *next = s_list.head;
+  SoftTimer *prev = NULL;
+  while (next != NULL && next->remainder <= node->remainder) {
+    prev = next;
+    next = next->next;
   }
-  return false;
+  if (prev == NULL) {
+    s_list.head = node;
+    prv_set_timer(node->remainder);
+  } else {
+    prev->next = node;
+    node->prev = prev;
+  }
+  if (next != NULL) {
+    next->prev = node;
+    node->next = next;
+  }
+  critical_section_end(crit);
+  return STATUS_CODE_OK;
 }
 
 bool soft_timer_cancel(SoftTimerId timer_id) {
-  const bool critical = critical_section_start();
-  if (timer_id < SOFT_TIMER_MAX_TIMERS && s_posix_timers[timer_id].inuse) {
-    // Clear the timer if it is in use by setting it_val to 0, 0.
-    struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
-    timer_settime(s_posix_timers[timer_id].timer_id, 0, &spec, NULL);
-    s_posix_timers[timer_id].inuse = false;
-    s_active_timers--;
-    critical_section_end(critical);
-    return true;
+  if (timer_id >= SOFT_TIMER_MAX_TIMERS || !soft_timer_inuse()) {
+    return false;
   }
-  critical_section_end(critical);
-  return false;
+
+  bool crit = critical_section_start();
+  prv_remove_timer(&s_storage[timer_id]);
+  critical_section_end(crit);
+  return true;
+}
+
+bool soft_timer_inuse(void) {
+  return s_list.head != NULL;
 }
 
 uint32_t soft_timer_remaining_time(SoftTimerId timer_id) {
-  if (timer_id >= SOFT_TIMER_MAX_TIMERS) {
+  if (timer_id >= SOFT_TIMER_MAX_TIMERS || !soft_timer_inuse()) {
     return 0;
   }
 
+  // See timer_gettime manual page for details
   struct itimerspec spec = { { 0, 0 }, { 0, 0 } };
-  timer_gettime(s_posix_timers[timer_id].timer_id, &spec);
-  return spec.it_value.tv_sec * 1000000 + spec.it_value.tv_nsec / 1000;
+  timer_gettime(s_list.timer_id, &spec);
+  uint32_t head_remaining_us = spec.it_value.tv_sec * 1000000 + spec.it_value.tv_nsec / 1000;
+
+  return s_storage[timer_id].remainder - s_list.head->remainder + head_remaining_us;
 }

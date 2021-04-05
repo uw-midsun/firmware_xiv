@@ -4,6 +4,7 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 typedef enum {
   TEST_CAN_ACK_DEVICE_A = 0,
@@ -137,6 +138,7 @@ void test_can_ack_expiry(void) {
   can_ack_add_request(&s_ack_requests, 0x2, &ack_request);
 
   while (data.msg_id == 0) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(0x2, data.msg_id);
@@ -168,6 +170,7 @@ void test_can_ack_expiry_moved(void) {
   TEST_ASSERT_EQUAL(1, s_ack_requests.num_requests);
 
   while (data.msg_id == can_msg.msg_id) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(0x2, data.msg_id);
