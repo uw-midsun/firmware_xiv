@@ -107,6 +107,4 @@ SpacesInSquareBrackets: false
 Standard:        Auto
 TabWidth:        8
 UseTab:          Never
----
-Language: JavaScript
-BasedOnStyle: Google
+

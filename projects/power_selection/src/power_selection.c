@@ -87,8 +87,8 @@ uint16_t prv_status_checker() {
 static void prv_power_selection_callback(SoftTimerId timer_id, void *context) {
   uint16_t status = prv_status_checker();
   // SENDING AUX BATTERY DATA
-  CAN_TRANSMIT_AUX_BATTERY_STATUS(s_aux_volt - (uint16_t)AUX_VOLT_DEFAULT,
-                                  s_aux_temp - (uint16_t)AUX_TEMP_DEFAULT, status);
+  CAN_TRANSMIT_AUX_BATTERY_STATUS(s_aux_volt - AUX_VOLT_DEFAULT, s_aux_temp - AUX_TEMP_DEFAULT,
+                                  status);
   soft_timer_start_millis(TIMER_TIMEOUT_MS, prv_power_selection_callback, context, NULL);
 }
 
