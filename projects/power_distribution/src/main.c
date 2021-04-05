@@ -178,7 +178,7 @@ int main(void) {
     fan_settings.fan_pwm1 = FRONT_PD_PWM_1;
     fan_settings.fan_pwm2 = FRONT_PD_PWM_2;
   } else {
-    fan_settings.fan_pwm1 = REAR_ENC_VENT_PWM,
+    fan_settings.fan_pwm1 = REAR_ENC_VENT_PWM;
     fan_settings.fan_pwm2 = REAR_DCDC_PWM;
   }
   StatusCode fan_ctrl_status = pd_fan_ctrl_init(&fan_settings, is_front_pd);
