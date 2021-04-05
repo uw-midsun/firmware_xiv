@@ -4,7 +4,7 @@
 // returns a non-OK status code.
 //
 // Usage:
-// BUG(my_critical_function_that_can_never_fail());
+// BUG(initialize_my_critical_module());
 //
 // BUG is meant to wrap operations where the only sensible thing to do on failure is to exit with
 // debugging information, such as initializing modules in main. If a BUG is triggered, it should
