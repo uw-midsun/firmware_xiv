@@ -170,22 +170,22 @@ int main(void) {
   BUG(lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings));
 
   // initialize fan ctrl
+  FanCtrlSettings fan_settings = {
+    .i2c_port = PD_I2C_PORT,
+    .i2c_address = ADT7476A_I2C_ADDRESS,
+  };
   if (is_front_pd) {
-    FanCtrlSettings fan_settings = {
-      .i2c_port = PD_I2C_PORT,
-      .fan_pwm1 = FRONT_PD_PWM_1,
-      .fan_pwm2 = FRONT_PD_PWM_2,
-      .i2c_address = ADT7476A_I2C_ADDRESS,
-    };
-    BUG(pd_fan_ctrl_init(&fan_settings, true));
+    fan_settings.fan_pwm1 = FRONT_PD_PWM_1;
+    fan_settings.fan_pwm2 = FRONT_PD_PWM_2;
   } else {
-    FanCtrlSettings fan_settings = {
-      .i2c_port = PD_I2C_PORT,
-      .fan_pwm1 = REAR_ENC_VENT_PWM,
-      .fan_pwm2 = REAR_DCDC_PWM,
-      .i2c_address = ADT7476A_I2C_ADDRESS,
-    };
-    BUG(pd_fan_ctrl_init(&fan_settings, false));
+    fan_settings.fan_pwm1 = REAR_ENC_VENT_PWM,
+    fan_settings.fan_pwm2 = REAR_DCDC_PWM;
+  }
+  StatusCode fan_ctrl_status = pd_fan_ctrl_init(&fan_settings, is_front_pd);
+  if (!status_ok(fan_ctrl_status)) {
+    // Fan control could in theory fail to init spontaneously (due to I2C issues with ADT7476A), and
+    // we can survive without it, so we don't use BUG and instead just log.
+    LOG_WARN("Failed to initialize fan control! Status=%d\n", fan_ctrl_status);
   }
 
   if (is_front_pd) {
