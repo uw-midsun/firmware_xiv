@@ -16,8 +16,8 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_SENSED_CH1_VALUE (int16_t)0x1337
-#define TEST_SENSED_CH2_VALUE (int16_t)0xDEAD
+#define TEST_SENSED_CH1_VALUE 0x1337
+#define TEST_SENSED_CH2_VALUE 0xDEAD
 #define TEST_STORED_VALUE TEST_SENSED_CH1_VALUE  // only CH1 is used
 
 // there must be MAX_SOLAR_MCP3427 valid data points after and including this data point
@@ -176,7 +176,7 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   TEST_ASSERT_EQUAL(false, is_set);  // not setting data yet
 
   // call the MCP3427 callback, make sure nothing was set yet (we only set data on the sense cycle)
-  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
   data_store_get_is_set(TEST_DATA_POINT, &is_set);
   TEST_ASSERT_EQUAL(false, is_set);
@@ -192,7 +192,7 @@ void test_sense_mcp3427_normal_cycle_one_mcp3427(void) {
   data_store_set(TEST_DATA_POINT, 0);
 
   // one more cycle, same thing
-  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
   s_sense_callbacks[0](s_sense_callback_contexts[0]);
   data_store_get(TEST_DATA_POINT, &set_value);
@@ -223,7 +223,7 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
 
   // call the MCP3427 callbacks, make sure nothing was set in the data store
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
-    s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+    s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
   }
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
@@ -244,7 +244,7 @@ void test_sense_mcp3427_normal_cycle_max_mcp3427s(void) {
 
   // one more cycle, same thing
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
-    s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+    s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
   }
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
@@ -275,7 +275,7 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
   }
 
   // only call the first MCP3427 callback, only the first sense cycle should have an effect
-  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
   for (uint8_t i = 0; i < MAX_SOLAR_MCP3427; i++) {
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
@@ -285,7 +285,7 @@ void test_sense_mcp3427_data_not_ready_max_mcp3427s(void) {
 
   // call the rest of the MCP3427 callbacks, now the data store should be called
   for (uint8_t i = 1; i < MAX_SOLAR_MCP3427; i++) {
-    s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+    s_mcp3427_callbacks[i](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                            s_mcp3427_callback_contexts[i]);
     s_sense_callbacks[i](s_sense_callback_contexts[i]);
     data_store_get_is_set(prv_get_test_data_point(i), &is_set);
@@ -350,7 +350,7 @@ void test_sense_mcp3427_fault(void) {
     s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
     TEST_ASSERT_EQUAL(0, s_num_faults_raised);
   }
-  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, (int16_t)TEST_SENSED_CH2_VALUE,
+  s_mcp3427_callbacks[0](TEST_SENSED_CH1_VALUE, TEST_SENSED_CH2_VALUE,
                          s_mcp3427_callback_contexts[0]);
   s_mcp3427_fault_callbacks[0](s_mcp3427_fault_callback_contexts[0]);
   TEST_ASSERT_EQUAL(0, s_num_faults_raised);
