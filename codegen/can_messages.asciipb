@@ -117,19 +117,7 @@ msg {
   }
 }
 
-# IDs: 19-20 Reserved
-
-msg {
-  id: 21
-  source: CENTRE_CONSOLE
-  target: "MOTOR_INTERFACE"
-  msg_name: "front power"
-  can_data {
-    u16 {
-      field_name_1: "power_bitset"
-    }
-  }
-}
+# IDs: 19-21 Reserved
 
 msg {
   id: 22
@@ -179,7 +167,19 @@ msg {
   }
 }
 
-# IDs: 26-27 Reserved
+msg {
+  id:26
+  source: STEERING
+  target: "REGEN_BRAKING"
+  msg_name: "regen braking"
+  can_data{
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+# IDs: 27 Reserved
 
 msg {
   id: 28
@@ -512,6 +512,7 @@ msg {
   }
 }
 
+# See https://uwmidsun.atlassian.net/l/c/normaJUS for how to interpret PD fault messages
 msg {
   id: 61
   source: POWER_DISTRIBUTION_REAR
@@ -519,10 +520,10 @@ msg {
   msg_name: "rear pd fault"
   can_data {
     u16 {
-      field_name_1: "Fault data"
-      field_name_2: "enclosure temp data"
-      field_name_3: "dcdc temp data"
-      field_name_4: "reference voltage"
+      field_name_1: "fault_data"
+      field_name_2: "enclosure_temp_data"
+      field_name_3: "dcdc_temp_data"
+      field_name_4: "faulting_output"
     }
   }
 }
@@ -535,12 +536,13 @@ msg {
   can_data {
     u16 {
       field_name_1: "fault_data"
+      field_name_2: "faulting_output"
     }
   }
 }
 
 
-# Common message format for all babydriver messages: see https://uwmidsun.atlassian.net/l/c/XHjUAAK2
+# Common message format for all babydriver messages: see https://uwmidsun.atlassian.net/l/c/Bsqmcu19
 msg {
   id: 63
   source: BABYDRIVER
