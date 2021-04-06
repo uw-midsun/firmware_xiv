@@ -26,7 +26,7 @@
 #   make install_requirements - Installs python requirements for every project
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
-# 	make codegen_proto - Generates protobuf files 
+# 	make codegen_protos - Generates protobuf files 
 # 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86 
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mpxe [TE] - Build and run the specified MPXE integration test, or all integration tests if TE is not defined
