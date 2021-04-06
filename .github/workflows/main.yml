@@ -70,7 +70,8 @@ jobs:
         run: |
           pip install --user pylint
           pip install --user autopep8
-          # Install dependencies from all requirements.txt in the repo
+          pip install --upgrade pip
+          pip install --upgrade setuptools
           make install_requirements
 
       - name: Force PATH to update
@@ -99,6 +100,8 @@ jobs:
 
       - name: Build and test
         run: |
+          make codegen
+          make codegen_dbc
           make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
           make clean
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
