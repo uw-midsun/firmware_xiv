@@ -21,11 +21,16 @@
 #   make new [PR|LI] - Creates folder structure for new project or library
 #   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
-#   make update_codegen - Update the codegen-tooling release
-#   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
 #   make pytest_all - Runs all python tests in the scripts directory of every project 
 #   make install_requirements - Installs python requirements for every project
+#   make codegen - Generates header files for CAN messages used in firmware
+# 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
+# 	make codegen_protos - Generates protobuf files 
+# 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86 
+#   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make mpxe [TE] - Build and run the specified MPXE integration test, or all integration tests if TE is not defined
+#   make fastmpxe [TE] - Don't build and just run the MPXE integration test, or all if TE is not defined.
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -41,8 +46,17 @@ PROJ_DIR := projects
 PLATFORMS_DIR := platform
 LIB_DIR := libraries
 MAKE_DIR := make
+CODEGEN_DIR := codegen
+MPXE_DIR := mpxe
 
+ifeq ($(MAKECMDGOALS),mpxe)
+PLATFORM ?= x86
+DEFINE += MPXE
+IS_MPXE := TRUE
+$(call gen_mpxe)
+else
 PLATFORM ?= stm32f0xx
+endif
 
 # Include argument filters
 include $(MAKE_DIR)/filter.mk
@@ -78,6 +92,11 @@ else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
+# MPXE generated file directories
+MPXE_C_GEN_DIR := $(LIB_DIR)/mpxe-gen
+MPXE_PYTHON_GEN_DIR := $(MPXE_DIR)/protogen
+MPXE_PROTOS_DIR := $(MPXE_DIR)/protos
+
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
@@ -85,6 +104,15 @@ COMMA := ,
 ###################################################################################################
 
 # AUTOMATED ACTIONS
+
+# $(call gen_mpxe)
+define gen_mpxe
+$(shell mkdir -p $(MPXE_C_GEN_DIR)/inc $(MPXE_C_GEN_DIR)/src $(MPXE_PYTHON_GEN_DIR))
+$(shell cd $(MPXE_PROTOS_DIR) && protoc --c_out=$(ROOT)/$(MPXE_C_GEN_DIR)/inc *)
+$(shell cd $(MPXE_PROTOS_DIR) && protoc --python_out=$(ROOT)/$(MPXE_PYTHON_GEN_DIR) *)
+$(shell mv $(MPXE_C_GEN_DIR)/inc/*.c $(MPXE_C_GEN_DIR)/src)
+$(shell rm -r -f $(MPXE_C_GEN_DIR)/inc/mpxe)
+endef
 
 # $(call include_lib,libname)
 define include_lib
@@ -151,24 +179,31 @@ CFLAGS += $(addprefix -D,$(DEFINE))
 # Allow depending on the value of DEFINE so we rebuild after changing defines
 $(eval $(call dependable_var,DEFINE))
 
+ifneq (,$(IS_MPXE))
+$(eval $(call gen_mpxe))
+endif
+
 # Includes all libraries so make can find their targets
 $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
-IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
+IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mpxe-gen
 # This uses regex
-IGNORE_PY_FILES := ./lint.py ./libraries/unity.*
-# Find all python files excluding library files in project env (./venv)
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( -path ./.venv -o -path ./libraries -o -path ./lint.py \) -prune -o -name '*.py' -print)
+IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
+# Find all python files excluding ignored files
+IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
+FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
-FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' 
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)./.venv/*'
+FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
+# ignore MPXE since it has a different pylint
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mpxe/*.py' ':(exclude)./.venv/*'
+FIND_MOD_NEW_MPXE_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mpxe/*.py' ':(exclude)./.venv/*'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -177,25 +212,50 @@ lint:
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r python2 lint.py
 
-#Quick lint on ONLY changed/new files
+# Quick lint on ONLY changed/new files
 .PHONY: lint_quick
 lint_quick:
-	@echo "Quick linting on ONLY changed/new files"
+	@echo "Quick linting on ONLY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
-# Disable import error
+# Globally disable the following pylint messages:
+PYLINT_DISABLE := \
+	import-error redefined-outer-name unused-argument \
+	too-few-public-methods duplicate-code no-self-use
+
+# Disable these additional pylint messages for MPXE:
+MPXE_PYLINT_DISABLE := \
+	missing-module-docstring missing-class-docstring \
+	missing-function-docstring invalid-name
+
+PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE))
+MPXE_PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE)) $(addprefix --disable=,$(MPXE_PYLINT_DISABLE))
+
+# Lints Python files, excluding MPXE generated files
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR), $(MPXE_DIR), $(CODEGEN_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
-	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
+	@find $(MAKE_DIR) $(PLATFORMS_DIR) $(CODEGEN_DIR)/scripts -iname "*.py" -print | xargs -r $(PYLINT)
+	@$(FIND:"*.[ch]"="*.py") | xargs -r $(PYLINT)
+	@find $(MPXE_DIR) -path $(MPXE_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(MPXE_PYLINT)
+
+.PHONY: pylint_quick
+pylint_quick:
+	@echo "Quick linting ONLY changed/new Python files"
+	@$(FIND_MOD_NEW_PY) | xargs -r $(PYLINT)
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r $(MPXE_PYLINT)
 
 .PHONY: format_quick
 format_quick:
-	@echo "Quick format on ONlY changed/new files"
+	@echo "Quick format on ONlY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
+	
+.PHONY: pyformat_quick
+pyformat_quick: 
+	@echo "Quick format on ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -203,15 +263,49 @@ format:
 	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
+
+.PHONY: pyformat
+pyformat: 
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
+# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command 
+.PHONY: codegen
+codegen: codegen_protos
+	@echo "Generating from templates..."
+	@cd $(CODEGEN_DIR) && python scripts/build.py 
+	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' \) | xargs -r clang-format -i -fallback-style=Google
+	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
+
+# Note: build_dbc has same issue as build.py with local paths
+.PHONY: codegen_dbc
+codegen_dbc:
+	@echo "Generating DBC file"
+	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
+
+.PHONY: codegen_protos 
+codegen_protos:
+	@echo "Compiling protos..."
+	@mkdir -p $(CODEGEN_DIR)/genfiles
+	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
+
+.PHONY: pytest
+pytest:
+	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
+
+.PHONY: pytest_all
+pytest_all:
+	@for i in $$(find . -path ./.venv -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
+	do																								\
+		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
+	done	
+
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
 test_format: format
-	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
-	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT | xargs -r -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -r -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
 # Builds the project or library
 .PHONY: build
@@ -242,8 +336,16 @@ new:
 
 .PHONY: clean
 clean:
+	@echo cleaning
 	@rm -rf $(BUILD_DIR)
 	@rm -rf .venv
+	@rm -f $(LIB_DIR)/mpxe-gen/inc/*.pb-c.h
+	@rm -f $(LIB_DIR)/mpxe-gen/src/*.pb-c.c
+	@rm -f $(MPXE_DIR)/protogen/*_pb2.py
+
+.PHONY: mock_can_data
+mock_can_data: socketcan
+	@cd $(CODEGEN_DIR) && python3 mock_can_data.py
 
 .PHONY: remake
 remake: clean all
@@ -255,28 +357,27 @@ socketcan:
 	@sudo modprobe vcan
 	@sudo ip link add dev vcan0 type vcan || true
 	@sudo ip link set up vcan0 || true
-	@ip link show vcan0
-
-.PHONY: update_codegen
-update_codegen:
-	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
-
-.PHONY: pytest
-pytest:
-	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
-
-.PHONY: pytest_all
-pytest_all:
-	@for i in $$(find projects -name "test_*.py"); 													\
-	do																								\
-		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done		
+	@ip link show vcan0									
 
 .PHONY: install_requirements
 install_requirements:
+	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
+	@sudo apt-get update
+	@sudo apt-get install protobuf-compiler
 	@rm -rf .venv
+	@mkdir .venv
 	@virtualenv .venv
-	@pip install -r requirements.txt									
+	@pip install -r requirements.txt -t .venv/lib/python3.6/site-packages
+
+MPXE_PROJS := 
+-include $(MPXE_DIR)/integration_tests/deps.mk
+
+.PHONY: fastmpxe
+fastmpxe:
+	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(TEST).py"
+
+.PHONY: mpxe
+mpxe: $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

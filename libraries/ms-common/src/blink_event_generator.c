@@ -1,6 +1,10 @@
 #include "blink_event_generator.h"
 
-#define BLINK_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "event_queue.h"
+#include "soft_timer.h"
 
 static BlinkerState prv_opposite_state(BlinkerState state) {
   return state == BLINKER_STATE_ON ? BLINKER_STATE_OFF : BLINKER_STATE_ON;
@@ -16,6 +20,7 @@ StatusCode blink_event_generator_init(BlinkEventGeneratorStorage *storage,
     return STATUS_CODE_INVALID_ARGS;
   }
 
+  storage->event_priority = settings->event_priority;
   storage->interval_us = settings->interval_us;
   storage->default_state = storage->current_state = settings->default_state;
   storage->callback = settings->callback;
@@ -31,10 +36,10 @@ static bool prv_is_active(BlinkEventGeneratorStorage *storage) {
 static void prv_raise_blink_event_callback(SoftTimerId timer_id, void *context) {
   BlinkEventGeneratorStorage *storage = context;
   BlinkerState new_state = prv_opposite_state(storage->current_state);
-  event_raise_priority(BLINK_EVENT_PRIORITY, storage->event_id, prv_state_to_value(new_state));
+  event_raise_priority(storage->event_priority, storage->event_id, prv_state_to_value(new_state));
   storage->current_state = new_state;
 
-  soft_timer_start(storage->interval_us, &prv_raise_blink_event_callback, storage,
+  soft_timer_start(storage->interval_us, prv_raise_blink_event_callback, storage,
                    &storage->timer_id);
 
   if (storage->callback) {
@@ -62,7 +67,7 @@ StatusCode blink_event_generator_start(BlinkEventGeneratorStorage *storage, Even
 bool blink_event_generator_stop(BlinkEventGeneratorStorage *storage) {
   if (storage->current_state != storage->default_state) {
     // raise a final event to go back to the default state
-    event_raise_priority(BLINK_EVENT_PRIORITY, storage->event_id,
+    event_raise_priority(storage->event_priority, storage->event_id,
                          prv_state_to_value(storage->default_state));
   }
 

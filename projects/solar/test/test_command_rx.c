@@ -37,8 +37,8 @@ static void prv_transmit_command(EERelayState relay_state) {
 }
 
 void setup_test(void) {
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR, SOLAR_CAN_EVENT_TX,
-                                  SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+                                  SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(command_rx_init());
   s_times_relay_closed = 0;
   s_times_relay_opened = 0;
@@ -73,7 +73,7 @@ void test_open_close_can_commands(void) {
 
 // Test that non-relay state CAN messages or non-battery directed relay state messages are ignored.
 void test_irrelevant_can_message(void) {
-  CAN_TRANSMIT_SOLAR_FAULT(0, 0);  // irrelevant CAN message
+  CAN_TRANSMIT_SOLAR_FAULT_6_MPPTS(0, 0);  // irrelevant CAN message
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(0, s_times_relay_closed);
   TEST_ASSERT_EQUAL(0, s_times_relay_opened);
