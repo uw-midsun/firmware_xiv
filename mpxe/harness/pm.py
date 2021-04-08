@@ -14,7 +14,6 @@ POLL_TIMEOUT = 0.5
 
 # signals are set in python and C, change in both places if changing
 STORE_LOCK_SIGNAL = signal.SIGUSR1
-INIT_LOCK_SIGNAL = signal.SIGUSR2
 
 
 class InvalidPollError(Exception):
@@ -34,31 +33,17 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.CanIO()
 
-        # set up initialization lock for STDOUT
-        self.init_lock = threading.Lock()
-        self.init_lock.acquire()
-        signal.signal(INIT_LOCK_SIGNAL, self.init_lock_signal)
-
-    def init_lock_signal(self, signum, stack_frame):
-        self.init_lock.release()
-
     def start(self, name, sim=None, init_conds=None):
         if name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
 
-        # lock until C side poll is ready to receive
-        self.init_lock.acquire()
-        self.init_lock.release()
-
         if init_conds:
             for update in init_conds:
                 proj.write_store(update)
-                sleep(0.1)  # needed in between sequential updates
 
         proj.send_command(stores_pb2.MxCmdType.FINISH_INIT_CONDS)
-
         return proj
 
     def stop(self, proj):

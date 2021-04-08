@@ -1,12 +1,16 @@
 import subprocess
+import signal
+import threading
 import os
 import fcntl
+import time
 
 from mpxe.harness import decoder
 from mpxe.harness.dir_config import REPO_DIR
 from mpxe.protogen import stores_pb2
 
 BIN_DIR_FORMAT = os.path.join(REPO_DIR, 'build/bin/x86/{}')
+INIT_LOCK_SIGNAL = signal.SIGUSR2
 
 
 class StoreUpdate:
@@ -32,7 +36,13 @@ class Project:
         flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
         fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
+        # set up initialization lock for STDIN
+        self.init_lock = threading.Lock()
+        signal.signal(INIT_LOCK_SIGNAL, self.init_lock_signal)
         self.sim = sim
+
+    def init_lock_signal(self, signum, stack_frame):
+        self.init_lock.release()
 
     def stop(self):
         if self.killed:
@@ -60,8 +70,13 @@ class Project:
         self.write(update.SerializeToString())
 
     def write(self, msg):
+        # lock for next write store call received
+        self.init_lock.acquire()
         self.popen.stdin.write(msg)
         self.popen.stdin.flush()
+        # Block until C sends signal that data has been read
+        self.init_lock.acquire()
+        self.init_lock.release()
 
     def handle_store(self, pm, msg):
         store_info = decoder.decode_store_info(msg)

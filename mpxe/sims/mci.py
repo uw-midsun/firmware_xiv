@@ -22,7 +22,7 @@ class Mci(sim.Sim):
         # Upon precharge enable (PA9) going high, set PB0 and PA10 to mock precharge
         if not self.precharge_enable and self.get_gpio(proj, 'a', 9):
             self.precharge_enable = self.get_gpio(proj, 'a', 9)
-            time.sleep(0.1)
+            time.sleep(0.5)
             # update precharge monitor and latch out
             self.set_gpio(proj, 'b', 0, True)
             time.sleep(0.1)
