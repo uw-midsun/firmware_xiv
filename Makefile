@@ -100,6 +100,9 @@ MPXE_PROTOS_DIR := $(MPXE_DIR)/protos
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
+# Virtualenv directory
+VENV_DIV := .venv
+
 # Please don't touch anything below this line
 ###################################################################################################
 
@@ -161,6 +164,12 @@ endef
 # ENV SETUP
 
 ROOT := $(shell pwd)
+
+###################################################################################################
+
+# PIP ENVIRONMENT SETUP
+
+export PATH := /home/vagrant/shared/firmware_xiv/$(VENV_DIV)/bin:$(PATH)
 
 ###################################################################################################
 
@@ -296,7 +305,7 @@ pytest:
 
 .PHONY: pytest_all
 pytest_all:
-	@for i in $$(find . -path ./.venv -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
+	@for i in $$(find . -path ./$(VENV_DIV) -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
 	done	
@@ -338,7 +347,6 @@ new:
 clean:
 	@echo cleaning
 	@rm -rf $(BUILD_DIR)
-	@rm -rf .venv
 	@rm -f $(LIB_DIR)/mpxe-gen/inc/*.pb-c.h
 	@rm -f $(LIB_DIR)/mpxe-gen/src/*.pb-c.c
 	@rm -f $(MPXE_DIR)/protogen/*_pb2.py
@@ -359,15 +367,17 @@ socketcan:
 	@sudo ip link set up vcan0 || true
 	@ip link show vcan0									
 
+# Note: ". .venv/bin/activate" is the /sh/ (and more portable way) of bash's "source .venv/bin/activate"
 .PHONY: install_requirements
 install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@rm -rf .venv
-	@mkdir .venv
-	@virtualenv .venv
-	@pip install -r requirements.txt -t .venv/lib/python3.6/site-packages
+	@rm -rf $(VENV_DIV)
+	@mkdir $(VENV_DIV)
+	@virtualenv $(VENV_DIV)
+	@. $(VENV_DIV)/bin/activate; \
+	pip install -r requirements.txt
 
 MPXE_PROJS := 
 -include $(MPXE_DIR)/integration_tests/deps.mk

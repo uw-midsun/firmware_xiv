@@ -2,8 +2,4 @@
 
 ## Usage
 
-```bash
-# Run python tests
-python test_insert_module_name.py
-
-```
+Check Makefile for instructions on running and testing Babydriver. 
