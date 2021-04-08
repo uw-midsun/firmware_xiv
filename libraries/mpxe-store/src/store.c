@@ -1,5 +1,6 @@
 #include "store.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
@@ -9,6 +10,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "delay.h"
 
 #include "critical_section.h"
 #include "log.h"
@@ -71,6 +73,7 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
     MxCmd *cmd = mx_cmd__unpack(NULL, (size_t)update->msg.len, update->msg.data);
     if (cmd->cmd < MX_CMD_TYPE__NUM_CMDS && s_cmd_cb_lookup[cmd->cmd] != NULL) {
       s_cmd_cb_lookup[cmd->cmd](NULL);
+      mx_cmd__free_unpacked(cmd, NULL);
     } else {
       LOG_DEBUG("INVALID COMMAND SENT!\n");
     }
@@ -91,9 +94,7 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
-  // Signal parent process after poll thread created
   pid_t ppid = getppid();
-  kill(ppid, SIGUSR2);
   // read protos from stdin
   // compare using second proto as 'mask'
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
@@ -112,6 +113,8 @@ static void *prv_poll_update(void *arg) {
           LOG_DEBUG("read error while polling\n");
         }
         prv_handle_store_update(buf, len);
+        // Signal parent process after poll thread created
+        kill(ppid, SIGUSR2);
       } else {
         LOG_DEBUG("pollhup\n");
       }
@@ -141,8 +144,9 @@ void store_config(void) {
     (UpdateStoreFunc)NULL,
   };
   store_register(MX_STORE_TYPE__LOG, log_funcs, &s_mxlog, NULL);
-
   // set up polling thread
+  // struct sigaction action = {.sa_handler = prv_sigusr, .sa_flags = SA_RESTART};
+  // sigaction(SIGUSR1, &action, NULL);
   pthread_t poll_thread;
   pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
 
