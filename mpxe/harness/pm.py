@@ -2,7 +2,6 @@ import os
 import threading
 import select
 import signal
-from time import sleep
 
 from mpxe.harness import canio
 from mpxe.harness import project
