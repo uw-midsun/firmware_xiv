@@ -3,7 +3,6 @@ import signal
 import threading
 import os
 import fcntl
-import time
 
 from mpxe.harness import decoder
 from mpxe.harness.dir_config import REPO_DIR
