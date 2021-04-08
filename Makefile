@@ -169,7 +169,8 @@ ROOT := $(shell pwd)
 
 # PIP ENVIRONMENT SETUP
 
-export PATH := /home/vagrant/shared/firmware_xiv/$(VENV_DIV)/bin:$(PATH)
+
+export PATH := $(ROOT)/$(VENV_DIV)/bin:$(PATH)
 
 ###################################################################################################
 

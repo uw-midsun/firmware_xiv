@@ -68,8 +68,6 @@ jobs:
 
       - name: Install Python tooling
         run: |
-          pip install --user pylint
-          pip install --user autopep8
           pip install --user virtualenv
           pip install --upgrade pip
           pip install --upgrade setuptools
