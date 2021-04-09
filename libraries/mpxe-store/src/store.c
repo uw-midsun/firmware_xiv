@@ -170,6 +170,7 @@ void store_export(MxStoreType type, void *store, void *key) {
 }
 
 void log_export(char *buf, uint16_t len) {
+  store_config();
   s_mxlog.log.len = len;
   s_mxlog.log.data = (uint8_t *)buf;
   store_export(MX_STORE_TYPE__LOG, &s_mxlog, NULL);

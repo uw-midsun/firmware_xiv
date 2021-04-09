@@ -39,7 +39,6 @@ typedef enum {
 #define MAX_LOG_LEN 256
 static char s_log_buf[MAX_LOG_LEN];
 
-// fflush necessary for printing through pipes
 #define LOG(level, fmt, ...)                                                                  \
   do {                                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                                     \
