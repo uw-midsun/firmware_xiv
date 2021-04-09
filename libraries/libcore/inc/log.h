@@ -43,6 +43,7 @@ static char s_log_buf[MAX_LOG_LEN];
 #define LOG(level, fmt, ...)                                                                  \
   do {                                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                                     \
+      store_config();                                                                         \
       memset(s_log_buf, 0, sizeof(s_log_buf));                                                \
       int len = snprintf(s_log_buf, sizeof(s_log_buf), "[%u] %s:%u: " fmt, (level), __FILE__, \
                          __LINE__, ##__VA_ARGS__);                                            \
