@@ -1,35 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2017 The Chromium OS Authors. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-#    * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
-#    * Neither the name of Google Inc. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-# Original source and docs:
-# https://chromium.googlesource.com/chromiumos/platform/ec/+/refs/heads/main/extra/stack_analyzer
-# https://www.chromium.org/chromium-os/ec-development/stack-size-analyzer
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 
 """Statically analyze stack usage of EC firmware.
 
@@ -277,6 +249,7 @@ class Function(object):
   def __hash__(self):
     return id(self)
 
+
 class AndesAnalyzer(object):
   """Disassembly analyzer for Andes architecture.
 
@@ -429,6 +402,7 @@ class AndesAnalyzer(object):
 
     return (stack_frame, callsites)
 
+
 class ArmAnalyzer(object):
   """Disassembly analyzer for ARM architecture.
 
@@ -578,6 +552,7 @@ class ArmAnalyzer(object):
 
     return (stack_frame, callsites)
 
+
 class RiscvAnalyzer(object):
   """Disassembly analyzer for RISC-V architecture.
 
@@ -676,6 +651,7 @@ class RiscvAnalyzer(object):
             stack_frame += abs(int(operand_text.split(",")[2]))
 
     return (stack_frame, callsites)
+
 
 class StackAnalyzer(object):
   """Class to analyze stack usage.
@@ -1738,12 +1714,12 @@ def ParseRoDataText(rodata_text):
   """Parse the content of rodata
 
   Args:
-    symbol_text: Text of the rodata dump.
+    rodata_text: Text of the rodata dump.
 
   Returns:
-    symbols: Symbol list.
+    rodata: Rodata dump.
   """
-  # Examples: 8018ab0 00040048 00010000 10020000 4b8e0108  ...H........K...
+  # Examples: 8018ab00 00040048 00010000 10020000 4b8e0108  ...H........K...
   #           100a7294 00000000 00000000 01000000           ............
 
   base_offset = None
