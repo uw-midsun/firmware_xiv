@@ -15,6 +15,7 @@
 #include "critical_section.h"
 #include "log.h"
 #include "stores.pb-c.h"
+#include "x86_interrupt.h"
 
 #define MAX_STORE_COUNT 64
 #define INVALID_STORE_ID MAX_STORE_COUNT
@@ -54,6 +55,7 @@ static void prv_handle_finish_conditions(void *context) {
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
+  MXDBG("export unlocking in signal handler, signal: %d\n", signo);
   pthread_mutex_unlock(&s_sig_lock);
 }
 
@@ -102,36 +104,44 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
   pid_t ppid = getppid();
+  x86_interrupt_pthread_init();
+
   // read protos from stdin
   // compare using second proto as 'mask'
-  struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
+  struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN | POLLPRI };
   while (true) {
-    int res = poll(&pfd, 1, -1);
+    MXDBG("POLL_THREAD polling!!\n");
+    int res = poll(&pfd, 1, 1000);
+    MXDBG("POLL_THREAD poll returned %d\n", res);
     if (res == -1) {
       // interrupted
+      MXDBG("POLL_THREAD polling interrupted, errno %d, eintr %d\n", errno, EINTR);
       continue;
     } else if (res == 0) {
       continue;  // nothing to read
+      MXDBG("POLL_THREAD nothing to read\n");
     } else {
       if (pfd.revents & POLLIN) {
         static uint8_t buf[MAX_STORE_SIZE_BYTES];
-        MXDBG("reading\n");
+        MXDBG("POLL_THREAD reading\n");
         ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
         if (len == -1) {
-          LOG_DEBUG("read error while polling\n");
+          LOG_DEBUG("POLL_THREAD read error while polling\n");
         }
-        MXDBG("before handling\n");
+        MXDBG("POLL_THREAD before handling\n");
         prv_handle_store_update(buf, len);
         // Signal parent process after poll thread created
-        MXDBG("After handling\n");
+        MXDBG("POLL_THREAD After handling\n");
 
         kill(ppid, SIGUSR2);
-        MXDBG("after kill signal\n");
+        MXDBG("POLL_THREAD after kill signal\n");
       } else {
+        MXDBG("POLL_THREAD pollhup\n");
         LOG_DEBUG("pollhup\n");
       }
     }
   }
+  MXDBG("returning from poll???\n");
   return NULL;
 }
 
@@ -206,6 +216,7 @@ void *store_get(MxStoreType type, void *key) {
 }
 
 void store_export(MxStoreType type, void *store, void *key) {
+  MXDBG("Store export starting, type: %d\n", type);
   // Serialize store to proto
   size_t packed_size = s_func_table[type].get_packed_size(store);
   uint8_t *store_buf = malloc(packed_size);

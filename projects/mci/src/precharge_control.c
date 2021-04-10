@@ -19,6 +19,7 @@ PrechargeControlStorage *test_get_storage(void) {
 }
 
 StatusCode prv_set_precharge_control(PrechargeControlStorage *storage, const GpioState state) {
+  LOG_DEBUG("setting GPIO state precharge\n");
   gpio_set_state(&storage->precharge_control, state);
   return STATUS_CODE_OK;
 }
@@ -43,6 +44,7 @@ StatusCode prv_discharge_rx(const CanMessage *msg, void *context, CanAckStatus *
 
 StatusCode prv_precharge_rx(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   PrechargeControlStorage *storage = context;
+  LOG_DEBUG("prv_precharge_rx called\n");
   return prv_set_precharge_control(storage, GPIO_STATE_HIGH);
 }
 

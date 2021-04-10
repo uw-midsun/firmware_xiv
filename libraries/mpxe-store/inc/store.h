@@ -8,7 +8,7 @@
 
 #define MXDBG(fmt, ...)                  \
   do {                                   \
-    fprintf(stderr, fmt, ##__VA_ARGS__); \
+    fprintf(stderr, "[MX] " fmt, ##__VA_ARGS__); \
   } while (0)
 
 // Protoc generates versions of these for each message type, so we define generic

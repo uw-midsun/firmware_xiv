@@ -39,6 +39,10 @@ class Project:
         flags = fcntl.fcntl(self.popen.stderr.fileno(), fcntl.F_GETFL)
         fcntl.fcntl(self.popen.stderr.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
+        flags = fcntl.fcntl(self.popen.stdin.fileno(), fcntl.F_GETFL)
+        print('FLAGS:', hex(flags))
+        print('nonblock:', hex(os.O_NONBLOCK))
+
         # set up initialization lock for STDIN
         self.init_lock = threading.Lock()
         signal.signal(INIT_LOCK_SIGNAL, self.init_lock_signal)
@@ -74,11 +78,17 @@ class Project:
 
     def write(self, msg):
         # lock for next write store call received
+        print('init lock first acquire')
         self.init_lock.acquire()
-        self.popen.stdin.write(msg)
-        self.popen.stdin.flush()
+        print('writing and flushing stdin')
+        print('len msg:', len(msg))
+        ret = self.popen.stdin.write(msg)
+        print('write ret:', ret)
+        ret = self.popen.stdin.flush()
+        print('flush ret:', ret)
+        print('stream type:', type(self.popen.stdin))
         # Block until C sends signal that data has been read
-        print('waiting for init lock')
+        print('init lock second acquire')
         self.init_lock.acquire()
         self.init_lock.release()
         print('released init lock')

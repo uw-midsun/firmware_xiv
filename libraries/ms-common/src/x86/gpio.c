@@ -50,6 +50,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
           if ((msg->state[i] == 1 && edge == INTERRUPT_EDGE_RISING) ||
               (msg->state[i] == 0 && edge == INTERRUPT_EDGE_FALLING) ||
               edge == INTERRUPT_EDGE_RISING_FALLING) {
+            MXDBG("triggering interrupt\n");
             gpio_it_trigger_interrupt(&address);
           }
         }

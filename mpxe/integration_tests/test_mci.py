@@ -11,7 +11,7 @@ class TestMci(int_test.IntTest):
         self.mci = self.manager.start('mci', Mci())
 
     def test_mci(self):
-        time.sleep(1)
+        time.sleep(1.3)
         self.assertNotEqual(self.mci.sim.tx_id, 0)
         self.assertEqual(self.mci.sim.tx_data, 0)
 
