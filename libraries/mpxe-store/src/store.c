@@ -72,21 +72,28 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   if (update->type == MX_STORE_TYPE__CMD) {
     MxCmd *cmd = mx_cmd__unpack(NULL, (size_t)update->msg.len, update->msg.data);
     if (cmd->cmd < MX_CMD_TYPE__NUM_CMDS && s_cmd_cb_lookup[cmd->cmd] != NULL) {
+      MXDBG("cmd %d sent\n", cmd->cmd);
       s_cmd_cb_lookup[cmd->cmd](NULL);
+      MXDBG("cmd handled\n");
       mx_cmd__free_unpacked(cmd, NULL);
     } else {
       LOG_DEBUG("INVALID COMMAND SENT!\n");
     }
   } else {
     if (s_init_cond_complete) {  // Default activity, call update store for type
+      MXDBG("update %d got\n", update->type);
       s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+      MXDBG("update handled\n");
       mx_store_update__free_unpacked(update, NULL);
+      MXDBG("update freed\n");
     } else {  // Store initial conditions to be used in store_register
       if (s_num_init_conds < MAX_STORE_COUNT) {
         s_init_cond[s_num_init_conds] = update;
         s_num_init_conds++;
       } else {
+        MXDBG("no good\n");
         LOG_WARN("MPXE INITIAL CONDITIONS OVERFLOW!\n");
+        MXDBG("overflow\n");
       }
     }
   }
@@ -108,13 +115,18 @@ static void *prv_poll_update(void *arg) {
     } else {
       if (pfd.revents & POLLIN) {
         static uint8_t buf[MAX_STORE_SIZE_BYTES];
+        MXDBG("reading\n");
         ssize_t len = read(STDIN_FILENO, buf, sizeof(buf));
         if (len == -1) {
           LOG_DEBUG("read error while polling\n");
         }
+        MXDBG("before handling\n");
         prv_handle_store_update(buf, len);
         // Signal parent process after poll thread created
+        MXDBG("After handling\n");
+
         kill(ppid, SIGUSR2);
+        MXDBG("after kill signal\n");
       } else {
         LOG_DEBUG("pollhup\n");
       }
@@ -211,12 +223,16 @@ void store_export(MxStoreType type, void *store, void *key) {
   uint8_t *export_buf = malloc(export_size);
   mx_store_info__pack(&msg, export_buf);
 
+  MXDBG("export locking\n");
   pthread_mutex_lock(&s_sig_lock);
   // write proto to fifo
+  MXDBG("export writing\n");
   ssize_t written = write(STDOUT_FILENO, export_buf, export_size);
   // wait for signal that parent got message
+  MXDBG("export locking again\n");
   pthread_mutex_lock(&s_sig_lock);
   pthread_mutex_unlock(&s_sig_lock);
+  MXDBG("export unlocking\n");
 
   if (written == -1) {
     LOG_DEBUG("write error while exporting\n");

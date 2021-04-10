@@ -8,6 +8,7 @@
 #include "pedal_rx.h"
 #include "soft_timer.h"
 
+#include "log.h"
 #include "cruise_rx.h"
 #include "drive_fsm.h"
 #include "mci_broadcast.h"
@@ -80,6 +81,7 @@ int main(void) {
   soft_timer_init();
   gpio_init();
   gpio_it_init();
+  LOG_DEBUG("finished initing in mci\n");
 
   prv_setup_system_can();
   prv_setup_motor_can();

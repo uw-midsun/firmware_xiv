@@ -24,6 +24,7 @@ class Mci(sim.Sim):
             self.precharge_enable = self.get_gpio(proj, 'a', 9)
             time.sleep(0.5)
             # update precharge monitor and latch out
+            print('setting gpio b0 on')
             self.set_gpio(proj, 'b', 0, True)
             time.sleep(0.1)
             self.set_gpio(proj, 'a', 10, True)

@@ -37,16 +37,19 @@ class ProjectManager:
             raise ValueError('invalid project "{}": expected something from projects directory')
         proj = project.Project(name, sim or Sim())
         self.fd_to_proj[proj.popen.stdout.fileno()] = proj
+        self.fd_to_proj[proj.popen.stderr.fileno()] = proj
 
         if init_conds:
             for update in init_conds:
                 proj.write_store(update)
 
+        print('sending finish init conds')
         proj.send_command(stores_pb2.MxCmdType.FINISH_INIT_CONDS)
         return proj
 
     def stop(self, proj):
         del self.fd_to_proj[proj.popen.stdout.fileno()]
+        del self.fd_to_proj[proj.popen.stderr.fileno()]
         proj.stop()
 
     def stop_all(self):
@@ -65,10 +68,17 @@ class ProjectManager:
             if (event & select.POLLIN) == 0:
                 raise InvalidPollError
             proj = self.fd_to_proj[fd]
+            # check if the output is from stderr for debugging
+            if fd == proj.popen.stderr.fileno():
+                print('[DEBUG]', proj.popen.stderr.read().decode('utf-8').rstrip())
+                return
             # Currently assume all messages are storeinfo,
             # might need other message types
+            print('reading stdout')
             msg = proj.popen.stdout.read()
+            print('handling')
             proj.handle_store(self, msg)
+            print('sending SIGUSR1')
             proj.popen.send_signal(STORE_LOCK_SIGNAL)
 
         try:

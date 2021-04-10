@@ -28,12 +28,16 @@ class Project:
 
         cmd = BIN_DIR_FORMAT.format(self.name)
         self.popen = subprocess.Popen(cmd, bufsize=0, shell=False, stdin=subprocess.PIPE,
-                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                       universal_newlines=False)
 
         # Set the flag O_NONBLOCK on stdout, necessary for reading from running projects
         flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
         fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+        # Set up stderr for debugging, same as stdout
+        flags = fcntl.fcntl(self.popen.stderr.fileno(), fcntl.F_GETFL)
+        fcntl.fcntl(self.popen.stderr.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
         # set up initialization lock for STDIN
         self.init_lock = threading.Lock()
@@ -74,8 +78,10 @@ class Project:
         self.popen.stdin.write(msg)
         self.popen.stdin.flush()
         # Block until C sends signal that data has been read
+        print('waiting for init lock')
         self.init_lock.acquire()
         self.init_lock.release()
+        print('released init lock')
 
     def handle_store(self, pm, msg):
         store_info = decoder.decode_store_info(msg)
