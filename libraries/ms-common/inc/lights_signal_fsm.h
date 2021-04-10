@@ -5,6 +5,8 @@
 // Input events are also user-defined.
 // Requires interrupts, soft timers, and the event queue to be initialized.
 
+#include <stdint.h>
+
 #include "blink_event_generator.h"
 #include "event_queue.h"
 #include "fsm.h"
@@ -30,6 +32,8 @@ typedef struct {
   // "On" blinks between emitted sync events if behaviour is SYNC_BEHAVIOUR_SEND_SYNC_MSGS.
   uint16_t num_blinks_between_syncs;
   uint32_t blink_interval_us;
+  // The event priority MUST be set (otherwise it defaults to EVENT_PRIORITY_HIGHEST!)
+  EventPriority event_priority;
 } SignalFsmSettings;
 
 typedef struct {

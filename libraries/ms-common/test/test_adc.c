@@ -6,6 +6,7 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 // temps in kelvin
 #define ADC_INVALID_UNDER_TEMP 253
@@ -153,6 +154,7 @@ void test_single(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_read_raw(ADC_CHANNEL_3, &reading));
 
   while (!s_callback_ran) {
+    wait();
   }
 
   TEST_ASSERT_TRUE(s_callback_ran);
@@ -175,6 +177,7 @@ void test_continuous() {
 
   // Run a busy loop until a callback is triggered
   while (!s_callback_runs) {
+    wait();
   }
 
   TEST_ASSERT_TRUE(s_callback_ran);
@@ -296,6 +299,7 @@ void test_pin_single(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_EMPTY, adc_read_raw_pin(s_empty_pin, &reading));
 
   while (!s_pin_callback_ran) {
+    wait();
   }
 
   TEST_ASSERT_TRUE(s_pin_callback_ran);
@@ -318,6 +322,7 @@ void test_pin_continuous() {
 
   // Run a busy loop until a callback is triggered
   while (!s_pin_callback_ran) {
+    wait();
   }
 
   TEST_ASSERT_TRUE(s_pin_callback_ran);
