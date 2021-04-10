@@ -737,7 +737,8 @@ class StackAnalyzer(object):
     line_infos = []
     for index in range(0, len(lines), 2):
       (function_name, line_text) = lines[index:index + 2]
-      if line_text in ['??:0', ':?']:
+      # MidSun fix: addr2line outputs 'reent.c:?' for many stdlib functions for some reason
+      if line_text == '??:0' or line_text.endswith(':?'):
         line_infos.append(None)
       else:
         result = self.ADDRTOLINE_RE.match(line_text)
