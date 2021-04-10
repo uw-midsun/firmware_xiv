@@ -1,0 +1,7 @@
+add:
+  prv_measure_currents[projects/power_distribution/src/current_measurement.c:32]:
+    - prv_current_measurement_data_ready_callback[projects/power_distribution/src/main.c]
+  prv_partially_publish[projects/power_distribution/src/publish_data.c:49]:
+    - prv_publish_front_current_measurement[projects/power_distribution/src/publish_data_config.c]
+    - prv_publish_rear_current_measurement[projects/power_distribution/src/publish_data_config.c]
+
