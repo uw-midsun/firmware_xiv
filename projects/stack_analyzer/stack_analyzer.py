@@ -24,8 +24,6 @@ import subprocess
 import yaml
 
 
-SECTION_RO = 'RO'
-SECTION_RW = 'RW'
 # Default size of extra stack frame needed by exception context switch.
 # This value is for cortex-m with FPU enabled.
 DEFAULT_EXCEPTION_FRAME_SIZE = 224
