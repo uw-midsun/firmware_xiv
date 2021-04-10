@@ -1713,7 +1713,7 @@ def ParseRoDataText(rodata_text):
     rodata_text: Text of the rodata dump.
 
   Returns:
-    rodata: Rodata dump.
+    (offset, rodata): Rodata offset and rodata dump.
   """
   # Examples: 8018ab00 00040048 00010000 10020000 4b8e0108  ...H........K...
   #           100a7294 00000000 00000000 01000000           ............
@@ -1839,7 +1839,7 @@ def main():
                                             encoding='utf-8')
       rodata_text = subprocess.check_output([options.objdump,
                                              '-s',
-                                             '-j', '.rodata',
+                                             '-j', '.text', # MidSun .rodata is in the .text section
                                              options.elf_path],
                                             encoding='utf-8')
     except subprocess.CalledProcessError:
