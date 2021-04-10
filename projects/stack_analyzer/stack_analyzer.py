@@ -1728,9 +1728,9 @@ def ParseArgs():
   """
   parser = argparse.ArgumentParser(description="EC firmware stack analyzer.")
   parser.add_argument('elf_path', help="the path of EC firmware ELF")
-  parser.add_argument('--objdump', default='objdump',
+  parser.add_argument('--objdump', default='arm-none-eabi-objdump',
                       help='the path of objdump')
-  parser.add_argument('--addr2line', default='addr2line',
+  parser.add_argument('--addr2line', default='arm-none-eabi-addr2line',
                       help='the path of addr2line')
   parser.add_argument('--annotation', default=None,
                       help='the path of annotation file')
