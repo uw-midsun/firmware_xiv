@@ -53,6 +53,48 @@ import yaml
 # This value is for cortex-m with FPU enabled.
 DEFAULT_EXCEPTION_FRAME_SIZE = 224
 
+# All the Interrupt Service Routine (ISR) names on the STM32F072. Taken from startup_stm32f072.s.
+ISR_NAMES = [
+  'Reset_Handler',
+  'NMI_Handler',
+  'HardFault_Handler',
+  'SVC_Handler',
+  'PendSV_Handler',
+  'SysTick_Handler',
+  'WWDG_IRQHandler',
+  'PVD_VDDIO2_IRQHandler',
+  'RTC_IRQHandler',
+  'FLASH_IRQHandler',
+  'RCC_CRS_IRQHandler',
+  'EXTI0_1_IRQHandler',
+  'EXTI2_3_IRQHandler',
+  'EXTI4_15_IRQHandler',
+  'TSC_IRQHandler',
+  'DMA1_Channel1_IRQHandler',
+  'DMA1_Channel2_3_IRQHandler',
+  'DMA1_Channel4_5_6_7_IRQHandler',
+  'ADC1_COMP_IRQHandler',
+  'TIM1_BRK_UP_TRG_COM_IRQHandler',
+  'TIM1_CC_IRQHandler',
+  'TIM2_IRQHandler',
+  'TIM3_IRQHandler',
+  'TIM6_DAC_IRQHandler',
+  'TIM7_IRQHandler',
+  'TIM14_IRQHandler',
+  'TIM15_IRQHandler',
+  'TIM16_IRQHandler',
+  'TIM17_IRQHandler',
+  'I2C1_IRQHandler',
+  'I2C2_IRQHandler',
+  'SPI1_IRQHandler',
+  'SPI2_IRQHandler',
+  'USART1_IRQHandler',
+  'USART2_IRQHandler',
+  'USART3_4_IRQHandler',
+  'CEC_CAN_IRQHandler',
+  'USB_IRQHandler',
+]
+
 
 class StackAnalyzerError(Exception):
   """Exception class for stack analyzer utility."""
@@ -1788,23 +1830,8 @@ def LoadTasklist(symbols):
     tasklist: Task list.
   """
 
-  # TaskInfoPointer = ctypes.POINTER(TaskInfo)
-  # taskinfos = TaskInfoPointer()
-  # if section == SECTION_RO:
-  #   get_taskinfos_func = export_taskinfo.get_ro_taskinfos
-  # else:
-  #   get_taskinfos_func = export_taskinfo.get_rw_taskinfos
-
-  # taskinfo_num = get_taskinfos_func(ctypes.pointer(taskinfos))
-
-  # tasklist = []
-  # for index in range(taskinfo_num):
-  #   taskinfo = taskinfos[index]
-  #   tasklist.append(Task(taskinfo.name.decode('utf-8'),
-  #                        taskinfo.routine.decode('utf-8'),
-  #                        taskinfo.stack_size))
-
-  tasklist = [Task('pedal_board', 'main', 8*2**10)]
+  task_names = ['main'] + ISR_NAMES
+  tasklist = [Task(name, name, 0x1000) for name in task_names]
 
   # Resolve routine address for each task. It's more efficient to resolve all
   # routine addresses of tasks together.
