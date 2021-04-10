@@ -1662,10 +1662,6 @@ def ParseArgs():
   """
   parser = argparse.ArgumentParser(description="EC firmware stack analyzer.")
   parser.add_argument('elf_path', help="the path of EC firmware ELF")
-  parser.add_argument('--export_taskinfo', required=True,
-                      help="the path of export_taskinfo.so utility")
-  parser.add_argument('--section', required=True, help='the section.',
-                      choices=[SECTION_RO, SECTION_RW])
   parser.add_argument('--objdump', default='objdump',
                       help='the path of objdump')
   parser.add_argument('--addr2line', default='addr2line',
@@ -1758,33 +1754,33 @@ def ParseRoDataText(rodata_text):
   return (base_offset, rodata)
 
 
-def LoadTasklist(section, export_taskinfo, symbols):
+def LoadTasklist(symbols):
   """Load the task information.
 
   Args:
-    section: Section (RO | RW).
-    export_taskinfo: Handle of export_taskinfo.so.
     symbols: Symbol list.
 
   Returns:
     tasklist: Task list.
   """
 
-  TaskInfoPointer = ctypes.POINTER(TaskInfo)
-  taskinfos = TaskInfoPointer()
-  if section == SECTION_RO:
-    get_taskinfos_func = export_taskinfo.get_ro_taskinfos
-  else:
-    get_taskinfos_func = export_taskinfo.get_rw_taskinfos
+  # TaskInfoPointer = ctypes.POINTER(TaskInfo)
+  # taskinfos = TaskInfoPointer()
+  # if section == SECTION_RO:
+  #   get_taskinfos_func = export_taskinfo.get_ro_taskinfos
+  # else:
+  #   get_taskinfos_func = export_taskinfo.get_rw_taskinfos
 
-  taskinfo_num = get_taskinfos_func(ctypes.pointer(taskinfos))
+  # taskinfo_num = get_taskinfos_func(ctypes.pointer(taskinfos))
 
-  tasklist = []
-  for index in range(taskinfo_num):
-    taskinfo = taskinfos[index]
-    tasklist.append(Task(taskinfo.name.decode('utf-8'),
-                         taskinfo.routine.decode('utf-8'),
-                         taskinfo.stack_size))
+  # tasklist = []
+  # for index in range(taskinfo_num):
+  #   taskinfo = taskinfos[index]
+  #   tasklist.append(Task(taskinfo.name.decode('utf-8'),
+  #                        taskinfo.routine.decode('utf-8'),
+  #                        taskinfo.stack_size))
+
+  tasklist = [Task('pedal_board', 'main', 8*2**10)]
 
   # Resolve routine address for each task. It's more efficient to resolve all
   # routine addresses of tasks together.
@@ -1855,12 +1851,7 @@ def main():
     rodata = ParseRoDataText(rodata_text)
 
     # Load the tasklist.
-    try:
-      export_taskinfo = ctypes.CDLL(options.export_taskinfo)
-    except OSError:
-      raise StackAnalyzerError('Failed to load export_taskinfo.')
-
-    tasklist = LoadTasklist(options.section, export_taskinfo, symbols)
+    tasklist = LoadTasklist(symbols)
 
     analyzer = StackAnalyzer(options, symbols, rodata, tasklist, annotation)
     analyzer.Analyze()
