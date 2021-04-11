@@ -1,5 +1,4 @@
 import subprocess
-import signal
 import threading
 import os
 import fcntl
@@ -9,6 +8,7 @@ from mpxe.harness.dir_config import REPO_DIR
 from mpxe.protogen import stores_pb2
 
 BIN_DIR_FORMAT = os.path.join(REPO_DIR, 'build/bin/x86/{}')
+
 
 class StoreUpdate:
     def __init__(self, msg, mask, store_type, key):

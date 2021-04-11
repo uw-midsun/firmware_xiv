@@ -12,6 +12,7 @@ from mpxe.protogen import stores_pb2
 
 POLL_TIMEOUT = 0.5
 
+# pylint: disable=too-many-instance-attributes
 # signals are set in python and C, change in both places if changing
 POLL_LOCK_SIGNAL = signal.SIGUSR1
 PUSH_LOCK_SIGNAL = signal.SIGUSR2
