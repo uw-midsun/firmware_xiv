@@ -1,9 +1,11 @@
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import gpio_pb2
 
+from mpxe.harness.project import StoreUpdate
+
 
 class Sim:
-    def handle_update(self, pm, proj):
+    def handle_update(self, pm, proj, key):
         pass
 
     def handle_log(self, pm, proj, log):
@@ -21,4 +23,6 @@ class Sim:
         gpio_mask = gpio_pb2.MxGpioStore()
         gpio_mask.state.extend([0] * 6 * 16)
         gpio_mask.state[ind] = state
-        proj.write_store(gpio_msg, gpio_mask, stores_pb2.MxStoreType.GPIO)
+        gpio_update = StoreUpdate(gpio_msg, gpio_mask, stores_pb2.MxStoreType.GPIO, 0)
+
+        proj.write_store(gpio_update)

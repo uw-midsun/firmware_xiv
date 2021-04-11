@@ -1,5 +1,6 @@
 #include "store.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
@@ -9,6 +10,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "delay.h"
 
 #include "critical_section.h"
 #include "log.h"
@@ -27,12 +29,28 @@ typedef struct Store {
 bool store_lib_inited = false;
 
 static Store s_stores[MAX_STORE_COUNT];
-
 static StoreFuncs s_func_table[MX_STORE_TYPE__END];
 
 static pthread_mutex_t s_sig_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_init_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static MxLog s_mxlog = MX_LOG__INIT;
+
+static bool s_init_cond_complete = false;
+static MxStoreUpdate *s_init_cond[MAX_STORE_COUNT];
+static int s_num_init_conds;
+
+// MxCmd callback table and function prototypes
+// If you are adding a command, you must declare it below and add it to the lookup table
+static void prv_handle_finish_conditions(void *context);
+static MxCmdCallback s_cmd_cb_lookup[MX_CMD_TYPE__NUM_CMDS] = {
+  [MX_CMD_TYPE__FINISH_INIT_CONDS] = prv_handle_finish_conditions,
+};
+
+static void prv_handle_finish_conditions(void *context) {
+  s_init_cond_complete = true;
+  pthread_mutex_unlock(&s_init_lock);
+}
 
 // signal handler for catching parent
 static void prv_sigusr(int signo) {
@@ -50,12 +68,33 @@ Store *prv_get_first_empty() {
 
 static void prv_handle_store_update(uint8_t *buf, int64_t len) {
   MxStoreUpdate *update = mx_store_update__unpack(NULL, (size_t)len, buf);
-  s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
-  mx_store_update__free_unpacked(update, NULL);
+  // Handle command with respective function in lookup table
+  if (update->type == MX_STORE_TYPE__CMD) {
+    MxCmd *cmd = mx_cmd__unpack(NULL, (size_t)update->msg.len, update->msg.data);
+    if (cmd->cmd < MX_CMD_TYPE__NUM_CMDS && s_cmd_cb_lookup[cmd->cmd] != NULL) {
+      s_cmd_cb_lookup[cmd->cmd](NULL);
+      mx_cmd__free_unpacked(cmd, NULL);
+    } else {
+      LOG_DEBUG("INVALID COMMAND SENT!\n");
+    }
+  } else {
+    if (s_init_cond_complete) {  // Default activity, call update store for type
+      s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+      mx_store_update__free_unpacked(update, NULL);
+    } else {  // Store initial conditions to be used in store_register
+      if (s_num_init_conds < MAX_STORE_COUNT) {
+        s_init_cond[s_num_init_conds] = update;
+        s_num_init_conds++;
+      } else {
+        LOG_WARN("MPXE INITIAL CONDITIONS OVERFLOW!\n");
+      }
+    }
+  }
 }
 
 // handles getting an update from python, runs as thread
 static void *prv_poll_update(void *arg) {
+  pid_t ppid = getppid();
   // read protos from stdin
   // compare using second proto as 'mask'
   struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
@@ -74,6 +113,8 @@ static void *prv_poll_update(void *arg) {
           LOG_DEBUG("read error while polling\n");
         }
         prv_handle_store_update(buf, len);
+        // Signal parent process after poll thread created
+        kill(ppid, SIGUSR2);
       } else {
         LOG_DEBUG("pollhup\n");
       }
@@ -91,10 +132,6 @@ void store_config(void) {
   // set up signal handler
   signal(SIGUSR1, prv_sigusr);
 
-  // set up polling thread
-  pthread_t poll_thread;
-  pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
-
   // set up store pool
   memset(&s_stores, 0, sizeof(s_stores));
 
@@ -107,6 +144,14 @@ void store_config(void) {
     (UpdateStoreFunc)NULL,
   };
   store_register(MX_STORE_TYPE__LOG, log_funcs, &s_mxlog, NULL);
+  // set up polling thread
+  pthread_t poll_thread;
+  pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
+
+  // Lock for initial conditions, continue when FINISH_INIT_CONDS recv'd
+  pthread_mutex_lock(&s_init_lock);
+  pthread_mutex_lock(&s_init_lock);
+  pthread_mutex_unlock(&s_init_lock);
 
   store_lib_inited = true;
 }
@@ -122,6 +167,17 @@ void store_register(MxStoreType type, StoreFuncs funcs, void *store, void *key) 
   local_store->type = type;
   local_store->store = store;
   local_store->key = key;
+
+  // Need to check each index, as freed and set to NULL once used
+  for (uint16_t i = 0; i < MAX_STORE_COUNT; i++) {
+    if (s_init_cond[i] != NULL) {
+      if (s_init_cond[i]->type == type && (void *)(intptr_t)s_init_cond[i]->key == key) {
+        funcs.update_store(s_init_cond[i]->msg, s_init_cond[i]->mask, key);
+        mx_store_update__free_unpacked(s_init_cond[i], NULL);
+        s_init_cond[i] = NULL;
+      }
+    }
+  }
 }
 
 void *store_get(MxStoreType type, void *key) {

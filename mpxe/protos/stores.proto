@@ -2,19 +2,30 @@ syntax = "proto3";
 
 enum MxStoreType {
   LOG = 0;
-  GPIO = 1;
-  ADS1015 = 2;
-  MCP2515 = 3;
-  ADS1259 = 4;
-  ADT7476A = 5;
-  ADC = 6;
-  PCA9539R = 7;
-  MCP23008 = 8;
-  END = 9;
+  CMD = 1;
+  GPIO = 2;
+  ADS1015 = 3;
+  MCP2515 = 4;
+  ADS1259 = 5;
+  ADT7476A = 6;
+  ADC = 7;
+  PCA9539R = 8;
+  MCP23008 = 9;
+  END = 10;
+}
+
+enum MxCmdType {
+  NOP = 0;
+  FINISH_INIT_CONDS = 1;
+  NUM_CMDS = 3;
 }
 
 message MxLog {
   bytes log = 1;
+}
+
+message MxCmd {
+  MxCmdType cmd = 1;
 }
 
 message MxStoreInfo {

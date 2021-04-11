@@ -112,9 +112,6 @@ StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
 }
 
 StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
-#ifdef MPXE
-  prv_init_store();
-#endif
   if (storage == NULL || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -156,6 +153,7 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
                              storage->callback, storage->callback_context);
 
 #ifdef MPXE
+  prv_init_store();
   store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
 #endif
 

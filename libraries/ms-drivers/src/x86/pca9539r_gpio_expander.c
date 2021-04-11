@@ -68,11 +68,7 @@ static void prv_init_store(uint8_t address) {
 #endif
 
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
-#ifdef MPXE
-  prv_init_store(i2c_address);
-#endif
   s_i2c_port = i2c_port;
-
   // Set each pin to the default settings
   Pca9539rGpioSettings default_settings = {
     .direction = PCA9539R_GPIO_DIR_IN,
@@ -82,6 +78,7 @@ StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
     s_pin_settings[i2c_address][i] = default_settings;
   }
 #ifdef MPXE
+  prv_init_store(i2c_address);
   prv_export((void *)(intptr_t)i2c_address);
 #endif
   return STATUS_CODE_OK;
