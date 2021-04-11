@@ -41,8 +41,7 @@
 from __future__ import print_function
 
 import argparse
-import collections
-import ctypes
+import collections.abc
 import os
 import re
 import subprocess
@@ -1747,7 +1746,7 @@ def ParseArgs():
                       help='the path of objdump')
   parser.add_argument('--addr2line', default='arm-none-eabi-addr2line',
                       help='the path of addr2line')
-  parser.add_argument('--annotation', default=None,
+  parser.add_argument('--annotation', action='append', nargs='*',
                       help='the path of annotation file')
 
   # TODO(cheyuw): Add an option for dumping stack usage of all functions.
@@ -1835,6 +1834,60 @@ def ParseRoDataText(rodata_text):
   return (base_offset, rodata)
 
 
+def LoadAnnotationConfig(paths):
+  """Load and merge annotation configs from multiple annotation files.
+
+  Args:
+    paths: Paths to annotation files as returned by argparse.
+  
+  Returns:
+    config: Merged annotation config.
+
+  Raises:
+    StackAnalyzerError: If an annotation file is invalid.
+  """
+
+  def update(orig_dict, new_dict):
+    """Recursive dict.update: https://stackoverflow.com/a/18394648"""
+    for key, val in new_dict.items():
+      if isinstance(val, collections.abc.Mapping):
+        tmp = update(orig_dict.get(key, {}), val)
+        orig_dict[key] = tmp
+      elif isinstance(val, list):
+        orig_dict[key] = (orig_dict.get(key, []) + val)
+      else:
+        orig_dict[key] = new_dict[key]
+    return orig_dict
+
+  if paths is None:
+    return {}
+
+  config = {}
+
+  # paths looks like [['path1'], ['path2']] as returned by argparse
+  for (path,) in paths:
+    if not os.path.exists(path):
+      print('Warning: Annotation file {} does not exist.'.format(path))
+      continue
+
+    try:
+      with open(path, 'r') as annotation_file:
+        annotation = yaml.safe_load(annotation_file)
+
+    except yaml.YAMLError:
+      raise StackAnalyzerError('Failed to parse annotation file {}.'.format(path))
+    except IOError:
+      raise StackAnalyzerError('Failed to open annotation file {}.'.format(path))
+
+    # TODO(cheyuw): Do complete annotation format verification.
+    if not isinstance(annotation, dict):
+      raise StackAnalyzerError('Invalid annotation file {}.'.format(path))
+
+    update(config, annotation)
+
+  return config
+
+
 def LoadTasklists(symbols):
   """Load the task information.
 
@@ -1874,29 +1927,8 @@ def main():
   try:
     options = ParseArgs()
 
-    # Load annotation config.
-    if options.annotation is None:
-      annotation = {}
-    elif not os.path.exists(options.annotation):
-      print('Warning: Annotation file {} does not exist.'
-            .format(options.annotation))
-      annotation = {}
-    else:
-      try:
-        with open(options.annotation, 'r') as annotation_file:
-          annotation = yaml.safe_load(annotation_file)
-
-      except yaml.YAMLError:
-        raise StackAnalyzerError('Failed to parse annotation file {}.'
-                                 .format(options.annotation))
-      except IOError:
-        raise StackAnalyzerError('Failed to open annotation file {}.'
-                                 .format(options.annotation))
-
-      # TODO(cheyuw): Do complete annotation format verification.
-      if not isinstance(annotation, dict):
-        raise StackAnalyzerError('Invalid annotation file {}.'
-                                 .format(options.annotation))
+    # Load annotation config
+    annotation = LoadAnnotationConfig(options.annotation)
 
     # Generate and parse the symbols.
     try:
@@ -1906,7 +1938,8 @@ def main():
                                             encoding='utf-8')
       rodata_text = subprocess.check_output([options.objdump,
                                              '-s',
-                                             '-j', '.text', # MidSun .rodata is in the .text section
+                                             # MidSun rodata is in the .text section
+                                             '-j', '.text',
                                              options.elf_path],
                                             encoding='utf-8')
     except subprocess.CalledProcessError:
