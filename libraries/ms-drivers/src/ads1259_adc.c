@@ -154,9 +154,6 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
 
 // Initializes ads1259 connection on a SPI port. Can be re-called to calibrate adc
 StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings) {
-#ifdef MPXE
-  prv_init_store();
-#endif
   storage->spi_port = settings->spi_port;
   storage->handler = settings->handler;
   storage->error_context = settings->error_context;
@@ -170,6 +167,9 @@ StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings) {
   };
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
   status_ok_or_return(prv_configure_registers(storage));
+#ifdef MPXE
+  prv_init_store();
+#endif
   LOG_DEBUG("ads1259 driver init all ok\n");
   return STATUS_CODE_OK;
 }
