@@ -50,8 +50,8 @@ import yaml
 
 
 # Default size of extra stack frame needed by exception context switch.
-# This value is for cortex-m with FPU enabled.
-DEFAULT_EXCEPTION_FRAME_SIZE = 224
+# See https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-processor/exception-model/exception-entry-and-return
+DEFAULT_EXCEPTION_FRAME_SIZE = 0x1c
 
 # All the Interrupt Service Routine (ISR) names on the STM32F072. Taken from startup_stm32f072.s.
 ISR_NAMES = [
