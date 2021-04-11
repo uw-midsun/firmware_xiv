@@ -50,49 +50,59 @@ import yaml
 
 
 # Default size of extra stack frame needed by exception context switch.
+# ARM Cortex M0 pushes an extra stack frame of this size when context-switching to an ISR.
 # See https://developer.arm.com/documentation/dui0497/a/the-cortex-m0-processor/exception-model/exception-entry-and-return
 DEFAULT_EXCEPTION_FRAME_SIZE = 0x1c
 
-# All the Interrupt Service Routine (ISR) names on the STM32F072. Taken from startup_stm32f072.s.
-ISR_NAMES = [
-  'Reset_Handler',
-  'NMI_Handler',
-  'HardFault_Handler',
-  'SVC_Handler',
-  'PendSV_Handler',
-  'SysTick_Handler',
-  'WWDG_IRQHandler',
-  'PVD_VDDIO2_IRQHandler',
-  'RTC_IRQHandler',
-  'FLASH_IRQHandler',
-  'RCC_CRS_IRQHandler',
-  'EXTI0_1_IRQHandler',
-  'EXTI2_3_IRQHandler',
-  'EXTI4_15_IRQHandler',
-  'TSC_IRQHandler',
-  'DMA1_Channel1_IRQHandler',
-  'DMA1_Channel2_3_IRQHandler',
-  'DMA1_Channel4_5_6_7_IRQHandler',
-  'ADC1_COMP_IRQHandler',
-  'TIM1_BRK_UP_TRG_COM_IRQHandler',
-  'TIM1_CC_IRQHandler',
-  'TIM2_IRQHandler',
-  'TIM3_IRQHandler',
-  'TIM6_DAC_IRQHandler',
-  'TIM7_IRQHandler',
-  'TIM14_IRQHandler',
-  'TIM15_IRQHandler',
-  'TIM16_IRQHandler',
-  'TIM17_IRQHandler',
-  'I2C1_IRQHandler',
-  'I2C2_IRQHandler',
-  'SPI1_IRQHandler',
-  'SPI2_IRQHandler',
-  'USART1_IRQHandler',
-  'USART2_IRQHandler',
-  'USART3_4_IRQHandler',
-  'CEC_CAN_IRQHandler',
+# The functions called by startup_stm32f072.s, in the order they're called.
+ENTRY_FUNCTION_NAMES = [
+  'SystemInit',
+  'retarget_init',
+  'git_version_init',
+  'main',
+]
+
+# All the Interrupt Service Routine (ISR) names on the STM32F072, lowest priority first.
+# Each ISR's interrupt can interrupt all previous ISRs. Taken from startup_stm32f072.s.
+ISR_NAMES_INCREASING_PRIORITY = [
   'USB_IRQHandler',
+  'CEC_CAN_IRQHandler',
+  'USART3_4_IRQHandler',
+  'USART2_IRQHandler',
+  'USART1_IRQHandler',
+  'SPI2_IRQHandler',
+  'SPI1_IRQHandler',
+  'I2C2_IRQHandler',
+  'I2C1_IRQHandler',
+  'TIM17_IRQHandler',
+  'TIM16_IRQHandler',
+  'TIM15_IRQHandler',
+  'TIM14_IRQHandler',
+  'TIM7_IRQHandler',
+  'TIM6_DAC_IRQHandler',
+  'TIM3_IRQHandler',
+  'TIM2_IRQHandler',
+  'TIM1_CC_IRQHandler',
+  'TIM1_BRK_UP_TRG_COM_IRQHandler',
+  'ADC1_COMP_IRQHandler',
+  'DMA1_Channel4_5_6_7_IRQHandler',
+  'DMA1_Channel2_3_IRQHandler',
+  'DMA1_Channel1_IRQHandler',
+  'TSC_IRQHandler',
+  'EXTI4_15_IRQHandler',
+  'EXTI2_3_IRQHandler',
+  'EXTI0_1_IRQHandler',
+  'RCC_CRS_IRQHandler',
+  'FLASH_IRQHandler',
+  'RTC_IRQHandler',
+  'PVD_VDDIO2_IRQHandler',
+  'WWDG_IRQHandler',
+  'SysTick_Handler',
+  'PendSV_Handler',
+  'SVC_Handler',
+  'HardFault_Handler',
+  'NMI_Handler',
+  'Reset_Handler',
 ]
 
 
@@ -117,22 +127,19 @@ class Task(object):
   Attributes:
     name: Task name.
     routine_name: Routine function name.
-    stack_max_size: Max stack size.
     routine_address: Resolved routine address. None if it hasn't been resolved.
   """
 
-  def __init__(self, name, routine_name, stack_max_size, routine_address=None):
+  def __init__(self, name, routine_name, routine_address=None):
     """Constructor.
 
     Args:
       name: Task name.
       routine_name: Routine function name.
-      stack_max_size: Max stack size.
       routine_address: Resolved routine address.
     """
     self.name = name
     self.routine_name = routine_name
-    self.stack_max_size = stack_max_size
     self.routine_address = routine_address
 
   def __eq__(self, other):
@@ -149,7 +156,6 @@ class Task(object):
 
     return (self.name == other.name and
             self.routine_name == other.routine_name and
-            self.stack_max_size == other.stack_max_size and
             self.routine_address == other.routine_address)
 
 
@@ -742,21 +748,23 @@ class StackAnalyzer(object):
   ANNOTATION_ERROR_NOTFOUND = 'function is not found'
   ANNOTATION_ERROR_AMBIGUOUS = 'signature is ambiguous'
 
-  def __init__(self, options, symbols, rodata, tasklist, annotation):
+  def __init__(self, options, symbols, rodata, entry_tasks, isr_tasks, annotation):
     """Constructor.
 
     Args:
       options: Namespace from argparse.parse_args().
       symbols: Symbol list.
       rodata: Content of .rodata section (offset, data)
-      tasklist: Task list.
+      entry_tasks: List of Tasks representing entry points (can't be stacked).
+      isr_tasks: List of Tasks representing ISRs (stackable in the given order).
       annotation: Annotation config.
     """
     self.options = options
     self.symbols = symbols
     self.rodata_offset = rodata[0]
     self.rodata = rodata[1]
-    self.tasklist = tasklist
+    self.entry_tasks = entry_tasks
+    self.isr_tasks = isr_tasks
     self.annotation = annotation
     self.address_to_line_cache = {}
 
@@ -1649,17 +1657,33 @@ class StackAnalyzer(object):
                                             eliminated_addrs)
     cycle_functions = self.AnalyzeCallGraph(function_map, remove_list)
 
+    # The theoretical worst-case stack usage occurs when all interrupts occur at the maximum stack
+    # usage of the entrypoint task with the largest max stack usage. We print that scenario.
+    largest_entry_task = max(
+      reversed(self.entry_tasks), # prefer later entries if equal, e.g. main not git_version_init
+      key=lambda task: function_map[task.routine_address].stack_max_usage)
+    nested_tasks = [largest_entry_task] + self.isr_tasks
+
     # Print the results of task-aware stack analysis.
+    print('Worst-case stack usage (each interrupt fires when last ISR is at largest stack use):')
     extra_stack_frame = self.annotation.get('exception_frame_size',
                                             DEFAULT_EXCEPTION_FRAME_SIZE)
-    for task in self.tasklist:
+    worst_case_stack_usage = 0
+    for task in nested_tasks:
       routine_func = function_map[task.routine_address]
-      print('Task: {}, Max size: {} ({} + {}), Allocated size: {}'.format(
-          task.name,
-          routine_func.stack_max_usage + extra_stack_frame,
-          routine_func.stack_max_usage,
-          extra_stack_frame,
-          task.stack_max_size))
+      if task is largest_entry_task:
+        print('Entry: {}, Max size: {}'.format(
+            task.name,
+            routine_func.stack_max_usage))
+      else:
+        print('Nested interrupt: {}, Max size: {} ({} + {} context-switching overhead)'.format(
+            task.name,
+            routine_func.stack_max_usage + extra_stack_frame,
+            routine_func.stack_max_usage,
+            extra_stack_frame))
+        worst_case_stack_usage += extra_stack_frame
+
+      worst_case_stack_usage += routine_func.stack_max_usage
 
       print('Call Trace:')
       max_stack_path = routine_func.stack_max_path
@@ -1693,6 +1717,8 @@ class StackAnalyzer(object):
 
           for _, text in sorted(text_list, key=lambda item: item[0]):
             print(text)
+
+    print('Overall worst-case stack usage: {} bytes'.format(worst_case_stack_usage))
 
     print('Unresolved indirect callsites:')
     for function in function_map.values():
@@ -1820,18 +1846,19 @@ def ParseRoDataText(rodata_text):
   return (base_offset, rodata)
 
 
-def LoadTasklist(symbols):
+def LoadTasklists(symbols):
   """Load the task information.
 
   Args:
     symbols: Symbol list.
 
   Returns:
-    tasklist: Task list.
+    entry_tasks, isr_tasks: Tasks representing entrypoint functions and ISRs, respectively.
   """
 
-  task_names = ['main'] + ISR_NAMES
-  tasklist = [Task(name, name, 0x1000) for name in task_names]
+  entry_tasks = [Task(name, name) for name in ENTRY_FUNCTION_NAMES]
+  isr_tasks = [Task(name, name) for name in ISR_NAMES_INCREASING_PRIORITY]
+  tasklist = entry_tasks + isr_tasks
 
   # Resolve routine address for each task. It's more efficient to resolve all
   # routine addresses of tasks together.
@@ -1850,7 +1877,7 @@ def LoadTasklist(symbols):
     assert address is not None
     task.routine_address = address
 
-  return tasklist
+  return entry_tasks, isr_tasks
 
 
 def main():
@@ -1901,10 +1928,9 @@ def main():
     symbols = ParseSymbolText(symbol_text)
     rodata = ParseRoDataText(rodata_text)
 
-    # Load the tasklist.
-    tasklist = LoadTasklist(symbols)
+    entry_tasks, isr_tasks = LoadTasklists(symbols)
 
-    analyzer = StackAnalyzer(options, symbols, rodata, tasklist, annotation)
+    analyzer = StackAnalyzer(options, symbols, rodata, entry_tasks, isr_tasks, annotation)
     analyzer.Analyze()
   except StackAnalyzerError as e:
     print('Error: {}'.format(e))

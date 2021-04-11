@@ -25,6 +25,7 @@ int main(void) {
   interrupt_init();
   soft_timer_init();
   soft_timer_start_millis(100, prv_soft_timer_callback, NULL, NULL);
+  LOG_DEBUG("I'm bigger than git_version_init now\n");
   while (true) {
     wait();
   }
