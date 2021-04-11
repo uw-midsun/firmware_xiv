@@ -1,0 +1,25 @@
+msg {
+  id:30
+  msg_name: "example"
+  can_data {
+    frame {
+      type: UINT64
+    }
+  }
+}
+
+msg {
+  id:34
+  msg_name: "memes"
+  can_data {
+    frame {
+      type: UINT64  
+    }
+  }
+}
+
+msg {
+  id:42,
+  msg_name: "test ack"
+  msg_type: true
+}

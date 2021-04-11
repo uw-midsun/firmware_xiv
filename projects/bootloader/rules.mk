@@ -6,6 +6,7 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common
+$(T)_DEPS := ms-common ms-helper
 
 $(T)_LINKER_SCRIPT := stm32f0_bootloader.ld
+$(T)_test_config_MOCKS := persist_init
