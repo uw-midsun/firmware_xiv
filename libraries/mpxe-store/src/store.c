@@ -145,8 +145,6 @@ void store_config(void) {
   };
   store_register(MX_STORE_TYPE__LOG, log_funcs, &s_mxlog, NULL);
   // set up polling thread
-  // struct sigaction action = {.sa_handler = prv_sigusr, .sa_flags = SA_RESTART};
-  // sigaction(SIGUSR1, &action, NULL);
   pthread_t poll_thread;
   pthread_create(&poll_thread, NULL, prv_poll_update, NULL);
 
