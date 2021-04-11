@@ -1,4 +1,4 @@
-import time
+import threading
 
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import mcp2515_pb2
@@ -22,11 +22,10 @@ class Mci(sim.Sim):
         # Upon precharge enable (PA9) going high, set PB0 and PA10 to mock precharge
         if not self.precharge_enable and self.get_gpio(proj, 'a', 9):
             self.precharge_enable = self.get_gpio(proj, 'a', 9)
-            time.sleep(0.5)
-            # update precharge monitor and latch out
-            self.set_gpio(proj, 'b', 0, True)
-            time.sleep(0.1)
-            self.set_gpio(proj, 'a', 10, True)
+            set_b0 = threading.Timer(0.1, self.set_gpio, [proj, 'b', 0, True])
+            set_b0.start()
+            set_a10 = threading.Timer(0.2, self.set_gpio, [proj, 'a', 10, True])
+            set_a10.start()
 
         # grab mcp2515 outbound messages
         if MCP2515_KEY in proj.stores:
