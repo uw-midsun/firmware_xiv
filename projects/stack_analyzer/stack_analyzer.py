@@ -110,17 +110,6 @@ class StackAnalyzerError(Exception):
   """Exception class for stack analyzer utility."""
 
 
-class TaskInfo(ctypes.Structure):
-  """Taskinfo ctypes structure.
-
-  The structure definition is corresponding to the "struct taskinfo"
-  in "util/export_taskinfo.so.c".
-  """
-  _fields_ = [('name', ctypes.c_char_p),
-              ('routine', ctypes.c_char_p),
-              ('stack_size', ctypes.c_uint32)]
-
-
 class Task(object):
   """Task information.
 
