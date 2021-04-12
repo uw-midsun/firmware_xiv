@@ -60,10 +60,6 @@ static void prv_export() {
 #endif
 
 StatusCode mcp23008_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
-#ifdef MPXE
-  mpxe_address = i2c_address;
-  prv_init_store();
-#endif
   s_i2c_port = i2c_port;
 
   // Set each pin to the default settings
@@ -75,6 +71,8 @@ StatusCode mcp23008_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
     s_pin_settings[i2c_address][i] = default_settings;
   }
 #ifdef MPXE
+  mpxe_address = i2c_address;
+  prv_init_store();
   prv_export();
 #endif
   return STATUS_CODE_OK;

@@ -1,5 +1,6 @@
 from mpxe.protogen import stores_pb2
 from mpxe.protogen import ads1259_pb2
+from mpxe.harness.project import StoreUpdate
 
 from mpxe.sims import sim
 
@@ -14,8 +15,8 @@ class Ads1259(sim.Sim):
 
         ads1259_mask = ads1259_pb2.MxAds1259Store()
         ads1259_mask.reading = 1
-
-        proj.write_store(ads1259_msg, ads1259_mask, stores_pb2.MxStoreType.ADS1259)
+        ads1259_update = StoreUpdate(ads1259_msg, ads1259_mask, stores_pb2.MxStoreType.ADS1259, 0)
+        proj.write_store(ads1259_update)
 
     def assert_store_value_reading(self, proj, reading):
         # as there is no export to store for this driver this will be false

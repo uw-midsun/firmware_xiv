@@ -7,7 +7,7 @@ class Adt7476a(sim.Sim):
         self.speed = [0, 0, 0]
         self.status = [0, 0, 0]
 
-    def handle_update(self, pm, proj):
+    def handle_update(self, pm, proj, key):
         stores = proj.stores
         if (stores_pb2.MxStoreType.ADT7476A, 0) in stores:
             adt = stores[(stores_pb2.MxStoreType.ADT7476A, 0)]
