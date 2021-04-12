@@ -11,7 +11,7 @@ class TestLeds(int_test.IntTest):
         self.leds = self.manager.start('leds', Leds())
 
     def test_leds(self):
-        time.sleep(1)
+        time.sleep(0.3)
 
 
 if __name__ == '__main__':

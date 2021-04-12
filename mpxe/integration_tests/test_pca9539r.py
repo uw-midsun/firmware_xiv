@@ -21,7 +21,7 @@ class TestPca9539r(int_test.IntTest):
 
         value = 1
         for _ in range(1):
-            time.sleep(1)
+            time.sleep(0.5)
             for i in range(NUM_PCA_PINS):
                 self.pca9539r.sim.assert_store_values(i, value, pca_key)
             value = not value
