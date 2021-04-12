@@ -4,4 +4,8 @@ add:
   prv_partially_publish[projects/power_distribution/src/publish_data.c:49]:
     - prv_publish_front_current_measurement[projects/power_distribution/src/publish_data_config.c]
     - prv_publish_rear_current_measurement[projects/power_distribution/src/publish_data_config.c]
-
+remove:
+  # adc_read_converted can only recurse at most once
+  - [adc_read_converted, adc_read_converted, adc_read_converted]
+  # from newlib <https://sourceware.org/newlib> findfp.c: __sfp and __sinit can't infinitely recurse
+  - [__sfp, __sinit, __sfp]
