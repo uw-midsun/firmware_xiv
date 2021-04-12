@@ -8,7 +8,7 @@
 #include "math.h"
 #include "soft_timer.h"
 
-#ifdef MPXE
+#ifdef MU
 
 #include <stdlib.h>
 
@@ -16,7 +16,7 @@
 #include "store.h"
 #include "stores.pb-c.h"
 
-static MxAds1259Store s_store = MX_ADS1259_STORE__INIT;
+static MuAds1259Store s_store = MU_ADS1259_STORE__INIT;
 
 #endif
 
@@ -34,28 +34,28 @@ static const uint8_t s_num_usable_bits[NUM_ADS1259_DATA_RATE] = {
   [ADS1259_DATA_RATE_3600] = 17, [ADS1259_DATA_RATE_14400] = 16,
 };
 
-#ifdef MPXE
+#ifdef MU
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
-  MxAds1259Store *msg = mx_ads1259_store__unpack(NULL, msg_buf.len, msg_buf.data);
-  MxAds1259Store *mask = mx_ads1259_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  MuAds1259Store *msg = mu_ads1259_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuAds1259Store *mask = mu_ads1259_store__unpack(NULL, mask_buf.len, mask_buf.data);
   if (mask->reading != 0) {
     s_store.reading = msg->reading;
   }
-  mx_ads1259_store__free_unpacked(msg, NULL);
-  mx_ads1259_store__free_unpacked(mask, NULL);
+  mu_ads1259_store__free_unpacked(msg, NULL);
+  mu_ads1259_store__free_unpacked(mask, NULL);
 }
 
 static void prv_init_store(void) {
   store_config();
   StoreFuncs funcs = {
-    (GetPackedSizeFunc)mx_ads1259_store__get_packed_size,
-    (PackFunc)mx_ads1259_store__pack,
-    (UnpackFunc)mx_ads1259_store__unpack,
-    (FreeUnpackedFunc)mx_ads1259_store__free_unpacked,
+    (GetPackedSizeFunc)mu_ads1259_store__get_packed_size,
+    (PackFunc)mu_ads1259_store__pack,
+    (UnpackFunc)mu_ads1259_store__unpack,
+    (FreeUnpackedFunc)mu_ads1259_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  store_register(MX_STORE_TYPE__ADS1259, funcs, &s_store, NULL);
+  store_register(MU_STORE_TYPE__ADS1259, funcs, &s_store, NULL);
 }
 
 #endif
@@ -94,7 +94,7 @@ static StatusCode prv_configure_registers(Ads1259Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-#ifndef MPXE
+#ifndef MU
 // calculate check-sum based on page 29 of datasheet
 static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
   uint8_t sum = (uint8_t)(storage->rx_data.LSB + storage->rx_data.MID + storage->rx_data.MSB +
@@ -113,7 +113,7 @@ static Ads1259StatusCode prv_checksum(Ads1259Storage *storage) {
 // using the amount of noise free bits based on the SPS and VREF calculate analog voltage value
 // 0x000000-0x7FFFFF positive range, 0xFFFFFF - 0x800000 neg range, rightmost is greatest magnitude
 static void prv_convert_data(Ads1259Storage *storage) {
-#ifdef MPXE
+#ifdef MU
 
   storage->reading = s_store.reading;
 
@@ -139,7 +139,7 @@ static void prv_conversion_callback(SoftTimerId timer_id, void *context) {
   uint8_t payload[] = { ADS1259_READ_DATA_BY_OPCODE };
   spi_exchange(storage->spi_port, payload, 1, (uint8_t *)&storage->rx_data, NUM_ADS_RX_BYTES);
 
-#ifndef MPXE
+#ifndef MU
 
   code = prv_checksum(storage);
   (*storage->handler)(code, storage->error_context);
@@ -167,7 +167,7 @@ StatusCode ads1259_init(Ads1259Storage *storage, Ads1259Settings *settings) {
   };
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
   status_ok_or_return(prv_configure_registers(storage));
-#ifdef MPXE
+#ifdef MU
   prv_init_store();
 #endif
   LOG_DEBUG("ads1259 driver init all ok\n");
