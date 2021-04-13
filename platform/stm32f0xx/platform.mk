@@ -23,14 +23,21 @@ LDSCRIPT_DIR := $(PLATFORM_DIR)/ldscripts
 
 # Build flags for the device
 CDEFINES := USE_STDPERIPH_DRIVER STM32F072 HSE_VALUE=32000000
+NEWLIB_DIR := $(ROOT)/../newlib-build/arm-none-eabi/thumb/newlib
 CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 					-Wno-unused-variable -Wno-unused-parameter -Wsign-conversion -Wpointer-arith \
 					-ffunction-sections -fdata-sections \
 					$(ARCH_CFLAGS) $(addprefix -D,$(CDEFINES))
 
 # Linker flags - linker script set per target
-LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
-           --specs=nosys.specs --specs=nano.specs -lm
+LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority -lm
+
+ifeq (,$(CUSTOM_NEWLIB))
+LDFLAGS += --specs=nosys.specs --specs=nano.specs
+else
+CFLAGS += -nostdlib
+LDFLAGS += -L$(NEWLIB_DIR) -I$(NEWLIB_DIR)/targ-include -lc
+endif
 
 # temporary build mechanism for applications: set DEFAULT_LINKER_SCRIPT=stm32f0_application.ld
 DEFAULT_LINKER_SCRIPT ?= stm32f0_default.ld
