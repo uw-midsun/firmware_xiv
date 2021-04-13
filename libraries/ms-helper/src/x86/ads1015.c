@@ -23,6 +23,9 @@
 #define ADS1015_CHANNEL_ARBITRARY_READING 0
 
 #ifdef MPXE
+#undef ADS1015_CHANNEL_UPDATE_PERIOD_US
+#define ADS1015_CHANNEL_UPDATE_PERIODS_US 10000
+
 static MxAds1015Store s_store = MX_ADS1015_STORE__INIT;
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
