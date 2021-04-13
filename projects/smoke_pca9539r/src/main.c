@@ -13,7 +13,7 @@
 #include "wait.h"
 
 // used to adjust time between gpio pin toggling
-#define WAIT_TIME_MILLIS 1000
+#define WAIT_TIME_MILLIS 500
 
 #define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address
 #define I2C_PORT I2C_PORT_2

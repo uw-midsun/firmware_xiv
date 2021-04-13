@@ -11,8 +11,8 @@ class TestAdt7476a(int_test.IntTest):
         self.adt7476a = self.manager.start('smoke_adt7476a', Adt7476a())
 
     def test_adt7476a(self):
-        for x in range(1, 10):
-            time.sleep(1)
+        for x in range(1, 3):
+            time.sleep(0.1)
             # this is for ADT_PWM_PORT_1
             self.adt7476a.sim.assert_store_values(self.adt7476a, x * 10, 0, 0)
             # this is for ADT_PWM_PORT_2
