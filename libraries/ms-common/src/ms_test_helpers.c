@@ -6,12 +6,13 @@
 #include "status.h"
 
 #define CLOCK_HEADSTART 30000
+#define TOLERANCE_MS 10
 
-StatusCode time_assert(uint8_t value_to_compare, uint8_t *value_to_test, double time_ms,
-                       double tolerance_ms) {
+StatusCode ms_test_helpers_time_assert(uint8_t value_to_compare, volatile uint8_t *value_to_test,
+                                       double time_ms) {
   double elapsed = 0;
-  double upper_bound = (double)(time_ms + tolerance_ms) / 1000.0;
-  double lower_bound = (double)(time_ms - tolerance_ms) / 1000.0;
+  double upper_bound = (double)(time_ms + TOLERANCE_MS) / 1000.0;
+  double lower_bound = (double)(time_ms - TOLERANCE_MS) / 1000.0;
   clock_t begin = clock() - CLOCK_HEADSTART;
   while (elapsed < upper_bound) {
     elapsed = ((double)(clock() - begin)) / (CLOCKS_PER_SEC);
