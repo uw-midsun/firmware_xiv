@@ -13,7 +13,7 @@
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
 
-#define TEST_BPS_HEARTBEAT_PERIOD_MS 50
+#define TEST_BPS_HEARTBEAT_PERIOD_MS 100
 #define BUFFER_TIME_MS 3
 
 static CanStorage s_can_storage = { 0 };

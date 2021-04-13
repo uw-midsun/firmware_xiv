@@ -15,7 +15,6 @@ StatusCode time_assert(uint8_t value_to_compare, uint8_t *value_to_test, double 
   clock_t begin = clock() - CLOCK_HEADSTART;
   while (elapsed < upper_bound) {
     elapsed = ((double)(clock() - begin)) / (CLOCKS_PER_SEC);
-    LOG_DEBUG("value_to_test = %d @ elapsed = %f\n", *value_to_test, elapsed);
     if (value_to_compare == *value_to_test && elapsed > lower_bound) {
       return STATUS_CODE_OK;
     }
