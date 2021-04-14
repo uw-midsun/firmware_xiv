@@ -20,7 +20,8 @@ Use the `STDLIB_DEBUG` option when building for STM32:
 ```bash
 make build PROJECT=centre_console STDLIB_DEBUG=true
 ```
-This seems to increase the binary size by ~5KB.
+This seems to increase the binary size by ~5KB. Running on STM32 with the debug stdlib seems to work
+fine, but in production we should use the normal stdlib, if only to optimize for space.
 
 ## How was it built?
 
