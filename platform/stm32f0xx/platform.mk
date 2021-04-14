@@ -60,11 +60,22 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
 CHANNEL ?= can0
 
 # Platform targets
-.PHONY: program gdb target babydriver temp-bootloader-write
+.PHONY: program gdb target babydriver analyzestack temp-bootloader-write
+
+BABYDRIVER_DIR := $(PROJ_DIR)/baby_driver/scripts
 
 babydriver:
 	@make program PROJECT=baby_driver
-	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
+	@python3 -i $(BABYDRIVER_DIR)/repl_setup.py --channel $(CHANNEL)
+
+ANALYZESTACK_DIR := $(PROJ_DIR)/stack_analyzer
+ANNOTATION_FILE := analyzestack.yaml
+
+# We use the $(T)_DIR variables built up by the build to include annotation files from all dependencies.
+analyzestack: clean build
+	@python3 $(ANALYZESTACK_DIR)/stack_analyzer.py $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT) \
+		$(addprefix --annotation ,$(wildcard \
+			$(foreach dep,$($(PROJECT)_DEPS) $(PROJECT),$($(dep)_DIR)/$(ANNOTATION_FILE))))
 
 ifeq (,$(MACOS_SSH_USERNAME))
 

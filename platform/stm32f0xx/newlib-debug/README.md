@@ -1,3 +1,5 @@
+# newlib-debug: Newlib binaries with debug symbols
+
 This directory contains a prebuilt version of [newlib][1], our C standard library on STM32, with
 debug symbols.
 
@@ -33,7 +35,7 @@ mkdir newlib-build
 cd newlib-build
 
 # these options taken from https://stackoverflow.com/a/50348732
-../newlib-build/configure --target=arm-none-eabi --enable-newlib-reent-small --disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-wide-orient --enable-newlib-nano-malloc --disable-newlib-unbuf-stream-opt --enable-lite-exit --enable-newlib-global-atexit --enable-newlib-nano-formatted-io --disable-nls
+../newlib-cygwin/configure --target=arm-none-eabi --enable-newlib-reent-small --disable-newlib-fvwrite-in-streamio --disable-newlib-fseek-optimization --disable-newlib-wide-orient --enable-newlib-nano-malloc --disable-newlib-unbuf-stream-opt --enable-lite-exit --enable-newlib-global-atexit --enable-newlib-nano-formatted-io --disable-nls
 
 make
 ```
