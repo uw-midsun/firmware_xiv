@@ -59,6 +59,11 @@ else
 PLATFORM ?= stm32f0xx
 endif
 
+ifeq (analyzestack,$(MAKECMDGOALS))
+# Use debug symbols by default in the stack analyzer
+STDLIB_DEBUG ?= true
+endif
+
 # Include argument filters
 include $(MAKE_DIR)/filter.mk
 
