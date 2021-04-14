@@ -1,0 +1,3 @@
+remove:
+  # adc_read_converted can only recurse at most once
+  - [adc_read_converted, adc_read_converted, adc_read_converted]

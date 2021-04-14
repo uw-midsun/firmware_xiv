@@ -1,0 +1,3 @@
+remove:
+  # stack analyzer detects InfiniteLoop in assembly as recursion, but it doesn't push to the stack
+  - [TIM1_BRK_UP_TRG_COM_IRQHandler]
