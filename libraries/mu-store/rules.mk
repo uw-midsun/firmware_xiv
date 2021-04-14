@@ -5,10 +5,5 @@
 # $(T)_INC_DIRS: $(T)_DIR/inc{/$(PLATFORM)}
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
-$(T)_DEPS :=
-
-$(T)_test_mock_MOCKS := status_impl_update
-
-ifneq (,$(IS_MU))
-$(T)_DEPS += mu-gen mu-store
-endif
+# Specify the libraries you want to include
+$(T)_DEPS := mu-gen
