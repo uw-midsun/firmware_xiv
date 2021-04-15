@@ -1,4 +1,9 @@
 add:
+  soft_timers:
+    - prv_measure_currents[projects/power_distribution/src/current_measurement.c]
+    - prv_front_pd_fan_ctrl_update_speed[projects/power_distribution/src/pd_fan_ctrl.c]
+    - prv_rear_pd_fan_ctrl_update_speed[projects/power_distribution/src/pd_fan_ctrl.c]
+    - prv_partially_publish[projects/power_distribution/src/publish_data.c]
   prv_measure_currents[projects/power_distribution/src/current_measurement.c:32]:
     - prv_current_measurement_data_ready_callback[projects/power_distribution/src/main.c]
   prv_partially_publish[projects/power_distribution/src/publish_data.c:49]:
