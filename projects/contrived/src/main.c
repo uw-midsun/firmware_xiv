@@ -24,7 +24,7 @@ static void prv_soft_timer_callback(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("%s\n", mystr);
 }
 
-static void __attribute__((noinline)) prv_uses_function_pointer() {
+static void __attribute__((noinline)) prv_uses_function_pointer(void) {
   ANALYZESTACK_ALIAS("testalias")
   s_foo();
 }

@@ -104,10 +104,6 @@ ISR_NAMES_INCREASING_PRIORITY = [
   'Reset_Handler',
 ]
 
-# Any symbol matching this will be interpreted as an alias for the line on which it appears instead
-# of a function name. Aliases can be used in annotations to reference the line they're defined on.
-ALIAS_SYMBOL_RE = re.compile(r'^__ANALYZESTACK_ALIAS\$(?P<alias>[^\$]*)$')
-
 
 class StackAnalyzerError(Exception):
   """Exception class for stack analyzer utility."""
@@ -735,6 +731,10 @@ class StackAnalyzer(object):
   FUNCTION_PREFIX_NAME_RE = re.compile(
       r'^(?P<name>[{0}]+)([^{0}].*)?$'.format(C_FUNCTION_NAME))
 
+  # Any symbol matching this will be interpreted as an alias for the line on which it appears instead
+  # of a function name. Aliases can be used in annotations to reference the line they're defined on.
+  ALIAS_SYMBOL_RE = re.compile(r'^__ANALYZESTACK_ALIAS\$(?P<alias>[^\$]*)$')
+
   # Errors of annotation resolving.
   ANNOTATION_ERROR_INVALID = 'invalid signature'
   ANNOTATION_ERROR_NOTFOUND = 'function is not found'
@@ -872,7 +872,7 @@ class StackAnalyzer(object):
     def IsAliasFunctionSignature(line):
       """MidSun extension: check if the line is a function signature for an alias."""
       symbol = MatchFunctionSignature(line)
-      return symbol is not None and bool(ALIAS_SYMBOL_RE.match(symbol.name))
+      return symbol is not None and bool(self.ALIAS_SYMBOL_RE.match(symbol.name))
 
     # Build symbol map, indexed by symbol address.
     symbol_map = {}
@@ -973,7 +973,7 @@ class StackAnalyzer(object):
     """MidSun extension: Build a map of alias names to (function name, path, line)."""
     alias_map = {}
     for symbol in self.symbols:
-      result = ALIAS_SYMBOL_RE.match(symbol.name)
+      result = self.ALIAS_SYMBOL_RE.match(symbol.name)
       if result is not None:
         line_info = self.AddressToLine(symbol.address)[0]
         if line_info is None:
@@ -981,12 +981,13 @@ class StackAnalyzer(object):
         alias_map[result.group('alias').strip()] = line_info
     return alias_map
 
-  def MapAnnotation(self, function_map, signature_set):
+  def MapAnnotation(self, function_map, signature_set, alias_map):
     """Map annotation signatures to functions.
 
     Args:
       function_map: Function map.
       signature_set: Set of annotation signatures.
+      alias_map: Map of aliases to signatures.
 
     Returns:
       Map of signatures to functions, map of signatures which can't be resolved.
@@ -1013,6 +1014,11 @@ class StackAnalyzer(object):
     symbol_path_map = {}
     for sig in signature_set:
       (name, path, _) = sig
+
+      # Dereference aliases.
+      if path is None and name in alias_map:
+        (name, path, _) = alias_map[name]
+        continue
 
       functions = symbol_map.get(name)
       if functions is None:
@@ -1269,8 +1275,9 @@ class StackAnalyzer(object):
       signature_set.update(remove_sigs)
 
     # Map signatures to functions.
-    (signature_map, sig_error_map) = self.MapAnnotation(function_map, signature_set)
     alias_map = self.BuildAliasMap()
+    (signature_map, sig_error_map) = self.MapAnnotation(
+      function_map, signature_set, alias_map)
 
     # Build the indirect callsite map indexed by callsite signature.
     indirect_map = collections.defaultdict(set)
