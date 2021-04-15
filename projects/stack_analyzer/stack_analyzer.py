@@ -104,6 +104,10 @@ ISR_NAMES_INCREASING_PRIORITY = [
   'Reset_Handler',
 ]
 
+# Any symbol matching this will be interpreted as an alias for the line on which it appears instead
+# of a function name. Aliases can be used in annotations to reference the line they're defined on.
+ALIAS_SYMBOL_RE = re.compile(r'^__ANALYZESTACK_ALIAS\$(?P<alias>[^\$]*)$')
+
 
 class StackAnalyzerError(Exception):
   """Exception class for stack analyzer utility."""
@@ -836,6 +840,21 @@ class StackAnalyzer(object):
     function_signature_regex = re.compile(
         r'^(?P<address>[0-9A-Fa-f]+)\s+<(?P<name>[^>]+)>:$')
 
+    def MatchFunctionSignature(line):
+      """Check if the line matches a function signature, and if so return its symbol."""
+      result = function_signature_regex.match(line)
+      if result is None:
+        return None
+
+      address = int(result.group('address'), 16)
+      symbol = symbol_map.get(address)
+
+      # Check if the function exists and matches.
+      if symbol is None:
+        return None
+
+      return symbol
+
     def DetectFunctionHead(line):
       """Check if the line is a function head.
 
@@ -845,18 +864,15 @@ class StackAnalyzer(object):
       Returns:
         symbol: Function symbol. None if it isn't a function head.
       """
-      result = function_signature_regex.match(line)
-      if result is None:
-        return None
-
-      address = int(result.group('address'), 16)
-      symbol = symbol_map.get(address)
-
-      # Check if the function exists and matches.
+      symbol = MatchFunctionSignature(line)
       if symbol is None or symbol.symtype != 'F':
         return None
-
       return symbol
+
+    def IsAliasFunctionSignature(line):
+      """MidSun extension: check if the line is a function signature for an alias."""
+      symbol = MatchFunctionSignature(line)
+      return symbol is not None and bool(ALIAS_SYMBOL_RE.match(symbol.name))
 
     # Build symbol map, indexed by symbol address.
     symbol_map = {}
@@ -864,6 +880,9 @@ class StackAnalyzer(object):
       # If there are multiple symbols with same address, keeping any of them is
       # good enough.
       symbol_map[symbol.address] = symbol
+
+    # Filter out alias lines to avoid mistaking them as function heads, and empty lines.
+    disasm_lines = [line for line in disasm_lines if line and not IsAliasFunctionSignature(line)]
 
     # Parse the disassembly text. We update the variable "line" to next line
     # when needed. There are two steps of parser:
@@ -949,6 +968,18 @@ class StackAnalyzer(object):
           callsite.callee = function_map.get(callsite.target)
 
     return function_map
+
+  def BuildAliasMap(self):
+    """MidSun extension: Build a map of alias names to (function name, path, line)."""
+    alias_map = {}
+    for symbol in self.symbols:
+      result = ALIAS_SYMBOL_RE.match(symbol.name)
+      if result is not None:
+        line_info = self.AddressToLine(symbol.address)[0]
+        if line_info is None:
+          continue
+        alias_map[result.group('alias').strip()] = line_info
+    return alias_map
 
   def MapAnnotation(self, function_map, signature_set):
     """Map annotation signatures to functions.
@@ -1238,8 +1269,8 @@ class StackAnalyzer(object):
       signature_set.update(remove_sigs)
 
     # Map signatures to functions.
-    (signature_map, sig_error_map) = self.MapAnnotation(function_map,
-                                                        signature_set)
+    (signature_map, sig_error_map) = self.MapAnnotation(function_map, signature_set)
+    alias_map = self.BuildAliasMap()
 
     # Build the indirect callsite map indexed by callsite signature.
     indirect_map = collections.defaultdict(set)
@@ -1267,6 +1298,10 @@ class StackAnalyzer(object):
     eliminated_addrs = set()
 
     for src_sig, dst_sigs in add_rules.items():
+      # Dereference aliases.
+      if src_sig[1] is src_sig[2] is None and src_sig[0] in alias_map:
+        src_sig = alias_map[src_sig[0]]
+
       src_funcs = set(signature_map.get(src_sig, []))
       # Try to match the source signature to the indirect callsites. Even if it
       # can't be found in disassembly.

@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "analyzestack.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
@@ -12,6 +13,8 @@
 
 #define CONTRIVED_ARRAY_SIZE 0x80
 
+static void (*s_foo)(void);
+
 static void prv_soft_timer_callback(SoftTimerId timer_id, void *context) {
   char mystr[CONTRIVED_ARRAY_SIZE] = { '\0' };
   for (size_t i = 0; i < CONTRIVED_ARRAY_SIZE; i++) {
@@ -21,11 +24,21 @@ static void prv_soft_timer_callback(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("%s\n", mystr);
 }
 
+static void __attribute__((noinline)) prv_uses_function_pointer() {
+  ANALYZESTACK_ALIAS("testalias")
+  s_foo();
+}
+
+static void __attribute__((noinline)) prv_foobar(void) {
+  LOG_DEBUG("hi!\n");
+}
+
 int main(void) {
   interrupt_init();
   soft_timer_init();
   soft_timer_start_millis(100, prv_soft_timer_callback, NULL, NULL);
-  LOG_DEBUG("I'm bigger than git_version_init now\n");
+  s_foo = prv_foobar;
+  prv_uses_function_pointer();
   while (true) {
     wait();
   }

@@ -1,3 +1,0 @@
-add:
-  objpool_free_node[libraries/ms-common/src/objpool.c:70]:
-    - prv_init_can_interval[libraries/ms-helper/src/can_interval.c]

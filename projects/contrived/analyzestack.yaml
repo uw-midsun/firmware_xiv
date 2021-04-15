@@ -1,3 +1,5 @@
 add:
   prv_update_timer[libraries/ms-common/src/stm32f0xx/soft_timer.c:211]:
     - prv_soft_timer_callback[projects/contrived/src/main.c]
+  testalias:
+    - prv_foobar
