@@ -101,7 +101,7 @@ DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
 # Virtualenv directory
-VENV_DIV := .venv
+VENV_DIR := .venv
 
 # Please don't touch anything below this line
 ###################################################################################################
@@ -169,7 +169,7 @@ ROOT := $(shell pwd)
 
 # PIP ENVIRONMENT SETUP
 
-export PATH := $(ROOT)/$(VENV_DIV)/bin:$(PATH)
+export PATH := $(ROOT)/$(VENV_DIR)/bin:$(PATH)
 
 ###################################################################################################
 
@@ -200,7 +200,7 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mpxe-gen
 # This uses regex
-IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
+IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
@@ -211,8 +211,8 @@ FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 				-iname "*.[ch]" -print
 FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
 # ignore MPXE since it has a different pylint
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mpxe/*.py' ':(exclude)./.venv/*'
-FIND_MOD_NEW_MPXE_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mpxe/*.py' ':(exclude)./.venv/*'
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mpxe/*.py' ':(exclude)$(VENV_DIR)/*'
+FIND_MOD_NEW_MPXE_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mpxe/*.py' ':(exclude)$(VENV_DIR)/*'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -305,7 +305,7 @@ pytest:
 
 .PHONY: pytest_all
 pytest_all:
-	@for i in $$(find . -path ./$(VENV_DIV) -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
+	@for i in $$(find . -path ./$(VENV_DIR) -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
 	done	
@@ -365,18 +365,19 @@ socketcan:
 	@sudo modprobe vcan
 	@sudo ip link add dev vcan0 type vcan || true
 	@sudo ip link set up vcan0 || true
-	@ip link show vcan0									
+	@ip link show vcan0
 
 # Note: ". .venv/bin/activate" is the /sh/ (and more portable way) of bash's "source .venv/bin/activate"
+# If you are getting a "virtualenv: Command not found" error, try running `sudo pip3 install virtualenv`
 .PHONY: install_requirements
 install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@rm -rf $(VENV_DIV)
-	@mkdir $(VENV_DIV)
-	@virtualenv $(VENV_DIV)
-	@. $(VENV_DIV)/bin/activate; \
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
 
 MPXE_PROJS := 
