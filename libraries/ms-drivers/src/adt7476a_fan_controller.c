@@ -9,17 +9,17 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 
-#ifdef MPXE
+#ifdef MU
 #include <stdlib.h>
 #include "adt7476a.pb-c.h"
 #include "store.h"
 #include "stores.pb-c.h"
 
-static MxAdt7476aStore s_store = MX_ADT7476A_STORE__INIT;
+static MuAdt7476aStore s_store = MU_ADT7476A_STORE__INIT;
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
-  MxAdt7476aStore *msg = mx_adt7476a_store__unpack(NULL, msg_buf.len, msg_buf.data);
-  MxAdt7476aStore *mask = mx_adt7476a_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  MuAdt7476aStore *msg = mu_adt7476a_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuAdt7476aStore *mask = mu_adt7476a_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
   for (AdtPwmPort i = 0; i < NUM_ADT_PWM_PORTS; i++) {
     // only update state if mask is set
@@ -29,25 +29,25 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     }
   }
 
-  mx_adt7476a_store__free_unpacked(msg, NULL);
-  mx_adt7476a_store__free_unpacked(mask, NULL);
-  store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
+  mu_adt7476a_store__free_unpacked(msg, NULL);
+  mu_adt7476a_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
 }
 
 static void prv_init_store(void) {
   store_config();
   StoreFuncs funcs = {
-    (GetPackedSizeFunc)mx_adt7476a_store__get_packed_size,
-    (PackFunc)mx_adt7476a_store__pack,
-    (UnpackFunc)mx_adt7476a_store__unpack,
-    (FreeUnpackedFunc)mx_adt7476a_store__free_unpacked,
+    (GetPackedSizeFunc)mu_adt7476a_store__get_packed_size,
+    (PackFunc)mu_adt7476a_store__pack,
+    (UnpackFunc)mu_adt7476a_store__unpack,
+    (FreeUnpackedFunc)mu_adt7476a_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
   s_store.n_speed = NUM_ADT_PWM_PORTS;
   s_store.speed = malloc(NUM_ADT_PWM_PORTS * sizeof(uint32_t));
   s_store.n_status = NUM_ADT_PWM_PORTS;
   s_store.status = malloc(NUM_ADT_PWM_PORTS * sizeof(protobuf_c_boolean));
-  store_register(MX_STORE_TYPE__ADT7476A, funcs, &s_store, NULL);
+  store_register(MU_STORE_TYPE__ADT7476A, funcs, &s_store, NULL);
 }
 #endif
 
@@ -68,7 +68,7 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
 
     status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
                                   SIZEOF_ARRAY(adt7476a_speed_register)));
-#ifdef MPXE
+#ifdef MU
     s_store.speed[0] = real_speed;
 #endif
 
@@ -77,7 +77,7 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
 
     status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
                                   SIZEOF_ARRAY(adt7476a_speed_register)));
-#ifdef MPXE
+#ifdef MU
     s_store.speed[1] = real_speed;
 #endif
 
@@ -87,8 +87,8 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
     return STATUS_CODE_INVALID_ARGS;
   }
 
-#ifdef MPXE
-  store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
+#ifdef MU
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
 #endif
   return STATUS_CODE_OK;
 }
@@ -102,11 +102,11 @@ StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
   StatusCode reg2 =
       (i2c_read_reg(port, adt7476a_i2c_read_address, ADT7476A_INTERRUPT_STATUS_REGISTER_2,
                     register_2_data, ADT7476A_REG_SIZE));
-#ifdef MPXE
+#ifdef MU
   s_store.status[0] = reg1 ? true : false;
   s_store.status[1] = reg2 ? true : false;
 
-  store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
 #endif
   return STATUS_CODE_OK;
 }
@@ -152,9 +152,9 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
   gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              storage->callback, storage->callback_context);
 
-#ifdef MPXE
+#ifdef MU
   prv_init_store();
-  store_export(MX_STORE_TYPE__ADT7476A, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
 #endif
 
   return STATUS_CODE_OK;

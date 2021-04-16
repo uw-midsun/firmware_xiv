@@ -1,5 +1,5 @@
 #include <string.h>
-
+#include <time.h>
 #include "bms_events.h"
 #include "bps_heartbeat.h"
 #include "can.h"
@@ -14,7 +14,6 @@
 #include "soft_timer.h"
 
 #define TEST_BPS_HEARTBEAT_PERIOD_MS 50
-#define BUFFER_TIME_MS 3
 
 static CanStorage s_can_storage = { 0 };
 
@@ -73,11 +72,11 @@ void test_hb_repeats(void) {
   s_ack_status = CAN_ACK_STATUS_OK;
   TEST_ASSERT_OK(bps_heartbeat_init(&s_storage, TEST_BPS_HEARTBEAT_PERIOD_MS));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
+  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
+  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
+  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS);
 
   TEST_ASSERT_EQUAL(3, s_hb_count);
 }
@@ -95,16 +94,13 @@ void test_hb_fails_then_faults(void) {
   s_ack_status = CAN_ACK_STATUS_TIMEOUT;
   TEST_ASSERT_OK(bps_heartbeat_init(&s_storage, TEST_BPS_HEARTBEAT_PERIOD_MS));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
-  TEST_ASSERT_EQUAL(1, s_storage.ack_fail_count);
+  MS_TEST_ASSERT_EQUAL_AT_TIME(1, (&s_storage.ack_fail_count), TEST_BPS_HEARTBEAT_PERIOD_MS);
 
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
-  TEST_ASSERT_EQUAL(2, s_storage.ack_fail_count);
+  MS_TEST_ASSERT_EQUAL_AT_TIME(2, (&s_storage.ack_fail_count), TEST_BPS_HEARTBEAT_PERIOD_MS);
 
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(BMS_CAN_EVENT_TX, BMS_CAN_EVENT_RX);
-  delay_ms(TEST_BPS_HEARTBEAT_PERIOD_MS + BUFFER_TIME_MS);
-  TEST_ASSERT_EQUAL(3, s_storage.ack_fail_count);
+  MS_TEST_ASSERT_EQUAL_AT_TIME(3, (&s_storage.ack_fail_count), TEST_BPS_HEARTBEAT_PERIOD_MS);
 
   TEST_ASSERT_EQUAL(EE_BPS_STATE_FAULT_ACK_TIMEOUT, s_fault_bps_bitmask);
   TEST_ASSERT_EQUAL(false, s_fault_bps_clear);
