@@ -100,6 +100,9 @@ MU_PROTOS_DIR := $(MU_DIR)/protos
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
+# Virtualenv directory
+VENV_DIR := .venv
+
 # Please don't touch anything below this line
 ###################################################################################################
 
@@ -164,6 +167,12 @@ ROOT := $(shell pwd)
 
 ###################################################################################################
 
+# PIP ENVIRONMENT SETUP
+
+export PATH := $(ROOT)/$(VENV_DIR)/bin:$(PATH)
+
+###################################################################################################
+
 # MAKE PROJECT
 
 # Actually calls the make
@@ -191,10 +200,10 @@ $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
 # This uses regex
-IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
+IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
+FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
@@ -202,8 +211,8 @@ FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 				-iname "*.[ch]" -print
 FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
 # ignore MU since it has a different pylint
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mu/*.py'
-FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mu/*.py'
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mu/*.py' ':(exclude)$(VENV_DIR)/*'
+FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mu/*.py' ':(exclude)$(VENV_DIR)/*'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -296,7 +305,7 @@ pytest:
 
 .PHONY: pytest_all
 pytest_all:
-	@for i in $$(find . -path ./.venv -prune -o -path ./mu/integration_tests -prune -o -name "test_*.py"); 			\
+	@for i in $$(find . -path ./$(VENV_DIR) -prune -o -path ./mu/integration_tests -prune -o -name "test_*.py"); 			\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
 	done	
@@ -356,17 +365,20 @@ socketcan:
 	@sudo modprobe vcan
 	@sudo ip link add dev vcan0 type vcan || true
 	@sudo ip link set up vcan0 || true
-	@ip link show vcan0		
+	@ip link show vcan0
 
+# Note: ". .venv/bin/activate" is the /sh/ (and more portable way) of bash's "source .venv/bin/activate"
+# If you are getting a "virtualenv: Command not found" error, try running `sudo pip3 install virtualenv`
 .PHONY: install_requirements
 install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@for i in $$(find . -name "requirements.txt"); 		\
-	do															\
-		pip install -r $$i;										\
-	done						
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
+	pip install -r requirements.txt
 
 MU_PROJS := 
 -include $(MU_DIR)/integration_tests/deps.mk
