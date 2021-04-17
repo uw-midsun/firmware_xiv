@@ -1,7 +1,8 @@
+// Module to be tested
 #include "fan_control_solar.h"
 
-#include <stdbool.h>
-
+#include "can_msg_defs.h"
+#include "can_unpack.h"
 #include "data_store.h"
 #include "event_queue.h"
 #include "exported_enums.h"
@@ -12,6 +13,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "max6643_fan_controller.h"
+#include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "solar_boards.h"
 #include "solar_events.h"
@@ -24,6 +26,13 @@
 #define BELOW_TEMPERATURE_THRESHOLD_DC 2
 #define ABOVE_TEMPERATURE_THRESHOLD_DC 4
 
+typedef enum {
+  TEST_CAN_SOLAR_FAN_EVENT_TX = 0,
+  TEST_CAN_SOLAR_FAN_EVENT_RX,
+  TEST_CAN_SOLAR_FAN_EVENT_FAULT,
+  NUM_TEST_CAN_EVENTS,
+} TestCanEvent;
+
 // Declare static test variables
 static GpioAddress s_overtemp_addr;
 static GpioAddress s_fan_fail_addr;
@@ -33,13 +42,31 @@ static SolarMpptCount s_mppt_count;
 
 static GpioState s_gpio_state;
 static Event s_data_ready = { .id = DATA_READY_EVENT, .data = 0 };
+static CanStorage s_can_storage = { 0 };
+static FaultHandlerSettings s_settings = {
+  .relay_open_faults = {},
+  .num_relay_open_faults = 0,
+  .mppt_count = SOLAR_BOARD_6_MPPTS,
+};
+
+// To receive rx_fault_monitor info
+static CanMessage s_can_msg;
+static uint8_t s_ee_solar_fault;
+static uint8_t s_fault_data;
+
+static StatusCode prv_ee_solar_fault_rx_handler(const CanMessage *msg, void *context,
+                                                CanAckStatus *ack_reply) {
+  CAN_UNPACK_SOLAR_FAULT_6_MPPTS(&s_can_msg, &s_ee_solar_fault, &s_fault_data);
+  return STATUS_CODE_OK;
+}
 
 void setup_test(void) {
-  event_queue_init();
-  gpio_init();
-  interrupt_init();
-  gpio_it_init();
+  // Also runs event_queue_init(), gpio_init(), interrupt_init(), soft_timer_init()
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
+                                  TEST_CAN_SOLAR_FAN_EVENT_TX, TEST_CAN_SOLAR_FAN_EVENT_RX,
+                                  TEST_CAN_SOLAR_FAN_EVENT_FAULT);
   data_store_init();
+  fault_handler_init(&s_settings);
 
   // Test Board A with 6 MPPTs uses virtual port A
   GpioAddress s_overtemp_addr = { .port = GPIO_PORT_A, .pin = 0 };
@@ -47,6 +74,10 @@ void setup_test(void) {
   GpioAddress s_full_speed_addr = { .port = GPIO_PORT_A, .pin = 2 };
 
   SolarMpptCount s_mppt_count = SOLAR_BOARD_6_MPPTS;
+
+  // Register Handlers to receive and unpack CAN message into static variables
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_ee_solar_fault_rx_handler,
+                          NULL);
 }
 
 // Used to reinitialize static testing variable GpioState s_gpio_state
@@ -72,8 +103,11 @@ void test_fan_fail_fault_handling(void) {
   // Test that fan fail fault is raised correctly when fan fail pin is interrupted
   gpio_it_trigger_interrupt(&s_fan_fail_addr);
 
-  Event e;
-  MS_TEST_HELPER_ASSERT_EVENT(e, EE_SOLAR_FAULT_FAN_FAIL, 0);
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_SOLAR_FAN_EVENT_TX, TEST_CAN_SOLAR_FAN_EVENT_RX);
+
+  TEST_ASSERT_EQUAL_MESSAGE(EE_SOLAR_FAULT_FAN_FAIL, s_ee_solar_fault,
+                            "Was expecting EE_SOLAR_FAULT_FAN_FAIL instead \n");
+  TEST_ASSERT_EQUAL_INT16(0, s_fault_data);
 }
 
 // Test that overtemperature fault/pins & full speed pins are raised correctly
@@ -120,11 +154,13 @@ void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void) {
   data_store_set(DATA_POINT_TEMPERATURE(6), ABOVE_TEMPERATURE_THRESHOLD_DC);
   fan_control_process_event(&s_data_ready);
 
-  Event e;
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_SOLAR_FAN_EVENT_TX, TEST_CAN_SOLAR_FAN_EVENT_RX);
 
   // Overtemperature fault should be raised
   // Should fail by default if event_process(&e) fails
-  MS_TEST_HELPER_ASSERT_EVENT(e, EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, 0);
+  TEST_ASSERT_EQUAL_MESSAGE(EE_SOLAR_FAULT_OVERTEMPERATURE, s_ee_solar_fault,
+                            "Was expecting EE_SOLAR_FAULT_OVERTEMPERATURE instead \n");
+  TEST_ASSERT_EQUAL_INT16(0, s_fault_data);
 
   // Full Speed pin should be low to enable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
@@ -147,10 +183,12 @@ void test_fan_overtemp_fault_fullspeed_handling_case_multipleabovetemp(void) {
   }
   fan_control_process_event(&s_data_ready);
 
-  Event e;
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_SOLAR_FAN_EVENT_TX, TEST_CAN_SOLAR_FAN_EVENT_RX);
 
   // Overtemperature fault should be raised
-  MS_TEST_HELPER_ASSERT_EVENT(e, EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, 0);
+  TEST_ASSERT_EQUAL_MESSAGE(EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, s_ee_solar_fault,
+                            "Was expecting EE_SOLAR_FAULT_OVERTEMPERATURE instead \n");
+  TEST_ASSERT_EQUAL_INT16(0, s_fault_data);
 
   // Full Speed pin should be low to enable full speed
   gpio_get_state(&s_full_speed_addr, &s_gpio_state);
