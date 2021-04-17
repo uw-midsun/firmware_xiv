@@ -86,18 +86,35 @@ StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *read
 }
 
 // Set value returned on GPIO read
-static GpioState s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS];
-static uint8_t s_test_gpio_read_index = 0;
-
+// Generally used for valid pins
+static GpioState s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS + 1];
 StatusCode TEST_MOCK(gpio_get_state)(GpioAddress *address, GpioState *input_state) {
-  *input_state = s_test_gpio_read_states[s_test_gpio_read_index];
-
-  if (s_test_gpio_read_index == NUM_POWER_SELECT_VALID_PINS - 1) {
-    s_test_gpio_read_index = 0;
-  } else {
-    s_test_gpio_read_index++;
+  // Find correct reading to return
+  for (int i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
+    if (prv_gpio_addr_is_eq(POWER_SELECT_VALID_PINS[i], *address)) {
+      *input_state = s_test_gpio_read_states[i];
+      return STATUS_CODE_OK;
+    }
+  }
+  GpioAddress fault_addr = POWER_SELECT_DCDC_FAULT_ADDR;
+  if (prv_gpio_addr_is_eq(fault_addr, *address)) {
+    *input_state = s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS];
+    return STATUS_CODE_OK;
   }
 
+  // Should never get here
+  return STATUS_CODE_INVALID_ARGS;
+}
+
+static GpioState s_test_ltc_state;
+
+// Since we mock out gpio_get_state for valid pins, we need to mock gpio_set_state
+// to make sure calls to it work OK (only checking LTC)
+StatusCode TEST_MOCK(gpio_set_state)(GpioAddress *address, GpioState state) {
+  GpioAddress shdn_addr = POWER_SELECT_LTC_SHDN_ADDR;
+  if (prv_gpio_addr_is_eq(shdn_addr, *address)) {
+    s_test_ltc_state = state;
+  }
   return STATUS_CODE_OK;
 }
 
@@ -114,7 +131,7 @@ static void prv_set_voltages_good(void) {
 
 static void prv_set_all_pins_valid(void) {
   for (uint16_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
-    s_test_gpio_read_states[i] = GPIO_STATE_LOW;
+    gpio_set_state(&POWER_SELECT_VALID_PINS[i], GPIO_STATE_LOW);
   }
 }
 
@@ -162,12 +179,17 @@ void teardown_test(void) {
   memset(s_test_gpio_read_states, GPIO_STATE_LOW, NUM_POWER_SELECT_VALID_PINS * sizeof(GpioState));
 
   power_select_stop();
-
-  s_test_gpio_read_index = 0;
 }
 
 void test_power_select_init_works(void) {
   TEST_ASSERT_OK(power_select_init());
+
+  // No faults, but pins invalid until we measure
+  TEST_ASSERT_EQUAL(0, power_select_get_valid_bitset());
+  TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+
+  // LTC should be activated
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 }
 
 void test_power_select_periodic_measure_works(void) {
@@ -198,6 +220,9 @@ void test_power_select_periodic_measure_reports_correctly(void) {
   // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+
+  // LTC should be activated
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 
   // Check whether voltage readings as expected
   PowerSelectStorage test_storage = power_select_get_storage();
@@ -287,6 +312,8 @@ void test_power_select_faults_handled(void) {
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
+
   // Set aux to overvoltage + overcurrent
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_FAULT_VOLTAGE_SCALED_MV;
   s_test_adc_read_values[POWER_SELECT_AUX + NUM_POWER_SELECT_MEASUREMENT_TYPES] =
@@ -297,6 +324,7 @@ void test_power_select_faults_handled(void) {
   expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERVOLTAGE;
   expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERCURRENT;
   TEST_ASSERT_EQUAL(expected_fault_bitset, power_select_get_fault_bitset());
+  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_test_ltc_state);
 
   // Set values back to good
   s_test_adc_read_values[POWER_SELECT_AUX] = TEST_GOOD_VOLTAGE_SCALED_MV;
@@ -306,6 +334,7 @@ void test_power_select_faults_handled(void) {
 
   // Should now be no faults
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 }
 
 // Make sure the DCDC fault pin works as expected
@@ -322,14 +351,14 @@ void test_power_select_dcdc_fault_works(void) {
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
 
   // Trigger a DCDC fault interrupt
-  s_test_gpio_read_states[0] = GPIO_STATE_HIGH;
+  s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS] = GPIO_STATE_HIGH;
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
   gpio_it_trigger_interrupt(&pin);
 
   TEST_ASSERT_EQUAL((1 << POWER_SELECT_DCDC_FAULT), power_select_get_fault_bitset());
 
   // Back to normal
-  s_test_gpio_read_states[0] = GPIO_STATE_LOW;
+  s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS] = GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&pin);
 
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());

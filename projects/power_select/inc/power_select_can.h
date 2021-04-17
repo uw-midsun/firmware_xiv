@@ -5,9 +5,9 @@
 #include "can.h"
 #include "can_pack.h"
 #include "can_unpack.h"
+#include "controller_board_pins.h"
 #include "exported_enums.h"
 #include "log.h"
-#include "controller_board_pins.h"
 
 #include "power_select.h"
 #include "power_select_events.h"

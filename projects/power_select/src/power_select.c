@@ -12,8 +12,17 @@ static const GpioSettings SENSE_SETTINGS = {
   GPIO_ALTFN_ANALOG,
 };
 
-// Broadcast the fault bitset
-void prv_broadcast_fault(void) {
+// Broadcast the fault bitset and turn off/on the LTC as required
+void prv_handle_fault(void) {
+  // Turn off/on LTC depending on fault status
+  GpioAddress pin = POWER_SELECT_LTC_SHDN_ADDR;
+  if (s_storage.fault_bitset == 0) {
+    // Turn back on if not already
+    gpio_set_state(&pin, GPIO_STATE_HIGH);
+  } else {
+    // Fault, turn off LTC
+    gpio_set_state(&pin, GPIO_STATE_LOW);
+  }
   CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset);
 }
 
@@ -60,7 +69,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
       PowerSelectFault fault = i;
       if (s_storage.voltages[i] > MAX_VOLTAGES[i]) {
         s_storage.fault_bitset |= 1 << fault;
-        prv_broadcast_fault();
+        prv_handle_fault();
       } else {
         s_storage.fault_bitset &= ~(1 << fault);
       }
@@ -83,7 +92,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
       PowerSelectFault fault = i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS;
       if (s_storage.currents[i] > MAX_CURRENTS[i]) {
         s_storage.fault_bitset |= 1 << fault;
-        prv_broadcast_fault();
+        prv_handle_fault();
       } else {
         s_storage.fault_bitset &= ~(1 << fault);
       }
@@ -104,7 +113,7 @@ void prv_periodic_measure(SoftTimerId timer_id, void *context) {
 
   // Send fault bitset if no faults
   if (s_storage.fault_bitset == 0) {
-    prv_broadcast_fault();
+    prv_handle_fault();
   }
 
   soft_timer_start(s_storage.interval_us, prv_periodic_measure, &s_storage, &s_storage.timer_id);
@@ -143,7 +152,7 @@ void prv_handle_fault_it(const GpioAddress *address, void *context) {
     s_storage.fault_bitset &= ~(1 << POWER_SELECT_DCDC_FAULT);
   }
 
-  prv_broadcast_fault();
+  prv_handle_fault();
 }
 
 // DCDC_FAULT pin goes high on fault
@@ -194,8 +203,8 @@ StatusCode power_select_init(void) {
   };
 
   GpioAddress shdn_pin = POWER_SELECT_LTC_SHDN_ADDR;
-  // Note: not using this atm
   status_ok_or_return(gpio_init_pin(&shdn_pin, &shdn_settings));
+  gpio_set_state(&shdn_pin, GPIO_STATE_HIGH);
 
   s_storage.timer_id = SOFT_TIMER_INVALID_TIMER;
   s_storage.measurement_in_progress = false;

@@ -3,6 +3,7 @@
 #include "power_select_can.h"
 #include "power_select_events.h"
 
+#include "controller_board_pins.h"
 #include "delay.h"
 #include "gpio.h"
 #include "interrupt.h"
@@ -10,7 +11,6 @@
 #include "ms_test_helpers.h"
 #include "string.h"
 #include "test_helpers.h"
-#include "controller_board_pins.h"
 
 static uint16_t s_test_fault_bitset;
 
