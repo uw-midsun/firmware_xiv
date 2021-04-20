@@ -1,10 +1,6 @@
-import threading
-
-from mu.harness.board_sim import BoardSim, GPIO_KEY
-from mu.harness.project import StoreUpdate
+from mu.harness.board_sim import BoardSim
 from mu.sims.sub_sims.mcp2515 import Mcp2515
 from mu.protogen import stores_pb2
-from mu.protogen import mcp2515_pb2
 
 
 MCP2515_KEY = (stores_pb2.MuStoreType.MCP2515, 0)

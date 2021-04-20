@@ -5,7 +5,6 @@ import signal
 import queue
 
 from mu.harness import canio
-from mu.harness import project
 from mu.harness.dir_config import REPO_DIR
 from mu.harness import decoder
 from mu.harness.board_sim import BoardSim
@@ -92,7 +91,6 @@ class ProjectManager:
             msg = sim.proj.popen.stdout.read()
             store_info = decoder.decode_store_info(msg)
             if store_info.type == stores_pb2.LOG:
-                # TODO(SOFT-465): move logging to a separate class
                 mulog = stores_pb2.MuLog()
                 mulog.ParseFromString(store_info.msg)
                 log = mulog.log.decode().rstrip()

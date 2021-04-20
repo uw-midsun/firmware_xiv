@@ -16,7 +16,7 @@
 #include "stores.pb-c.h"
 
 static MuGpioStore s_store = MU_GPIO_STORE__INIT;
-#define NUM_MU_GPIO_PINS (GPIO_PINS_PER_PORT * 2) // We only use ports A and B
+#define NUM_MU_GPIO_PINS (GPIO_PINS_PER_PORT * 2)  // We only use ports A and B
 #endif
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
@@ -72,7 +72,7 @@ static void prv_init_store(void) {
     (FreeUnpackedFunc)mu_gpio_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  s_store.n_state = NUM_MU_GPIO_PINS; // We only use ports A and B
+  s_store.n_state = NUM_MU_GPIO_PINS;  // We only use ports A and B
   s_store.state = malloc(NUM_MU_GPIO_PINS * sizeof(protobuf_c_boolean));
   store_register(MU_STORE_TYPE__GPIO, funcs, &s_store, NULL);
 }

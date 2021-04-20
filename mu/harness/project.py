@@ -3,7 +3,6 @@ import threading
 import os
 import fcntl
 
-from mu.harness import decoder
 from mu.harness.dir_config import REPO_DIR
 from mu.protogen import stores_pb2
 

@@ -3,7 +3,6 @@ import time
 
 from mu.integration_tests import int_test
 from mu.sims.bms_carrier import BmsCarrier
-from mu.sims.sub_sims.ads1259 import Ads1259
 
 
 class TestAds1259(int_test.IntTest):

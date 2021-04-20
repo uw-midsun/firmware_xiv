@@ -1,5 +1,4 @@
 from mu.harness.board_sim import BoardSim, GPIO_KEY
-from mu.protogen import stores_pb2
 
 
 class Leds(BoardSim):

@@ -11,18 +11,20 @@ from mu.harness.project import StoreUpdate
 GPIO_KEY = (stores_pb2.MuStoreType.GPIO, 0)
 
 class BoardSim:
-    def __init__(self, pm, proj_name, sub_sim_classes=[], init_conds=[]):
+    def __init__(self, pm, proj_name, sub_sim_classes=None, init_conds=None):
         self.pm = pm
         self.sub_sims = {}
-        for sub_sim_class in sub_sim_classes:
-            self.sub_sims[sub_sim_class.__name__] = sub_sim_class(self)
+        if sub_sim_classes:
+            for sub_sim_class in sub_sim_classes:
+                self.sub_sims[sub_sim_class.__name__] = sub_sim_class(self)
         self.stores = {}
         self.timers = []
         self.proj = project.Project(pm, self, proj_name)
         self.fd = self.proj.popen.stdout.fileno()
         self.pm.register(self)
-        for cond in init_conds:
-            self.proj.write_store(cond)
+        if init_conds:
+            for cond in init_conds:
+                self.proj.write_store(cond)
         self.proj.send_command(stores_pb2.MuCmdType.FINISH_INIT_CONDS)
 
     def stop(self):
@@ -59,9 +61,7 @@ class BoardSim:
         gpio_update = StoreUpdate(gpio_msg, gpio_mask, stores_pb2.MuStoreType.GPIO, 0)
 
         self.proj.write_store(gpio_update)
-    
-    # TODO(SOFT-158): Implement set_adc(self, port, pin, val)
-    
+
     # To be implemented by subclasses
 
     def handle_store(self, store, key):
