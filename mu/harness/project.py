@@ -19,11 +19,11 @@ class StoreUpdate:
 
 
 class Project:
-    def __init__(self, pm, name, sim):
-        self.name = name
+    def __init__(self, pm, sim, name):
         self.pm = pm
+        self.sim = sim
+        self.name = name
         self.killed = False
-        self.stores = {}
         self.write_sem = threading.Semaphore(value=0)
 
         cmd = BIN_DIR_FORMAT.format(self.name)
@@ -34,8 +34,6 @@ class Project:
         # Set the flag O_NONBLOCK on stdout, necessary for reading from running projects
         flags = fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_GETFL)
         fcntl.fcntl(self.popen.stdout.fileno(), fcntl.F_SETFL, flags | os.O_NONBLOCK)
-
-        self.sim = sim
 
     def stop(self):
         if self.killed:
@@ -72,14 +70,3 @@ class Project:
         self.pm.push_queue.put(write_closure)
         # after main thread calls the closure it'll increment the returned sem, unblocking this
         self.write_sem.acquire()
-
-    def handle_store(self, msg):
-        store_info = decoder.decode_store_info(msg)
-        if store_info.type == stores_pb2.LOG:
-            mulog = stores_pb2.MuLog()
-            mulog.ParseFromString(store_info.msg)
-            self.sim.handle_log(self.pm, self, mulog.log.decode('utf-8').rstrip())
-        else:
-            key = (store_info.type, store_info.key)
-            self.stores[key] = decoder.decode_store(store_info)
-            self.sim.handle_update(self.pm, self, key)

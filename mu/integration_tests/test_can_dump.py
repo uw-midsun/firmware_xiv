@@ -11,6 +11,7 @@ class TestCanDump(int_test.IntTest):
 
     def test_can_dump(self):
         time.sleep(0.1)
+        self.assert_can_data('UNKNOWN', 'data', [])
 
 
 if __name__ == '__main__':

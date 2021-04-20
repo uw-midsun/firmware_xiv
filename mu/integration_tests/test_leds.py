@@ -8,7 +8,7 @@ from mu.sims.leds import Leds
 class TestLeds(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.leds = self.manager.start('leds', Leds())
+        self.leds = self.manager.start('leds', Leds)
 
     def test_leds(self):
         time.sleep(0.3)

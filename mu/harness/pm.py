@@ -7,7 +7,8 @@ import queue
 from mu.harness import canio
 from mu.harness import project
 from mu.harness.dir_config import REPO_DIR
-from mu.sims.sim import Sim
+from mu.harness import decoder
+from mu.harness.board_sim import BoardSim
 from mu.protogen import stores_pb2
 
 POLL_TIMEOUT = 0.5
@@ -24,9 +25,7 @@ class InvalidPollError(Exception):
 
 class ProjectManager:
     def __init__(self):
-        # index projects by stdout and ctop_fifo fd
-        # ctop_fifo is the child-to-parent fifo created by the C program
-        self.fd_to_proj = {}
+        self.fd_to_sim = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.killed = False
 
@@ -42,27 +41,22 @@ class ProjectManager:
         self.poll_thread.start()
         self.can = canio.CanIO()
 
-    def start(self, name, sim=None, init_conds=None):
-        if name not in self.proj_name_list:
+    def start(self, proj_name, sim_class=BoardSim):
+        if proj_name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
-        proj = project.Project(self, name, sim or Sim())
-        self.fd_to_proj[proj.popen.stdout.fileno()] = proj
+        sim = sim_class(self, proj_name)
+        return sim
 
-        if init_conds:
-            for update in init_conds:
-                proj.write_store(update)
+    def register(self, sim):
+        self.fd_to_sim[sim.fd] = sim
 
-        proj.send_command(stores_pb2.MuCmdType.FINISH_INIT_CONDS)
-        return proj
-
-    def stop(self, proj):
-        del self.fd_to_proj[proj.popen.stdout.fileno()]
-        proj.stop()
+    def stop(self, sim):
+        del self.fd_to_sim[sim.fd]
+        sim.stop()
 
     def stop_all(self):
-        for proj in list(self.fd_to_proj.values()):
-            if not proj.killed:
-                self.stop(proj)
+        for sim in list(self.fd_to_sim.values()):
+            sim.stop()
 
     def signal_push_sem(self, signum, stack_frame):
         self.push_sem.release()
@@ -85,23 +79,31 @@ class ProjectManager:
     def poll(self):
         def prep_poll():
             poll = select.poll()
-            for fd in self.fd_to_proj:
+            for fd in self.fd_to_sim:
                 poll.register(fd, select.POLLIN)
             return poll
 
         def handle_poll_res(fd, event):
             if (event & select.POLLIN) == 0:
                 raise InvalidPollError
-            proj = self.fd_to_proj[fd]
+            sim = self.fd_to_sim[fd]
             # Currently assume all messages are storeinfo,
             # might need other message types
-            msg = proj.popen.stdout.read()
-            proj.handle_store(msg)
-            proj.popen.send_signal(POLL_LOCK_SIGNAL)
+            msg = sim.proj.popen.stdout.read()
+            store_info = decoder.decode_store_info(msg)
+            if store_info.type == stores_pb2.LOG:
+                # TODO(SOFT-465): move logging to a separate class
+                mulog = stores_pb2.MuLog()
+                mulog.ParseFromString(store_info.msg)
+                log = mulog.log.decode().rstrip()
+                print(log)
+            else:
+                sim.handle_info(store_info)
+            sim.proj.popen.send_signal(POLL_LOCK_SIGNAL)
 
         try:
             while not self.killed:
-                if not self.fd_to_proj:
+                if not self.fd_to_sim:
                     continue
                 p = prep_poll()
                 res_list = p.poll(POLL_TIMEOUT)

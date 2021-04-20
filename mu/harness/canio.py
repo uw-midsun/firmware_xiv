@@ -42,13 +42,14 @@ class CanIO:
     def listener(self):
         while not self.killed:
             raw_msg = self.bus.recv(BUS_RECV_TIMEOUT)
+            msg = None
             if raw_msg is None:
                 continue
             try:
                 msg_data = self.db.decode_message(raw_msg.arbitration_id, raw_msg.data)
                 metadata = self.db.get_message_by_frame_id(raw_msg.arbitration_id)
                 msg = Msg(metadata.name, msg_data)
-                print('[CAN] {}: {}'.format(msg.name, msg.data))
-                self.messages.appendleft(msg)
-            except KeyError as e:
-                print('[CAN] UNKNOWN {}#{}'.format(e, list(raw_msg.data)))
+            except KeyError:
+                msg = Msg('UNKNOWN', {'data': list(raw_msg.data)})
+            print('[CAN] {}: {}'.format(msg.name, msg.data))
+            self.messages.appendleft(msg)

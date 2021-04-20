@@ -1,20 +1,17 @@
+from mu.harness.sub_sim import SubSim
 from mu.protogen import stores_pb2
-from mu.sims import sim
 
+ADT7476A_KEY = (stores_pb2.MuStoreType.ADT7476A, 0)
 
-class Adt7476a(sim.Sim):
-    def __init__(self):
-        self.speed = [0, 0, 0]
-        self.status = [0, 0, 0]
-
-    def handle_update(self, pm, proj, key):
-        stores = proj.stores
-        if (stores_pb2.MuStoreType.ADT7476A, 0) in stores:
-            adt = stores[(stores_pb2.MuStoreType.ADT7476A, 0)]
+class Adt7476a(SubSim):
+    def handle_store(self, store, key):
+        stores = self.parent.stores
+        if ADT7476A_KEY in stores:
+            adt = stores[ADT7476A_KEY]
             self.speed = [int(adt.speed[i]) for i in range(len(adt.speed)) if i < 3]
             self.status = [adt.status[i] for i in range(len(adt.status)) if i < 3]
 
-    def assert_store_values(self, proj, speed, status, channel):
+    def assert_values(self, speed, status, channel):
         # make sure the store has been initialized before calling this
         if speed / 0.39 - 1 < 0:
             real_speed = 0
