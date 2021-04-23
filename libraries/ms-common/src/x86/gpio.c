@@ -16,6 +16,7 @@
 #include "stores.pb-c.h"
 
 static MuGpioStore s_store = MU_GPIO_STORE__INIT;
+#define NUM_MU_GPIO_PINS (GPIO_PINS_PER_PORT * 3)  // We only use ports A, B, and C
 #endif
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];
@@ -27,7 +28,7 @@ static uint32_t prv_get_index(const GpioAddress *address) {
 
 #ifdef MU
 static void prv_export() {
-  for (uint16_t i = 0; i < GPIO_TOTAL_PINS; i++) {
+  for (uint16_t i = 0; i < NUM_MU_GPIO_PINS; i++) {
     s_store.state[i] = s_pin_settings[i].state;
   }
   store_export(MU_STORE_TYPE__GPIO, &s_store, NULL);
@@ -71,8 +72,8 @@ static void prv_init_store(void) {
     (FreeUnpackedFunc)mu_gpio_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  s_store.n_state = GPIO_TOTAL_PINS;
-  s_store.state = malloc(GPIO_TOTAL_PINS * sizeof(protobuf_c_boolean));
+  s_store.n_state = NUM_MU_GPIO_PINS;  // We only use ports A and B
+  s_store.state = malloc(NUM_MU_GPIO_PINS * sizeof(protobuf_c_boolean));
   store_register(MU_STORE_TYPE__GPIO, funcs, &s_store, NULL);
 }
 #endif
