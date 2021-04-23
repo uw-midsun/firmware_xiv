@@ -16,7 +16,7 @@
 #include "stores.pb-c.h"
 
 static MuGpioStore s_store = MU_GPIO_STORE__INIT;
-#define NUM_MU_GPIO_PINS (GPIO_PINS_PER_PORT * 2)  // We only use ports A and B
+#define NUM_MU_GPIO_PINS (GPIO_PINS_PER_PORT * 3)  // We only use ports A, B, and C
 #endif
 
 static GpioSettings s_pin_settings[GPIO_TOTAL_PINS];

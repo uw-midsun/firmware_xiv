@@ -10,11 +10,11 @@ BIN_DIR_FORMAT = os.path.join(REPO_DIR, 'build/bin/x86/{}')
 
 
 class StoreUpdate:
-    def __init__(self, msg, mask, store_type, key):
+    def __init__(self, msg, mask, key):
+        # Key is the tuple (store_type, store_key)
         self.msg = msg
         self.mask = mask
-        self.store_type = store_type
-        self.key = key  # use for update stores in sims, init conditions and pm.py
+        self.key = key
 
 
 class Project:
@@ -45,8 +45,8 @@ class Project:
 
     def write_store(self, store_update):
         update = stores_pb2.MuStoreUpdate()
-        update.key = store_update.key
-        update.type = store_update.store_type
+        update.type = store_update.key[0]
+        update.key = store_update.key[1]
         update.msg = store_update.msg.SerializeToString()
         update.mask = store_update.mask.SerializeToString()
         self.write(update.SerializeToString())

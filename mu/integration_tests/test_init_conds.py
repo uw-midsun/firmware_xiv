@@ -47,8 +47,7 @@ def pca9539r_init_conditions():
     pca9539r_update1 = StoreUpdate(
         pca9539r_msg,
         pca9539r_mask,
-        stores_pb2.MuStoreType.PCA9539R,
-        0x74)
+        PCA9539R_1_KEY)
 
     # initial states for second pca9539r
     pca9539r_msg2 = pca9539r_pb2.MuPca9539rStore()
@@ -64,7 +63,6 @@ def pca9539r_init_conditions():
     pca9539r_update2 = StoreUpdate(
         pca9539r_msg2,
         pca9539r_mask2,
-        stores_pb2.MuStoreType.PCA9539R,
-        0x75)
+        PCA9539R_2_KEY)
 
     return [pca9539r_update1, pca9539r_update2]

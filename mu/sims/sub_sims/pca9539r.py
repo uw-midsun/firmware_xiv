@@ -11,7 +11,7 @@ class Pca9539r(SubSim):
         msg.state[pin] = state
         mask = pca9539r_pb2.MuPca9539rStore()
         mask.state[pin] = 1
-        update = StoreUpdate(msg, mask, key[0], key[1])
+        update = StoreUpdate(msg, mask, key)
         self.parent.proj.write_store(update)
 
     def assert_pin_state(self, key, pin, state):

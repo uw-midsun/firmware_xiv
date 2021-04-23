@@ -12,7 +12,7 @@ class Mcp23008(SubSim):
         msg.state[pin] = state
         mask = mcp23008_pb2.MuMcp23008Store()
         mask.state[pin] = 1
-        update = StoreUpdate(msg, mask, stores_pb2.MuStoreType.MCP23008, 0)
+        update = StoreUpdate(msg, mask, key)
         self.parent.proj.write_store(update)
 
     def assert_pin_state(self, key, pin, state):
