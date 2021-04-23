@@ -24,7 +24,7 @@ class TestMpxeInit(int_test.IntTest):
 
     def test_initial_conditions(self):
         time.sleep(0.1)
-        sub_sim = self.board.sub_sims['Pca9539r']
+        sub_sim = self.board.sub_sim('pca9539r')
         for i in range(NUM_PCA9539R_PINS):
             sub_sim.assert_pin_state(PCA9539R_1_KEY, i, i%2)
         for i in range(NUM_PCA9539R_PINS):

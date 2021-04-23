@@ -15,10 +15,10 @@ class TestMcp23008(int_test.IntTest):
     def test_mcp23008(self):
         time.sleep(0.1)
         for x in range(NUM_MCP23008_PINS):  # test all pins init'd
-            self.board.sub_sims['Mcp23008'].assert_pin_state(MCP23008_KEY, x, 1)
+            self.board.sub_sim('mcp23008').assert_pin_state(MCP23008_KEY, x, 1)
         time.sleep(0.1)
         for x in range(NUM_MCP23008_PINS):  # test all pins toggled
-            self.board.sub_sims['Mcp23008'].assert_pin_state(MCP23008_KEY, x, 0)
+            self.board.sub_sim('mcp23008').assert_pin_state(MCP23008_KEY, x, 0)
 
 
 if __name__ == '__main__':

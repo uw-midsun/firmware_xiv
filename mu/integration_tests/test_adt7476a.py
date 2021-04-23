@@ -14,9 +14,9 @@ class TestAdt7476a(int_test.IntTest):
         for x in range(1, 3):
             time.sleep(0.1)
             # this is for ADT_PWM_PORT_1
-            self.board.sub_sims['Adt7476a'].assert_values(x * 10, 0, 0)
+            self.board.sub_sim('adt7476a').assert_values(x * 10, 0, 0)
             # this is for ADT_PWM_PORT_2
-            self.board.sub_sims['Adt7476a'].assert_values(0, 0, 1)
+            self.board.sub_sim('adt7476a').assert_values(0, 0, 1)
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ class BoardSim:
         self.sub_sims = {}
         if sub_sim_classes:
             for sub_sim_class in sub_sim_classes:
-                self.sub_sims[sub_sim_class.__name__] = sub_sim_class(self)
+                self.sub_sims[sub_sim_class.__name__.lower()] = sub_sim_class(self)
         self.stores = {}
         self.timers = []
         self.proj = project.Project(pm, self, proj_name)
@@ -29,6 +29,9 @@ class BoardSim:
             for cond in init_conds:
                 self.proj.write_store(cond)
         self.proj.send_command(stores_pb2.MuCmdType.FINISH_INIT_CONDS)
+
+    def sub_sim(self, sim_name):
+        return self.sub_sims[sim_name.lower()]
 
     def process_pipe(self):
         msg = self.proj.popen.stdout.read()

@@ -16,7 +16,7 @@ class TestPedal(int_test.IntTest):
         self.assert_can_data('PEDAL_OUTPUT', 'throttle_output', 0)
 
         # set throttle channel to 50
-        self.board.sub_sims['Ads1015'].update_reading(0, 50)
+        self.board.sub_sim('ads1015').update_reading(0, 50)
         time.sleep(0.3)
         # ads1015 reading is nonzero so throttle should be nonzero
         self.assert_can_data('PEDAL_OUTPUT', 'throttle_output', 50)

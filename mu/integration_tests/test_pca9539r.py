@@ -18,16 +18,16 @@ class TestPca9539r(int_test.IntTest):
     def test_pca9539r(self):
         time.sleep(0.1)
         for i in range(NUM_PCA9539R_PINS):
-            self.board.sub_sims['Pca9539r'].assert_pin_state(PCA9539R_KEY, i, 1)
+            self.board.sub_sim('pca9539r').assert_pin_state(PCA9539R_KEY, i, 1)
         time.sleep(0.1)
         for i in range(NUM_PCA9539R_PINS):
-            self.board.sub_sims['Pca9539r'].assert_pin_state(PCA9539R_KEY, i, 0)
+            self.board.sub_sim('pca9539r').assert_pin_state(PCA9539R_KEY, i, 0)
 
         value = 1
         for _ in range(1):
             time.sleep(0.5)
             for i in range(NUM_PCA9539R_PINS):
-                self.board.sub_sims['Pca9539r'].assert_pin_state(PCA9539R_KEY, i, value)
+                self.board.sub_sim('pca9539r').assert_pin_state(PCA9539R_KEY, i, value)
             value = not value
 
 
