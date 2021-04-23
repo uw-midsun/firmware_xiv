@@ -4,6 +4,7 @@ from mu.protogen import stores_pb2
 from mu.protogen import mcp23008_pb2
 
 NUM_MCP23008_PINS = 8
+MCP23008_KEY = (stores_pb2.MuStoreType.MCP23008, 0)
 
 
 class Mcp23008(SubSim):

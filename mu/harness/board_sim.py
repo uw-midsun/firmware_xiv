@@ -1,3 +1,4 @@
+import signal
 import threading
 
 from mu.harness import project
@@ -9,6 +10,8 @@ from mu.harness.project import StoreUpdate
 
 # Constants for stm32f0xx store keys
 GPIO_KEY = (stores_pb2.MuStoreType.GPIO, 0)
+
+POLL_LOCK_SIGNAL = signal.SIGUSR1
 
 class BoardSim:
     def __init__(self, pm, proj_name, sub_sim_classes=None, init_conds=None):
@@ -26,6 +29,18 @@ class BoardSim:
             for cond in init_conds:
                 self.proj.write_store(cond)
         self.proj.send_command(stores_pb2.MuCmdType.FINISH_INIT_CONDS)
+
+    def process_pipe(self):
+        msg = self.proj.popen.stdout.read()
+        store_info = decoder.decode_store_info(msg)
+        if store_info.type == stores_pb2.LOG:
+            mulog = stores_pb2.MuLog()
+            mulog.ParseFromString(store_info.msg)
+            log = mulog.log.decode().rstrip()
+            print(log)
+        else:
+            self.handle_info(store_info)
+        self.proj.popen.send_signal(POLL_LOCK_SIGNAL)
 
     def stop(self):
         self.proj.stop()

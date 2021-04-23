@@ -7,8 +7,8 @@ from mu.sims.sub_sims.pca9539r import Pca9539r, NUM_PCA9539R_PINS
 from mu.protogen import pca9539r_pb2
 from mu.protogen import stores_pb2
 
-PCA9539R_1_KEY = (stores_pb2.MuStoreType.PCA9539R, 0x74)
-PCA9539R_2_KEY = (stores_pb2.MuStoreType.PCA9539R, 0x75)
+PCA9539R_1_KEY = Pca9539r.addr_to_key(0x74)
+PCA9539R_2_KEY = Pca9539r.addr_to_key(0x75)
 
 
 class MuInitConds(BoardSim):

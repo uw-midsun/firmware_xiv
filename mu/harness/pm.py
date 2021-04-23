@@ -14,7 +14,6 @@ POLL_TIMEOUT = 0.5
 
 # pylint: disable=too-many-instance-attributes
 # signals are set in python and C, change in both places if changing
-POLL_LOCK_SIGNAL = signal.SIGUSR1
 PUSH_LOCK_SIGNAL = signal.SIGUSR2
 
 
@@ -54,7 +53,7 @@ class ProjectManager:
         sim.stop()
 
     def stop_all(self):
-        for sim in list(self.fd_to_sim.values()):
+        for sim in self.fd_to_sim.values():
             sim.stop()
 
     def signal_push_sem(self, signum, stack_frame):
@@ -85,19 +84,8 @@ class ProjectManager:
         def handle_poll_res(fd, event):
             if (event & select.POLLIN) == 0:
                 raise InvalidPollError
-            sim = self.fd_to_sim[fd]
-            # Currently assume all messages are storeinfo,
-            # might need other message types
-            msg = sim.proj.popen.stdout.read()
-            store_info = decoder.decode_store_info(msg)
-            if store_info.type == stores_pb2.LOG:
-                mulog = stores_pb2.MuLog()
-                mulog.ParseFromString(store_info.msg)
-                log = mulog.log.decode().rstrip()
-                print(log)
-            else:
-                sim.handle_info(store_info)
-            sim.proj.popen.send_signal(POLL_LOCK_SIGNAL)
+            sim = self.fd_to_sim[fd]          
+            sim.process_pipe()
 
         try:
             while not self.killed:
