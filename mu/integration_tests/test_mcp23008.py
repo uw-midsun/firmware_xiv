@@ -4,7 +4,6 @@ import time
 from mu.integration_tests import int_test
 from mu.sims.bms_carrier import BmsCarrier
 from mu.sims.sub_sims.mcp23008 import NUM_MCP23008_PINS, MCP23008_KEY
-from mu.protogen import stores_pb2
 
 
 class TestMcp23008(int_test.IntTest):

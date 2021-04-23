@@ -8,7 +8,7 @@ NUM_PCA9539R_PINS = 16
 
 class Pca9539r(SubSim):
     @classmethod
-    def addr_to_key(self, i2c_address):
+    def addr_to_key(cls, i2c_address):
         return (stores_pb2.MuStoreType.PCA9539R, i2c_address)
 
     def update_pin(self, key, pin, state):

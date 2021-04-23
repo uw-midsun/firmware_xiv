@@ -5,7 +5,6 @@ from mu.harness.project import StoreUpdate
 from mu.harness.board_sim import BoardSim
 from mu.sims.sub_sims.pca9539r import Pca9539r, NUM_PCA9539R_PINS
 from mu.protogen import pca9539r_pb2
-from mu.protogen import stores_pb2
 
 PCA9539R_1_KEY = Pca9539r.addr_to_key(0x74)
 PCA9539R_2_KEY = Pca9539r.addr_to_key(0x75)

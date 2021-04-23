@@ -1,6 +1,5 @@
 from mu.harness.board_sim import BoardSim
-from mu.sims.sub_sims.mcp2515 import Mcp2515, MCP2515_KEY
-from mu.protogen import stores_pb2
+from mu.sims.sub_sims.mcp2515 import Mcp2515
 
 
 class Mci(BoardSim):

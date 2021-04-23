@@ -6,9 +6,7 @@ import queue
 
 from mu.harness import canio
 from mu.harness.dir_config import REPO_DIR
-from mu.harness import decoder
 from mu.harness.board_sim import BoardSim
-from mu.protogen import stores_pb2
 
 POLL_TIMEOUT = 0.5
 
@@ -84,7 +82,7 @@ class ProjectManager:
         def handle_poll_res(fd, event):
             if (event & select.POLLIN) == 0:
                 raise InvalidPollError
-            sim = self.fd_to_sim[fd]          
+            sim = self.fd_to_sim[fd]
             sim.process_pipe()
 
         try:
