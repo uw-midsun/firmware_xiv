@@ -5,6 +5,7 @@ import signal
 import queue
 
 from mu.harness import canio
+from mu.harness import logger
 from mu.harness.dir_config import REPO_DIR
 from mu.harness.board_sim import BoardSim
 
@@ -35,7 +36,12 @@ class ProjectManager:
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
-        self.can = canio.CanIO()
+        self.can = canio.CanIO(self)
+
+        # setup logging
+        self.logger = logger.Logger()
+        self.log_thread = threading.Thread(target=self.log_all)
+        self.log_thread.start()
 
     def start(self, proj_name, sim_class=BoardSim):
         if proj_name not in self.proj_name_list:
@@ -95,6 +101,16 @@ class ProjectManager:
                     handle_poll_res(fd, event)
         except InvalidPollError:
             return
+
+    def log_all(self):
+        sub = logger.Subscriber('pm')
+        self.logger.subscribe(sub)
+        while not self.killed:
+            try:
+                print(sub.get().msg)
+            except logger.NoLog:
+                continue
+        self.logger.unsubscribe(sub)
 
     def end(self):
         self.killed = True
