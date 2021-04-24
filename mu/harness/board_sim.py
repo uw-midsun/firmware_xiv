@@ -40,7 +40,7 @@ class BoardSim:
             mulog = stores_pb2.MuLog()
             mulog.ParseFromString(store_info.msg)
             log = mulog.log.decode().rstrip()
-            print(log)
+            self.pm.logger.log(type(self).__name__, log)
         else:
             self.handle_info(store_info)
         self.proj.popen.send_signal(POLL_LOCK_SIGNAL)
