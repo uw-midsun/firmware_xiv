@@ -1,13 +1,10 @@
-from collections import deque
+from collections import deque, namedtuple
 import queue
 
 class NoLog(queue.Empty):
     pass
 
-class Log:
-    def __init__(self, tag, msg):
-        self.tag = tag
-        self.msg = msg
+Log = namedtuple('Log', ['tag', 'msg'])
 
 
 class Subscriber:
@@ -19,7 +16,7 @@ class Subscriber:
         self.q = queue.Queue()
 
     def put(self, log):
-        if not self.tags or log.tags in self.tags:
+        if not self.tags or log.tag in self.tags:
             self.q.put(log)
 
     def get(self):
@@ -44,12 +41,7 @@ class Logger:
             sub.put(l)
 
     def query(self, tag):
-        ret = []
-        for log in self.logs:
-            if log.tag == tag:
-                ret.append(log)
-
-        return ret
+        return [log for log in self.logs if log.tag == tag]
 
     def subscribe(self, sub):
         self.subs[sub.name] = sub
