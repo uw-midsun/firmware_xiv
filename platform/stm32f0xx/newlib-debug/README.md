@@ -22,8 +22,8 @@ Use the `STDLIB_DEBUG` option when building for STM32:
 ```bash
 make build PROJECT=centre_console STDLIB_DEBUG=true
 ```
-This seems to increase the binary size by ~5KB. Running on STM32 with the debug stdlib seems to work
-fine, but in production we should use the normal stdlib, if only to optimize for space.
+Running on STM32 with the debug stdlib seems to work fine, but in production we should use the
+normal stdlib, if only to optimize for space.
 
 ## How was it built?
 
@@ -39,8 +39,28 @@ cd newlib-build
 
 make
 ```
-Libraries taken from the `arm-none-eabi/thumb/newlib` directory, because our MCUs run the Thumb
-variant of ARM. Note that this actually builds newlib *nano*, which is a variant optimized for code
-size and which gcc-arm-embedded uses too.
+The libraries were taken from the `arm-none-eabi/thumb/v6-m/newlib` directory, because our MCU, the
+STM32F072, has an [ARM Cortex-M0][2] processor core, which supports the [ARMv6-M][3] instruction set
+architecture (ISA) in [Thumb][4] mode (an ARM variant which takes half the bytes per instruction).
+Note that this actually builds newlib *nano*, which is a newlib variant optimized for code size;
+it's what gcc-arm-embedded uses too.
+
+### What if we change from the STM32F072?
+
+Then these binaries (probably) won't work! To change to a different MCU:
+1. Figure out what processor core it uses ([Wikipedia has a good list][5]).
+2. Build newlib from source with the instructions above.
+3. Copy `lib[cgm].a` from the `newlib-build/arm-none-eabi/thumb/${arch}/newlib` directory, where
+   `${arch}` corresponds to the precise architecture name without `ARM`, e.g. `v6-m` for ARMv6-M.
+
+Note: there's also a generic `arm-none-eabi/thumb/newlib` directory which has binaries that work on
+all ARM versions. This *wasn't* used because it uses a [really awkward function returning convention][6]
+for compatibility where it pops the return address to some non-`lr` register like `r1` then calls
+`bx r1`, which the stack analyzer was falsely detecting as an indirect function call.
 
 [1]: https://sourceware.org/newlib/
+[2]: https://en.wikipedia.org/wiki/ARM_Cortex-M#Cortex-M0
+[3]: https://en.wikipedia.org/wiki/ARM_Cortex-M#ARMv6-M
+[4]: https://en.wikipedia.org/wiki/ARM_architecture#Thumb
+[5]: https://en.wikipedia.org/wiki/STM32
+[6]: https://stackoverflow.com/a/38770325
