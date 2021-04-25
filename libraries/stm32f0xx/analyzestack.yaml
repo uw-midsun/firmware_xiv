@@ -1,3 +1,5 @@
 remove:
   # stack analyzer detects InfiniteLoop in assembly as recursion, but it doesn't push to the stack
   - [TIM1_BRK_UP_TRG_COM_IRQHandler]
+  # from newlib <https://sourceware.org/newlib> findfp.c: __sfp and __sinit can't infinitely recurse
+  - [__sfp, '__sinit.part.0[../newlib-cygwin/newlib/libc/include/sys/reent.h]', __sfp]

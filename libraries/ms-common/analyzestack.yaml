@@ -1,3 +1,6 @@
 remove:
   # adc_read_converted can only recurse at most once
   - [adc_read_converted, adc_read_converted, adc_read_converted]
+  # qsort recurses to a depth of O(log2(n)) on an array of n elements
+  # we currently only use it in can_rx with n=10, so let's say we can't recurse 5 times or more
+  - [qsort, qsort, qsort, qsort, qsort]
