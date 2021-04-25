@@ -1772,9 +1772,11 @@ class StackAnalyzer(object):
         for _, text in sorted(text_list, key=lambda item: item[0]):
           print(text)
 
-    print('Unresolved annotation signatures:')
-    for sigtxt, error in failed_sigtxts:
-      print('    {}: {}'.format(sigtxt, error))
+    # MidSun change: the unresolved annotation signatures are almost entirely due to stripping
+    # unused functions, so we don't print them.
+    # print('Unresolved annotation signatures:')
+    # for sigtxt, error in failed_sigtxts:
+    #   print('    {}: {}'.format(sigtxt, error))
 
     if len(cycle_functions) > 0:
       print('There are cycles in the following function sets:')
