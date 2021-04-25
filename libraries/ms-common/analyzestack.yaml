@@ -1,3 +1,23 @@
+add:
+  bsearch[../newlib-cygwin/newlib/libc/search/bsearch.c:79]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  # unfortunately newlib's qsort calls the cmp arg in a ton of places
+  # all of these are necessary to resolve callsites to the comparison function qsort is passed
+  # TODO: make it less painful to annotate a qsort function
+  med3[../newlib-cygwin/newlib/libc/search/qsort.c:143]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  med3[../newlib-cygwin/newlib/libc/search/qsort.c:144]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  med3[../newlib-cygwin/newlib/libc/search/qsort.c:145]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  qsort[../newlib-cygwin/newlib/libc/search/qsort.c:199]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  qsort[../newlib-cygwin/newlib/libc/search/qsort.c:228]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  qsort[../newlib-cygwin/newlib/libc/search/qsort.c:238]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
+  qsort[../newlib-cygwin/newlib/libc/search/qsort.c:257]:
+    - prv_handler_comp[libraries/ms-common/src/can_rx.c]
 remove:
   # adc_read_converted can only recurse at most once
   - [adc_read_converted, adc_read_converted, adc_read_converted]
