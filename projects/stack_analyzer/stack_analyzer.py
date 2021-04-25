@@ -31,10 +31,12 @@
 """Statically analyze stack usage of EC firmware.
 
   Example:
-    extra/stack_analyzer/stack_analyzer.py \
-        --export_taskinfo ./build/elm/util/export_taskinfo.so \
-        --section RW \
-        ./build/elm/RW/ec.RW.elf
+    make analyzestack PROJECT=power_distribution
+  Or to run without rebuilding:
+    projects/stack_analyzer/stack_analyzer.py build/bin/stm32f0xx/power_distribution.elf \
+        --annotation projects/power_distribution/analyzestack.yaml \
+        --annotation libraries/ms-common/analyzestack.yaml
+        # etc with all relevant annotation files
 
 """
 
