@@ -30,32 +30,26 @@ static void prv_overtemp_callback(const GpioAddress *address, void *context) {
   fault_handler_raise_fault(EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, 0);
 }
 
-// Checks the temperature for one mppt and enables mppt pin accordingly
-// Will return true if full speed state has been enabled
+// Checks the temperature for one mppt
+// Will return true if full speed state should be enabled
 static bool prv_check_temperature(uint8_t thermistor) {
   bool is_set = false;
   data_store_get_is_set(DATA_POINT_TEMPERATURE(thermistor), &is_set);
   if (is_set) {
     uint32_t value = 0;
     data_store_get(DATA_POINT_TEMPERATURE(thermistor), &value);
-    if (value >= s_settings.full_speed_temp_threshold_dC) {
-      gpio_set_state(&s_settings.full_speed_addr, FULL_SPEED_STATE_ENABLED);
-      return true;
-    } else {
-      return false;
-    }
+    return (value >= s_settings.full_speed_temp_threshold_dC);
   }
   return false;
 }
 
 // Checks the temperature for all mppts and enables mppt pin accordingly
-// Will return true if full speed state has been enabled
+// Will return true if full speed state should be enabled
 static bool prv_are_mppts_overtemp(SolarMpptCount mppt_count) {
   for (Mppt mppt = 0; mppt < mppt_count; mppt++) {
     if (prv_check_temperature(mppt)) {
       return true;
     } else if (spv1020_is_overtemperature(DATA_POINT_MPPT_STATUS(mppt))) {
-      gpio_set_state(&s_settings.full_speed_addr, FULL_SPEED_STATE_ENABLED);
       return true;
     }
   }
@@ -101,10 +95,12 @@ StatusCode fan_control_init(FanControlSolarSettings *settings) {
 }
 
 // Processes the next event returning true if the event is a DATA_READY_EVENT and is processed
-// successfully. Returns false otherwise.
+// successfully. Also sets full speed pin high if an overtemp fault is detected.
+// Returns false otherwise.
 bool fan_control_process_event(Event *e) {
   if (e != NULL && e->id == DATA_READY_EVENT) {
     if (prv_are_mppts_overtemp(s_settings.mppt_count)) {
+      gpio_set_state(&s_settings.full_speed_addr, FULL_SPEED_STATE_ENABLED);
       return true;
     }
     gpio_set_state(&s_settings.full_speed_addr, FULL_SPEED_STATE_DISABLED);

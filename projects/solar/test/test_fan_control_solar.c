@@ -34,11 +34,13 @@ typedef enum {
 } TestCanEvent;
 
 // Declare static test variables
-static GpioAddress s_overtemp_addr;
-static GpioAddress s_fan_fail_addr;
-static GpioAddress s_full_speed_addr;
 static uint16_t s_full_speed_temp_threshold = 3;  // arbitrarily selected value for testing
-static SolarMpptCount s_mppt_count;
+static SolarMpptCount s_mppt_count = SOLAR_BOARD_6_MPPTS;
+
+// Test Board A with 6 MPPTs uses virtual port A
+static GpioAddress s_overtemp_addr = { .port = GPIO_PORT_A, .pin = 0 };
+static GpioAddress s_fan_fail_addr = { .port = GPIO_PORT_A, .pin = 1 };
+static GpioAddress s_full_speed_addr = { .port = GPIO_PORT_A, .pin = 2 };
 
 static GpioState s_gpio_state;
 static Event s_data_ready = { .id = DATA_READY_EVENT, .data = 0 };
@@ -68,22 +70,15 @@ void setup_test(void) {
   data_store_init();
   fault_handler_init(&s_settings);
 
-  // Test Board A with 6 MPPTs uses virtual port A
-  GpioAddress s_overtemp_addr = { .port = GPIO_PORT_A, .pin = 0 };
-  GpioAddress s_fan_fail_addr = { .port = GPIO_PORT_A, .pin = 1 };
-  GpioAddress s_full_speed_addr = { .port = GPIO_PORT_A, .pin = 2 };
-
-  SolarMpptCount s_mppt_count = SOLAR_BOARD_6_MPPTS;
-
   // Register Handlers to receive and unpack CAN message into static variables
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_ee_solar_fault_rx_handler,
                           NULL);
-}
 
-// Used to reinitialize static testing variable GpioState s_gpio_state
-void teardown_test(void) {
+  // Used to reinitialize static testing variable GpioState s_gpio_state
   s_gpio_state = GPIO_STATE_LOW;
 }
+
+void teardown_test(void) {}
 
 // Test that "overtemperature" & "fan fail" faults are raised properly
 void test_fan_fail_fault_handling(void) {
@@ -151,7 +146,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void) {
   for (Mppt i = 0; i < 5; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
   }
-  data_store_set(DATA_POINT_TEMPERATURE(6), ABOVE_TEMPERATURE_THRESHOLD_DC);
+  data_store_set(DATA_POINT_TEMPERATURE(5), ABOVE_TEMPERATURE_THRESHOLD_DC);
   fan_control_process_event(&s_data_ready);
 
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_SOLAR_FAN_EVENT_TX, TEST_CAN_SOLAR_FAN_EVENT_RX);
