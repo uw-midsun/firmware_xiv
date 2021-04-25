@@ -8,7 +8,7 @@
 #include "soft_timer.h"
 #include "wait.h"
 // Macros
-#define DELAY_TIME 500
+#define DELAY_TIME_MS 1000
 
 // Structure
 typedef struct Counters {
@@ -28,7 +28,7 @@ static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   storage->counter_b++;
   LOG_DEBUG("Counter B: %i\n", storage->counter_b);
   // Start the timer again
-  soft_timer_start_millis(DELAY_TIME, prv_timer_callback, storage, NULL);
+  soft_timer_start_millis(DELAY_TIME_MS, prv_timer_callback, storage, NULL);
 }
 
 int main(void) {
@@ -37,7 +37,7 @@ int main(void) {
   soft_timer_init();
   Counters storage = { 0 };
   // Timer call
-  soft_timer_start_millis(DELAY_TIME, prv_timer_callback, &storage, NULL);
+  soft_timer_start_millis(DELAY_TIME_MS, prv_timer_callback, &storage, NULL);
   // Keep the program running
   while (true) {
     wait();
