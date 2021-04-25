@@ -21,6 +21,7 @@ add:
 remove:
   # adc_read_converted can only recurse at most once
   - [adc_read_converted, adc_read_converted, adc_read_converted]
-  # qsort recurses to a depth of O(log2(n)) on an array of n elements
-  # we currently only use it in can_rx with n=10, so let's say we can't recurse 5 times or more
-  - [qsort, qsort, qsort, qsort, qsort]
+  # newlib's qsort is actually really smart and doesn't recurse too much
+  # see newlib/libc/search/qsort.c:148 in https://sourceware.org/git/newlib-cygwin.git
+  # we currently only use it in can_rx with 10 elems, so let's say we can't recurse more than once
+  - [qsort, qsort, qsort]
