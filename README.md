@@ -52,6 +52,12 @@ make pylint
 # Define a symbol from the command line - for example, setting the log level
 make test LIBRARY=ms-common DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_WARN"
 
+# Intall python requirements for every project
+make install_requirements
+
+# Note that for python make commands, you will likely need to be in virtualenv. After running install_requirements, run
+source .venv/bin/activate
+
 # Run all python tests within the scripts directory of a project
 # Append TEST=module to run a specific test
 make pytest PROJECT=test_project

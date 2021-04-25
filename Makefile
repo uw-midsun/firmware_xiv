@@ -30,8 +30,8 @@
 # 	make codegen_protos - Generates protobuf files 
 # 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86 
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
-#   make mpxe [TE] - Build and run the specified MPXE integration test, or all integration tests if TE is not defined
-#   make fastmpxe [TE] - Don't build and just run the MPXE integration test, or all if TE is not defined.
+#   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
+#   make fastmu [TE] - Don't build and just run the MU integration test, or all if TE is not defined.
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -48,13 +48,13 @@ PLATFORMS_DIR := platform
 LIB_DIR := libraries
 MAKE_DIR := make
 CODEGEN_DIR := codegen
-MPXE_DIR := mpxe
+MU_DIR := mu
 
-ifeq ($(MAKECMDGOALS),mpxe)
+ifeq ($(MAKECMDGOALS),mu)
 PLATFORM ?= x86
-DEFINE += MPXE
-IS_MPXE := TRUE
-$(call gen_mpxe)
+DEFINE += MU
+IS_MU := TRUE
+$(call gen_mu)
 else
 PLATFORM ?= stm32f0xx
 endif
@@ -98,26 +98,29 @@ else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
-# MPXE generated file directories
-MPXE_C_GEN_DIR := $(LIB_DIR)/mpxe-gen
-MPXE_PYTHON_GEN_DIR := $(MPXE_DIR)/protogen
-MPXE_PROTOS_DIR := $(MPXE_DIR)/protos
+# MU generated file directories
+MU_C_GEN_DIR := $(LIB_DIR)/mu-gen
+MU_PYTHON_GEN_DIR := $(MU_DIR)/protogen
+MU_PROTOS_DIR := $(MU_DIR)/protos
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
+
+# Virtualenv directory
+VENV_DIR := .venv
 
 # Please don't touch anything below this line
 ###################################################################################################
 
 # AUTOMATED ACTIONS
 
-# $(call gen_mpxe)
-define gen_mpxe
-$(shell mkdir -p $(MPXE_C_GEN_DIR)/inc $(MPXE_C_GEN_DIR)/src $(MPXE_PYTHON_GEN_DIR))
-$(shell cd $(MPXE_PROTOS_DIR) && protoc --c_out=$(ROOT)/$(MPXE_C_GEN_DIR)/inc *)
-$(shell cd $(MPXE_PROTOS_DIR) && protoc --python_out=$(ROOT)/$(MPXE_PYTHON_GEN_DIR) *)
-$(shell mv $(MPXE_C_GEN_DIR)/inc/*.c $(MPXE_C_GEN_DIR)/src)
-$(shell rm -r -f $(MPXE_C_GEN_DIR)/inc/mpxe)
+# $(call gen_mu)
+define gen_mu
+$(shell mkdir -p $(MU_C_GEN_DIR)/inc $(MU_C_GEN_DIR)/src $(MU_PYTHON_GEN_DIR))
+$(shell cd $(MU_PROTOS_DIR) && protoc --c_out=$(ROOT)/$(MU_C_GEN_DIR)/inc *)
+$(shell cd $(MU_PROTOS_DIR) && protoc --python_out=$(ROOT)/$(MU_PYTHON_GEN_DIR) *)
+$(shell mv $(MU_C_GEN_DIR)/inc/*.c $(MU_C_GEN_DIR)/src)
+$(shell rm -r -f $(MU_C_GEN_DIR)/inc/mu)
 endef
 
 # $(call include_lib,libname)
@@ -170,6 +173,12 @@ ROOT := $(shell pwd)
 
 ###################################################################################################
 
+# PIP ENVIRONMENT SETUP
+
+export PATH := $(ROOT)/$(VENV_DIR)/bin:$(PATH)
+
+###################################################################################################
+
 # MAKE PROJECT
 
 # Actually calls the make
@@ -185,8 +194,8 @@ CFLAGS += $(addprefix -D,$(DEFINE))
 # Allow depending on the value of DEFINE so we rebuild after changing defines
 $(eval $(call dependable_var,DEFINE))
 
-ifneq (,$(IS_MPXE))
-$(eval $(call gen_mpxe))
+ifneq (,$(IS_MU))
+$(eval $(call gen_mu))
 endif
 
 # Includes all libraries so make can find their targets
@@ -195,21 +204,21 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
-IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mpxe-gen
+IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
 # This uses regex
-IGNORE_PY_FILES := ./lint.py ./libraries/unity ./.venv
+IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
+FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
 FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
 FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
-# ignore MPXE since it has a different pylint
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mpxe/*.py'
-FIND_MOD_NEW_MPXE_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mpxe/*.py'
+# ignore MU since it has a different pylint
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mu/*.py' ':(exclude)$(VENV_DIR)/*'
+FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mu/*.py' ':(exclude)$(VENV_DIR)/*'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
@@ -229,28 +238,28 @@ PYLINT_DISABLE := \
 	import-error redefined-outer-name unused-argument \
 	too-few-public-methods duplicate-code no-self-use
 
-# Disable these additional pylint messages for MPXE:
-MPXE_PYLINT_DISABLE := \
+# Disable these additional pylint messages for MU:
+MU_PYLINT_DISABLE := \
 	missing-module-docstring missing-class-docstring \
 	missing-function-docstring invalid-name
 
 PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE))
-MPXE_PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE)) $(addprefix --disable=,$(MPXE_PYLINT_DISABLE))
+MU_PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE)) $(addprefix --disable=,$(MU_PYLINT_DISABLE))
 
-# Lints Python files, excluding MPXE generated files
+# Lints Python files, excluding MU generated files
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR), $(MPXE_DIR), $(CODEGEN_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR), $(MU_DIR), $(CODEGEN_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@find $(MAKE_DIR) $(PLATFORMS_DIR) $(CODEGEN_DIR)/scripts -iname "*.py" -print | xargs -r $(PYLINT)
 	@$(FIND:"*.[ch]"="*.py") | xargs -r $(PYLINT)
-	@find $(MPXE_DIR) -path $(MPXE_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(MPXE_PYLINT)
+	@find $(MU_DIR) -path $(MU_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(MU_PYLINT)
 
 .PHONY: pylint_quick
 pylint_quick:
 	@echo "Quick linting ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs -r $(PYLINT)
-	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r $(MPXE_PYLINT)
+	@$(FIND_MOD_NEW_MU_PY) | xargs -r $(MU_PYLINT)
 
 .PHONY: format_quick
 format_quick:
@@ -261,7 +270,7 @@ format_quick:
 pyformat_quick: 
 	@echo "Quick format on ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
-	@$(FIND_MOD_NEW_MPXE_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_MU_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -302,7 +311,7 @@ pytest:
 
 .PHONY: pytest_all
 pytest_all:
-	@for i in $$(find . -path ./.venv -prune -o -path ./mpxe/integration_tests -prune -o -name "test_*.py"); 			\
+	@for i in $$(find . -path ./$(VENV_DIR) -prune -o -path ./mu/integration_tests -prune -o -name "test_*.py"); 			\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
 	done	
@@ -344,9 +353,9 @@ new:
 clean:
 	@echo cleaning
 	@rm -rf $(BUILD_DIR)
-	@rm -f $(LIB_DIR)/mpxe-gen/inc/*.pb-c.h
-	@rm -f $(LIB_DIR)/mpxe-gen/src/*.pb-c.c
-	@rm -f $(MPXE_DIR)/protogen/*_pb2.py
+	@rm -f $(LIB_DIR)/mu-gen/inc/*.pb-c.h
+	@rm -f $(LIB_DIR)/mu-gen/src/*.pb-c.c
+	@rm -f $(MU_DIR)/protogen/*_pb2.py
 
 .PHONY: mock_can_data
 mock_can_data: socketcan
@@ -362,27 +371,30 @@ socketcan:
 	@sudo modprobe vcan
 	@sudo ip link add dev vcan0 type vcan || true
 	@sudo ip link set up vcan0 || true
-	@ip link show vcan0		
+	@ip link show vcan0
 
+# Note: ". .venv/bin/activate" is the /sh/ (and more portable way) of bash's "source .venv/bin/activate"
+# If you are getting a "virtualenv: Command not found" error, try running `sudo pip3 install virtualenv`
 .PHONY: install_requirements
 install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
-	@for i in $$(find . -name "requirements.txt"); 		\
-	do															\
-		pip install -r $$i;										\
-	done						
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
+	pip install -r requirements.txt
 
-MPXE_PROJS := 
--include $(MPXE_DIR)/integration_tests/deps.mk
+MU_PROJS := 
+-include $(MU_DIR)/integration_tests/deps.mk
 
-.PHONY: fastmpxe
-fastmpxe:
-	@python3 -m unittest discover -t $(MPXE_DIR) -s $(MPXE_DIR)/integration_tests -p "test_*$(TEST).py"
+.PHONY: fastmu
+fastmu:
+	@python3 -m unittest discover -t $(MU_DIR) -s $(MU_DIR)/integration_tests -p "test_*$(TEST).py"
 
-.PHONY: mpxe
-mpxe: $(MPXE_PROJS:%=$(BIN_DIR)/%) socketcan fastmpxe
+.PHONY: mu
+mu: $(MU_PROJS:%=$(BIN_DIR)/%) socketcan fastmu
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

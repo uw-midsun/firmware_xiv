@@ -79,6 +79,9 @@
     TEST_ASSERT_NOT_OK(event_process(&(e)));    \
   })
 
+StatusCode ms_test_helpers_time_assert(uint8_t value_to_compare, volatile uint8_t *value_to_test,
+                                       double time_ms);
+
 #define MS_TEST_HELPER_ACK_MESSAGE_WITH_STATUS(can_storage, message_id, acking_device, ack_status) \
   ({                                                                                               \
     CanMessage msg = { .type = CAN_MSG_TYPE_ACK,                                                   \
@@ -87,3 +90,6 @@
                        .data = (ack_status) };                                                     \
     TEST_ASSERT_OK(can_ack_handle_msg(&(can_storage).ack_requests, &msg));                         \
   })
+
+#define MS_TEST_ASSERT_EQUAL_AT_TIME(value_to_compare, value_to_test, time_ms) \
+  TEST_ASSERT_OK(ms_test_helpers_time_assert(value_to_compare, value_to_test, time_ms));
