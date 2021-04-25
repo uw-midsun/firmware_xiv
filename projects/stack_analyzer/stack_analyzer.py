@@ -1173,6 +1173,12 @@ class StackAnalyzer(object):
           invalid_sigtxts.add(src_sigtxt)
           continue
 
+        # MidSun extension: consider empty dest list as specifying that the indirect callsite
+        # doesn't call anything
+        if not dst_sigtxts:
+          add_rules[src_sig] = set()
+          continue
+
         for dst_sigtxt in dst_sigtxts:
           if isinstance(dst_sigtxt, dict):
             dst_sig = ExpandArray(dst_sigtxt)

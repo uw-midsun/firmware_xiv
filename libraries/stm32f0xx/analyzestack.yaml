@@ -1,3 +1,8 @@
+add:
+  # remove a bunch of false positives from newlib by assigning them no callsites
+  _printf_r[../newlib-cygwin/newlib/libc/stdio/printf.c:37]:
+  printf[../newlib-cygwin/newlib/libc/stdio/printf.c:59]:
+  _open[../newlib-cygwin/newlib/libc/sys/arm/syscalls.c:420]:
 remove:
   # stack analyzer detects InfiniteLoop in assembly as recursion, but it doesn't push to the stack
   - [TIM1_BRK_UP_TRG_COM_IRQHandler]
