@@ -23,7 +23,7 @@ void test_chip_id(void) {
   delay_us(half_second_ms);
   chip_Id_2 = chip_id_get();
   for (int i = 0; i < 2; i++) {
-    LOG_DEBUG("%d", chip_Id_1.id[i]);
+    LOG_DEBUG("%u", chip_Id_1.id[i]);
   }
   TEST_ASSERT_EQUAL_INT32_ARRAY(chip_Id_1.id, chip_Id_2.id, 2);
 }
