@@ -28,15 +28,16 @@ NEWLIB_DEBUG_DIR := $(PLATFORM_DIR)/newlib-debug
 CDEFINES := USE_STDPERIPH_DRIVER STM32F072 HSE_VALUE=32000000
 CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 					-Wno-unused-variable -Wno-unused-parameter -Wsign-conversion -Wpointer-arith \
-					-ffunction-sections -fdata-sections --specs=nosys.specs --specs=nano.specs \
+					-ffunction-sections -fdata-sections \
 					$(ARCH_CFLAGS) $(addprefix -D,$(CDEFINES))
 
 # Linker flags - linker script set per target
-LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority -lm
+LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority -lm \
+           --specs=nosys.specs --specs=nano.specs
 
 ifeq (true,$(STDLIB_DEBUG))
-CFLAGS := $(filter-out --specs=nosys.specs --specs=nano.specs,$(CFLAGS)) -nostdlib
-LDFLAGS += -L$(NEWLIB_DEBUG_DIR) -lc
+CFLAGS += -nostdlib
+LDFLAGS := $(filter-out --specs=nosys.specs --specs=nano.specs,$(LDFLAGS)) -L$(NEWLIB_DEBUG_DIR) -lc
 endif
 
 # temporary build mechanism for applications: set DEFAULT_LINKER_SCRIPT=stm32f0_application.ld
