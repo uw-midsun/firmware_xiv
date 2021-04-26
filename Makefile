@@ -32,6 +32,7 @@
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
 #   make fastmu [TE] - Don't build and just run the MU integration test, or all if TE is not defined.
+#   make analyzestack [PR] - Analyzes the maximum stack size of the specified project
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
