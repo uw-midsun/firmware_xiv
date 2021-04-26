@@ -32,8 +32,8 @@ CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 					$(ARCH_CFLAGS) $(addprefix -D,$(CDEFINES))
 
 # Linker flags - linker script set per target
-LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority -lm \
-           --specs=nosys.specs --specs=nano.specs
+LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
+           --specs=nosys.specs --specs=nano.specs -lm
 
 ifeq (true,$(STDLIB_DEBUG))
 CFLAGS += -nostdlib
