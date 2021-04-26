@@ -30,7 +30,7 @@
 # pylint: skip-file
 
 
-"""Statically analyze stack usage of EC firmware.
+"""Statically analyze stack usage of a firmware project.
 
   Example:
     make analyzestack PROJECT=power_distribution
