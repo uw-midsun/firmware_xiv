@@ -27,6 +27,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# pylint: skip-file
+
 
 """Statically analyze stack usage of EC firmware.
 
@@ -732,9 +734,9 @@ class StackAnalyzer(object):
     FUNCTION_PREFIX_NAME_RE = re.compile(
         r'^(?P<name>[{0}]+)([^{0}].*)?$'.format(C_FUNCTION_NAME))
 
-    # Any symbol matching this will be interpreted as an alias for the line on which it appears instead
-    # of a function name. Aliases can be used in annotations to reference the
-    # line they're defined on.
+    # Any symbol matching this will be interpreted as an alias for the line on which it appears
+    # instead of a function name. Aliases can be used in annotations to reference the line they're
+    # defined on.
     ALIAS_SYMBOL_RE = re.compile(r'^__ANALYZESTACK_ALIAS\$(?P<alias>[^\$]*)$')
 
     # Errors of annotation resolving.
@@ -1176,7 +1178,7 @@ class StackAnalyzer(object):
                     invalid_sigtxts.add(src_sigtxt)
                     continue
 
-                # MidSun extension: consider empty dest list as specifying that the indirect callsite
+                # MidSun extension: consider empty dst list as specifying that the indirect callsite
                 # doesn't call anything
                 if not dst_sigtxts:
                     add_rules[src_sig] = set()
@@ -1696,7 +1698,7 @@ class StackAnalyzer(object):
                                                 eliminated_addrs)
         cycle_functions = self.AnalyzeCallGraph(function_map, remove_list)
 
-        # The theoretical worst-case stack usage occurs when all interrupts occur at the maximum stack
+        # The theoretical worst-case stack usage occurs when all interrupts occur at the max stack
         # usage of the entrypoint task with the largest max stack usage. We print that scenario.
         largest_entry_task = max(
             reversed(self.entry_tasks),
@@ -1705,7 +1707,7 @@ class StackAnalyzer(object):
         nested_tasks = [largest_entry_task] + self.isr_tasks
 
         # Print the results of task-aware stack analysis.
-        print('Worst-case stack usage (each interrupt fires when last ISR is at largest stack use):')
+        print('Worst-case stack usage (each interrupt fires when last ISR is at max stack use):')
         extra_stack_frame = self.annotation.get('exception_frame_size',
                                                 DEFAULT_EXCEPTION_FRAME_SIZE)
         worst_case_stack_usage = 0
@@ -1716,11 +1718,12 @@ class StackAnalyzer(object):
                     task.name,
                     routine_func.stack_max_usage))
             else:
-                print('Nested interrupt: {}, Max size: {} ({} + {} context-switching overhead)'.format(
-                    task.name,
-                    routine_func.stack_max_usage + extra_stack_frame,
-                    routine_func.stack_max_usage,
-                    extra_stack_frame))
+                print('Nested interrupt: {}, Max size: {} ({} + {} context-switching overhead)'
+                    .format(
+                        task.name,
+                        routine_func.stack_max_usage + extra_stack_frame,
+                        routine_func.stack_max_usage,
+                        extra_stack_frame))
                 worst_case_stack_usage += extra_stack_frame
 
             worst_case_stack_usage += routine_func.stack_max_usage

@@ -16,7 +16,7 @@ This will clean your build files, rebuild the project for STM32 with debug symbo
 `STDLIB_DEBUG=true`, see platform/stm32f0xx/newlib-debug/README.md), then run `stack_analyzer.py` on
 the build output. It will print a ton of output like this:
 ```
-Worst-case stack usage (each interrupt fires when last ISR is at largest stack use):
+Worst-case stack usage (each interrupt fires when last ISR is at max stack use):
 Entry: main, Max size: 1068
 Call Trace:
     main (144) [projects/power_distribution/src/main.c:109] 8004c08
