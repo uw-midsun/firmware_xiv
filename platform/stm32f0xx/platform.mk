@@ -69,7 +69,7 @@ babydriver:
 	@make program PROJECT=baby_driver
 	@python3 -i $(BABYDRIVER_DIR)/repl_setup.py --channel $(CHANNEL)
 
-ANALYZESTACK_DIR := $(PROJ_DIR)/stack_analyzer
+ANALYZESTACK_DIR := $(PLATFORM_DIR)/scripts/stack_analyzer
 ANNOTATION_FILE := analyzestack.yaml
 
 # We use the $(T)_DIR variables built up by the build to include annotation files from all dependencies.
