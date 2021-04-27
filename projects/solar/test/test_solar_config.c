@@ -83,12 +83,6 @@ void test_initializing_fault_monitor_config(void) {
   TEST_ASSERT_OK(fault_monitor_init(config_get_fault_monitor_settings(SOLAR_BOARD_6_MPPTS)));
 }
 
-// Test that we can initialize the configs returned by |config_fan_control_settings|.
-void test_initializing_fan_control_config(void) {
-  TEST_ASSERT_OK(fan_control_init(config_get_fan_control_settings(SOLAR_BOARD_5_MPPTS)));
-  TEST_ASSERT_OK(fan_control_init(config_get_fan_control_settings(SOLAR_BOARD_6_MPPTS)));
-}
-
 // Test that we can initialize the config returned by |config_get_fault_handler_settings|.
 void test_initializing_fault_handler_config_5_mppts(void) {
   TEST_ASSERT_OK(fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_5_MPPTS)));
