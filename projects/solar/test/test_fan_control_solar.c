@@ -232,6 +232,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void) {
   // Set 6th mppt status to overtemperature
   data_store_set(DATA_POINT_MPPT_STATUS(5), SPV1020_OVT_MASK);
 
+  // No data set for mppt thermoresistors intentionally
   fan_control_process_event(&s_data_ready);
 
   // Full Speed pin should be low to enable full speed
