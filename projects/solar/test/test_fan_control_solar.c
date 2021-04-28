@@ -52,13 +52,12 @@ static FaultHandlerSettings s_settings = {
 };
 
 // To receive rx_fault_monitor info
-static CanMessage s_can_msg;
 static uint8_t s_ee_solar_fault;
 static uint8_t s_fault_data;
 
 static StatusCode prv_ee_solar_fault_rx_handler(const CanMessage *msg, void *context,
                                                 CanAckStatus *ack_reply) {
-  CAN_UNPACK_SOLAR_FAULT_6_MPPTS(&s_can_msg, &s_ee_solar_fault, &s_fault_data);
+  CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &s_ee_solar_fault, &s_fault_data);
   return STATUS_CODE_OK;
 }
 
@@ -126,8 +125,8 @@ void test_overtemp_fault_handling(void) {
 
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_SOLAR_FAN_EVENT_TX, TEST_CAN_SOLAR_FAN_EVENT_RX);
 
-  TEST_ASSERT_EQUAL_MESSAGE(EE_SOLAR_FAULT_OVERTEMPERATURE, s_ee_solar_fault,
-                            "Was expecting EE_SOLAR_FAULT_OVERTEMPERATURE instead");
+  TEST_ASSERT_EQUAL_MESSAGE(EE_SOLAR_FAULT_FAN_OVERTEMPERATURE, s_ee_solar_fault,
+                            "Was expecting EE_SOLAR_FAULT_FAN_OVERTEMPERATURE instead");
   TEST_ASSERT_EQUAL_INT8(0, s_fault_data);
 }
 
