@@ -1,4 +1,3 @@
-// Contains the FanControlSolarSettings struc and declarations for functions to be defined here
 #include "fan_control_solar.h"
 
 #include <stdbool.h>
@@ -32,13 +31,28 @@ static void prv_overtemp_callback(const GpioAddress *address, void *context) {
 
 // Checks the temperature for one mppt
 // Will return true if full speed state should be enabled
+// If value is not set, it returns false
 static bool prv_check_temperature(uint8_t thermistor) {
   bool is_set = false;
   data_store_get_is_set(DATA_POINT_TEMPERATURE(thermistor), &is_set);
   if (is_set) {
     uint32_t value = 0;
     data_store_get(DATA_POINT_TEMPERATURE(thermistor), &value);
-    return (value >= s_settings.full_speed_temp_threshold_dC);
+    return value >= s_settings.full_speed_temp_threshold_dC;
+  }
+  return false;
+}
+
+// Checks the status for one mppt
+// Will return true if full speed state should be enabled
+// If value is not set, it returns false
+static bool prv_check_status(uint8_t thermistor) {
+  bool is_set = false;
+  data_store_get_is_set(DATA_POINT_MPPT_STATUS(thermistor), &is_set);
+  if (is_set) {
+    uint32_t status_value = 0;
+    data_store_get(DATA_POINT_MPPT_STATUS(thermistor), &status_value);
+    return spv1020_is_overtemperature(status_value);
   }
   return false;
 }
@@ -47,11 +61,9 @@ static bool prv_check_temperature(uint8_t thermistor) {
 // Will return true if full speed state should be enabled
 static bool prv_are_mppts_overtemp(SolarMpptCount mppt_count) {
   for (Mppt mppt = 0; mppt < mppt_count; mppt++) {
-    uint32_t status_value = 0;
-    data_store_get(DATA_POINT_MPPT_STATUS(mppt), &status_value);
     if (prv_check_temperature(mppt)) {
       return true;
-    } else if (spv1020_is_overtemperature(status_value)) {
+    } else if (prv_check_status(mppt)) {
       return true;
     }
   }

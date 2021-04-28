@@ -1,6 +1,6 @@
 #pragma once
 
-// Handles solar fault events including overtemperature and fail fail faults. Also drives full speed
+// Handles solar fault events including overtemperature and fail faults. Also drives full speed
 // pin accordingly. Requires GPIO, interrupts, soft timers, the event queue, CAN, and data_store,
 // and fault_handler to be initialized.
 
