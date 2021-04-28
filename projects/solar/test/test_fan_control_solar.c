@@ -25,6 +25,7 @@
 // Any defines here
 #define BELOW_TEMPERATURE_THRESHOLD_DC 2
 #define ABOVE_TEMPERATURE_THRESHOLD_DC 4
+#define SPV1020_NOMINAL_MASK 0b0000000
 
 typedef enum {
   TEST_CAN_SOLAR_FAN_EVENT_TX = 0,
@@ -74,8 +75,8 @@ void setup_test(void) {
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_ee_solar_fault_rx_handler,
                           NULL);
 
-  // Used to reinitialize static testing variable GpioState s_gpio_state
-  s_gpio_state = GPIO_STATE_LOW;
+  // Used to reinitialize static testing variable GpioState s_gpio_state (default inactive high)
+  s_gpio_state = GPIO_STATE_HIGH;
 }
 
 void teardown_test(void) {}
@@ -144,6 +145,11 @@ void test_fan_overtemp_fault_fullspeed_handling_case_belowtemp(void) {
   // Ensure fan_control_init works
   TEST_ASSERT_OK(fan_control_init(&settings));
 
+  // Initialize all mppt statuses to nominal
+  for (int i = 0; i < 6; i++) {
+    data_store_set(DATA_POINT_MPPT_STATUS(i), SPV1020_NOMINAL_MASK);
+  }
+
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
   }
@@ -164,6 +170,11 @@ void test_fan_overtemp_fault_fullspeed_handling_case_oneabovetemp(void) {
     .mppt_count = s_mppt_count,
   };
   TEST_ASSERT_OK(fan_control_init(&settings));
+
+  // Initialize all mppt statuses to nominal
+  for (int i = 0; i < 6; i++) {
+    data_store_set(DATA_POINT_MPPT_STATUS(i), SPV1020_NOMINAL_MASK);
+  }
 
   for (Mppt i = 0; i < 5; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
@@ -187,6 +198,11 @@ void test_fan_overtemp_fault_fullspeed_handling_case_multipleabovetemp(void) {
   };
   TEST_ASSERT_OK(fan_control_init(&settings));
 
+  // Initialize all mppt statuses to nominal
+  for (int i = 0; i < 6; i++) {
+    data_store_set(DATA_POINT_MPPT_STATUS(i), SPV1020_NOMINAL_MASK);
+  }
+
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), ABOVE_TEMPERATURE_THRESHOLD_DC);
   }
@@ -208,6 +224,11 @@ void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void) {
   };
   TEST_ASSERT_OK(fan_control_init(&settings));
 
+  // Initialize all mppt statuses to nominal
+  for (int i = 0; i < 6; i++) {
+    data_store_set(DATA_POINT_MPPT_STATUS(i), SPV1020_NOMINAL_MASK);
+  }
+
   // Set 6th mppt status to overtemperature
   data_store_set(DATA_POINT_MPPT_STATUS(5), SPV1020_OVT_MASK);
 
@@ -218,7 +239,7 @@ void test_fan_overtemp_fault_fullspeed_handling_case_overtempstatus(void) {
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_gpio_state);
 }
 
-// Test that full_speed set inactive (high) when MPPTs are no longer overtemp
+// Test that full_speed set inactive (high) when MPPTs no longer detecting overtemp
 void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void) {
   FanControlSolarSettings settings = {
     .overtemp_addr = s_overtemp_addr,
@@ -228,6 +249,11 @@ void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void) {
     .mppt_count = s_mppt_count,
   };
   TEST_ASSERT_OK(fan_control_init(&settings));
+
+  // Initialize all mppt statuses to nominal
+  for (int i = 0; i < 6; i++) {
+    data_store_set(DATA_POINT_MPPT_STATUS(i), SPV1020_NOMINAL_MASK);
+  }
 
   // First trigger full_speed pin to go active
   for (Mppt i = 0; i < 6; i++) {
@@ -243,6 +269,40 @@ void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovertemp(void) {
   for (Mppt i = 0; i < 6; i++) {
     data_store_set(DATA_POINT_TEMPERATURE(i), BELOW_TEMPERATURE_THRESHOLD_DC);
   }
+  fan_control_process_event(&s_data_ready);
+
+  // Test that full_speed pin is inactive (high)
+  gpio_get_state(&s_full_speed_addr, &s_gpio_state);
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_gpio_state);
+}
+
+// Test that full_speed set inactive (high)
+// when MPPTs no longer detecting overtemp status
+void test_fan_overtemp_fault_fullspeed_handling_case_nolongerovtempstatus(void) {
+  FanControlSolarSettings settings = {
+    .overtemp_addr = s_overtemp_addr,
+    .fan_fail_addr = s_fan_fail_addr,
+    .full_speed_addr = s_full_speed_addr,
+    .full_speed_temp_threshold_dC = s_full_speed_temp_threshold,
+    .mppt_count = s_mppt_count,
+  };
+  TEST_ASSERT_OK(fan_control_init(&settings));
+
+  // Initialize all mppt statuses to nominal
+  for (int i = 0; i < 6; i++) {
+    data_store_set(DATA_POINT_MPPT_STATUS(i), SPV1020_NOMINAL_MASK);
+  }
+
+  // First trigger full_speed pin to go active
+  data_store_set(DATA_POINT_MPPT_STATUS(5), SPV1020_OVT_MASK);
+  fan_control_process_event(&s_data_ready);
+
+  // Test that the full_speed pin is indeed active low
+  gpio_get_state(&s_full_speed_addr, &s_gpio_state);
+  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_gpio_state);
+
+  // Set status to nominal
+  data_store_set(DATA_POINT_MPPT_STATUS(5), SPV1020_NOMINAL_MASK);
   fan_control_process_event(&s_data_ready);
 
   // Test that full_speed pin is inactive (high)

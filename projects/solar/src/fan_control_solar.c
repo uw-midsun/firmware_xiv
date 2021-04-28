@@ -38,8 +38,10 @@ static bool prv_check_temperature(uint8_t thermistor) {
   if (is_set) {
     uint32_t value = 0;
     data_store_get(DATA_POINT_TEMPERATURE(thermistor), &value);
+    LOG_WARN("Data was set and checked\n");
     return (value >= s_settings.full_speed_temp_threshold_dC);
   }
+  LOG_WARN("Data was not set\n");
   return false;
 }
 
@@ -48,11 +50,14 @@ static bool prv_check_temperature(uint8_t thermistor) {
 static bool prv_are_mppts_overtemp(SolarMpptCount mppt_count) {
   for (Mppt mppt = 0; mppt < mppt_count; mppt++) {
     if (prv_check_temperature(mppt)) {
+      LOG_WARN("Detected mppt overtemp\n");
       return true;
     } else if (spv1020_is_overtemperature(DATA_POINT_MPPT_STATUS(mppt))) {
+      LOG_WARN("Detected overtemperature status\n");
       return true;
     }
   }
+  LOG_WARN("Returned false\n");
   return false;
 }
 
