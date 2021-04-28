@@ -11,23 +11,23 @@
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
 
-#ifdef MPXE
+#ifdef MU
 #include <stdlib.h>
 
 #include "mcp2515.pb-c.h"
 #include "store.h"
 #include "stores.pb-c.h"
 
-static Mcp2515Storage *s_mpxe_storage;
-static MxMcp2515Store s_store = MX_MCP2515_STORE__INIT;
+static Mcp2515Storage *s_mu_storage;
+static MuMcp2515Store s_store = MU_MCP2515_STORE__INIT;
 
 static void prv_export() {
-  store_export(MX_STORE_TYPE__MCP2515, &s_store, NULL);
+  store_export(MU_STORE_TYPE__MCP2515, &s_store, NULL);
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
-  MxMcp2515Store *msg = mx_mcp2515_store__unpack(NULL, msg_buf.len, msg_buf.data);
-  MxMcp2515Store *mask = mx_mcp2515_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  MuMcp2515Store *msg = mu_mcp2515_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuMcp2515Store *mask = mu_mcp2515_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
   // Harness should never change tx values
   if (mask->rx_id != 0) {
@@ -35,26 +35,26 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     s_store.rx_extended = msg->rx_extended;
     s_store.rx_dlc = msg->rx_dlc;
     s_store.rx_data = msg->rx_data;
-    if (s_mpxe_storage->rx_cb != NULL) {
-      s_mpxe_storage->rx_cb(msg->rx_id, msg->rx_extended, msg->rx_data, msg->rx_dlc,
-                            s_mpxe_storage->context);
+    if (s_mu_storage->rx_cb != NULL) {
+      s_mu_storage->rx_cb(msg->rx_id, msg->rx_extended, msg->rx_data, msg->rx_dlc,
+                          s_mu_storage->context);
     }
   }
 
-  mx_mcp2515_store__free_unpacked(msg, NULL);
-  mx_mcp2515_store__free_unpacked(mask, NULL);
+  mu_mcp2515_store__free_unpacked(msg, NULL);
+  mu_mcp2515_store__free_unpacked(mask, NULL);
 }
 
 static void prv_init_store(void) {
   store_config();
   StoreFuncs funcs = {
-    (GetPackedSizeFunc)mx_mcp2515_store__get_packed_size,
-    (PackFunc)mx_mcp2515_store__pack,
-    (UnpackFunc)mx_mcp2515_store__unpack,
-    (FreeUnpackedFunc)mx_mcp2515_store__free_unpacked,
+    (GetPackedSizeFunc)mu_mcp2515_store__get_packed_size,
+    (PackFunc)mu_mcp2515_store__pack,
+    (UnpackFunc)mu_mcp2515_store__unpack,
+    (FreeUnpackedFunc)mu_mcp2515_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  store_register(MX_STORE_TYPE__MCP2515, funcs, &s_store, NULL);
+  store_register(MU_STORE_TYPE__MCP2515, funcs, &s_store, NULL);
 }
 #endif
 
@@ -206,9 +206,9 @@ static void prv_handle_int(const GpioAddress *address, void *context) {
 }
 
 StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
-#ifdef MPXE
+#ifdef MU
   prv_init_store();
-  s_mpxe_storage = storage;
+  s_mu_storage = storage;
 #endif
   storage->spi_port = settings->spi_port;
   storage->rx_cb = settings->rx_cb;
@@ -380,7 +380,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   // Send message
   uint8_t send_payload[] = { MCP2515_CMD_RTS | tx_buf->rts };
   spi_exchange(storage->spi_port, send_payload, sizeof(send_payload), NULL, 0);
-#ifdef MPXE
+#ifdef MU
   s_store.tx_id = id;
   s_store.tx_data = data;
   prv_export();
