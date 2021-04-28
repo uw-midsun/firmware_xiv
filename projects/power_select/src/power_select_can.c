@@ -2,8 +2,8 @@
 
 static CanAckStatus prv_confirm_aux(uint16_t fault_bitset, uint8_t valid_bitset) {
   if (!(valid_bitset & 1 << POWER_SELECT_AUX_VALID) ||
-      fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT ||
-      fault_bitset & 1 << POWER_SELECT_AUX_OVERVOLTAGE) {
+      (fault_bitset & 1 << POWER_SELECT_AUX_OVERCURRENT) ||
+      (fault_bitset & 1 << POWER_SELECT_AUX_OVERVOLTAGE)) {
     return CAN_ACK_STATUS_INVALID;
   } else {
     return CAN_ACK_STATUS_OK;
@@ -12,8 +12,8 @@ static CanAckStatus prv_confirm_aux(uint16_t fault_bitset, uint8_t valid_bitset)
 
 static CanAckStatus prv_confirm_dcdc(uint16_t fault_bitset, uint8_t valid_bitset) {
   if (!(valid_bitset & 1 << POWER_SELECT_DCDC_VALID) ||
-      fault_bitset & 1 << POWER_SELECT_DCDC_OVERCURRENT ||
-      fault_bitset & 1 << POWER_SELECT_DCDC_OVERVOLTAGE) {
+      (fault_bitset & 1 << POWER_SELECT_DCDC_OVERCURRENT) ||
+      (fault_bitset & 1 << POWER_SELECT_DCDC_OVERVOLTAGE)) {
     return CAN_ACK_STATUS_INVALID;
   } else {
     return CAN_ACK_STATUS_OK;

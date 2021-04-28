@@ -1,6 +1,7 @@
 #include "power_select.h"
 #include "power_select_events.h"
 
+#include "can_msg_defs.h"
 #include "delay.h"
 #include "exported_enums.h"
 #include "gpio.h"
@@ -85,9 +86,10 @@ StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *read
   return STATUS_CODE_INVALID_ARGS;
 }
 
+static GpioState s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS + 1];
+
 // Set value returned on GPIO read
 // Generally used for valid pins
-static GpioState s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS + 1];
 StatusCode TEST_MOCK(gpio_get_state)(GpioAddress *address, GpioState *input_state) {
   // Find correct reading to return
   for (int i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {

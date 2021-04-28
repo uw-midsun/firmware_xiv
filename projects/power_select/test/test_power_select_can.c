@@ -3,6 +3,7 @@
 #include "power_select_can.h"
 #include "power_select_events.h"
 
+#include "can_msg_defs.h"
 #include "controller_board_pins.h"
 #include "delay.h"
 #include "gpio.h"

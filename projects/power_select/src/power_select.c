@@ -1,6 +1,4 @@
 #include "power_select.h"
-#include "gpio.h"
-#include "log.h"
 
 static PowerSelectStorage s_storage;
 
