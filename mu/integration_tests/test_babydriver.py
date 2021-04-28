@@ -23,15 +23,16 @@ class TestBabyDriver(int_test.IntTest):
 
     def test_adc_read(self):
         time.sleep(1)
-        adc_read.adc_read(port='A', pin=6, raw=False)
+        adc_read.adc_read(port='A', pin=6, raw=True)
 
     def test_gpio_get(self):
         gpio_get.gpio_get('A', 6)
 
     def test_gpio_set(self):
-        self.babydriver.sim.get_gpio(proj=self.babydriver, port='A', pin=5)
+        #self.babydriver.set_gpio(port='A', pin=5, state=False)
+        #time.sleep(1)
         gpio_set.gpio_set('A', 5, True)
-        self.babydriver.sim.get_gpio(proj=self.babydriver, port='A', pin=5)
+        self.babydriver.get_gpio(port='A', pin=5)
 
     def test_gpio_interrupts(self):
         gpio_interrupts.register_gpio_interrupt(port='A', pin=3)
