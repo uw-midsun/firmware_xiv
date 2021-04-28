@@ -6,7 +6,7 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common
+$(T)_DEPS := ms-common codegen-tooling
 
 $(T)_test_power_select_MOCKS := adc_read_converted_pin gpio_get_state gpio_set_state
 $(T)_test_power_select_can_MOCKS := power_select_get_fault_bitset power_select_get_valid_bitset
