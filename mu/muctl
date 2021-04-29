@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TOP_DIR=~/shared/firmware_xiv
 exec env PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/ctl/control.py" "$@"

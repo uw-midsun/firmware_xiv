@@ -1,4 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 
 TOP_DIR=~/shared/firmware_xiv
-exec env PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/srv/server.py" "$@"
+
+if [[ $* == *stop* ]]
+then
+    # find the server process and grab just the pid
+    pid=$(ps ax | grep mu/*/server.py | cut -d " " -f1)
+    kill -9 $pid
+    exit
+fi
+
+if [[ $* == *-bg* ]]
+then
+    echo "Starting musrv in background"
+    env _TAG="MUSRV" PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/srv/server.py" "$@" > /dev/null & disown
+else
+    echo "Starting musrv with output"
+    exec env PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/srv/server.py" "$@"
+fi

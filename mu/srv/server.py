@@ -3,6 +3,7 @@ import socketserver
 import threading
 
 from mu.srv.handler import ReqHandler
+from mu.srv.config import get_config
 from mu.harness.pm import ProjectManager
 
 TCP_PORT = 8989
@@ -10,19 +11,21 @@ TCP_PORT = 8989
 class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     def __init__(self, address, handler_class):
         super().__init__(address, handler_class)
-        self.pm = ProjectManager()
-    
-    def server_close(self):
-        self.pm.stop_all()
-        super().server_close()
+        config = get_config()
+        self.pm = ProjectManager(bus_name=config.canbus)
+
+    def stop(self):
+        self.pm.end()
+        self.server_close()
 
 
 if __name__ == '__main__':
     address = ('', TCP_PORT)
-    httpd = ThreadedServer(address, ReqHandler)
+    server = ThreadedServer(address, ReqHandler)
+    print('now serving musrv on port', TCP_PORT)
     try:
-        print('now serving musrv on port', TCP_PORT)
-        httpd.serve_forever()
+        server.serve_forever()
     except KeyboardInterrupt:
         pass
-    httpd.server_close()
+    print('closing musrv')
+    server.stop()
