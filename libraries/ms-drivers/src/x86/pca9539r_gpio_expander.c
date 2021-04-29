@@ -53,6 +53,9 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
 
 static void prv_init_store(uint8_t address) {
   store_config();
+  if (s_stores[address].state != NULL) {
+    free(s_stores[address].state);
+  }
   StoreFuncs funcs = {
     (GetPackedSizeFunc)mu_pca9539r_store__get_packed_size,
     (PackFunc)mu_pca9539r_store__pack,

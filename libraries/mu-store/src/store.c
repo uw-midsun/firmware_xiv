@@ -161,6 +161,10 @@ void store_register(MuStoreType type, StoreFuncs funcs, void *store, void *key) 
     LOG_DEBUG("invalid store\n");
     return;
   }
+  if (store_get(type, key)) {
+    return;
+  }
+
   s_func_table[type] = funcs;
   // malloc a proto as a store and return a pointer to it
   Store *local_store = prv_get_first_empty();
