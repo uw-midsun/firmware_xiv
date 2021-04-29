@@ -21,7 +21,7 @@ class InvalidPollError(Exception):
 
 
 class ProjectManager:
-    def __init__(self):
+    def __init__(self, bus_name='vcan0'):
         self.fd_to_sim = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.killed = False
@@ -36,7 +36,7 @@ class ProjectManager:
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
-        self.can = canio.CanIO(self)
+        self.can = canio.CanIO(self, bus_name=bus_name)
 
         # setup logging
         self.logger = logger.Logger()

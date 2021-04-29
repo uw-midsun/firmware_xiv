@@ -1,0 +1,5 @@
+#!/usr/bin/python3
+from srv.server import entrypoint
+
+if __name__ == '__main__':
+    entrypoint()

@@ -13,11 +13,11 @@ Msg = namedtuple('Msg', ['name', 'data'])
 
 
 class CanIO:
-    def __init__(self, pm):
+    def __init__(self, pm, bus_name='vcan0'):
         self.pm = pm
         self.messages = deque()
         self.db = cantools.database.load_file(DBC_PATH)
-        self.bus = can.interface.Bus('vcan0', receive_own_messages=True, bustype='socketcan')
+        self.bus = can.interface.Bus(bus_name, receive_own_messages=True, bustype='socketcan')
         self.killed = False
         self.listen_thread = threading.Thread(target=self.listener)
         self.listen_thread.start()

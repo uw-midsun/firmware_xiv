@@ -383,6 +383,11 @@ install_requirements:
 MU_PROJS := 
 -include $(MU_DIR)/integration_tests/deps.mk
 
+.PHONY: install_mu
+install_mu:
+	@sudo ln -s ~/shared/firmware_xiv/mu/muctl /usr/bin/muctl
+	@sudo ln -s ~/shared/firmware_xiv/mu/musrv /usr/bin/musrv
+
 .PHONY: fastmu
 fastmu:
 	@python3 -m unittest discover -t $(MU_DIR) -s $(MU_DIR)/integration_tests -p "test_*$(TEST).py"
