@@ -17,7 +17,7 @@
 #include "unity.h"
 
 #define TEST_TIMEOUT_PERIOD_MS 50
-#define I2C_READ_DEFAULT_TIMEOUT_MS 750
+#define I2C_READ_DEFAULT_TIMEOUT_MS 1500
 #define I2C_READ_SOFT_TIMER_TIMEOUT_MS 5
 
 typedef enum {
@@ -68,9 +68,9 @@ static StatusCode prv_rx_i2c_read_callback(uint8_t data[8], void *context, bool 
 void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_BABYDRIVER, TEST_CAN_EVENT_TX,
                                   TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
-  i2c_read_init(I2C_READ_DEFAULT_TIMEOUT_MS, I2C_READ_SOFT_TIMER_TIMEOUT_MS);
-  dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_READ_DATA, prv_rx_i2c_read_callback, NULL);
   TEST_ASSERT_OK(dispatcher_init());
+  dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_READ_DATA, prv_rx_i2c_read_callback, NULL);
+  i2c_read_init(I2C_READ_DEFAULT_TIMEOUT_MS, I2C_READ_SOFT_TIMER_TIMEOUT_MS);
 }
 
 void test_read_i2c(void) {

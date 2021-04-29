@@ -61,9 +61,9 @@ static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
 
   bytes_sent += 7;
   if (bytes_sent < s_storage.rx_len) {
-    soft_timer_start(s_soft_timer_delay, prv_timer_data_callback, NULL, NULL);
+    soft_timer_start_millis(s_soft_timer_delay, prv_timer_data_callback, NULL, NULL);
   } else {
-    soft_timer_start(s_soft_timer_delay, prv_timer_status_callback, NULL, NULL);
+    soft_timer_start_millis(s_soft_timer_delay, prv_timer_status_callback, NULL, NULL);
     prv_i2c_data_reset();
   }
 }
@@ -108,7 +108,7 @@ static StatusCode prv_i2c_read_command_callback(uint8_t data[8], void *context, 
 
   // Transmits the recieved data in blocks of 7
   if (s_storage.rx_len != 0) {
-    soft_timer_start(s_soft_timer_delay, prv_timer_data_callback, NULL, NULL);
+    soft_timer_start_millis(s_soft_timer_delay, prv_timer_data_callback, NULL, NULL);
   } else {
     CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_OK, 0, 0, 0, 0, 0, 0);
   }
