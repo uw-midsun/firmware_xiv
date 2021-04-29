@@ -27,9 +27,15 @@ static uint32_t prv_get_index(const GpioAddress *address) {
 }
 
 #ifdef MU
-static void prv_export() {
+static void prv_export(void) {
   for (uint16_t i = 0; i < NUM_MU_GPIO_PINS; i++) {
-    s_store.state[i] = s_pin_settings[i].state;
+    GpioAddress addr = {
+      .port = i / GPIO_PINS_PER_PORT,  //
+      .pin = i % GPIO_PINS_PER_PORT,   //
+    };
+    GpioState state = GPIO_STATE_LOW;
+    gpio_get_state(&addr, &state);
+    s_store.state[i] = state;
   }
   store_export(MU_STORE_TYPE__GPIO, &s_store, NULL);
 }
@@ -42,8 +48,8 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     // only update state if mask is set
     if (mask->state[i] != 0) {
       s_store.state[i] = msg->state[i];
-      if (s_pin_settings[i].state != (uint8_t)msg->state[i]) {
-        s_pin_settings[i].state = msg->state[i];
+      if (s_gpio_pin_input_value[i] != (uint8_t)msg->state[i]) {
+        s_gpio_pin_input_value[i] = msg->state[i];
         // Note that interrupts are ID'd based on pin only, not port.
         GpioAddress address = { .port = 0, .pin = i % 16 };
         InterruptEdge edge;
