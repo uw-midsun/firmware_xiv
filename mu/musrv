@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-from srv.server import entrypoint
+#!/bin/sh
 
-if __name__ == '__main__':
-    entrypoint()
+TOP_DIR=~/shared/firmware_xiv
+exec env PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/srv/server.py" "$@"

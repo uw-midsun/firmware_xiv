@@ -1,3 +1,4 @@
-#!/usr/bin/python3
-if __name__ == '__main__':
-    print('unimplemented!')
+#!/bin/sh
+
+TOP_DIR=~/shared/firmware_xiv
+exec env PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/ctl/control.py" "$@"

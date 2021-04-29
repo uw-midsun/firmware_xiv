@@ -17,7 +17,7 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         super().server_close()
 
 
-def entrypoint():
+if __name__ == '__main__':
     address = ('', TCP_PORT)
     httpd = ThreadedServer(address, ReqHandler)
     try:
