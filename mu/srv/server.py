@@ -1,6 +1,6 @@
 import http.server
 import socketserver
-import threading
+from functools import partial
 
 from mu.srv.handler import ReqHandler
 from mu.srv.config import get_config
@@ -10,10 +10,9 @@ from mu.sims.leds import Leds
 TCP_PORT = 8989
 
 class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-    def __init__(self, address, handler_class):
+    def __init__(self, pm, address, handler_class):
         super().__init__(address, handler_class)
-        config = get_config()
-        self.pm = ProjectManager(config=config)
+        self.pm = pm
         # Temporarily start manually for testing
         self.pm.start('leds', Leds)
 
@@ -24,7 +23,10 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 if __name__ == '__main__':
     address = ('', TCP_PORT)
-    server = ThreadedServer(address, ReqHandler)
+    config = get_config()
+    pm = ProjectManager(config=config)
+    handler = partial(ReqHandler, pm)
+    server = ThreadedServer(pm, address, handler)
     print('now serving musrv on port', TCP_PORT)
     try:
         server.serve_forever()
