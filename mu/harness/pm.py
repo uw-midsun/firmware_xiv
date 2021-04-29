@@ -118,7 +118,7 @@ class ProjectManager:
         while not self.killed:
             try:
                 log = sub.get()
-                print('[{}] {}'.format(log.tag, log.msg))
+                print('[{}] {}'.format(log.tag, log.msg), flush=True)
             except logger.NoLog:
                 continue
         self.logger.unsubscribe(sub)

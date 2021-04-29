@@ -5,6 +5,7 @@ import threading
 from mu.srv.handler import ReqHandler
 from mu.srv.config import get_config
 from mu.harness.pm import ProjectManager
+from mu.sims.leds import Leds
 
 TCP_PORT = 8989
 
@@ -13,6 +14,8 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         super().__init__(address, handler_class)
         config = get_config()
         self.pm = ProjectManager(config=config)
+        # Temporarily start manually for testing
+        self.pm.start('leds', Leds)
 
     def stop(self):
         self.pm.end()

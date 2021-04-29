@@ -1,2 +1,5 @@
+from mu.ctl.args import get_args
+
 if __name__ == '__main__':
-    print('unimplemented!')
+    args = get_args()
+    args.func(args)
