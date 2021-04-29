@@ -12,7 +12,7 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     def __init__(self, address, handler_class):
         super().__init__(address, handler_class)
         config = get_config()
-        self.pm = ProjectManager(bus_name=config.canbus)
+        self.pm = ProjectManager(config=config)
 
     def stop(self):
         self.pm.end()

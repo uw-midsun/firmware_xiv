@@ -4,6 +4,7 @@ import select
 import signal
 import queue
 
+from mu.srv.config import Config
 from mu.harness import canio
 from mu.harness import logger
 from mu.harness.dir_config import REPO_DIR
@@ -21,7 +22,10 @@ class InvalidPollError(Exception):
 
 
 class ProjectManager:
-    def __init__(self, bus_name='vcan0'):
+    def __init__(self, config=None):
+        if not config:
+            config = Config(False, 'vcan0')
+        self.config = config
         self.fd_to_sim = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.killed = False
@@ -36,7 +40,13 @@ class ProjectManager:
         # run listener threads
         self.poll_thread = threading.Thread(target=self.poll)
         self.poll_thread.start()
-        self.can = canio.CanIO(self, bus_name=bus_name)
+
+        # Can initialization can fail with an invalid canbus, so cleanup is necessary
+        try:
+            self.can = canio.CanIO(self, bus_name=config.canbus)
+        except OSError as e:
+            self.end()
+            raise e
 
         # setup logging
         self.logger = logger.Logger()
@@ -107,7 +117,8 @@ class ProjectManager:
         self.logger.subscribe(sub)
         while not self.killed:
             try:
-                print(sub.get().msg)
+                log = sub.get()
+                print('[{}] {}'.format(log.tag, log.msg))
             except logger.NoLog:
                 continue
         self.logger.unsubscribe(sub)

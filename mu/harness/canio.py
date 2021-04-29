@@ -52,6 +52,6 @@ class CanIO:
                 msg = Msg(metadata.name, msg_data)
             except KeyError:
                 msg = Msg('UNKNOWN', {'data': list(raw_msg.data)})
-            log = '[CAN] {}: {}'.format(msg.name, msg.data)
+            log = '{}: {}'.format(msg.name, msg.data)
             self.pm.logger.log('CAN', log)
             self.messages.appendleft(msg)
