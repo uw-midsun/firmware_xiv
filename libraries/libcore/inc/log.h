@@ -23,7 +23,7 @@ typedef enum {
 #define LOG_WARN(fmt, ...) LOG(LOG_LEVEL_WARN, fmt, ##__VA_ARGS__)
 #define LOG_CRITICAL(fmt, ...) LOG(LOG_LEVEL_CRITICAL, fmt, ##__VA_ARGS__)
 
-#ifndef MPXE
+#ifndef MU
 #define LOG(level, fmt, ...)                                                  \
   do {                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                     \
@@ -39,7 +39,6 @@ typedef enum {
 #define MAX_LOG_LEN 256
 static char s_log_buf[MAX_LOG_LEN];
 
-// fflush necessary for printing through pipes
 #define LOG(level, fmt, ...)                                                                  \
   do {                                                                                        \
     if ((level) >= LOG_LEVEL_VERBOSITY) {                                                     \

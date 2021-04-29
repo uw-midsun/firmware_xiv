@@ -45,6 +45,7 @@ typedef struct CanHwSocketData {
   size_t num_filters;
   CanHwEventHandler handlers[NUM_CAN_HW_EVENTS];
   uint32_t delay_us;
+  int loopback;
 } CanHwSocketData;
 
 static pthread_t s_rx_pthread_id;
@@ -76,6 +77,10 @@ static void *prv_rx_thread(void *arg) {
   pthread_barrier_wait(&s_barrier);
 
   struct timeval timeout = { .tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US };
+
+  if (s_socket_data.loopback) {
+    return NULL;
+  }
 
   // Mutex is unlocked when the thread should exit
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
@@ -126,7 +131,7 @@ static void *prv_tx_thread(void *arg) {
     // Delay to simulate bus speed
     usleep(s_socket_data.delay_us);
 
-    if (s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
+    if (!s_socket_data.loopback && s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
       s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback(
           s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
     }
@@ -164,6 +169,7 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   memset(&s_socket_data, 0, sizeof(s_socket_data));
   s_socket_data.delay_us = prv_get_delay(settings->bitrate);
   fifo_init(&s_socket_data.tx_fifo, s_socket_data.tx_frames);
+  s_socket_data.loopback = settings->loopback;
 
   s_socket_data.can_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
   if (s_socket_data.can_fd == -1) {
@@ -171,10 +177,11 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to open socket");
   }
 
-  // Loopback - expects to receive its own messages
-  int loopback = settings->loopback;
-  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &loopback,
-                 sizeof(loopback)) < 0) {
+  // Rather than using real loopback, we short-circuit the socket manually to improve determinism
+  // in tests by eliminating varying network delay.
+  int no_loopback = (int)false;
+  if (setsockopt(s_socket_data.can_fd, SOL_CAN_RAW, CAN_RAW_RECV_OWN_MSGS, &no_loopback,
+                 sizeof(no_loopback)) < 0) {
     LOG_CRITICAL("CAN HW: Failed to set loopback mode on socket\n");
     return status_msg(STATUS_CODE_INTERNAL_ERROR, "CAN HW: Failed to set loopback mode on socket");
   }
@@ -260,8 +267,40 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
     // Fifo is full
     return status_msg(STATUS_CODE_RESOURCE_EXHAUSTED, "CAN HW TX failed");
   }
-  // Unblock TX thread
-  sem_post(&s_tx_sem);
+
+  if (!s_socket_data.loopback) {
+    // Unblock TX thread
+    sem_post(&s_tx_sem);
+  } else {
+    fifo_pop(&s_socket_data.tx_fifo, &s_socket_data.rx_frame);
+
+    // TX the frame since STM32 still TXes messages in loopback
+    int bytes = write(s_socket_data.can_fd, &frame, sizeof(frame));
+
+    // Call handlers directly
+    if (s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
+      s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback(
+          s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
+    }
+
+    s_socket_data.rx_frame_valid = true;
+
+    // Apply filters that would normally be applied within socketcan
+    bool filter_match = !(bool)s_socket_data.num_filters;
+    for (size_t i = 0; i < s_socket_data.num_filters; i++) {
+      struct can_filter filter = s_socket_data.filters[i];
+      uint32_t filt_id = extended ? id | CAN_EFF_FLAG : id;
+      if ((filt_id & filter.can_mask) == (filter.can_id & filter.can_mask)) {
+        filter_match = true;
+        break;
+      }
+    }
+
+    if (filter_match && s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
+      s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
+          s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
+    }
+  }
 
   return STATUS_CODE_OK;
 }

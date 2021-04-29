@@ -51,6 +51,7 @@ void setup_test(void) {
   bps_watcher_init();
   s_callback_acked = false;
 }
+
 void teardown_test(void) {}
 
 // test to make sure bps watcher does nothing if no fault
@@ -87,8 +88,8 @@ void test_bps_fault_watcher(void) {
 
   // assert that these events are raised
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_STROBE_EVENT, 1);
-  MS_TEST_HELPER_ASSERT_EVENT(e, POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_STROBE_EVENT, 1);
+  MS_TEST_HELPER_ASSERT_EVENT(e, PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING, 1);
   // not needed but for the ack
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
 }

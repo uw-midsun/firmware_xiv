@@ -1,13 +1,17 @@
 #include "can_rx_event_mapper.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "can.h"
 #include "event_queue.h"
+#include "log.h"
+#include "pd_events.h"
 
-#define CAN_RX_EVENT_PRIORITY EVENT_PRIORITY_NORMAL
-
-static PowerDistributionCanRxEventMapperConfig s_config;
+static CanRxEventMapperConfig *s_config;
 
 static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStatus *ack) {
-  PowerDistributionCanRxEventMapperMsgSpec *spec = context;
+  CanRxEventMapperMsgSpec *spec = context;
 
   EventId event_id;
   if (spec->has_type) {
@@ -39,22 +43,20 @@ static StatusCode prv_handle_rx(const CanMessage *msg, void *context, CanAckStat
     data = (raw_data == 0) ? 0 : 1;
   }
 
-  status_ok_or_return(event_raise_priority(CAN_RX_EVENT_PRIORITY, event_id, data));
-
-  if (spec->ack) {
-    *ack = CAN_ACK_STATUS_OK;
+  StatusCode status = event_raise_priority(PD_ACTION_EVENT_PRIORITY, event_id, data);
+  if (!status_ok(status)) {
+    LOG_WARN("WARNING: can_rx_event_mapper failed to raise event! id=%d, data=%d, status=%d\n",
+             event_id, data, status);
   }
-
-  return STATUS_CODE_OK;
+  return status;
 }
 
-StatusCode power_distribution_can_rx_event_mapper_init(
-    PowerDistributionCanRxEventMapperConfig config) {
+StatusCode can_rx_event_mapper_init(CanRxEventMapperConfig *config) {
   s_config = config;
 
-  for (uint8_t i = 0; i < config.num_msg_specs; i++) {
-    status_ok_or_return(can_register_rx_handler(s_config.msg_specs[i].msg_id, &prv_handle_rx,
-                                                &s_config.msg_specs[i]));
+  for (uint8_t i = 0; i < config->num_msg_specs; i++) {
+    status_ok_or_return(can_register_rx_handler(s_config->msg_specs[i].msg_id, prv_handle_rx,
+                                                &s_config->msg_specs[i]));
   }
 
   return STATUS_CODE_OK;

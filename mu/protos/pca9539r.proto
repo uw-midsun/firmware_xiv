@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message MuPca9539rStore {
+  repeated bool state = 1;
+}

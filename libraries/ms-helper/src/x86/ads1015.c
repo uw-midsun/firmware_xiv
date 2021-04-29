@@ -10,7 +10,7 @@
 #include "ads1015_def.h"
 #include "soft_timer.h"
 
-#ifdef MPXE
+#ifdef MU
 #include <stdlib.h>
 
 #include "ads1015.pb-c.h"
@@ -22,12 +22,15 @@
 #define ADS1015_CHANNEL_UPDATE_PERIOD_US ADS1015_CONVERSION_TIME_US_1600_SPS
 #define ADS1015_CHANNEL_ARBITRARY_READING 0
 
-#ifdef MPXE
-static MxAds1015Store s_store = MX_ADS1015_STORE__INIT;
+#ifdef MU
+#undef ADS1015_CHANNEL_UPDATE_PERIOD_US
+#define ADS1015_CHANNEL_UPDATE_PERIOD_US 10000
+
+static MuAds1015Store s_store = MU_ADS1015_STORE__INIT;
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
-  MxAds1015Store *msg = mx_ads1015_store__unpack(NULL, msg_buf.len, msg_buf.data);
-  MxAds1015Store *mask = mx_ads1015_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  MuAds1015Store *msg = mu_ads1015_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuAds1015Store *mask = mu_ads1015_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
   for (Ads1015Channel i = 0; i < NUM_ADS1015_CHANNELS; i++) {
     if (mask->readings[i] != 0) {
@@ -35,22 +38,22 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     }
   }
 
-  mx_ads1015_store__free_unpacked(msg, NULL);
-  mx_ads1015_store__free_unpacked(mask, NULL);
+  mu_ads1015_store__free_unpacked(msg, NULL);
+  mu_ads1015_store__free_unpacked(mask, NULL);
 }
 
 static void prv_init_store(void) {
   store_config();
   StoreFuncs funcs = {
-    (GetPackedSizeFunc)mx_ads1015_store__get_packed_size,
-    (PackFunc)mx_ads1015_store__pack,
-    (UnpackFunc)mx_ads1015_store__unpack,
-    (FreeUnpackedFunc)mx_ads1015_store__free_unpacked,
+    (GetPackedSizeFunc)mu_ads1015_store__get_packed_size,
+    (PackFunc)mu_ads1015_store__pack,
+    (UnpackFunc)mu_ads1015_store__unpack,
+    (FreeUnpackedFunc)mu_ads1015_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
   s_store.n_readings = NUM_ADS1015_CHANNELS;
   s_store.readings = malloc(NUM_ADS1015_CHANNELS * sizeof(int32_t));
-  store_register(MX_STORE_TYPE__ADS1015, funcs, &s_store, NULL);
+  store_register(MU_STORE_TYPE__ADS1015, funcs, &s_store, NULL);
 }
 #endif
 
@@ -86,7 +89,7 @@ static void prv_timer_callback(SoftTimerId id, void *context) {
   if (prv_channel_is_enabled(storage, current_channel)) {
     storage->channel_readings[current_channel] = ADS1015_CHANNEL_ARBITRARY_READING;
 
-#ifdef MPXE
+#ifdef MU
     storage->channel_readings[current_channel] = s_store.readings[current_channel];
 #endif
 
@@ -112,10 +115,6 @@ static void prv_timer_callback(SoftTimerId id, void *context) {
 // Inits the storage for ADS1015 and starts the soft timer.
 StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port, Ads1015Address i2c_addr,
                         GpioAddress *ready_pin) {
-#ifdef MPXE
-  prv_init_store();
-#endif
-
   if (storage == NULL || ready_pin == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
@@ -123,6 +122,9 @@ StatusCode ads1015_init(Ads1015Storage *storage, I2CPort i2c_port, Ads1015Addres
   for (Ads1015Channel channel = 0; channel < NUM_ADS1015_CHANNELS; channel++) {
     storage->channel_readings[channel] = ADS1015_DISABLED_CHANNEL_READING;
   }
+#ifdef MU
+  prv_init_store();
+#endif
   return soft_timer_start(ADS1015_CHANNEL_UPDATE_PERIOD_US, prv_timer_callback, storage, NULL);
 }
 

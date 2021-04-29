@@ -52,6 +52,12 @@ make pylint
 # Define a symbol from the command line - for example, setting the log level
 make test LIBRARY=ms-common DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_WARN"
 
+# Intall python requirements for every project
+make install_requirements
+
+# Note that for python make commands, you will likely need to be in virtualenv. After running install_requirements, run
+source .venv/bin/activate
+
 # Run all python tests within the scripts directory of a project
 # Append TEST=module to run a specific test
 make pytest PROJECT=test_project
@@ -59,8 +65,14 @@ make pytest PROJECT=test_project
 # Run every python test in the scripts directory for all projects
 make pytest_all
 
-# Intall python requirements for every project
+# Install package requirements for every project
 make install_requirements 
+
+# Run codegen
+make codegen
+
+# Generate dbc file
+make codegen_dbc
 ```
 
 We use [GNU Make](https://www.gnu.org/software/make/manual/) for our build system. See [Managing Projects with GNU Make, 3.Xth Edition](http://wanderinghorse.net/computing/make/book/ManagingProjectsWithGNUMake-3.1.3.pdf) for a fantastic supplement to the manual.

@@ -40,7 +40,7 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
   } else {
     if (s_count <= READ_CYCLE_NUM * READ_CYCLE_SIZE || READ_CYCLE_NUM == 0) {
       s_index = 0;
-      soft_timer_start_millis(1000, prv_periodic_read, queue, NULL);
+      soft_timer_start_millis(100, prv_periodic_read, queue, NULL);
     } else {
       exit(0);
     }

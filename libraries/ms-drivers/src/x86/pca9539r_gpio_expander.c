@@ -1,5 +1,5 @@
 #include "pca9539r_gpio_expander.h"
-#ifdef MPXE
+#ifdef MU
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,9 +18,9 @@ static I2CPort s_i2c_port = NUM_I2C_PORTS;
 
 static Pca9539rGpioSettings s_pin_settings[MAX_I2C_ADDRESSES][NUM_PCA9539R_GPIO_PINS];
 
-#ifdef MPXE
+#ifdef MU
 
-static MxPca9539rStore s_stores[MAX_I2C_ADDRESSES];
+static MuPca9539rStore s_stores[MAX_I2C_ADDRESSES];
 
 static void prv_export(void *key) {
   int k = (intptr_t)(key);
@@ -28,12 +28,12 @@ static void prv_export(void *key) {
     s_stores[k].state[j] = s_pin_settings[k][j].state;
   }
 
-  store_export(MX_STORE_TYPE__PCA9539R, &s_stores[k], key);
+  store_export(MU_STORE_TYPE__PCA9539R, &s_stores[k], key);
 }
 
 static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf, void *key) {
-  MxPca9539rStore *msg = mx_pca9539r_store__unpack(NULL, msg_buf.len, msg_buf.data);
-  MxPca9539rStore *mask = mx_pca9539r_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  MuPca9539rStore *msg = mu_pca9539r_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuPca9539rStore *mask = mu_pca9539r_store__unpack(NULL, mask_buf.len, mask_buf.data);
 
   int k = (intptr_t)(key);
   for (uint16_t i = 0; i < mask->n_state; i++) {
@@ -46,33 +46,29 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
     }
   }
 
-  mx_pca9539r_store__free_unpacked(msg, NULL);
-  mx_pca9539r_store__free_unpacked(mask, NULL);
+  mu_pca9539r_store__free_unpacked(msg, NULL);
+  mu_pca9539r_store__free_unpacked(mask, NULL);
   prv_export(key);
 }
 
 static void prv_init_store(uint8_t address) {
   store_config();
   StoreFuncs funcs = {
-    (GetPackedSizeFunc)mx_pca9539r_store__get_packed_size,
-    (PackFunc)mx_pca9539r_store__pack,
-    (UnpackFunc)mx_pca9539r_store__unpack,
-    (FreeUnpackedFunc)mx_pca9539r_store__free_unpacked,
+    (GetPackedSizeFunc)mu_pca9539r_store__get_packed_size,
+    (PackFunc)mu_pca9539r_store__pack,
+    (UnpackFunc)mu_pca9539r_store__unpack,
+    (FreeUnpackedFunc)mu_pca9539r_store__free_unpacked,
     (UpdateStoreFunc)update_store,
   };
-  s_stores[address] = (MxPca9539rStore)MX_PCA9539R_STORE__INIT;
+  s_stores[address] = (MuPca9539rStore)MU_PCA9539R_STORE__INIT;
   s_stores[address].n_state = NUM_PCA9539R_GPIO_PINS;
   s_stores[address].state = malloc(NUM_PCA9539R_GPIO_PINS * sizeof(protobuf_c_boolean));
-  store_register(MX_STORE_TYPE__PCA9539R, funcs, &s_stores[address], (void *)(intptr_t)address);
+  store_register(MU_STORE_TYPE__PCA9539R, funcs, &s_stores[address], (void *)(intptr_t)address);
 }
 #endif
 
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address) {
-#ifdef MPXE
-  prv_init_store(i2c_address);
-#endif
   s_i2c_port = i2c_port;
-
   // Set each pin to the default settings
   Pca9539rGpioSettings default_settings = {
     .direction = PCA9539R_GPIO_DIR_IN,
@@ -81,7 +77,8 @@ StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_addre
   for (Pca9539rPinAddress i = 0; i < NUM_PCA9539R_GPIO_PINS; i++) {
     s_pin_settings[i2c_address][i] = default_settings;
   }
-#ifdef MPXE
+#ifdef MU
+  prv_init_store(i2c_address);
   prv_export((void *)(intptr_t)i2c_address);
 #endif
   return STATUS_CODE_OK;
@@ -99,7 +96,7 @@ StatusCode pca9539r_gpio_init_pin(const Pca9539rGpioAddress *address,
   }
 
   s_pin_settings[address->i2c_address][address->pin] = *settings;
-#ifdef MPXE
+#ifdef MU
   prv_export((void *)(intptr_t)address->i2c_address);
 #endif
   return STATUS_CODE_OK;
@@ -116,7 +113,7 @@ StatusCode pca9539r_gpio_set_state(const Pca9539rGpioAddress *address,
   }
 
   s_pin_settings[address->i2c_address][address->pin].state = state;
-#ifdef MPXE
+#ifdef MU
   prv_export((void *)(intptr_t)address->i2c_address);
 #endif
   return STATUS_CODE_OK;
@@ -136,7 +133,7 @@ StatusCode pca9539r_gpio_toggle_state(const Pca9539rGpioAddress *address) {
   } else {
     s_pin_settings[address->i2c_address][address->pin].state = PCA9539R_GPIO_STATE_HIGH;
   }
-#ifdef MPXE
+#ifdef MU
   prv_export((void *)(intptr_t)address->i2c_address);
 #endif
   return STATUS_CODE_OK;
