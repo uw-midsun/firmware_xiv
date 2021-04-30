@@ -114,7 +114,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            const comment = require('./uncommitted-codegen-changes.md');
+            const comment = require('./.github/workflows/uncommitted-codegen-changes.md');
             github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
