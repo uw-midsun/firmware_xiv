@@ -103,9 +103,6 @@ jobs:
 
       - name: Check for uncommitted codegen changes
         id: check-uncommitted-changes
-        outputs:
-          has-uncommitted-changes:
-            description: "1 if there are uncommitted changes, 0 otherwise"
         continue-on-error: true
         # https://stackoverflow.com/a/3879077
         run: |
