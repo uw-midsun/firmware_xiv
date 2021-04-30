@@ -113,7 +113,7 @@ jobs:
           git diff-index --quiet HEAD --
           echo "::set-output name=has-uncommitted-changes::$?"
 
-      - name: Post PR comment and exit on uncommitted changes
+      - name: Post PR comment on uncommitted changes
         if: ${{ steps.check-uncommitted-changes.has-uncommitted-changes == "1" }}
         uses: actions/github-script@v4
         with:
@@ -125,7 +125,9 @@ jobs:
               repo: context.repo.repo,
               body: comment,
             });
-        # fail the job
+
+      - name: Fail on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.has-uncommitted-changes == "1" }}
         run: exit 1
 
       - name: Build and test
