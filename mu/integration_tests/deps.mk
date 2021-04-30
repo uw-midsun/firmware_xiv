@@ -10,3 +10,4 @@ MU_PROJS += smoke_pca9539r
 MU_PROJS += smoke_mcp23008
 MU_PROJS += baby_driver
 MU_PROJS += mu_init_conds
+MU_PROJS += power_distribution
