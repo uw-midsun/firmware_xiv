@@ -103,12 +103,10 @@ jobs:
 
       - name: Check for uncommitted codegen changes
         id: check_uncommitted_changes
-        continue-on-error: true
         # https://stackoverflow.com/a/3879077
         run: |
           git update-index --refresh 
-          git diff-index --quiet HEAD --
-          echo "::set-output name=has_uncommitted_changes::$?"
+          git diff-index --quiet HEAD -- || echo "::set-output name=has_uncommitted_changes::1"
 
       - name: Post PR comment on uncommitted changes
         if: ${{ steps.check_uncommitted_changes.has_uncommitted_changes == 1 }}
