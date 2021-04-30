@@ -16,7 +16,7 @@ from gpio_interrupts import register_gpio_interrupt, unregister_gpio_interrupt, 
 from can_send import can_send_raw, load_dbc, can_send
 
 
-def call_gpio_it():
+def initialize_modules():
     """Initialize gpio interrupt"""
     init_notifier_gpio_it()
 
