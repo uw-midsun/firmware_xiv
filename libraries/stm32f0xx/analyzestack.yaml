@@ -1,0 +1,80 @@
+add:
+  # remove a bunch of false positives from newlib by assigning them no callsites
+  _printf_r[../newlib-cygwin/newlib/libc/stdio/printf.c:37]:
+  printf[../newlib-cygwin/newlib/libc/stdio/printf.c:59]:
+  _open[../newlib-cygwin/newlib/libc/sys/arm/syscalls.c:420]:
+
+  # resolve function pointer calls in newlib, add more if you encounter them!
+  _fwalk[../newlib-cygwin/newlib/libc/stdio/fwalk.c:49]:
+    - __fp_lock[../newlib-cygwin/newlib/libc/stdio/findfp.c]
+    - __fp_unlock[../newlib-cygwin/newlib/libc/stdio/findfp.c]
+    - lflush[../newlib-cygwin/newlib/libc/stdio/refill.c]
+  _fwalk_reent[../newlib-cygwin/newlib/libc/stdio/fwalk.c:75]:
+    - _fclose_r[../newlib-cygwin/newlib/libc/stdio/fclose.c]
+    - _fflush_r[../newlib-cygwin/newlib/libc/stdio/fflush.c]
+    - __sflushw_r[../newlib-cygwin/newlib/libc/stdio/fflush.c]
+  # the next bunch are calls to a FILE's function pointers, so add everything I can find them set to
+  __sflush_r[../newlib-cygwin/newlib/libc/stdio/fflush.c:154]:
+    # this is a _seek call
+    - __sseek[../newlib-cygwin/newlib/libc/stdio/stdio.c]
+    # probably these are unnecessary
+    - memseeker[../newlib-cygwin/newlib/libc/stdio/open_memstream.c]
+    - fmemseeker[../newlib-cygwin/newlib/libc/stdio/fmemopen.c]
+    - funseeker[../newlib-cygwin/newlib/libc/stdio/funopen.c]
+  __sflush_r[../newlib-cygwin/newlib/libc/stdio/fflush.c:182]:
+    # TODO: an easy way to annotate identical indirect calls without repetition
+    - __sseek[../newlib-cygwin/newlib/libc/stdio/stdio.c]
+    - memseeker[../newlib-cygwin/newlib/libc/stdio/open_memstream.c]
+    - fmemseeker[../newlib-cygwin/newlib/libc/stdio/fmemopen.c]
+    - funseeker[../newlib-cygwin/newlib/libc/stdio/funopen.c]
+  __sflush_r[../newlib-cygwin/newlib/libc/stdio/fflush.c:224]:
+    # this one is _write
+    - __swrite[../newlib-cygwin/newlib/libc/stdio/stdio.c]
+    # probably these are unnecessary
+    - __swrite64[../newlib-cygwin/newlib/libc/stdio64/stdio64.c]
+    - memwriter[../newlib-cygwin/newlib/libc/stdio/open_memstream.c]
+    - funwriter[../newlib-cygwin/newlib/libc/stdio/funopen.c]
+    - fcwriter[../newlib-cygwin/newlib/libc/stdio/fopencookie.c]
+  __sfvwrite_r[../newlib-cygwin/newlib/libc/stdio/fvwrite.c:98]:
+    # this is also _write
+    - __swrite[../newlib-cygwin/newlib/libc/stdio/stdio.c]
+    - __swrite64[../newlib-cygwin/newlib/libc/stdio64/stdio64.c]
+    - memwriter[../newlib-cygwin/newlib/libc/stdio/open_memstream.c]
+    - funwriter[../newlib-cygwin/newlib/libc/stdio/funopen.c]
+    - fcwriter[../newlib-cygwin/newlib/libc/stdio/fopencookie.c]
+  __sfvwrite_r[../newlib-cygwin/newlib/libc/stdio/fvwrite.c:196]:
+    # _write
+    - __swrite[../newlib-cygwin/newlib/libc/stdio/stdio.c]
+    - __swrite64[../newlib-cygwin/newlib/libc/stdio64/stdio64.c]
+    - memwriter[../newlib-cygwin/newlib/libc/stdio/open_memstream.c]
+    - funwriter[../newlib-cygwin/newlib/libc/stdio/funopen.c]
+    - fcwriter[../newlib-cygwin/newlib/libc/stdio/fopencookie.c]
+  __sfvwrite_r[../newlib-cygwin/newlib/libc/stdio/fvwrite.c:237]:
+    # _write
+    - __swrite[../newlib-cygwin/newlib/libc/stdio/stdio.c]
+    - __swrite64[../newlib-cygwin/newlib/libc/stdio64/stdio64.c]
+    - memwriter[../newlib-cygwin/newlib/libc/stdio/open_memstream.c]
+    - funwriter[../newlib-cygwin/newlib/libc/stdio/funopen.c]
+    - fcwriter[../newlib-cygwin/newlib/libc/stdio/fopencookie.c]
+  # these are for the 'pfunc' (i.e. print func) in newlib's printf impl which actually outputs chars
+  _printf_common[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf_i.c:81]:
+    - __sfputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+    - __ssputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+  _printf_common[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf_i.c:94]:
+    - __sfputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+    - __ssputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+  _printf_common[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf_i.c:102]:
+    - __sfputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+    - __ssputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+  _printf_i[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf_i.c:241]:
+    - __sfputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+    - __ssputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+  _printf_i[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf_i.c:244]:
+    - __sfputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+    - __ssputs_r[../newlib-cygwin/newlib/libc/stdio/nano-vfprintf.c]
+
+remove:
+  # stack analyzer detects InfiniteLoop in assembly as recursion, but it doesn't push to the stack
+  - [TIM1_BRK_UP_TRG_COM_IRQHandler]
+  # from newlib <https://sourceware.org/newlib> findfp.c: __sfp and __sinit can't infinitely recurse
+  - [__sfp, '__sinit.part.0[../newlib-cygwin/newlib/libc/include/sys/reent.h]', __sfp]
