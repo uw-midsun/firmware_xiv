@@ -1,6 +1,6 @@
-#include <stdint.h>
-
 #include "chip_id.h"
+
+#include <stdint.h>
 
 // Unique device identifier base address from section 33.1 of the specific device
 // datasheet
