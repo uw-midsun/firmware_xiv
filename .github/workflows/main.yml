@@ -96,10 +96,40 @@ jobs:
           make lint
           make pylint
 
-      - name: Build and test
+      - name: Build codegen
         run: |
           make codegen
           make codegen_dbc
+
+      - name: Check for uncommitted codegen changes
+        id: check-uncommitted-changes
+        outputs:
+          has-uncommitted-changes:
+            description: "1 if there are uncommitted changes, 0 otherwise"
+        continue-on-error: true
+        # https://stackoverflow.com/a/3879077
+        run: |
+          git update-index --refresh 
+          git diff-index --quiet HEAD --
+          echo "::set-output name=has-uncommitted-changes::$?"
+
+      - name: Post PR comment and exit on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.has-uncommitted-changes == "1" }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const comment = require('./uncommitted-codegen-changes.md');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+        # fail the job
+        run: exit 1
+
+      - name: Build and test
+        run: |
           make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
           make clean
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
