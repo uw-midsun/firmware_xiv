@@ -102,14 +102,15 @@ jobs:
           make codegen_dbc
 
       - name: Check for uncommitted codegen changes
-        id: check_uncommitted_changes
+        id: check-uncommitted-changes
+        continue-on-error: true
         # https://stackoverflow.com/a/3879077
         run: |
           git update-index --refresh || true
-          git diff-index --quiet HEAD -- || echo "::set-output name=has_uncommitted_changes::1"
+          git diff-index --quiet HEAD --
 
       - name: Post PR comment on uncommitted changes
-        if: ${{ steps.check_uncommitted_changes.outputs.has_uncommitted_changes == 1 }}
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
         uses: actions/github-script@v4
         with:
           script: |
@@ -122,7 +123,7 @@ jobs:
             });
 
       - name: Fail on uncommitted changes
-        if: ${{ steps.check_uncommitted_changes.outputs.has_uncommitted_changes == 1 }}
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
         run: exit 1
 
       - name: Build and test
