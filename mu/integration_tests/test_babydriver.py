@@ -1,8 +1,8 @@
 import time
 import unittest
-from mu.integration_tests import int_test
 import sys
 sys.path.append('projects/baby_driver/scripts')
+# pylint: disable=wrong-import-position
 import repl_setup
 import gpio_set
 import i2c_write
@@ -11,6 +11,7 @@ import gpio_interrupts
 import gpio_get
 import can_util
 import adc_read
+from mu.integration_tests import int_test
 
 
 
@@ -19,7 +20,7 @@ class TestBabyDriver(int_test.IntTest):
         super().setUp()
         self.babydriver = self.manager.start('baby_driver')
         can_util.default_channel = "vcan0"
-        repl_setup.call_gpio_it()
+        repl_setup.initialize_modules()
 
     def test_adc_read(self):
         time.sleep(1)
@@ -29,7 +30,7 @@ class TestBabyDriver(int_test.IntTest):
         time.sleep(1)
         self.babydriver.set_gpio(port='A', pin=5, state=False)
         time.sleep(1)
-        gpio_get.gpio_get('A', 6)
+        assert gpio_get.gpio_get('A', 5) is False
 
     def test_gpio_set(self):
         time.sleep(1)
@@ -37,13 +38,32 @@ class TestBabyDriver(int_test.IntTest):
         time.sleep(1)
         gpio_set.gpio_set('A', 5, True)
         time.sleep(1)
-        self.babydriver.get_gpio(port='A', pin=5)
+        assert self.babydriver.get_gpio(port='A', pin=5) is True
 
     def test_gpio_interrupts(self):
+        
+        # Defining a Callback function
+        isCalled = False
+        def interrupt_callback(info):            
+            self.isCalled = True
+
+        # Registring the interrupt
         time.sleep(1)
-        gpio_interrupts.register_gpio_interrupt(port='A', pin=3)
+        gpio_interrupts.register_gpio_interrupt(port='A', pin=5, callback =interrupt_callback(info="info"))
+        
+        # Simulating
         time.sleep(1)
-        gpio_interrupts.unregister_gpio_interrupt(port='A', pin=3)
+        self.babydriver.set_gpio(port='A', pin=5, state=True)
+        time.sleep(1)
+        self.babydriver.set_gpio(port='A', pin=5, state=False)
+        
+        # Asserting
+        time.sleep(1)
+        assert isCalled is True
+        
+        # Unregistring the interrupt
+        time.sleep(1)
+        gpio_interrupts.unregister_gpio_interrupt(port='A', pin=5)
 
     def test_i2c_write(self):
         time.sleep(1)
