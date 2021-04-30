@@ -114,7 +114,9 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            const comment = require('./.github/workflows/uncommitted-codegen-changes.md');
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-codegen-changes.md', 'utf8');
             github.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
