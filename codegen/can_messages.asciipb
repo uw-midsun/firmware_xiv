@@ -330,6 +330,18 @@ msg {
 # IDs: 42-44 Reserved
 
 msg {
+  id: 44
+  source: STEERING
+  target: "TELEMETRY"
+  msg_name: "test test test"
+  can_data {
+    empty {
+      
+    }
+  }
+}
+
+msg {
   id: 45
   source: POWER_DISTRIBUTION_FRONT
   target: "TELEMETRY"
