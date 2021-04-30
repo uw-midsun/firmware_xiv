@@ -9,18 +9,19 @@
 #   CM: [COMPILER=] - Specifies the compiler to use on x86. Defaults to gcc [gcc | clang].
 #   CO: [COPTIONS=] - Specifies compiler options on x86 [asan | tsan].
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
+#   SD: [STDLIB_DEBUG=] - Set to true on STM32 to use an stdlib with debug symbols. See platform/stm32f0xx/newlib-debug/README.md.
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
 #
 # Usage:
-#   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
+#   make [all] [PL] [PR] [SD] [DF] - Builds the target project and its dependencies
 #   make clean - Completely deletes all build output
 #   make format - Formats all non-vendor code
-#   make gdb [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test and connects an instance of GDB
+#   make gdb [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test and connects an instance of GDB
 #   make lint - Lints all non-vendor code
 #   make new [PR|LI] - Creates folder structure for new project or library
-#   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
-#   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
+#   make remake [PL] [PR] [SD] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
+#   make test [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
 #   make pytest_all - Runs all python tests in the scripts directory of every project 
 #   make install_requirements - Installs python requirements for every project
@@ -31,11 +32,12 @@
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
 #   make fastmu [TE] - Don't build and just run the MU integration test, or all if TE is not defined.
+#   make analyzestack [PR] - Analyzes the maximum stack size of the specified project
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
 #   make program [PL=stm32f0xx] [PR] [PB] - Programs and runs the project through OpenOCD
-#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]]
+#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]] [DF]
 #
 ###################################################################################################
 
@@ -56,6 +58,11 @@ IS_MU := TRUE
 $(call gen_mu)
 else
 PLATFORM ?= stm32f0xx
+endif
+
+ifeq (analyzestack,$(MAKECMDGOALS))
+# Use debug symbols by default in the stack analyzer
+STDLIB_DEBUG ?= true
 endif
 
 # Include argument filters

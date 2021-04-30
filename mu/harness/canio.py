@@ -13,7 +13,8 @@ Msg = namedtuple('Msg', ['name', 'data'])
 
 
 class CanIO:
-    def __init__(self):
+    def __init__(self, pm):
+        self.pm = pm
         self.messages = deque()
         self.db = cantools.database.load_file(DBC_PATH)
         self.bus = can.interface.Bus('vcan0', receive_own_messages=True, bustype='socketcan')
@@ -51,5 +52,6 @@ class CanIO:
                 msg = Msg(metadata.name, msg_data)
             except KeyError:
                 msg = Msg('UNKNOWN', {'data': list(raw_msg.data)})
-            print('[CAN] {}: {}'.format(msg.name, msg.data))
+            log = '[CAN] {}: {}'.format(msg.name, msg.data)
+            self.pm.logger.log('CAN', log)
             self.messages.appendleft(msg)
