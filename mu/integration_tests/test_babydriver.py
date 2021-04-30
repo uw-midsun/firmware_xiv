@@ -40,27 +40,25 @@ class TestBabyDriver(int_test.IntTest):
         time.sleep(1)
         assert self.babydriver.get_gpio(port='A', pin=5) is True
 
-    def test_gpio_interrupts(self):
-        
+    def test_gpio_interrupts(self): #IN PROGRESS
         # Defining a Callback function
+        # pylint: disable=attribute-defined-outside-init
         isCalled = False
-        def interrupt_callback(info):            
+        def interrupt_callback(info):
             self.isCalled = True
-
         # Registring the interrupt
         time.sleep(1)
-        gpio_interrupts.register_gpio_interrupt(port='A', pin=5, callback =interrupt_callback(info="info"))
-        
+        gpio_interrupts.register_gpio_interrupt(port='A',
+                                                pin=5,
+                                                callback =interrupt_callback(info="info"))
         # Simulating
         time.sleep(1)
         self.babydriver.set_gpio(port='A', pin=5, state=True)
         time.sleep(1)
         self.babydriver.set_gpio(port='A', pin=5, state=False)
-        
         # Asserting
         time.sleep(1)
         assert isCalled is True
-        
         # Unregistring the interrupt
         time.sleep(1)
         gpio_interrupts.unregister_gpio_interrupt(port='A', pin=5)
