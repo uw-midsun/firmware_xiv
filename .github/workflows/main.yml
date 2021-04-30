@@ -105,7 +105,7 @@ jobs:
         id: check_uncommitted_changes
         # https://stackoverflow.com/a/3879077
         run: |
-          git update-index --refresh 
+          git update-index --refresh || true
           git diff-index --quiet HEAD -- || echo "::set-output name=has_uncommitted_changes::1"
 
       - name: Post PR comment on uncommitted changes
