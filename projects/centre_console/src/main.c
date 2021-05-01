@@ -72,7 +72,6 @@ int main(void) {
   prv_set_up_can();
 
   pedal_monitor_init();
-  brake_light_control_init();
   button_press_init();
   hazard_tx_init();
   led_manager_init();

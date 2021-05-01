@@ -11,8 +11,6 @@
 #include "soft_timer.h"
 #include "status.h"
 
-static PedalState s_prev_pedal_state = PEDAL_STATE_RELEASED;
-
 // Called when brake light should change
 // Will transmit the appropriate CanMessage to turn brake lights on/off
 static void prv_can_transmit_brake_light_change(PedalState current_state) {
@@ -26,17 +24,8 @@ static void prv_can_transmit_brake_light_change(PedalState current_state) {
 
 // Callback function for soft timer
 // Checks whether or not a CAN message should be transmitted
-static void prv_update_brake_lights(SoftTimerId timer_id, void *context) {
-  PedalState current_state = get_pedal_state();
-  if (current_state != s_prev_pedal_state) {
+static void brake_light_control_update(PedalState current_state, PedalState new_state){
+  if (current_state != new_state) {
     prv_can_transmit_brake_light_change(current_state);
   }
-  soft_timer_start_millis(PEDAL_STATE_UPDATE_FREQUENCY_MS,
-                          prv_update_brake_lights, NULL, NULL);
-}
-
-StatusCode brake_light_control_init(void) {
-  status_ok_or_return(soft_timer_start_millis(PEDAL_STATE_UPDATE_FREQUENCY_MS,
-                                              prv_update_brake_lights, NULL, NULL));
-  return STATUS_CODE_OK;
 }
