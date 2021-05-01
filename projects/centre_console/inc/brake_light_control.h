@@ -5,6 +5,8 @@
 
 // Requires pedal_monitor, CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
 
+#include "status.h"
+
 #define PEDAL_STATE_UPDATE_FREQUENCY_MS 100
 
 typedef enum {

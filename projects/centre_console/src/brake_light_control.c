@@ -31,8 +31,8 @@ static void prv_update_brake_lights(SoftTimerId timer_id, void *context) {
   if (current_state != s_prev_pedal_state) {
     prv_can_transmit_brake_light_change(current_state);
   }
-  status_ok_or_return(soft_timer_start_millis(PEDAL_STATE_UPDATE_FREQUENCY_MS,
-                                              prv_update_brake_lights, NULL, NULL));
+  soft_timer_start_millis(PEDAL_STATE_UPDATE_FREQUENCY_MS,
+                          prv_update_brake_lights, NULL, NULL);
 }
 
 StatusCode brake_light_control_init(void) {

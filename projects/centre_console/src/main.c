@@ -1,3 +1,4 @@
+#include "brake_light_control.h"
 #include "button_press.h"
 #include "can.h"
 #include "can_msg_defs.h"
@@ -71,6 +72,7 @@ int main(void) {
   prv_set_up_can();
 
   pedal_monitor_init();
+  brake_light_control_init();
   button_press_init();
   hazard_tx_init();
   led_manager_init();
