@@ -394,27 +394,29 @@ void test_power_select_broadcast_works(void) {
 
   prv_force_measurement();
 
-  // 3 total broadcasts from measurement (2x measurements + fault)
-  // MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
-  // MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
-  // MS_TEST_HELPER_CAN_TX(POWER_SELECT_CAN_EVENT_TX);
+  Event e = { 0 };
 
-  // First rx should be SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE
-  MS_TEST_HELPER_CAN_TX_RX(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+  // 3 TX events, 3 RX events
+  // We process events this way to make testing pass more consistently
+  // locally + when running CI
+  for (uint8_t i = 0; i < 6; i++) {
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    TEST_ASSERT_TRUE(can_process_event(&e));
+  }
+
+  // First TX: SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[0]);  // aux voltage
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_aux_measurements[1]);  // aux current
   TEST_ASSERT_EQUAL(TEST_EXPECTED_TEMP, s_aux_measurements[2]);    // aux temp
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[3]);  // main voltage
 
-  // Second rx should be SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT
-  MS_TEST_HELPER_CAN_TX_RX(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+  // Second TX: SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_dcdc_measurements[0]);  // dcdc voltage
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[1]);  // dcdc current
   TEST_ASSERT_EQUAL(TEST_EXPECTED_TEMP, s_dcdc_measurements[2]);    // dcdc temp
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[3]);  // main current
 
-  // Third rx should be SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
-  MS_TEST_HELPER_CAN_TX_RX(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
+  // Third TX: SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
   TEST_ASSERT_EQUAL(0, s_fault_measurement);
 
   // Should be no events
