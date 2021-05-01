@@ -29,7 +29,7 @@
 
 #define TEST_EXPECTED_TEMP ((uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV)))
 
-#define TEST_MEASUREMENT_INTERVAL_MS 50
+#define TEST_MEASUREMENT_INTERVAL_MS 100
 #define TEST_MEASUREMENT_INTERVAL_US ((TEST_MEASUREMENT_INTERVAL_MS)*1000)
 
 static void prv_force_measurement(void) {
