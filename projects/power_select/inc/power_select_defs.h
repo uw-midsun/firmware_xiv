@@ -18,7 +18,7 @@
 
 #define POWER_SELECT_AUX_VREF_MV 1624
 
-// Maximium measurements.  Values higher than these represent a fault
+// Maximum measurements.  Values higher than these represent a fault
 #define POWER_SELECT_PWR_SUP_MAX_CURRENT_MA 37500
 #define POWER_SELECT_PWR_SUP_MAX_VOLTAGE_MV 15820
 #define POWER_SELECT_DCDC_MAX_CURRENT_MA 37500

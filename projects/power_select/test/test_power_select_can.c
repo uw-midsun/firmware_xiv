@@ -27,10 +27,8 @@ uint8_t TEST_MOCK(power_select_get_valid_bitset)(void) {
 
 static CanStorage s_can_storage = { 0 };
 
-#define TEST_CAN_ID 15
-
 static CanSettings s_can_settings = {
-  .device_id = TEST_CAN_ID,
+  .device_id = SYSTEM_CAN_DEVICE_POWER_SELECT,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = POWER_SELECT_CAN_EVENT_RX,
   .tx_event = POWER_SELECT_CAN_EVENT_TX,
@@ -70,7 +68,7 @@ void setup_test(void) {
   TEST_ASSERT_OK(power_select_can_init());
 
   s_ack_req.callback = prv_test_can_ack;
-  s_ack_req.expected_bitset = CAN_ACK_EXPECTED_DEVICES(TEST_CAN_ID);
+  s_ack_req.expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_POWER_SELECT);
   s_ack_req.context = &s_expect_ack;
 
   s_times_ack_called = 0;

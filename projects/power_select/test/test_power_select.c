@@ -27,7 +27,7 @@
 #define TEST_FAULT_VOLTAGE_SCALED_MV (TEST_FAULT_VOLTAGE_MV * POWER_SELECT_VSENSE_SCALING / V_TO_MV)
 #define TEST_FAULT_CURRENT_SCALED_MA (TEST_FAULT_CURRENT_MA * POWER_SELECT_ISENSE_SCALING / A_TO_MA)
 
-#define EXPECTED_TEMP ((uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV)))
+#define TEST_EXPECTED_TEMP ((uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV)))
 
 #define TEST_MEASUREMENT_INTERVAL_MS 50
 #define TEST_MEASUREMENT_INTERVAL_US ((TEST_MEASUREMENT_INTERVAL_MS)*1000)
@@ -39,6 +39,9 @@ static void prv_force_measurement(void) {
   delay_ms(TEST_MEASUREMENT_INTERVAL_MS - 10);
   power_select_stop();
 }
+
+// For comparing voltages/currents that get cast from float to uint16
+#define TEST_FLOAT_CMP_DELTA_MAX 50
 
 static CanStorage s_can_storage = { 0 };
 
@@ -62,20 +65,20 @@ static uint16_t s_test_adc_read_values[NUM_POWER_SELECT_MEASUREMENTS];
 
 StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress address, uint16_t *reading) {
   // Find correct reading to return
-  for (int i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    if (prv_gpio_addr_is_eq(POWER_SELECT_VOLTAGE_MEASUREMENT_PINS[i], address)) {
+  for (uint8_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
+    if (prv_gpio_addr_is_eq(g_power_select_voltage_pins[i], address)) {
       *reading = s_test_adc_read_values[i];
       return STATUS_CODE_OK;
     }
   }
-  for (int i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
-    if (prv_gpio_addr_is_eq(POWER_SELECT_CURRENT_MEASUREMENT_PINS[i], address)) {
+  for (uint8_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
+    if (prv_gpio_addr_is_eq(g_power_select_current_pins[i], address)) {
       *reading = s_test_adc_read_values[i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
       return STATUS_CODE_OK;
     }
   }
-  for (int i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
-    if (prv_gpio_addr_is_eq(POWER_SELECT_TEMP_MEASUREMENT_PINS[i], address)) {
+  for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
+    if (prv_gpio_addr_is_eq(g_power_select_temp_pins[i], address)) {
       *reading = s_test_adc_read_values[i + NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS +
                                         NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
       return STATUS_CODE_OK;
@@ -92,8 +95,8 @@ static GpioState s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS + 1];
 // Generally used for valid pins
 StatusCode TEST_MOCK(gpio_get_state)(GpioAddress *address, GpioState *input_state) {
   // Find correct reading to return
-  for (int i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
-    if (prv_gpio_addr_is_eq(POWER_SELECT_VALID_PINS[i], *address)) {
+  for (uint8_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
+    if (prv_gpio_addr_is_eq(g_power_select_valid_pins[i], *address)) {
       *input_state = s_test_gpio_read_states[i];
       return STATUS_CODE_OK;
     }
@@ -125,15 +128,15 @@ static void prv_set_voltages_good(void) {
     s_test_adc_read_values[i] = TEST_GOOD_VOLTAGE_SCALED_MV;
   }
   s_test_adc_read_values[3] = TEST_GOOD_CURRENT_SCALED_MA;
-  s_test_adc_read_values[5] = TEST_GOOD_CURRENT_SCALED_MA;
   s_test_adc_read_values[4] = TEST_GOOD_CURRENT_SCALED_MA;
+  s_test_adc_read_values[5] = TEST_GOOD_CURRENT_SCALED_MA;
   s_test_adc_read_values[6] = TEST_TEMP_VOLTAGE_MV;
   s_test_adc_read_values[7] = TEST_TEMP_VOLTAGE_MV;
 }
 
 static void prv_set_all_pins_valid(void) {
   for (uint16_t i = 0; i < NUM_POWER_SELECT_VALID_PINS; i++) {
-    gpio_set_state(&POWER_SELECT_VALID_PINS[i], GPIO_STATE_LOW);
+    gpio_set_state(&g_power_select_valid_pins[i], GPIO_STATE_LOW);
   }
 }
 
@@ -231,11 +234,13 @@ void test_power_select_periodic_measure_reports_correctly(void) {
 
   for (uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     // Account for float rounding
-    TEST_ASSERT_TRUE(abs(test_storage.voltages[i] - TEST_GOOD_VOLTAGE_MV) < 50);
-    TEST_ASSERT_TRUE(abs(test_storage.currents[i] - TEST_GOOD_CURRENT_MA) < 50);
+    TEST_ASSERT_UINT16_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_GOOD_VOLTAGE_MV,
+                              test_storage.voltages[i]);
+    TEST_ASSERT_UINT16_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_GOOD_CURRENT_MA,
+                              test_storage.currents[i]);
     if (i < NUM_POWER_SELECT_TEMP_MEASUREMENTS) {
       // Confirm thermistor readings as expected
-      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - EXPECTED_TEMP) < 50);
+      TEST_ASSERT_INT32_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_EXPECTED_TEMP, test_storage.temps[i]);
     }
   }
 }
@@ -261,11 +266,13 @@ void test_power_select_invalid_pin_reading(void) {
 
   for (uint16_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
     // Account for float rounding
-    TEST_ASSERT_TRUE(abs(test_storage.voltages[i] - TEST_GOOD_VOLTAGE_MV) < 50);
-    TEST_ASSERT_TRUE(abs(test_storage.currents[i] - TEST_GOOD_CURRENT_MA) < 50);
+    TEST_ASSERT_UINT16_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_GOOD_VOLTAGE_MV,
+                              test_storage.voltages[i]);
+    TEST_ASSERT_UINT16_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_GOOD_CURRENT_MA,
+                              test_storage.currents[i]);
     if (i < NUM_POWER_SELECT_TEMP_MEASUREMENTS) {
       // Confirm thermistor readings as expected
-      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - EXPECTED_TEMP) < 50);
+      TEST_ASSERT_INT32_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_EXPECTED_TEMP, test_storage.temps[i]);
     }
   }
 
@@ -288,13 +295,15 @@ void test_power_select_invalid_pin_reading(void) {
       TEST_ASSERT_EQUAL(0, test_storage.currents[i]);
     } else {
       // Account for float rounding
-      TEST_ASSERT_TRUE(abs(test_storage.voltages[i] - TEST_GOOD_VOLTAGE_MV) < 50);
-      TEST_ASSERT_TRUE(abs(test_storage.currents[i] - TEST_GOOD_CURRENT_MA) < 50);
+      TEST_ASSERT_UINT16_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_GOOD_VOLTAGE_MV,
+                                test_storage.voltages[i]);
+      TEST_ASSERT_UINT16_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_GOOD_CURRENT_MA,
+                                test_storage.currents[i]);
     }
 
     if (i < NUM_POWER_SELECT_TEMP_MEASUREMENTS) {
       // Confirm thermistor readings as expected
-      TEST_ASSERT_TRUE(abs(test_storage.temps[i] - EXPECTED_TEMP) < 50);
+      TEST_ASSERT_INT32_WITHIN(TEST_FLOAT_CMP_DELTA_MAX, TEST_EXPECTED_TEMP, test_storage.temps[i]);
     }
   }
 }
@@ -396,14 +405,14 @@ void test_power_select_broadcast_works(void) {
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[0]);  // aux voltage
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_aux_measurements[1]);  // aux current
-  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_aux_measurements[2]);         // aux temp
+  TEST_ASSERT_EQUAL(TEST_EXPECTED_TEMP, s_aux_measurements[2]);    // aux temp
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[3]);  // main voltage
 
   // Second rx should be SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT
   MS_TEST_HELPER_CAN_RX(POWER_SELECT_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_dcdc_measurements[0]);  // dcdc voltage
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[1]);  // dcdc current
-  TEST_ASSERT_EQUAL(EXPECTED_TEMP, s_dcdc_measurements[2]);         // dcdc temp
+  TEST_ASSERT_EQUAL(TEST_EXPECTED_TEMP, s_dcdc_measurements[2]);    // dcdc temp
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[3]);  // main current
 
   // Third rx should be SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
