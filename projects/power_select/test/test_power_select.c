@@ -392,8 +392,6 @@ void test_power_select_broadcast_works(void) {
   prv_set_voltages_good();
   prv_set_all_pins_valid();
 
-  power_select_start(POWER_SELECT_MEASUREMENT_INTERVAL_US);
-
   prv_force_measurement();
 
   // 3 total broadcasts from measurement (2x measurements + fault)
