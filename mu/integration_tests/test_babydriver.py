@@ -3,15 +3,16 @@ import unittest
 import sys
 sys.path.append('projects/baby_driver/scripts')
 # pylint: disable=wrong-import-position
-import repl_setup
-import gpio_set
-import i2c_write
-import spi_exchange
-import gpio_interrupts
-import gpio_get
-import can_util
 import adc_read
+import can_util
+import gpio_get
+import gpio_interrupts
+import spi_exchange
+import i2c_write
+import gpio_set
+import repl_setup
 from mu.integration_tests import int_test
+
 
 
 
@@ -40,26 +41,26 @@ class TestBabyDriver(int_test.IntTest):
         time.sleep(1)
         assert self.babydriver.get_gpio(port='A', pin=5) is True
 
-    def test_gpio_interrupts(self): #IN PROGRESS
+    def test_gpio_interrupts(self):
         # Defining a Callback function
-        # pylint: disable=attribute-defined-outside-init
         isCalled = False
+
         def interrupt_callback(info):
-            self.isCalled = True
-        # Registring the interrupt
+            nonlocal isCalled
+            isCalled = True
+        # Registering the interrupt
         time.sleep(1)
         gpio_interrupts.register_gpio_interrupt(port='A',
                                                 pin=5,
-                                                callback =interrupt_callback(info="info"))
+                                                callback=interrupt_callback)
         # Simulating
         time.sleep(1)
         self.babydriver.set_gpio(port='A', pin=5, state=True)
         time.sleep(1)
         self.babydriver.set_gpio(port='A', pin=5, state=False)
         # Asserting
-        time.sleep(1)
         assert isCalled is True
-        # Unregistring the interrupt
+        # Unregistering the interrupt
         time.sleep(1)
         gpio_interrupts.unregister_gpio_interrupt(port='A', pin=5)
 
