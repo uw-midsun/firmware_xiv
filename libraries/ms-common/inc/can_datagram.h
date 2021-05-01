@@ -56,7 +56,6 @@ typedef struct CanDatagram {
   uint8_t dt_type;
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
-
   uint16_t data_len;
   uint8_t *data;  // union needed here with u64?s
 } CanDatagram;
@@ -99,7 +98,7 @@ bool can_datagram_is_valid(CanDatagram *dt);
 int can_datagram_output_bytes(CanDatagram *dt, char *buffer, size_t buffer_len);
 
 /** Computes the CRC32 of the datagram. */
-StatusCode can_datagram_compute_crc(CanDatagram *dt);
+uint32_t can_datagram_compute_crc(void);
 
 /** Returns true if the ID has the start of datagram field set. */
 bool can_datagram_id_start_is_set(unsigned int id);

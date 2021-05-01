@@ -6,16 +6,18 @@
 #include "log.h"
 #include "watchdog.h"
 
-#define MAX_DATA_LEN 2048
-#define MAX_DEST_NODES 255  // This could be changed?
+#define PROTOCOL_VERSION_SIZE_BYTES 1
+#define CRC_SIZE_BYTES 4
+#define DT_TYPE_SIZE_BYTES 1
+#define DEST_LEN_SIZE_BYTES 1
+#define MAX_DEST_NODES_SIZE_BYTES 256
+#define DATA_LEN_SIZE_BYTES 2
+#define MAX_DATA_SIZE_BYTES 2048
+
+#define MAX_CRC_SIZE_BYTES 24
+
 #define RX_WATCHDOG_TIMEOUT_MS 25
 #define CAN_BUFFER_SIZE 8
-#define CRC_SIZE_BYTES 4
-#define DATA_LENGTH_SIZE_BYTES 2
-#define DEST_NODE_MAX_SIZE 255
-#define DATA_MAX_SIZE 2048
-
-#define CRC_TEST_VALUE 0x121212
 
 static Fsm s_dt_fsm;
 static CanDatagramStorage s_store;
@@ -28,6 +30,7 @@ static size_t s_rx_data_len;
 static int s_data_write_count;
 // If we want to have multiple instances of can datagram stores then this will need to be changed
 
+// Forward declare FSM states and transitions
 FSM_DECLARE_STATE(state_idle);
 FSM_DECLARE_STATE(state_protocol_version);
 FSM_DECLARE_STATE(state_crc);
@@ -103,12 +106,38 @@ static bool prv_read_rx_buffer(uint8_t **data, size_t *len) {
   }
   *len = (s_rx_msg_buf.tail)->len;
   *data = (s_rx_msg_buf.tail)->data;
-  // for(int i = 0; i < 8; i++) {
-  //     LOG_DEBUG("RX DATA: %d\n", (*data)[i]);
-  // }
   s_rx_msg_buf.tail++;
   s_data_write_count++;
   return true;
+}
+
+static uint32_t prv_can_datagram_compute_crc(void) {
+  uint32_t crc;
+  uint8_t stream[MAX_CRC_SIZE_BYTES];
+  uint8_t *write = stream;
+  CanDatagram *dt = &s_store.dt;
+
+  crc32_init();
+
+  // CRC for data and dst_nodes
+  uint32_t dst_crc = crc32_arr(dt->destination_nodes, dt->destination_nodes_len);
+  uint32_t data_crc = crc32_arr(dt->data, dt->data_len);
+
+  // Copy metadata to stream, append dst and data crc
+  memcpy(write, &dt->dt_type, DT_TYPE_SIZE_BYTES);
+  write += DT_TYPE_SIZE_BYTES;
+  memcpy(write, &dt->destination_nodes_len, DEST_LEN_SIZE_BYTES);
+  write += DEST_LEN_SIZE_BYTES;
+  memcpy(write, &dst_crc, sizeof(uint32_t));
+  write += sizeof(uint32_t);
+  memcpy(write, &dt->data_len, DATA_LEN_SIZE_BYTES);
+  write += DATA_LEN_SIZE_BYTES;
+  memcpy(write, &data_crc, sizeof(uint32_t));
+  write += sizeof(uint32_t);
+
+  crc = crc32_arr(stream, (size_t)(write - stream));
+  LOG_DEBUG("CRC %u\n", crc);
+  return crc;
 }
 
 // BEGIN FSM STATE FUNCTIONS
@@ -140,7 +169,6 @@ static void prv_process_crc(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("crc\n");
   s_store.event = DATAGRAM_EVENT_DT_TYPE;
   CanDatagram *dt = context;
-  dt->crc = CRC_TEST_VALUE;
   memset(s_can_buffer, 0, CAN_BUFFER_SIZE * sizeof(uint8_t));
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     for (uint8_t byte = 0; byte < CRC_SIZE_BYTES; byte++) {
@@ -248,7 +276,7 @@ static void prv_process_data_len(Fsm *fsm, const Event *e, void *context) {
   CanDatagram *dt = context;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     memset(s_can_buffer, 0, CAN_BUFFER_SIZE * sizeof(uint8_t));
-    for (uint8_t byte = 0; byte < DATA_LENGTH_SIZE_BYTES; byte++) {
+    for (uint8_t byte = 0; byte < DATA_LEN_SIZE_BYTES; byte++) {
       s_can_buffer[byte] = dt->data_len >> (24 - 8 * byte) & 0xFF;
     }
     s_store.tx_cb(s_can_buffer, sizeof(dt->data_len), false);
@@ -259,7 +287,7 @@ static void prv_process_data_len(Fsm *fsm, const Event *e, void *context) {
     if (!prv_read_rx_buffer(&rx_data, &len)) {
       event_raise_no_data(DATAGRAM_EVENT_DATA_LEN);
     } else {
-      for (uint8_t byte = 0; byte < DATA_LENGTH_SIZE_BYTES; byte++) {
+      for (uint8_t byte = 0; byte < DATA_LEN_SIZE_BYTES; byte++) {
         dt->data_len = dt->data_len | rx_data[byte] << (8 * byte);
       }
       event_raise_no_data(DATAGRAM_EVENT_DATA);
@@ -268,7 +296,7 @@ static void prv_process_data_len(Fsm *fsm, const Event *e, void *context) {
 }
 
 static void prv_process_data(Fsm *fsm, const Event *e, void *context) {
-  //LOG_DEBUG("data\n");
+  LOG_DEBUG("data\n");
   CanDatagram *dt = context;
   uint8_t data_len = dt->data_len;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
@@ -324,23 +352,23 @@ static void prv_rx_watchdog_expiry_cb(void *context) {
 }
 
 StatusCode can_datagram_init(CanDatagramSettings *settings) {
-  // Zero datagram
-  CanDatagram *dt = &s_store.dt;
-  memset(&s_store.dt, 0, sizeof(s_store.dt));
   if (settings->mode >= NUM_CAN_DATAGRAM_MODES) {
     return STATUS_CODE_INVALID_ARGS;
   }
   s_store.mode = settings->mode;
 
   // Datagram initialization
+  CanDatagram *dt = &s_store.dt;
+  memset(&s_store.dt, 0, sizeof(s_store.dt));
   dt->dt_type =
       settings->dt_type;  // (TODO: SOFT-415) check against valid datagram types once created
   dt->destination_nodes_len = settings->destination_nodes_len;  // Error checking for buffers?
   dt->data_len = settings->data_len;
   dt->destination_nodes = settings->destination_nodes;
   dt->data = settings->data;
+  dt->crc = prv_can_datagram_compute_crc();
   LOG_DEBUG("LEN A: %d, LEN: %d\n", dt->data_len, settings->data_len);
-
+  
   // Mode specific setup
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     if (settings->tx_cb == NULL) {
@@ -358,7 +386,6 @@ StatusCode can_datagram_init(CanDatagramSettings *settings) {
   }
 
   prv_init_fsm((void *)dt);
-  crc32_init();
   return STATUS_CODE_OK;
 }
 
@@ -391,27 +418,9 @@ bool can_datagram_process_event(Event *e) {
   return fsm_process_event(&s_dt_fsm, e);
 }
 
-#if 0
-StatusCode can_datagram_compute_crc(void) {
-  uint32_t crc;
-  uint8_t tmp[4];
-  crc = crc32(0, &dt->destination_nodes_len, 1);
-  crc = crc32(crc, &dt->destination_nodes[0], dt->destination_nodes_len);
 
-  /* data_len is not in network endianess, correct that before CRC update. */
-  tmp[0] = (dt->data_len >> 24) & 0xff;
-  tmp[1] = (dt->data_len >> 16) & 0xff;
-  tmp[2] = (dt->data_len >> 8) & 0xff;
-  tmp[3] = (dt->data_len >> 0) & 0xff;
-
-  crc = crc32(crc, tmp, 4);
-  crc = crc32(crc, &dt->data[0], dt->data_len);
-  return crc;
-}
 
 
 bool can_datagram_id_start_is_set(unsigned int id) {
   return id & ID_START_MASK;
 }
-
-#endif

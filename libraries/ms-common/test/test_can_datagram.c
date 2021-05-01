@@ -225,7 +225,7 @@ void test_can_datagram_rx(void) {
   prv_mock_dt_tx();
   can_datagram_start();
   Event e = { 0 };
-  while (!can_datagram_complete()) {  // Loop until num msg rx'd same as tx'd
+  while (!can_datagram_complete()) {  // Loop until rx complete
     prv_mock_dt_tx();
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
