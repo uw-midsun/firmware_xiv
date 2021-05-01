@@ -130,9 +130,4 @@ jobs:
 
       - name: Build and test
         run: |
-          make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
-          make clean
-          make build_all PLATFORM=x86 DEFINE="${DEFINES}"
-          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
-          make pytest_all
-          make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+          make test LIBRARY=ms-common TEST=wait PLATFORM=x86 DEFINE="${DEFINES}"
