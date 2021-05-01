@@ -44,9 +44,9 @@ class ProjectManager:
         # Can initialization can fail with an invalid canbus, so cleanup is necessary
         try:
             self.can = canio.CanIO(self, bus_name=config.canbus)
-        except OSError as e:
+        except OSError:
             self.end()
-            raise e
+            raise
 
         # setup logging
         self.logger = logger.Logger()

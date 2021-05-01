@@ -5,7 +5,7 @@ TOP_DIR=~/shared/firmware_xiv
 if [[ $* == *stop* ]]
 then
     # find the server process and grab just the pid
-    pid=$(ps ax | grep mu/*/srv | cut -d " " -f1 | sort | head -1)
+    pid=$(pgrep -f mu/*/srv | sort | head -1)
     kill -9 $pid
     rm -f .mu.log
     exit
