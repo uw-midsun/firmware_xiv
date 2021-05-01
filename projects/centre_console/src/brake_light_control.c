@@ -9,6 +9,7 @@
 #include "pedal_monitor.h"
 #include "pedal_rx.h"
 #include "soft_timer.h"
+#include "status.h"
 
 static PedalState s_prev_pedal_state = PEDAL_STATE_RELEASED;
 
