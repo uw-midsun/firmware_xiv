@@ -98,6 +98,19 @@
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,          \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_AUX_STATUS_MAIN_VOLTAGE(msg_ptr, aux_voltage_u16_ptr, aux_current_u16_ptr, \
+                                           aux_temp_u16_ptr, main_voltage_u16_ptr)            \
+  can_unpack_impl_u16((msg_ptr), 8, (aux_voltage_u16_ptr), (aux_current_u16_ptr),             \
+                      (aux_temp_u16_ptr), (main_voltage_u16_ptr))
+
+#define CAN_UNPACK_DCDC_STATUS_MAIN_CURRENT(msg_ptr, dcdc_voltage_u16_ptr, dcdc_current_u16_ptr, \
+                                            dcdc_temp_u16_ptr, main_current_u16_ptr)             \
+  can_unpack_impl_u16((msg_ptr), 8, (dcdc_voltage_u16_ptr), (dcdc_current_u16_ptr),              \
+                      (dcdc_temp_u16_ptr), (main_current_u16_ptr))
+
+#define CAN_UNPACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64_ptr) \
+  can_unpack_impl_u64((msg_ptr), 8, (fault_id_u64_ptr))
+
 #define CAN_UNPACK_UV_CUTOFF_NOTIFICATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_REQUEST_TO_CHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
@@ -125,19 +138,6 @@
 #define CAN_UNPACK_FRONT_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),               \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_AUX_STATUS_MAIN_VOLTAGE(msg_ptr, aux_voltage_u16_ptr, aux_current_u16_ptr, \
-                                           aux_temp_u16_ptr, main_voltage_u16_ptr)            \
-  can_unpack_impl_u16((msg_ptr), 8, (aux_voltage_u16_ptr), (aux_current_u16_ptr),             \
-                      (aux_temp_u16_ptr), (main_voltage_u16_ptr))
-
-#define CAN_UNPACK_DCDC_STATUS_MAIN_CURRENT(msg_ptr, dcdc_voltage_u16_ptr, dcdc_current_u16_ptr, \
-                                            dcdc_temp_u16_ptr, main_current_u16_ptr)             \
-  can_unpack_impl_u16((msg_ptr), 8, (dcdc_voltage_u16_ptr), (dcdc_current_u16_ptr),              \
-                      (dcdc_temp_u16_ptr), (main_current_u16_ptr))
-
-#define CAN_UNPACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64_ptr) \
-  can_unpack_impl_u64((msg_ptr), 8, fault_id_u64_ptr)
 
 #define CAN_UNPACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),              \
