@@ -9,7 +9,7 @@ VALID_LIBRARIES := $(patsubst $(LIB_DIR)/%/rules.mk,%,$(wildcard $(LIB_DIR)/*/ru
 # - For test, gdb, and program, check to see if PLATFORM and {PROJECT or {LIBRARY and TEST}} are valid
 # - For build, check if PLATFORM and {PROJECT or LIBRARY} are valid
 
-ifneq (,$(filter clean lint lint_quick pylint format format_quick build_all test_all test_format socketcan codegen codegen_dbc codegen_protos codegen_test mock_can_data babydriver mu fastmu pylint_quick pyformat pyformat_quick pytest_all pytest install_requirements,$(MAKECMDGOALS)))
+ifneq (,$(filter clean lint lint_quick pylint format format_quick build_all test_all test_format socketcan codegen codegen_dbc codegen_protos codegen_test mock_can_data babydriver install_mu mu fastmu pylint_quick pyformat pyformat_quick pytest_all pytest install_requirements,$(MAKECMDGOALS)))
   # Universal operation: do nothing - args are not used or only PLATFORM is checked
 else ifneq (,$(filter new,$(MAKECMDGOALS)))
   # New project: just make sure PROJECT or LIBRARY is defined
