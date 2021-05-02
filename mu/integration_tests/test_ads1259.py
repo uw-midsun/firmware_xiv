@@ -12,7 +12,7 @@ class TestAds1259(int_test.IntTest):
 
     def test_ads1259(self):
         # Smoke test has no output, but you can visually ensure logged reading changes
-        time.sleep(0.2) # Let smoke test run once
+        time.sleep(0.2)  # Let smoke test run once
         self.board.sub_sim('ads1259').update_reading(0x9A)
         time.sleep(0.2)  # Let smoke test run again
 
