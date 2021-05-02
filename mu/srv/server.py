@@ -14,7 +14,7 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         super().__init__(address, handler_class)
         self.pm = pm
         # Temporarily start manually for testing
-        self.pm.start('leds', Leds)
+        # self.pm.start('leds', Leds)
 
     def stop(self):
         self.pm.end()

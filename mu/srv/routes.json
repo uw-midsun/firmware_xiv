@@ -1,0 +1,8 @@
+{
+    "sim_start": "sim/start",
+    "sim_stop": "sim/stop",
+    "sim_cat": "sim/cat",
+    "sim_list": "sim/list",
+
+    "reset": "reset"
+}

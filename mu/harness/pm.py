@@ -3,12 +3,16 @@ import threading
 import select
 import signal
 import queue
+import importlib
+import sys
+import inspect
 
 from mu.srv.config import Config
 from mu.harness import canio
 from mu.harness import logger
 from mu.harness.dir_config import REPO_DIR
 from mu.harness.board_sim import BoardSim
+from mu.harness.sub_sim import SubSim
 
 POLL_TIMEOUT = 0.5
 
@@ -24,15 +28,20 @@ class InvalidPollError(Exception):
 class ProjectManager:
     def __init__(self, config=None):
         if not config:
-            config = Config(False, 'vcan0')
+            config = Config(False, 'vcan0', False)
+        print('Configuration:', config)
         self.config = config
         self.fd_to_sim = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
+        self.sim_catalog = self.sim_cat()
         self.killed = False
 
         # all writes are done on the main thread via the push_queue
         self.push_sem = threading.Semaphore(value=0)
-        signal.signal(PUSH_LOCK_SIGNAL, self.signal_push_sem)
+        try:
+            signal.signal(PUSH_LOCK_SIGNAL, self.signal_push_sem)
+        except ValueError:
+            pass
         self.push_queue = queue.Queue()
         self.push_thread = threading.Thread(target=self.push)
         self.push_thread.start()
@@ -52,8 +61,15 @@ class ProjectManager:
         self.logger = logger.Logger()
         self.log_thread = threading.Thread(target=self.log_all)
         self.log_thread.start()
+    
+    def reset(self):
+        config = self.config
+        self.end()
+        self.__init__(config=config)
 
     def start(self, proj_name, sim_class=BoardSim):
+        if type(sim_class) == str:
+            sim_class = self.sim_catalog[sim_class]
         if proj_name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
         sim = sim_class(self, proj_name)
@@ -65,6 +81,12 @@ class ProjectManager:
     def stop(self, sim):
         del self.fd_to_sim[sim.fd]
         sim.stop()
+
+    def stop_name(self, sim_name):
+        for sim in self.fd_to_sim.values():
+            if sim.__class__.__name__ == sim_name:
+                self.stop(sim)
+                return 
 
     def stop_all(self):
         for sim in self.fd_to_sim.values():
@@ -113,6 +135,8 @@ class ProjectManager:
             return
 
     def log_all(self):
+        if not self.config.projlogs:
+            return  
         sub = logger.Subscriber('pm')
         self.logger.subscribe(sub)
         while not self.killed:
@@ -122,6 +146,31 @@ class ProjectManager:
             except logger.NoLog:
                 continue
         self.logger.unsubscribe(sub)
+    
+    def sim_list(self):
+        ret = []
+        for fd in self.fd_to_sim:
+            ret.append({
+                'fd': fd,
+                'sim': self.fd_to_sim[fd].__class__.__name__,
+            })
+        return ret
+
+    def sim_cat(self):
+        sim_files = os.listdir(os.path.join(REPO_DIR, 'mu/sims'))
+        catalog = {}
+        for sim_file in sim_files:
+            if not sim_file.endswith('.py'):
+                continue
+            sim_name = sim_file[:len(sim_file)-3]
+            mod_name = 'mu.sims.{}'.format(sim_name)
+            importlib.import_module(mod_name)
+            sim_classes = inspect.getmembers(sys.modules[mod_name], inspect.isclass)
+            for sim_class in sim_classes:
+                if SubSim in sim_class[1].__bases__ or sim_class[0] in catalog:
+                    continue
+                catalog[sim_class[0]] = sim_class[1]
+        return catalog
 
     def end(self):
         self.killed = True
