@@ -8,7 +8,7 @@
 #include "soft_timer.h"
 #include "wait.h"
 // Macros
-#define DELAY_TIME_MS 1000
+#define DELAY_TIME_MS 500
 
 // Structure
 typedef struct Counters {
@@ -19,14 +19,13 @@ typedef struct Counters {
 // Private function
 static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *storage = context;
-  // Counter A needs to be updated twice
   storage->counter_a++;
   LOG_DEBUG("Counter A: %i\n", storage->counter_a);
-  storage->counter_a++;
-  LOG_DEBUG("Counter A: %i\n", storage->counter_a);
-  // Counter B needs to be updated once
-  storage->counter_b++;
-  LOG_DEBUG("Counter B: %i\n", storage->counter_b);
+  if (storage->counter_a % 2 == 0) {
+    storage->counter_b++;
+    LOG_DEBUG("Counter B: %i\n", storage->counter_b);
+  }
+
   // Start the timer again
   soft_timer_start_millis(DELAY_TIME_MS, prv_timer_callback, storage, NULL);
 }
