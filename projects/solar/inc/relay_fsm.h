@@ -10,6 +10,10 @@
 #include "fsm.h"
 #include "status.h"
 
+// delays given by datasheet (EV200HAANA)
+// max between time to close and time to open
+#define RELAY_SEQUENCE_ASSERTION_DELAY_MS 15 // I Added this
+
 typedef struct RelayFsmStorage {
   Fsm fsm;
 } RelayFsmStorage;

@@ -10,6 +10,11 @@
 #include "solar_events.h"
 #include "status.h"
 
+void prv_assert_relay_state(const Event *e, void *context){
+  //ask where to find PA6_RELAY_STATUS?
+}
+
+
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
   fault_handler_raise_fault(EE_SOLAR_FAULT_DRV120, 0);
@@ -27,6 +32,11 @@ FSM_STATE_TRANSITION(state_relay_closed) {
 }
 
 static void prv_open_relay(Fsm *fsm, const Event *e, void *context) {
+  // where a call to assert should be made ??
+  soft_timer_start_millis(RELAY_SEQUENCE_ASSERTION_DELAY_MS, prv_assert_relay_state, e,
+                          &e->assertion_timer_id);
+
+
   LOG_DEBUG("Opening relay\n");
   drv120_relay_open();
 }
