@@ -58,8 +58,8 @@ static void prv_handle_rx(Fsm *fsm, const Event *e, void *context) {
   // Process bootloader messages
   if(rx_msg.source_id == SYSTEM_CAN_DEVICE_BOOTLOADER) {
     result = bootloader_can_receive(&rx_msg);
+    return;
   }
-  return;
 
   // We currently ignore failures to handle the message.
   // If needed, we could push it back to the queue.
