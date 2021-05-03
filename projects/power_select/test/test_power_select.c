@@ -29,7 +29,7 @@
 
 #define TEST_EXPECTED_TEMP ((uint16_t)resistance_to_temp(voltage_to_res(TEST_TEMP_VOLTAGE_MV)))
 
-#define TEST_MEASUREMENT_INTERVAL_MS 100
+#define TEST_MEASUREMENT_INTERVAL_MS 50
 #define TEST_MEASUREMENT_INTERVAL_US ((TEST_MEASUREMENT_INTERVAL_MS)*1000)
 
 static void prv_force_measurement(void) {
@@ -399,10 +399,10 @@ void test_power_select_broadcast_works(void) {
   // 3 TX events, 3 RX events
   // We process events this way to make testing pass more consistently
   // locally + when running CI
-  // for (uint8_t i = 0; i < 3; i++) {  // changing to 3 events for testing
-  //   MS_TEST_HELPER_AWAIT_EVENT(e);
-  //   TEST_ASSERT_TRUE(can_process_event(&e));
-  // }
+  for (uint8_t i = 0; i < 1; i++) {
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    TEST_ASSERT_TRUE(can_process_event(&e));
+  }
 
   // First TX: SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE
   TEST_ASSERT_EQUAL(TEST_GOOD_VOLTAGE_MV, s_aux_measurements[0]);  // aux voltage
