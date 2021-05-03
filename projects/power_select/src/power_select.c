@@ -58,18 +58,15 @@ static void prv_handle_fault(void) {
     // Fault, turn off LTC
     gpio_set_state(&pin, GPIO_STATE_LOW);
   }
-  delay_ms(5);
   LOG_WARN("Send fault bitset result: %d\n",
            CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset));
 }
 
 // Broadcast sense measurements from storage.
 static StatusCode prv_broadcast_measurements(void) {
-  delay_ms(5);
   StatusCode status = CAN_TRANSMIT_AUX_STATUS_MAIN_VOLTAGE(
       s_storage.voltages[POWER_SELECT_AUX], s_storage.currents[POWER_SELECT_AUX],
       s_storage.temps[POWER_SELECT_AUX], s_storage.voltages[POWER_SELECT_PWR_SUP]);
-  delay_ms(5);
   status_ok_or_return(CAN_TRANSMIT_DCDC_STATUS_MAIN_CURRENT(
       s_storage.voltages[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_DCDC],
       s_storage.temps[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_PWR_SUP]));
