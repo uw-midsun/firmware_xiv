@@ -3,7 +3,7 @@
 // This module allows the sending and receiving of CAN messages in the bootloader's CAN ID format.
 // It allows registering a callback which will be called when a bootloader CAN message is received
 // with client controller board ID 0 (msg_id == 0).
-// Requires interrupts, gpio, the event queue, soft-timers and CAN to be initialized.
+// Requires interrupts, gpio, the event queue, soft timers and CAN to be initialized.
 
 #include <stdbool.h>
 #include <stdint.h>

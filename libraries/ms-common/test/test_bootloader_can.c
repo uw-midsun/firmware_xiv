@@ -2,7 +2,6 @@
 
 #include <string.h>
 
-#include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "test_helpers.h"
