@@ -137,6 +137,7 @@ StatusCode can_transmit(const CanMessage *msg, const CanAckRequest *ack_request)
   // Basically, the idea is that all the TX and RX should be happening in the
   // main event loop. We raise an event just to ensure that the CAN TX is
   // postponed until the main event loop.
+  LOG_WARN("Raising CAN event\n");
   event_raise(s_can_storage->tx_event, 1);
 
   return can_fifo_push(&s_can_storage->tx_fifo, msg);
@@ -147,7 +148,7 @@ bool can_process_event(const Event *e) {
     LOG_WARN("CAN Storage uninitialized\n");
     return false;
   }
-
+  LOG_WARN("Processing CAN event\n");
   return fsm_process_event(&s_can_storage->fsm, e);
 }
 
