@@ -400,9 +400,7 @@ void test_power_select_broadcast_works(void) {
   // We process events this way to make testing pass more consistently
   // locally + when running CI
   for (uint8_t i = 0; i < 6; i++) {
-    LOG_WARN("event check loop iteration %d\n", i);
-    // MS_TEST_HELPER_AWAIT_EVENT(e);
-    TEST_ASSERT_OK(event_process(&e));
+    MS_TEST_HELPER_AWAIT_EVENT(e);
     TEST_ASSERT_TRUE(can_process_event(&e));
   }
 

@@ -58,8 +58,7 @@ static void prv_handle_fault(void) {
     // Fault, turn off LTC
     gpio_set_state(&pin, GPIO_STATE_LOW);
   }
-  LOG_WARN("Send fault bitset result: %d\n",
-           CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset));
+  CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset);
 }
 
 // Broadcast sense measurements from storage.
@@ -75,7 +74,6 @@ static StatusCode prv_broadcast_measurements(void) {
 
 // Read current, voltage, and temp measurements to storage
 static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
-  LOG_WARN("Starting prv_periodic_measure\n");
   LOG_DEBUG("Reading measurements...\n");
   LOG_DEBUG("Note: 0 = AUX, 1 = DCDC, 2 = PWR SUP; valid pins active-low\n");
 
@@ -146,16 +144,14 @@ static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Temp %d: %d\n", (int)i, (int)s_storage.temps[i]);
   }
 
-  LOG_WARN("Send measurements result: %d\n", prv_broadcast_measurements());
+  prv_broadcast_measurements();
 
   // Send fault bitset if no faults
   if (s_storage.fault_bitset == 0) {
-    LOG_WARN("No faults: sending fault bitset\n");
     prv_handle_fault();
   }
 
   soft_timer_start(s_storage.interval_us, prv_periodic_measure, &s_storage, &s_storage.timer_id);
-  LOG_WARN("done sending measurements, started soft timer\n");
 }
 
 // Initialize all sense pins as ADC
