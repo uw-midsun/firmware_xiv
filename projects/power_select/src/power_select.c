@@ -59,7 +59,8 @@ static void prv_handle_fault(void) {
     gpio_set_state(&pin, GPIO_STATE_LOW);
   }
   delay_ms(5);
-  CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset);
+  LOG_WARN("Send fault bitset result: %d\n",
+           CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset));
 }
 
 // Broadcast sense measurements from storage.
@@ -148,7 +149,7 @@ static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Temp %d: %d\n", (int)i, (int)s_storage.temps[i]);
   }
 
-  LOG_DEBUG("Send measurements result: %d\n", prv_broadcast_measurements());
+  LOG_WARN("Send measurements result: %d\n", prv_broadcast_measurements());
 
   // Send fault bitset if no faults
   if (s_storage.fault_bitset == 0) {
