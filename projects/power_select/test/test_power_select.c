@@ -399,7 +399,7 @@ void test_power_select_broadcast_works(void) {
   // 3 TX events, 3 RX events
   // We process events this way to make testing pass more consistently
   // locally + when running CI
-  for (uint8_t i = 0; i < 6; i++) {
+  for (uint8_t i = 0; i < 3; i++) {  // changing to 3 events for testing
     MS_TEST_HELPER_AWAIT_EVENT(e);
     TEST_ASSERT_TRUE(can_process_event(&e));
   }
