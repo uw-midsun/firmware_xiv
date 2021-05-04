@@ -73,9 +73,12 @@ static StatusCode prv_initialize_libraries(void) {
   status_ok_or_return(i2c_init(I2C_PORT_1, config_get_i2c1_settings()));
   status_ok_or_return(i2c_init(I2C_PORT_2, config_get_i2c2_settings()));
   status_ok_or_return(spi_init(SOLAR_SPI_PORT, config_get_spi_settings()));
-  status_ok_or_return(can_init(&s_can_storage, config_get_can_settings()));
 
-  status_ok_or_return(drv120_relay_init(config_get_drv120_relay_pin()));
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_initialize_can(SolarMpptCount mppt_count) {
+  status_ok_or_return(can_init(&s_can_storage, config_get_can_settings(mppt_count)));
 
   return STATUS_CODE_OK;
 }
@@ -91,16 +94,16 @@ static StatusCode prv_initialize_sense_modules(SolarMpptCount mppt_count) {
   return STATUS_CODE_OK;
 }
 
-static StatusCode prv_initialize_action_modules(void) {
+static StatusCode prv_initialize_action_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(relay_fsm_init(&s_relay_fsm_storage));
-  status_ok_or_return(fault_handler_init(config_get_fault_handler_settings()));
+  status_ok_or_return(fault_handler_init(config_get_fault_handler_settings(mppt_count)));
   status_ok_or_return(command_rx_init());
   return STATUS_CODE_OK;
 }
 
 static StatusCode prv_initialize_data_consumer_modules(SolarMpptCount mppt_count) {
   status_ok_or_return(logger_init(mppt_count));
-  status_ok_or_return(data_tx_init(config_get_data_tx_settings()));
+  status_ok_or_return(data_tx_init(config_get_data_tx_settings(mppt_count)));
   status_ok_or_return(fault_monitor_init(config_get_fault_monitor_settings(mppt_count)));
   return STATUS_CODE_OK;
 }
@@ -111,8 +114,10 @@ int main(void) {
   SolarMpptCount mppt_count;
   status_ok_or_return(prv_get_mppt_count(&mppt_count));
 
+  status_ok_or_return(prv_initialize_can(mppt_count));
+
   status_ok_or_return(data_store_init());
-  status_ok_or_return(prv_initialize_action_modules());
+  status_ok_or_return(prv_initialize_action_modules(mppt_count));
   status_ok_or_return(prv_initialize_sense_modules(mppt_count));
   status_ok_or_return(prv_initialize_data_consumer_modules(mppt_count));
 

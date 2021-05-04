@@ -58,6 +58,9 @@
 #define SOLAR_MCP3427_CURRENT_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN MCP3427_AMP_GAIN_1
 
+// Registers gpio interrupt with STATUS pin on drv120, enables fault handling
+#define ENABLE_DRV120_FAULT_HANDLING true
+
 // the number of MCP3427s above those associated 1:1 with MPPTs - currently, only current sense
 #define NUM_EXTRA_NON_MPPT_MCP3427S 1
 
@@ -84,8 +87,8 @@ static const SpiSettings s_spi_settings = {
   .cs = SOLAR_UNUSED_PIN,
 };
 
-static const CanSettings s_can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+// |device_id| is set dynamically by |config_get_can_settings|
+static CanSettings s_can_settings = {
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,
@@ -95,13 +98,15 @@ static const CanSettings s_can_settings = {
   .loopback = false,
 };
 
-static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_relay_pin = RELAY_EN_PIN;
+static const GpioAddress s_drv120_status_pin = { GPIO_PORT_A, 6 };
 
 static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
 };
 
-static const FaultHandlerSettings s_fault_handler_settings = {
+// |mppt_count| is set dynamically by |config_get_fault_handler_settings|
+static FaultHandlerSettings s_fault_handler_settings = {
   .relay_open_faults =
       {
           EE_SOLAR_FAULT_OVERCURRENT,
@@ -111,7 +116,8 @@ static const FaultHandlerSettings s_fault_handler_settings = {
   .num_relay_open_faults = 3,
 };
 
-static const DataTxSettings s_data_tx_settings = {
+// |mppt_count| is set dynamically by |config_get_data_tx_settings|
+static DataTxSettings s_data_tx_settings = {
   .wait_between_tx_in_millis = DATA_TX_WAIT_TIME_MS,
   .msgs_per_tx_iteration = DATA_TX_MSGS_PER_TX_ITERATION,
 };
@@ -128,23 +134,43 @@ const SpiSettings *config_get_spi_settings(void) {
   return &s_spi_settings;
 }
 
-const CanSettings *config_get_can_settings(void) {
+const CanSettings *config_get_can_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  } else if (mppt_count == SOLAR_BOARD_6_MPPTS) {
+    s_can_settings.device_id = SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS;
+  } else {
+    s_can_settings.device_id = SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS;
+  }
   return &s_can_settings;
 }
 
-const GpioAddress *config_get_drv120_relay_pin(void) {
+const GpioAddress *config_get_drv120_enable_pin(void) {
   return &s_drv120_relay_pin;
+}
+
+const GpioAddress *config_get_drv120_status_pin(void) {
+  return ENABLE_DRV120_FAULT_HANDLING ? &s_drv120_status_pin : NULL;
 }
 
 const SenseSettings *config_get_sense_settings(void) {
   return &s_sense_settings;
 }
 
-const FaultHandlerSettings *config_get_fault_handler_settings(void) {
+const FaultHandlerSettings *config_get_fault_handler_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  }
+  s_fault_handler_settings.mppt_count = mppt_count;
   return &s_fault_handler_settings;
 }
 
-const DataTxSettings *config_get_data_tx_settings(void) {
+const DataTxSettings *config_get_data_tx_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  }
+  s_data_tx_settings.mppt_count = mppt_count;
+
   return &s_data_tx_settings;
 }
 
@@ -274,20 +300,30 @@ const SenseMcp3427Settings *config_get_sense_mcp3427_settings(SolarMpptCount mpp
 
 // |num_thermistors| is set dynamically by |config_get_sense_temperature_settings|
 static SenseTemperatureSettings s_sense_temperature_settings =
-    { .thermistor_pins = {
-          { GPIO_PORT_A, 0 },
-          { GPIO_PORT_A, 1 },
-          { GPIO_PORT_A, 2 },
-          { GPIO_PORT_A, 3 },
-          { GPIO_PORT_A, 4 },
-          { GPIO_PORT_A, 5 },  // not used on 5 MPPT board
+    { .thermistor_settings = {
+          { RTD_THERMISTOR, { GPIO_PORT_A, 0 } },
+          { RTD_THERMISTOR, { GPIO_PORT_A, 1 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 2 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 3 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 4 } },
+          { NUM_THERMISTOR_TYPES, { GPIO_PORT_A, 5 } },  // A5 depends on the number of MPPT
       } };
 
 const SenseTemperatureSettings *config_get_sense_temperature_settings(SolarMpptCount mppt_count) {
   if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
     return NULL;
   }
+
   s_sense_temperature_settings.num_thermistors = mppt_count;  // we have one thermistor per MPPT
+
+  if (mppt_count == SOLAR_BOARD_5_MPPTS) {
+    // On the 5 MPPT board, port A5 is BJT
+    s_sense_temperature_settings.thermistor_settings[5].thermistor_type = FAN_CONTROL_THERMISTOR;
+  } else if (mppt_count == SOLAR_BOARD_6_MPPTS) {
+    // On the 5 MPPT board, port A5 is NTC
+    s_sense_temperature_settings.thermistor_settings[5].thermistor_type = NTC_THERMISTOR;
+  }
+
   return &s_sense_temperature_settings;
 }
 

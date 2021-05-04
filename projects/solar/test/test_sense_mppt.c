@@ -24,8 +24,7 @@
 #define TEST_CURRENT 0x1337
 #define TEST_VOLTAGE 0xDEAD
 #define TEST_PWM 0xBEEF
-#define TEST_CR_BIT 1
-#define DEFAULT_STATUS TEST_CR_BIT  // other bits 0: OK
+#define TEST_STATUS 1  // CR bit 1, other bits 0: OK
 
 #define MAX_FAULTS (2 * NUM_EE_SOLAR_FAULTS * MAX_SOLAR_BOARD_MPPTS)
 
@@ -103,7 +102,7 @@ void setup_test(void) {
   s_mppt_current_ret = TEST_CURRENT;
   s_mppt_voltage_ret = TEST_VOLTAGE;
   s_mppt_pwm_ret = TEST_PWM;
-  s_mppt_status_ret = DEFAULT_STATUS;
+  s_mppt_status_ret = TEST_STATUS;
   s_mppt_current_pin = INVALID_MPPT;
   s_mppt_voltage_pin = INVALID_MPPT;
   s_mppt_pwm_pin = INVALID_MPPT;
@@ -132,7 +131,7 @@ void test_single_mppt_cycle_sets_values(void) {
   TEST_ASSERT_EQUAL(false, is_set);
   data_store_get_is_set(DATA_POINT_MPPT_PWM(0), &is_set);
   TEST_ASSERT_EQUAL(false, is_set);
-  data_store_get_is_set(DATA_POINT_CR_BIT(0), &is_set);
+  data_store_get_is_set(DATA_POINT_MPPT_STATUS(0), &is_set);
   TEST_ASSERT_EQUAL(false, is_set);
 
   // trigger the sense cycle, everything should then be set to the correct values
@@ -144,7 +143,7 @@ void test_single_mppt_cycle_sets_values(void) {
   TEST_ASSERT_EQUAL(true, is_set);
   data_store_get_is_set(DATA_POINT_MPPT_PWM(0), &is_set);
   TEST_ASSERT_EQUAL(true, is_set);
-  data_store_get_is_set(DATA_POINT_CR_BIT(0), &is_set);
+  data_store_get_is_set(DATA_POINT_MPPT_STATUS(0), &is_set);
   TEST_ASSERT_EQUAL(true, is_set);
 
   data_store_get(DATA_POINT_MPPT_CURRENT(0), &set_value);
@@ -153,8 +152,8 @@ void test_single_mppt_cycle_sets_values(void) {
   TEST_ASSERT_EQUAL(TEST_VOLTAGE, set_value);
   data_store_get(DATA_POINT_MPPT_PWM(0), &set_value);
   TEST_ASSERT_EQUAL(TEST_PWM, set_value);
-  data_store_get(DATA_POINT_CR_BIT(0), &set_value);
-  TEST_ASSERT_EQUAL(TEST_CR_BIT, set_value);
+  data_store_get(DATA_POINT_MPPT_STATUS(0), &set_value);
+  TEST_ASSERT_EQUAL(TEST_STATUS, set_value);
 
   // the pins used should match with the MPPT
   TEST_ASSERT_EQUAL(0, s_mppt_current_pin);
@@ -186,7 +185,7 @@ void test_max_mppt_cycle_sets_values(void) {
     TEST_ASSERT_EQUAL(false, is_set);
     data_store_get_is_set(DATA_POINT_MPPT_PWM(mppt), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);
-    data_store_get_is_set(DATA_POINT_CR_BIT(mppt), &is_set);
+    data_store_get_is_set(DATA_POINT_MPPT_STATUS(mppt), &is_set);
     TEST_ASSERT_EQUAL(false, is_set);
   }
 
@@ -200,7 +199,7 @@ void test_max_mppt_cycle_sets_values(void) {
     TEST_ASSERT_EQUAL(true, is_set);
     data_store_get_is_set(DATA_POINT_MPPT_PWM(mppt), &is_set);
     TEST_ASSERT_EQUAL(true, is_set);
-    data_store_get_is_set(DATA_POINT_CR_BIT(mppt), &is_set);
+    data_store_get_is_set(DATA_POINT_MPPT_STATUS(mppt), &is_set);
     TEST_ASSERT_EQUAL(true, is_set);
 
     data_store_get(DATA_POINT_MPPT_CURRENT(mppt), &set_value);
@@ -209,8 +208,8 @@ void test_max_mppt_cycle_sets_values(void) {
     TEST_ASSERT_EQUAL(TEST_VOLTAGE, set_value);
     data_store_get(DATA_POINT_MPPT_PWM(mppt), &set_value);
     TEST_ASSERT_EQUAL(TEST_PWM, set_value);
-    data_store_get(DATA_POINT_CR_BIT(mppt), &set_value);
-    TEST_ASSERT_EQUAL(TEST_CR_BIT, set_value);
+    data_store_get(DATA_POINT_MPPT_STATUS(mppt), &set_value);
+    TEST_ASSERT_EQUAL(TEST_STATUS, set_value);
   }
 
   // the default status is OK, so no errors should have been thrown

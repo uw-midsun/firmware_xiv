@@ -88,9 +88,6 @@ static void prv_sig_state_handler(int signum, siginfo_t *info, void *ptr) {
 }
 
 void x86_interrupt_init(void) {
-  // Log the main thread ID for debugging.
-  LOG_DEBUG("Main Thread (id:%ld)\n", pthread_self());
-
   // Assign the s_pid to be the process id handling the interrupts. This
   // prevents subprocesses from sending a signal to itself instead.
   s_pid = getpid();
@@ -202,6 +199,13 @@ void x86_interrupt_unmask(void) {
   siginfo_t value_store;
   value_store.si_value.sival_int = X86_INTERRUPT_STATE_UNMASK;
   sigqueue(s_pid, SIGRTMIN + NUM_INTERRUPT_PRIORITIES, value_store.si_value);
+}
+
+void x86_interrupt_wake(void) {
+  siginfo_t value_store;
+  uint8_t interrupt_id = NUM_X86_INTERRUPT_INTERRUPTS;
+  value_store.si_value.sival_int = interrupt_id;
+  sigqueue(s_pid, SIGRTMIN + INTERRUPT_PRIORITY_HIGH, value_store.si_value);
 }
 
 bool x86_interrupt_in_handler(void) {

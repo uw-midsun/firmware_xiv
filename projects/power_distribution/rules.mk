@@ -7,3 +7,6 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common ms-drivers
+
+$(T)_test_output_MOCKS := adc_read_converted_pin gpio_set_state
+$(T)_test_pd_fan_ctrl_MOCKS := adc_read_converted_pin i2c_write i2c_read_reg

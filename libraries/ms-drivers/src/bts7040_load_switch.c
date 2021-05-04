@@ -51,9 +51,9 @@ StatusCode bts7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *set
   storage->fault_callback_context = settings->fault_callback_context;
 
   storage->resistor = settings->resistor;
+  storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
-  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // Initialize the enable pin
   status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin));
@@ -75,9 +75,9 @@ StatusCode bts7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSetting
   storage->fault_callback_context = settings->fault_callback_context;
 
   storage->resistor = settings->resistor;
+  storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
-  storage->max_fault_voltage_mv = settings->max_fault_voltage_mv;
 
   // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->enable_pin.enable_pin_pca9539r->i2c_address);
@@ -105,20 +105,21 @@ static void prv_convert_voltage_to_current(Bts7040Storage *storage, uint16_t *me
   if (*meas <= BTS7040_MAX_LEAKAGE_VOLTAGE_MV) {
     *meas = 0;
   } else {
-    *meas *= BTS7040_IS_SCALING_NOMINAL;
-    *meas /= storage->resistor;
+    // using 32 bits to avoid overflow, and signed ints to get around C's janky type system
+    uint32_t meas32 = (uint32_t)*meas;
+    meas32 *= BTS7040_IS_SCALING_NOMINAL;
+    meas32 /= storage->resistor;
+    int32_t unbiased_meas32 = (int32_t)meas32 - storage->bias;
+    *meas = (uint16_t)MAX(unbiased_meas32, 0);
   }
 }
 
 StatusCode bts7040_get_measurement(Bts7040Storage *storage, uint16_t *meas) {
-  AdcChannel sense_channel = NUM_ADC_CHANNELS;
-  status_ok_or_return(adc_get_channel(*storage->sense_pin, &sense_channel));
-
-  status_ok_or_return(adc_read_converted(sense_channel, meas));
+  status_ok_or_return(adc_read_converted_pin(*storage->sense_pin, meas));
 
   // Set equal to 0 if below/equal to leakage current.  Otherwise, convert to true load current.
   // Check for faults, call callback and handle fault if voltage is within fault range
-  if ((storage->min_fault_voltage_mv <= *meas) && (*meas <= storage->max_fault_voltage_mv)) {
+  if (*meas >= storage->min_fault_voltage_mv) {
     // We don't really need to convert the voltage here, but this is consistent with the BTS7200
     // driver's behaviour.
     prv_convert_voltage_to_current(storage, meas);
@@ -146,8 +147,8 @@ StatusCode bts7040_start(Bts7040Storage *storage) {
   return STATUS_CODE_OK;
 }
 
-bool bts7040_stop(Bts7040Storage *storage) {
-  bool result = soft_timer_cancel(storage->measurement_timer_id);
+void bts7040_stop(Bts7040Storage *storage) {
+  soft_timer_cancel(storage->measurement_timer_id);
   soft_timer_cancel(storage->enable_pin.fault_timer_id);
 
   // make sure calling stop twice doesn't cancel an unrelated timer
@@ -156,6 +157,4 @@ bool bts7040_stop(Bts7040Storage *storage) {
 
   // Fault handling no longer in progress
   storage->enable_pin.fault_in_progress = false;
-
-  return result;
 }

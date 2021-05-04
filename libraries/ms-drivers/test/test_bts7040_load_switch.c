@@ -6,22 +6,23 @@
 #include "log.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 
 #define TEST_I2C_PORT I2C_PORT_2
 #define TEST_I2C_ADDRESS 0x74
 
 // 1.21k resistor
 #define BTS7040_TEST_RESISTOR 1210
+#define BTS7040_TEST_BIAS 1
 
 // 1 mA * BTS7040_TEST_RESISTOR
 #define ADC_EXPECTED_OK_VOLTAGE 1210
 
 // Values are capped at this on power_distribution boards
 #define ADC_MIN_FAULT_VOLTAGE 3200
-#define ADC_MAX_FAULT_VOLTAGE 3300
 
-// Within fault range given
-#define ADC_FAULT_VOLTAGE 3250
+// Above fault voltage given
+#define ADC_FAULT_VOLTAGE 3300
 
 // Return ADC_EXPECTED_OK_VOLTAGE by default
 #define ADC_DEFAULT_RETURNED_VOLTAGE_RAW ADC_EXPECTED_OK_VOLTAGE
@@ -48,10 +49,10 @@ static void prv_fault_callback_increment(void *context) {
 // Storage is global so we can call bts7040_stop to stop soft timers and avoid segfaults
 static Bts7040Storage s_storage = { 0 };
 
-// Mocks adc_read_converted to allow for changing the reading during testing.
+// Mocks adc_read_converted_pin to allow for changing the reading during testing.
 // Note that this removes some of the interrupt functionality of the x86 adc implementation,
 // but this shouldn't matter in this case.
-StatusCode TEST_MOCK(adc_read_converted)(AdcChannel adc_channel, uint16_t *reading) {
+StatusCode TEST_MOCK(adc_read_converted_pin)(GpioAddress addr, uint16_t *reading) {
   *reading = s_adc_measurement;
 
   return STATUS_CODE_OK;
@@ -97,8 +98,8 @@ void test_bts7040_current_sense_timer_stm32_works(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -117,10 +118,11 @@ void test_bts7040_current_sense_timer_stm32_works(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 1) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 
   // make sure that stop actually stops it
   delay_us(2 * interval_us);
@@ -141,8 +143,8 @@ void test_bts7040_current_sense_timer_pca9539r_works(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    // no bias (should default to 0)
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -160,11 +162,12 @@ void test_bts7040_current_sense_timer_pca9539r_works(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 1) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 
   // make sure that stop actually stops it
   delay_us(2 * interval_us);
@@ -184,8 +187,8 @@ void test_bts7040_current_sense_restart(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -197,11 +200,12 @@ void test_bts7040_current_sense_restart(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 1) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 
   // make sure it's stopped
   delay_us(2 * interval_us);
@@ -215,11 +219,12 @@ void test_bts7040_current_sense_restart(void) {
 
   // wait in a busy loop for the callback to be called
   while (s_times_callback_called == 3) {
+    wait();
   }
 
   TEST_ASSERT_EQUAL(4, s_times_callback_called);
 
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 
   // make sure it's stopped
   delay_us(2 * interval_us);
@@ -237,8 +242,8 @@ void test_bts7040_current_sense_stm32_init_invalid_settings(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -271,8 +276,8 @@ void test_bts7040_current_sense_pca9539r_init_invalid_settings(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -304,14 +309,14 @@ void test_bts7040_current_sense_null_callback(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = NULL,
   };
 
   TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
   TEST_ASSERT_OK(bts7040_start(&s_storage));
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 }
 
 // Test that bts7040_get_measurement returns ok.
@@ -325,8 +330,8 @@ void test_bts7040_current_sense_get_measurement_stm32_valid(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -350,7 +355,6 @@ void test_bts7040_current_sense_get_measurement_pca9539r_valid(void) {
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
 
@@ -359,29 +363,6 @@ void test_bts7040_current_sense_get_measurement_pca9539r_valid(void) {
   uint16_t reading = 0;
   TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &reading));
   LOG_DEBUG("PCA9539R reading: %d\n", reading);
-}
-
-// Test that bts7040_stop returns true only when it stops a timer
-void test_bts7040_current_sense_stop_return_behaviour(void) {
-  // this doesn't matter (adc isn't reading anything) but can't be null
-  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
-  GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
-  uint32_t interval_us = 500;                                       // 0.5 ms
-  Bts7040Stm32Settings settings = {
-    .sense_pin = &test_sense_pin,
-    .enable_pin = &test_enable_pin,
-    .interval_us = interval_us,
-    .resistor = BTS7040_TEST_RESISTOR,
-    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
-    .callback = &prv_callback_increment,
-  };
-
-  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
-  TEST_ASSERT_FALSE(bts7040_stop(&s_storage));
-  TEST_ASSERT_OK(bts7040_start(&s_storage));
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
-  TEST_ASSERT_FALSE(bts7040_stop(&s_storage));
 }
 
 // Test that the context is actually passed to the function
@@ -397,15 +378,15 @@ void test_bts7040_current_sense_context_passed(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .callback_context = context_pointer,
   };
 
   TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
   TEST_ASSERT_OK(bts7040_start(&s_storage));
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
   TEST_ASSERT_EQUAL(context_pointer, s_received_context);
 }
 
@@ -421,8 +402,8 @@ void test_bts7040_output_functions_work(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
   };
   TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &settings));
@@ -455,7 +436,7 @@ void test_bts7040_output_functions_work(void) {
   TEST_ASSERT_FALSE(bts7040_get_output_enabled(&s_storage));
 
   // Stop
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 }
 
 // Test that fault callback gets called when measurement is within fault range.
@@ -470,8 +451,8 @@ void test_bts7040_faults_within_fault_range(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
@@ -499,8 +480,8 @@ void test_bts7040_no_fault_outside_of_fault_range(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
@@ -514,8 +495,6 @@ void test_bts7040_no_fault_outside_of_fault_range(void) {
   bts7040_get_measurement(&s_storage, &meas);
 
   TEST_ASSERT_EQUAL(0, s_times_fault_callback_called);
-
-  s_times_fault_callback_called = 0;
 }
 
 // Test that the fault callback gets called when running bts7040_start, and
@@ -531,8 +510,8 @@ void test_bts7040_fault_cb_called_from_start(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -544,8 +523,7 @@ void test_bts7040_fault_cb_called_from_start(void) {
   s_adc_measurement = ADC_FAULT_VOLTAGE;
   delay_us(2 * interval_us);  // wait for 2* interval
   TEST_ASSERT_TRUE(s_times_fault_callback_called > 0);
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
-  s_times_fault_callback_called = 0;
+  bts7040_stop(&s_storage);
 }
 
 // Test that fault cleared correctly, and that the IN pin is toggled
@@ -561,8 +539,8 @@ void test_bts7040_handle_fault_clears_fault(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -592,7 +570,7 @@ void test_bts7040_handle_fault_clears_fault(void) {
   delay_ms(40);
   TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
 
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 }
 
 // Test that fault context is passed on correctly on fault.
@@ -607,8 +585,8 @@ void test_bts7040_fault_context_passed_on_fault(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
     .fault_callback_context = context_pointer,
@@ -638,8 +616,8 @@ void test_bts7040_enable_fails_during_fault(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -672,7 +650,7 @@ void test_bts7040_enable_fails_during_fault(void) {
   TEST_ASSERT_TRUE(bts7040_get_output_enabled(&s_storage));
 
   // Stop
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 }
 
 // Make sure that bts7040_stop stops all soft timers and sets
@@ -688,8 +666,8 @@ void test_bts7040_stop_works(void) {
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
     .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
     .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
-    .max_fault_voltage_mv = ADC_MAX_FAULT_VOLTAGE,
     .callback = &prv_callback_increment,
     .fault_callback = &prv_fault_callback_increment,
   };
@@ -708,7 +686,7 @@ void test_bts7040_stop_works(void) {
   TEST_ASSERT_TRUE(soft_timer_remaining_time(s_storage.enable_pin.fault_timer_id) > 0);
 
   // Stop
-  TEST_ASSERT_TRUE(bts7040_stop(&s_storage));
+  bts7040_stop(&s_storage);
 
   // Verify
   TEST_ASSERT_EQUAL(SOFT_TIMER_INVALID_TIMER, s_storage.measurement_timer_id);

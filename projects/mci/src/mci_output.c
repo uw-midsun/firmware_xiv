@@ -87,7 +87,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("is cruise? %d\n", is_cruise);
     // LOG_DEBUG("velocity lookup %d\n", s_velocity_lookup[drive_state]);
   }
-  /** Handling message **/
+  // Handling message
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
   prv_send_wavesculptor_message(storage, MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID, drive_command);
   soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
