@@ -43,8 +43,9 @@ static Mcp2515Storage s_motor_can_storage;
 static CanStorage s_can_storage;
 static MotorControllerBroadcastStorage s_broadcast_storage;
 
-static bool s_recieved_velocity = false;
-static bool s_recieved_bus_measurement = false;
+static bool s_received_velocity = false;
+static bool s_received_bus_measurement = false;
+static bool s_received_status[2] = {false, false}; // left, right
 
 static MotorControllerBroadcastSettings s_broadcast_settings =
     { .motor_can = &s_motor_can_storage,
@@ -61,6 +62,7 @@ typedef struct TestWaveSculptorBusMeasurement {
 typedef struct TestMotorControllerMeasurements {
   TestWaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   uint16_t vehicle_velocity[NUM_MOTOR_CONTROLLERS];
+  uint64_t motor_status[NUM_MOTOR_CONTROLLERS];
 } TestMotorControllerMeasurements;
 
 static TestMotorControllerMeasurements s_test_measurements = { 0 };
@@ -94,7 +96,7 @@ static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
   CAN_UNPACK_MOTOR_VELOCITY(msg, &left_velocity, &right_velocity);
   s_test_measurements.vehicle_velocity[LEFT_MOTOR_CONTROLLER] = left_velocity;
   s_test_measurements.vehicle_velocity[RIGHT_MOTOR_CONTROLLER] = right_velocity;
-  s_recieved_velocity = true;
+  s_received_velocity = true;
   return STATUS_CODE_OK;
 }
 
@@ -106,7 +108,14 @@ static StatusCode prv_handle_bus_measurement(const CanMessage *msg, void *contex
   s_test_measurements.bus_measurements[LEFT_MOTOR_CONTROLLER].bus_current_a = left_current;
   s_test_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_voltage_v = right_voltage;
   s_test_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a = right_current;
-  s_recieved_bus_measurement = true;
+  s_received_bus_measurement = true;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_handle_status(const CanMessage *msg, void *context,
+                                    CanAckStatus *ack_reply) {
+  uint64_t status;
+  CAN_UNPACK_MOTOR_DEBUG(msg, &status);
   return STATUS_CODE_OK;
 }
 
@@ -239,11 +248,13 @@ void setup_test(void) {
                                          prv_handle_bus_measurement, NULL));
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, prv_handle_velocity, NULL));
+
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_DEBUG, prv_handle_status, NULL));
 }
 
 void teardown_test(void) {
-  s_recieved_velocity = false;
-  s_recieved_bus_measurement = false;
+  s_received_velocity = false;
+  s_received_bus_measurement = false;
   memset(&s_test_measurements, 0, sizeof(s_test_measurements));
   memset(&s_broadcast_storage, 0, sizeof(s_broadcast_storage));
 }
@@ -253,7 +264,7 @@ void teardown_test(void) {
 // lb - left bus measurement
 // rb - right bus measurement
 
-// Test 1: lb rv lv rb (check 2 output)
+// Test 1: General broadcast flow.  Should output 4 times
 void test_all_measurements_lb_rv_lv_rb() {
   LOG_DEBUG("start of test all\n");
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
@@ -280,7 +291,7 @@ void test_all_measurements_lb_rv_lv_rb() {
         },
   };
   LOG_DEBUG("before prv send\n");
-  // need to send in this order so filter works correctly
+  // need to send in this order because of how the filter works
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
@@ -304,10 +315,10 @@ void test_all_measurements_lb_rv_lv_rb() {
 
   LOG_DEBUG("after, before delay\n");
   delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  // prv_assert_double_broadcast();
+  // prv_assert_num_broadcasts(1);
   prv_assert_num_broadcasts(4);
-  TEST_ASSERT_TRUE(s_recieved_velocity);
-  TEST_ASSERT_TRUE(s_recieved_bus_measurement);
+  TEST_ASSERT_TRUE(s_received_velocity);
+  TEST_ASSERT_TRUE(s_received_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -353,10 +364,10 @@ void test_all_measurements_lb_rb_lv_rv() {
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_double_broadcast();
+  prv_assert_num_broadcasts(1);
 
-  TEST_ASSERT_TRUE(s_recieved_velocity);
-  TEST_ASSERT_TRUE(s_recieved_bus_measurement);
+  TEST_ASSERT_TRUE(s_received_velocity);
+  TEST_ASSERT_TRUE(s_received_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -401,10 +412,10 @@ void test_all_measurements_rb_lb_lv_rv() {
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_double_broadcast();
+  prv_assert_num_broadcasts(1);
 
-  TEST_ASSERT_TRUE(s_recieved_velocity);
-  TEST_ASSERT_TRUE(s_recieved_bus_measurement);
+  TEST_ASSERT_TRUE(s_received_velocity);
+  TEST_ASSERT_TRUE(s_received_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -416,7 +427,8 @@ void test_all_measurements_rb_lb_lv_rv() {
 }
 
 */
-// Test 4: rb (check no output)
+/*
+// Test 4: Only send right side measurements and check that only status outputs
 void test_no_measurements_rb() {
   // motor_can tx and rx should happen immedietly
 
@@ -444,14 +456,23 @@ void test_no_measurements_rb() {
         },
   };
 
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE,
                         &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  prv_assert_num_broadcasts(1);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  TEST_ASSERT_FALSE(s_recieved_velocity);
-  TEST_ASSERT_FALSE(s_recieved_bus_measurement);
+  TEST_ASSERT_FALSE(s_received_velocity);
+  TEST_ASSERT_FALSE(s_received_bus_measurement);
 
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_voltage_v = 0;
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a = 0;
@@ -499,10 +520,10 @@ void test_bus_measurements_rb_lb() {
                         &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_single_broadcast();
+  prv_assert_num_broadcasts(1);
 
-  TEST_ASSERT_FALSE(s_recieved_velocity);
-  TEST_ASSERT_TRUE(s_recieved_bus_measurement);
+  TEST_ASSERT_FALSE(s_received_velocity);
+  TEST_ASSERT_TRUE(s_received_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -545,10 +566,10 @@ void test_velocity_measurements_rv_lv() {
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_single_broadcast();
+  prv_assert_num_broadcasts(1);
 
-  TEST_ASSERT_TRUE(s_recieved_velocity);
-  TEST_ASSERT_FALSE(s_recieved_bus_measurement);
+  TEST_ASSERT_TRUE(s_received_velocity);
+  TEST_ASSERT_FALSE(s_received_bus_measurement);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -594,8 +615,8 @@ void test_no_measurements_rb_lv() {
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  TEST_ASSERT_FALSE(s_recieved_velocity);
-  TEST_ASSERT_FALSE(s_recieved_bus_measurement);
+  TEST_ASSERT_FALSE(s_received_velocity);
+  TEST_ASSERT_FALSE(s_received_bus_measurement);
 
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_voltage_v = 0;
   expected_measurements.bus_measurements[RIGHT_MOTOR_CONTROLLER].bus_current_a = 0;
@@ -644,10 +665,10 @@ void test_all_measurements_rv_lv_then_rb_lb() {
                         &expected_first_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_single_broadcast();
+  prv_assert_num_broadcasts(1);
 
-  TEST_ASSERT_TRUE(s_recieved_velocity);
-  TEST_ASSERT_FALSE(s_recieved_bus_measurement);
+  TEST_ASSERT_TRUE(s_received_velocity);
+  TEST_ASSERT_FALSE(s_received_bus_measurement);
 
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL(
@@ -660,8 +681,8 @@ void test_all_measurements_rv_lv_then_rb_lb() {
                       s_test_measurements.vehicle_velocity[motor_id]);
   }
 
-  s_recieved_velocity = false;
-  s_recieved_bus_measurement = false;
+  s_received_velocity = false;
+  s_received_bus_measurement = false;
   memset(&s_test_measurements, 0, sizeof(s_test_measurements));
 
   MotorControllerMeasurements expected_second_measurements = {
@@ -691,10 +712,10 @@ void test_all_measurements_rv_lv_then_rb_lb() {
                         &expected_second_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  prv_assert_single_broadcast();
+  prv_assert_num_broadcasts(1);
 
-  TEST_ASSERT_FALSE(s_recieved_velocity);
-  TEST_ASSERT_TRUE(s_recieved_bus_measurement);
+  TEST_ASSERT_FALSE(s_received_velocity);
+  TEST_ASSERT_TRUE(s_received_bus_measurement);
 
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL(
