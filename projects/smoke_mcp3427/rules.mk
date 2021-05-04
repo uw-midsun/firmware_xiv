@@ -6,4 +6,4 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 # Specify the libraries you want to include
-$(T)_DEPS := ms-common ms-drivers
+$(T)_DEPS := ms-helpers ms-common ms-drivers

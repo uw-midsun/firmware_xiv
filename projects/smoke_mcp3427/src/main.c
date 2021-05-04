@@ -6,6 +6,7 @@
 // https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1475543041/MCP3427+smoke+test+user+guide
 #include "mcp3427_adc.h"
 
+#include "controller_board_pins.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "i2c.h"
@@ -22,17 +23,6 @@
 #define SMOKE_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
 #define SMOKE_AMP_GAIN MCP3427_AMP_GAIN_1
 #define SMOKE_CONVERSION_MODE MCP3427_CONVERSION_MODE_ONE_SHOT
-
-// I2C settings
-#define I2C1_SDA \
-  { .port = GPIO_PORT_B, .pin = 11 }
-#define I2C1_SCL \
-  { .port = GPIO_PORT_B, .pin = 10 }
-
-#define I2C2_SDA \
-  { .port = GPIO_PORT_B, .pin = 9 }
-#define I2C2_SCL \
-  { .port = GPIO_PORT_B, .pin = 8 }
 
 // Unique ID of each MCP3427
 typedef enum {
@@ -172,15 +162,15 @@ int main() {
 
   I2CSettings i2c1_settings = {
     .speed = I2C_SPEED_FAST,
-    .sda = I2C1_SDA,
-    .scl = I2C1_SCL,
+    .sda = CONTROLLER_BOARD_ADDR_I2C1_SDA,
+    .scl = CONTROLLER_BOARD_ADDR_I2C1_SCL,
   };
   i2c_init(I2C_PORT_1, &i2c1_settings);
 
   I2CSettings i2c2_settings = {
     .speed = I2C_SPEED_FAST,
-    .sda = I2C2_SDA,
-    .scl = I2C2_SCL,
+    .sda = CONTROLLER_BOARD_ADDR_I2C2_SDA,
+    .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,
   };
   i2c_init(I2C_PORT_2, &i2c2_settings);
 
