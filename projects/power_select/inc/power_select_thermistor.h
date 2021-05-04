@@ -17,4 +17,4 @@ double resistance_to_temp(double resistance);
 #define POWER_SELECT_THERMISTOR_RESISTOR 10000
 
 #define voltage_to_res(v) \
-  POWER_SELECT_THERMISTOR_VREF_SCALED / (double)((v) / MV_TO_V) - POWER_SELECT_THERMISTOR_RESISTOR
+  (POWER_SELECT_THERMISTOR_VREF_SCALED / (double)((v) / MV_TO_V) - POWER_SELECT_THERMISTOR_RESISTOR)

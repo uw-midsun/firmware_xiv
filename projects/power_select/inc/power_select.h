@@ -4,6 +4,7 @@
 // Requires gpio, interrupts, event queue, CAN, ADC (in ADC_MODE_SINGLE), and soft timers to be
 // initialized.
 
+#include <inttypes.h>
 #include "adc.h"
 #include "can_pack.h"
 #include "can_transmit.h"
