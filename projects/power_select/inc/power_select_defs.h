@@ -38,6 +38,9 @@ typedef enum {
   NUM_POWER_SELECT_FAULTS,
 } PowerSelectFault;
 
+// Faults that require the LTC to be turned off
+#define POWER_SELECT_LTC_DISABLE_FAULT_MASK 0b1111111
+
 // Sense pins
 #define POWER_SELECT_PWR_SUP_ISENSE_ADDR \
   { GPIO_PORT_A, 7 }

@@ -6,6 +6,7 @@
 #include "generic_can.h"
 #include "interrupt.h"
 #include "log.h"
+#include "wait.h"
 
 #include "power_select.h"
 #include "power_select_can.h"
@@ -25,7 +26,7 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
-int main() {
+int main(void) {
   interrupt_init();
   gpio_init();
   gpio_it_init();
@@ -43,6 +44,7 @@ int main() {
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
+      wait();
     }
     can_process_event(&e);
   }

@@ -42,7 +42,7 @@ const uint16_t g_power_select_max_currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS
 static void prv_handle_fault(void) {
   // Turn off/on LTC depending on fault status
   GpioAddress pin = POWER_SELECT_LTC_SHDN_ADDR;
-  if (s_storage.fault_bitset == 0) {
+  if ((s_storage.fault_bitset & POWER_SELECT_LTC_DISABLE_FAULT_MASK) == 0) {
     // Turn back on if not already
     gpio_set_state(&pin, GPIO_STATE_HIGH);
   } else {
@@ -112,7 +112,7 @@ static void prv_read_temps(void) {
     adc_read_converted_pin(g_power_select_temp_pins[i], &temp);
 
     s_storage.temps[i] = (int32_t)resistance_to_temp(voltage_to_res(temp));
-    LOG_DEBUG("Temp %" PRIu8 ": %" SCNi32 " C\n", i, s_storage.temps[i]);
+    LOG_DEBUG("Temp %" PRIu8 ": %" PRIi32 " C\n", i, s_storage.temps[i]);
   }
 }
 
@@ -268,12 +268,11 @@ StatusCode power_select_init(void) {
 
 StatusCode power_select_start(uint32_t interval_us) {
   s_storage.interval_us = interval_us;
-  if (s_storage.measurement_in_progress == false) {
-    s_storage.measurement_in_progress = true;
-    prv_periodic_measure(s_storage.timer_id, &s_storage);
-  } else {
+  if (s_storage.measurement_in_progress) {
     return STATUS_CODE_RESOURCE_EXHAUSTED;
   }
+  s_storage.measurement_in_progress = true;
+  prv_periodic_measure(s_storage.timer_id, &s_storage);
   return STATUS_CODE_OK;
 }
 
