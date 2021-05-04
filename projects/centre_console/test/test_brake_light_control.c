@@ -29,16 +29,6 @@ typedef enum {
 static CanStorage s_can_storage = { 0 };
 static PedalMonitorStorage s_pedal_storage = { 0 };
 
-// Mocked function from pedal_monitor.c to avoid dealing with soft_timer
-static void TEST_MOCK(prv_update_state(SoftTimerId timer_id, void *context)) {
-  PedalMonitorStorage *storage = context;
-  PedalState current_state = storage->state;
-  PedalValues pedal_values = pedal_rx_get_pedal_values(&storage->rx_storage);
-  storage->state =
-      (pedal_values.brake > PEDAL_STATE_THRESHOLD) ? PEDAL_STATE_PRESSED : PEDAL_STATE_RELEASED;
-  brake_light_control_update(current_state, storage->state);
-}
-
 // Stores unpacked data from RX handler messages
 static uint8_t s_brake_lights_id;
 static uint8_t s_brake_lights_state;
@@ -46,7 +36,7 @@ static uint8_t s_brake_lights_state;
 // Callback function for RX handler
 static StatusCode prv_brake_lights_handler(const CanMessage *msg, void *context,
                                            CanAckStatus *ack_reply) {
-  CAN_UNPACK_LIGHTS(msg, s_brake_lights_id, s_brake_lights_state);
+  CAN_UNPACK_LIGHTS(msg, &s_brake_lights_id, &s_brake_lights_state);
   return STATUS_CODE_OK;
 }
 
@@ -63,28 +53,50 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-// Test that CAN message for brake light on is sent when pedal is pressed
-void test_CAN_brake_light_on_when_pedal_pressed(void){
-  // Set pedal state to pressed by setting pedal values above threshold
+// Tests for PEDAL_MONITOR_STATE_CHANGE raising behaviour:
 
-  // Call the callback function (simulate soft_timer activation)
+// Test that no events are raised if pedal remains in one state
+// (either pressed or released)
+void test_no_state_change_event_when_state_constant(void){
+// Test for when the pedal state changes from pressed to pressed
 
-  // Check that a CAN message has been TX'ed with correct ID & state
+// Test for when the pedal state changes from released to released
 
 }
 
-// Test that CAN message for brake light off is sent when pedal is released
-void test_CAN_brake_light_off_when_pedal_released(void){
-  // Set pedal state to pressed by setting pedal values above threshold
+// Test that a PEDAL_MONITOR_STATE_CHANGE event is raised when
+// the pedal state changes
+void test_state_change_event_raised_when_pedal_state_changes(void){
+// Test for when the pedal state changes from pressed to released
 
-  // Call the callback function (simulate soft_timer activation)
+// Test for when the pedal state changes from released to pressed
+
+}
+
+// Tests for CAN transmission behaviour given PEDAL_MONITOR_STATE_CHANGE:
+
+// Test that CAN message for brake light on is sent when pedal is pressed
+void test_CAN_brake_light_on_when_pedal_pressed(void){
+  // Raise PEDAL_MONITOR_STATE_CHANGE event with pedal pressed state
 
   // Check that a CAN message has been TX'ed with correct ID & state
   
 }
 
-// Test that no CAN messages are sent if pedal remains in one state
-// (either pressed or released)
-void test_no_CAN_msg_when_state_constant(void){
+// Test that CAN message for brake light off is sent when pedal is released
+void test_CAN_brake_light_off_when_pedal_released(void){
+  // Raise PEDAL_MONITOR_STATE_CHANGE event with pedal released state
 
+  // Check that a CAN message has been TX'ed with correct ID & state
+  
+}
+
+// Test that processing a non DATA_READY_EVENT returns false (fails gracefully)
+void test_not_data_ready_event(void) {
+  // NULL passed in
+  TEST_ASSERT_FALSE(fan_control_process_event(NULL));
+
+  // Non DATA_READY_EVENT passed in
+  Event e = { PEDAL_MONITOR_STATE_CHANGE + 1, 0 };
+  TEST_ASSERT_FALSE(fan_control_process_event(&e));
 }

@@ -9,7 +9,9 @@ static void prv_update_state(SoftTimerId timer_id, void *context) {
   PedalValues pedal_values = pedal_rx_get_pedal_values(&storage->rx_storage);
   storage->state =
       (pedal_values.brake > PEDAL_STATE_THRESHOLD) ? PEDAL_STATE_PRESSED : PEDAL_STATE_RELEASED;
-  brake_light_control_update(current_state, storage->state);
+  if (current_state != storage->state){
+    event_raise(PEDAL_MONITOR_STATE_CHANGE, storage->state);
+  }
   soft_timer_start_millis(PEDAL_STATE_UPDATE_FREQUENCY_MS, prv_update_state, &s_storage,
                           &s_storage.timer_id);
 }

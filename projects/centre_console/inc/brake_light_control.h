@@ -5,6 +5,8 @@
 
 // Requires pedal_monitor, CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
 
+#include <stdbool.h>
+
 #include "status.h"
 
-static void brake_light_control_update(PedalState current_state, PedalState new_state);
+bool brake_light_control_process_event(Event *e);

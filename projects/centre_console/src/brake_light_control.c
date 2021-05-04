@@ -22,10 +22,12 @@ static void prv_can_transmit_brake_light_change(PedalState current_state) {
   }
 }
 
-// Callback function for soft timer
-// Checks whether or not a CAN message should be transmitted
-static void brake_light_control_update(PedalState current_state, PedalState new_state){
-  if (current_state != new_state) {
-    prv_can_transmit_brake_light_change(current_state);
+// Processes PEDAL_MONITOR_STATE_CHANGE events and will call
+// the above private function to update brake lights
+bool brake_light_control_process_event(Event *e){
+  if (e != NULL && e->id == PEDAL_MONITOR_STATE_CHANGE) {
+    prv_can_transmit_brake_light_change(e->data);
+    return true;
   }
+  return false;
 }
