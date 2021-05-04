@@ -79,7 +79,7 @@ static const I2CSettings s_i2c2_settings = {
 };
 
 static const SpiSettings s_spi_settings = {
-  .baudrate = 60000,
+  .baudrate = 6000000,
   .mode = SPI_MODE_3,
   .mosi = SOLAR_SPI2_MOSI,
   .miso = SOLAR_SPI2_MISO,
