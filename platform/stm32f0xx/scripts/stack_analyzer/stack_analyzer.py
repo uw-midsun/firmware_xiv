@@ -1720,11 +1720,11 @@ class StackAnalyzer(object):
                     routine_func.stack_max_usage))
             else:
                 print('Nested interrupt: {}, Max size: {} ({} + {} context-switching overhead)'
-                    .format(
-                        task.name,
-                        routine_func.stack_max_usage + extra_stack_frame,
-                        routine_func.stack_max_usage,
-                        extra_stack_frame))
+                      .format(
+                          task.name,
+                          routine_func.stack_max_usage + extra_stack_frame,
+                          routine_func.stack_max_usage,
+                          extra_stack_frame))
                 worst_case_stack_usage += extra_stack_frame
 
             worst_case_stack_usage += routine_func.stack_max_usage

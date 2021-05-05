@@ -1,8 +1,10 @@
 from collections import deque, namedtuple
 import queue
 
+
 class NoLog(queue.Empty):
     pass
+
 
 Log = namedtuple('Log', ['tag', 'msg'])
 
