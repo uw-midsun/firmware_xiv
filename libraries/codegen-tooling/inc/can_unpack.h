@@ -90,6 +90,9 @@
                       (vehicle_velocity_right_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_MOTOR_STATUS(msg_ptr, motor_status_l_u32_ptr, motor_status_r_u32_ptr) \
+  can_unpack_impl_u32((msg_ptr), 8, (motor_status_l_u32_ptr), (motor_status_r_u32_ptr))
+
 #define CAN_UNPACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32_ptr, motor_temp_r_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (motor_temp_l_u32_ptr), (motor_temp_r_u32_ptr))
 

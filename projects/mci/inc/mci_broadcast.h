@@ -51,6 +51,7 @@ typedef struct {
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
+  uint32_t status[NUM_MOTOR_CONTROLLERS];
 } MotorControllerMeasurements;
 
 typedef struct MotorControllerBroadcastSettings {
@@ -62,8 +63,8 @@ typedef struct MotorControllerBroadcastStorage {
   Mcp2515Storage *motor_can;
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
+  uint8_t status_rx_bitset;
   MotorControllerMeasurements measurements;
-  uint64_t status;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
   MotorControllerMeasurementCallback
       callbacks[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS];  // Callbacks exposed so we can unit

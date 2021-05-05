@@ -50,8 +50,10 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 }
 
 static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
-  LOG_DEBUG("broadcasting status: 0x%x%x\n", (int)storage->status, (int)(storage->status >> 32));
-  CAN_TRANSMIT_MOTOR_DEBUG(storage->status);
+  LOG_DEBUG("broadcasting status: 0x%x%x\n", storage->measurements.status[LEFT_MOTOR_CONTROLLER], storage->measurements.status[RIGHT_MOTOR_CONTROLLER]);
+  // LOG_DEBUG("broadcasting status: 0x%x\n", storage->measurements.status);
+  uint32_t *measurements = storage->measurements.status;
+  CAN_TRANSMIT_MOTOR_STATUS(measurements[LEFT_MOTOR_CONTROLLER], measurements[RIGHT_MOTOR_CONTROLLER]);
 }
 
 // Change the MCP2515 filter to filter for the next ID to look for
@@ -72,7 +74,8 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   // MCP2515 requires both filters to be set, so just use the same one twice
   // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required one by one
   uint32_t filters[2] = { filter, filter };
-  LOG_DEBUG("Change filter result %d\n", mcp2515_set_filter(storage->motor_can, filters));
+  StatusCode status = mcp2515_set_filter(storage->motor_can, filters);
+  LOG_DEBUG("Change filter result %d\n", status);
 }
 
 // CB for rx received
@@ -128,8 +131,21 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("got status message\n");
   MotorControllerBroadcastStorage *storage = context;
-  storage->status = msg->data;
-  prv_broadcast_status(storage);
+
+  WaveSculptorCanId can_id = { .raw = msg->id };
+  WaveSculptorCanData can_data = { .raw = msg->data };
+
+  for(size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
+    // Cast out upper 32 bits so we can broadcast both status in one CAN message
+    uint32_t status = (uint32_t)(can_data.raw);
+    if(can_id.device_id == storage->ids[motor_id]) {
+      bool disabled = critical_section_start();
+      storage->measurements.status[motor_id] = status;
+      storage->status_rx_bitset |= 1 << motor_id;
+      critical_section_end(disabled);
+      break;
+    }
+  }
 }
 
 static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
@@ -234,7 +250,13 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("sending bus periodic broadcast\n");
     prv_broadcast_bus_measurement(storage);
   }
-  // TODO(SOFT-139): Send status messages here as well
+  if (storage->status_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
+    // Received status info from all motor controllers - clear bitset and broadcast
+    storage->status_rx_bitset = 0;
+    LOG_DEBUG("Sending status periodic broadcast\n");
+    prv_broadcast_status(storage);
+  }
+  // TODO(SOFT-139): Send status messages here as well (should be done now)
   soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                           storage, NULL);
 }
