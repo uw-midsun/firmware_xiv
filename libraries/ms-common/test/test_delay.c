@@ -23,10 +23,8 @@ void test_delay_us(void) {
 // The following 2 functions test that delay_us can be used
 // inside a soft timer callback without deadlock (issue SOFT-298)
 static void callback(SoftTimerId timer, void *context) {
-  LOG_DEBUG("Callback started\n");
   delay_us(10000);
   soft_timer_done = true;
-  LOG_DEBUG("Callback ended\n");
 }
 void test_delay_in_soft_timer(void) {
   soft_timer_done = false;
