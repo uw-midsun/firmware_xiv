@@ -115,6 +115,16 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
     };
     storage->cb_storage.callbacks[cb_index](&msg, context);
   }
+
+  // Check if we received the ID we're looking for
+  // Return early if not so we keep looking for that ID until we get it
+  if (cb_index != storage->cb_storage.cur_measurement) {
+    LOG_WARN("WARNING - filtering for ID %d but processed %d", storage->cb_storage.cur_measurement,
+             cb_index);
+    // TODO(SOFT-139): similar error handling to above
+    return;
+  }
+
   // Change to filter for next message
   prv_change_filter(storage);
 }
