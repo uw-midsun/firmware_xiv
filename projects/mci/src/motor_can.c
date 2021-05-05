@@ -26,8 +26,8 @@
 
 #include <string.h>
 
-#include "motor_can.h"
 #include "log.h"
+#include "motor_can.h"
 
 static inline uint8_t pack_left_shift_u32(uint32_t value, uint8_t shift, uint8_t mask) {
   return (uint8_t)((uint8_t)(value << shift) & mask);
@@ -58,6 +58,7 @@ int motor_can_drive_command_pack(uint8_t *dst_p, const MotorCanDriveCommand *src
   dst_p[6] |= pack_right_shift_u32(motor_current, 16u, 0xffu);
   dst_p[7] |= pack_right_shift_u32(motor_current, 24u, 0xffu);
 
-  LOG_DEBUG("motor current %d motor velocity %d???\n", (int)((uint32_t)motor_current), (int)((uint32_t)motor_velocity));
+  LOG_DEBUG("motor current %d motor velocity %d???\n", (int)((uint32_t)motor_current),
+            (int)((uint32_t)motor_velocity));
   return (8);
 }

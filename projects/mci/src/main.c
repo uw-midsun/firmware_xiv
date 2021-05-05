@@ -20,7 +20,6 @@
 #include "log.h"
 
 static CanStorage s_can_storage;
-// static GenericCanMcp2515 s_can_mcp2515;
 static MotorControllerStorage s_mci_storage;
 
 static Mcp2515Storage s_can_mcp2515;
@@ -42,39 +41,13 @@ void prv_setup_system_can() {
   cruise_rx_init();
 }
 
-/*
-static void prv_setup_motor_can(void) {
-  Mcp2515Settings mcp2515_settings = {
-    .spi_port = SPI_PORT_2,
-    .spi_baudrate = 6000000,
-    .mosi = { .port = GPIO_PORT_B, 15 },
-    .miso = { .port = GPIO_PORT_B, 14 },
-    .sclk = { .port = GPIO_PORT_B, 13 },
-    .cs = { .port = GPIO_PORT_B, 12 },
-    .int_pin = { .port = GPIO_PORT_A, 8 },
-
-    .can_bitrate = MCP2515_BITRATE_500KBPS,
-    .loopback = false,
-    // filter at MCP2515 instead of through SW
-    .filters = {
-      [MCP2515_FILTER_ID_RXF0] = {.raw = 0x1},
-      [MCP2515_FILTER_ID_RXF1] = {.raw = 0x402},
-    },
-  };
-  // debug stuff to apply filters directly to mcp2515
-  //generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
-  mcp2515_init(&s_test_can_mcp2515, &mcp2515_settings);
-  mcp2515_register_cbs(&s_test_can_mcp2515, prv_test_receive_rx, NULL, NULL);
-}
-*/
-
 void prv_mci_storage_init(void *context) {
   PrechargeControlSettings precharge_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
     .precharge_monitor2 = { .port = GPIO_PORT_A, .pin = 10 },
   };
-  LOG_DEBUG("precharge init: %d\n", precharge_control_init(&precharge_settings));
+  precharge_control_init(&precharge_settings);
 
   MotorControllerBroadcastSettings broadcast_settings =
       { .motor_can = &s_can_mcp2515,
@@ -94,15 +67,10 @@ int main(void) {
   gpio_init();
   gpio_it_init();
 
-  LOG_DEBUG("here 1\n");
-
   prv_setup_system_can();
-  // prv_setup_motor_can();
 
-  LOG_DEBUG("before storage init\n");
   prv_mci_storage_init(&s_mci_storage);
   drive_fsm_init();  // why do we call this here after calling it in prv_setup_system_can?
-  LOG_DEBUG("after storage init\n");
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {

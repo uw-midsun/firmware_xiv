@@ -51,7 +51,6 @@ static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
   memcpy(&msg.data, data, sizeof(data));
   LOG_DEBUG("Sending speed message to wavesculptor, id 0x%x\n", (int)msg.id);
   mcp2515_tx(storage->motor_can, msg.id, msg.extended, msg.data, msg.dlc);
-  // generic_can_tx(storage->motor_can, &msg);
 }
 
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {

@@ -131,14 +131,16 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
             expected_value->motor_velocity,
             fabs(actual_value.motor_velocity - expected_value->motor_velocity),
             TEST_MCI_OUTPUT_THRESHOLD);
-  
+
   TEST_ASSERT_TRUE(id == MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID ||
                    id == MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID);
-  
-  TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_velocity, actual_value.motor_velocity);
 
-  TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_current, actual_value.motor_current);
-  
+  TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_velocity,
+                           actual_value.motor_velocity);
+
+  TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_current,
+                           actual_value.motor_current);
+
   s_test_mci_output_storage.pedal_sent = false;
   // verify id and dlc are as expected
   return STATUS_CODE_OK;

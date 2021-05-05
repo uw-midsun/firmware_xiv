@@ -14,21 +14,16 @@
 
 #define M_TO_CM_CONV 100
 
-// static Mcp2515Storage s_mcp2515_storage;
+static const uint16_t MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP
+    [NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
+      [MOTOR_CONTROLLER_BROADCAST_STATUS] = MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
+      [MOTOR_CONTROLLER_BROADCAST_BUS] = MOTOR_CONTROLLER_BROADCAST_BUS_OFFSET,
+      [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = MOTOR_CONTROLLER_BROADCAST_VELOCITY_OFFSET,
+      [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP_OFFSET,
+      [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET
+    };
 
-// static MotorControllerCallbackStorage s_cb_storage;
-
-static const uint16_t
-    MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP
-        [NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
-          [MOTOR_CONTROLLER_BROADCAST_STATUS] = MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET,
-          [MOTOR_CONTROLLER_BROADCAST_BUS] = MOTOR_CONTROLLER_BROADCAST_BUS_OFFSET,
-          [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = MOTOR_CONTROLLER_BROADCAST_VELOCITY_OFFSET,
-          [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP_OFFSET,
-          [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET
-        };
-
-// Uncomment when using with only the left motor controller
+// Uncomment when using with only the left motor controller (when testing hardware)
 // #define RIGHT_MOTOR_CONTROLLER_UNUSED
 
 #ifdef RIGHT_MOTOR_CONTROLLER_UNUSED
@@ -50,10 +45,11 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 }
 
 static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
-  LOG_DEBUG("broadcasting status: 0x%x%x\n", storage->measurements.status[LEFT_MOTOR_CONTROLLER], storage->measurements.status[RIGHT_MOTOR_CONTROLLER]);
-  // LOG_DEBUG("broadcasting status: 0x%x\n", storage->measurements.status);
+  LOG_DEBUG("broadcasting status: 0x%x%x\n", storage->measurements.status[LEFT_MOTOR_CONTROLLER],
+            storage->measurements.status[RIGHT_MOTOR_CONTROLLER]);
   uint32_t *measurements = storage->measurements.status;
-  CAN_TRANSMIT_MOTOR_STATUS(measurements[LEFT_MOTOR_CONTROLLER], measurements[RIGHT_MOTOR_CONTROLLER]);
+  CAN_TRANSMIT_MOTOR_STATUS(measurements[LEFT_MOTOR_CONTROLLER],
+                            measurements[RIGHT_MOTOR_CONTROLLER]);
 }
 
 // Change the MCP2515 filter to filter for the next ID to look for
@@ -72,7 +68,8 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
           MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
   LOG_DEBUG("Changing filter to 0x%x\n", (int)filter);
   // MCP2515 requires both filters to be set, so just use the same one twice
-  // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required one by one
+  // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required
+  // one by one
   uint32_t filters[2] = { filter, filter };
   StatusCode status = mcp2515_set_filter(storage->motor_can, filters);
   LOG_DEBUG("Change filter result %d\n", status);
@@ -83,7 +80,6 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   MotorControllerBroadcastStorage *storage = context;
   LOG_DEBUG("received rx from id: 0x%x\n", (int)id);
   LOG_DEBUG("Data: 0x%x%x\n", (int)data, (int)(data >> 32));
-  // uint32_t cb_offset = (uint32_t)(storage->cb_storage.cur_measurement);
   // calculate the base offset
   uint32_t cur_mc_id = (storage->cb_storage.motor_controller == LEFT_MOTOR_CONTROLLER
                             ? LEFT_MOTOR_CONTROLLER_BASE_ADDR
@@ -100,7 +96,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   }
   // check if received message ID doesn't have a CB index
   if (cb_index == NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS) {
-    LOG_DEBUG("WARNING - NO CB FOR MESSAGE ID 0x%x\n", (int)id);
+    LOG_WARN("WARNING - NO CB FOR MESSAGE ID 0x%x\n", (int)id);
     // this should NEVER happen, so it may make sense to throw an error
     // TODO(SOFT-139): error handling here?
     // have had this happen a few times, always with offset 9 (voltage rail measurement)
@@ -123,11 +119,6 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   prv_change_filter(storage);
 }
 
-// TODO(SOFT-139): implement status message handling + broadcast
-// just resending the status message for now since it's a uint64
-// in future, we can probably pack both status messages together by
-// cutting out the reserved bits from the error flags and the 2-byte active motor
-// ID (which we don't need for anything IIRC)
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("got status message\n");
   MotorControllerBroadcastStorage *storage = context;
@@ -135,10 +126,11 @@ static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
 
-  for(size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    // Cast out upper 32 bits so we can broadcast both status in one CAN message
-    uint32_t status = (uint32_t)(can_data.raw);
-    if(can_id.device_id == storage->ids[motor_id]) {
+  // Cast out upper 32 bits so we can broadcast both status in one CAN message
+  uint32_t status = (uint32_t)(can_data.raw);
+
+  for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
+    if (can_id.device_id == storage->ids[motor_id]) {
       bool disabled = critical_section_start();
       storage->measurements.status[motor_id] = status;
       storage->status_rx_bitset |= 1 << motor_id;
@@ -194,7 +186,7 @@ static void prv_handle_motor_temp_rx(const GenericCanMsg *msg, void *context) {
 }
 
 static void prv_handle_dsp_temp_rx(const GenericCanMsg *msg, void *context) {
-  // TODO(SOFT-421): figure out if this is needed
+  // TODO(SOFT-421): Figure out if we need to send this too
   LOG_DEBUG("got dsp temp rx\n");
 }
 
@@ -269,7 +261,7 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
   storage->motor_can = settings->motor_can;
-  // memset(storage->motor_can, 0, sizeof(*storage->motor_can));
+  memset(storage->motor_can, 0, sizeof(*storage->motor_can));
   prv_setup_motor_can(storage);
   return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                                  storage, NULL);

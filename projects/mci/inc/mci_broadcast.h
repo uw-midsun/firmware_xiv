@@ -33,9 +33,10 @@ typedef enum {
   NUM_MOTOR_CONTROLLERS,
 } MotorController;
 
+// NOTE(Feb 2021 validation): currently both motor controllers are 0x400, right will need to be
+// configured
 #define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
-#define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200  
-// NOTE: currently both motor controllers are 0x400, right will need to be configured
+#define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200
 
 #define MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(controller)                        \
   (((controller) == LEFT_MOTOR_CONTROLLER) ? LEFT_MOTOR_CONTROLLER_BASE_ADDR \
@@ -66,10 +67,8 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t status_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
-  MotorControllerMeasurementCallback
-      callbacks[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS];  // Callbacks exposed so we can unit
-                                                               // test more easily
-  MotorControllerCallbackStorage cb_storage;                   // ditto
+  // Callbacks exposed for unit testing
+  MotorControllerCallbackStorage cb_storage;
 } MotorControllerBroadcastStorage;
 
 StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
