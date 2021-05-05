@@ -42,7 +42,8 @@ typedef struct TestMciOutputStorage {
 
 static CanStorage s_can_storage;
 static MotorControllerOutputStorage s_mci_output_storage;
-static GenericCanMcp2515 s_can_mcp2515;
+// static GenericCanMcp2515 s_can_mcp2515;
+static Mcp2515Storage s_motor_can_storage;
 static TestMciOutputStorage s_test_mci_output_storage;
 static EEDriveOutput s_drive_state;
 
@@ -96,6 +97,7 @@ void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
 }
 
+// Copies what mci_broadcast prv_setup_motor_can does without registering CBs
 static void prv_setup_motor_can(void) {
   Mcp2515Settings mcp2515_settings = {
     .spi_port = SPI_PORT_2,
@@ -110,7 +112,7 @@ static void prv_setup_motor_can(void) {
     .loopback = false,
   };
 
-  generic_can_mcp2515_init(&s_can_mcp2515, &mcp2515_settings);
+  mcp2515_init(&s_motor_can_storage, &mcp2515_settings);
 }
 
 StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
@@ -129,12 +131,14 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
             expected_value->motor_velocity,
             fabs(actual_value.motor_velocity - expected_value->motor_velocity),
             TEST_MCI_OUTPUT_THRESHOLD);
+  
   TEST_ASSERT_TRUE(id == MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID ||
                    id == MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID);
-  TEST_ASSERT_TRUE(fabs(actual_value.motor_velocity - expected_value->motor_velocity) <
-                   TEST_MCI_OUTPUT_THRESHOLD);
-  TEST_ASSERT_TRUE(fabs(actual_value.motor_current - expected_value->motor_current) <
-                   TEST_MCI_OUTPUT_THRESHOLD);
+  
+  TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_velocity, actual_value.motor_velocity);
+
+  TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_current, actual_value.motor_current);
+  
   s_test_mci_output_storage.pedal_sent = false;
   // verify id and dlc are as expected
   return STATUS_CODE_OK;
@@ -160,7 +164,7 @@ void setup_test(void) {
 
   prv_setup_system_can();
   prv_setup_motor_can();
-  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, (GenericCan *)&s_can_mcp2515));
+  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage));
 }
 
 void teardown_test(void) {}
@@ -237,7 +241,7 @@ void test_mci_output_drive_no_pedals(void) {
   };
   MotorCanDriveCommand expected_value = {
     .motor_current = 0.0f,
-    .motor_velocity = 100.0f,
+    .motor_velocity = WAVESCULPTOR_FORWARD_VELOCITY,
   };
   s_test_mci_output_storage.expected_value = expected_value;
   s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
@@ -253,7 +257,7 @@ void test_mci_output_drive_only_throttle(void) {
   };
   MotorCanDriveCommand expected_value = {
     .motor_current = 0.5f,
-    .motor_velocity = 100.0f,
+    .motor_velocity = WAVESCULPTOR_FORWARD_VELOCITY,
   };
   s_test_mci_output_storage.expected_value = expected_value;
   s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
@@ -301,7 +305,7 @@ void test_mci_output_reverse_no_pedals(void) {
   };
   MotorCanDriveCommand expected_value = {
     .motor_current = 0.0f,
-    .motor_velocity = -100.0f,
+    .motor_velocity = WAVESCULPTOR_REVERSE_VELOCITY,
   };
   s_test_mci_output_storage.expected_value = expected_value;
   s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
@@ -317,7 +321,7 @@ void test_mci_output_reverse_only_throttle(void) {
   };
   MotorCanDriveCommand expected_value = {
     .motor_current = 0.5f,
-    .motor_velocity = -100.0f,
+    .motor_velocity = WAVESCULPTOR_REVERSE_VELOCITY,
   };
   s_test_mci_output_storage.expected_value = expected_value;
   s_drive_state = EE_DRIVE_OUTPUT_REVERSE;

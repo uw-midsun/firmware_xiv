@@ -57,35 +57,27 @@ static void prv_send_wavesculptor_message(MotorControllerOutputStorage *storage,
 static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   MotorControllerOutputStorage *storage = context;
   PedalValues pedal_values = pedal_rx_get_pedal_values(&storage->pedal_storage);
-  // LOG_DEBUG("pedal values %f %f \n", pedal_values.brake, pedal_values.throttle);
-  // LOG_DEBUG("pedal values %d %d \n", (int)pedal_values.brake, (int)pedal_values.throttle);
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
   bool is_cruise = drive_fsm_is_cruise();
   // TODO(SOFT-122): Make sure test ensures that maps are continues
-  if (drive_state != EE_DRIVE_OUTPUT_OFF) { // CHANGE THIS BACK TO OUTPUT OFF LATER
-    LOG_DEBUG("output off\n");
+  if (drive_state == EE_DRIVE_OUTPUT_OFF) {
     drive_command.motor_current = 0.0f;
     drive_command.motor_velocity = 0.0f;
-  } else if (pedal_values.brake > MOTOR_CONTROLLER_BRAKE_THRESHOLD + 0.01f) {
-    LOG_DEBUG("elif 1\n");
+  } else if (pedal_values.brake > MOTOR_CONTROLLER_BRAKE_THRESHOLD) {
     // Regen Braking along with brake being pressed
     drive_command.motor_current = prv_brake_to_regen_map(pedal_values.brake);
     drive_command.motor_velocity = 0.0f;
     // disable cruise when brake is pressed
     if (is_cruise) drive_fsm_toggle_cruise();
   } else if (!is_cruise && pedal_values.throttle < s_regen_threshold) {
-    LOG_DEBUG("elif 2\n");
     // Regen Braking along if throttle is pressed a little
     drive_command.motor_current = prv_throttle_to_regen_map(pedal_values.throttle);
     drive_command.motor_velocity = 0.0f;
   } else {
-    LOG_DEBUG("else\n");
     drive_command.motor_current = prv_throttle_to_accel_map(pedal_values.throttle);
     drive_command.motor_velocity =
-        is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[EE_DRIVE_OUTPUT_DRIVE];
-    LOG_DEBUG("is cruise? %d\n", is_cruise);
-    // LOG_DEBUG("velocity lookup %d\n", s_velocity_lookup[drive_state]);
+        is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[drive_state];
   }
   // Handling message
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);

@@ -3,8 +3,9 @@
 #include <assert.h>
 #include <stdint.h>
 
-#define WAVESCULPTOR_FORWARD_VELOCITY 2000.0f
-#define WAVESCULPTOR_REVERSE_VELOCITY -100.0f
+// Set to unobtainable values to control based off current
+#define WAVESCULPTOR_FORWARD_VELOCITY 20000.0f
+#define WAVESCULPTOR_REVERSE_VELOCITY -20000.0f
 
 typedef union WaveSculptorCanId {
   struct {
