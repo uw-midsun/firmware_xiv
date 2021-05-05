@@ -76,7 +76,7 @@ static void prv_init_drive_fsm() {
   fsm_state_init(state_drive, prv_state_drive_output);
   fsm_state_init(state_reverse, prv_state_reverse_output);
   fsm_state_init(state_cruise, prv_state_cruise_output);
-  fsm_init(&s_drive_fsm, "drive_fsm", &state_drive, NULL);
+  fsm_init(&s_drive_fsm, "drive_fsm", &state_off, NULL);
 }
 
 bool drive_fsm_process_event(const Event *e) {

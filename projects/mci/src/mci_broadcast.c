@@ -271,7 +271,6 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
   storage->motor_can = settings->motor_can;
-  memset(storage->motor_can, 0, sizeof(*storage->motor_can));
   prv_setup_motor_can(storage);
   return soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                                  storage, NULL);

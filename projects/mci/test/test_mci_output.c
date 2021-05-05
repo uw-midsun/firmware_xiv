@@ -42,7 +42,6 @@ typedef struct TestMciOutputStorage {
 
 static CanStorage s_can_storage;
 static MotorControllerOutputStorage s_mci_output_storage;
-// static GenericCanMcp2515 s_can_mcp2515;
 static Mcp2515Storage s_motor_can_storage;
 static TestMciOutputStorage s_test_mci_output_storage;
 static EEDriveOutput s_drive_state;

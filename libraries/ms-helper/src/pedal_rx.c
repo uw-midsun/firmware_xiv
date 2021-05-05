@@ -28,14 +28,12 @@ static StatusCode prv_kick_watchdog(PedalRxStorage *storage) {
 
 static StatusCode prv_handle_pedal_output(const CanMessage *msg, void *context,
                                           CanAckStatus *ack_reply) {
-  LOG_DEBUG("GOT PEDAL OUTPUT!!!\n");
   PedalRxStorage *storage = context;
   PedalValues *pedal_values = &storage->pedal_values;
 
   uint32_t throttle_msg;
   uint32_t brake_msg;
   CAN_UNPACK_PEDAL_OUTPUT(msg, &throttle_msg, &brake_msg);
-  LOG_DEBUG("throttle: %d brake: %d\n", (int)throttle_msg, (int)brake_msg);
 
   pedal_values->throttle = (float)(throttle_msg);
   pedal_values->brake = (float)(brake_msg);

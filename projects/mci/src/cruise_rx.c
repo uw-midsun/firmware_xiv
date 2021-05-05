@@ -27,7 +27,7 @@ float cruise_rx_get_target_velocity(void) {
 static StatusCode prv_cruise_command_rx(const CanMessage *msg, void *context,
                                         CanAckStatus *ack_reply) {
   (void)context;
-  uint8_t cruise_command = 2;
+  uint8_t cruise_command = 0;
   CAN_UNPACK_CRUISE_CONTROL_COMMAND(msg, &cruise_command);
 
   switch (cruise_command) {

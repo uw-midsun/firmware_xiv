@@ -70,7 +70,7 @@ int main(void) {
   prv_setup_system_can();
 
   prv_mci_storage_init(&s_mci_storage);
-  drive_fsm_init();  // why do we call this here after calling it in prv_setup_system_can?
+  drive_fsm_init();
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
