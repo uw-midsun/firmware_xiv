@@ -49,7 +49,7 @@ int main(void) {
   adc_set_channel_pin(reading_addr, true);
 
   gpio_it_register_interrupt(&button_pin_addr, &button_rising, INTERRUPT_EDGE_FALLING,
-                             prv_button_callback, &reading_addr);
+                             prv_button_callback, NULL);
 
   while (1) {
     wait();
