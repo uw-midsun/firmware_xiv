@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message MxAdcStore {
-  repeated uint32 reading = 1;
-}

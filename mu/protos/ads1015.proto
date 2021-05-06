@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message MuAds1015Store {
+  repeated int32 readings = 1;
+}

@@ -1,6 +1,7 @@
 #include "solar_config.h"
 
 #include "can_msg_defs.h"
+#include "controller_board_pins.h"
 #include "data_store.h"
 #include "data_tx.h"
 #include "exported_enums.h"
@@ -68,44 +69,45 @@
 
 static const I2CSettings s_i2c1_settings = {
   .speed = SOLAR_I2C_SPEED,
-  .sda = SOLAR_I2C1_SDA,
-  .scl = SOLAR_I2C1_SCL,
+  .sda = CONTROLLER_BOARD_ADDR_I2C1_SDA,
+  .scl = CONTROLLER_BOARD_ADDR_I2C1_SCL,
 };
 
 static const I2CSettings s_i2c2_settings = {
   .speed = SOLAR_I2C_SPEED,
-  .sda = SOLAR_I2C2_SDA,
-  .scl = SOLAR_I2C2_SCL,
+  .sda = CONTROLLER_BOARD_ADDR_I2C2_SDA,
+  .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,
 };
 
 static const SpiSettings s_spi_settings = {
-  .baudrate = 60000,
+  .baudrate = 6000000,
   .mode = SPI_MODE_3,
-  .mosi = SOLAR_SPI2_MOSI,
-  .miso = SOLAR_SPI2_MISO,
-  .sclk = SOLAR_SPI2_SCLK,
+  .mosi = CONTROLLER_BOARD_ADDR_SPI2_MOSI,
+  .miso = CONTROLLER_BOARD_ADDR_SPI2_MISO,
+  .sclk = CONTROLLER_BOARD_ADDR_SPI2_SCK,
   .cs = SOLAR_UNUSED_PIN,
 };
 
-static const CanSettings s_can_settings = {
-  .device_id = SYSTEM_CAN_DEVICE_SOLAR,
+// |device_id| is set dynamically by |config_get_can_settings|
+static CanSettings s_can_settings = {
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,
   .fault_event = SOLAR_CAN_EVENT_FAULT,
-  .rx = SOLAR_CAN_RX_PIN,
-  .tx = SOLAR_CAN_TX_PIN,
+  .rx = CONTROLLER_BOARD_ADDR_CAN_RX,
+  .tx = CONTROLLER_BOARD_ADDR_CAN_TX,
   .loopback = false,
 };
 
-static const GpioAddress s_drv120_relay_pin = { GPIO_PORT_A, 8 };
+static const GpioAddress s_drv120_relay_pin = RELAY_EN_PIN;
 static const GpioAddress s_drv120_status_pin = { GPIO_PORT_A, 6 };
 
 static const SenseSettings s_sense_settings = {
   .sense_period_us = SENSE_CYCLE_PERIOD_US,
 };
 
-static const FaultHandlerSettings s_fault_handler_settings = {
+// |mppt_count| is set dynamically by |config_get_fault_handler_settings|
+static FaultHandlerSettings s_fault_handler_settings = {
   .relay_open_faults =
       {
           EE_SOLAR_FAULT_OVERCURRENT,
@@ -115,7 +117,8 @@ static const FaultHandlerSettings s_fault_handler_settings = {
   .num_relay_open_faults = 3,
 };
 
-static const DataTxSettings s_data_tx_settings = {
+// |mppt_count| is set dynamically by |config_get_data_tx_settings|
+static DataTxSettings s_data_tx_settings = {
   .wait_between_tx_in_millis = DATA_TX_WAIT_TIME_MS,
   .msgs_per_tx_iteration = DATA_TX_MSGS_PER_TX_ITERATION,
 };
@@ -132,7 +135,14 @@ const SpiSettings *config_get_spi_settings(void) {
   return &s_spi_settings;
 }
 
-const CanSettings *config_get_can_settings(void) {
+const CanSettings *config_get_can_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  } else if (mppt_count == SOLAR_BOARD_6_MPPTS) {
+    s_can_settings.device_id = SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS;
+  } else {
+    s_can_settings.device_id = SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS;
+  }
   return &s_can_settings;
 }
 
@@ -148,11 +158,20 @@ const SenseSettings *config_get_sense_settings(void) {
   return &s_sense_settings;
 }
 
-const FaultHandlerSettings *config_get_fault_handler_settings(void) {
+const FaultHandlerSettings *config_get_fault_handler_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  }
+  s_fault_handler_settings.mppt_count = mppt_count;
   return &s_fault_handler_settings;
 }
 
-const DataTxSettings *config_get_data_tx_settings(void) {
+const DataTxSettings *config_get_data_tx_settings(SolarMpptCount mppt_count) {
+  if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
+    return NULL;
+  }
+  s_data_tx_settings.mppt_count = mppt_count;
+
   return &s_data_tx_settings;
 }
 
@@ -229,8 +248,8 @@ static SenseMcp3427Settings s_sense_mcp3427_settings = {
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
-                      .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
-                      .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+                      .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
+                      .addr_pin_1 = MCP3427_PIN_STATE_FLOAT,
                       .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
                       .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
@@ -282,20 +301,30 @@ const SenseMcp3427Settings *config_get_sense_mcp3427_settings(SolarMpptCount mpp
 
 // |num_thermistors| is set dynamically by |config_get_sense_temperature_settings|
 static SenseTemperatureSettings s_sense_temperature_settings =
-    { .thermistor_pins = {
-          { GPIO_PORT_A, 0 },
-          { GPIO_PORT_A, 1 },
-          { GPIO_PORT_A, 2 },
-          { GPIO_PORT_A, 3 },
-          { GPIO_PORT_A, 4 },
-          { GPIO_PORT_A, 5 },  // not used on 5 MPPT board
+    { .thermistor_settings = {
+          { RTD_THERMISTOR, { GPIO_PORT_A, 0 } },
+          { RTD_THERMISTOR, { GPIO_PORT_A, 1 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 2 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 3 } },
+          { NTC_THERMISTOR, { GPIO_PORT_A, 4 } },
+          { NUM_THERMISTOR_TYPES, { GPIO_PORT_A, 5 } },  // A5 depends on the number of MPPT
       } };
 
 const SenseTemperatureSettings *config_get_sense_temperature_settings(SolarMpptCount mppt_count) {
   if (mppt_count > MAX_SOLAR_BOARD_MPPTS) {
     return NULL;
   }
+
   s_sense_temperature_settings.num_thermistors = mppt_count;  // we have one thermistor per MPPT
+
+  if (mppt_count == SOLAR_BOARD_5_MPPTS) {
+    // On the 5 MPPT board, port A5 is BJT
+    s_sense_temperature_settings.thermistor_settings[5].thermistor_type = FAN_CONTROL_THERMISTOR;
+  } else if (mppt_count == SOLAR_BOARD_6_MPPTS) {
+    // On the 5 MPPT board, port A5 is NTC
+    s_sense_temperature_settings.thermistor_settings[5].thermistor_type = NTC_THERMISTOR;
+  }
+
   return &s_sense_temperature_settings;
 }
 

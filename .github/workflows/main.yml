@@ -16,6 +16,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-16.04
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v2
 
@@ -67,9 +68,9 @@ jobs:
 
       - name: Install Python tooling
         run: |
-          pip install --user pylint
-          pip install --user autopep8
-          # Install dependencies from all requirements.txt in the repo
+          pip install --user virtualenv
+          pip install --upgrade pip
+          pip install --upgrade setuptools
           make install_requirements
 
       - name: Force PATH to update
@@ -87,8 +88,7 @@ jobs:
           make --version
           clang --version
           clang-format --version
-          pylint --version
-          autopep8 --version
+          .venv/bin/pip3 freeze
 
       - name: Format and lint
         run: |
@@ -96,9 +96,41 @@ jobs:
           make lint
           make pylint
 
+      - name: Build codegen
+        run: |
+          make codegen
+          make codegen_dbc
+
+      - name: Check for uncommitted codegen changes
+        id: check-uncommitted-changes
+        continue-on-error: true
+        # https://stackoverflow.com/a/3879077
+        run: |
+          git update-index --refresh || true
+          git diff-index --quiet HEAD --
+
+      - name: Post PR comment on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-codegen-changes.md', 'utf8');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+
+      - name: Fail on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        run: exit 1
+
       - name: Build and test
         run: |
-          make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
+          make build_all PLATFORM=stm32f0xx DEFINE="${DEFINES}"
           make clean
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"

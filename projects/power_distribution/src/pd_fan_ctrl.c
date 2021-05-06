@@ -25,7 +25,7 @@ static FanCtrlStorage s_fan_storage;
 static void prv_fan_overtemp_callback(void) {
   // Transmit stored ratio values for dcdc and enclosure based on ref reading
   CAN_TRANSMIT_REAR_PD_FAULT(s_fan_storage.fan_err_flags | FAN_OVERTEMP, s_fan_storage.dcdc_reading,
-                             s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
+                             s_fan_storage.enclosure_reading, 0);
 }
 
 // Interrupt callback triggered when smbalert pin goes low
@@ -41,16 +41,21 @@ static void prv_fan_err_cb(const GpioAddress *address, void *context) {
   reg2 &= (FAN1_ERR | FAN2_ERR | FAN3_ERR | FAN4_ERR);  // Take only fan statuses
   *err_data |= (reg2);                                  // Compress to one uint16 fan_data
   if (s_fan_storage.is_front_pd) {
-    CAN_TRANSMIT_FRONT_PD_FAULT(*err_data);
+    CAN_TRANSMIT_FRONT_PD_FAULT(*err_data, 0);
   } else {
     CAN_TRANSMIT_REAR_PD_FAULT(*err_data, s_fan_storage.dcdc_reading,
-                               s_fan_storage.enclosure_reading, s_fan_storage.ref_reading);
+                               s_fan_storage.enclosure_reading, 0);
   }
   s_fan_storage.fan_err_flags = 0;
 }
 
 // Converts front pd adc reading of potentiometer to fan speed percent
 static void prv_front_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_speed) {
+  if (s_fan_storage.ref_reading == 0) {
+    // just to be safe to avoid divide-by-zero errors
+    *fan_speed = 100;
+    return;
+  }
   double ratio = s_fan_storage.ref_reading / 100.0;
   *fan_speed = v_measured / ratio;
 }
@@ -64,8 +69,8 @@ static void prv_rear_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_speed
   // calculate bias current for each thermistor
   double curr_bias = (double)(v_ref - v_measured) / BIAS_RESISTANCE;
 
-  // Account for adc margin of error near max values
-  if (v_ref - v_measured < ADC_EPSILON_MV) {
+  // Account for adc margin of error near max values, and account for (improbable) unsigned nonsense
+  if (v_ref - v_measured < ADC_EPSILON_MV || v_ref < v_measured) {
     measured_res = FAN_OVERTEMP_RES;
   } else {
     measured_res = (double)v_measured / curr_bias;
@@ -162,8 +167,7 @@ StatusCode pd_fan_ctrl_init(FanCtrlSettings *settings, bool is_front_pd) {
     .i2c = settings->i2c_port,
     .i2c_read_addr = settings->i2c_address,
     .i2c_write_addr = settings->i2c_address,
-    .smbalert_pin = s_fan_storage.is_front_pd ? (GpioAddress)FRONT_PIN_SMBALERT
-                                              : (GpioAddress)REAR_PIN_SMBALERT,
+    .smbalert_pin = PD_SMBALERT_PIN,
   };
   Adt7476aStorage adt_storage;
   status_ok_or_return(adt7476a_init(&adt_storage, &adt_settings));

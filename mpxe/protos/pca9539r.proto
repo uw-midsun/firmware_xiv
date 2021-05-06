@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message MxPca9539rStore {
-  repeated bool state = 1;
-}

@@ -1,512 +1,473 @@
 #include "pd_gpio_config.h"
+
+#include "output.h"
 #include "pd_events.h"
 #include "pin_defs.h"
 
-#define POWER_DISTRIBUTION_I2C_ADDRESS_0 0x74
-#define POWER_DISTRIBUTION_I2C_ADDRESS_1 0x76
-
-// Enable pins on front power distribution without dedicated events (probably fine):
-// left and right display, main and rear pi, left and right camera, speaker, rear display, spares
-
-const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG = {
+const PdGpioConfig g_front_pd_gpio_config = {
   .events =
-      (PowerDistributionGpioEventSpec[]){
+      (PdGpioEventSpec[]){
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_DRIVER_DISPLAY,
+              .event_id = PD_GPIO_EVENT_HORN,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = FRONT_PIN_DVR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = FRONT_OUTPUT_HORN,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_STEERING,
+              .event_id = PD_GPIO_EVENT_SIGNAL_LEFT,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = FRONT_PIN_STEERING_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_CENTRE_CONSOLE,
+              .event_id = PD_GPIO_EVENT_SIGNAL_RIGHT,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = FRONT_PIN_CTR_CONSL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_DRL,
+              .event_id = PD_GPIO_EVENT_SIGNAL_HAZARD,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = FRONT_PIN_DAYTIME_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_PEDAL,
-              .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      {
-                          .address = FRONT_PIN_PEDAL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_HORN,
-              .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      {
-                          .address = FRONT_PIN_HORN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
-              .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      {
-                          .address = FRONT_PIN_FRONT_LEFT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
-              .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      {
-                          .address = FRONT_PIN_FRONT_RIGHT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 1,
-          },
-          {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
-              .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      {
-                          .address = FRONT_PIN_FRONT_LEFT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                       {
-                          .address = FRONT_PIN_FRONT_RIGHT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 2,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_DRIVER_DISPLAY_BMS,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: driver display, steering, centre console, pedal, speaker,
-                      // left display, right display, main display, rear display, left camera, right
-                      // camera, main rPi, rear rPi
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = FRONT_PIN_DVR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_DRIVER_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
+                      },
+                  },
+              .num_outputs = 1,
+          },
+          {
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
+              .outputs =
+                  (PdGpioOutputSpec[]){
+                      // On: centre console, pedal, steering, driver display, infotainment display,
+                      // rear/left/right display, left/right camera, main (telemetry/driver display)
+                      // pi, speaker, fan
+                      {
+                          .output = FRONT_OUTPUT_CENTRE_CONSOLE,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_STEERING_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_PEDAL,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_CTR_CONSL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_STEERING,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_PEDAL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          // just to be safe even though it was turned on earlier
+                          .output = FRONT_OUTPUT_DRIVER_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_SPEAKER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_INFOTAINMENT_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_LEFT_DISPLAY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_REAR_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_RIGHT_DISPLAY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_LEFT_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_MAIN_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_RIGHT_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_REAR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_LEFT_CAMERA,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_MAIN_PI_B_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_RIGHT_CAMERA,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_REAR_PI_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_MAIN_PI,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_LEFT_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_SPEAKER,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_RIGHT_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_FAN,
+                          .state = PD_GPIO_STATE_ON,
                       },
                   },
               .num_outputs = 13,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+              .event_id = PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: driver display, steering, centre console, pedal, speaker,
-                      // left display, right display, main display, rear display, main rPi, rear rPi
-                      // Turn off: left camera, right camera (in case we go from on to aux)
+                  (PdGpioOutputSpec[]){
+                      // On: centre console, pedal, steering, driver display, infotainment display,
+                      // main pi, speaker, fan
+                      // Off: rear/left/right display, left/right camera
                       {
-                          .address = FRONT_PIN_DVR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_CENTRE_CONSOLE,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_STEERING_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_PEDAL,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_CTR_CONSL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_STEERING,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_PEDAL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_DRIVER_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_SPEAKER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_INFOTAINMENT_DISPLAY,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_LEFT_DISPLAY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_MAIN_PI,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_RIGHT_DISPLAY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_SPEAKER,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_MAIN_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_FAN,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_REAR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_REAR_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_MAIN_PI_B_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_LEFT_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_REAR_PI_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_RIGHT_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_LEFT_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_LEFT_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_RIGHT_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_RIGHT_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                   },
               .num_outputs = 13,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .event_id = PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      // Turn on (or keep on): centre console, pedal
-                      // Turn off: driver display, steering, speaker, left display, right display,
-                      // main display rear display, main rPi, rear rPi, left camera, right camera,
-                      // parking brake, daytime running lights, front left turn light, front right
-                      // turn light
+                  (PdGpioOutputSpec[]){
+                      // On: centre console, pedal
+                      // Off: steering, driver display, infotainment display, rear/left/right
+                      // display, left/right camera, main pi, speaker, front turn lights, daytime
+                      // running lights
                       {
-                          .address = FRONT_PIN_CTR_CONSL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_CENTRE_CONSOLE,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_PEDAL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = FRONT_OUTPUT_PEDAL,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = FRONT_PIN_DVR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_STEERING,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_STEERING_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_DRIVER_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_SPEAKER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_INFOTAINMENT_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_LEFT_DISPLAY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_REAR_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_RIGHT_DISPLAY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_LEFT_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_MAIN_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_RIGHT_DISPLAY,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_REAR_DISP_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_LEFT_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_MAIN_PI_B_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_RIGHT_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_REAR_PI_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_MAIN_PI,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_LEFT_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_SPEAKER,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_RIGHT_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_FAN,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_PARKING_BRAKE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_DAYTIME_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = FRONT_PIN_FRONT_LEFT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
-                      },
-                      {
-                          .address = FRONT_PIN_FRONT_RIGHT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                   },
-              .num_outputs = 17,
+              .num_outputs = 16,
           },
       },
-  .num_events = 12,
+  .num_events = 8,
 };
 
-const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG = {
+const PdGpioConfig g_rear_pd_gpio_config = {
   .events =
-      (PowerDistributionGpioEventSpec[]){
+      (PdGpioEventSpec[]){
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_BRAKE_LIGHT,
+              .event_id = PD_GPIO_EVENT_BRAKE_LIGHT,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = REAR_PIN_REAR_LEFT_BRAKEL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                      {
-                          .address = REAR_PIN_CENTER_BRAKE_LIGHT_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                      {
-                          .address = REAR_PIN_REAR_RIGHT_BRAKEL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
-                      },
-                  },
-              .num_outputs = 3,
-          },
-          {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_LEFT,
-              .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      {
-                          .address = REAR_PIN_REAR_LEFT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = REAR_OUTPUT_BRAKE_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_RIGHT,
+              .event_id = PD_GPIO_EVENT_SIGNAL_LEFT,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = REAR_PIN_REAR_RIGHT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = REAR_OUTPUT_LEFT_REAR_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_SIGNAL_HAZARD,
+              .event_id = PD_GPIO_EVENT_SIGNAL_RIGHT,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = REAR_PIN_REAR_LEFT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
+                      },
+                  },
+              .num_outputs = 1,
+          },
+          {
+              .event_id = PD_GPIO_EVENT_SIGNAL_HAZARD,
+              .outputs =
+                  (PdGpioOutputSpec[]){
+                      {
+                          .output = REAR_OUTPUT_LEFT_REAR_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                       {
-                          .address = REAR_PIN_REAR_RIGHT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 2,
           },
           {
-              .event_id = POWER_DISTRIBUTION_GPIO_EVENT_STROBE,
+              .event_id = PD_GPIO_EVENT_STROBE,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = REAR_PIN_STROBE_LIGHT_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_SAME_AS_DATA,
+                          .output = REAR_OUTPUT_BPS_STROBE_LIGHT,
+                          .state = PD_GPIO_STATE_SAME_AS_DATA,
                       },
                   },
               .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_MAIN,
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_DRIVER_DISPLAY_BMS,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: BMS carrier, MCI, solar sense, telemetry, charger, rear camera
+                  (PdGpioOutputSpec[]){
                       {
-                          .address = REAR_PIN_BMS_CARRIER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = REAR_PIN_MOTOR_INTERFACE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = REAR_PIN_SOLAR_SENSE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = REAR_PIN_TELEMETRY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = REAR_PIN_CHARGER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
-                      },
-                      {
-                          .address = REAR_PIN_REAR_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          // BMS *should* be on already because we run through the off sequence at
+                          // startup, but let's be safe
+                          .output = REAR_OUTPUT_BMS,
+                          .state = PD_GPIO_STATE_ON,
                       },
                   },
-              .num_outputs = 6,
+              .num_outputs = 1,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_ON_EVERYTHING_AUX,
+              .event_id = PD_POWER_MAIN_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      // Turn on: BMS carrier, solar sense, telemetry, charger
-                      // Turn off: MCI, rear camera
+                  (PdGpioOutputSpec[]){
+                      // On: BMS, MCI, solar sense, charger, rear camera, fans
                       {
-                          .address = REAR_PIN_BMS_CARRIER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = REAR_OUTPUT_BMS,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_SOLAR_SENSE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = REAR_OUTPUT_MCI,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_TELEMETRY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = REAR_OUTPUT_CHARGER,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_CHARGER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = REAR_OUTPUT_SOLAR_SENSE,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_MOTOR_INTERFACE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_REAR_CAMERA,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_REAR_CAMERA_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_FAN_1,
+                          .state = PD_GPIO_STATE_ON,
+                      },
+                      {
+                          .output = REAR_OUTPUT_FAN_2,
+                          .state = PD_GPIO_STATE_ON,
                       },
                   },
-              .num_outputs = 6,
+              .num_outputs = 7,
           },
           {
-              .event_id = POWER_DISTRIBUTION_POWER_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .event_id = PD_POWER_AUX_SEQUENCE_EVENT_TURN_ON_EVERYTHING,
               .outputs =
-                  (PowerDistributionGpioOutputSpec[]){
-                      // Turn on (or keep on): BMS carrier, solar sense, charger
-                      // Turn off: MCI, telemetry, rear camera, left/right/centre brake lights,
-                      // left/right rear turn lights
+                  (PdGpioOutputSpec[]){
+                      // On: BMS, solar sense, charger
+                      // Off: MCI, rear camera, fans
                       {
-                          .address = REAR_PIN_BMS_CARRIER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          // just to be safe, even though it should be on from earlier
+                          .output = REAR_OUTPUT_BMS,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_SOLAR_SENSE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = REAR_OUTPUT_CHARGER,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_CHARGER_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_HIGH,
+                          .output = REAR_OUTPUT_SOLAR_SENSE,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_MOTOR_INTERFACE_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_MCI,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = REAR_PIN_TELEMETRY_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_REAR_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = REAR_PIN_REAR_LEFT_BRAKEL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_FAN_1,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                       {
-                          .address = REAR_PIN_CENTER_BRAKE_LIGHT_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_FAN_2,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                  },
+              .num_outputs = 7,
+          },
+          {
+              .event_id = PD_POWER_OFF_SEQUENCE_EVENT_TURN_OFF_EVERYTHING,
+              .outputs =
+                  (PdGpioOutputSpec[]){
+                      // On: BMS, solar sense, charger
+                      // Turn off: MCI, rear camera, fans, brake light, left/right rear turn lights
+                      {
+                          .output = REAR_OUTPUT_BMS,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_REAR_RIGHT_BRAKEL_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_CHARGER,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_REAR_LEFT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_SOLAR_SENSE,
+                          .state = PD_GPIO_STATE_ON,
                       },
                       {
-                          .address = REAR_PIN_REAR_RIGHT_TURN_EN,
-                          .state = POWER_DISTRIBUTION_GPIO_STATE_LOW,
+                          .output = REAR_OUTPUT_MCI,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                      {
+                          .output = REAR_OUTPUT_REAR_CAMERA,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                      {
+                          .output = REAR_OUTPUT_FAN_1,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                      {
+                          .output = REAR_OUTPUT_FAN_2,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                      {
+                          .output = REAR_OUTPUT_BRAKE_LIGHT,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                      {
+                          .output = REAR_OUTPUT_LEFT_REAR_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_OFF,
+                      },
+                      {
+                          .output = REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT,
+                          .state = PD_GPIO_STATE_OFF,
                       },
                   },
               .num_outputs = 10,
           },
       },
-  .num_events = 8,
+  .num_events = 9,
 };

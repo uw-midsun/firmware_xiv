@@ -1,5 +1,11 @@
 #include "lights_signal_fsm.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "can_transmit.h"
+#include "event_queue.h"
+#include "status.h"
 
 FSM_DECLARE_STATE(state_none);                 // no lights active
 FSM_DECLARE_STATE(state_left_signal);          // left signal active
@@ -134,11 +140,13 @@ StatusCode lights_signal_fsm_init(SignalFsmStorage *storage, const SignalFsmSett
 
   BlinkEventGeneratorSettings blinker_settings = {
     .interval_us = settings->blink_interval_us,
+    .event_priority = settings->event_priority,
     .default_state = BLINKER_STATE_OFF,  // all lights default to off
     .callback = prv_blink_event_raised_callback,
     .callback_context = storage,
   };
-  blink_event_generator_init(&storage->blink_event_generator, &blinker_settings);
+  status_ok_or_return(
+      blink_event_generator_init(&storage->blink_event_generator, &blinker_settings));
 
   fsm_init(&storage->fsm, "Lights Signal FSM", &state_none, storage);
   fsm_state_init(state_none, prv_state_none_output);
