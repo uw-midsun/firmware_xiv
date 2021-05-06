@@ -11,6 +11,7 @@
 
 typedef void (*MotorControllerMeasurementCallback)(const GenericCanMsg *msg, void *context);
 
+// Measurements from the WaveSculptor we process currently
 typedef enum {
   MOTOR_CONTROLLER_BROADCAST_STATUS = 0,
   MOTOR_CONTROLLER_BROADCAST_BUS,
@@ -19,13 +20,6 @@ typedef enum {
   MOTOR_CONTROLLER_BROADCAST_DSP_TEMP,
   NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS,
 } MotorControllerBroadcastMeasurement;
-
-// Message offsets from motor controller base address
-#define MOTOR_CONTROLLER_BROADCAST_STATUS_OFFSET 0x1
-#define MOTOR_CONTROLLER_BROADCAST_BUS_OFFSET 0x2
-#define MOTOR_CONTROLLER_BROADCAST_VELOCITY_OFFSET 0x3
-#define MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP_OFFSET 0xB
-#define MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET 0xC
 
 typedef enum {
   LEFT_MOTOR_CONTROLLER = 0,
