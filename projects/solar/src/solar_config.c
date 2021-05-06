@@ -1,6 +1,7 @@
 #include "solar_config.h"
 
 #include "can_msg_defs.h"
+#include "controller_board_pins.h"
 #include "data_store.h"
 #include "data_tx.h"
 #include "exported_enums.h"
@@ -68,22 +69,22 @@
 
 static const I2CSettings s_i2c1_settings = {
   .speed = SOLAR_I2C_SPEED,
-  .sda = SOLAR_I2C1_SDA,
-  .scl = SOLAR_I2C1_SCL,
+  .sda = CONTROLLER_BOARD_ADDR_I2C1_SDA,
+  .scl = CONTROLLER_BOARD_ADDR_I2C1_SCL,
 };
 
 static const I2CSettings s_i2c2_settings = {
   .speed = SOLAR_I2C_SPEED,
-  .sda = SOLAR_I2C2_SDA,
-  .scl = SOLAR_I2C2_SCL,
+  .sda = CONTROLLER_BOARD_ADDR_I2C2_SDA,
+  .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,
 };
 
 static const SpiSettings s_spi_settings = {
-  .baudrate = 60000,
+  .baudrate = 6000000,
   .mode = SPI_MODE_3,
-  .mosi = SOLAR_SPI2_MOSI,
-  .miso = SOLAR_SPI2_MISO,
-  .sclk = SOLAR_SPI2_SCLK,
+  .mosi = CONTROLLER_BOARD_ADDR_SPI2_MOSI,
+  .miso = CONTROLLER_BOARD_ADDR_SPI2_MISO,
+  .sclk = CONTROLLER_BOARD_ADDR_SPI2_SCK,
   .cs = SOLAR_UNUSED_PIN,
 };
 
@@ -93,8 +94,8 @@ static CanSettings s_can_settings = {
   .rx_event = SOLAR_CAN_EVENT_RX,
   .tx_event = SOLAR_CAN_EVENT_TX,
   .fault_event = SOLAR_CAN_EVENT_FAULT,
-  .rx = SOLAR_CAN_RX_PIN,
-  .tx = SOLAR_CAN_TX_PIN,
+  .rx = CONTROLLER_BOARD_ADDR_CAN_RX,
+  .tx = CONTROLLER_BOARD_ADDR_CAN_TX,
   .loopback = false,
 };
 
@@ -247,8 +248,8 @@ static SenseMcp3427Settings s_sense_mcp3427_settings = {
               .mcp3427_settings =
                   {
                       .port = I2C_PORT_2,
-                      .addr_pin_0 = MCP3427_PIN_STATE_FLOAT,
-                      .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+                      .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
+                      .addr_pin_1 = MCP3427_PIN_STATE_FLOAT,
                       .sample_rate = SOLAR_MCP3427_SAMPLE_RATE,
                       .amplifier_gain = SOLAR_MCP3427_VOLTAGE_SENSE_AMP_GAIN,
                       .conversion_mode = SOLAR_MCP3427_CONVERSION_MODE,
