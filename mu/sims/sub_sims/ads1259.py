@@ -5,6 +5,7 @@ from mu.protogen import ads1259_pb2
 
 ADS1259_KEY = (stores_pb2.MuStoreType.ADS1259, 0)
 
+
 class Ads1259(SubSim):
     def update_reading(self, reading):
         ads1259_msg = ads1259_pb2.MuAds1259Store()

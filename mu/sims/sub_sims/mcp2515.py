@@ -5,6 +5,7 @@ from mu.protogen import mcp2515_pb2
 
 MCP2515_KEY = (stores_pb2.MuStoreType.MCP2515, 0)
 
+
 class Mcp2515(SubSim):
     def handle_store(self, store, key):
         if key[0] == stores_pb2.MuStoreType.MCP2515:
