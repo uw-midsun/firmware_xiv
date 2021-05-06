@@ -32,10 +32,6 @@ typedef enum {
 #define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
 #define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200
 
-#define MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(controller)                        \
-  (((controller) == LEFT_MOTOR_CONTROLLER) ? LEFT_MOTOR_CONTROLLER_BASE_ADDR \
-                                           : RIGHT_MOTOR_CONTROLLER_BASE_ADDR)
-
 // Stores callbacks when processing MCP2515 messages
 typedef struct {
   MotorController motor_controller;

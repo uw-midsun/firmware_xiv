@@ -15,14 +15,18 @@
 
 #define M_TO_CM_CONV 100
 
-static const uint16_t MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP
-    [NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
-      [MOTOR_CONTROLLER_BROADCAST_STATUS] = WAVESCULPTOR_MEASUREMENT_ID_STATUS,
-      [MOTOR_CONTROLLER_BROADCAST_BUS] = WAVESCULPTOR_MEASUREMENT_ID_BUS,
-      [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = WAVESCULPTOR_MEASUREMENT_ID_VELOCITY,
-      [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE,
-      [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_AIR_IN_CPU_TEMPERATURE
-    };
+static const uint32_t s_base_addr_lookup[NUM_MOTOR_CONTROLLERS] = {
+  [LEFT_MOTOR_CONTROLLER] = LEFT_MOTOR_CONTROLLER_BASE_ADDR,
+  [RIGHT_MOTOR_CONTROLLER] = RIGHT_MOTOR_CONTROLLER_BASE_ADDR,
+};
+
+static const uint32_t s_offset_lookup[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS] = {
+  [MOTOR_CONTROLLER_BROADCAST_STATUS] = WAVESCULPTOR_MEASUREMENT_ID_STATUS,
+  [MOTOR_CONTROLLER_BROADCAST_BUS] = WAVESCULPTOR_MEASUREMENT_ID_BUS,
+  [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = WAVESCULPTOR_MEASUREMENT_ID_VELOCITY,
+  [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE,
+  [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_AIR_IN_CPU_TEMPERATURE
+};
 
 // Uncomment when testing with only the left motor controller
 // #define RIGHT_MOTOR_CONTROLLER_UNUSED
@@ -61,10 +65,8 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   } else {
     storage->cb_storage.cur_measurement++;
   }
-  uint32_t filter =
-      (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
-      (uint32_t)
-          MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
+  uint32_t filter = s_base_addr_lookup[storage->cb_storage.motor_controller] +
+                    s_offset_lookup[storage->cb_storage.cur_measurement];
   // MCP2515 requires both filters to be set, so just use the same one twice
   // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required
   // one by one
@@ -79,14 +81,12 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   LOG_DEBUG("Received rx from id: 0x%x\n", (int)id);
   LOG_DEBUG("Data: 0x%" PRIx64 "\n", data);
   // calculate the base offset
-  uint32_t cur_mc_id = (storage->cb_storage.motor_controller == LEFT_MOTOR_CONTROLLER
-                            ? LEFT_MOTOR_CONTROLLER_BASE_ADDR
-                            : RIGHT_MOTOR_CONTROLLER_BASE_ADDR);
+  uint32_t cur_mc_id = s_base_addr_lookup[storage->cb_storage.motor_controller];
   uint32_t offset = (id - cur_mc_id);
   // map base offset to the cb array index
   uint32_t cb_index = NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS;
   for (uint32_t i = 0; i < NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS; i++) {
-    if (MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[i] == offset) {
+    if (s_offset_lookup[i] == offset) {
       cb_index = i;
       break;
     }
@@ -115,9 +115,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   // Check if we received the ID we're looking for
   // Return early if not so we keep looking for that ID until we get it
   if (cb_index != storage->cb_storage.cur_measurement) {
-    uint32_t id_lf =
-        cur_mc_id +
-        MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
+    uint32_t id_lf = cur_mc_id + s_offset_lookup[storage->cb_storage.cur_measurement];
     LOG_WARN("WARNING - filtering for ID 0x%x but processed 0x%x\n", (int)id_lf, (int)id);
     // TODO(SOFT-139): similar error handling to above
     return;
@@ -209,10 +207,8 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
   storage->cb_storage.motor_controller = LEFT_MOTOR_CONTROLLER;
 
   // Initial message ID to filter for
-  uint32_t filter =
-      (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
-      (uint32_t)
-          MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
+  uint32_t filter = s_base_addr_lookup[storage->cb_storage.motor_controller] +
+                    s_offset_lookup[storage->cb_storage.cur_measurement];
 
   Mcp2515Settings mcp2515_settings = {
     .spi_port = SPI_PORT_2,
