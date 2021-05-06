@@ -13,6 +13,7 @@ GPIO_KEY = (stores_pb2.MuStoreType.GPIO, 0)
 
 POLL_LOCK_SIGNAL = signal.SIGUSR1
 
+
 class BoardSim:
     def __init__(self, pm, proj_name, sub_sim_classes=None, init_conds=None):
         self.pm = pm
