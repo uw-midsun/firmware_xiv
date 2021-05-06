@@ -2,6 +2,7 @@ import http.server
 import json
 
 from mu.srv.router import get_routes
+from mu.harness import logger
 
 class InternalError(Exception):
     pass
@@ -20,6 +21,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             routes['sim_stop']: self.sim_stop,
             routes['sim_cat']: self.sim_cat,
             routes['sim_list']: self.sim_list,
+            routes['logs']: self.sim_logs,
         }
 
     def respond(self, code, body='{"acknowledged": "true"}'):
@@ -64,3 +66,18 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
     def sim_list(self, params=None):
         sim_list = self.pm.sim_list()
         self.respond(200, body=json.dumps(sim_list))
+    
+    def sim_logs(self, params=None):
+        self.respond(200, body='')
+        sub = logger.Subscriber(params['sim'])
+        self.pm.logger.subscribe(sub)
+        try:
+            while True:
+                try:
+                    log = sub.get()
+                    self.wfile.write('[{}] {}\n'.format(log.tag, log.msg).encode())
+                except logger.NoLog:
+                    pass
+        except BrokenPipeError:
+            pass
+        self.pm.logger.unsubscribe(sub)

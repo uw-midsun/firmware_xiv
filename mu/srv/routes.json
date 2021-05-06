@@ -4,5 +4,7 @@
     "sim_cat": "sim/cat",
     "sim_list": "sim/list",
 
+    "logs": "logs",
+
     "reset": "reset"
 }
