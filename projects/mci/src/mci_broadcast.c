@@ -208,6 +208,12 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
   storage->cb_storage.cur_measurement = MOTOR_CONTROLLER_BROADCAST_STATUS;
   storage->cb_storage.motor_controller = LEFT_MOTOR_CONTROLLER;
 
+  // Initial message ID to filter for
+  uint32_t filter =
+      (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
+      (uint32_t)
+          MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
+
   Mcp2515Settings mcp2515_settings = {
     .spi_port = SPI_PORT_2,
     .spi_baudrate = 6000000,
@@ -221,12 +227,9 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
     .loopback = false,
     .filters =
         {
-            [MCP2515_FILTER_ID_RXF0] = { .raw =
-                                             (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR +
-                                                        storage->cb_storage.cur_measurement + 1) },
-            [MCP2515_FILTER_ID_RXF1] = { .raw =
-                                             (uint32_t)(LEFT_MOTOR_CONTROLLER_BASE_ADDR +
-                                                        storage->cb_storage.cur_measurement + 1) },
+            [MCP2515_FILTER_ID_RXF0] = { .raw = filter },
+
+            [MCP2515_FILTER_ID_RXF1] = { .raw = filter },
         },
   };
   mcp2515_init(storage->motor_can, &mcp2515_settings);
