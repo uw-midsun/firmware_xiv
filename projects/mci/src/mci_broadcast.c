@@ -68,6 +68,7 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   // MCP2515 requires both filters to be set, so just use the same one twice
   // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required
   // one by one
+  LOG_DEBUG("Now filtering for ID 0x%x\n", (int)filter);
   uint32_t filters[2] = { filter, filter };
   mcp2515_set_filter(storage->motor_can, filters);
 }
@@ -92,7 +93,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   }
   // check if received message ID doesn't have a CB index
   if (cb_index == NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS) {
-    LOG_WARN("WARNING - NO CB FOR MESSAGE ID 0x%x\n", (int)id);
+    LOG_WARN("WARNING - no cb for message ID 0x%x or received message from wrong MC\n", (int)id);
     // TODO(SOFT-139): error handling here
     // This should NEVER happen, so it may make sense to throw an error
     // However, have had this happen a few times, always with offset 9 (voltage rail measurement)
@@ -114,8 +115,10 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   // Check if we received the ID we're looking for
   // Return early if not so we keep looking for that ID until we get it
   if (cb_index != storage->cb_storage.cur_measurement) {
-    LOG_WARN("WARNING - filtering for ID 0x%x but processed 0x%x\n",
-             (int)storage->cb_storage.cur_measurement, (int)cb_index);
+    uint32_t id_lf =
+        cur_mc_id +
+        MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
+    LOG_WARN("WARNING - filtering for ID 0x%x but processed 0x%x\n", (int)id_lf, (int)id);
     // TODO(SOFT-139): similar error handling to above
     return;
   }

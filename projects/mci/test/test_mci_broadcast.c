@@ -40,7 +40,6 @@ typedef enum {
   NUM_TEST_MCI_MESSAGES
 } TestMciMessage;
 
-static GenericCanMcp2515 s_motor_can;
 static Mcp2515Storage s_motor_can_storage;
 static CanStorage s_can_storage;
 static MotorControllerBroadcastStorage s_broadcast_storage;
@@ -144,55 +143,10 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
     .extended = false,
   };
   memcpy(&msg.data, &can_data, sizeof(can_data));
-  mcp2515_tx(&s_motor_can_storage, msg.id, msg.extended, msg.data, msg.dlc);
-  // generic_can_tx((GenericCan *)&s_motor_can, &msg);
-}
 
-// Mocks what the mci_broadcast does when receiving messages through the MCP2515.
-StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
-                                 size_t dlc) {
-  if (storage->rx_cb != NULL) {
-    GenericCanMsg msg = {
-      .id = id,
-      .data = data,
-      .extended = extended,
-      .dlc = dlc,
-    };
-    storage->rx_cb(id, extended, data, dlc, storage->context);
-    /*
-    if (id == MOTOR_CAN_LEFT_VELOCITY_MEASUREMENT_FRAME_ID ||
-        id == MOTOR_CAN_RIGHT_VELOCITY_MEASUREMENT_FRAME_ID) {
-      s_broadcast_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_VELOCITY](&msg,
-    &s_broadcast_storage); } else if (id == MOTOR_CAN_LEFT_BUS_MEASUREMENT_FRAME_ID || id ==
-    MOTOR_CAN_RIGHT_BUS_MEASUREMENT_FRAME_ID) {
-      s_broadcast_storage.callbacks[MOTOR_CONTROLLER_BROADCAST_BUS](&msg, &s_broadcast_storage);
-    }
-    */
-  }
-  return STATUS_CODE_OK;
-}
-
-// Empty function pointer to be used with mcp2515_init
-static void prv_rx_handler(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {}
-
-static void prv_setup_motor_can(void) {
-  Mcp2515Settings mcp2515_settings = {
-    .spi_port = SPI_PORT_2,
-    .spi_baudrate = 6000000,
-    .mosi = { .port = GPIO_PORT_B, 15 },
-    .miso = { .port = GPIO_PORT_B, 14 },
-    .sclk = { .port = GPIO_PORT_B, 13 },
-    .cs = { .port = GPIO_PORT_B, 12 },
-    .int_pin = { .port = GPIO_PORT_A, 8 },
-
-    .can_bitrate = MCP2515_BITRATE_500KBPS,
-    .loopback = true,
-  };
-
-  // Will throw unimplemented errors on x86
-  generic_can_mcp2515_init(&s_motor_can, &mcp2515_settings);
-  // On x86 the rx handler doesn't get registered either :|
-  mcp2515_register_cbs(s_motor_can.mcp2515, prv_rx_handler, NULL, &s_motor_can);
+  // Mock MCP2515 message rx from WaveSculptor
+  s_broadcast_storage.motor_can->rx_cb(msg.id, msg.extended, msg.data, msg.dlc,
+                                       s_broadcast_storage.motor_can->context);
 }
 
 static void prv_setup_system_can() {
@@ -258,7 +212,6 @@ void setup_test(void) {
   soft_timer_init();
 
   prv_setup_system_can();
-  prv_setup_motor_can();
 
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_CONTROLLER_VC,
                                          prv_handle_bus_measurement, NULL));

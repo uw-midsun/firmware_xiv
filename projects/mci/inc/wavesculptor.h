@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 // Set to unobtainable values to control based off current
+// (see pg. 30 of WaveSculptor user manual)
 #define WAVESCULPTOR_FORWARD_VELOCITY 20000.0f
 #define WAVESCULPTOR_REVERSE_VELOCITY -20000.0f
 

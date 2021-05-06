@@ -294,7 +294,6 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   uint8_t opmode =
       (settings->loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
-  prv_write(storage, MCP2515_CTRL_REG_CANCTRL, registers, SIZEOF_ARRAY(registers));
   // Active-low interrupt pin
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
