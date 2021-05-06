@@ -7,7 +7,7 @@ def get_args():
     subparsers = parser.add_subparsers()
 
     parser_logs = subparsers.add_parser('logs', help='stream logs from musrv')
-    parser_logs.add_argument('sim', default='')
+    parser_logs.add_argument('sim', nargs='?', default='')
     parser_logs.set_defaults(func=logs)
 
     parser_reset = subparsers.add_parser('reset', help='reset musrv pm')

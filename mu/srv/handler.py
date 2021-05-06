@@ -36,7 +36,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             self.routes[path[1:]](params=params)
         except InternalError:
             self.respond(500, body='internal error')
-    
+
     def parse_query(self, query):
         if query == '':
             return []
@@ -46,7 +46,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             key, _, val = param.partition('=')
             ret[key] = val
         return ret
-    
+
     def reset_pm(self, params=None):
         self.pm.reset()
         self.respond(200)
@@ -62,11 +62,11 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
     def sim_cat(self, params=None):
         sim_list = list(self.pm.sim_cat().keys())
         self.respond(200, body=json.dumps(sim_list))
-    
+
     def sim_list(self, params=None):
         sim_list = self.pm.sim_list()
         self.respond(200, body=json.dumps(sim_list))
-    
+
     def sim_logs(self, params=None):
         self.respond(200, body='')
         sub = logger.Subscriber(params['sim'])

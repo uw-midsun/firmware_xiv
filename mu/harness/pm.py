@@ -61,14 +61,14 @@ class ProjectManager:
         self.logger = logger.Logger()
         self.log_thread = threading.Thread(target=self.log_all)
         self.log_thread.start()
-    
+
     def reset(self):
         config = self.config
         self.end()
         self.__init__(config=config)
 
     def start(self, proj_name, sim_class=BoardSim):
-        if type(sim_class) == str:
+        if isinstance(sim_class, str):
             sim_class = self.sim_catalog[sim_class]
         if proj_name not in self.proj_name_list:
             raise ValueError('invalid project "{}": expected something from projects directory')
@@ -86,7 +86,7 @@ class ProjectManager:
         for sim in self.fd_to_sim.values():
             if sim.__class__.__name__ == sim_name:
                 self.stop(sim)
-                return 
+                return
 
     def stop_all(self):
         for sim in self.fd_to_sim.values():
@@ -136,7 +136,7 @@ class ProjectManager:
 
     def log_all(self):
         if not self.config.projlogs:
-            return  
+            return
         sub = logger.Subscriber('pm')
         self.logger.subscribe(sub)
         while not self.killed:
@@ -146,7 +146,7 @@ class ProjectManager:
             except logger.NoLog:
                 continue
         self.logger.unsubscribe(sub)
-    
+
     def sim_list(self):
         ret = []
         for fd in self.fd_to_sim:
