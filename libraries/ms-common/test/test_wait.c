@@ -136,6 +136,7 @@ void teardown_test(void) {}
 // number of waits done is checked
 
 void test_wait_works_timer(void) {
+  LOG_DEBUG("test_wait_works_timer\n");
   uint8_t num_wait_cycles_timer = 0;
 
   while (s_num_times_timer_callback_called < EXPECTED_TIMES_TIMER_CALLBACK_CALLED) {
@@ -149,6 +150,7 @@ void test_wait_works_timer(void) {
 }
 
 void test_wait_works_gpio(void) {
+  LOG_DEBUG("test_wait_works_gpio\n");
   uint8_t num_wait_cycles_timer = 0;
   pthread_t gpio_thread;
 
@@ -178,6 +180,7 @@ void test_wait_works_gpio(void) {
 }
 
 void test_wait_works_raw_x86(void) {
+  LOG_DEBUG("test_wait_works_raw_x86\n");
   uint8_t num_wait_cycles_timer = 0;
   pthread_t interrupt_thread;
 
@@ -209,6 +212,7 @@ void test_wait_works_raw_x86(void) {
 }
 
 void test_can_wake_works(void) {
+  LOG_DEBUG("test_can_wake_works\n";)
   uint8_t num_wait_cycles_timer = 0;
 
   prv_init_can();
