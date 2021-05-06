@@ -78,7 +78,7 @@ void test_timeout_gives_released(void) {
 
   delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
   TEST_ASSERT_EQUAL(PEDAL_STATE_PRESSED, get_pedal_state());
- 
+
   // Ignore extraneous PEDAL_MONITOR_STATE_CHANGE events
   Event e = { 0 };
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, PEDAL_MONITOR_STATE_CHANGE);
