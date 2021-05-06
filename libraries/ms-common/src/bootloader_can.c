@@ -10,7 +10,7 @@
 
 #define CLIENT_SCRIPT_CONTROLLER_BOARD_ID 0
 
-static CanRxHandlerCb s_callback = NULL;
+static BootloaderCallback s_callback = NULL;
 static void *s_context = NULL;
 
 StatusCode bootloader_can_init(CanStorage *storage, CanSettings *settings) {
@@ -19,8 +19,8 @@ StatusCode bootloader_can_init(CanStorage *storage, CanSettings *settings) {
   return can_init(storage, settings);
 }
 
-StatusCode bootloader_can_transmit(uint8_t *data, size_t len, bool is_start_message,
-                                   uint16_t board_id) {
+StatusCode bootloader_can_transmit(uint16_t board_id, uint8_t *data, size_t len,
+                                   bool is_start_message) {
   CanMessage message = { .source_id = SYSTEM_CAN_DEVICE_BOOTLOADER,
                          .msg_id = board_id,
                          .type = CAN_MSG_TYPE_DATA,
@@ -34,18 +34,18 @@ StatusCode bootloader_can_transmit(uint8_t *data, size_t len, bool is_start_mess
   return can_transmit(&message, NULL);
 }
 
-StatusCode bootloader_can_register_handler(CanRxHandlerCb callback, void *context) {
-  s_callback = callback;
-  s_context = context;
-  if (s_callback == NULL) {
+StatusCode bootloader_can_register_handler(BootloaderCallback callback, void *context) {
+  if (callback == NULL) {
     return STATUS_CODE_INVALID_ARGS;
   }
+  s_callback = callback;
+  s_context = context;
   return STATUS_CODE_OK;
 }
 
 StatusCode bootloader_can_receive(CanMessage *msg) {
-  if (msg->msg_id == CLIENT_SCRIPT_CONTROLLER_BOARD_ID) {
-    return s_callback(msg, s_context, NULL);
+  if (msg->msg_id == CLIENT_SCRIPT_CONTROLLER_BOARD_ID && s_callback != NULL) {
+    return s_callback(msg, s_context);
   }
   return STATUS_CODE_OK;
 }

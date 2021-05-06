@@ -50,7 +50,6 @@ message CanData {
 // NEXT TAG = 9
 message CanMsg {
   enum Source {
-    // enum must contain 0 in protobuf.
     BOOTLOADER = 0;
     BMS_CARRIER = 1;
     CENTRE_CONSOLE = 2;
