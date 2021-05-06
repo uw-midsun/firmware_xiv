@@ -3,6 +3,7 @@ from mu.protogen import stores_pb2
 
 ADT7476A_KEY = (stores_pb2.MuStoreType.ADT7476A, 0)
 
+
 class Adt7476a(SubSim):
     def assert_values(self, speed, status, channel):
         # make sure the store has been initialized before calling this

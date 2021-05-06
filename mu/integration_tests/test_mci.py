@@ -7,6 +7,7 @@ from mu.protogen import stores_pb2
 
 MCP2515_KEY = (stores_pb2.MuStoreType.MCP2515, 0)
 
+
 class TestMci(int_test.IntTest):
     def setUp(self):
         super().setUp()
