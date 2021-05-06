@@ -212,7 +212,7 @@ void test_wait_works_raw_x86(void) {
 }
 
 void test_can_wake_works(void) {
-  LOG_DEBUG("test_can_wake_works\n";)
+  LOG_DEBUG("test_can_wake_works\n");
   uint8_t num_wait_cycles_timer = 0;
 
   prv_init_can();
