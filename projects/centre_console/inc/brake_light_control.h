@@ -7,6 +7,9 @@
 
 #include <stdbool.h>
 
+#include "centre_console_events.h"
+#include "pedal_monitor.h"
+#include "pedal_rx.h"
 #include "status.h"
 
 bool brake_light_control_process_event(Event *e);

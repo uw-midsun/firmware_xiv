@@ -22,9 +22,9 @@ static void prv_can_transmit_brake_light_change(PedalState current_state) {
   }
 }
 
-// Processes PEDAL_MONITOR_STATE_CHANGE events and will call
-// the above private function to update brake lights
-bool brake_light_control_process_event(Event *e){
+// Processes PEDAL_MONITOR_STATE_CHANGE events and will transmit
+// the appropriate CanMessage to turn brake lights on/off
+bool brake_light_control_process_event(Event *e) {
   if (e != NULL && e->id == PEDAL_MONITOR_STATE_CHANGE) {
     prv_can_transmit_brake_light_change(e->data);
     return true;
