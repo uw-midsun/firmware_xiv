@@ -30,7 +30,7 @@ void test_delay_in_soft_timer(void) {
   soft_timer_done = false;
   soft_timer_start(10000, callback, NULL, NULL);
 
-  // Soft timer should be done within 1 second
-  delay_us(1000000);
+  // Soft timer should be done after 20000 us
+  delay_us(20000);
   TEST_ASSERT_TRUE(soft_timer_done);
 }
