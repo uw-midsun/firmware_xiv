@@ -9,10 +9,9 @@
 #include "dispatcher.h"
 #include "gpio.h"
 #include "misc.h"
-#include "watchdog.h"
+#include "log.h"
 
 static I2CReadCommand s_storage = { 0 };
-static WatchdogStorage storage_watchdog;
 static bool s_expecting_message = true;
 static uint32_t s_soft_timer_delay;
 static size_t bytes_sent = 0;
@@ -34,14 +33,6 @@ static void prv_i2c_data_reset(void) {
   s_storage.reg = 0;
 }
 
-// Watchdog callback, tx's timeout error
-static void prv_expiry_callback(void *context) {
-  // Only tx's timeout error if gap between messages is too large
-  if (!s_expecting_message) {
-    CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_TIMEOUT, 0, 0, 0, 0, 0, 0);
-  }
-}
-
 static void prv_timer_status_callback(SoftTimerId timer_id, void *context) {
   // This function is used to send a STATUS_CODE_OK message
   // The function is in a soft timer call back because there
@@ -60,6 +51,7 @@ static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
                           response[bytes_sent + 5], response[bytes_sent + 6]);
 
   bytes_sent += 7;
+//  LOG_DEBUG("%d \n",s_storage.rx_len);
   if (bytes_sent < s_storage.rx_len) {
     soft_timer_start_millis(s_soft_timer_delay, prv_timer_data_callback, NULL, NULL);
   } else {
@@ -70,7 +62,6 @@ static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
 
 static StatusCode prv_i2c_read_command_callback(uint8_t data[8], void *context, bool *tx_result) {
   *tx_result = false;
-  watchdog_kick(&storage_watchdog);
 
   s_storage.port = data[1];
   s_storage.address = data[2];
@@ -119,9 +110,8 @@ static StatusCode prv_i2c_read_command_callback(uint8_t data[8], void *context, 
   return STATUS_CODE_OK;
 }
 
-StatusCode i2c_read_init(uint32_t timeout_ms, uint32_t timeout_soft_timer) {
+StatusCode i2c_read_init(uint32_t timeout_soft_timer) {
   s_soft_timer_delay = timeout_soft_timer;
-  watchdog_start(&storage_watchdog, timeout_ms, prv_expiry_callback, NULL);
 
   return dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_READ_COMMAND,
                                       prv_i2c_read_command_callback, NULL);

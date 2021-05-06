@@ -25,6 +25,7 @@
 #include "soft_timer.h"
 #include "spi_exchange.h"
 #include "wait.h"
+#include "i2c_read.h"
 
 typedef enum {
   CAN_EVENT_RX = 0,
@@ -62,6 +63,7 @@ int main() {
   gpio_get_init();
   gpio_interrupts_init();
   i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS);
+  i2c_read_init(I2C_READ_DEFAULT_TIMEOUT_MS);
   spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY);
 
   Event e = { 0 };

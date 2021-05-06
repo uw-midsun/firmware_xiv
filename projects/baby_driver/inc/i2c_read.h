@@ -15,7 +15,7 @@ typedef struct I2CReadCommand {
   uint8_t reg;
 } I2CReadCommand;
 
-#define I2C_WRITE_DEFAULT_TIMEOUT_MS 750
+#define I2C_READ_DEFAULT_TIMEOUT_MS 5
 
 // Timeout period can be made shorter for testing
-StatusCode i2c_read_init(uint32_t timeout_ms, uint32_t timeout_soft_timer);
+StatusCode i2c_read_init(uint32_t timeout_soft_timer);
