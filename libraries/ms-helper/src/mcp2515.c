@@ -7,7 +7,6 @@
 #include "debug_led.h"
 #include "delay.h"
 #include "gpio_it.h"
-#include "log.h"
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
 
@@ -90,12 +89,9 @@ static const uint8_t s_brp_lookup[NUM_MCP2515_BITRATES] = {
 
 // SPI commands - See Table 12-1
 static void prv_reset(Mcp2515Storage *storage) {
-  LOG_DEBUG("in reset\n");
   uint8_t payload[] = { MCP2515_CMD_RESET };
   spi_exchange(storage->spi_port, payload, sizeof(payload), NULL, 0);
-  LOG_DEBUG("before reset delay\n");
   delay_us(100);
-  LOG_DEBUG("after reset delay\n");
 }
 
 static void prv_read(Mcp2515Storage *storage, uint8_t addr, uint8_t *read_data, size_t read_len) {
@@ -228,10 +224,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     .cs = settings->cs,
   };
   status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
-  LOG_DEBUG("spi init\n");
-  // delay in this seems to cause a deadlock when called during MCI
   prv_reset(storage);
-  LOG_DEBUG("after reset\n");
   // Set to Config mode, CLKOUT /4
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
                  MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
@@ -296,22 +289,12 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     0x00,
   };
 
-  uint8_t test = 0;
-  prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
-  LOG_DEBUG("before write %d\n", test);
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
-  prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
-  LOG_DEBUG("after write %d\n", test);
   // Leave config mode
   uint8_t opmode =
       (settings->loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
-  test = 0;
-  prv_read(storage, MCP2515_CTRL_REG_CANCTRL, &test, sizeof(test));
-  LOG_DEBUG("before write 2 %d\n", test);
   prv_write(storage, MCP2515_CTRL_REG_CANCTRL, registers, SIZEOF_ARRAY(registers));
-  prv_read(storage, MCP2515_CTRL_REG_CANCTRL, &test, sizeof(test));
-  LOG_DEBUG("after write 2 %d\n", test);
   // Active-low interrupt pin
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
@@ -322,7 +305,6 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
-  LOG_DEBUG("end of init\n");
   return gpio_it_register_interrupt(&settings->int_pin, &it_settings, INTERRUPT_EDGE_FALLING,
                                     prv_handle_int, storage);
 }
@@ -403,8 +385,7 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
 }
 
 StatusCode mcp2515_set_filter(Mcp2515Storage *storage, uint32_t *filters) {
-  // mostly just copy-pasting code from mcp2515_init here. not sure if this will work, but will
-  // need refactoring if it does
+  // Primarily just copy-pasted from mcp2515_init()
 
   // convert filters to Mcp2515Ids
   Mcp2515Id filters_converted[NUM_MCP2515_FILTER_IDS];
@@ -454,7 +435,7 @@ StatusCode mcp2515_set_filter(Mcp2515Storage *storage, uint32_t *filters) {
     // Set eid0-7
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
   }
-  // Leave config mode (hardcoding this to always be normal for now, never loopback)
+  // Return to normal mode
   uint8_t opmode = (MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
   return STATUS_CODE_OK;

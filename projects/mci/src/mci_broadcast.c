@@ -1,10 +1,11 @@
 #include "mci_broadcast.h"
 
+#include <inttypes.h>
+
 #include "can_transmit.h"
 #include "can_unpack.h"
 #include "critical_section.h"
 #include "mcp2515.h"
-#include "string.h"
 
 #include "cruise_rx.h"
 #include "log.h"
@@ -23,7 +24,7 @@ static const uint16_t MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP
       [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = MOTOR_CONTROLLER_BROADCAST_DSP_TEMP_OFFSET
     };
 
-// Uncomment when using with only the left motor controller (when testing hardware)
+// Uncomment when testing with only the left motor controller
 // #define RIGHT_MOTOR_CONTROLLER_UNUSED
 
 #ifdef RIGHT_MOTOR_CONTROLLER_UNUSED
@@ -45,8 +46,6 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 }
 
 static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
-  LOG_DEBUG("broadcasting status: 0x%x%x\n", storage->measurements.status[LEFT_MOTOR_CONTROLLER],
-            storage->measurements.status[RIGHT_MOTOR_CONTROLLER]);
   uint32_t *measurements = storage->measurements.status;
   CAN_TRANSMIT_MOTOR_STATUS(measurements[LEFT_MOTOR_CONTROLLER],
                             measurements[RIGHT_MOTOR_CONTROLLER]);
@@ -66,26 +65,23 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
       (uint32_t)MOTOR_CONTROLLER_BASE_ADDR_LOOKUP(storage->cb_storage.motor_controller) +
       (uint32_t)
           MOTOR_CONTROLLER_BROADCAST_MEASUREMENT_OFFSET_LOOKUP[storage->cb_storage.cur_measurement];
-  LOG_DEBUG("Changing filter to 0x%x\n", (int)filter);
   // MCP2515 requires both filters to be set, so just use the same one twice
   // Looking for multiple message IDs seems to cause issues, so we iterate through all IDs required
   // one by one
   uint32_t filters[2] = { filter, filter };
-  StatusCode status = mcp2515_set_filter(storage->motor_can, filters);
-  LOG_DEBUG("Change filter result %d\n", status);
+  mcp2515_set_filter(storage->motor_can, filters);
 }
 
 // CB for rx received
 static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc, void *context) {
   MotorControllerBroadcastStorage *storage = context;
-  LOG_DEBUG("received rx from id: 0x%x\n", (int)id);
-  LOG_DEBUG("Data: 0x%x%x\n", (int)data, (int)(data >> 32));
+  LOG_DEBUG("Received rx from id: 0x%x\n", (int)id);
+  LOG_DEBUG("Data: 0x%" PRIx64 "\n", data);
   // calculate the base offset
   uint32_t cur_mc_id = (storage->cb_storage.motor_controller == LEFT_MOTOR_CONTROLLER
                             ? LEFT_MOTOR_CONTROLLER_BASE_ADDR
                             : RIGHT_MOTOR_CONTROLLER_BASE_ADDR);
   uint32_t offset = (id - cur_mc_id);
-  LOG_DEBUG("CHECKING FOR OFFSET 0x%x\n", (int)offset);
   // map base offset to the cb array index
   uint32_t cb_index = NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS;
   for (uint32_t i = 0; i < NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS; i++) {
@@ -97,16 +93,15 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   // check if received message ID doesn't have a CB index
   if (cb_index == NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS) {
     LOG_WARN("WARNING - NO CB FOR MESSAGE ID 0x%x\n", (int)id);
-    // this should NEVER happen, so it may make sense to throw an error
-    // TODO(SOFT-139): error handling here?
-    // have had this happen a few times, always with offset 9 (voltage rail measurement)
+    // TODO(SOFT-139): error handling here
+    // This should NEVER happen, so it may make sense to throw an error
+    // However, have had this happen a few times, always with offset 9 (voltage rail measurement)
     // not sure what the cause is, doesn't happen often
     return;
   }
 
   // Only call CB if it exists
   if (storage->cb_storage.callbacks[cb_index] != NULL) {
-    // consider reworking so we don't need to use this
     GenericCanMsg msg = {
       .id = id,
       .extended = extended,
@@ -119,8 +114,8 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
   // Check if we received the ID we're looking for
   // Return early if not so we keep looking for that ID until we get it
   if (cb_index != storage->cb_storage.cur_measurement) {
-    LOG_WARN("WARNING - filtering for ID %d but processed %d", storage->cb_storage.cur_measurement,
-             cb_index);
+    LOG_WARN("WARNING - filtering for ID 0x%x but processed 0x%x\n",
+             (int)storage->cb_storage.cur_measurement, (int)cb_index);
     // TODO(SOFT-139): similar error handling to above
     return;
   }
@@ -130,7 +125,7 @@ static void prv_process_rx(uint32_t id, bool extended, uint64_t data, size_t dlc
 }
 
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
-  LOG_DEBUG("got status message\n");
+  LOG_DEBUG("Received status message\n");
   MotorControllerBroadcastStorage *storage = context;
 
   WaveSculptorCanId can_id = { .raw = msg->id };
@@ -151,7 +146,7 @@ static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
 }
 
 static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
-  LOG_DEBUG("got speed message\n");
+  LOG_DEBUG("Received speed message\n");
   MotorControllerBroadcastStorage *storage = context;
   float *measurements = storage->measurements.vehicle_velocity;
 
@@ -173,13 +168,12 @@ static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
 }
 
 static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *context) {
-  LOG_DEBUG("got bus measurement message\n");
+  LOG_DEBUG("Received bus measurement message\n");
   MotorControllerBroadcastStorage *storage = context;
   WaveSculptorBusMeasurement *measurements = storage->measurements.bus_measurements;
 
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
-  LOG_DEBUG("device id %d\n", can_id.device_id);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     if (can_id.device_id == storage->ids[motor_id]) {
       bool disabled = critical_section_start();
@@ -191,13 +185,13 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
 }
 
 static void prv_handle_motor_temp_rx(const GenericCanMsg *msg, void *context) {
-  // TODO(SOFT-421): send this over CAN
-  LOG_DEBUG("got motor temp rx\n");
+  // TODO(SOFT-421): send this over CAN and store it
+  LOG_DEBUG("Received motor temp message\n");
 }
 
 static void prv_handle_dsp_temp_rx(const GenericCanMsg *msg, void *context) {
-  // TODO(SOFT-421): Figure out if we need to send this too
-  LOG_DEBUG("got dsp temp rx\n");
+  // TODO(SOFT-421): send this over CAN and store it
+  LOG_DEBUG("Received DSP temp message\n");
 }
 
 static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
@@ -238,18 +232,16 @@ static void prv_setup_motor_can(MotorControllerBroadcastStorage *storage) {
 
 static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
   MotorControllerBroadcastStorage *storage = context;
-  LOG_DEBUG("velocity rx bitset: %d, bus bitset: %d\n", storage->velocity_rx_bitset,
-            storage->bus_rx_bitset);
   if (storage->velocity_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
     // Received speed from all motor controllers - clear bitset and broadcast
     storage->velocity_rx_bitset = 0;
-    LOG_DEBUG("sending velocity periodic broadcast\n");
+    LOG_DEBUG("Sending velocity periodic broadcast\n");
     prv_broadcast_speed(storage);
   }
   if (storage->bus_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
     // Received bus measurements from all motor controllers - clear bitset and broadcast
     storage->bus_rx_bitset = 0;
-    LOG_DEBUG("sending bus periodic broadcast\n");
+    LOG_DEBUG("Sending bus periodic broadcast\n");
     prv_broadcast_bus_measurement(storage);
   }
   if (storage->status_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
@@ -258,7 +250,7 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Sending status periodic broadcast\n");
     prv_broadcast_status(storage);
   }
-  // TODO(SOFT-139): Send status messages here as well (should be done now)
+  // TODO(SOFT-421): broadcast temp measurements
   soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                           storage, NULL);
 }
