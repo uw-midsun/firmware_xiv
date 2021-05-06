@@ -15,10 +15,9 @@
 // Will transmit the appropriate CanMessage to turn brake lights on/off
 static void prv_can_transmit_brake_light_change(PedalState current_state) {
   if (current_state == PEDAL_STATE_RELEASED) {
-    CAN_TRANSMIT_LIGHTS(SYSTEM_CAN_MESSAGE_LIGHTS, EE_LIGHT_STATE_OFF);
-
+    CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_BRAKES, EE_LIGHT_STATE_OFF);
   } else if (current_state == PEDAL_STATE_PRESSED) {
-    CAN_TRANSMIT_LIGHTS(SYSTEM_CAN_MESSAGE_LIGHTS, EE_LIGHT_STATE_ON);
+    CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_BRAKES, EE_LIGHT_STATE_ON);
   }
 }
 

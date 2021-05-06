@@ -40,16 +40,18 @@ void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
                                   TEST_CAN_BRAKE_LIGHT_EVENT_TX, TEST_CAN_BRAKE_LIGHT_EVENT_RX,
                                   TEST_CAN_BRAKE_LIGHT_EVENT_FAULT);
-  pedal_monitor_init();
 
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_brake_lights_handler, NULL);
+
+  s_brake_lights_id = 0;
+  s_brake_lights_state = 0;
 }
 
 void teardown_test(void) {}
 
 // Test that CAN message for brake light on is sent when pedal is pressed
 // with PEDAL_MONITOR_STATE_CHANGE event raised
-void test_CAN_brake_light_on_when_pedal_pressed(void) {
+void test_can_brake_light_on_when_pedal_pressed(void) {
   // After event_raise and event_process PEDAL_MONITOR_STATE_CHANGE event
   // with pedal released state, brake_light_control_process_event is called
   Event e = { PEDAL_MONITOR_STATE_CHANGE, PEDAL_STATE_PRESSED };
@@ -57,13 +59,13 @@ void test_CAN_brake_light_on_when_pedal_pressed(void) {
 
   // Check that a CAN message has been TX'ed with correct ID & state
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_BRAKE_LIGHT_EVENT_TX, TEST_CAN_BRAKE_LIGHT_EVENT_RX);
-  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, s_brake_lights_id);
+  TEST_ASSERT_EQUAL(EE_LIGHT_TYPE_BRAKES, s_brake_lights_id);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_ON, s_brake_lights_state);
 }
 
 // Test that CAN message for brake light off is sent when pedal is released
 // with PEDAL_MONITOR_STATE_CHANGE event raised
-void test_CAN_brake_light_off_when_pedal_released(void) {
+void test_can_brake_light_off_when_pedal_released(void) {
   // After event_raise and event_process PEDAL_MONITOR_STATE_CHANGE event
   // with pedal released state, brake_light_control_process_event is called
   Event e = { PEDAL_MONITOR_STATE_CHANGE, PEDAL_STATE_RELEASED };
@@ -71,7 +73,7 @@ void test_CAN_brake_light_off_when_pedal_released(void) {
 
   // Check that a CAN message has been TX'ed with correct ID & state
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_BRAKE_LIGHT_EVENT_TX, TEST_CAN_BRAKE_LIGHT_EVENT_RX);
-  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, s_brake_lights_id);
+  TEST_ASSERT_EQUAL(EE_LIGHT_TYPE_BRAKES, s_brake_lights_id);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_OFF, s_brake_lights_state);
 }
 
