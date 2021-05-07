@@ -3,7 +3,7 @@ from mu.sims.sub_sims.mcp2515 import Mcp2515
 
 
 class Mci(BoardSim):
-    def __init__(self, pm, proj_name):
+    def __init__(self, pm, proj_name='mci'):
         super().__init__(pm, proj_name, sub_sim_classes=[Mcp2515])
         self.precharge_enable = False
 

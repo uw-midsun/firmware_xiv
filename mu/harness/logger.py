@@ -23,10 +23,12 @@ class Subscriber:
 
     def get(self):
         try:
-            return self.q.get(timeout=0.1)
+            log = self.q.get(timeout=0.1)
+            if self.tags is None or log.tag in self.tags:
+                return log
         except queue.Empty as e:
             raise NoLog from e
-
+        return None
 
 class Logger:
     def __init__(self, max_logs=1000):

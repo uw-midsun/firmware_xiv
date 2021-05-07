@@ -8,7 +8,7 @@ from mu.sims.bms_carrier import BmsCarrier
 class TestAds1259(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('smoke_ads1259', sim_class=BmsCarrier)
+        self.board = self.manager.start(BmsCarrier, proj_name='smoke_ads1259')
 
     def test_ads1259(self):
         # Smoke test has no output, but you can visually ensure logged reading changes
