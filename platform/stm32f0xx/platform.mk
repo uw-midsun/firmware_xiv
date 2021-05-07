@@ -21,6 +21,9 @@ ARCH_CFLAGS := -mlittle-endian -mcpu=cortex-m0 -march=armv6-m -mthumb
 # Linker script location
 LDSCRIPT_DIR := $(PLATFORM_DIR)/ldscripts
 
+# Location of newlib binaries with debug symbols enabled
+NEWLIB_DEBUG_DIR := $(PLATFORM_DIR)/newlib-debug
+
 # Build flags for the device
 CDEFINES := USE_STDPERIPH_DRIVER STM32F072 HSE_VALUE=32000000
 CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
@@ -31,6 +34,11 @@ CFLAGS := -Wall -Wextra -Werror -g3 -Os -std=c11 -Wno-discarded-qualifiers \
 # Linker flags - linker script set per target
 LDFLAGS := -L$(LDSCRIPT_DIR) -Wl,--gc-sections -Wl,--undefined=uxTopUsedPriority \
            --specs=nosys.specs --specs=nano.specs -lm
+
+ifeq (true,$(STDLIB_DEBUG))
+CFLAGS += -nostdlib
+LDFLAGS := $(filter-out --specs=nosys.specs --specs=nano.specs,$(LDFLAGS)) -L$(NEWLIB_DEBUG_DIR) -lc
+endif
 
 # temporary build mechanism for applications: set DEFAULT_LINKER_SCRIPT=stm32f0_application.ld
 DEFAULT_LINKER_SCRIPT ?= stm32f0_default.ld
@@ -53,11 +61,22 @@ OPENOCD_CFG := -s $(OPENOCD_SCRIPT_DIR) \
 CHANNEL ?= can0
 
 # Platform targets
-.PHONY: program gdb target babydriver temp-bootloader-write
+.PHONY: program gdb target babydriver analyzestack temp-bootloader-write
+
+BABYDRIVER_DIR := $(PROJ_DIR)/baby_driver/scripts
 
 babydriver:
 	@make program PROJECT=baby_driver
-	@python3 -i projects/baby_driver/scripts/repl_setup.py --channel $(CHANNEL)
+	@python3 -i $(BABYDRIVER_DIR)/repl_setup.py --channel $(CHANNEL)
+
+ANALYZESTACK_DIR := $(PLATFORM_DIR)/scripts/stack_analyzer
+ANNOTATION_FILE := analyzestack.yaml
+
+# We use the $(T)_DIR variables built up by the build to include annotation files from all dependencies.
+analyzestack: clean build
+	@python3 $(ANALYZESTACK_DIR)/stack_analyzer.py $(BIN_DIR)/$(PROJECT)$(PLATFORM_EXT) \
+		$(addprefix --annotation ,$(wildcard \
+			$(foreach dep,$($(PROJECT)_DEPS) $(PROJECT),$($(dep)_DIR)/$(ANNOTATION_FILE))))
 
 ifeq (,$(MACOS_SSH_USERNAME))
 
