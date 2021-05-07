@@ -41,7 +41,7 @@ static CanSettings s_can_settings = {
 
 static StatusCode prv_bootloader_rx_callback(const CanMessage *msg, void *context) {
   s_times_callback_called++;
-  memcpy(s_received_data, msg->data_u8, 8);
+  memcpy(s_received_data, msg->data_u8, msg->dlc);
   s_received_len = msg->dlc;
   s_received_context = context;
   s_received_is_start_message = (msg->type == CAN_MSG_TYPE_ACK);
@@ -69,7 +69,7 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 // Test that a bootloader CAN message with client board ID can be succesfully sent
-// and the appropreate callback called when received
+// and the appropriate callback called when received.
 void test_bootloader_can_received(void) {
   TEST_ASSERT_OK(bootloader_can_init(&s_can_storage, &s_can_settings));
   uint8_t data[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -84,7 +84,7 @@ void test_bootloader_can_received(void) {
   TEST_ASSERT_EQUAL(NULL, s_received_context);
 }
 
-// Test that a bootloader CAN message sent with non-client board ID is not received
+// Test that a bootloader CAN message sent with non-client board ID is not received.
 void test_bootloader_can_not_received(void) {
   TEST_ASSERT_OK(bootloader_can_init(&s_can_storage, &s_can_settings));
   uint8_t data[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -95,8 +95,41 @@ void test_bootloader_can_not_received(void) {
   TEST_ASSERT_EQUAL(0, s_times_callback_called);
 }
 
-// Test that a bootloader CAN message with client board ID can be sent and the appropreate
-// callback called when received without initializing bootloader_can, only initializing can
+// Test that a bootloader CAN message with len < 8 is received succesfully,
+// and that a message with len > 8 is not sent.
+void test_bootloader_can_various_len(void) {
+  TEST_ASSERT_OK(bootloader_can_init(&s_can_storage, &s_can_settings));
+  // test when data length is 5
+  uint8_t data[5] = { 0, 4, 0, 1, 5 };
+  TEST_ASSERT_OK(bootloader_can_transmit(CLIENT_SCRIPT_CONTROLLER_BOARD_ID, data, 5, true));
+
+  // process bootloader message
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(data, s_received_data, 5);
+  TEST_ASSERT_EQUAL(5, s_received_len);
+  TEST_ASSERT_EQUAL(true, s_received_is_start_message);
+  TEST_ASSERT_EQUAL(NULL, s_received_context);
+
+  // test when data length is 0, none of the data should be transmitted
+  uint8_t *empty_data = NULL;
+  TEST_ASSERT_OK(bootloader_can_transmit(CLIENT_SCRIPT_CONTROLLER_BOARD_ID, empty_data, 0, false));
+
+  // process bootloader message
+  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  // no change in the static recived_data variable, since no new data was transmitted
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(data, s_received_data, 5);
+  TEST_ASSERT_EQUAL(0, s_received_len);
+  TEST_ASSERT_EQUAL(false, s_received_is_start_message);
+  TEST_ASSERT_EQUAL(NULL, s_received_context);
+
+  // test for transmitting message with len > 8, should return STATUS_CODE_INVALID_ARGS
+  TEST_ASSERT_NOT_OK(bootloader_can_transmit(CLIENT_SCRIPT_CONTROLLER_BOARD_ID, data, 9, false));
+}
+
+// Test that a bootloader CAN message with client board ID can be sent and the appropriate
+// callback called when received without initializing bootloader_can, only initializing can.
 void test_bootloader_can_no_init(void) {
   TEST_ASSERT_OK(can_init(&s_can_storage, &s_can_settings));
   uint8_t data[8] = { 0, 0, 0, 1, 0, 0, 0, 0 };
