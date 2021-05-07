@@ -1,6 +1,6 @@
 from mu.harness.board_sim import BoardSim, GPIO_KEY
 
-
+# pylint: disable=useless-super-delegation
 class Leds(BoardSim):
     def __init__(self, pm, proj_name='leds'):
         super().__init__(pm, proj_name)

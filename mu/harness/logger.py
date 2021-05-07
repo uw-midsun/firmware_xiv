@@ -28,7 +28,7 @@ class Subscriber:
                 return log
         except queue.Empty as e:
             raise NoLog from e
-
+        return None
 
 class Logger:
     def __init__(self, max_logs=1000):

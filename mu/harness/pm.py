@@ -11,7 +11,6 @@ from mu.harness import canio
 from mu.harness import logger
 from mu.harness.dir_config import REPO_DIR
 from mu.harness.board_sim import BoardSim
-from mu.harness.sub_sim import SubSim
 
 POLL_TIMEOUT = 0.5
 
@@ -70,8 +69,8 @@ class ProjectManager:
         if isinstance(sim_class, str):
             try:
                 sim_class = self.sim_catalog[sim_class]
-            except KeyError:
-                raise ValueError('Invalid sim, check catalog')
+            except KeyError as e:
+                raise ValueError('Invalid sim, check catalog') from e
         if proj_name:
             if proj_name not in self.proj_name_list:
                 raise ValueError('invalid project "{}": expected something from projects directory')

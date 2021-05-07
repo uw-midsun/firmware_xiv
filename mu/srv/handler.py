@@ -84,7 +84,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
                     self.wfile.write('[{}] {}\n'.format(log.tag, log.msg).encode())
                 except logger.NoLog:
                     pass
-        except BrokenPipeError as e:
+        except BrokenPipeError:
             pass
         finally:
             self.pm.logger.unsubscribe(sub)
