@@ -1,7 +1,7 @@
 import http.server
 import json
+import urllib
 
-from mu.srv.router import get_routes
 from mu.harness import logger
 
 class InternalError(Exception):
@@ -14,14 +14,13 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
         super().__init__(*args, **kwargs)
 
     def setup_routing(self):
-        routes = get_routes()
         self.routes = {
-            routes['reset']: self.reset_pm,
-            routes['sim_start']: self.sim_start,
-            routes['sim_stop']: self.sim_stop,
-            routes['sim_cat']: self.sim_cat,
-            routes['sim_list']: self.sim_list,
-            routes['logs']: self.sim_logs,
+            'reset': self.reset_pm,
+            'start': self.start,
+            'stop': self.stop,
+            'sims': self.sims,
+            'list': self.sim_list,
+            'logs': self.logs,
         }
 
     def respond(self, code, body='{"acknowledged": "true"}'):
@@ -31,9 +30,9 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            path, _, query = self.path.partition('?')
-            params=self.parse_query(query)
-            self.routes[path[1:]](params=params)
+            parsed = urllib.parse.urlparse(self.path)
+            params = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+            self.routes[parsed.path[1:]](params=params)
         except InternalError:
             self.respond(500, body='internal error')
 
@@ -51,15 +50,21 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
         self.pm.reset()
         self.respond(200)
 
-    def sim_start(self, params=None):
-        self.pm.start(params['sim'], proj_name=params['proj'])
-        self.respond(200)
+    def start(self, params=None):
+        try:
+            self.pm.start(params['sim'][0], proj_name=params['proj'][0])
+            self.respond(200)
+        except ValueError as e:
+            self.respond(500, body='{}'.format(e))
 
-    def sim_stop(self, params=None):
-        self.pm.stop_name(params['sim'])
-        self.respond(200)
+    def stop(self, params=None):
+        try:
+            self.pm.stop_name(params['sim'][0])
+            self.respond(200)
+        except ValueError as e:
+            self.respond(500, body='{}'.format(e))
 
-    def sim_cat(self, params=None):
+    def sims(self, params=None):
         sim_list = list(self.pm.sim_cat().keys())
         self.respond(200, body=json.dumps(sim_list))
 
@@ -67,17 +72,19 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
         sim_list = self.pm.sim_list()
         self.respond(200, body=json.dumps(sim_list))
 
-    def sim_logs(self, params=None):
+    def logs(self, params=None):
         self.respond(200, body='')
-        sub = logger.Subscriber(params['sim'])
+        sim_name = params['sim'][0]
+        sub = logger.Subscriber(sim_name, tags=[sim_name])
         self.pm.logger.subscribe(sub)
         try:
-            while True:
+            while not self.pm.killed:
                 try:
                     log = sub.get()
                     self.wfile.write('[{}] {}\n'.format(log.tag, log.msg).encode())
                 except logger.NoLog:
                     pass
-        except BrokenPipeError:
+        except BrokenPipeError as e:
             pass
-        self.pm.logger.unsubscribe(sub)
+        finally:
+            self.pm.logger.unsubscribe(sub)

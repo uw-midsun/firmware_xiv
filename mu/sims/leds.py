@@ -9,4 +9,4 @@ class Leds(BoardSim):
         states = [int(i) for i in self.stores[GPIO_KEY].state]
         # use addition to indicate port - 16 = GPIO_PORT_B, 0 = GPIO_PORT_A
         leds = [states[16 + 5], states[16 + 4], states[16 + 3], states[0 + 15]]
-        self.pm.logger.log('LED', str(leds))
+        self.pm.logger.log(self.__class__.__name__, str(leds))

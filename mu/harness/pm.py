@@ -4,7 +4,6 @@ import select
 import signal
 import queue
 import importlib
-import sys
 import inspect
 
 from mu.srv.config import Config
@@ -69,7 +68,10 @@ class ProjectManager:
 
     def start(self, sim_class, proj_name=''):
         if isinstance(sim_class, str):
-            sim_class = self.sim_catalog[sim_class]
+            try:
+                sim_class = self.sim_catalog[sim_class]
+            except KeyError:
+                raise ValueError('Invalid sim, check catalog')
         if proj_name:
             if proj_name not in self.proj_name_list:
                 raise ValueError('invalid project "{}": expected something from projects directory')
@@ -88,6 +90,7 @@ class ProjectManager:
             if sim.__class__.__name__ == sim_name:
                 self.stop(sim)
                 return
+        raise ValueError('Invalid sim, check list')
 
     def stop_all(self):
         for sim in self.fd_to_sim.values():
@@ -151,26 +154,23 @@ class ProjectManager:
     def sim_list(self):
         ret = []
         for fd in self.fd_to_sim:
-            ret.append({
-                'fd': fd,
-                'sim': self.fd_to_sim[fd].__class__.__name__,
-            })
+            ret.append(self.fd_to_sim[fd].__class__.__name__)
         return ret
 
     def sim_cat(self):
-        sim_files = os.listdir(os.path.join(REPO_DIR, 'mu/sims'))
+        sim_files = os.listdir(os.path.join(REPO_DIR, 'mu', 'sims'))
         catalog = {}
         for sim_file in sim_files:
             if not sim_file.endswith('.py'):
                 continue
             sim_name = sim_file[:len(sim_file)-3]
             mod_name = 'mu.sims.{}'.format(sim_name)
-            importlib.import_module(mod_name)
-            sim_classes = inspect.getmembers(sys.modules[mod_name], inspect.isclass)
-            for sim_class in sim_classes:
-                if SubSim in sim_class[1].__bases__ or sim_class[0] in catalog:
+            mod = importlib.import_module(mod_name)
+            sim_classes = inspect.getmembers(mod, inspect.isclass)
+            for sim_name, sim_class in sim_classes:
+                if BoardSim not in inspect.getmro(sim_class) or sim_name in catalog:
                     continue
-                catalog[sim_class[0]] = sim_class[1]
+                catalog[sim_name] = sim_class
         return catalog
 
     def end(self):
