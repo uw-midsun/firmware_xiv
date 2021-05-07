@@ -19,7 +19,7 @@ def get_args():
 
     sim_start = sim_subparsers.add_parser('start', help='start sim')
     sim_start.add_argument('sim')
-    sim_start.add_argument('proj')
+    sim_start.add_argument('proj', nargs='?', default='')
     sim_start.set_defaults(func=sims.start)
 
     sim_stop = sim_subparsers.add_parser('stop', help='stop sim')

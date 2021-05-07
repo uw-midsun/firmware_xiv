@@ -52,7 +52,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
         self.respond(200)
 
     def sim_start(self, params=None):
-        self.pm.start(params['proj'], params['sim'])
+        self.pm.start(params['sim'], proj_name=params['proj'])
         self.respond(200)
 
     def sim_stop(self, params=None):
