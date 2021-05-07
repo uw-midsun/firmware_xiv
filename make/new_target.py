@@ -31,10 +31,10 @@ def new_target(target_type, name):
 
     projects/libraries
     └── name
-                             ├── inc
-                             ├── rules.mk
-                             ├── src
-                             └── test
+                                                                                                     ├── inc
+                                                                                                     ├── rules.mk
+                                                                                                     ├── src
+                                                                                                     └── test
 
     where rules.mk is required for the project or library to be valid.
 
