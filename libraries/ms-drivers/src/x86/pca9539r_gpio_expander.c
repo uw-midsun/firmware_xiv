@@ -1,5 +1,7 @@
 #include "pca9539r_gpio_expander.h"
+
 #include "status.h"
+
 // There's only 256 I2C addresses so it's ok to keep all the settings in memory
 #define MAX_I2C_ADDRESSES 256
 
@@ -81,13 +83,11 @@ StatusCode pca9539r_gpio_get_state(const Pca9539rGpioAddress *address,
   *input_state = s_pin_settings[address->i2c_address][address->pin].state;
   return STATUS_CODE_OK;
 }
-#include "log.h"
+
 StatusCode pca9539r_gpio_subscribe_interrupts(const GpioAddress *interrupt_pin,
                                               Pca9539rInterruptCallback callback, void *context) {
   InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                            .priority = INTERRUPT_PRIORITY_NORMAL };
-  gpio_it_register_interrupt(interrupt_pin, &interrupt_settings, INTERRUPT_EDGE_FALLING, *callback,
-                             context);
-  LOG_DEBUG("%s", status_get().message);
-  return status_get().code;
+  return gpio_it_register_interrupt(interrupt_pin, &interrupt_settings, INTERRUPT_EDGE_FALLING,
+                                    *callback, context);
 }
