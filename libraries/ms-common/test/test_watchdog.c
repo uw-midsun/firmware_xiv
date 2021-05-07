@@ -55,7 +55,7 @@ void test_watchdog_kick(void) {
   TEST_ASSERT_FALSE(s_expiry_called);
 
   watchdog_kick(&s_watchdog);
-  delay_ms(50);
+  delay_ms(10);
   TEST_ASSERT_FALSE(s_expiry_called);
 
   delay_ms(TIMEOUT_MS);
