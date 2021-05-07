@@ -1,6 +1,8 @@
 #include "can_fsm.h"
+#include "bootloader_can.h"
 #include "can.h"
 #include "can_hw.h"
+#include "can_msg_defs.h"
 #include "can_rx.h"
 
 FSM_DECLARE_STATE(can_rx_fsm_handle);
@@ -50,6 +52,12 @@ static void prv_handle_rx(Fsm *fsm, const Event *e, void *context) {
   if (result != STATUS_CODE_OK) {
     // We had a mismatch between number of events and number of messages, so
     // return silently Alternatively, we could use the data value of the event.
+    return;
+  }
+
+  // Process bootloader messages
+  if (rx_msg.source_id == SYSTEM_CAN_DEVICE_BOOTLOADER) {
+    result = bootloader_can_receive(&rx_msg);
     return;
   }
 
