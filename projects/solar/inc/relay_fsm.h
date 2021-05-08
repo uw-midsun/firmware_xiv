@@ -9,10 +9,14 @@
 #include "event_queue.h"
 #include "fsm.h"
 #include "status.h"
+#include "soft_timer.h"
 
-// delays given by datasheet (EV200HAANA)
-// max between time to close and time to open
-#define RELAY_SEQUENCE_ASSERTION_DELAY_MS 15 // I Added this
+
+#define RELAY_ASSERTION_DELAY_MS 50
+#define DATA_STORE_ASSERTION_DELAY_MS 1000 
+
+#define CURRENT_ASSERT_THRESHOLD_uA 10
+
 
 typedef struct RelayFsmStorage {
   Fsm fsm;

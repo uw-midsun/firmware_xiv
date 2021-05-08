@@ -8,13 +8,40 @@
 #include "log.h"
 #include "solar_config.h"
 #include "solar_events.h"
+#include "can_unpack.h"
+#include "gpio.h"
 #include "status.h"
+#include "data_store.h"
 
-void prv_assert_relay_state(const Event *e, void *context){
-  //ask where to find PA6_RELAY_STATUS?
+
+static void prv_assert_relay(void *context){
+  
+  // check prv_realy_err_cb
+  // shoudl declare a varaible to check?
+
+
+  int32_t data_value;
+  bool isCalled = false;
+
+  data_store_get_is_set(DATA_POINT_CURRENT, &isCalled);
+
+  while(!isCalled){
+    soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context,
+                          NULL);
+  }
+
+  data_store_get(DATA_POINT_CURRENT, (uint32_t *)&data_value);
+
+  // check threshold
+  if(data_value > CURRENT_ASSERT_THRESHOLD_uA){
+    //fault message => reuse solar fault
+  }else{
+    //success message =>define code_gen ascipd send using can transmit.h
+  }
+
 }
 
-
+// adjust
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
   fault_handler_raise_fault(EE_SOLAR_FAULT_DRV120, 0);
@@ -32,13 +59,12 @@ FSM_STATE_TRANSITION(state_relay_closed) {
 }
 
 static void prv_open_relay(Fsm *fsm, const Event *e, void *context) {
-  // where a call to assert should be made ??
-  soft_timer_start_millis(RELAY_SEQUENCE_ASSERTION_DELAY_MS, prv_assert_relay_state, e,
-                          &e->assertion_timer_id);
-
-
   LOG_DEBUG("Opening relay\n");
   drv120_relay_open();
+
+  // call the assert function
+  soft_timer_start_millis(RELAY_ASSERTION_DELAY_MS, prv_assert_relay, context,
+                          NULL); //timer id? context is neccessary? 
 }
 
 static void prv_close_relay(Fsm *fsm, const Event *e, void *context) {
@@ -53,7 +79,7 @@ StatusCode relay_fsm_init(RelayFsmStorage *storage) {
   // Init drv120
   Drv120RelaySettings drv120_settings = {
     .enable_pin = config_get_drv120_enable_pin(),
-    .status_pin = config_get_drv120_status_pin(),
+    .status_pin = config_get_drv120_status_pin(), //the pin I need active-high
     .error_handler = prv_relay_err_cb,
     .context = NULL,
   };
