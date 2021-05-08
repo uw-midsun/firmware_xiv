@@ -8,7 +8,7 @@ from mu.sims.front_pd import FrontPd
 class TestPdInit(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('power_distribution', FrontPd)
+        self.board = self.manager.start(FrontPd)
 
     def test_front_init(self):
         time.sleep(1)
