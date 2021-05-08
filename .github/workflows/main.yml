@@ -134,10 +134,10 @@ jobs:
         continue-on-error: true
         run: |
           make test LIBRARY=ms-common TEST=wait PLATFORM=x86
-        - uses: actions/upload-artifact@master
-          with:
-            name: my-artifact
-            path: build/gen/x86/ms-common
+      - uses: actions/upload-artifact@master
+        with:
+          name: my-artifact
+          path: build/gen/x86/ms-common
   check:
     needs : [build]
     if: "always() && (needs.build.outputs.job_status=='failure')"
