@@ -72,6 +72,7 @@ static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
 }
 
 void setup_test(void) {
+  LOG_DEBUG("setup_test\n");
   gpio_init();
   event_queue_init();
   interrupt_init();
@@ -86,6 +87,7 @@ void setup_test(void) {
 }
 
 static void *prv_gpio_interrupt_thread(void *argument) {
+  LOG_DEBUG("prv_gpio_interrupt_thread\n");
   usleep(30);
   LOG_DEBUG("trigger interrupt\n");
   gpio_it_trigger_interrupt(&s_test_output_pin);
@@ -95,6 +97,7 @@ static void *prv_gpio_interrupt_thread(void *argument) {
 }
 
 static void *prv_x86_interrupt_thread(void *argument) {
+  LOG_DEBUG("prv_x86_interrupt_thread\n");
   usleep(30);
   LOG_DEBUG("trigger interrupt\n");
   x86_interrupt_trigger(s_interrupt_id);
@@ -103,6 +106,7 @@ static void *prv_x86_interrupt_thread(void *argument) {
 }
 
 static void *prv_can_tx(void *argument) {
+  LOG_DEBUG("prv_can_tx\n");
   usleep(30);
   can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
   pthread_exit(NULL);
@@ -110,6 +114,7 @@ static void *prv_can_tx(void *argument) {
 }
 
 static void prv_init_can(void) {
+  LOG_DEBUG("prv_init_can\n");
   CanSettings can_settings = {
     .device_id = TEST_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_500KBPS,
