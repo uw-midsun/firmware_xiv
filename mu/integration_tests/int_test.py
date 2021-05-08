@@ -1,12 +1,14 @@
 import unittest
 
 from mu.harness.pm import ProjectManager
+from mu.srv.config import Config
 
 
 class IntTest(unittest.TestCase):
     def setUp(self):
         print("Running test", self._testMethodName)
-        self.manager = ProjectManager()
+        config = Config(False, 'vcan0', True)
+        self.manager = ProjectManager(config)
 
     def tearDown(self):
         self.manager.end()

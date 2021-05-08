@@ -12,7 +12,7 @@ PCA9539R_KEY = Pca9539r.addr_to_key(0x74)
 class TestPca9539r(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('smoke_pca9539r', FrontPd)
+        self.board = self.manager.start(FrontPd, proj_name='smoke_pca9539r')
 
     def test_pca9539r(self):
         time.sleep(0.1)
