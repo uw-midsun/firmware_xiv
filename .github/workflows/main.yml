@@ -131,5 +131,5 @@ jobs:
 
       - name: Build and test
         run: |
-          make test LIBRARY=ms-common TEST=blink_event_generator PLATFORM=x86 DEFINE="${DEFINES}"
           make test LIBRARY=ms-common TEST=wait PLATFORM=x86 DEFINE="${DEFINES}"
+          make clean
