@@ -134,12 +134,22 @@ jobs:
         continue-on-error: true
         run: |
           make test LIBRARY=ms-common TEST=wait PLATFORM=x86
+        - uses: actions/upload-artifact@master
+          with:
+            name: my-artifact
+            path: build/gen/x86/ms-common
   check:
+    needs : [build]
+    if: "always() && (needs.build.outputs.job_status=='failure')"
       runs-on: ubuntu-16.04
       timeout-minutes: 12
       steps:
       - uses: actions/checkout@v2
+      - uses: actions/checkout@master
+      - uses: actions/download-artifact@master
+        with:
+          name: my-artifact
+          path: build/gen/x86/ms-common
       - name: Debugging
         run: |
           cat build/gen/x86/ms-common/test_wait_runner.c
-          make clean
