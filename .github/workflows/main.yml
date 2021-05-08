@@ -143,7 +143,7 @@ jobs:
       
   check:
     needs : [build]
-    if: "always() && (needs.build.outputs.job_status=='failure')"
+    if: ${{ needs.build.outputs.job_status == 'failure' }}
       runs-on: ubuntu-16.04
       timeout-minutes: 12
       steps:
