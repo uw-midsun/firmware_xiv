@@ -134,7 +134,7 @@ jobs:
         continue-on-error: true
         run: |
           make test LIBRARY=ms-common TEST=wait PLATFORM=x86
-  build:
+  check:
       runs-on: ubuntu-16.04
       timeout-minutes: 12
       steps:
