@@ -2,7 +2,11 @@ import http.server
 import json
 import urllib
 
-from mu.harness import logger
+from google.protobuf import json_format
+
+from mu.harness import logger, decoder
+from mu.harness.project import StoreUpdate
+from mu.protogen.stores_pb2 import MuStoreType
 
 class InternalError(Exception):
     pass
@@ -21,6 +25,9 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             'sims': self.sims,
             'list': self.sim_list,
             'logs': self.logs,
+
+            'view': self.view,
+            'apply': self.apply,
         }
 
     def respond(self, code, body='{"acknowledged": "true"}'):
@@ -88,3 +95,50 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             pass
         finally:
             self.pm.logger.unsubscribe(sub)
+
+    def view(self, params=None):
+        sim_name = params['sim'][0]
+        store_type = params['type'][0]
+        store_key = params['key'][0]
+        try:
+            sim = self.pm.sim_from_name(sim_name)
+            if store_type:
+                store = sim.stores_str_lookup(store_type, store_key)
+                store_json = json_format.MessageToJson(store)
+                self.respond(200, body=store_json)
+            else:
+                store_dicts = {}
+                for key, val in sim.stores.items():
+                    key_string = '{}/{}'.format(MuStoreType.Name(key[0]), key[1])
+                    store_dicts[key_string] = json_format.MessageToDict(val)
+                stores_json = json.dumps(store_dicts)
+                self.respond(200, body=stores_json)
+        except ValueError as e:
+            self.respond(500, body='{}'.format(e))
+
+    def apply(self, params=None):
+        sim_name = params['sim'][0]
+        store_type = params['type'][0]
+        key = int(params['key'][0], 0) if params['key'][0] else 0
+
+        raw_len = self.headers['Content-Length']
+        store_json = self.rfile.read(int(raw_len)).decode()
+
+        store = decoder.store_from_name(store_type)
+        try:
+            store_dict = json.loads(store_json)
+            json_format.Parse(store_dict, store)
+        except json_format.ParseError as e:
+            self.respond(500, body='{}'.format(e))
+            return
+
+        mask = decoder.full_mask(store)
+        store_enum = MuStoreType.Value(store_type.upper())
+        update = StoreUpdate(store, mask, (store_enum, key))
+
+        try:
+            sim = self.pm.sim_from_name(sim_name)
+            sim.proj.write_store(update)
+            self.respond(200)
+        except ValueError as e:
+            self.respond(500, body='{}'.format(e))

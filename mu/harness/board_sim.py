@@ -84,6 +84,14 @@ class BoardSim:
 
         self.proj.write_store(gpio_update)
 
+    def stores_str_lookup(self, store_type, store_key):
+        for key in self.stores:
+            if key[0] == stores_pb2.MuStoreType.Value(store_type.upper()):
+                if store_key and not int(store_key, 0) == key[0]:
+                    continue
+                return self.stores[key]
+        raise ValueError('No such store')
+
     # To be implemented by subclasses
 
     def handle_store(self, store, key):

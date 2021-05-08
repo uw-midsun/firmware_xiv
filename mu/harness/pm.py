@@ -80,16 +80,19 @@ class ProjectManager:
     def register(self, sim):
         self.fd_to_sim[sim.fd] = sim
 
+    def sim_from_name(self, sim_name):
+        for sim in self.fd_to_sim.values():
+            if sim.__class__.__name__ == sim_name:
+                return sim
+        raise ValueError('Invalid sim, check list')
+
     def stop(self, sim):
         del self.fd_to_sim[sim.fd]
         sim.stop()
 
     def stop_name(self, sim_name):
-        for sim in self.fd_to_sim.values():
-            if sim.__class__.__name__ == sim_name:
-                self.stop(sim)
-                return
-        raise ValueError('Invalid sim, check list')
+        sim = self.sim_from_name(sim_name)
+        self.stop(sim)
 
     def stop_all(self):
         for sim in self.fd_to_sim.values():
