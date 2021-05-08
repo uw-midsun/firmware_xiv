@@ -40,6 +40,12 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_REGEN_BRAKING(msg_ptr, state_u8)                                                 \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_REGEN_BRAKING, \
+                   1, (state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
+                   CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32, brake_output_u32)               \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, 8, \
                     (throttle_output_u32), (brake_output_u32))
@@ -63,12 +69,6 @@
   can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, SYSTEM_CAN_MESSAGE_HORN, 1, (state_u8), \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                 \
-                   CAN_PACK_IMPL_EMPTY)
-
-#define CAN_PACK_REGEN_BRAKING(msg_ptr, state_u8)                                              \
-  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, SYSTEM_CAN_MESSAGE_REGEN_BRAKING, 1, \
-                   (state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,  \
-                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,              \
                    CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_BEGIN_PRECHARGE(msg_ptr)                          \
@@ -126,6 +126,10 @@
 #define CAN_PACK_UV_CUTOFF_NOTIFICATION(msg_ptr)                             \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT, \
                       SYSTEM_CAN_MESSAGE_UV_CUTOFF_NOTIFICATION)
+
+#define CAN_PACK_REGEN_BRAKING_TOGGLE_REQUEST(msg_ptr)       \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, \
+                      SYSTEM_CAN_MESSAGE_REGEN_BRAKING_TOGGLE_REQUEST)
 
 #define CAN_PACK_REQUEST_TO_CHARGE(msg_ptr) \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_REQUEST_TO_CHARGE)

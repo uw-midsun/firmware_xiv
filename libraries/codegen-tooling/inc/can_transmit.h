@@ -63,6 +63,14 @@
     status;                                                     \
   })
 
+#define CAN_TRANSMIT_REGEN_BRAKING(state_u8)      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));     \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output_u32, brake_output_u32)    \
   ({                                                                        \
     CanMessage msg = { 0 };                                                 \
@@ -99,14 +107,6 @@
   ({                                              \
     CanMessage msg = { 0 };                       \
     CAN_PACK_HORN(&msg, (state_u8));              \
-    StatusCode status = can_transmit(&msg, NULL); \
-    status;                                       \
-  })
-
-#define CAN_TRANSMIT_REGEN_BRAKING(state_u8)      \
-  ({                                              \
-    CanMessage msg = { 0 };                       \
-    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));     \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
@@ -207,6 +207,14 @@
     CAN_PACK_UV_CUTOFF_NOTIFICATION(&msg);        \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
+  })
+
+#define CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST() \
+  ({                                                \
+    CanMessage msg = { 0 };                         \
+    CAN_PACK_REGEN_BRAKING_TOGGLE_REQUEST(&msg);    \
+    StatusCode status = can_transmit(&msg, NULL);   \
+    status;                                         \
   })
 
 #define CAN_TRANSMIT_REQUEST_TO_CHARGE()          \
