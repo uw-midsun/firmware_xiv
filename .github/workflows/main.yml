@@ -90,11 +90,12 @@ jobs:
           clang-format --version
           .venv/bin/pip3 freeze
 
-      - name: Format and lint
+      - name: Format and lint and clean
         run: |
           make test_format
           make lint
           make pylint
+          make clean
 
       - name: Build codegen
         run: |
