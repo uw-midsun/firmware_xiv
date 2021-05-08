@@ -144,8 +144,8 @@ jobs:
   check:
     needs : [build]
     if: ${{ needs.build.outputs.job_status == 'failure' }}
-      runs-on: ubuntu-16.04
-      timeout-minutes: 12
+    runs-on: ubuntu-16.04
+    timeout-minutes: 12
       steps:
       - uses: actions/checkout@v2
       - uses: actions/checkout@master
