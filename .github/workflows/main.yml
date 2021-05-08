@@ -134,9 +134,12 @@ jobs:
         continue-on-error: true
         run: |
           make test LIBRARY=ms-common TEST=wait PLATFORM=x86
-
+  build:
+      runs-on: ubuntu-16.04
+      timeout-minutes: 12
+      steps:
+      - uses: actions/checkout@v2
       - name: Debugging
-        if: ${{ steps.build-test.outcome == 'failure' }}
         run: |
           cat build/gen/x86/ms-common/test_wait_runner.c
           make clean
