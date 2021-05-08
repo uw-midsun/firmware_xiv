@@ -131,5 +131,9 @@ jobs:
 
       - name: Build and test
         run: |
-          make test LIBRARY=ms-common TEST=wait PLATFORM=x86 DEFINE="${DEFINES}"
+          make test LIBRARY=ms-common TEST=wait PLATFORM=x86
+
+      - name: Debugging
+        run: |
+          cat build/gen/x86/ms-common/test_wait_runner.c
           make clean
