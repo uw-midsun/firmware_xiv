@@ -23,6 +23,7 @@ class BoardSim:
                 self.sub_sims[sub_sim_class.__name__.lower()] = sub_sim_class(self)
         self.stores = {}
         self.timers = []
+        self.simios = {}
         self.proj = project.Project(pm, self, proj_name)
         self.fd = self.proj.popen.stdout.fileno()
         self.pm.register(self)

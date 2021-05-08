@@ -30,3 +30,13 @@ def update(args):
 
     r = req.send('apply', params, edited)
     print(r.text)
+
+def get_io(args):
+    params = { 'name': args.name }
+    r = req.send('get', params)
+    print(r.text)
+
+def set_io(args):
+    params = { 'name': args.name, 'val': args.val }
+    r = req.send('set', params)
+    print(r.text)

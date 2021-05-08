@@ -42,4 +42,13 @@ def get_args():
     update.add_argument('key', nargs='?', default='')
     update.set_defaults(func=stores.update)
 
+    get_io = subparsers.add_parser('get', help='get sim inputs and outputs')
+    get_io.add_argument('name', nargs='?', default='')
+    get_io.set_defaults(func=stores.get_io)
+
+    set_io = subparsers.add_parser('set', help='set sim inputs')
+    set_io.add_argument('name')
+    set_io.add_argument('val')
+    set_io.set_defaults(func=stores.set_io)
+
     return parser.parse_args()

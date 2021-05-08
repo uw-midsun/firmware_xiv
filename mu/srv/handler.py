@@ -28,6 +28,8 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
 
             'view': self.view,
             'apply': self.apply,
+            'get': self.get,
+            'set': self.set,
         }
 
     def respond(self, code, body='{"acknowledged": "true"}'):
@@ -141,4 +143,25 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             sim.proj.write_store(update)
             self.respond(200)
         except ValueError as e:
+            self.respond(500, body='{}'.format(e))
+
+    def get(self, params=None):
+        io_name = params['name'][0]
+        try:
+            if io_name:
+                val = self.pm.get_io(io_name)
+                self.respond(200, body='{}'.format(val))
+            else:
+                vals = self.pm.get_all_io()
+                self.respond(200, body=json.dumps(vals))
+        except (KeyError, ValueError, NotImplementedError) as e:
+            self.respond(500, body='{}'.format(e))
+
+    def set(self, params=None):
+        io_name = params['name'][0]
+        val = params['val'][0]
+        try:
+            val = self.pm.set_io(io_name, val)
+            self.respond(200)
+        except (KeyError, ValueError, NotImplementedError) as e:
             self.respond(500, body='{}'.format(e))

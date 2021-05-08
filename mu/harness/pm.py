@@ -30,6 +30,7 @@ class ProjectManager:
         print('Configuration:', config)
         self.config = config
         self.fd_to_sim = {}
+        self.simios = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.sim_catalog = self.sim_cat()
         self.killed = False
@@ -174,6 +175,23 @@ class ProjectManager:
                     continue
                 catalog[sim_name] = sim_class
         return catalog
+
+    def new_io(self, simio):
+        if simio.name in self.simios:
+            raise ValueError('SimIo name taken')
+        self.simios[simio.name] = simio
+
+    def get_io(self, name):
+        return self.simios[name].get()
+
+    def get_all_io(self):
+        ret = {}
+        for name, simio in self.simios:
+            ret[name] = simio.get()
+        return ret
+
+    def set_io(self, name, val):
+        self.simios[name].set(val)
 
     def end(self):
         self.killed = True
