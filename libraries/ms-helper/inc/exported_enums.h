@@ -73,35 +73,12 @@ typedef enum {
   NUM_EE_DRIVE_OUTPUTS,
 } EEDriveOutput;
 
-// Front Power Distribution Output to be used with a SYSTEM_CAN_MESSAGE_FRONT_POWER message.
-typedef enum {
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRIVER_DISPLAY = 0,
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STEERING,
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_CENTRE_CONSOLE,
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_PEDAL,
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_DRL,
-  NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUTS,
-} EEFrontPowerDistributionOutput;
-
-typedef enum {
-  EE_REAR_POWER_DISTRIBUTION_OUTPUT_MCI = 0,
-  EE_REAR_POWER_DISTRIBUTION_OUTPUT_BMS_CARRIER,
-  NUM_EE_REAR_POWER_DISTRIBUTION_OUTPUTS,
-} EERearPowerDistributionOutput;
-
 typedef enum {
   EE_RELAY_ID_BATTERY = 0,
   EE_RELAY_ID_MOTOR_CONTROLLER,
   EE_RELAY_ID_SOLAR,
   NUM_EE_RELAY_IDS,
 } EERelayId;
-
-// Front Power Distribution Output State to be used with a SYSTEM_CAN_MESSAGE_FRONT_POWER message.
-typedef enum {
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_OFF = 0,
-  EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATE_ON,
-  NUM_EE_FRONT_POWER_DISTRIBUTION_OUTPUT_STATES
-} EEFrontPowerDistributionOutputState;
 
 // Light type to be used with a SYSTEM_CAN_MESSAGE_LIGHTS_STATE message.
 typedef enum EELightType {
@@ -216,6 +193,12 @@ typedef enum EESolarFault {
   // The temperature of any array thermistor is over our threshold. Data is the index of the too-hot
   // thermistor.
   EE_SOLAR_FAULT_OVERTEMPERATURE,
+
+  // The temperature of the fan is over the threshold. No data.
+  EE_SOLAR_FAULT_FAN_OVERTEMPERATURE,
+
+  // Fan failure detected. No data.
+  EE_SOLAR_FAULT_FAN_FAIL,
 
   // The drv120 relay has signaled that overtemp/undervolt lockout conditions have been triggered
   EE_SOLAR_FAULT_DRV120,

@@ -6,6 +6,7 @@
 // faster interrupts.
 #include "soft_timer.h"
 #include <string.h>
+#include "analyzestack.h"
 #include "critical_section.h"
 #include "misc.h"
 #include "objpool.h"
@@ -208,6 +209,8 @@ static void prv_update_timer(void) {
   while (active_timer != NULL && (active_timer->expiry_rollover_count < s_timers.rollover_count ||
                                   (active_timer->expiry_rollover_count == s_timers.rollover_count &&
                                    active_timer->expiry_us <= TIM_GetCounter(TIM2) + 10))) {
+    // This call can be referenced in stack analyzer annotations by this alias.
+    ANALYZESTACK_ALIAS("soft_timers")
     active_timer->callback(SOFT_TIMER_GET_ID(active_timer), active_timer->context);
 
     prv_remove_timer(active_timer);

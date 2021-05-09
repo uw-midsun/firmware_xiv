@@ -1,10 +1,14 @@
 #pragma once
 
 // Map CAN messages to events.
-// Requires CAN and the event queue to be initialized.
+// Requires GPIO, interrupts, soft timers, the event queue, and CAN to be initialized.
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #include "can.h"
 #include "event_queue.h"
+#include "status.h"
 
 typedef struct {
   // The CAN message id we're responding to.
@@ -25,15 +29,11 @@ typedef struct {
   // else, we look for it in the first u16 slot. The state will be 1 if the state slot is nonzero
   // and 0 if it is zero.
   bool has_state;
-
-  // Should we ack the message?
-  bool ack;
-} PowerDistributionCanRxEventMapperMsgSpec;
+} CanRxEventMapperMsgSpec;
 
 typedef struct {
-  PowerDistributionCanRxEventMapperMsgSpec *msg_specs;
+  CanRxEventMapperMsgSpec *msg_specs;
   uint8_t num_msg_specs;
-} PowerDistributionCanRxEventMapperConfig;
+} CanRxEventMapperConfig;
 
-StatusCode power_distribution_can_rx_event_mapper_init(
-    PowerDistributionCanRxEventMapperConfig config);
+StatusCode can_rx_event_mapper_init(CanRxEventMapperConfig *config);

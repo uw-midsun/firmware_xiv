@@ -1,6 +1,5 @@
 #include "pedal_rx.h"
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -9,7 +8,6 @@
 #include "can_transmit.h"
 #include "delay.h"
 #include "event_queue.h"
-#include "exported_enums.h"
 #include "interrupt.h"
 #include "log.h"
 #include "ms_test_helpers.h"
@@ -60,11 +58,11 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_pedal_rx_receives_correct_values(void) {
-  float throttle_float = 12.4;
-  float brake_float = 13.26;
+  float throttle_float = 12.0f;
+  float brake_float = 13.0f;
+  uint32_t throttle_output = (uint32_t)(throttle_float);
+  uint32_t brake_output = (uint32_t)(brake_float);
 
-  uint32_t throttle_output = (uint32_t)(throttle_float * EE_PEDAL_VALUE_DENOMINATOR);
-  uint32_t brake_output = (uint32_t)(brake_float * EE_PEDAL_VALUE_DENOMINATOR);
   // transmitting a message
   CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
   MS_TEST_HELPER_CAN_TX_RX(TEST_PEDAL_RX_CAN_TX, TEST_PEDAL_RX_CAN_RX);
@@ -76,11 +74,10 @@ void test_pedal_rx_receives_correct_values(void) {
 }
 
 void test_pedal_rx_timeout_goes_off_if_pedal_messages_are_not_received_fast_enough(void) {
-  float throttle_float = 12.4;
-  float brake_float = 13.26;
-
-  uint32_t throttle_output = (uint32_t)(throttle_float * EE_PEDAL_VALUE_DENOMINATOR);
-  uint32_t brake_output = (uint32_t)(brake_float * EE_PEDAL_VALUE_DENOMINATOR);
+  float throttle_float = 12.0f;
+  float brake_float = 13.0f;
+  uint32_t throttle_output = (uint32_t)(throttle_float);
+  uint32_t brake_output = (uint32_t)(brake_float);
 
   // we want to try at least twice to make sure the module clears its own fault
   for (uint8_t i = 0; i < 2; i++) {

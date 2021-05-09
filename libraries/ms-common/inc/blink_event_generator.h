@@ -3,6 +3,9 @@
 // Takes an event ID with a data field and generates events toggling the data field between 1 and 0.
 // Requires interrupts, soft timers, and the event queue to be initialized.
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "event_queue.h"
 #include "soft_timer.h"
 
@@ -15,16 +18,18 @@ typedef enum {
 // new_state is the state of the most recently raised event.
 typedef void (*BlinkEventGeneratorCallback)(BlinkerState new_state, void *context);
 
-typedef struct {
+typedef struct BlinkEventGeneratorSettings {
   uint32_t interval_us;
+  EventPriority event_priority;          // must be set! (defaults to EVENT_PRIORITY_HIGHEST)
   BlinkerState default_state;            // defaults to BLINKER_STATE_OFF
   BlinkEventGeneratorCallback callback;  // can be null; else, called after each event raised
   void *callback_context;
 } BlinkEventGeneratorSettings;
 
-typedef struct {
+typedef struct BlinkEventGeneratorStorage {
   uint32_t interval_us;
   EventId event_id;
+  EventPriority event_priority;
   BlinkEventGeneratorCallback callback;
   void *callback_context;
   BlinkerState default_state;

@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+// NEXT TAG = 9
+message FrameU8 {
+  string field_name_1 = 1;
+  string field_name_2 = 2;
+  string field_name_3 = 3;
+  string field_name_4 = 4;
+  string field_name_5 = 5;
+  string field_name_6 = 6;
+  string field_name_7 = 7;
+  string field_name_8 = 8;
+}
+
+// NEXT TAG = 5
+message FrameU16 {
+  string field_name_1 = 1;
+  string field_name_2 = 2;
+  string field_name_3 = 3;
+  string field_name_4 = 4;
+}
+
+// NEXT TAG = 3
+message FrameU32 {
+  string field_name_1 = 1;
+  string field_name_2 = 2;
+}
+
+// NEXT TAG = 2
+message FrameU64 {
+  string field_name_1 = 1;  //
+}
+
+// NEXT TAG = 1
+message FrameEmpty {
+}
+
+// NEXT TAG = 7
+message CanData {
+  uint64 data = 1;
+  oneof frame {
+    FrameU8 u8 = 2;
+    FrameU16 u16 = 3;
+    FrameU32 u32 = 4;
+    FrameU64 u64 = 5;
+    FrameEmpty empty = 6;
+  }
+}
+
+// NEXT TAG = 9
+message CanMsg {
+  enum Source {
+    BOOTLOADER = 0;
+    BMS_CARRIER = 1;
+    CENTRE_CONSOLE = 2;
+    POWER_DISTRIBUTION_REAR = 3;
+    POWER_DISTRIBUTION_FRONT = 4;
+    MOTOR_CONTROLLER = 5;
+    PEDAL = 6;
+    STEERING = 7;
+    SOLAR_5_MPPTS = 8;
+    SOLAR_6_MPPTS = 9;
+    CHARGER = 10;
+    IMU = 11;
+    POWER_SELECTION = 12;
+
+    BABYDRIVER = 15;
+  }
+
+  uint32 raw_id = 1;  // 0-2047 only
+  Source source = 2;  // 0-15 only
+  string target = 3;
+  bool is_ack = 4;
+  uint32 id = 5;  // 0-63 only
+  CanData can_data = 6;
+  string msg_name = 7;
+  string msg_readable_name = 8;
+  bool is_critical = 9;
+  bool is_signed = 10;
+}
+
+// NEXT TAG = 2
+message CanSchema {
+  repeated CanMsg msg = 1;  //
+}

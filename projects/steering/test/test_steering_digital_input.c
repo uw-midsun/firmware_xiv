@@ -73,14 +73,13 @@ void test_steering_digital_input_horn() {
   TEST_ASSERT_EQUAL(1, count);
 }
 
-void test_steering_digital_input_high_beam_forward() {
+void test_steering_digital_input_drl_1() {
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_high_beam_rx_cb_handler, NULL));
-  GpioAddress high_beam_forward_address = HIGH_BEAM_FORWARD_GPIO_ADDR;
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&high_beam_forward_address));
+  GpioAddress drl_1_address = DRL_1_GPIO_ADDR;
+  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&drl_1_address));
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_HIGH_BEAM_FORWARD_EVENT,
-                                   (uint16_t)GPIO_STATE_LOW);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_1_EVENT, (uint16_t)GPIO_STATE_LOW);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);

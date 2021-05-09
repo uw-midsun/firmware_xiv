@@ -88,9 +88,6 @@ static void prv_sig_state_handler(int signum, siginfo_t *info, void *ptr) {
 }
 
 void x86_interrupt_init(void) {
-  // Log the main thread ID for debugging.
-  LOG_DEBUG("Main Thread (id:%ld)\n", pthread_self());
-
   // Assign the s_pid to be the process id handling the interrupts. This
   // prevents subprocesses from sending a signal to itself instead.
   s_pid = getpid();
