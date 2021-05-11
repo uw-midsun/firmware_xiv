@@ -19,13 +19,13 @@
 #include "gpio_interrupts.h"
 #include "gpio_it.h"
 #include "gpio_set.h"
+#include "i2c_read.h"
 #include "i2c_write.h"
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "spi_exchange.h"
 #include "wait.h"
-#include "i2c_read.h"
 
 typedef enum {
   CAN_EVENT_RX = 0,

@@ -16,8 +16,6 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_TIMEOUT_PERIOD_MS 50
-#define I2C_READ_DEFAULT_TIMEOUT_MS 1500
 #define I2C_READ_SOFT_TIMER_TIMEOUT_MS 5
 
 typedef enum {
@@ -70,7 +68,7 @@ void setup_test(void) {
                                   TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(dispatcher_init());
   dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_READ_DATA, prv_rx_i2c_read_callback, NULL);
-  i2c_read_init(I2C_READ_DEFAULT_TIMEOUT_MS, I2C_READ_SOFT_TIMER_TIMEOUT_MS);
+  i2c_read_init(I2C_READ_SOFT_TIMER_TIMEOUT_MS);
 }
 
 void test_read_i2c(void) {
@@ -189,7 +187,7 @@ void test_read_i2c(void) {
   // Compares data recieved with the data sent
   TEST_ASSERT_EQUAL(data_port, s_test_storage.port);
   TEST_ASSERT_EQUAL(data_address, s_test_storage.address);
-  TEST_ASSERT_EQUAL(0, s_test_storage.reg);
+  TEST_ASSERT_EQUAL(2, s_test_storage.reg);
   TEST_ASSERT_EQUAL(data_rx_len, s_test_storage.rx_len);
 
   // Test reading less than 7 bytes
@@ -212,41 +210,4 @@ void test_read_i2c(void) {
   TEST_ASSERT_EQUAL(data_address, s_test_storage.address);
   TEST_ASSERT_EQUAL(data_reg, s_test_storage.reg);
   TEST_ASSERT_EQUAL(data_rx_len, s_test_storage.rx_len);
-}
-
-void test_timeout_error(void) {
-  // This test tests the watchdog timeout error in i2c_read
-
-  I2CPort data_port = I2C_PORT_1;
-  I2CAddress data_address = 0x74;
-  uint8_t data_rx_len = 8;
-  uint8_t data_is_reg = 2;
-  uint8_t data_reg = 3;
-  uint8_t data[8] = { BABYDRIVER_MESSAGE_I2C_WRITE_COMMAND,
-                      data_port,
-                      data_address,
-                      data_rx_len,
-                      data_is_reg,
-                      data_reg,
-                      0,
-                      0 };
-
-  // Test delay between 1st and 2nd data message
-  uint8_t data_2[8] = { BABYDRIVER_MESSAGE_I2C_WRITE_COMMAND, I2C_PORT_2, 0x74, 2, 4, 3, 0, 0 };
-
-  // Send CAN message with command message information
-  CAN_TRANSMIT_BABYDRIVER(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-
-  // Delay before next message to trigger timeout error
-  delay_ms(TEST_TIMEOUT_PERIOD_MS);
-  CAN_TRANSMIT_BABYDRIVER(data_2[0], data_2[1], data_2[2], data_2[3], data_2[4], data_2[5],
-                          data_2[6], data_2[7]);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-
-  TEST_ASSERT_EQUAL(STATUS_CODE_TIMEOUT, s_received_status);
 }
