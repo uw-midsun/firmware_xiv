@@ -76,6 +76,7 @@ typedef struct CanDatagramStorage {
   CanDatagramMode mode;
   CanDatagramCb tx_cb;  // Add watchdog error handler?
   uint16_t rx_bytes_read;
+  uint16_t tx_bytes_sent;
   CanDatagramEvent event;
 } CanDatagramStorage;
 
@@ -99,6 +100,8 @@ int can_datagram_output_bytes(CanDatagram *dt, char *buffer, size_t buffer_len);
 
 /** Computes the CRC32 of the datagram. */
 uint32_t can_datagram_compute_crc(void);
+
+CanDatagram *can_datagram_get_datagram(void);
 
 /** Returns true if the ID has the start of datagram field set. */
 bool can_datagram_id_start_is_set(unsigned int id);
