@@ -77,13 +77,14 @@ typedef struct CanDatagramStorage {
   CanDatagramCb tx_cb;  // Add watchdog error handler?
   uint16_t rx_bytes_read;
   uint16_t tx_bytes_sent;
-  CanDatagramEvent event;
+  bool start;
+  CanDatagramEvent event; // To be removed
 } CanDatagramStorage;
 
 /** Sets the structure field to default values. */
 StatusCode can_datagram_init(CanDatagramSettings *settings);
 
-void can_datagram_start(void);
+StatusCode can_datagram_start_tx(uint8_t *init_data, size_t len);
 
 StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message);
 

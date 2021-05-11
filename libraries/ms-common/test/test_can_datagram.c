@@ -22,8 +22,8 @@
 #include "unity.h"
 
 #define TEST_CAN_DEVICE_ID 1
-#define TEST_CAN_INIT_MSG_ID 1
-#define TEST_CAN_DT_MSG_ID 2
+#define TEST_CAN_START_MSG_ID 2
+#define TEST_CAN_DT_MSG_ID 1
 #define TEST_CAN_BUFFER_SIZE 8
 
 #define TEST_DST_SIZE_SHORT 16
@@ -43,12 +43,10 @@ static uint8_t s_dst[TEST_DST_SIZE_SHORT] =
 static uint8_t s_data_long[TEST_DATA_SIZE_LONG] = { 0 };
 static uint8_t s_dst_long[TEST_DST_SIZE_LONG] = { 0 };
 
-static uint8_t s_rx_data[TEST_DATA_SIZE_SHORT];
-static uint8_t s_rx_dst[TEST_DST_SIZE_SHORT];
-
 static uint8_t data_lengths[] = { 1, 4, 1, 8, 2, 8 };
 static int s_num_msg_rx;
 static int s_num_tx;
+static bool s_start_message_set;
 
 
 typedef union test_datagram_msg {  // Should I include this in the library?
@@ -67,7 +65,15 @@ void setup_test(void) {
   soft_timer_init();
 }
 
-void teardown_test(void) {}
+void teardown_test(void) {
+  Event e;
+  while (status_ok(event_process(&e))) {
+  }
+  s_start_message_set = false;
+  s_num_msg_rx = 0;
+  s_num_tx = 0;
+  s_num_msg_rx = 0;
+}
 
 static void prv_initialize_can() {
   CanSettings can_settings = {
@@ -98,12 +104,6 @@ static void prv_mock_dt_tx(uint8_t dst_size, uint16_t data_size,
     .data = data_data,
   };
   switch (s_num_tx) {
-    // case 0:
-    //     LOG_DEBUG("SENDING STARTUP MSG\n");
-    //     msg.data_u64 = 0;
-    //     CanMessage can_msg;
-    //     can_pack_impl_u64(&can_msg, TEST_CAN_DEVICE_ID, TEST_CAN_INIT_MSG_ID, msg_len,
-    //     msg.data_u64); can_transmit(&can_msg, NULL); s_num_tx++; return;
     case 0:
       LOG_DEBUG("Protoc_V\n");
       msg.data_u8[0] = test_dt.protocol_version;
@@ -172,15 +172,31 @@ static void prv_mock_dt_tx(uint8_t dst_size, uint16_t data_size,
 }
 
 static StatusCode prv_tx_callback(uint8_t *data, size_t len, bool start_message) {
-    if (start_message) {
-        return STATUS_CODE_OK;
-    }
     CanMessage msg;
-    test_datagram_msg msg_data = { 0 };
-    memcpy(msg_data.data_u8, data, len);
-    can_pack_impl_u64(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_DT_MSG_ID, len, msg_data.data_u64);
+    if (start_message) {
+      can_pack_impl_u64(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_START_MSG_ID, 0, 0);
+    } else {
+      test_datagram_msg msg_data = { 0 };
+      memcpy(msg_data.data_u8, data, len);
+      can_pack_impl_u64(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_DT_MSG_ID, len, msg_data.data_u64);
+    }
     can_transmit(&msg, NULL);
     return STATUS_CODE_OK;
+}
+
+static StatusCode prv_tx_init_rx_handler(const CanMessage *msg, void *context, CanAckStatus
+*ack_reply) {
+  LOG_DEBUG("TX init message received!\n");
+  s_start_message_set = true;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_rx_init_rx_handler(const CanMessage *msg, void *context, CanAckStatus
+*ack_reply) {
+  LOG_DEBUG("RX init message received!\n");
+  can_datagram_rx(NULL, 0, true);
+  s_start_message_set = true;
+  return STATUS_CODE_OK;
 }
 
 static StatusCode prv_test_short_tx_rx_handler(const CanMessage *msg, void *context, CanAckStatus
@@ -192,7 +208,6 @@ static StatusCode prv_test_short_tx_rx_handler(const CanMessage *msg, void *cont
     s_short_test_data_index++;
     return STATUS_CODE_OK;
 }
-
 
 static StatusCode prv_test_long_tx_rx_handler(const CanMessage *msg, void *context, CanAckStatus
 *ack_reply) {
@@ -223,16 +238,16 @@ void test_can_datagram_tx(void) {
     };
     can_datagram_init(&settings);
     can_register_rx_handler(TEST_CAN_DT_MSG_ID, prv_test_short_tx_rx_handler, NULL);
-    can_datagram_start();
+    can_register_rx_handler(TEST_CAN_START_MSG_ID, prv_tx_init_rx_handler, NULL);
+    can_datagram_start_tx(NULL, 0);
 
-    s_num_msg_rx = 0;
     Event e = { 0 };
-    //uint16_t count = 0;
     while(s_num_msg_rx < NUM_SHORT_TEST_MSG) { // Loop until num msg rx'd same as tx'd
         MS_TEST_HELPER_AWAIT_EVENT(e);
         can_datagram_process_event(&e);
         can_process_event(&e);
     }
+    TEST_ASSERT_EQUAL(true, s_start_message_set);
     //MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -249,9 +264,8 @@ void test_long_can_datagram_tx(void) {
     };
     can_datagram_init(&settings);
     can_register_rx_handler(TEST_CAN_DT_MSG_ID, prv_test_long_tx_rx_handler, NULL);
-    can_datagram_start();
+    can_datagram_start_tx(NULL, 0);
 
-    s_num_msg_rx = 0;
     Event e = { 0 };
     uint16_t count = 0;
     while(s_num_msg_rx < NUM_LONG_TEST_MSG) { // Loop until num msg rx'd same as tx'd
@@ -262,7 +276,6 @@ void test_long_can_datagram_tx(void) {
     //MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
-
 void test_can_datagram_rx(void) {
   uint8_t *rx_dst_buf = malloc(TEST_DST_SIZE_SHORT);
   uint8_t *rx_data_buf = malloc(TEST_DATA_SIZE_SHORT);
@@ -272,24 +285,38 @@ void test_can_datagram_rx(void) {
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
     //.destination_nodes_len = TEST_DST_SIZE_SHORT,
-    .destination_nodes = s_rx_dst,
+    .destination_nodes = rx_dst_buf,
     //.data_len = TEST_DATA_SIZE_SHORT,
-    .data = s_rx_data,
+    .data = rx_data_buf,
   };
 
   can_datagram_init(&settings);
   can_register_rx_handler(TEST_CAN_DT_MSG_ID, prv_can_datagram_rx_handler, NULL);
-  // prv_mock_dt_tx();
-  can_datagram_start();
+  can_register_rx_handler(TEST_CAN_START_MSG_ID, prv_rx_init_rx_handler, NULL);
+
+  // Send mock start message
+  CanMessage msg = { 0 };
+  can_pack_impl_empty(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_START_MSG_ID);
+  can_transmit(&msg, NULL);
+  MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
+  TEST_ASSERT_EQUAL(true, s_start_message_set);
+
   Event e = { 0 };
+  bool send_tx = true;
   while (!can_datagram_complete()) {  // Loop until rx complete
-    prv_mock_dt_tx(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data);
+    // Send txes one at a time -> can datagram will send 4 at a time
+    // but client in real scenario does not have to process tx's as well as rx's
+    if(send_tx) {
+      prv_mock_dt_tx(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data);
+      send_tx = false;
+    }
     MS_TEST_HELPER_AWAIT_EVENT(e);
+    if(e.id == CAN_DATAGRAM_EVENT_TX) { 
+      send_tx = true;
+    }
     can_datagram_process_event(&e);
     can_process_event(&e);
   }
-  free(rx_data_buf);
-  free(rx_dst_buf);
 
   CanDatagram *dt = can_datagram_get_datagram();
   TEST_ASSERT_EQUAL(1, dt->protocol_version);
@@ -298,6 +325,14 @@ void test_can_datagram_rx(void) {
   TEST_ASSERT_EQUAL(16, dt->destination_nodes_len);
   TEST_ASSERT_EQUAL(16, dt->data_len);
   // add data checking
+  for(int i = 0; i < TEST_DST_SIZE_SHORT; i++) {
+    TEST_ASSERT_EQUAL(s_dst[i], rx_dst_buf[i]);
+  }
+  for(uint16_t i = 0; i < TEST_DATA_SIZE_SHORT; i++) {
+    TEST_ASSERT_EQUAL(s_data[i], rx_data_buf[i]);
+  }
+  free(rx_data_buf);
+  free(rx_dst_buf);
 }
 
 void test_long_can_datagram_rx(void) {
@@ -310,28 +345,29 @@ void test_long_can_datagram_rx(void) {
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
     //.destination_nodes_len = TEST_DST_SIZE_LONG,
-    .destination_nodes = s_rx_dst,
+    .destination_nodes = rx_dst_buf,
     //.data_len = TEST_DATA_SIZE_LONG,
-    .data = s_rx_data,
+    .data = rx_data_buf,
   };
 
   can_datagram_init(&settings);
   can_register_rx_handler(TEST_CAN_DT_MSG_ID, prv_can_datagram_rx_handler, NULL);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  can_datagram_start();
+  can_register_rx_handler(TEST_CAN_START_MSG_ID, prv_rx_init_rx_handler, NULL);
 
-  s_num_tx = 0;
+  // Send mock start message
+  CanMessage msg = { 0 };
+  can_pack_impl_empty(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_START_MSG_ID);
+  can_transmit(&msg, NULL);
+  MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
+  TEST_ASSERT_EQUAL(true, s_start_message_set);
+
   Event e = { 0 };
-  int mock_tx_count = 0;
-  int rx_count = 0;
-  int tx_count = 0;
   bool send_tx = true;
   while (!can_datagram_complete()) {  // Loop until rx complete
     if(send_tx) {
       prv_mock_dt_tx(TEST_DST_SIZE_LONG, TEST_DATA_SIZE_LONG, s_dst_long, s_data_long);
       send_tx = false;
     }
-    mock_tx_count++;
     MS_TEST_HELPER_AWAIT_EVENT(e);
 
     // Send txes one at a time -> can datagram will send 4 at a time
@@ -348,9 +384,7 @@ void test_long_can_datagram_rx(void) {
   TEST_ASSERT_EQUAL(0x12121212, dt->crc);
   TEST_ASSERT_EQUAL(TEST_DST_SIZE_LONG, dt->destination_nodes_len);
   TEST_ASSERT_EQUAL(TEST_DATA_SIZE_LONG, dt->data_len);
-// This necessary for some weird reason, s_data_long is non_zero at this point
-  memset(s_data_long, 0, TEST_DATA_SIZE_LONG); 
-  memset(s_dst_long, 0, TEST_DST_SIZE_LONG);
+
   for(int i = 0; i < TEST_DST_SIZE_LONG; i++) {
     TEST_ASSERT_EQUAL(s_dst_long[i], rx_dst_buf[i]);
   }
