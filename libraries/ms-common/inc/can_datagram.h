@@ -7,8 +7,6 @@
 #include "status.h"
 
 #define CAN_DATAGRAM_VERSION 1
-
-#define ID_START_MASK (1 << 7)
 #define DATAGRAM_RX_BUFFER_LEN 256
 
 typedef StatusCode (*CanDatagramCb)(uint8_t *data, size_t len, bool start_message);
@@ -29,6 +27,7 @@ typedef enum {
   DATAGRAM_EVENT_DATA_LEN,
   DATAGRAM_EVENT_DATA,
   DATAGRAM_EVENT_COMPLETE,
+  DATAGRAM_EVENT_ERROR,
   NUM_DATAGRAM_DIGEST_EVENTS,
 } CanDatagramEvent;
 
@@ -37,6 +36,21 @@ typedef enum {
   CAN_DATAGRAM_MODE_RX,
   NUM_CAN_DATAGRAM_MODES,
 } CanDatagramMode;
+
+typedef enum {
+  DATAGRAM_STATUS_OK = 0,
+  DATAGRAM_STATUS_COMPLETE,
+  DATAGRAM_STATUS_ERROR,
+} CanDatagramStatus;
+
+typedef enum {
+  // (TODO: SOFT_415) update datagram types
+  CAN_DATAGRAM_TYPE_A = 0,
+  CAN_DATAGRAM_TYPE_B,
+  CAN_DATAGRAM_TYPE_C,
+  CAN_DATAGRAM_TYPE_D,
+  NUM_CAN_DATAGRAM_TYPES,
+} CanDatagramType;
 
 typedef struct RxBufStore {
   uint8_t data[8];
@@ -64,7 +78,7 @@ typedef struct CanDatagramSettings {
   CanDatagramCb tx_cb;
   CanDatagramMode mode;
 
-  uint8_t dt_type;
+  CanDatagramType dt_type;
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
   uint16_t data_len;
@@ -77,8 +91,8 @@ typedef struct CanDatagramStorage {
   CanDatagramCb tx_cb;  // Add watchdog error handler?
   uint16_t rx_bytes_read;
   uint16_t tx_bytes_sent;
+  CanDatagramStatus status;
   bool start;
-  CanDatagramEvent event; // To be removed
 } CanDatagramStorage;
 
 /** Sets the structure field to default values. */
@@ -91,18 +105,12 @@ StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message);
 bool can_datagram_process_event(Event *e);
 
 /** Returns true if the datagram is complete (all data were sent/read). */
-bool can_datagram_complete(void);
+CanDatagramStatus can_datagram_get_status(void);
 
 /** Returns true if the datagram is valid (complete and CRC match). */
 bool can_datagram_is_valid(CanDatagram *dt);
-
-/** Encodes the datagram in the buffer. */
-int can_datagram_output_bytes(CanDatagram *dt, char *buffer, size_t buffer_len);
 
 /** Computes the CRC32 of the datagram. */
 uint32_t can_datagram_compute_crc(void);
 
 CanDatagram *can_datagram_get_datagram(void);
-
-/** Returns true if the ID has the start of datagram field set. */
-bool can_datagram_id_start_is_set(unsigned int id);
