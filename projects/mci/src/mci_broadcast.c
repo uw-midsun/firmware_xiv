@@ -152,8 +152,8 @@ static void prv_change_filter(MotorControllerBroadcastStorage *storage) {
   // one by one
   LOG_DEBUG("Now filtering for ID 0x%" PRIx32 "\n", filter);
   Mcp2515Id filters[NUM_MCP2515_FILTER_IDS] = {
-    {.raw = filter},
-    {.raw = filter},
+    { .raw = filter },
+    { .raw = filter },
   };
 
   // Not in loopback mode
