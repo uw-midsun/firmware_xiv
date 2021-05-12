@@ -204,43 +204,17 @@ static void prv_handle_int(const GpioAddress *address, void *context) {
   critical_section_end(disabled);
 }
 
-StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
-#ifdef MU
-  prv_init_store();
-  s_mu_storage = storage;
-#endif
-  storage->spi_port = settings->spi_port;
-  storage->rx_cb = settings->rx_cb;
-  storage->bus_err_cb = settings->bus_err_cb;
-  storage->context = settings->context;
-  storage->int_pin = settings->int_pin;
-
-  const SpiSettings spi_settings = {
-    .baudrate = settings->spi_baudrate,
-    .mode = SPI_MODE_0,
-    .mosi = settings->mosi,
-    .miso = settings->miso,
-    .sclk = settings->sclk,
-    .cs = settings->cs,
-  };
-  status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
-  prv_reset(storage);
-  // Set to Config mode, CLKOUT /4
-  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
-                 MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
-                 MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
-
-  // set RXB0 ctrl BUKT bit on to enable rollover to rx1
-  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
-  Mcp2515Id default_filter = settings->filters[MCP2515_FILTER_ID_RXF0];
+// Call with MCP2515 in Config mode to set filters
+static void prv_configure_filters(Mcp2515Storage *storage, Mcp2515Id *filters) {
+  Mcp2515Id default_filter = filters[MCP2515_FILTER_ID_RXF0];
   for (size_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
-    Mcp2515Id filter = settings->filters[i];
+    Mcp2515Id filter = filters[i];
     if (default_filter.raw == 0) {
       continue;
     }
 
     // Prevents us from filtering for id 0x0
-    if (settings->filters[i].raw == 0) {
+    if (filters[i].raw == 0) {
       filter = default_filter;
     }
 
@@ -271,6 +245,37 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     // Set eid0-7
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
   }
+}
+StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
+#ifdef MU
+  prv_init_store();
+  s_mu_storage = storage;
+#endif
+  storage->spi_port = settings->spi_port;
+  storage->rx_cb = settings->rx_cb;
+  storage->bus_err_cb = settings->bus_err_cb;
+  storage->context = settings->context;
+  storage->int_pin = settings->int_pin;
+
+  const SpiSettings spi_settings = {
+    .baudrate = settings->spi_baudrate,
+    .mode = SPI_MODE_0,
+    .mosi = settings->mosi,
+    .miso = settings->miso,
+    .sclk = settings->sclk,
+    .cs = settings->cs,
+  };
+  status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
+  prv_reset(storage);
+  // Set to Config mode, CLKOUT /4
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
+                 MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
+                 MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
+
+  // set RXB0 ctrl BUKT bit on to enable rollover to rx1
+  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
+
+  prv_configure_filters(storage, settings->filters);
 
   // 5.7 Timing configurations:
   // In order:
@@ -383,59 +388,16 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   return STATUS_CODE_OK;
 }
 
-StatusCode mcp2515_set_filter(Mcp2515Storage *storage, uint32_t *filters) {
-  // Primarily just copy-pasted from mcp2515_init()
-
-  // convert filters to Mcp2515Ids
-  Mcp2515Id filters_converted[NUM_MCP2515_FILTER_IDS];
-  for (uint8_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
-    filters_converted[i].raw = filters[i];
-  }
+StatusCode mcp2515_set_filter(Mcp2515Storage *storage, Mcp2515Id *filters, bool loopback) {
   // Set to Config mode, CLKOUT /4
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
                  MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
                  MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
-  Mcp2515Id default_filter = filters_converted[MCP2515_FILTER_ID_RXF0];
-  for (size_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
-    Mcp2515Id filter = filters_converted[i];
-    if (default_filter.raw == 0) {
-      continue;
-    }
 
-    // Prevents us from filtering for id 0x0
-    if (filters_converted[i].raw == 0) {
-      filter = default_filter;
-    }
+  prv_configure_filters(storage, filters);
 
-    uint8_t maskRegH = MCP2515_REG_RXM0SIDH;
-    if (i == MCP2515_FILTER_ID_RXF1) maskRegH = MCP2515_REG_RXM1SIDH;
-    // If it's a standard id, ensure it's placed in the right bits
-    if (filter.raw >> MCP2515_STANDARD_ID_LEN == 0) {
-      filter.raw <<= MCP2515_EXTENDED_ID_LEN;
-    }
-    bool standard = filter.raw << (32 - MCP2515_EXTENDED_ID_LEN) == 0;
-    size_t numMaskRegisters =
-        standard ? MCP2515_NUM_MASK_REGISTERS_STANDARD : MCP2515_NUM_MASK_REGISTERS_EXTENDED;
-    // Set the filter masks to 0xff so we filter on the whole message
-    for (size_t i = 0; i < numMaskRegisters; i++) {
-      prv_bit_modify(storage, maskRegH + i, 0xff, 0xff);
-    }
-    // If it is just a standard id, then shift it up to match the struct
-    uint8_t filterRegH = MCP2515_REG_RXF0SIDH;
-    if (i == MCP2515_FILTER_ID_RXF1) filterRegH = MCP2515_REG_RXF1SIDH;
-    uint8_t filterRegL = filterRegH + 1;
-    // Set sidh
-    prv_bit_modify(storage, filterRegH, 0xff, filter.sidh);
-    // Set sidl and eid16-17
-    prv_bit_modify(storage, filterRegL, 0xff,
-                   (filter.sid_0_2 << 5) | ((!standard) << 3) | filter.eid_16_17);
-    // Set eid8-15
-    prv_bit_modify(storage, filterRegH + 2, 0xff, filter.eid8);
-    // Set eid0-7
-    prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
-  }
-  // Return to normal mode
-  uint8_t opmode = (MCP2515_CANCTRL_OPMODE_NORMAL);
+  // Leave config mode
+  uint8_t opmode = (loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
   return STATUS_CODE_OK;
 }
