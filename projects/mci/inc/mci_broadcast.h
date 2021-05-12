@@ -32,13 +32,6 @@ typedef enum {
 #define LEFT_MOTOR_CONTROLLER_BASE_ADDR 0x400
 #define RIGHT_MOTOR_CONTROLLER_BASE_ADDR 0x200
 
-// Stores callbacks when processing MCP2515 messages
-typedef struct {
-  MotorController motor_controller;
-  MotorControllerBroadcastMeasurement cur_measurement;
-  MotorControllerMeasurementCallback callbacks[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS];
-} MotorControllerCallbackStorage;
-
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
@@ -57,8 +50,9 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t status_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
-  // Callbacks exposed for unit testing
-  MotorControllerCallbackStorage cb_storage;
+  // What we're currently filtering for
+  MotorController filter_mc;
+  MotorControllerBroadcastMeasurement filter_measurement;
 } MotorControllerBroadcastStorage;
 
 StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,

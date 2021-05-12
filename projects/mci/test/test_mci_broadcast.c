@@ -68,27 +68,32 @@ typedef struct TestMotorControllerMeasurements {
 
 static TestMotorControllerMeasurements s_test_measurements = { 0 };
 
+// To simplify frame ID map below
+#define L_MTR_MSG_IDX(message) (LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + (message))
+#define R_MTR_MSG_IDX(message) (RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + (message))
+
+#define L_MTR_MSG_ID(offset) (LEFT_MOTOR_CONTROLLER_BASE_ADDR + (offset))
+#define R_MTR_MSG_ID(offset) (RIGHT_MOTOR_CONTROLLER_BASE_ADDR + (offset))
+
 static MotorCanFrameId s_frame_id_map[] = {
-  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_VELOCITY_MESSAGE] =
-      LEFT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_VELOCITY,
-  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_VELOCITY_MESSAGE] =
-      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_VELOCITY,
-  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_BUS_MEASUREMENT_MESSAGE] =
-      LEFT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_BUS,
-  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_BUS_MEASUREMENT_MESSAGE] =
-      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_BUS,
-  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_STATUS_MESSAGE] =
-      LEFT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_STATUS,
-  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_STATUS_MESSAGE] =
-      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_STATUS,
-  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_MOTOR_TEMP_MESSAGE] =
-      LEFT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE,
-  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_MOTOR_TEMP_MESSAGE] =
-      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE,
-  [LEFT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_DSP_TEMP_MESSAGE] =
-      LEFT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_AIR_IN_CPU_TEMPERATURE,
-  [RIGHT_MOTOR_CONTROLLER * NUM_TEST_MCI_MESSAGES + TEST_MCI_DSP_TEMP_MESSAGE] =
-      RIGHT_MOTOR_CONTROLLER_BASE_ADDR + WAVESCULPTOR_MEASUREMENT_ID_AIR_IN_CPU_TEMPERATURE,
+  [L_MTR_MSG_IDX(TEST_MCI_STATUS_MESSAGE)] = L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_STATUS),
+  [R_MTR_MSG_IDX(TEST_MCI_STATUS_MESSAGE)] = R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_STATUS),
+
+  [L_MTR_MSG_IDX(TEST_MCI_BUS_MEASUREMENT_MESSAGE)] = L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_BUS),
+  [R_MTR_MSG_IDX(TEST_MCI_BUS_MEASUREMENT_MESSAGE)] = R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_BUS),
+
+  [L_MTR_MSG_IDX(TEST_MCI_VELOCITY_MESSAGE)] = L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_VELOCITY),
+  [R_MTR_MSG_IDX(TEST_MCI_VELOCITY_MESSAGE)] = R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_VELOCITY),
+
+  [L_MTR_MSG_IDX(TEST_MCI_MOTOR_TEMP_MESSAGE)] =
+      L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE),
+  [R_MTR_MSG_IDX(TEST_MCI_MOTOR_TEMP_MESSAGE)] =
+      R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE),
+
+  [L_MTR_MSG_IDX(TEST_MCI_DSP_TEMP_MESSAGE)] =
+      L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_AIR_IN_CPU_TEMPERATURE),
+  [R_MTR_MSG_IDX(TEST_MCI_DSP_TEMP_MESSAGE)] =
+      R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_AIR_IN_CPU_TEMPERATURE),
 };
 
 static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
@@ -149,7 +154,7 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
                                        s_broadcast_storage.motor_can->context);
 }
 
-static void prv_setup_system_can() {
+static void prv_setup_system_can(void) {
   CanSettings can_settings = {
     .device_id = SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
     .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -235,7 +240,7 @@ void teardown_test(void) {
 // rb - right bus measurement
 
 // Test 1: General broadcast flow.
-void test_left_all_right_all() {
+void test_left_all_right_all(void) {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
   mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
@@ -299,7 +304,7 @@ void test_left_all_right_all() {
 }
 
 // Test 2: Only send left side measurements and check no output
-void test_left_all_right_none() {
+void test_left_all_right_none(void) {
   // motor_can tx and rx should happen immedietly
 
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
@@ -466,7 +471,7 @@ void test_left_all_right_status_bus(void) {
 }
 
 // Test 5: General broadcast flow, repeated thrice.
-void test_3x_left_all_right_all() {
+void test_3x_left_all_right_all(void) {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
   mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
 
@@ -542,7 +547,7 @@ void test_3x_left_all_right_all() {
 }
 
 // Test 6: Same as test 1, but with broadcasts with the wrong ID sprinkled in.
-void test_message_id_filter() {
+void test_message_id_filter(void) {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
   mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
   MotorControllerMeasurements expected_measurements = {
