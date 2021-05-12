@@ -36,9 +36,7 @@ StatusCode steering_can_process_event(Event *e) {
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_RIGHT, (EELightState)e->data);
       break;
     case STEERING_REGEN_BRAKE_EVENT:
-      s_enable_regen_braking = !s_enable_regen_braking;
-      uint16_t state = s_enable_regen_braking ? 1 : 0;
-      CAN_TRANSMIT_REGEN_BRAKING(state);
+      CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
       break;
     default:
       return STATUS_CODE_OUT_OF_RANGE;
