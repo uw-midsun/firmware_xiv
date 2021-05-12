@@ -11,10 +11,8 @@
 #include "log.h"
 #include "misc.h"
 
-static I2CReadCommand s_storage = { 0 };
-static bool s_expecting_message = true;
+static uint8_t rx_len;
 static uint32_t s_tx_delay_ms;
-static size_t s_bytes_sent = 0;
 
 // The size of the array is rounded up to 266 to account for accessing an array ouy of bounds in the
 // loop where the data is transmitted
@@ -22,14 +20,7 @@ static uint8_t s_response[266] = { 0 };
 
 // Resets module state to initial state
 static void prv_i2c_data_reset(void) {
-  s_expecting_message = true;
-
-  s_bytes_sent = 0;
-  s_storage.port = 0;
-  s_storage.address = 0;
-  s_storage.rx_len = 0;
-  s_storage.is_reg = 0;
-  s_storage.reg = 0;
+  rx_len = 0;
 }
 
 static void prv_timer_status_callback(SoftTimerId timer_id, void *context) {
@@ -44,17 +35,20 @@ static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
   // This function is used to send CAN messages, it is a soft timer
   // callback since there needs to be a delay between messages sent.
 
-  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_I2C_READ_DATA, s_response[s_bytes_sent],
-                          s_response[s_bytes_sent + 1], s_response[s_bytes_sent + 2],
-                          s_response[s_bytes_sent + 3], s_response[s_bytes_sent + 4],
-                          s_response[s_bytes_sent + 5], s_response[s_bytes_sent + 6]);
+  uintptr_t bytes_sent;
+  bytes_sent = (uintptr_t)context;
 
-  s_bytes_sent += 7;
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_I2C_READ_DATA, s_response[bytes_sent],
+                          s_response[bytes_sent + 1], s_response[bytes_sent + 2],
+                          s_response[bytes_sent + 3], s_response[bytes_sent + 4],
+                          s_response[bytes_sent + 5], s_response[bytes_sent + 6]);
 
-  if (s_bytes_sent < s_storage.rx_len) {
-    soft_timer_start_millis(s_tx_delay_ms, prv_timer_data_callback, NULL, NULL);
+  bytes_sent += 7;
+
+  if (bytes_sent < rx_len) {
+    soft_timer_start_millis(s_tx_delay_ms, prv_timer_data_callback, (void *)bytes_sent, NULL);
   } else {
-    soft_timer_start_millis(s_tx_delay_ms, prv_timer_status_callback, NULL, NULL);
+    soft_timer_start_millis(s_tx_delay_ms, prv_timer_status_callback, (void *)bytes_sent, NULL);
     prv_i2c_data_reset();
   }
 }
@@ -62,26 +56,31 @@ static void prv_timer_data_callback(SoftTimerId timer_id, void *context) {
 static StatusCode prv_i2c_read_command_callback(uint8_t data[8], void *context, bool *tx_result) {
   *tx_result = false;
 
-  s_storage.port = data[1];
-  s_storage.address = data[2];
-  s_storage.rx_len = data[3];
+  uint8_t port;
+  uint8_t address;
+  uint8_t reg;
+  uint8_t is_reg;
+
+  port = data[1];
+  address = data[2];
+  rx_len = data[3];
   // Stores whether it is a register read, Nonzero for register read, 0 for normal read
-  s_storage.is_reg = data[4];
+  is_reg = data[4];
 
   // Only if it is a register read, store the register
-  if (s_storage.is_reg != 0) {
-    s_storage.reg = data[5];
+  if (is_reg != 0) {
+    reg = data[5];
   }
 
   // Initializes I2C module on the I2C port
-  if (s_storage.port == I2C_PORT_1) {
+  if (port == I2C_PORT_1) {
     I2CSettings i2c1_settings = {
       .speed = I2C_SPEED_FAST,
       .sda = CONTROLLER_BOARD_ADDR_I2C1_SDA,
       .scl = CONTROLLER_BOARD_ADDR_I2C1_SCL,
     };
     i2c_init(I2C_PORT_1, &i2c1_settings);
-  } else if (s_storage.port == I2C_PORT_2) {
+  } else if (port == I2C_PORT_2) {
     I2CSettings i2c2_settings = {
       .speed = I2C_SPEED_FAST,
       .sda = CONTROLLER_BOARD_ADDR_I2C2_SDA,
@@ -90,27 +89,24 @@ static StatusCode prv_i2c_read_command_callback(uint8_t data[8], void *context, 
     i2c_init(I2C_PORT_2, &i2c2_settings);
   }
 
-  if (s_storage.is_reg != 0) {
-    i2c_read_reg(s_storage.port, s_storage.address, s_storage.reg, s_response, s_storage.rx_len);
+  if (is_reg != 0) {
+    i2c_read_reg(port, address, reg, s_response, rx_len);
   } else {
-    i2c_read(s_storage.port, s_storage.address, s_response, s_storage.rx_len);
+    i2c_read(port, address, s_response, rx_len);
   }
 
   // Transmits the received data in blocks of 7
-  if (s_storage.rx_len != 0) {
-    soft_timer_start_millis(s_tx_delay_ms, prv_timer_data_callback, NULL, NULL);
+  if (rx_len != 0) {
+    soft_timer_start_millis(s_tx_delay_ms, prv_timer_data_callback, (void *)0, NULL);
   } else {
     CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, STATUS_CODE_OK, 0, 0, 0, 0, 0, 0);
   }
 
-  // Expects a message next
-  s_expecting_message = true;
-
   return STATUS_CODE_OK;
 }
 
-StatusCode i2c_read_init(uint32_t timeout_soft_timer) {
-  s_tx_delay_ms = timeout_soft_timer;
+StatusCode i2c_read_init(uint32_t tx_delay_ms) {
+  s_tx_delay_ms = tx_delay_ms;
 
   return dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_READ_COMMAND,
                                       prv_i2c_read_command_callback, NULL);

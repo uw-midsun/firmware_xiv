@@ -63,7 +63,7 @@ int main() {
   gpio_get_init();
   gpio_interrupts_init();
   i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS);
-  i2c_read_init(I2C_READ_DEFAULT_TIMEOUT_MS);
+  i2c_read_init(I2C_READ_DEFAULT_TX_DELAY_MS);
   spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY);
 
   Event e = { 0 };

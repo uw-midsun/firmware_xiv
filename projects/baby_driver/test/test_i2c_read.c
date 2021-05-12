@@ -16,8 +16,6 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define I2C_READ_SOFT_TIMER_TIMEOUT_MS 5
-
 typedef enum {
   TEST_CAN_EVENT_TX = 0,
   TEST_CAN_EVENT_RX,
@@ -68,7 +66,7 @@ void setup_test(void) {
                                   TEST_CAN_EVENT_RX, TEST_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(dispatcher_init());
   dispatcher_register_callback(BABYDRIVER_MESSAGE_I2C_READ_DATA, prv_rx_i2c_read_callback, NULL);
-  i2c_read_init(I2C_READ_SOFT_TIMER_TIMEOUT_MS);
+  i2c_read_init(I2C_READ_DEFAULT_TX_DELAY_MS);
 }
 
 void test_read_i2c(void) {
