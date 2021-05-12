@@ -8,18 +8,17 @@
 #include "drv120_relay.h"
 #include "event_queue.h"
 #include "fsm.h"
-#include "status.h"
 #include "soft_timer.h"
-
+#include "status.h"
 
 #define RELAY_ASSERTION_DELAY_MS 50
-#define DATA_STORE_ASSERTION_DELAY_MS 1000 
+#define DATA_STORE_ASSERTION_DELAY_MS 1000
 
 #define CURRENT_ASSERT_THRESHOLD_uA 10
 
-
 typedef struct RelayFsmStorage {
   Fsm fsm;
+  bool isErrCalled;
 } RelayFsmStorage;
 
 // Initialize the FSM. The relay is initialized to closed.

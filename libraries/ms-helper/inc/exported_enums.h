@@ -203,5 +203,7 @@ typedef enum EESolarFault {
   // The drv120 relay has signaled that overtemp/undervolt lockout conditions have been triggered
   EE_SOLAR_FAULT_DRV120,
 
-  NUM_EE_SOLAR_FAULTS,
+  // The drv120 relay has not opened
+  EE_SOLAR_RELAY_OPEN_ERROR
+
 } EESolarFault;

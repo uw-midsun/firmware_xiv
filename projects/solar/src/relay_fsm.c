@@ -2,48 +2,46 @@
 
 #include <stdbool.h>
 
+#include "can_unpack.h"
+#include "data_store.h"
 #include "event_queue.h"
 #include "fault_handler.h"
 #include "fsm.h"
+#include "gpio.h"
 #include "log.h"
 #include "solar_config.h"
 #include "solar_events.h"
-#include "can_unpack.h"
-#include "gpio.h"
 #include "status.h"
-#include "data_store.h"
 
-
-static void prv_assert_relay(void *context){
-  
-  // check prv_realy_err_cb
-  // shoudl declare a varaible to check?
-
+static void prv_assert_relay(void *context) {
+  // Check if prv_realy_err_cb has been called
+  if (context->isErrCalled == true) {
+    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
+  }
 
   int32_t data_value;
-  bool isCalled = false;
+  bool isSet = false;
 
-  data_store_get_is_set(DATA_POINT_CURRENT, &isCalled);
+  data_store_get_is_set(DATA_POINT_CURRENT, &isSet);
 
-  while(!isCalled){
-    soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context,
-                          NULL);
+  while (!isSet) {
+    soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
   }
 
   data_store_get(DATA_POINT_CURRENT, (uint32_t *)&data_value);
 
-  // check threshold
-  if(data_value > CURRENT_ASSERT_THRESHOLD_uA){
-    //fault message => reuse solar fault
-  }else{
-    //success message =>define code_gen ascipd send using can transmit.h
-  }
+  if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
+    fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0);
+  } else {
+    // success message => define code_gen ascipd send using can transmit.h
 
+  }
 }
 
-// adjust
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
+  // Setting error flag true if this function is called
+  context->isErrCalled = true;
   fault_handler_raise_fault(EE_SOLAR_FAULT_DRV120, 0);
 }
 
@@ -62,9 +60,8 @@ static void prv_open_relay(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("Opening relay\n");
   drv120_relay_open();
 
-  // call the assert function
-  soft_timer_start_millis(RELAY_ASSERTION_DELAY_MS, prv_assert_relay, context,
-                          NULL); //timer id? context is neccessary? 
+  // Call the assert function after delay
+  soft_timer_start_millis(RELAY_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
 }
 
 static void prv_close_relay(Fsm *fsm, const Event *e, void *context) {
@@ -76,12 +73,14 @@ StatusCode relay_fsm_init(RelayFsmStorage *storage) {
   if (storage == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
+  // Setting storage error flag false intially
+  storage->isErrCalled = false;
   // Init drv120
   Drv120RelaySettings drv120_settings = {
     .enable_pin = config_get_drv120_enable_pin(),
-    .status_pin = config_get_drv120_status_pin(), //the pin I need active-high
+    .status_pin = config_get_drv120_status_pin(),
     .error_handler = prv_relay_err_cb,
-    .context = NULL,
+    .context = storage,
   };
   status_ok_or_return(drv120_relay_init(&drv120_settings));
 
