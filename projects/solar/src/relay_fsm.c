@@ -34,7 +34,6 @@ static void prv_assert_relay(void *context) {
     fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0);
   } else {
     // success message => define code_gen ascipd send using can transmit.h
-
   }
 }
 
