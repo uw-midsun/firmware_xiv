@@ -309,6 +309,7 @@ void test_power_select_invalid_pin_reading(void) {
 }
 
 // Make sure fault bitset updated appropriately, faults broadcast over CAN correctly
+// and LTC turned off on faults given in POWER_SELECT_LTC_DISABLE_FAULT_MASK
 void test_power_select_faults_handled(void) {
   TEST_ASSERT_OK(power_select_init());
 
@@ -348,6 +349,72 @@ void test_power_select_faults_handled(void) {
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 }
 
+// Similar to above, but tests each individual fault on its own
+void test_power_select_individual_fault_handling(void) {
+  TEST_ASSERT_OK(power_select_init());
+
+  prv_set_voltages_good();
+  prv_set_all_pins_valid();
+
+  TEST_ASSERT_OK(power_select_start(TEST_MEASUREMENT_INTERVAL_US));
+
+  delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
+
+  // All pins should be valid, no faults
+  TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
+  TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
+
+  for (uint8_t meas = 0; meas < NUM_POWER_SELECT_MEASUREMENT_TYPES; meas++) {
+    LOG_DEBUG("Checking measurement %d\n", meas);
+
+    // Overvoltage
+    s_test_adc_read_values[meas] = TEST_FAULT_VOLTAGE_SCALED_MV;
+    delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
+
+    uint16_t expected_fault_bitset = 0;
+    expected_fault_bitset |= 1 << meas;  // corresponding voltage fault
+    TEST_ASSERT_EQUAL(expected_fault_bitset, power_select_get_fault_bitset());
+    // Voltage faults don't turn off LTC
+    TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
+
+    // Back to OK
+    s_test_adc_read_values[meas] = TEST_GOOD_VOLTAGE_SCALED_MV;
+    delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
+
+    // Should now be no faults
+    TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+    TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
+
+    // Overcurrent
+    s_test_adc_read_values[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + meas] =
+        TEST_FAULT_CURRENT_SCALED_MA;
+    delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
+
+    expected_fault_bitset = 0;
+    // Corresponding current fault
+    expected_fault_bitset |= 1 << (NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + meas);
+    TEST_ASSERT_EQUAL(expected_fault_bitset, power_select_get_fault_bitset());
+
+    // Only aux and pwr sup turn off LTC
+    if ((meas == POWER_SELECT_AUX) || (meas == POWER_SELECT_PWR_SUP)) {
+      TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_test_ltc_state);
+    } else {
+      TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
+    }
+
+    // Back to OK
+    s_test_adc_read_values[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + meas] =
+        TEST_GOOD_CURRENT_SCALED_MA;
+    delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
+
+    // Should now be no faults
+    TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+    TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
+  }
+}
+
 // Make sure the DCDC fault pin works as expected
 void test_power_select_dcdc_fault_works(void) {
   TEST_ASSERT_OK(power_select_init());
@@ -360,6 +427,7 @@ void test_power_select_dcdc_fault_works(void) {
   // All pins should be valid, no faults
   TEST_ASSERT_EQUAL(0b111, power_select_get_valid_bitset());
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 
   // Trigger a DCDC fault interrupt
   s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS] = GPIO_STATE_HIGH;
@@ -367,12 +435,15 @@ void test_power_select_dcdc_fault_works(void) {
   gpio_it_trigger_interrupt(&pin);
 
   TEST_ASSERT_EQUAL((1 << POWER_SELECT_DCDC_FAULT), power_select_get_fault_bitset());
+  // DCDC faults don't turn off LTC
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 
   // Back to normal
   s_test_gpio_read_states[NUM_POWER_SELECT_VALID_PINS] = GPIO_STATE_LOW;
   gpio_it_trigger_interrupt(&pin);
 
   TEST_ASSERT_EQUAL(0, power_select_get_fault_bitset());
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 }
 
 // Make sure values get broadcast over CAN as expected

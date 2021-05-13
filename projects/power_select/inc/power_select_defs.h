@@ -21,7 +21,7 @@
 // Maximum measurements.  Values higher than these represent a fault
 #define POWER_SELECT_PWR_SUP_MAX_CURRENT_MA 37500
 #define POWER_SELECT_PWR_SUP_MAX_VOLTAGE_MV 15820
-#define POWER_SELECT_DCDC_MAX_CURRENT_MA 37500
+#define POWER_SELECT_DCDC_MAX_CURRENT_MA 20000
 #define POWER_SELECT_DCDC_MAX_VOLTAGE_MV 15820
 #define POWER_SELECT_AUX_MAX_CURRENT_MA 8220
 #define POWER_SELECT_AUX_MAX_VOLTAGE_MV 15820
@@ -39,7 +39,9 @@ typedef enum {
 } PowerSelectFault;
 
 // Faults that require the LTC to be turned off
-#define POWER_SELECT_LTC_DISABLE_FAULT_MASK 0b1111111
+// See https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/1055326209/Power+Selector+Board
+#define POWER_SELECT_LTC_DISABLE_FAULT_MASK \
+  ((1 << POWER_SELECT_AUX_OVERCURRENT) | (1 << POWER_SELECT_PWR_SUP_OVERCURRENT))
 
 // Sense pins
 #define POWER_SELECT_PWR_SUP_ISENSE_ADDR \
