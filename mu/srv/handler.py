@@ -64,14 +64,14 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             self.pm.start(params['sim'][0], proj_name=params['proj'][0])
             self.respond(200)
         except ValueError as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))
 
     def stop(self, params=None):
         try:
             self.pm.stop_name(params['sim'][0])
             self.respond(200)
         except ValueError as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))
 
     def sims(self, params=None):
         sim_list = list(self.pm.sim_cat().keys())
@@ -116,7 +116,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
                 stores_json = json.dumps(store_dicts)
                 self.respond(200, body=stores_json)
         except ValueError as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))
 
     def apply(self, params=None):
         sim_name = params['sim'][0]
@@ -131,7 +131,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             store_dict = json.loads(store_json)
             json_format.Parse(store_dict, store)
         except json_format.ParseError as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))
             return
 
         mask = decoder.full_mask(store)
@@ -143,7 +143,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             sim.proj.write_store(update)
             self.respond(200)
         except ValueError as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))
 
     def get(self, params=None):
         io_name = params['name'][0]
@@ -155,7 +155,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
                 vals = self.pm.get_all_io()
                 self.respond(200, body=json.dumps(vals))
         except (KeyError, ValueError, NotImplementedError) as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))
 
     def set(self, params=None):
         io_name = params['name'][0]
@@ -164,4 +164,4 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             val = self.pm.set_io(io_name, val)
             self.respond(200)
         except (KeyError, ValueError, NotImplementedError) as e:
-            self.respond(500, body='{}'.format(e))
+            self.respond(500, body=str(e))

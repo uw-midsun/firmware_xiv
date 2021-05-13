@@ -6,8 +6,8 @@ from mu.sims.sub_sims.ads1015 import Ads1015, ADS1015_KEY
 class PedalBoard(BoardSim):
     def __init__(self, pm, proj_name='pedal_board'):
         super().__init__(pm, proj_name, sub_sim_classes=[Ads1015])
-        self.pm.new_io(SimIo('throttle', self.get_throttle, self.set_throttle))
-        self.pm.new_io(SimIo('brake', self.get_brake, self.set_brake))
+        self.pm.new_io(SimIo(self, 'throttle', self.get_throttle, self.set_throttle))
+        self.pm.new_io(SimIo(self, 'brake', self.get_brake, self.set_brake))
 
     def get_throttle(self):
         return self.stores[ADS1015_KEY].readings[0]

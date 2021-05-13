@@ -1,5 +1,6 @@
 class SimIo:
-    def __init__(self, name, getter, setter):
+    def __init__(self, sim, name, getter, setter):
+        self.sim = sim
         self.name = name
         self.getter = getter
         self.setter = setter

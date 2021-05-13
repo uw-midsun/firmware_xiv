@@ -89,6 +89,13 @@ class ProjectManager:
 
     def stop(self, sim):
         del self.fd_to_sim[sim.fd]
+        # avoid deleting from self.simios during iteration
+        simios = []
+        for name, simio in self.simios.items():
+            if simio.sim == sim:
+                simios.append(name)
+        for simio in simios:
+            del self.simios[simio]
         sim.stop()
 
     def stop_name(self, sim_name):
@@ -186,7 +193,7 @@ class ProjectManager:
 
     def get_all_io(self):
         ret = {}
-        for name, simio in self.simios:
+        for name, simio in self.simios.items():
             ret[name] = simio.get()
         return ret
 

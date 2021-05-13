@@ -23,7 +23,6 @@ class BoardSim:
                 self.sub_sims[sub_sim_class.__name__.lower()] = sub_sim_class(self)
         self.stores = {}
         self.timers = []
-        self.simios = {}
         self.proj = project.Project(pm, self, proj_name)
         self.fd = self.proj.popen.stdout.fileno()
         self.pm.register(self)
@@ -88,7 +87,7 @@ class BoardSim:
     def stores_str_lookup(self, store_type, store_key):
         for key in self.stores:
             if key[0] == stores_pb2.MuStoreType.Value(store_type.upper()):
-                if store_key and not int(store_key, 0) == key[0]:
+                if store_key and int(store_key, 0) != key[0]:
                     continue
                 return self.stores[key]
         raise ValueError('No such store')
