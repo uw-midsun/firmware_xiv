@@ -1,7 +1,6 @@
 import requests
 from mu.srv.server import TCP_PORT
 
-def send(route, body=None):
+def send(route, params=None, body=None):
     url = 'http://localhost:{}/{}'.format(TCP_PORT, route)
-    r = requests.get(url, params=body)
-    return r.text
+    return requests.get(url, params=params, json=body)
