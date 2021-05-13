@@ -12,6 +12,7 @@ import i2c_write
 import gpio_set
 import repl_setup
 from mu.integration_tests import int_test
+from mu.harness.board_sim import BoardSim
 
 
 
@@ -19,7 +20,7 @@ from mu.integration_tests import int_test
 class TestBabyDriver(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.babydriver = self.manager.start('baby_driver')
+        self.babydriver = self.manager.start(BoardSim, proj_name='baby_driver')
         can_util.default_channel = "vcan0"
         repl_setup.initialize_modules()
 
