@@ -14,7 +14,7 @@ static void prv_gpio_callback(const GpioAddress *address, void *context) {
   // Read the values from the ADC channel and output the reading
   // Check the data to see if it is valid first
   if (adc_read_converted_pin(*adc_reading, &adc_data) == STATUS_CODE_OK) {
-    LOG_DEBUG("ADC Reading: \n", adc_data);
+    LOG_DEBUG("ADC Reading: %i \n", adc_data);
   } else {
     LOG_DEBUG("Invalid Reading: \n");
     // I'll just put invalid reading for anything else than STATUS CODE OK
