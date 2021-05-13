@@ -8,7 +8,6 @@
 
 // Requires CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
 
-#include "ebrake_tx.h"
 #include "fsm.h"
 #include "mci_output_tx.h"
 #include "precharge_monitor.h"
@@ -32,7 +31,6 @@ typedef struct DriveFsmStorage {
   DriveState destination;
   DriveState current_state;
   PrechargeMonitor precharge_monitor_storage;
-  EbrakeTxStorage ebrake_storage;
   MciOutputTxStorage mci_output_storage;
 } DriveFsmStorage;
 
