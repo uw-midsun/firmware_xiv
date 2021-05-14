@@ -79,7 +79,9 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
     }
   } else {
     if (s_init_cond_complete) {  // Default activity, call update store for type
-      s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+      if (s_func_table[update->type].update_store) {
+        s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+      }
       mu_store_update__free_unpacked(update, NULL);
     } else {  // Store initial conditions to be used in store_register
       if (s_num_init_conds < MAX_STORE_COUNT) {

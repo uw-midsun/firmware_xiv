@@ -113,6 +113,11 @@
                     SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, 4, (vehicle_velocity_left_u16),          \
                     (vehicle_velocity_right_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_MOTOR_STATUS(msg_ptr, motor_status_l_u32, motor_status_r_u32) \
+  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,             \
+                    SYSTEM_CAN_MESSAGE_MOTOR_STATUS, 8, (motor_status_l_u32),  \
+                    (motor_status_r_u32))
+
 #define CAN_PACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32, motor_temp_r_u32)                          \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_MOTOR_TEMPS, \
                     8, (motor_temp_l_u32), (motor_temp_r_u32))
