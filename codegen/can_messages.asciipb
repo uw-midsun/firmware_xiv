@@ -338,7 +338,47 @@ msg {
   }
 }
 
-# IDs: 42-44 Reserved
+msg {
+  id: 42
+  source: POWER_SELECT
+  target: "CENTRE_CONSOLE"
+  msg_name: "aux status main voltage"
+  can_data {
+    u16 {
+      field_name_1: "aux_voltage"
+      field_name_2: "aux_current"
+      field_name_3: "aux_temp"
+      field_name_4: "main voltage"
+    }
+  }
+}
+
+msg {
+  id: 43
+  source: POWER_SELECT
+  target: "CENTRE_CONSOLE"
+  msg_name: "dcdc status main current"
+  can_data {
+    u16 {
+      field_name_1: "dcdc_voltage"
+      field_name_2: "dcdc_current"
+      field_name_3: "dcdc_temp"
+      field_name_4: "main current"
+    }
+  }
+}
+
+msg {
+  id: 44
+  source: POWER_SELECT
+  target: "CENTRE_CONSOLE"
+  msg_name: "power select fault"
+  can_data {
+    u64 {
+      field_name_1: "fault_id"
+    }
+  }
+}
 
 msg {
   id: 45
@@ -451,19 +491,7 @@ msg {
   }
 }
 
-msg {
-  id: 56
-  source: POWER_SELECTION
-  target: ""
-  msg_name: "aux battery status"
-  can_data {
-    u16 {
-      field_name_1: "aux_battery_volt"
-      field_name_2: "aux_battery_temp"
-      field_name_3: "dcdc_status"
-    }
-  }
-}
+# ID 56: reserved
 
 msg {
   id: 57
