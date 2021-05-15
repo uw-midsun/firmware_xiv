@@ -298,7 +298,18 @@ msg {
   }
 }
 
-# IDs: 37 Reserved
+msg { 
+  id: 37
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor status"
+  can_data {
+    u32 {
+      field_name_1: "motor_status_l"
+      field_name_2: "motor_status_r"
+    }
+  }
+}
 
 msg {
   id: 38

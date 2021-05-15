@@ -185,6 +185,14 @@
     status;                                                                                   \
   })
 
+#define CAN_TRANSMIT_MOTOR_STATUS(motor_status_l_u32, motor_status_r_u32)    \
+  ({                                                                         \
+    CanMessage msg = { 0 };                                                  \
+    CAN_PACK_MOTOR_STATUS(&msg, (motor_status_l_u32), (motor_status_r_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                            \
+    status;                                                                  \
+  })
+
 #define CAN_TRANSMIT_MOTOR_TEMPS(motor_temp_l_u32, motor_temp_r_u32)    \
   ({                                                                    \
     CanMessage msg = { 0 };                                             \

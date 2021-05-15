@@ -7,10 +7,11 @@ from mu.protogen import stores_pb2
 
 MCP2515_KEY = (stores_pb2.MuStoreType.MCP2515, 0)
 
+
 class TestMci(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('mci', Mci)
+        self.board = self.manager.start(Mci)
 
     def test_mci(self):
         time.sleep(0.3)

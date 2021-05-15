@@ -1,0 +1,21 @@
+#!/bin/bash
+
+TOP_DIR=~/shared/firmware_xiv
+
+if [[ $* == *stop* ]]
+then
+    # find the server process and grab just the pid
+    pid=$(pgrep -f mu/*/srv | sort | head -1)
+    kill -9 $pid
+    rm -f /home/vagrant/shared/firmware_xiv/.mu.log
+    exit
+fi
+
+if [[ $* == *-bg* ]]
+then
+    echo "Starting musrv in background"
+    (env PYTHONPATH="$TOP_DIR" python3 -u "$TOP_DIR/mu/srv/server.py" "$@" &>.mu.log &)
+else
+    echo "Starting musrv with output"
+    exec env PYTHONPATH="$TOP_DIR" python3 "$TOP_DIR/mu/srv/server.py" "$@"
+fi
