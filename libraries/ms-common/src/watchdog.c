@@ -18,3 +18,7 @@ void watchdog_kick(WatchdogStorage *storage) {
   soft_timer_cancel(storage->timer_id);
   soft_timer_start_millis(storage->timeout_ms, prv_expiry_callback, storage, &storage->timer_id);
 }
+
+void watchdog_cancel(WatchdogStorage *storage) {
+  soft_timer_cancel(storage->timer_id);
+}

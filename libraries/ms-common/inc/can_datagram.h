@@ -71,7 +71,7 @@ typedef struct CanDatagram {
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
   uint16_t data_len;
-  uint8_t *data;    
+  uint8_t *data;
 } CanDatagram;
 
 typedef struct CanDatagramSettings {
