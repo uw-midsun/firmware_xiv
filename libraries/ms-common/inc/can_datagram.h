@@ -71,7 +71,7 @@ typedef struct CanDatagram {
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
   uint16_t data_len;
-  uint8_t *data;  // union needed here with u64?s
+  uint8_t *data;    
 } CanDatagram;
 
 typedef struct CanDatagramSettings {
@@ -88,29 +88,27 @@ typedef struct CanDatagramSettings {
 typedef struct CanDatagramStorage {
   CanDatagram dt;
   CanDatagramMode mode;
-  CanDatagramCb tx_cb;  // Add watchdog error handler?
+  CanDatagramCb tx_cb;
   uint16_t rx_bytes_read;
   uint16_t tx_bytes_sent;
   CanDatagramStatus status;
   bool start;
 } CanDatagramStorage;
 
-/** Sets the structure field to default values. */
+// Initializes a can datagram instance and prepares for transmitting or receiving
 StatusCode can_datagram_init(CanDatagramSettings *settings);
 
+// Called after initialization to start txing datagram messages
 StatusCode can_datagram_start_tx(uint8_t *init_data, size_t len);
 
+// Called in the rx handler for datagram messages to process sequential messages
 StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message);
 
+// Processes datagram state events
 bool can_datagram_process_event(Event *e);
 
-/** Returns true if the datagram is complete (all data were sent/read). */
+// Returns true if the datagram is complete (all data were sent/read)
 CanDatagramStatus can_datagram_get_status(void);
 
-/** Returns true if the datagram is valid (complete and CRC match). */
-bool can_datagram_is_valid(CanDatagram *dt);
-
-/** Computes the CRC32 of the datagram. */
-uint32_t can_datagram_compute_crc(void);
-
+// Returns datagram for reading and verification purposes
 CanDatagram *can_datagram_get_datagram(void);
