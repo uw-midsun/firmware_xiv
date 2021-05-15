@@ -105,6 +105,28 @@ msg {
 # IDs: 11-17 Reserved
 
 msg {
+  id: 14
+  source: SOLAR_5_MPPTS
+  target: "TELEMETRY"
+  msg_name: "relay current"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 15
+  source: SOLAR_6_MPPTS
+  target: "TELEMETRY"
+  msg_name: "relay current"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
   id: 18
   source: PEDAL
   target: "MOTOR_INTERFACE"

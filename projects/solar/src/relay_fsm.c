@@ -13,6 +13,8 @@
 #include "solar_events.h"
 #include "status.h"
 
+static SolarMpptCount solar_mppt_count;
+
 static void prv_assert_relay(void *context) {
   // Check if prv_realy_err_cb has been called
   if (context->isErrCalled == true) {
@@ -68,12 +70,14 @@ static void prv_close_relay(Fsm *fsm, const Event *e, void *context) {
   drv120_relay_close();
 }
 
-StatusCode relay_fsm_init(RelayFsmStorage *storage) {
+StatusCode relay_fsm_init(RelayFsmStorage *storage, SolarMpptCount mppt_count) {
   if (storage == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
   // Setting storage error flag false intially
   storage->isErrCalled = false;
+  // Set the mppt_count
+  solar_mppt_count = mppt_count;
   // Init drv120
   Drv120RelaySettings drv120_settings = {
     .enable_pin = config_get_drv120_enable_pin(),
