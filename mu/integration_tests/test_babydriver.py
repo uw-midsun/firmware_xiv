@@ -1,20 +1,18 @@
+from mu.harness.board_sim import BoardSim
+from mu.integration_tests import int_test
+import repl_setup
+import gpio_set
+import i2c_write
+import spi_exchange
+import gpio_interrupts
+import gpio_get
+import can_util
+import adc_read
 import time
 import unittest
 import sys
 sys.path.append('projects/baby_driver/scripts')
 # pylint: disable=wrong-import-position
-import adc_read
-import can_util
-import gpio_get
-import gpio_interrupts
-import spi_exchange
-import i2c_write
-import gpio_set
-import repl_setup
-from mu.integration_tests import int_test
-from mu.harness.board_sim import BoardSim
-
-
 
 
 class TestBabyDriver(int_test.IntTest):

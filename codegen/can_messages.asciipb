@@ -108,7 +108,7 @@ msg {
   id: 14
   source: SOLAR_5_MPPTS
   target: "TELEMETRY"
-  msg_name: "relay current"
+  msg_name: "relay current 5 mppts"
   can_data {
     empty {
     }
@@ -119,7 +119,7 @@ msg {
   id: 15
   source: SOLAR_6_MPPTS
   target: "TELEMETRY"
-  msg_name: "relay current"
+  msg_name: "relay current 6 mppts"
   can_data {
     empty {
     }

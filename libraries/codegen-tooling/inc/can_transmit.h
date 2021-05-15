@@ -63,6 +63,22 @@
     status;                                                     \
   })
 
+#define CAN_TRANSMIT_RELAY_CURRENT_5_MPPTS()      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_RELAY_CURRENT_5_MPPTS(&msg);         \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS()      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_RELAY_CURRENT_6_MPPTS(&msg);         \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output_u32, brake_output_u32)    \
   ({                                                                        \
     CanMessage msg = { 0 };                                                 \
