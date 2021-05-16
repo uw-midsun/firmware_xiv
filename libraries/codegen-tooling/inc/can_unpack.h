@@ -90,6 +90,9 @@
                       (vehicle_velocity_right_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY)
 
+#define CAN_UNPACK_MOTOR_STATUS(msg_ptr, motor_status_l_u32_ptr, motor_status_r_u32_ptr) \
+  can_unpack_impl_u32((msg_ptr), 8, (motor_status_l_u32_ptr), (motor_status_r_u32_ptr))
+
 #define CAN_UNPACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32_ptr, motor_temp_r_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (motor_temp_l_u32_ptr), (motor_temp_r_u32_ptr))
 
@@ -97,6 +100,19 @@
   can_unpack_impl_u8((msg_ptr), 1, (command_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY,          \
                      CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_AUX_STATUS_MAIN_VOLTAGE(msg_ptr, aux_voltage_u16_ptr, aux_current_u16_ptr, \
+                                           aux_temp_u16_ptr, main_voltage_u16_ptr)            \
+  can_unpack_impl_u16((msg_ptr), 8, (aux_voltage_u16_ptr), (aux_current_u16_ptr),             \
+                      (aux_temp_u16_ptr), (main_voltage_u16_ptr))
+
+#define CAN_UNPACK_DCDC_STATUS_MAIN_CURRENT(msg_ptr, dcdc_voltage_u16_ptr, dcdc_current_u16_ptr, \
+                                            dcdc_temp_u16_ptr, main_current_u16_ptr)             \
+  can_unpack_impl_u16((msg_ptr), 8, (dcdc_voltage_u16_ptr), (dcdc_current_u16_ptr),              \
+                      (dcdc_temp_u16_ptr), (main_current_u16_ptr))
+
+#define CAN_UNPACK_POWER_SELECT_FAULT(msg_ptr, fault_id_u64_ptr) \
+  can_unpack_impl_u64((msg_ptr), 8, (fault_id_u64_ptr))
 
 #define CAN_UNPACK_UV_CUTOFF_NOTIFICATION(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
@@ -129,11 +145,6 @@
 #define CAN_UNPACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),              \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
-
-#define CAN_UNPACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16_ptr, aux_battery_temp_u16_ptr, \
-                                      dcdc_status_u16_ptr)                                         \
-  can_unpack_impl_u16((msg_ptr), 6, (aux_battery_volt_u16_ptr), (aux_battery_temp_u16_ptr),        \
-                      (dcdc_status_u16_ptr), CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8_ptr, fan_2_u8_ptr, fan_3_u8_ptr,            \
                                      fan_4_u8_ptr, fan_5_u8_ptr, fan_6_u8_ptr, fan_7_u8_ptr,       \
