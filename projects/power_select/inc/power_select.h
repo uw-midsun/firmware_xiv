@@ -56,7 +56,8 @@ typedef struct {
   uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
   int32_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];
   uint16_t fault_bitset;
-  uint8_t valid_bitset;  // valid pins
+  uint16_t valid_bitset;
+  uint16_t warning_bitset;
   SoftTimerId timer_id;
   bool measurement_in_progress;
   uint32_t interval_us;
@@ -75,7 +76,7 @@ bool power_select_stop(void);
 uint16_t power_select_get_fault_bitset(void);
 
 // Return the valid bitset
-uint8_t power_select_get_valid_bitset(void);
+uint16_t power_select_get_valid_bitset(void);
 
 // Return the storage (mainly for testing)
 PowerSelectStorage power_select_get_storage(void);

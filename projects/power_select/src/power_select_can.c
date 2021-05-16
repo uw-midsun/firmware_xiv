@@ -2,8 +2,8 @@
 
 static CanAckStatus prv_confirm_aux(uint16_t fault_bitset, uint8_t valid_bitset) {
   if (!(valid_bitset & (1 << POWER_SELECT_AUX_VALID)) ||
-      (fault_bitset & (1 << POWER_SELECT_AUX_OVERCURRENT)) ||
-      (fault_bitset & (1 << POWER_SELECT_AUX_OVERVOLTAGE))) {
+      (fault_bitset & (1 << POWER_SELECT_FAULT_AUX_OC)) ||
+      (fault_bitset & (1 << POWER_SELECT_FAULT_AUX_OV))) {
     return CAN_ACK_STATUS_INVALID;
   } else {
     return CAN_ACK_STATUS_OK;
@@ -12,8 +12,8 @@ static CanAckStatus prv_confirm_aux(uint16_t fault_bitset, uint8_t valid_bitset)
 
 static CanAckStatus prv_confirm_dcdc(uint16_t fault_bitset, uint8_t valid_bitset) {
   if (!(valid_bitset & (1 << POWER_SELECT_DCDC_VALID)) ||
-      (fault_bitset & (1 << POWER_SELECT_DCDC_OVERCURRENT)) ||
-      (fault_bitset & (1 << POWER_SELECT_DCDC_OVERVOLTAGE))) {
+      (fault_bitset & (1 << POWER_SELECT_FAULT_DCDC_OC)) ||
+      (fault_bitset & (1 << POWER_SELECT_FAULT_DCDC_OV))) {
     return CAN_ACK_STATUS_INVALID;
   } else {
     return CAN_ACK_STATUS_OK;
@@ -24,7 +24,7 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   uint16_t sequence = 0;
   CAN_UNPACK_POWER_ON_MAIN_SEQUENCE(msg, &sequence);
   uint16_t fault_bitset = power_select_get_fault_bitset();
-  uint8_t valid_bitset = power_select_get_valid_bitset();
+  uint16_t valid_bitset = power_select_get_valid_bitset();
   if (sequence == EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS) {
     *ack_reply = prv_confirm_aux(fault_bitset, valid_bitset);
   }
@@ -41,7 +41,7 @@ static StatusCode prv_rx_aux_callback(const CanMessage *msg, void *context,
   uint16_t sequence = 0;
   CAN_UNPACK_POWER_ON_AUX_SEQUENCE(msg, &sequence);
   uint16_t fault_bitset = power_select_get_fault_bitset();
-  uint8_t valid_bitset = power_select_get_valid_bitset();
+  uint16_t valid_bitset = power_select_get_valid_bitset();
   if (sequence == EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS) {
     *ack_reply = prv_confirm_aux(fault_bitset, valid_bitset);
   }

@@ -2,6 +2,16 @@
 
 static PowerSelectStorage s_storage;
 
+// GPIO settings for sense pins
+static const GpioSettings s_sense_settings = {
+  .direction = GPIO_DIR_IN,
+  .state = GPIO_STATE_LOW,
+  .resistor = GPIO_RES_NONE,
+  .alt_function = GPIO_ALTFN_ANALOG,
+};
+
+static const GpioAddress s_cell_vsense_pin = POWER_SELECT_CELL_VSENSE_ADDR;
+
 // Populate global arrs
 const GpioAddress g_power_select_voltage_pins[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS] = {
   [POWER_SELECT_AUX] = POWER_SELECT_AUX_VSENSE_ADDR,
@@ -38,8 +48,8 @@ const uint16_t g_power_select_max_currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS
   [POWER_SELECT_PWR_SUP] = POWER_SELECT_PWR_SUP_MAX_CURRENT_MA,
 };
 
-// Broadcast the fault bitset and turn off/on the LTC as required
-static void prv_handle_fault(void) {
+// Broadcast fault, warning, and status bitsets and turn off/on the LTC as required
+static void prv_handle_status(void) {
   // Turn off/on LTC depending on fault status
   GpioAddress pin = POWER_SELECT_LTC_SHDN_ADDR;
   if ((s_storage.fault_bitset & POWER_SELECT_LTC_DISABLE_FAULT_MASK) == 0) {
@@ -49,15 +59,15 @@ static void prv_handle_fault(void) {
     // Fault, turn off LTC
     gpio_set_state(&pin, GPIO_STATE_LOW);
   }
-  CAN_TRANSMIT_POWER_SELECT_FAULT((uint64_t)s_storage.fault_bitset);
+  CAN_TRANSMIT_POWER_SELECT_STATUS(s_storage.fault_bitset, s_storage.warning_bitset, s_storage.valid_bitset);
 }
 
 // Broadcast sense measurements from storage.
 static StatusCode prv_broadcast_measurements(void) {
-  StatusCode status = CAN_TRANSMIT_AUX_STATUS_MAIN_VOLTAGE(
+  StatusCode status = CAN_TRANSMIT_AUX_MEAS_MAIN_VOLTAGE(
       s_storage.voltages[POWER_SELECT_AUX], s_storage.currents[POWER_SELECT_AUX],
       s_storage.temps[POWER_SELECT_AUX], s_storage.voltages[POWER_SELECT_PWR_SUP]);
-  status_ok_or_return(CAN_TRANSMIT_DCDC_STATUS_MAIN_CURRENT(
+  status_ok_or_return(CAN_TRANSMIT_DCDC_MEAS_MAIN_CURRENT(
       s_storage.voltages[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_DCDC],
       s_storage.temps[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_PWR_SUP]));
   return status;
@@ -143,6 +153,20 @@ static void prv_read_currents(void) {
   }
 }
 
+// Read the voltage at the 3V3 cell and broadcast if it needs to be replaced
+static void prv_read_cell(void) {
+  uint16_t cell_voltage = 0;
+  adc_read_converted_pin(s_cell_vsense_pin, &cell_voltage);
+  cell_voltage /= POWER_SELECT_CELL_VSENSE_SCALING;
+  cell_voltage *= V_TO_MV;
+
+  if(cell_voltage < POWER_SELECT_CELL_MIN_VOLTAGE_MV) {
+    s_storage.warning_bitset |= (1 << POWER_SELECT_WARNING_BAT_LOW);
+  } else {
+    s_storage.warning_bitset &= ~(1 << POWER_SELECT_WARNING_BAT_LOW);
+  }
+}
+
 // Read current, voltage, and temp measurements to storage
 static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
   LOG_DEBUG("Reading measurements...\n");
@@ -157,35 +181,30 @@ static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
 
   prv_read_temps();
 
+  prv_read_cell();
+
   // Broadcast
   prv_broadcast_measurements();
 
-  prv_handle_fault();
+  prv_handle_status();
 
   soft_timer_start(s_storage.interval_us, prv_periodic_measure, &s_storage, &s_storage.timer_id);
 }
 
 // Initialize all sense pins as ADC
 static StatusCode prv_init_sense_pins(void) {
-  GpioSettings sense_settings = {
-    .direction = GPIO_DIR_IN,
-    .state = GPIO_STATE_LOW,
-    .resistor = GPIO_RES_NONE,
-    .alt_function = GPIO_ALTFN_ANALOG,
-  };
-
   for (uint32_t i = 0; i < NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS; i++) {
-    status_ok_or_return(gpio_init_pin(&g_power_select_voltage_pins[i], &sense_settings));
+    status_ok_or_return(gpio_init_pin(&g_power_select_voltage_pins[i], &s_sense_settings));
     status_ok_or_return(adc_set_channel_pin(g_power_select_voltage_pins[i], true));
   }
 
   for (uint32_t i = 0; i < NUM_POWER_SELECT_CURRENT_MEASUREMENTS; i++) {
-    status_ok_or_return(gpio_init_pin(&g_power_select_current_pins[i], &sense_settings));
+    status_ok_or_return(gpio_init_pin(&g_power_select_current_pins[i], &s_sense_settings));
     status_ok_or_return(adc_set_channel_pin(g_power_select_current_pins[i], true));
   }
 
   for (uint32_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
-    status_ok_or_return(gpio_init_pin(&g_power_select_temp_pins[i], &sense_settings));
+    status_ok_or_return(gpio_init_pin(&g_power_select_temp_pins[i], &s_sense_settings));
     status_ok_or_return(adc_set_channel_pin(g_power_select_temp_pins[i], true));
   }
 
@@ -199,13 +218,13 @@ static void prv_handle_fault_it(const GpioAddress *address, void *context) {
   gpio_get_state(&pin, &state);
   if (state == GPIO_STATE_HIGH) {
     LOG_DEBUG("DCDC FAULT\n");
-    s_storage.fault_bitset |= (1 << POWER_SELECT_DCDC_FAULT);
+    s_storage.fault_bitset |= (1 << POWER_SELECT_FAULT_DCDC_PIN);
   } else {
     LOG_DEBUG("DCDC fault cleared\n");
-    s_storage.fault_bitset &= ~(1 << POWER_SELECT_DCDC_FAULT);
+    s_storage.fault_bitset &= ~(1 << POWER_SELECT_FAULT_DCDC_PIN);
   }
 
-  prv_handle_fault();
+  prv_handle_status();
 }
 
 // DCDC_FAULT pin goes high on fault
@@ -287,7 +306,7 @@ uint16_t power_select_get_fault_bitset(void) {
   return s_storage.fault_bitset;
 }
 
-uint8_t power_select_get_valid_bitset(void) {
+uint16_t power_select_get_valid_bitset(void) {
   return s_storage.valid_bitset;
 }
 

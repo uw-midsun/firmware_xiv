@@ -145,7 +145,7 @@ static uint16_t s_aux_measurements[4];
 
 static StatusCode prv_power_select_aux_cb(const CanMessage *msg, void *context,
                                           CanAckStatus *ack_reply) {
-  CAN_UNPACK_AUX_STATUS_MAIN_VOLTAGE(msg, &s_aux_measurements[0], &s_aux_measurements[1],
+  CAN_UNPACK_AUX_MEAS_MAIN_VOLTAGE(msg, &s_aux_measurements[0], &s_aux_measurements[1],
                                      &s_aux_measurements[2], &s_aux_measurements[3]);
   return STATUS_CODE_OK;
 }
@@ -154,16 +154,16 @@ static uint16_t s_dcdc_measurements[4];
 
 static StatusCode prv_power_select_dcdc_cb(const CanMessage *msg, void *context,
                                            CanAckStatus *ack_reply) {
-  CAN_UNPACK_DCDC_STATUS_MAIN_CURRENT(msg, &s_dcdc_measurements[0], &s_dcdc_measurements[1],
+  CAN_UNPACK_DCDC_MEAS_MAIN_CURRENT(msg, &s_dcdc_measurements[0], &s_dcdc_measurements[1],
                                       &s_dcdc_measurements[2], &s_dcdc_measurements[3]);
   return STATUS_CODE_OK;
 }
 
-static uint64_t s_fault_measurement;
+static uint16_t s_status_readings[3];
 
-static StatusCode prv_power_select_fault_cb(const CanMessage *msg, void *context,
+static StatusCode prv_power_select_status_cb(const CanMessage *msg, void *context,
                                             CanAckStatus *ack_reply) {
-  CAN_UNPACK_POWER_SELECT_FAULT(msg, &s_fault_measurement);
+  CAN_UNPACK_POWER_SELECT_STATUS(msg, &s_status_readings[0], &s_status_readings[1], &s_status_readings[2]);
   return STATUS_CODE_OK;
 }
 
@@ -333,8 +333,8 @@ void test_power_select_faults_handled(void) {
   delay_ms(TEST_MEASUREMENT_INTERVAL_MS + 10);
 
   uint16_t expected_fault_bitset = 0;
-  expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERVOLTAGE;
-  expected_fault_bitset |= 1 << POWER_SELECT_AUX_OVERCURRENT;
+  expected_fault_bitset |= 1 << POWER_SELECT_FAULT_AUX_OV;
+  expected_fault_bitset |= 1 << POWER_SELECT_FAULT_AUX_OC;
   TEST_ASSERT_EQUAL(expected_fault_bitset, power_select_get_fault_bitset());
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_test_ltc_state);
 
@@ -434,7 +434,7 @@ void test_power_select_dcdc_fault_works(void) {
   GpioAddress pin = POWER_SELECT_DCDC_FAULT_ADDR;
   gpio_it_trigger_interrupt(&pin);
 
-  TEST_ASSERT_EQUAL((1 << POWER_SELECT_DCDC_FAULT), power_select_get_fault_bitset());
+  TEST_ASSERT_EQUAL((1 << POWER_SELECT_FAULT_DCDC_PIN), power_select_get_fault_bitset());
   // DCDC faults don't turn off LTC
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_ltc_state);
 
@@ -450,16 +450,15 @@ void test_power_select_dcdc_fault_works(void) {
 void test_power_select_broadcast_works(void) {
   TEST_ASSERT_OK(power_select_init());
 
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_STATUS_MAIN_VOLTAGE, prv_power_select_aux_cb,
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_AUX_MEAS_MAIN_VOLTAGE, prv_power_select_aux_cb,
                           NULL);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DCDC_STATUS_MAIN_CURRENT, prv_power_select_dcdc_cb,
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_DCDC_MEAS_MAIN_CURRENT, prv_power_select_dcdc_cb,
                           NULL);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT, prv_power_select_fault_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_POWER_SELECT_STATUS, prv_power_select_status_cb, NULL);
 
   memset(s_aux_measurements, 0, sizeof(s_dcdc_measurements));
   memset(s_dcdc_measurements, 0, sizeof(s_dcdc_measurements));
-  s_fault_measurement = 0;
-
+  memset(s_status_readings, 0, sizeof(s_status_readings));
   prv_set_voltages_good();
   prv_set_all_pins_valid();
 
@@ -487,8 +486,11 @@ void test_power_select_broadcast_works(void) {
   TEST_ASSERT_EQUAL(TEST_EXPECTED_TEMP, s_dcdc_measurements[2]);    // dcdc temp
   TEST_ASSERT_EQUAL(TEST_GOOD_CURRENT_MA, s_dcdc_measurements[3]);  // main current
 
-  // Third TX: SYSTEM_CAN_MESSAGE_POWER_SELECT_FAULT
-  TEST_ASSERT_EQUAL(0, s_fault_measurement);
+  // Third TX: SYSTEM_CAN_MESSAGE_POWER_SELECT_STATUS
+  // Valid bitset should be 0b111, all others should be 0
+  TEST_ASSERT_EQUAL(0, s_status_readings[0]); // Fault bitset
+  TEST_ASSERT_EQUAL(0, s_status_readings[1]); // Warning bitset
+  TEST_ASSERT_EQUAL(0b111, s_status_readings[2]); // Valid bitset
 
   // Should be no events
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
