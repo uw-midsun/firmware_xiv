@@ -39,6 +39,8 @@ typedef enum {
   (NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS + NUM_POWER_SELECT_CURRENT_MEASUREMENTS + \
    NUM_POWER_SELECT_TEMP_MEASUREMENTS)
 
+extern const GpioAddress g_power_select_cell_pin;
+
 extern const GpioAddress g_power_select_voltage_pins[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
 
 extern const GpioAddress g_power_select_current_pins[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];

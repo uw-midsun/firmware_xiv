@@ -10,7 +10,7 @@ static const GpioSettings s_sense_settings = {
   .alt_function = GPIO_ALTFN_ANALOG,
 };
 
-static const GpioAddress s_cell_vsense_pin = POWER_SELECT_CELL_VSENSE_ADDR;
+const GpioAddress g_power_select_cell_pin = POWER_SELECT_CELL_VSENSE_ADDR;
 
 // Populate global arrs
 const GpioAddress g_power_select_voltage_pins[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS] = {
@@ -59,7 +59,8 @@ static void prv_handle_status(void) {
     // Fault, turn off LTC
     gpio_set_state(&pin, GPIO_STATE_LOW);
   }
-  CAN_TRANSMIT_POWER_SELECT_STATUS(s_storage.fault_bitset, s_storage.warning_bitset, s_storage.valid_bitset);
+  CAN_TRANSMIT_POWER_SELECT_STATUS(s_storage.fault_bitset, s_storage.warning_bitset,
+                                   s_storage.valid_bitset);
 }
 
 // Broadcast sense measurements from storage.
@@ -156,11 +157,16 @@ static void prv_read_currents(void) {
 // Read the voltage at the 3V3 cell and broadcast if it needs to be replaced
 static void prv_read_cell(void) {
   uint16_t cell_voltage = 0;
-  adc_read_converted_pin(s_cell_vsense_pin, &cell_voltage);
-  cell_voltage /= POWER_SELECT_CELL_VSENSE_SCALING;
-  cell_voltage *= V_TO_MV;
+  adc_read_converted_pin(g_power_select_cell_pin, &cell_voltage);
 
-  if(cell_voltage < POWER_SELECT_CELL_MIN_VOLTAGE_MV) {
+  uint32_t cell_voltage_u32 = (uint32_t)cell_voltage;
+  cell_voltage_u32 *= V_TO_MV;
+  cell_voltage_u32 /= POWER_SELECT_CELL_VSENSE_SCALING;
+
+  LOG_DEBUG("3V3 cell voltage: %" PRIu32 "\n", cell_voltage_u32);
+
+  if (cell_voltage_u32 < POWER_SELECT_CELL_MIN_VOLTAGE_MV) {
+    LOG_WARN("Warning - 3V3 cell battery low, please replace\n");
     s_storage.warning_bitset |= (1 << POWER_SELECT_WARNING_BAT_LOW);
   } else {
     s_storage.warning_bitset &= ~(1 << POWER_SELECT_WARNING_BAT_LOW);
