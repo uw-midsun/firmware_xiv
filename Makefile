@@ -27,7 +27,7 @@
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
 # 	make codegen_protos - Generates protobuf files
-# 	make bootloader_protos - Generates protobuf files for the bootlaoder
+# 	make bootloader_protos - Generates protobuf files for the bootloader
 # 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
@@ -203,13 +203,14 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
+IGNORE_CLEANUP_PROJS := bootloader/protogen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
-FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
+FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS)) $(addprefix -o -path $(PROJ_DIR)/,$(IGNORE_CLEANUP_PROJS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
@@ -223,6 +224,7 @@ FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 
 lint:
 	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
+	@echo "Ecluding project folders: $(IGNORE_CLEANUP_PROJS)"
 	@$(FIND) | xargs -r python2 lint.py
 
 # Quick lint on ONLY changed/new files
