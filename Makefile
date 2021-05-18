@@ -224,7 +224,7 @@ FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 
 lint:
 	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@echo "Ecluding project folders: $(IGNORE_CLEANUP_PROJS)"
+	@echo "Excluding project folders: $(IGNORE_CLEANUP_PROJS)"
 	@$(FIND) | xargs -r python2 lint.py
 
 # Quick lint on ONLY changed/new files
