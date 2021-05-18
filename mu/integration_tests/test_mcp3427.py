@@ -1,10 +1,8 @@
-from mu.sims.solar import Solar
-from mu.harness.board_sim import BoardSim
 import unittest
 import time
 
 from mu.integration_tests import int_test
-from mu.sims.bms_carrier import BmsCarrier
+from mu.sims.solar import Solar
 
 class TestMcp3427(int_test.IntTest):
     def setUp(self):
