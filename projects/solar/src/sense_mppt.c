@@ -58,7 +58,7 @@ static void prv_sense_cycle_callback(void *context) {
   }
 
   if (status_ok(mppt_read_status(s_spi_port, &status, mppt))) {
-    data_store_set(DATA_POINT_CR_BIT(mppt), spv1020_is_cr_bit_set(status));
+    data_store_set(DATA_POINT_MPPT_STATUS(mppt), status);
     prv_check_status_for_faults(mppt, status);
   } else {
     LOG_WARN("Error reading status from MPPT %d\n", mppt);

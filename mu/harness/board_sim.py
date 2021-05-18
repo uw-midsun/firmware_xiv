@@ -13,6 +13,7 @@ GPIO_KEY = (stores_pb2.MuStoreType.GPIO, 0)
 
 POLL_LOCK_SIGNAL = signal.SIGUSR1
 
+
 class BoardSim:
     def __init__(self, pm, proj_name, sub_sim_classes=None, init_conds=None):
         self.pm = pm
@@ -64,11 +65,7 @@ class BoardSim:
         self.timers.append(timer)
         timer.start()
 
-    def get_gpio(self, port, pin):
-        gpio_msg = self.stores[GPIO_KEY]
-        return gpio_msg.state[(ord(port.capitalize()) - ord('A')) * 16 + pin]
-
-    def set_gpio(self, port, pin, state):
+    def make_gpio_update(self, port, pin, state):
         ind = (ord(port.capitalize()) - ord('A')) * 16 + pin
         gpio_msg = gpio_pb2.MuGpioStore()
         gpio_msg.state.extend([0] * 3 * 16)
@@ -76,9 +73,24 @@ class BoardSim:
         gpio_mask = gpio_pb2.MuGpioStore()
         gpio_mask.state.extend([0] * 3 * 16)
         gpio_mask.state[ind] = state
-        gpio_update = StoreUpdate(gpio_msg, gpio_mask, GPIO_KEY)
+        return StoreUpdate(gpio_msg, gpio_mask, GPIO_KEY)
+
+    def get_gpio(self, port, pin):
+        gpio_msg = self.stores[GPIO_KEY]
+        return gpio_msg.state[(ord(port.capitalize()) - ord('A')) * 16 + pin]
+
+    def set_gpio(self, port, pin, state):
+        gpio_update = self.make_gpio_update(port, pin, state)
 
         self.proj.write_store(gpio_update)
+
+    def stores_str_lookup(self, store_type, store_key):
+        for key in self.stores:
+            if key[0] == stores_pb2.MuStoreType.Value(store_type.upper()):
+                if store_key and int(store_key, 0) != key[0]:
+                    continue
+                return self.stores[key]
+        raise ValueError('No such store')
 
     # To be implemented by subclasses
 

@@ -96,11 +96,42 @@ jobs:
           make lint
           make pylint
 
-      - name: Build and test
+      - name: Build codegen
         run: |
           make codegen
           make codegen_dbc
-          make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
+
+      - name: Check for uncommitted codegen changes
+        id: check-uncommitted-changes
+        continue-on-error: true
+        # https://stackoverflow.com/a/3879077
+        run: |
+          git update-index --refresh || true
+          git diff-index --quiet HEAD --
+
+      - name: Post PR comment on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-codegen-changes.md', 'utf8');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+
+      - name: Fail on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        run: exit 1
+
+      - name: Build and test
+        id: build-test
+        run: |
+          make build_all PLATFORM=stm32f0xx DEFINE="${DEFINES}"
           make clean
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"

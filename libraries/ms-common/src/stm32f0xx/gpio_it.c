@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "analyzestack.h"
 #include "gpio.h"
 #include "interrupt_def.h"
 #include "status.h"
@@ -93,6 +94,8 @@ static void prv_run_gpio_callbacks(uint8_t lower_bound, uint8_t upper_bound) {
   for (int i = lower_bound; i <= upper_bound; i++) {
     stm32f0xx_interrupt_exti_get_pending(i, &pending);
     if (pending && s_gpio_it_interrupts[i].callback != NULL) {
+      // This call can be referenced in stack analyzer annotations by this alias.
+      ANALYZESTACK_ALIAS("gpio_interrupts")
       s_gpio_it_interrupts[i].callback(&s_gpio_it_interrupts[i].address,
                                        s_gpio_it_interrupts[i].context);
     }

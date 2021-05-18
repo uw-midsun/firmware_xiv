@@ -79,7 +79,9 @@ static void prv_handle_store_update(uint8_t *buf, int64_t len) {
     }
   } else {
     if (s_init_cond_complete) {  // Default activity, call update store for type
-      s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+      if (s_func_table[update->type].update_store) {
+        s_func_table[update->type].update_store(update->msg, update->mask, (void *)update->key);
+      }
       mu_store_update__free_unpacked(update, NULL);
     } else {  // Store initial conditions to be used in store_register
       if (s_num_init_conds < MAX_STORE_COUNT) {
@@ -161,6 +163,10 @@ void store_register(MuStoreType type, StoreFuncs funcs, void *store, void *key) 
     LOG_DEBUG("invalid store\n");
     return;
   }
+  if (store_get(type, key)) {
+    return;
+  }
+
   s_func_table[type] = funcs;
   // malloc a proto as a store and return a pointer to it
   Store *local_store = prv_get_first_empty();
