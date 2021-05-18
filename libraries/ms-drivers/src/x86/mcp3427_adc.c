@@ -104,13 +104,13 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
   Mcp3427Storage *storage = (Mcp3427Storage *)context;
 
   if (storage->current_channel == MCP3427_CHANNEL_2 && storage->callback != NULL) {
-    // We've "read" from both of the channels.
+  // We've "read" from both of the channels.
 #ifdef MU
-  if (s_store.fault_flag) {
-    storage->fault_callback(storage->fault_context);
-  } else {
-    storage->callback(s_store.readings[0], s_store.readings[1], storage->context);
-  }
+    if (s_store.fault_flag) {
+      storage->fault_callback(storage->fault_context);
+    } else {
+      storage->callback(s_store.readings[0], s_store.readings[1], storage->context);
+    }
 #else
     storage->callback(FIXED_RESULT, FIXED_RESULT, storage->context);
 #endif
