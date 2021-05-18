@@ -22,12 +22,13 @@
 #   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
 #   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
-#   make pytest_all - Runs all python tests in the scripts directory of every project 
+#   make pytest_all - Runs all python tests in the scripts directory of every project
 #   make install_requirements - Installs python requirements for every project
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
-# 	make codegen_protos - Generates protobuf files 
-# 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86 
+# 	make codegen_protos - Generates protobuf files
+# 	make bootloader_protos - Generates protobuf files for the bootlaoder
+# 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
 #   make fastmu [TE] - Don't build and just run the MU integration test, or all if TE is not defined.
@@ -96,6 +97,9 @@ endif
 MU_C_GEN_DIR := $(LIB_DIR)/mu-gen
 MU_PYTHON_GEN_DIR := $(MU_DIR)/protogen
 MU_PROTOS_DIR := $(MU_DIR)/protos
+
+# Bootloader directory
+BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
@@ -259,9 +263,9 @@ pylint_quick:
 format_quick:
 	@echo "Quick format on ONlY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
-	
+
 .PHONY: pyformat_quick
-pyformat_quick: 
+pyformat_quick:
 	@echo "Quick format on ONLY changed/new Python files"
 	@$(FIND_MOD_NEW_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
 	@$(FIND_MOD_NEW_MU_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
@@ -274,16 +278,22 @@ format:
 	@$(FIND) | xargs -r clang-format -i -style=file
 
 .PHONY: pyformat
-pyformat: 
+pyformat:
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
-# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command 
+.PHONY: bootloader_protos
+bootloader_protos:
+	@echo "Compiling protos..."
+	@mkdir -p $(BOOTLOADER_DIR)/protogen
+	@protoc -I=$(BOOTLOADER_DIR)/protos --c_out=$(BOOTLOADER_DIR)/protogen $(BOOTLOADER_DIR)/protos/*.proto
+
+# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command
 .PHONY: codegen
 codegen: codegen_protos
 	@echo "Generating from templates..."
-	@cd $(CODEGEN_DIR) && python scripts/build.py 
+	@cd $(CODEGEN_DIR) && python scripts/build.py
 	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' \) | xargs -r clang-format -i -fallback-style=Google
 	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
 
@@ -293,7 +303,7 @@ codegen_dbc:
 	@echo "Generating DBC file"
 	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
 
-.PHONY: codegen_protos 
+.PHONY: codegen_protos
 codegen_protos:
 	@echo "Compiling protos..."
 	@mkdir -p $(CODEGEN_DIR)/genfiles
@@ -308,7 +318,7 @@ pytest_all:
 	@for i in $$(find . -path ./$(VENV_DIR) -prune -o -path ./mu/integration_tests -prune -o -name "test_*.py"); 			\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done	
+	done
 
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
@@ -350,6 +360,8 @@ clean:
 	@rm -f $(LIB_DIR)/mu-gen/inc/*.pb-c.h
 	@rm -f $(LIB_DIR)/mu-gen/src/*.pb-c.c
 	@rm -f $(MU_DIR)/protogen/*_pb2.py
+	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.h
+	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.c
 
 .PHONY: mock_can_data
 mock_can_data: socketcan
@@ -380,7 +392,7 @@ install_requirements:
 	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
 
-MU_PROJS := 
+MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk
 
 .PHONY: fastmu
