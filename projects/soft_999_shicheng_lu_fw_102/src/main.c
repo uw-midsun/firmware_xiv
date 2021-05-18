@@ -12,8 +12,8 @@ typedef struct Counters {
   uint8_t counter_b;
 } Counters;
 
-void increment_counters(SoftTimerId id, void *context) {
-  Counters *counter = context;
+static void prv_increment_counters(SoftTimerId id, void *context) {
+  Counters *counters = context;
 
   counter->counter_a++;
   LOG_DEBUG("Counter A: %i\n", counter->counter_a);
@@ -22,16 +22,16 @@ void increment_counters(SoftTimerId id, void *context) {
     LOG_DEBUG("Counter B: %i\n", counter->counter_b);
   }
 
-  soft_timer_start_millis(DELAY_MS, increment_counters, context, NULL);
+  soft_timer_start_millis(DELAY_MS, prv_increment_counters, context, NULL);
 }
 
 int main() {
   interrupt_init();
   soft_timer_init();
 
-  Counters counter = { 0 };
+  Counters counters = { 0 };
 
-  soft_timer_start_millis(DELAY_MS, increment_counters, &counter, NULL);
+  soft_timer_start_millis(DELAY_MS, prv_increment_counters, &counter, NULL);
   while (true) {
     wait();
   }
