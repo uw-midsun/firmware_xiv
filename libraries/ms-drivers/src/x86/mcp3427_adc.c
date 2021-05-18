@@ -15,6 +15,44 @@
 
 #define NUM_MCP3427_CHIP_IDS (1 << 4)
 
+#ifdef MU
+#include "mcp3427.pb-c.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+static MuMcp3427Store s_store = MU_MCP3427_STORE__INIT;
+
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  MuMcp3427Store *msg = mu_mcp3427_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuMcp3427Store *mask = mu_mcp3427_store__unpack(NULL, mask_buf.len, mask_buf.data);
+  for (uint8_t i = 0; i < NUM_MCP3427_CHANNELS; i++) {
+    if (mask->readings[i] != 0) {
+      s_store.readings[i] = msg->readings[i];
+    }
+  }
+  if (mask->fault_flag != 0) {
+    s_store.fault_flag = msg->fault_flag;
+  }
+  mu_mcp3427_store__free_unpacked(msg, NULL);
+  mu_mcp3427_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__MCP3427, &s_store, NULL);
+}
+
+static void prv_init_store(void) {
+  store_config();
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mu_mcp3427_store__get_packed_size,
+    (PackFunc)mu_mcp3427_store__pack,
+    (UnpackFunc)mu_mcp3427_store__unpack,
+    (FreeUnpackedFunc)mu_mcp3427_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  s_store.n_readings = NUM_MCP3427_CHANNELS;
+  s_store.readings = malloc(NUM_MCP3427_CHANNELS * sizeof(uint32_t));
+  store_register(MU_STORE_TYPE__MCP3427, funcs, &s_store, NULL);
+}
+#endif
+
 // A lookup table of MCP3427 chip IDs (see |prv_get_chip_identifier|) to their storages,
 // used to automagically direct events to the correct storage in |mcp3427_process_event|.
 // This saves having to pass each event to every MCP3427, which is more of a concern on STM32,
@@ -67,7 +105,15 @@ static void prv_channel_ready(struct Fsm *fsm, const Event *e, void *context) {
 
   if (storage->current_channel == MCP3427_CHANNEL_2 && storage->callback != NULL) {
     // We've "read" from both of the channels.
+#ifdef MU
+  if (s_store.fault_flag) {
+    storage->fault_callback(storage->fault_context);
+  } else {
+    storage->callback(s_store.readings[0], s_store.readings[1], storage->context);
+  }
+#else
     storage->callback(FIXED_RESULT, FIXED_RESULT, storage->context);
+#endif
   }
 
   event_raise(storage->data_trigger_event, prv_get_chip_identifier(storage));
@@ -91,7 +137,9 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
   if (storage == NULL || settings == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-
+#ifdef MU
+  prv_init_store();
+#endif
   storage->data_ready_event = settings->adc_data_ready_event;
   storage->data_trigger_event = settings->adc_data_trigger_event;
 

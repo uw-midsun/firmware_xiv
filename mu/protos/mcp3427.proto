@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message MuMcp3427Store {
+  repeated uint32 readings = 1;
+  bool fault_flag = 2;
+}
