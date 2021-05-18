@@ -19,7 +19,7 @@
 #define MAX_DATA_SIZE_BYTES 2048
 #define MAX_CAN_TX 4
 
-#define MAX_CRC_SIZE_BYTES 24
+#define MAX_CRC_STREAM_SIZE_BYTES 24
 
 #define RX_WATCHDOG_TIMEOUT_MS 25
 #define CAN_BUFFER_SIZE 8
@@ -100,6 +100,11 @@ static void prv_init_rx_buffer(void) {
 }
 
 static void prv_write_rx_buffer(uint8_t *data, size_t len) {
+  // Catch buffer overflow as error
+  if (s_data_write_count >= DATAGRAM_RX_BUFFER_LEN) {
+    event_raise_no_data(DATAGRAM_EVENT_ERROR);
+    LOG_DEBUG("RX MSG BUFFER OVERFLOW. EXITING WITH ERROR...");
+  }
   if (s_rx_msg_buf.head - s_rx_msg_buf.buf > DATAGRAM_RX_BUFFER_LEN) {
     s_rx_msg_buf.head = s_rx_msg_buf.buf;
   }
@@ -127,7 +132,7 @@ static bool prv_read_rx_buffer(uint8_t **data, size_t *len) {
 
 static uint32_t prv_can_datagram_compute_crc(void) {
   uint32_t crc;
-  uint8_t stream[MAX_CRC_SIZE_BYTES];
+  uint8_t stream[MAX_CRC_STREAM_SIZE_BYTES];
   uint8_t *write = stream;
   CanDatagram *dt = &s_store.dt;
 

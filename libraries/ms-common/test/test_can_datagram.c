@@ -108,31 +108,36 @@ static void prv_mock_dt_tx(uint8_t dst_size, uint16_t data_size, uint8_t *dst_da
     .data = data_data,
   };
   switch (s_num_tx) {
-    case 0: {}
+    case 0: {
+    }
       // Protocol
       msg.data_u8[0] = test_dt.protocol_version;
       msg_len = 1;
       s_num_tx++;
       break;
-    case 1: {}
+    case 1: {
+    }
       // CRC
       msg.data_u64 = test_dt.crc;
       msg_len = 4;
       s_num_tx++;
       break;
-    case 2: {}
+    case 2: {
+    }
       // Type
       msg.data_u8[0] = test_dt.dt_type;
       msg_len = 1;
       s_num_tx++;
       break;
-    case 3: {}
+    case 3: {
+    }
       // Dst Length
       msg.data_u8[0] = test_dt.destination_nodes_len;
       msg_len = 1;
       s_num_tx++;
       break;
-    case 4: {}
+    case 4: {
+    }
       // Dst
       uint8_t dst_len = test_dt.destination_nodes_len;
       uint8_t dst_bytes_to_send = (dst_len - rx_bytes_sent < TEST_CAN_BUFFER_SIZE)
@@ -148,13 +153,15 @@ static void prv_mock_dt_tx(uint8_t dst_size, uint16_t data_size, uint8_t *dst_da
       }
       msg_len = dst_bytes_to_send;
       break;
-    case 5: {}
+    case 5: {
+    }
       // Data Length
       memcpy(msg.data_u8, &test_dt.data_len, 2);
       s_num_tx++;
       msg_len = 2;
       break;
-    case 6: {}
+    case 6: {
+    }
       // Data
       uint16_t data_len = test_dt.data_len;
       uint8_t data_bytes_to_send = (data_len - rx_bytes_sent < TEST_CAN_BUFFER_SIZE)
