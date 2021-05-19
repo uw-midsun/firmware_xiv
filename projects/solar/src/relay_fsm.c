@@ -11,13 +11,17 @@
 #include "log.h"
 #include "solar_config.h"
 #include "solar_events.h"
+#include "solar_boards.h"
 #include "status.h"
 
 static SolarMpptCount solar_mppt_count;
 
-static void prv_assert_relay(void *context) {
+// look at test_drv120 last test
+static void prv_assert_relay(SoftTimerId timer_id, void *context) {
+  // Cast context to storage
+  RelayFsmStorage *storage = (RelayFsmStorage*)context;
   // Check if prv_realy_err_cb has been called
-  if (context->isErrCalled == true) {
+  if (storage->isErrCalled  == true){
     fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
   }
 
@@ -41,8 +45,10 @@ static void prv_assert_relay(void *context) {
 
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
+  // Cast context to storage
+  RelayFsmStorage *storage = (RelayFsmStorage*)context;
   // Setting error flag true if this function is called
-  context->isErrCalled = true;
+  storage->isErrCalled = true;
   fault_handler_raise_fault(EE_SOLAR_FAULT_DRV120, 0);
 }
 

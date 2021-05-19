@@ -51,7 +51,7 @@ void setup_test(void) {
   event_queue_init();
   gpio_it_init();
   fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_6_MPPTS));
-  TEST_ASSERT_OK(relay_fsm_init(&s_storage));
+  TEST_ASSERT_OK(relay_fsm_init(&s_storage, SOLAR_BOARD_6_MPPTS));
 }
 void teardown_test(void) {}
 
@@ -171,7 +171,7 @@ void test_relay_fsm_process_event_return_value(void) {
 
 // Test that the module gracefully handles null and invalid inputs.
 void test_invalid_input(void) {
-  TEST_ASSERT_NOT_OK(relay_fsm_init(NULL));
+  TEST_ASSERT_NOT_OK(relay_fsm_init(NULL, 0));
 
   // force to closed so we can get a state changing event
   Event e = { 0 };

@@ -204,6 +204,7 @@ typedef enum EESolarFault {
   EE_SOLAR_FAULT_DRV120,
 
   // The drv120 relay has not opened
-  EE_SOLAR_RELAY_OPEN_ERROR
+  EE_SOLAR_RELAY_OPEN_ERROR,
 
+  NUM_EE_SOLAR_FAULTS,
 } EESolarFault;

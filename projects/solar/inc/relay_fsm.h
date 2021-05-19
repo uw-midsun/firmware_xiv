@@ -7,14 +7,15 @@
 
 #include "drv120_relay.h"
 #include "event_queue.h"
+#include "solar_boards.h"
 #include "fsm.h"
 #include "soft_timer.h"
 #include "status.h"
 
+#define CURRENT_ASSERT_THRESHOLD_uA 10
+
 #define RELAY_ASSERTION_DELAY_MS 50
 #define DATA_STORE_ASSERTION_DELAY_MS 1000
-
-#define CURRENT_ASSERT_THRESHOLD_uA 10
 
 typedef struct RelayFsmStorage {
   Fsm fsm;
@@ -22,7 +23,7 @@ typedef struct RelayFsmStorage {
 } RelayFsmStorage;
 
 // Initialize the FSM. The relay is initialized to closed.
-StatusCode relay_fsm_init(RelayFsmStorage *storage);
+StatusCode relay_fsm_init(RelayFsmStorage *storage, SolarMpptCount mppt_count);
 
 // Process an event and return whether the relay changed state.
 bool relay_fsm_process_event(RelayFsmStorage *storage, const Event *event);
