@@ -530,8 +530,7 @@ void test_power_select_bat_low(void) {
     TEST_ASSERT_TRUE(can_process_event(&e));
   }
 
-  // Valid bitset should be 0b111, no faults/warnings, POWER_SELECT_WARNING_BAT_LOW bit set in
-  // warning
+  // Valid bitset should be 0b111, no faults/warnings
   TEST_ASSERT_EQUAL(0, s_status_readings[0]);      // Fault bitset
   TEST_ASSERT_EQUAL(0, s_status_readings[1]);      // Warning bitset
   TEST_ASSERT_EQUAL(0b111, s_status_readings[2]);  // Valid bitset

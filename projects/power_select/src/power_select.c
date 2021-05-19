@@ -154,7 +154,7 @@ static void prv_read_currents(void) {
   }
 }
 
-// Read the voltage at the 3V3 cell and broadcast if it needs to be replaced
+// Read the voltage at the 3V3 cell and flag if it needs to be replaced
 static void prv_read_cell(void) {
   uint16_t cell_voltage = 0;
   adc_read_converted_pin(g_power_select_cell_pin, &cell_voltage);
