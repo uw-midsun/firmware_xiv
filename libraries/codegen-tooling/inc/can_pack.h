@@ -141,10 +141,10 @@
                     (dcdc_current_u16), (dcdc_temp_u16), (main_current_u16))
 
 #define CAN_PACK_POWER_SELECT_STATUS(msg_ptr, fault_bitset_u16, warning_bitset_u16, \
-                                     valid_bitset_u16)                              \
+                                     valid_bitset_u16, cell_voltage_u16)            \
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                      \
-                    SYSTEM_CAN_MESSAGE_POWER_SELECT_STATUS, 6, (fault_bitset_u16),  \
-                    (warning_bitset_u16), (valid_bitset_u16), CAN_PACK_IMPL_EMPTY)
+                    SYSTEM_CAN_MESSAGE_POWER_SELECT_STATUS, 8, (fault_bitset_u16),  \
+                    (warning_bitset_u16), (valid_bitset_u16), (cell_voltage_u16))
 
 #define CAN_PACK_UV_CUTOFF_NOTIFICATION(msg_ptr)                             \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT, \

@@ -60,7 +60,7 @@ static void prv_handle_status(void) {
     gpio_set_state(&pin, GPIO_STATE_LOW);
   }
   CAN_TRANSMIT_POWER_SELECT_STATUS(s_storage.fault_bitset, s_storage.warning_bitset,
-                                   s_storage.valid_bitset);
+                                   s_storage.valid_bitset, s_storage.cell_voltage);
 }
 
 // Broadcast sense measurements from storage.
@@ -171,6 +171,8 @@ static void prv_read_cell(void) {
   } else {
     s_storage.warning_bitset &= ~(1 << POWER_SELECT_WARNING_BAT_LOW);
   }
+
+  s_storage.cell_voltage = (uint16_t)cell_voltage_u32;
 }
 
 // Read current, voltage, and temp measurements to storage

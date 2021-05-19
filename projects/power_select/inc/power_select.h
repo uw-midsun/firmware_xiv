@@ -55,6 +55,7 @@ extern const uint16_t g_power_select_max_currents[NUM_POWER_SELECT_CURRENT_MEASU
 
 typedef struct {
   uint16_t voltages[NUM_POWER_SELECT_VOLTAGE_MEASUREMENTS];
+  uint16_t cell_voltage;  // 3V3 cell
   uint16_t currents[NUM_POWER_SELECT_CURRENT_MEASUREMENTS];
   int32_t temps[NUM_POWER_SELECT_TEMP_MEASUREMENTS];
   uint16_t fault_bitset;

@@ -175,12 +175,12 @@ static StatusCode prv_power_select_dcdc_cb(const CanMessage *msg, void *context,
   return STATUS_CODE_OK;
 }
 
-static uint16_t s_status_readings[3];
+static uint16_t s_status_readings[4];
 
 static StatusCode prv_power_select_status_cb(const CanMessage *msg, void *context,
                                              CanAckStatus *ack_reply) {
   CAN_UNPACK_POWER_SELECT_STATUS(msg, &s_status_readings[0], &s_status_readings[1],
-                                 &s_status_readings[2]);
+                                 &s_status_readings[2], &s_status_readings[3]);
   return STATUS_CODE_OK;
 }
 
@@ -505,9 +505,10 @@ void test_power_select_broadcast_works(void) {
 
   // Third TX: SYSTEM_CAN_MESSAGE_POWER_SELECT_STATUS
   // Valid bitset should be 0b111, all others should be 0
-  TEST_ASSERT_EQUAL(0, s_status_readings[0]);      // Fault bitset
-  TEST_ASSERT_EQUAL(0, s_status_readings[1]);      // Warning bitset
-  TEST_ASSERT_EQUAL(0b111, s_status_readings[2]);  // Valid bitset
+  TEST_ASSERT_EQUAL(0, s_status_readings[0]);                          // Fault bitset
+  TEST_ASSERT_EQUAL(0, s_status_readings[1]);                          // Warning bitset
+  TEST_ASSERT_EQUAL(0b111, s_status_readings[2]);                      // Valid bitset
+  TEST_ASSERT_EQUAL(TEST_GOOD_CELL_VOLTAGE_MV, s_status_readings[3]);  // Cell voltage
 
   // Should be no events
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -531,9 +532,10 @@ void test_power_select_bat_low(void) {
   }
 
   // Valid bitset should be 0b111, no faults/warnings
-  TEST_ASSERT_EQUAL(0, s_status_readings[0]);      // Fault bitset
-  TEST_ASSERT_EQUAL(0, s_status_readings[1]);      // Warning bitset
-  TEST_ASSERT_EQUAL(0b111, s_status_readings[2]);  // Valid bitset
+  TEST_ASSERT_EQUAL(0, s_status_readings[0]);                          // Fault bitset
+  TEST_ASSERT_EQUAL(0, s_status_readings[1]);                          // Warning bitset
+  TEST_ASSERT_EQUAL(0b111, s_status_readings[2]);                      // Valid bitset
+  TEST_ASSERT_EQUAL(TEST_GOOD_CELL_VOLTAGE_MV, s_status_readings[3]);  // Cell voltage
 
   // Should be no events
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -552,6 +554,7 @@ void test_power_select_bat_low(void) {
   TEST_ASSERT_EQUAL(0, s_status_readings[0]);                                    // Fault bitset
   TEST_ASSERT_EQUAL((1 << POWER_SELECT_WARNING_BAT_LOW), s_status_readings[1]);  // Warning bitset
   TEST_ASSERT_EQUAL(0b111, s_status_readings[2]);                                // Valid bitset
+  TEST_ASSERT_EQUAL(TEST_LOW_CELL_VOLTAGE_MV, s_status_readings[3]);             // Cell voltage
 
   // Should be no events
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();

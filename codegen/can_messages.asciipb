@@ -378,6 +378,7 @@ msg {
       field_name_1: "fault_bitset"
       field_name_2: "warning_bitset"
       field_name_3: "valid_bitset"
+      field_name_4: "cell_voltage"
     }
   }
 }

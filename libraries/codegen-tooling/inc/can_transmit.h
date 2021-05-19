@@ -229,11 +229,12 @@
     status;                                                                                        \
   })
 
-#define CAN_TRANSMIT_POWER_SELECT_STATUS(fault_bitset_u16, warning_bitset_u16, valid_bitset_u16) \
+#define CAN_TRANSMIT_POWER_SELECT_STATUS(fault_bitset_u16, warning_bitset_u16, valid_bitset_u16, \
+                                         cell_voltage_u16)                                       \
   ({                                                                                             \
     CanMessage msg = { 0 };                                                                      \
     CAN_PACK_POWER_SELECT_STATUS(&msg, (fault_bitset_u16), (warning_bitset_u16),                 \
-                                 (valid_bitset_u16));                                            \
+                                 (valid_bitset_u16), (cell_voltage_u16));                        \
     StatusCode status = can_transmit(&msg, NULL);                                                \
     status;                                                                                      \
   })
