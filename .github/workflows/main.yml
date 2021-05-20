@@ -97,9 +97,7 @@ jobs:
         xargs cp --parents --target-directory ~/gcc/
             done
           fi
-
-
-
+          
       - name: Install clang
         if: steps.cache-clang.outputs.cache-hit != 'true'
         run: sudo apt-fast -y install clang-5.0
