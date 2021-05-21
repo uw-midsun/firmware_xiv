@@ -39,7 +39,15 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
     fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0);
   } else {
-    // success message => define code_gen ascipd send using can transmit.h
+    // success message
+    if(solar_mppt_count == 6){
+      CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS();
+    }else if(solar_mppt_count == 5){
+      CAN_TRANSMIT_RELAY_CURRENT_5_MPPTS();
+    }
+    else{
+      // could add a default fault message 
+    }
   }
 }
 

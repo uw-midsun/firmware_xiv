@@ -7,9 +7,9 @@
 
 #include "drv120_relay.h"
 #include "event_queue.h"
-#include "solar_boards.h"
 #include "fsm.h"
 #include "soft_timer.h"
+#include "solar_boards.h"
 #include "status.h"
 
 #define CURRENT_ASSERT_THRESHOLD_uA 10
