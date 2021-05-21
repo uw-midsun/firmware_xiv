@@ -31,6 +31,8 @@
 #define POWER_SELECT_CELL_MIN_VOLTAGE_MV 2100
 
 // Offsets for use in fault bitset
+// Note: OV: OVERVOLTAGE, OC: OVERCURRENT
+// DCDC_PIN is caused by POWER_SELECT_DCDC_FAULT_ADDR going high
 typedef enum {
   POWER_SELECT_FAULT_AUX_OV = 0,
   POWER_SELECT_FAULT_DCDC_OV,
