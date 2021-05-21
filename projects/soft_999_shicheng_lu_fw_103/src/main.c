@@ -7,7 +7,7 @@
 #include "wait.h"
 
 // LOG_DEBUG the adc converted value of context pin when called (context is A6 pin)
-static void priv_log_adc_value(const GpioAddress *address, void *context) {
+static void prv_log_adc_value(const GpioAddress *address, void *context) {
   GpioAddress *adc_addr = context;
   uint16_t adc_data = 0;
   adc_read_converted_pin(*adc_addr, &adc_data);
@@ -31,7 +31,7 @@ int main(void) {
     GPIO_ALTFN_ANALOG,
   };
   gpio_init_pin(&adc_addr, &adc_settings);
-  adc_set_channel_pin(adc_addr);
+  adc_set_channel_pin(adc_addr, true);
 
   // button gpio pin
   GpioAddress button_addr = {
@@ -52,8 +52,8 @@ int main(void) {
   };
 
   // calls log_adc_output on the falling edge of button press
-  gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING, log_adc_a6,
-                             &adc_addr);
+  gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING,
+                             prv_log_adc_value, &adc_addr);
 
   while (true) {
     wait();
