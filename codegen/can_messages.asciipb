@@ -342,7 +342,7 @@ msg {
   id: 42
   source: POWER_SELECT
   target: "CENTRE_CONSOLE"
-  msg_name: "aux status main voltage"
+  msg_name: "aux meas main voltage"
   can_data {
     u16 {
       field_name_1: "aux_voltage"
@@ -357,7 +357,7 @@ msg {
   id: 43
   source: POWER_SELECT
   target: "CENTRE_CONSOLE"
-  msg_name: "dcdc status main current"
+  msg_name: "dcdc meas main current"
   can_data {
     u16 {
       field_name_1: "dcdc_voltage"
@@ -372,10 +372,13 @@ msg {
   id: 44
   source: POWER_SELECT
   target: "CENTRE_CONSOLE"
-  msg_name: "power select fault"
+  msg_name: "power select status"
   can_data {
-    u64 {
-      field_name_1: "fault_id"
+    u16 {
+      field_name_1: "fault_bitset"
+      field_name_2: "warning_bitset"
+      field_name_3: "valid_bitset"
+      field_name_4: "cell_voltage"
     }
   }
 }
