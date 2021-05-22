@@ -17,52 +17,65 @@ typedef union WaveSculptorCanId {
   uint16_t raw;
 } WaveSculptorCanId;
 
-// Send to WaveSculptor
+// Send to WaveSculptor (Drive Commands)
 typedef enum {
-  WAVESCULPTOR_CMD_ID_DRIVE = 1,
-  WAVESCULPTOR_CMD_ID_POWER = 2,
-  WAVESCULPTOR_CMD_ID_RESET = 3,
+  WAVESCULPTOR_CMD_ID_DRIVE = 0x01,
+  WAVESCULPTOR_CMD_ID_POWER = 0x02,
+  WAVESCULPTOR_CMD_ID_RESET = 0x03,
 } WaveSculptorCmdId;
 
-// Driver Controls Base Addr + 1
+// Driver Controls Base Addr + 0x01
 typedef struct WaveSculptorDriveCmd {
   float motor_velocity_rpm;
   float motor_current_percentage;
 } WaveSculptorDriveCmd;
 
-// Driver Controls Base Addr + 2
+// Driver Controls Base Addr + 0x02
 typedef struct WaveSculptorPowerCmd {
   uint32_t reserved;
   float bus_current_percentage;
 } WaveSculptorPowerCmd;
 
-// Driver Controls Base Addr + 3
+// Driver Controls Base Addr + 0x03
 typedef struct WaveSculptorResetCmd {
   uint64_t reserved;
 } WaveSculptorResetCmd;
 
-// Receive from WaveSculptor
-
+// Send to WaveSculptor (Configuration Commands)
 typedef enum {
-  WAVESCULPTOR_MEASUREMENT_ID_INFO = 0,
-  WAVESCULPTOR_MEASUREMENT_ID_STATUS = 1,
-  WAVESCULPTOR_MEASUREMENT_ID_BUS = 2,
-  WAVESCULPTOR_MEASUREMENT_ID_VELOCITY = 3,
-  WAVESCULPTOR_MEASUREMENT_ID_PHASE_CURRENT = 4,
-  WAVESCULPTOR_MEASUREMENT_ID_MOTOR_VOLTAGE_VECTOR = 5,
-  WAVESCULPTOR_MEASUREMENT_ID_MOTOR_CURRENT_VECTOR = 6,
-  WAVESCULPTOR_MEASUREMENT_ID_MOTOR_BACKEMF = 7,
-  WAVESCULPTOR_MEASUREMENT_ID_POWER_RAIL = 8,
-  WAVESCULPTOR_MEASUREMENT_ID_CONTROLLER_RAIL = 9,
-  // ID 10 reserved
-  WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE = 11,
-  WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE = 12,
-  // ID 13 reserved
-  WAVESCULPTOR_MEASUREMENT_ID_ODOMETER_BUS_AMPHOURS = 14,
-  WAVESCULPTOR_MEASUREMENT_ID_SLIP_SPEED = 23,
+  WAVESCULPTOR_CONFIG_ID_ACTIVE_MOTOR = 0x12,
+} WaveSculptorConfigId;
+
+// Motor Controller Base Addr + 0x12
+typedef struct WaveSculptorActiveMotorChange {
+  // Must spell "ACTMOT" in ASCII (0x54 4F 4D 54 43 41)
+  uint16_t access_key[3];
+
+  // Desired active motor (0 to 9)
+  uint16_t active_motor;
+} WaveSculptorActiveMotorChange;
+
+// Receive from WaveSculptor
+typedef enum {
+  WAVESCULPTOR_MEASUREMENT_ID_INFO = 0x00,
+  WAVESCULPTOR_MEASUREMENT_ID_STATUS = 0x01,
+  WAVESCULPTOR_MEASUREMENT_ID_BUS = 0x02,
+  WAVESCULPTOR_MEASUREMENT_ID_VELOCITY = 0x03,
+  WAVESCULPTOR_MEASUREMENT_ID_PHASE_CURRENT = 0x04,
+  WAVESCULPTOR_MEASUREMENT_ID_MOTOR_VOLTAGE_VECTOR = 0x05,
+  WAVESCULPTOR_MEASUREMENT_ID_MOTOR_CURRENT_VECTOR = 0x06,
+  WAVESCULPTOR_MEASUREMENT_ID_MOTOR_BACKEMF = 0x07,
+  WAVESCULPTOR_MEASUREMENT_ID_POWER_RAIL = 0x08,
+  WAVESCULPTOR_MEASUREMENT_ID_CONTROLLER_RAIL = 0x09,
+  // ID 0x0A reserved
+  WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE = 0x0B,
+  WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE = 0x0C,
+  // ID 0x0D reserved
+  WAVESCULPTOR_MEASUREMENT_ID_ODOMETER_BUS_AMPHOURS = 0x0E,
+  WAVESCULPTOR_MEASUREMENT_ID_SLIP_SPEED = 0x17,
 } WaveSculptorMeasurementId;
 
-// Motor Controller Base Addr + 0
+// Motor Controller Base Addr + 0x00
 typedef struct WaveSculptorIdInfo {
   // Device identifier. 0x00004003
   uint32_t tritium_id;
@@ -72,7 +85,7 @@ typedef struct WaveSculptorIdInfo {
 } WaveSculptorIdInfo;
 static_assert(sizeof(WaveSculptorIdInfo) == 8, "WaveSculptorIdInfo is not 8 bytes");
 
-// Motor Controller Base Addr + 1
+// Motor Controller Base Addr + 0x01
 typedef struct WaveSculptorStatusInfo {
   // Limit flags indicate which control loop is limiting the output current of
   // the motor controller
@@ -84,7 +97,7 @@ typedef struct WaveSculptorStatusInfo {
       uint16_t bus_current : 1;
       uint16_t bus_voltage_upper : 1;
       uint16_t bus_voltage_lower : 1;
-      uint16_t heatsink_temp : 1;
+      uint16_t temperature : 1;
       uint16_t reserved : 9;
     } _PACKED;
     uint16_t raw;
@@ -93,7 +106,7 @@ typedef struct WaveSculptorStatusInfo {
   // Error flags indicate errors
   union {
     struct {
-      uint16_t reserved : 1;
+      uint16_t reserved_0 : 1;
       uint16_t sw_overcurrent : 1;
       uint16_t dc_bus_overvoltage : 1;
       uint16_t motor_position : 1;
@@ -102,21 +115,23 @@ typedef struct WaveSculptorStatusInfo {
       uint16_t undervoltage_15v : 1;
       uint16_t desaturation : 1;
       uint16_t overspeed : 1;
-      uint16_t reserved : 7;
+      uint16_t reserved_1 : 7;
     } _PACKED;
     uint16_t raw;
   } error_flags;
 
   // The index of the motor currently being used.
   uint16_t active_motor;
-  // The DSP CAN receive error counter (CAN 2.0)
+
+  // The DSP CAN transmission error counter (CAN 2.0)
   uint8_t tx_err_cnt;
+
   // The DSP CAN receive error counter (CAN 2.0)
   uint8_t rx_err_cnt;
 } WaveSculptorStatusInfo;
 static_assert(sizeof(WaveSculptorStatusInfo) == 8, "WaveSculptorStatusInfo is not 8 bytes");
 
-// Motor Controller Base Addr + 2
+// Motor Controller Base Addr + 0x02
 typedef struct WaveSculptorBusMeasurement {
   // Units: V
   // DC bus voltage at the controller.
@@ -128,7 +143,7 @@ typedef struct WaveSculptorBusMeasurement {
 } WaveSculptorBusMeasurement;
 static_assert(sizeof(WaveSculptorBusMeasurement) == 8, "WaveSculptorBusMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 3
+// Motor Controller Base Addr + 0x03
 typedef struct WaveSculptorVelocityMeasurement {
   // Units: revolutions per minute (rpm)
   // Motor angular frequency.
@@ -141,7 +156,7 @@ typedef struct WaveSculptorVelocityMeasurement {
 static_assert(sizeof(WaveSculptorVelocityMeasurement) == 8,
               "WaveSculptorVelocityMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 4
+// Motor Controller Base Addr + 0x04
 typedef struct WaveSculptorPhaseCurrentMeasurement {
   // Units: A
   // Root Mean Square current in motor Phase B.
@@ -154,7 +169,7 @@ typedef struct WaveSculptorPhaseCurrentMeasurement {
 static_assert(sizeof(WaveSculptorPhaseCurrentMeasurement) == 8,
               "WaveSculptorPhaseCurrentMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 5
+// Motor Controller Base Addr + 0x05
 typedef struct WaveSculptorMotorVoltageVectorMeasurement {
   // Units: V
   // Imaginary component of the applied non-rotating voltage vector to the
@@ -168,7 +183,7 @@ typedef struct WaveSculptorMotorVoltageVectorMeasurement {
 static_assert(sizeof(WaveSculptorMotorVoltageVectorMeasurement) == 8,
               "WaveSculptorMotorVoltageVectorMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 6
+// Motor Controller Base Addr + 0x06
 typedef struct WaveSculptorMotorCurrentVectorMeasurement {
   // Units: A
   // Imaginary component of applied non-rotating current vector to the motor.
@@ -184,7 +199,7 @@ typedef struct WaveSculptorMotorCurrentVectorMeasurement {
 static_assert(sizeof(WaveSculptorMotorCurrentVectorMeasurement) == 8,
               "WaveSculptorMotorCurrentVectorMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 7
+// Motor Controller Base Addr + 0x07
 typedef struct WaveSculptorBackEmfMeasurement {
   // Units: V
   // Peak of the phase to neutral motor voltage.
@@ -197,7 +212,7 @@ typedef struct WaveSculptorBackEmfMeasurement {
 static_assert(sizeof(WaveSculptorBackEmfMeasurement) == 8,
               "WaveSculptorBackEmfMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 8
+// Motor Controller Base Addr + 0x08
 typedef struct WaveSculptorPowerRailMeasurement {
   float reserved;
 
@@ -208,7 +223,7 @@ typedef struct WaveSculptorPowerRailMeasurement {
 static_assert(sizeof(WaveSculptorPowerRailMeasurement) == 8,
               "WaveSculptorPowerRailMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 9
+// Motor Controller Base Addr + 0x09
 typedef struct WaveSculptorControllerRailMeasurement {
   // Units: V
   // Actual voltage level of the 1.9V DSP power rail.
@@ -221,7 +236,7 @@ typedef struct WaveSculptorControllerRailMeasurement {
 static_assert(sizeof(WaveSculptorControllerRailMeasurement) == 8,
               "WaveSculptorControllerRailMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 11
+// Motor Controller Base Addr + 0x0B
 typedef struct WaveSculptorSinkMotorTempMeasurement {
   // Units: C
   // Internal temperature of the motor.
@@ -234,7 +249,7 @@ typedef struct WaveSculptorSinkMotorTempMeasurement {
 static_assert(sizeof(WaveSculptorSinkMotorTempMeasurement) == 8,
               "WaveSculptorSinkMotorTempMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 12
+// Motor Controller Base Addr + 0x0C
 typedef struct WaveSculptorDspTempMeasurement {
   // Units: C
   // Temperature of the DSP board.
@@ -245,7 +260,7 @@ typedef struct WaveSculptorDspTempMeasurement {
 static_assert(sizeof(WaveSculptorDspTempMeasurement) == 8,
               "WaveSculptorDspTempMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 14
+// Motor Controller Base Addr + 0x0D
 typedef struct WaveSculptorOdometerBusAhMeasurement {
   // Units: m
   // The distance the vehicle has travelled since reset.
@@ -258,8 +273,7 @@ typedef struct WaveSculptorOdometerBusAhMeasurement {
 static_assert(sizeof(WaveSculptorOdometerBusAhMeasurement) == 8,
               "WaveSculptorOdometerBusAhMeasurement is not 8 bytes");
 
-
-// Motor Controller Base Addr + 23
+// Motor Controller Base Addr + 0x17
 typedef struct WaveSculptorSlipSpeedMeasurement {
   float reserved;
 
@@ -275,6 +289,8 @@ typedef union WaveSculptorCanData {
   WaveSculptorDriveCmd drive_cmd;
   WaveSculptorPowerCmd power_cmd;
   WaveSculptorResetCmd reset_cmd;
+
+  WaveSculptorActiveMotorChange active_motor_config;
 
   WaveSculptorIdInfo id_info;
   WaveSculptorStatusInfo status_info;
