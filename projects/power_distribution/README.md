@@ -3,11 +3,13 @@
 ## What is the purpose of the board?
 A power distribution board is necessary to supply power to the various subsystems in the vehicle. This board performs distribution, startup, shutdown and emergency shutdown as required in regulations. In addition to supporting powering the boards, it also powers components directly, such as the horn, camera and others.
 
+Note that the horn is directly powered by UV cutoff which is controlled by the rear power distribution.
+
 More information about the board can be found here:
 https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/846201173/Power+Distribution+MS+14
 
-This consists of the front power distribution and the back power distribution. They both control different parts of the vehicle.
-The links below specifies what is controlled by the front power distribution and what is controlled by the back power distribution.
+This consists of the front power distribution and the rear power distribution. They both control different parts of the vehicle.
+The links below specifies what is controlled by the front power distribution and what is controlled by the rear power distribution.
 https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/850657322/Front+Power+Distribution
 https://uwmidsun.atlassian.net/wiki/spaces/ELEC/pages/850363109/Rear+Power+Distribution
 
