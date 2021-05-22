@@ -51,6 +51,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
   }
   mu_adc_store__free_unpacked(msg, NULL);
   mu_adc_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__ADC, &s_store, NULL);
 }
 
 static void prv_init_store() {
@@ -65,6 +66,7 @@ static void prv_init_store() {
   s_store.reading = malloc(NUM_ADC_CHANNELS * sizeof(uint32_t));
 
   store_register(MU_STORE_TYPE__ADC, funcs, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADC, &s_store, NULL);
 }
 #endif
 
