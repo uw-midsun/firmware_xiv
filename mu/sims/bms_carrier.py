@@ -5,7 +5,7 @@ from mu.sims.sub_sims.mcp23008 import Mcp23008
 
 
 class BmsCarrier(BoardSim):
-    def __init__(self, pm, proj_name):
+    def __init__(self, pm, proj_name='bms_carrier'):
         sub_sim_classes = [
             Ads1259,
             Adt7476a,

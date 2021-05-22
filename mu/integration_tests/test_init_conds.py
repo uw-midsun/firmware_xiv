@@ -11,7 +11,7 @@ PCA9539R_2_KEY = Pca9539r.addr_to_key(0x75)
 
 
 class MuInitConds(BoardSim):
-    def __init__(self, pm, proj_name):
+    def __init__(self, pm, proj_name='mu_init_conds'):
         conds = pca9539r_init_conditions()
         super().__init__(pm, proj_name, sub_sim_classes=[Pca9539r], init_conds=conds)
 
@@ -19,15 +19,15 @@ class MuInitConds(BoardSim):
 class TestMpxeInit(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('mu_init_conds', sim_class=MuInitConds)
+        self.board = self.manager.start(MuInitConds)
 
     def test_initial_conditions(self):
         time.sleep(0.1)
         sub_sim = self.board.sub_sim('pca9539r')
         for i in range(NUM_PCA9539R_PINS):
-            sub_sim.assert_pin_state(PCA9539R_1_KEY, i, i%2)
+            sub_sim.assert_pin_state(PCA9539R_1_KEY, i, i % 2)
         for i in range(NUM_PCA9539R_PINS):
-            sub_sim.assert_pin_state(PCA9539R_2_KEY, i, (i+1)%2)
+            sub_sim.assert_pin_state(PCA9539R_2_KEY, i, (i + 1) % 2)
 
 
 # Sets up init conds to a 1-0-1-0 repeating pattern

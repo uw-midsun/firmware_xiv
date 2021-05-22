@@ -8,7 +8,7 @@ from mu.sims.pedal_board import PedalBoard
 class TestPedal(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('pedal_board', sim_class=PedalBoard)
+        self.board = self.manager.start(PedalBoard)
 
     def test_pedal(self):
         time.sleep(0.3)

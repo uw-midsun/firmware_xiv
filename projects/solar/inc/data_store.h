@@ -19,7 +19,7 @@
 #define DATA_POINT_MPPT_VOLTAGE(n) NTH_DATA_POINT(DATA_POINT_TYPE_MPPT_VOLTAGE, (n))
 #define DATA_POINT_MPPT_CURRENT(n) NTH_DATA_POINT(DATA_POINT_TYPE_MPPT_CURRENT, (n))
 #define DATA_POINT_MPPT_PWM(n) NTH_DATA_POINT(DATA_POINT_TYPE_MPPT_PWM, (n))
-#define DATA_POINT_CR_BIT(n) NTH_DATA_POINT(DATA_POINT_TYPE_CR_BIT, (n))
+#define DATA_POINT_MPPT_STATUS(n) NTH_DATA_POINT(DATA_POINT_TYPE_MPPT_STATUS, (n))
 
 // Special case: DATA_POINT_TYPE_CURRENT isn't associated with an MPPT.
 #define DATA_POINT_CURRENT NTH_DATA_POINT_RAW(DATA_POINT_TYPE_CURRENT, 0)
@@ -54,9 +54,10 @@ typedef enum {
   // MPPT current PWM duty cycles, fraction out of 1000.
   DATA_POINT_TYPE_MPPT_PWM,
 
-  // The CR bits on the MPPTs: we don't know what they are, but let's keep track of them for now.
-  // Value of the data points will be 0 or 1.
-  DATA_POINT_TYPE_CR_BIT,
+  // MPPT status bit strings. Use the spv1020_is_* functions to extract data.
+  // 9 bits: overcurrent (4 bits), overvoltage (1 bit), overtemperature (1 bit), "CR" (1 bit).
+  // We don't know what the CR bit is, please tell us if you find any patterns.
+  DATA_POINT_TYPE_MPPT_STATUS,
 
   NUM_DATA_POINT_TYPES,
 } DataPointType;

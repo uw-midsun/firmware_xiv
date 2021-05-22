@@ -8,7 +8,7 @@ from mu.sims.bms_carrier import BmsCarrier
 class TestAdt7476a(int_test.IntTest):
     def setUp(self):
         super().setUp()
-        self.board = self.manager.start('smoke_adt7476a', sim_class=BmsCarrier)
+        self.board = self.manager.start(BmsCarrier, proj_name='smoke_adt7476a')
 
     def test_adt7476a(self):
         for x in range(1, 3):
