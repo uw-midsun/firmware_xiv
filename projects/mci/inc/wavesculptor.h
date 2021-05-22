@@ -260,7 +260,7 @@ typedef struct WaveSculptorDspTempMeasurement {
 static_assert(sizeof(WaveSculptorDspTempMeasurement) == 8,
               "WaveSculptorDspTempMeasurement is not 8 bytes");
 
-// Motor Controller Base Addr + 0x0D
+// Motor Controller Base Addr + 0x0E
 typedef struct WaveSculptorOdometerBusAhMeasurement {
   // Units: m
   // The distance the vehicle has travelled since reset.
