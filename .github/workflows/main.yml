@@ -134,5 +134,8 @@ jobs:
         continue-on-error: true
         run: |
           make test LIBRARY=ms-common TEST=wait PLATFORM=x86 &
+          process_id=$!
           sleep 300
+          kill $process_id
+          wait $process_id  && echo OK || echo NOT OK
           cat build/gen/x86/ms-common/test_wait_runner.c
