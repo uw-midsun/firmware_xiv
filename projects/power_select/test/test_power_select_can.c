@@ -90,7 +90,7 @@ void test_power_on_main_sequence_works(void) {
 
 void test_power_on_main_sequence_aux_fault(void) {
   // Aux fault
-  s_test_fault_bitset = 1 << POWER_SELECT_AUX_OVERVOLTAGE;
+  s_test_fault_bitset = 1 << POWER_SELECT_FAULT_AUX_OV;
 
   s_expect_ack = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
@@ -143,7 +143,7 @@ void test_power_on_main_sequence_aux_invalid(void) {
 // Same, but for DCDC:
 void test_power_on_main_sequence_dcdc_fault(void) {
   // DCDC fault
-  s_test_fault_bitset = 1 << POWER_SELECT_DCDC_OVERVOLTAGE;
+  s_test_fault_bitset = 1 << POWER_SELECT_FAULT_DCDC_OV;
 
   s_expect_ack = true;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS);
@@ -195,7 +195,7 @@ void test_power_on_main_sequence_dcdc_invalid(void) {
 
 void test_power_on_main_sequence_aux_dcdc_fault(void) {
   // Make sure both nack if both fault
-  s_test_fault_bitset = (1 << POWER_SELECT_AUX_OVERCURRENT) | (1 << POWER_SELECT_DCDC_OVERCURRENT);
+  s_test_fault_bitset = (1 << POWER_SELECT_FAULT_AUX_OC) | (1 << POWER_SELECT_FAULT_DCDC_OC);
 
   s_expect_ack = false;
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&s_ack_req, EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC);
@@ -258,12 +258,12 @@ void test_power_on_aux_sequence_works_without_dcdc(void) {
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
   // DCDC fault
-  s_test_fault_bitset |= 1 << POWER_SELECT_DCDC_OVERCURRENT;
+  s_test_fault_bitset |= 1 << POWER_SELECT_FAULT_DCDC_OC;
   CAN_TRANSMIT_POWER_ON_AUX_SEQUENCE(&s_ack_req, EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
   // No fault, DCDC invalid
-  s_test_fault_bitset &= ~(1 << POWER_SELECT_DCDC_OVERCURRENT);
+  s_test_fault_bitset &= ~(1 << POWER_SELECT_FAULT_DCDC_OC);
   s_test_valid_bitset &= ~(1 << POWER_SELECT_DCDC);
   CAN_TRANSMIT_POWER_ON_AUX_SEQUENCE(&s_ack_req, EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
@@ -278,12 +278,12 @@ void test_power_on_aux_sequence_aux_fault(void) {
 
   // Aux fault
   s_expect_ack = false;
-  s_test_fault_bitset |= 1 << POWER_SELECT_AUX_OVERCURRENT;
+  s_test_fault_bitset |= 1 << POWER_SELECT_FAULT_AUX_OC;
 
   CAN_TRANSMIT_POWER_ON_AUX_SEQUENCE(&s_ack_req, EE_POWER_AUX_SEQUENCE_CONFIRM_AUX_STATUS);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(POWER_SELECT_CAN_EVENT_TX, POWER_SELECT_CAN_EVENT_RX);
 
-  s_test_fault_bitset &= ~(1 << POWER_SELECT_AUX_OVERCURRENT);
+  s_test_fault_bitset &= ~(1 << POWER_SELECT_FAULT_AUX_OC);
 
   // Should be good now
   s_expect_ack = true;
