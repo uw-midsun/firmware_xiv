@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-message QueryingMCU {
+message Querying {
   repeated uint32 id = 1;
   repeated string name = 2;
   repeated string current_project = 3;
