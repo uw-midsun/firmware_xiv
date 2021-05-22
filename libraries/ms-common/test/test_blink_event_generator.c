@@ -327,7 +327,7 @@ void test_blink_event_generator_stop_silently_does_not_raise_last_event(void) {
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(0, e.data);
   TEST_ASSERT_NOT_OK(event_process(&e));
-  delay_us(interval_us + 5);
+  delay_us(interval_us + 10);
   TEST_ASSERT_OK(event_process(&e));
   TEST_ASSERT_EQUAL(TEST_EVENT_ID, e.id);
   TEST_ASSERT_EQUAL(1, e.data);
