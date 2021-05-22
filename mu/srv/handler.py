@@ -4,8 +4,10 @@ import urllib
 
 from mu.harness import logger
 
+
 class InternalError(Exception):
     pass
+
 
 class ReqHandler(http.server.BaseHTTPRequestHandler):
     def __init__(self, pm, *args, **kwargs):

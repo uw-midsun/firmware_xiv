@@ -7,8 +7,6 @@
 #include "steering_digital_input.h"
 #include "steering_events.h"
 
-static bool s_enable_regen_braking = true;
-
 StatusCode steering_can_process_event(Event *e) {
   switch (e->id) {
     case STEERING_INPUT_HORN_EVENT:

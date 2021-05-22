@@ -114,7 +114,18 @@ msg {
   }
 }
 
-# IDs: 12-17 Reserved
+msg {
+  id: 12
+  source: STEERING
+  target: "CENTRE_CONSOLE"
+  msg_name: "regen braking toggle request"
+  can_data {
+    empty {
+    }
+  }
+}
+
+# IDs: 13-17 Reserved
 
 msg {
   id: 18
@@ -337,17 +348,6 @@ msg {
   can_data {
     empty {
 
-    }
-  }
-}
-
-msg {
-  id: 46
-  source: STEERING
-  target: "CENTRE_CONSOLE"
-  msg_name: "regen braking toggle request"
-  can_data {
-    empty {
     }
   }
 }
