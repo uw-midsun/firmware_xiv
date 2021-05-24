@@ -136,6 +136,24 @@
       (command_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,         \
       CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_AUX_MEAS_MAIN_VOLTAGE(msg_ptr, aux_voltage_u16, aux_current_u16, aux_temp_u16, \
+                                       main_voltage_u16)                                        \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                                  \
+                    SYSTEM_CAN_MESSAGE_AUX_MEAS_MAIN_VOLTAGE, 8, (aux_voltage_u16),             \
+                    (aux_current_u16), (aux_temp_u16), (main_voltage_u16))
+
+#define CAN_PACK_DCDC_MEAS_MAIN_CURRENT(msg_ptr, dcdc_voltage_u16, dcdc_current_u16,  \
+                                        dcdc_temp_u16, main_current_u16)              \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                        \
+                    SYSTEM_CAN_MESSAGE_DCDC_MEAS_MAIN_CURRENT, 8, (dcdc_voltage_u16), \
+                    (dcdc_current_u16), (dcdc_temp_u16), (main_current_u16))
+
+#define CAN_PACK_POWER_SELECT_STATUS(msg_ptr, fault_bitset_u16, warning_bitset_u16, \
+                                     valid_bitset_u16, cell_voltage_u16)            \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECT,                      \
+                    SYSTEM_CAN_MESSAGE_POWER_SELECT_STATUS, 8, (fault_bitset_u16),  \
+                    (warning_bitset_u16), (valid_bitset_u16), (cell_voltage_u16))
+
 #define CAN_PACK_UV_CUTOFF_NOTIFICATION(msg_ptr)                             \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_FRONT, \
                       SYSTEM_CAN_MESSAGE_UV_CUTOFF_NOTIFICATION)
@@ -179,12 +197,6 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,             \
                     SYSTEM_CAN_MESSAGE_REAR_CURRENT_MEASUREMENT, 4, (current_id_u16), \
                     (current_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
-
-#define CAN_PACK_AUX_BATTERY_STATUS(msg_ptr, aux_battery_volt_u16, aux_battery_temp_u16, \
-                                    dcdc_status_u16)                                     \
-  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_SELECTION,                        \
-                    SYSTEM_CAN_MESSAGE_AUX_BATTERY_STATUS, 6, (aux_battery_volt_u16),    \
-                    (aux_battery_temp_u16), (dcdc_status_u16), CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8,      \
                                    fan_6_u8, fan_7_u8, fan_8_u8)                                   \
