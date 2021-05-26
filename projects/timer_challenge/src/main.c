@@ -1,6 +1,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "wait.h"
 
 #define INCREMENT_PERIOD_MS 500
 
@@ -31,6 +32,7 @@ int main(void) {
   soft_timer_start_millis(INCREMENT_PERIOD_MS, prv_timer_callback, &counters, NULL);
 
   while (true) {
+    wait();
   }
 
   return 0;
