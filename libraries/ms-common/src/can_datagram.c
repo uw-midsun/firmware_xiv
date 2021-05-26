@@ -24,6 +24,17 @@
 #define RX_WATCHDOG_TIMEOUT_MS 25
 #define CAN_BUFFER_SIZE 8
 
+typedef struct RxBufStore {
+  uint8_t data[8];
+  size_t len;
+} RxBufStore;
+
+typedef struct DatagramRxBuffer {
+  RxBufStore *head;
+  RxBufStore *tail;
+  RxBufStore buf[DATAGRAM_RX_BUFFER_LEN];
+} DatagramRxBuffer;
+
 static Fsm s_dt_fsm;
 static CanDatagramStorage s_store;
 static WatchdogStorage s_watchdog;
@@ -33,61 +44,82 @@ static uint8_t s_can_buffer[CAN_BUFFER_SIZE];
 static int s_data_write_count;
 
 // Forward declare FSM states and transitions
+// Each state can transition to next on completion of processing
+// or return to itself if data has not been received or has yet
+// to be processed
+
+// Idle state
 FSM_DECLARE_STATE(state_idle);
+// Protocol Version processed
 FSM_DECLARE_STATE(state_protocol_version);
+// CRC calculated and verified
 FSM_DECLARE_STATE(state_crc);
+// Datagram Type processed
 FSM_DECLARE_STATE(state_dt_type);
+// Destination nodes length processed
 FSM_DECLARE_STATE(state_dst_len);
+// Destination nodes data processed 
 FSM_DECLARE_STATE(state_dst);
+// Msg data length processed
 FSM_DECLARE_STATE(state_data_len);
+// Msg data processed
 FSM_DECLARE_STATE(state_data);
+// Cleanup and exit on error/completion
 FSM_DECLARE_STATE(state_done);
 
 FSM_STATE_TRANSITION(state_idle) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_PROTOCOL_VERSION, state_protocol_version);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_protocol_version);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_protocol_version) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_CRC, state_crc);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_PROTOCOL_VERSION, state_protocol_version);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_crc);
+  FSM_ADD_TRANSITION(store->repeat_event, state_protocol_version);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_crc) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DT_TYPE, state_dt_type);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_CRC, state_crc);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_dt_type);
+  FSM_ADD_TRANSITION(store->repeat_event, state_crc);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_dt_type) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DST_LEN, state_dst_len);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DT_TYPE, state_dt_type);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_dst_len);
+  FSM_ADD_TRANSITION(store->repeat_event, state_dt_type);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_dst_len) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DST_LEN, state_dst_len);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DST, state_dst);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_dst);
+  FSM_ADD_TRANSITION(store->repeat_event, state_dst_len);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_dst) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DST, state_dst);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DATA_LEN, state_data_len);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_data_len);
+  FSM_ADD_TRANSITION(store->repeat_event, state_dst);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_data_len) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DATA_LEN, state_data_len);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DATA, state_data);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_data);
+  FSM_ADD_TRANSITION(store->repeat_event, state_data_len);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_data) {
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_DATA, state_data);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_COMPLETE, state_done);
-  FSM_ADD_TRANSITION(DATAGRAM_EVENT_ERROR, state_done);
+  CanDatagramStorage *store = fsm->context;
+  FSM_ADD_TRANSITION(store->transition_event, state_done);
+  FSM_ADD_TRANSITION(store->repeat_event, state_data);
+  FSM_ADD_TRANSITION(store->error_event, state_done);
 }
 
 FSM_STATE_TRANSITION(state_done) {}
@@ -102,8 +134,8 @@ static void prv_init_rx_buffer(void) {
 static void prv_write_rx_buffer(uint8_t *data, size_t len) {
   // Catch buffer overflow as error
   if (s_data_write_count >= DATAGRAM_RX_BUFFER_LEN) {
-    event_raise_no_data(DATAGRAM_EVENT_ERROR);
-    LOG_DEBUG("RX MSG BUFFER OVERFLOW. EXITING WITH ERROR...");
+    event_raise_no_data(s_store.error_event);
+    LOG_WARN("RX MSG BUFFER OVERFLOW. EXITING WITH ERROR...");
   }
   if (s_rx_msg_buf.head - s_rx_msg_buf.buf > DATAGRAM_RX_BUFFER_LEN) {
     s_rx_msg_buf.head = s_rx_msg_buf.buf;
@@ -159,98 +191,103 @@ static uint32_t prv_can_datagram_compute_crc(void) {
 
 // BEGIN FSM STATE FUNCTIONS
 static void prv_process_protocol_version(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   // Verify start message received/sent
   if (s_store.start == false) {
-    LOG_DEBUG("START MESSAGE NOT RECEIVED. EXITING WITH ERROR...\n");
-    event_raise_no_data(DATAGRAM_EVENT_ERROR);
+    LOG_WARN("START MESSAGE NOT RECEIVED. EXITING WITH ERROR...\n");
+    event_raise_no_data(store->error_event);
     return;
   }
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     memcpy(s_can_buffer, &dt->protocol_version, PROTOCOL_VERSION_SIZE_BYTES);
     s_store.tx_cb(s_can_buffer, PROTOCOL_VERSION_SIZE_BYTES, false);
-    event_raise_no_data(DATAGRAM_EVENT_CRC);
+    event_raise_no_data(store->transition_event);
     LOG_DEBUG("crc\n");
   } else {
     uint8_t *rx_data;
     size_t len;
     // Check if data has been written yet, if not, re-raise
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_PROTOCOL_VERSION);
+      event_raise_no_data(store->repeat_event);
     } else {
       memcpy(&dt->protocol_version, rx_data, PROTOCOL_VERSION_SIZE_BYTES);
       if (dt->protocol_version != CAN_DATAGRAM_VERSION) {
-        event_raise_no_data(DATAGRAM_EVENT_ERROR);
+        event_raise_no_data(store->error_event);
         return;
       }
-      event_raise_no_data(DATAGRAM_EVENT_CRC);
+      event_raise_no_data(store->transition_event);
       LOG_DEBUG("crc\n");
     }
   }
 }
 
 static void prv_process_crc(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     memcpy(s_can_buffer, &dt->crc, CRC_SIZE_BYTES);
     s_store.tx_cb(s_can_buffer, CRC_SIZE_BYTES, false);
-    event_raise_no_data(DATAGRAM_EVENT_DT_TYPE);
+    event_raise_no_data(store->transition_event);
     LOG_DEBUG("dt_type\n");
   } else {
     uint8_t *rx_data;
     size_t len;
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_CRC);
+      event_raise_no_data(store->repeat_event);
     } else {
       memcpy(&dt->crc, rx_data, CRC_SIZE_BYTES);
-      event_raise_no_data(DATAGRAM_EVENT_DT_TYPE);
+      event_raise_no_data(store->transition_event);
       LOG_DEBUG("dt_type\n");
     }
   }
 }
 
 static void prv_process_dt_type(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     memcpy(s_can_buffer, &dt->dt_type, DT_TYPE_SIZE_BYTES);
     s_store.tx_cb(s_can_buffer, sizeof(dt->dt_type), false);
-    event_raise_no_data(DATAGRAM_EVENT_DST_LEN);
+    event_raise_no_data(store->transition_event);
   } else {
     uint8_t *rx_data;
     size_t len;
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_DT_TYPE);
+      event_raise_no_data(store->repeat_event);
       LOG_DEBUG("dst_len\n");
     } else {
       memcpy(&dt->dt_type, rx_data, DT_TYPE_SIZE_BYTES);
-      event_raise_no_data(DATAGRAM_EVENT_DST_LEN);
+      event_raise_no_data(store->transition_event);
       LOG_DEBUG("dst_len\n");
     }
   }
 }
 
 static void prv_process_dst_len(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     memcpy(s_can_buffer, &dt->destination_nodes_len, DEST_LEN_SIZE_BYTES);
     s_store.tx_cb(s_can_buffer, sizeof(dt->destination_nodes_len), false);
-    event_raise_no_data(DATAGRAM_EVENT_DST);
+    event_raise_no_data(store->transition_event);
     LOG_DEBUG("dst\n");
   } else {
     uint8_t *rx_data;
     size_t len;
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_DST_LEN);
+      event_raise_no_data(store->repeat_event);
     } else {
       memcpy(&dt->destination_nodes_len, rx_data, DEST_LEN_SIZE_BYTES);
-      event_raise_no_data(DATAGRAM_EVENT_DST);
+      event_raise_no_data(store->transition_event);
       LOG_DEBUG("dst\n");
     }
   }
 }
 
 static void prv_process_dst(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   uint8_t dst_len = dt->destination_nodes_len;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     uint8_t dst_bytes_to_send = 0;
@@ -264,54 +301,56 @@ static void prv_process_dst(Fsm *fsm, const Event *e, void *context) {
       s_store.tx_bytes_sent += dst_bytes_to_send;
       s_store.tx_cb(s_can_buffer, dst_bytes_to_send, false);
       if (s_store.tx_bytes_sent == dst_len) {
-        event_raise_no_data(DATAGRAM_EVENT_DATA_LEN);
         LOG_DEBUG("data len\n");
+        event_raise_no_data(store->transition_event);
         s_store.tx_bytes_sent = 0;
         return;
       }
     }
-    event_raise_no_data(DATAGRAM_EVENT_DST);
+    event_raise_no_data(store->repeat_event);
   } else {
     uint8_t *rx_data;
     size_t len;
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_DST);
+      event_raise_no_data(store->repeat_event);
     } else {
       memcpy(dt->destination_nodes + s_store.rx_bytes_read, rx_data, len);
       s_store.rx_bytes_read += len;
       if (s_store.rx_bytes_read == dt->destination_nodes_len) {
-        s_store.rx_bytes_read = 0;
-        event_raise_no_data(DATAGRAM_EVENT_DATA_LEN);
         LOG_DEBUG("data_len\n");
+        s_store.rx_bytes_read = 0;
+        event_raise_no_data(store->transition_event);
       } else {
-        event_raise_no_data(DATAGRAM_EVENT_DST);
+        event_raise_no_data(store->repeat_event);
       }
     }
   }
 }
 
 static void prv_process_data_len(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     memcpy(s_can_buffer, &dt->data_len, DATA_LEN_SIZE_BYTES);
     s_store.tx_cb(s_can_buffer, sizeof(dt->data_len), false);
-    event_raise_no_data(DATAGRAM_EVENT_DATA);
+    event_raise_no_data(store->transition_event);
   } else {
     uint8_t *rx_data;
     size_t len;
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_DATA_LEN);
+      event_raise_no_data(store->repeat_event);
       LOG_DEBUG("data\n");
     } else {
       memcpy(&dt->data_len, rx_data, DATA_LEN_SIZE_BYTES);
-      event_raise_no_data(DATAGRAM_EVENT_DATA);
+      event_raise_no_data(store->transition_event);
       LOG_DEBUG("data\n");
     }
   }
 }
 
 static void prv_process_data(Fsm *fsm, const Event *e, void *context) {
-  CanDatagram *dt = context;
+  CanDatagramStorage *store = context;
+  CanDatagram *dt = &store->dt;
   uint16_t data_len = dt->data_len;
   if (s_store.mode == CAN_DATAGRAM_MODE_TX) {
     uint8_t data_bytes_to_send = 0;
@@ -324,43 +363,44 @@ static void prv_process_data(Fsm *fsm, const Event *e, void *context) {
       s_store.tx_bytes_sent += data_bytes_to_send;
       s_store.tx_cb(s_can_buffer, data_bytes_to_send, false);
       if (s_store.tx_bytes_sent == data_len) {
-        event_raise_no_data(DATAGRAM_EVENT_COMPLETE);
+        event_raise_no_data(store->transition_event);
         s_store.tx_bytes_sent = 0;
         LOG_DEBUG("datagram complete!\n");
         watchdog_cancel(&s_watchdog);
         return;
       }
     }
-    event_raise_no_data(DATAGRAM_EVENT_DATA);
+    event_raise_no_data(store->repeat_event);
   } else {
     uint8_t *rx_data;
     size_t len;
     if (!prv_read_rx_buffer(&rx_data, &len)) {
-      event_raise_no_data(DATAGRAM_EVENT_DATA);
+      event_raise_no_data(store->repeat_event);
     } else {
       memcpy(dt->data + s_store.rx_bytes_read, rx_data, len);
       s_store.rx_bytes_read += len;
       if (s_store.rx_bytes_read >= dt->data_len) {
         s_store.rx_bytes_read = 0;
         if (prv_can_datagram_compute_crc() == dt->crc) {
-          event_raise_no_data(DATAGRAM_EVENT_COMPLETE);
+          event_raise_no_data(store->transition_event);
           LOG_DEBUG("datagram complete!\n");
         } else {
-          event_raise_no_data(DATAGRAM_EVENT_ERROR);
-          LOG_DEBUG("CRC VALUE DID NOT MATCH. EXITING WITH ERROR...\n");
+          event_raise_no_data(store->error_event);
+          LOG_WARN("CRC VALUE DID NOT MATCH. EXITING WITH ERROR...\n");
         }
       } else {
-        event_raise_no_data(DATAGRAM_EVENT_DATA);
+        event_raise_no_data(store->repeat_event);
       }
     }
   }
 }
 
 static void prv_process_done(Fsm *fsm, const Event *e, void *context) {
-  if (e->id == DATAGRAM_EVENT_COMPLETE) {
-    s_store.status = DATAGRAM_STATUS_COMPLETE;
+  CanDatagramStorage *store = context;
+  if (e->id == store->transition_event) {
+    store->status = DATAGRAM_STATUS_COMPLETE;
   } else {
-    s_store.status = DATAGRAM_STATUS_ERROR;
+    store->status = DATAGRAM_STATUS_ERROR;
   }
   watchdog_cancel(&s_watchdog);
 }
@@ -378,15 +418,12 @@ static void prv_init_fsm(void *context) {
 }
 
 static void prv_rx_watchdog_expiry_cb(void *context) {
-  event_raise_no_data(DATAGRAM_EVENT_ERROR);
-  LOG_DEBUG("WATCHDOG EXPIRED. EXITING WITH ERROR...\n");
+  event_raise_no_data(s_store.error_event);
+  LOG_WARN("WATCHDOG EXPIRED. EXITING WITH ERROR...\n");
 }
 
 StatusCode can_datagram_init(CanDatagramSettings *settings) {
   if (settings->mode >= NUM_CAN_DATAGRAM_MODES) {
-    return STATUS_CODE_INVALID_ARGS;
-  }
-  if (settings->dt_type >= NUM_CAN_DATAGRAM_TYPES) {
     return STATUS_CODE_INVALID_ARGS;
   }
   if (settings->data_len > MAX_DATA_SIZE_BYTES) {
@@ -396,6 +433,9 @@ StatusCode can_datagram_init(CanDatagramSettings *settings) {
   s_store.mode = settings->mode;
   s_store.status = DATAGRAM_STATUS_OK;
   s_store.start = false;
+  s_store.transition_event = settings->transition_event;
+  s_store.repeat_event = settings->repeat_event;
+  s_store.error_event = settings->error_event;
 
   // Datagram initialization
   CanDatagram *dt = &s_store.dt;
@@ -420,7 +460,7 @@ StatusCode can_datagram_init(CanDatagramSettings *settings) {
     memset(dt->destination_nodes, 0, dt->destination_nodes_len);
     memset(dt->data, 0, dt->data_len);
   }
-  prv_init_fsm((void *)dt);
+  prv_init_fsm((void *)&s_store);
   return STATUS_CODE_OK;
 }
 
@@ -429,7 +469,7 @@ StatusCode can_datagram_start_tx(uint8_t *init_data, size_t len) {
   if (s_store.mode == CAN_DATAGRAM_MODE_TX && len <= CAN_BUFFER_SIZE) {
     s_store.start = true;
     s_store.tx_cb(init_data, len, true);
-    event_raise_no_data(DATAGRAM_EVENT_PROTOCOL_VERSION);
+    event_raise_no_data(s_store.transition_event);
     LOG_DEBUG("protocol_version\n");
   } else {
     return STATUS_CODE_INVALID_ARGS;
@@ -447,15 +487,15 @@ StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message) {
 
   if (start_message) {
     s_store.start = true;
-    event_raise_no_data(DATAGRAM_EVENT_PROTOCOL_VERSION);
+    event_raise_no_data(s_store.transition_event);
     LOG_DEBUG("protocol_version\n");
     watchdog_start(&s_watchdog, RX_WATCHDOG_TIMEOUT_MS, prv_rx_watchdog_expiry_cb, NULL);
     return STATUS_CODE_OK;
   } else {
     // If start message not received, do not rx data
     if (s_store.start == false) {
-      event_raise_no_data(DATAGRAM_EVENT_ERROR);
-      LOG_DEBUG("NO START MESSAGE RECEIVED. EXITING WITH ERROR...\n");
+      event_raise_no_data(s_store.error_event);
+      LOG_WARN("NO START MESSAGE RECEIVED. EXITING WITH ERROR...\n");
     }
   }
   watchdog_kick(&s_watchdog);

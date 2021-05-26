@@ -50,6 +50,20 @@ static int s_num_msg_rx;
 static int s_num_tx;
 static bool s_start_message_set;
 
+typedef enum {
+  CAN_DATAGRAM_EVENT_RX = 0,
+  CAN_DATAGRAM_EVENT_TX,
+  CAN_DATAGRAM_EVENT_FAULT,
+  NUM_CAN_DATAGRAM_EVENTS,
+} CanDatagramCanEvent;
+
+typedef enum {
+  DATAGRAM_EVENT_TRANSITION = NUM_CAN_DATAGRAM_EVENTS + 1,
+  DATAGRAM_EVENT_REPEAT,
+  DATAGRAM_EVENT_ERROR,
+  NUM_DATAGRAM_DIGEST_EVENTS,
+} CanDatagramEvent;
+
 typedef union test_datagram_msg {  // Should I include this in the library?
   uint8_t data_u8[8];
   uint64_t data_u64;
@@ -244,6 +258,9 @@ void test_can_datagram_tx(void) {
   CanDatagramSettings settings = {
     .tx_cb = prv_tx_callback,
     .mode = CAN_DATAGRAM_MODE_TX,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .dt_type = 3,
     .destination_nodes_len = TEST_DST_SIZE_SHORT,
     .destination_nodes = s_dst,
@@ -270,6 +287,9 @@ void test_long_can_datagram_tx(void) {
     .tx_cb = prv_tx_callback,
     .mode = CAN_DATAGRAM_MODE_TX,
     .dt_type = 3,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes_len = TEST_DST_SIZE_LONG,
     .destination_nodes = s_dst_long,
     .data_len = TEST_DATA_SIZE_LONG,
@@ -284,6 +304,7 @@ void test_long_can_datagram_tx(void) {
   uint16_t count = 0;
   while (s_num_msg_rx < NUM_LONG_TEST_MSG) {  // Loop until num msg rx'd same as tx'd
     MS_TEST_HELPER_AWAIT_EVENT(e);
+    LOG_DEBUG("EVENT %d\n", e.id);
     can_datagram_process_event(&e);
     can_process_event(&e);
   }
@@ -299,6 +320,9 @@ void test_can_datagram_rx(void) {
     .tx_cb = NULL,
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes = rx_dst_buf,
     .data = rx_data_buf,
   };
@@ -358,6 +382,9 @@ void test_long_can_datagram_rx(void) {
     .tx_cb = NULL,
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes = rx_dst_buf,
     .data = rx_data_buf,
   };
@@ -417,6 +444,9 @@ void test_rx_timeout(void) {
     .tx_cb = NULL,
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes = rx_dst_buf,
     .data = rx_data_buf,
   };
@@ -450,6 +480,9 @@ void test_start_msg_not_sent(void) {
     .tx_cb = NULL,
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes = rx_dst_buf,
     .data = rx_data_buf,
   };
@@ -480,6 +513,9 @@ void test_multiple_tx_msg_sent(void) {
     .tx_cb = prv_tx_callback,
     .mode = CAN_DATAGRAM_MODE_TX,
     .dt_type = 3,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes_len = TEST_DST_SIZE_SHORT,
     .destination_nodes = s_dst,
     .data_len = TEST_DATA_SIZE_SHORT,
@@ -522,6 +558,9 @@ void test_crc_fail_and_msg_reset(void) {
     .tx_cb = NULL,
     .mode = CAN_DATAGRAM_MODE_RX,
     .dt_type = 0,
+    .transition_event = DATAGRAM_EVENT_TRANSITION,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
     .destination_nodes = rx_dst_buf,
     .data = rx_data_buf,
   };
