@@ -28,7 +28,7 @@ typedef struct CanDatagram {
   uint8_t protocol_version;
   uint32_t crc;
 
-  uint8_t dt_type;
+  uint8_t dgram_type;
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
   uint16_t data_len;
@@ -43,7 +43,7 @@ typedef struct CanDatagramSettings {
   EventId repeat_event;
   EventId error_event;
 
-  uint8_t dt_type;
+  uint8_t dgram_type;
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
   uint16_t data_len;
@@ -51,7 +51,7 @@ typedef struct CanDatagramSettings {
 } CanDatagramSettings;
 
 typedef struct CanDatagramStorage {
-  CanDatagram dt;
+  CanDatagram dgram;
   CanDatagramMode mode;
   CanDatagramCb tx_cb;
 
