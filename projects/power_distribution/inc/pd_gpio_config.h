@@ -4,5 +4,5 @@
 
 #include "pd_gpio.h"
 
-extern const PowerDistributionGpioConfig FRONT_POWER_DISTRIBUTION_GPIO_CONFIG;
-extern const PowerDistributionGpioConfig REAR_POWER_DISTRIBUTION_GPIO_CONFIG;
+extern const PdGpioConfig g_front_pd_gpio_config;
+extern const PdGpioConfig g_rear_pd_gpio_config;

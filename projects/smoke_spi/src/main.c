@@ -17,7 +17,7 @@ static uint8_t tx_bytes[] = { 0b00000001, 0b00001111 };
 static SpiPort port_to_use = SPI_PORT_2;
 
 const SpiSettings settings_to_use = {
-  .baudrate = 60000,
+  .baudrate = 6000000,
   .mode = SPI_MODE_0,
   // Adjust GPIO pins as needed
   .mosi = { .port = GPIO_PORT_B, 15 },

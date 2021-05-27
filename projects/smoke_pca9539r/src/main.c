@@ -13,10 +13,11 @@
 #include "wait.h"
 
 // used to adjust time between gpio pin toggling
-#define WAIT_TIME_MILLIS 1000
+#define WAIT_TIME_MILLIS 500
 
 #define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address
 #define I2C_PORT I2C_PORT_2
+
 // I2C_PORT_1 has SDA on PB9 and SCL on PB8
 // I2C_PORT_2 has SDA on PB11 and SCL on PB10
 
@@ -25,7 +26,7 @@
 #define PIN_I2C_SDA \
   { GPIO_PORT_B, 11 }
 
-void setup_test(void) {
+static void prv_setup_test(void) {
   I2CSettings i2c_settings = {
     .speed = I2C_SPEED_FAST,
     .sda = PIN_I2C_SDA,
@@ -101,14 +102,14 @@ int main() {
   gpio_init();
   interrupt_init();
   soft_timer_init();
-  setup_test();
+  prv_setup_test();
 
   LOG_DEBUG("Testing GPIO initialization...\n");
   LOG_DEBUG("Initializing all pins out...\n");
   prv_pca9539r_init_all_pins(PCA9539R_GPIO_DIR_OUT);
   prv_pca9539r_check_all_pin_states(PCA9539R_GPIO_STATE_HIGH);
   LOG_DEBUG("GPIO initialization complete. Now beginning toggling of GPIO states\n");
-  Pca9539rGpioState state;
+  Pca9539rGpioState state = PCA9539R_GPIO_STATE_LOW;
 
   // Toggles gpio, compares expected values against registers, first read should be ignored
   soft_timer_start_millis(100, prv_soft_timer_callback_output, &state, NULL);

@@ -6,7 +6,7 @@
 
 #define TEST_SPI_PORT SPI_PORT_2
 
-#define TEST_BAUDRATE 60000
+#define TEST_BAUDRATE 6000000
 #define TEST_MOSI_PIN \
   { .port = GPIO_PORT_B, 15 }
 #define TEST_MISO_PIN \
@@ -19,7 +19,7 @@
 void setup_test() {
   gpio_init();
   SpiSettings spi_settings = {
-    .baudrate = 60000,
+    .baudrate = TEST_BAUDRATE,
     .mode = SPI_MODE_3,
     .mosi = TEST_MOSI_PIN,
     .miso = TEST_MISO_PIN,

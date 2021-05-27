@@ -17,7 +17,7 @@
 
 #define ADT_7476A_NUM_FANS 4
 #define ADT_7476A_INTERRUPT_MASK_OFFSET 2
-#define SET_SPEED_INTERVAL_S 1
+#define SET_SPEED_INTERVAL_MS 100
 #define FAN_SPEED_INCREMENT 10
 #define I2C_WRITE_ADDR 0x5E
 #define I2C_READ_ADDR 0x5F
@@ -38,7 +38,7 @@ static void prv_periodic_set_speed(SoftTimerId id, void *context) {
   s_current_speed = s_current_speed % 101;
   LOG_DEBUG("SETTING SPEED: %d PERCENT\n", s_current_speed);
   adt7476a_set_speed(I2C_PORT, s_current_speed, ADT_PWM_PORT, I2C_WRITE_ADDR);
-  soft_timer_start_seconds(SET_SPEED_INTERVAL_S, prv_periodic_set_speed, NULL, NULL);
+  soft_timer_start_millis(SET_SPEED_INTERVAL_MS, prv_periodic_set_speed, NULL, NULL);
 }
 
 static void prv_callback(GpioAddress *address, void *context) {

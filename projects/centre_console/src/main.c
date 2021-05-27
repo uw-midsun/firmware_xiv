@@ -1,3 +1,4 @@
+#include "brake_light_control.h"
 #include "button_press.h"
 #include "can.h"
 #include "can_msg_defs.h"
@@ -99,6 +100,7 @@ int main(void) {
       hazard_tx_process_event(&e);
       led_manager_process_event(&e);
       race_switch_fsm_process_event(&s_race_switch_fsm_storage, &e);
+      brake_light_control_process_event(&e);
     }
     wait();
   }

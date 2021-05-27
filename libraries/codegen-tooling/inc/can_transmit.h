@@ -71,14 +71,6 @@
     status;                                                                 \
   })
 
-#define CAN_TRANSMIT_FRONT_POWER(power_bitset_u16)  \
-  ({                                                \
-    CanMessage msg = { 0 };                         \
-    CAN_PACK_FRONT_POWER(&msg, (power_bitset_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);   \
-    status;                                         \
-  })
-
 #define CAN_TRANSMIT_DRIVE_STATE(drive_state_u16)  \
   ({                                               \
     CanMessage msg = { 0 };                        \
@@ -107,6 +99,14 @@
   ({                                              \
     CanMessage msg = { 0 };                       \
     CAN_PACK_HORN(&msg, (state_u8));              \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_REGEN_BRAKING(state_u8)      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));     \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
@@ -185,6 +185,14 @@
     status;                                                                                   \
   })
 
+#define CAN_TRANSMIT_MOTOR_STATUS(motor_status_l_u32, motor_status_r_u32)    \
+  ({                                                                         \
+    CanMessage msg = { 0 };                                                  \
+    CAN_PACK_MOTOR_STATUS(&msg, (motor_status_l_u32), (motor_status_r_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                            \
+    status;                                                                  \
+  })
+
 #define CAN_TRANSMIT_MOTOR_TEMPS(motor_temp_l_u32, motor_temp_r_u32)    \
   ({                                                                    \
     CanMessage msg = { 0 };                                             \
@@ -199,6 +207,36 @@
     CAN_PACK_CRUISE_CONTROL_COMMAND(&msg, (command_u8)); \
     StatusCode status = can_transmit(&msg, NULL);        \
     status;                                              \
+  })
+
+#define CAN_TRANSMIT_AUX_MEAS_MAIN_VOLTAGE(aux_voltage_u16, aux_current_u16, aux_temp_u16,     \
+                                           main_voltage_u16)                                   \
+  ({                                                                                           \
+    CanMessage msg = { 0 };                                                                    \
+    CAN_PACK_AUX_MEAS_MAIN_VOLTAGE(&msg, (aux_voltage_u16), (aux_current_u16), (aux_temp_u16), \
+                                   (main_voltage_u16));                                        \
+    StatusCode status = can_transmit(&msg, NULL);                                              \
+    status;                                                                                    \
+  })
+
+#define CAN_TRANSMIT_DCDC_MEAS_MAIN_CURRENT(dcdc_voltage_u16, dcdc_current_u16, dcdc_temp_u16,     \
+                                            main_current_u16)                                      \
+  ({                                                                                               \
+    CanMessage msg = { 0 };                                                                        \
+    CAN_PACK_DCDC_MEAS_MAIN_CURRENT(&msg, (dcdc_voltage_u16), (dcdc_current_u16), (dcdc_temp_u16), \
+                                    (main_current_u16));                                           \
+    StatusCode status = can_transmit(&msg, NULL);                                                  \
+    status;                                                                                        \
+  })
+
+#define CAN_TRANSMIT_POWER_SELECT_STATUS(fault_bitset_u16, warning_bitset_u16, valid_bitset_u16, \
+                                         cell_voltage_u16)                                       \
+  ({                                                                                             \
+    CanMessage msg = { 0 };                                                                      \
+    CAN_PACK_POWER_SELECT_STATUS(&msg, (fault_bitset_u16), (warning_bitset_u16),                 \
+                                 (valid_bitset_u16), (cell_voltage_u16));                        \
+    StatusCode status = can_transmit(&msg, NULL);                                                \
+    status;                                                                                      \
   })
 
 #define CAN_TRANSMIT_UV_CUTOFF_NOTIFICATION()     \
@@ -233,6 +271,22 @@
     status;                                                    \
   })
 
+#define CAN_TRANSMIT_SOLAR_DATA_6_MPPTS(data_point_type_u32, data_value_u32)    \
+  ({                                                                            \
+    CanMessage msg = { 0 };                                                     \
+    CAN_PACK_SOLAR_DATA_6_MPPTS(&msg, (data_point_type_u32), (data_value_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                               \
+    status;                                                                     \
+  })
+
+#define CAN_TRANSMIT_SOLAR_FAULT_6_MPPTS(fault_u8, fault_data_u8)    \
+  ({                                                                 \
+    CanMessage msg = { 0 };                                          \
+    CAN_PACK_SOLAR_FAULT_6_MPPTS(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);                    \
+    status;                                                          \
+  })
+
 #define CAN_TRANSMIT_CHARGER_FAULT(fault_u8)      \
   ({                                              \
     CanMessage msg = { 0 };                       \
@@ -257,16 +311,6 @@
     status;                                                                   \
   })
 
-#define CAN_TRANSMIT_AUX_BATTERY_STATUS(aux_battery_volt_u16, aux_battery_temp_u16,   \
-                                        dcdc_status_u16)                              \
-  ({                                                                                  \
-    CanMessage msg = { 0 };                                                           \
-    CAN_PACK_AUX_BATTERY_STATUS(&msg, (aux_battery_volt_u16), (aux_battery_temp_u16), \
-                                (dcdc_status_u16));                                   \
-    StatusCode status = can_transmit(&msg, NULL);                                     \
-    status;                                                                           \
-  })
-
 #define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8, fan_6_u8, \
                                        fan_7_u8, fan_8_u8)                                         \
   ({                                                                                               \
@@ -285,38 +329,38 @@
     status;                                                \
   })
 
-#define CAN_TRANSMIT_SOLAR_DATA(data_point_type_u32, data_value_u32)    \
-  ({                                                                    \
-    CanMessage msg = { 0 };                                             \
-    CAN_PACK_SOLAR_DATA(&msg, (data_point_type_u32), (data_value_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                       \
-    status;                                                             \
+#define CAN_TRANSMIT_SOLAR_DATA_5_MPPTS(data_point_type_u32, data_value_u32)    \
+  ({                                                                            \
+    CanMessage msg = { 0 };                                                     \
+    CAN_PACK_SOLAR_DATA_5_MPPTS(&msg, (data_point_type_u32), (data_value_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                               \
+    status;                                                                     \
   })
 
-#define CAN_TRANSMIT_SOLAR_FAULT(fault_u8, fault_data_u8)    \
-  ({                                                         \
-    CanMessage msg = { 0 };                                  \
-    CAN_PACK_SOLAR_FAULT(&msg, (fault_u8), (fault_data_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);            \
-    status;                                                  \
+#define CAN_TRANSMIT_SOLAR_FAULT_5_MPPTS(fault_u8, fault_data_u8)    \
+  ({                                                                 \
+    CanMessage msg = { 0 };                                          \
+    CAN_PACK_SOLAR_FAULT_5_MPPTS(&msg, (fault_u8), (fault_data_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);                    \
+    status;                                                          \
   })
 
 #define CAN_TRANSMIT_REAR_PD_FAULT(fault_data_u16, enclosure_temp_data_u16, dcdc_temp_data_u16, \
-                                   reference_voltage_u16)                                       \
+                                   faulting_output_u16)                                         \
   ({                                                                                            \
     CanMessage msg = { 0 };                                                                     \
     CAN_PACK_REAR_PD_FAULT(&msg, (fault_data_u16), (enclosure_temp_data_u16),                   \
-                           (dcdc_temp_data_u16), (reference_voltage_u16));                      \
+                           (dcdc_temp_data_u16), (faulting_output_u16));                        \
     StatusCode status = can_transmit(&msg, NULL);                                               \
     status;                                                                                     \
   })
 
-#define CAN_TRANSMIT_FRONT_PD_FAULT(fault_data_u16)  \
-  ({                                                 \
-    CanMessage msg = { 0 };                          \
-    CAN_PACK_FRONT_PD_FAULT(&msg, (fault_data_u16)); \
-    StatusCode status = can_transmit(&msg, NULL);    \
-    status;                                          \
+#define CAN_TRANSMIT_FRONT_PD_FAULT(fault_data_u16, faulting_output_u16)    \
+  ({                                                                        \
+    CanMessage msg = { 0 };                                                 \
+    CAN_PACK_FRONT_PD_FAULT(&msg, (fault_data_u16), (faulting_output_u16)); \
+    StatusCode status = can_transmit(&msg, NULL);                           \
+    status;                                                                 \
   })
 
 #define CAN_TRANSMIT_BABYDRIVER(id_u8, data0_u8, data1_u8, data2_u8, data3_u8, data4_u8, data5_u8, \

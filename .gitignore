@@ -25,6 +25,8 @@ x86_flash
 *.a
 *.la
 *.lo
+# Allow bundled newlib binaries with debug symbols
+!platform/stm32f0xx/newlib-debug/*.a
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -76,3 +78,16 @@ logs/
 ### Vagrant Patch ###
 *.box
 .idea
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# Codegen related
+codegen/out/
+codegen/genfiles/
+codegen/system_can.dbc
+
+# Python generated code 
+*.pyc
