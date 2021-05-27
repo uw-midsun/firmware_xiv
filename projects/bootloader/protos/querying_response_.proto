@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message QueryingResponse {
+  uint32 id = 1;
+  string name = 2;
+  string current_project = 3;
+  string project_info = 4;
+  string git_version = 5;
+}
