@@ -29,17 +29,20 @@ typedef struct WaveSculptorDriveCmd {
   float motor_velocity_rpm;
   float motor_current_percentage;
 } WaveSculptorDriveCmd;
+static_assert(sizeof(WaveSculptorDriveCmd) == 8, "WaveSculptorDriveCmd is not 8 bytes");
 
 // Driver Controls Base Addr + 0x02
 typedef struct WaveSculptorPowerCmd {
   uint32_t reserved;
   float bus_current_percentage;
 } WaveSculptorPowerCmd;
+static_assert(sizeof(WaveSculptorPowerCmd) == 8, "WaveSculptorPowerCmd is not 8 bytes");
 
 // Driver Controls Base Addr + 0x03
 typedef struct WaveSculptorResetCmd {
   uint64_t reserved;
 } WaveSculptorResetCmd;
+static_assert(sizeof(WaveSculptorResetCmd) == 8, "WaveSculptorResetCmd is not 8 bytes");
 
 // Send to WaveSculptor (Configuration Commands)
 typedef enum {
@@ -54,6 +57,8 @@ typedef struct WaveSculptorActiveMotorChange {
   // Desired active motor (0 to 9)
   uint16_t active_motor;
 } WaveSculptorActiveMotorChange;
+static_assert(sizeof(WaveSculptorActiveMotorChange) == 8,
+              "WaveSculptorActiveMotorChange is not 8 bytes");
 
 // Receive from WaveSculptor
 typedef enum {
