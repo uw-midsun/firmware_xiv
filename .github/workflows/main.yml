@@ -139,7 +139,7 @@ jobs:
         id: build-test
         run: |
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
-          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+          make test_all PLATFORM=x86 DEFINE="${DEFINES}" &
           # make pytest_all
           # make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
           # make test LIBRARY=ms-common TEST=wait PLATFORM=x86 &
