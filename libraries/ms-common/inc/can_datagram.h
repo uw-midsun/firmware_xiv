@@ -1,15 +1,36 @@
 #pragma once
+// CAN DATAGRAM PROTOCOL LIBRARY
+//
+// Allows for transmitting and receiving variable length messages
+// over the fixed-latency CAN bus. 
+//
+// A "datagram" refers to the object in which data and the 
+// associated metadata are grouped. See the design document at 
+// https://uwmidsun.atlassian.net/l/c/fJ1gAPxP
+//
+// Usage:
+// The Datagram settings struct must be initialized with either
+// For Tx:
+// 	- All information fields filled
+// 	- Data buffers for destination nodes and message data
+// For Rx:
+// 	- Data and destination node buffers large enough to hold
+// 	  however much data is sent
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include "event_queue.h"
 #include "status.h"
+
 
 #define CAN_DATAGRAM_VERSION 1
 #define DATAGRAM_RX_BUFFER_LEN 256
 
-typedef StatusCode (*CanDatagramCb)(uint8_t *data, size_t len, bool start_message);
+// Callback used to tx a datagram message, used to handle all CAN transmission
+// Called in each state as data becomes ready to be transmitted
+typedef StatusCode (*CanDatagramTxCb)(uint8_t *data, size_t len, bool start_message);
 
 
 typedef enum {
@@ -36,7 +57,7 @@ typedef struct CanDatagram {
 } CanDatagram;
 
 typedef struct CanDatagramSettings {
-  CanDatagramCb tx_cb;
+  CanDatagramTxCb tx_cb;
   CanDatagramMode mode;
 
   EventId transition_event;
@@ -53,7 +74,7 @@ typedef struct CanDatagramSettings {
 typedef struct CanDatagramStorage {
   CanDatagram dgram;
   CanDatagramMode mode;
-  CanDatagramCb tx_cb;
+  CanDatagramTxCb tx_cb;
 
   EventId transition_event;
   EventId repeat_event;
