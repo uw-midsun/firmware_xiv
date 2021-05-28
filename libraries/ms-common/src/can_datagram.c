@@ -20,7 +20,9 @@
 #define MAX_DATA_SIZE_BYTES 2048
 #define MAX_CAN_TX 4
 
-#define MAX_CRC_STREAM_SIZE_BYTES 24
+#define MAX_CRC_STREAM_SIZE_BYTES \
+DGRAM_TYPE_SIZE_BYTES + DEST_LEN_SIZE_BYTES \
++ DATA_LEN_SIZE_BYTES + 2*sizeof(uint32_t)
 
 #define RX_WATCHDOG_TIMEOUT_MS 25
 #define CAN_BUFFER_SIZE 8
@@ -35,7 +37,6 @@ static CanDatagramStorage s_store;
 static WatchdogStorage s_watchdog;
 
 static uint8_t s_can_buffer[CAN_BUFFER_SIZE];
-static int s_data_write_count;
 
 static Fifo s_fifo;
 static struct RxBufStore s_rx_msg[DATAGRAM_RX_BUFFER_LEN];
@@ -154,7 +155,6 @@ static uint32_t prv_can_datagram_compute_crc(void) {
   uint8_t *write = stream;
   CanDatagram *dgram = &s_store.dgram;
 
-  crc32_init();
   // CRC for data and dst_nodes
   uint32_t dst_crc = crc32_arr(dgram->destination_nodes, dgram->destination_nodes_len);
   uint32_t data_crc = crc32_arr(dgram->data, dgram->data_len);
@@ -171,7 +171,7 @@ static uint32_t prv_can_datagram_compute_crc(void) {
   memcpy(write, &data_crc, sizeof(uint32_t));
   write += sizeof(uint32_t);
 
-  // process final crc
+  // process final crcs
   return crc32_arr(stream, (size_t)(write - stream));
 }
 
@@ -417,7 +417,7 @@ StatusCode can_datagram_init(CanDatagramSettings *settings) {
   }
   // Populate storage
   s_store.mode = settings->mode;
-  s_store.status = DATAGRAM_STATUS_OK;
+  s_store.status = DATAGRAM_STATUS_ACTIVE;
   s_store.start = false;
   s_store.transition_event = settings->transition_event;
   s_store.repeat_event = settings->repeat_event;

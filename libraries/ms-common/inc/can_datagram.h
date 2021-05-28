@@ -4,6 +4,8 @@
 // Allows for transmitting and receiving variable length messages
 // over the fixed-latency CAN bus. 
 //
+// Requires event queue, interrupts, soft timers and crc32 to be init'd
+//
 // A "datagram" refers to the object in which data and the 
 // associated metadata are grouped. See the design document at 
 // https://uwmidsun.atlassian.net/l/c/fJ1gAPxP
@@ -40,9 +42,10 @@ typedef enum {
 } CanDatagramMode;
 
 typedef enum {
-  DATAGRAM_STATUS_OK = 0,
+  DATAGRAM_STATUS_ACTIVE = 0,
   DATAGRAM_STATUS_COMPLETE,
   DATAGRAM_STATUS_ERROR,
+  NUM_DATAGRAM_STATUSES,
 } CanDatagramStatus;
 
 typedef struct CanDatagram {

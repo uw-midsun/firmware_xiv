@@ -14,6 +14,7 @@
 #include "gpio_it.h"
 #include "i2c.h"
 #include "interrupt.h"
+#include "crc32.h"
 #include "log.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
@@ -80,6 +81,7 @@ void setup_test(void) {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
+  crc32_init();
 }
 
 void teardown_test(void) {
@@ -339,7 +341,7 @@ void test_can_datagram_rx(void) {
 
   Event e = { 0 };
   bool send_tx = true;
-  while (can_datagram_get_status() == DATAGRAM_STATUS_OK) {  // Loop until rx complete
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
     // Send txes one at a time -> can datagram will send 4 at a time
     // but client in real scenario does not have to process tx's as well as rx's
     if (send_tx) {
@@ -401,7 +403,7 @@ void test_long_can_datagram_rx(void) {
 
   Event e = { 0 };
   bool send_tx = true;
-  while (can_datagram_get_status() == DATAGRAM_STATUS_OK) {  // Loop until rx complete
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
     if (send_tx) {
       prv_mock_dgram_tx(TEST_DST_SIZE_LONG, TEST_DATA_SIZE_LONG, s_dst_long, s_data_long, 0x81fde1b);
       send_tx = false;
@@ -462,7 +464,7 @@ void test_rx_timeout(void) {
   TEST_ASSERT_EQUAL(true, s_start_message_set);
   delay_ms(RX_WATCHDOG_TIMEOUT_MS + 5);
   Event e = { 0 };
-  while (can_datagram_get_status() == DATAGRAM_STATUS_OK) {
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_process_event(&e);
     can_datagram_process_event(&e);
@@ -491,7 +493,7 @@ void test_start_msg_not_sent(void) {
 
   Event e = { 0 };
   bool send_tx = true;
-  while (can_datagram_get_status() == DATAGRAM_STATUS_OK) {
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
     if (send_tx) {
       prv_mock_dgram_tx(TEST_DST_SIZE_LONG, TEST_DATA_SIZE_LONG, s_dst_long, s_data_long, 0x81fde1b);
       send_tx = false;
@@ -578,7 +580,7 @@ void test_crc_fail_and_msg_reset(void) {
   MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
   TEST_ASSERT_EQUAL(true, s_start_message_set);
 
-  while (can_datagram_get_status() == DATAGRAM_STATUS_OK) {
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
     if (send_tx) {
       prv_mock_dgram_tx(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data, 0xdeadbeef);
       send_tx = false;
@@ -603,7 +605,7 @@ void test_crc_fail_and_msg_reset(void) {
   TEST_ASSERT_EQUAL(true, s_start_message_set);
 
   send_tx = true;
-  while (can_datagram_get_status() == DATAGRAM_STATUS_OK) {  // Loop until rx complete
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
     // Send txes one at a time -> can datagram will send 4 at a time
     // but client in real scenario does not have to process tx's as well as rx's
     if (send_tx) {
