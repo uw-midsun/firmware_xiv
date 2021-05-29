@@ -56,9 +56,9 @@ typedef enum {
 //   return STATUS_CODE_OK;
 // }
 
-// static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
-// s_num_times_timer_callback_called++;
-// }
+static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
+  s_num_times_timer_callback_called++;
+}
 
 // static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
 // printf("CALLBACK CALLED\n");
@@ -140,17 +140,17 @@ void teardown_test(void) {}
 // number of waits done is checked
 
 void test_wait_works_timer(void) {
-  // printf("test_wait_works_timer\n");
-  // uint8_t num_wait_cycles_timer = 0;
+  printf("test_wait_works_timer\n");
+  uint8_t num_wait_cycles_timer = 0;
 
-  // while (s_num_times_timer_callback_called < EXPECTED_TIMES_TIMER_CALLBACK_CALLED) {
-  //   soft_timer_start_millis(WAIT_INTERVAL_MS, prv_test_wait_interrupt_callback, NULL, NULL);
+  while (s_num_times_timer_callback_called < EXPECTED_TIMES_TIMER_CALLBACK_CALLED) {
+    soft_timer_start_millis(WAIT_INTERVAL_MS, prv_test_wait_interrupt_callback, NULL, NULL);
 
-  //   wait();
-  //   num_wait_cycles_timer++;
-  // }
-  // TEST_ASSERT_EQUAL(EXPECTED_TIMER_INTERRUPT_CYCLES, num_wait_cycles_timer);
-  // TEST_ASSERT_EQUAL(EXPECTED_TIMES_TIMER_CALLBACK_CALLED, s_num_times_timer_callback_called);
+    wait();
+    num_wait_cycles_timer++;
+  }
+  TEST_ASSERT_EQUAL(EXPECTED_TIMER_INTERRUPT_CYCLES, num_wait_cycles_timer);
+  TEST_ASSERT_EQUAL(EXPECTED_TIMES_TIMER_CALLBACK_CALLED, s_num_times_timer_callback_called);
 }
 
 void test_wait_works_gpio(void) {
