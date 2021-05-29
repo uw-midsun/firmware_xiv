@@ -60,10 +60,9 @@ static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
   s_num_times_timer_callback_called++;
 }
 
-// static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
-// printf("CALLBACK CALLED\n");
-// s_num_times_gpio_callback_called++;
-// }
+static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
+  s_num_times_gpio_callback_called++;
+}
 
 // static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
 // printf("X86 CALLBACK CALLED\n");
