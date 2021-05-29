@@ -4,24 +4,25 @@
 #include "spi_104.h"
 
 StatusCode send_spi_message(void) {
-  static SpiPort port_to_use = SPI_PORT_2
+  static SpiPort port_to_use = SPI_PORT_2;
 
-      // MS12 schematics do not exist anymore so I am just using MS14 pins
-      const SPI_settings settings = {
-        .baudrate = 1000000  // 1 Mhz
-                        .mode =
-            SPI_MODE_0.mosi = { .port = GPIO_PORT_B, 15 }.miso = { .port = GPIO_PORT_B, 14 }.sclk =
-                { .port = GPIO_PORT_B, 13 }.cs = { .port = GPIO_PORT_B, 12 }
-      };
+  // MS12 schematics for charger interface
+  // do not exist anymore so I am just using MS14 pins
+  const SpiSettings settings = { .baudrate = 1000000,  // 1 Mhz
+                                 .mode = SPI_MODE_0,
+                                 .mosi = { .port = GPIO_PORT_B, 15 },
+                                 .miso = { .port = GPIO_PORT_B, 14 },
+                                 .sclk = { .port = GPIO_PORT_B, 13 },
+                                 .cs = { .port = GPIO_PORT_B, 12 } };
 
   // SPI initialization
   spi_init(port_to_use, &settings);
+  uint8_t spi_message = 0b01001001;
   // Bits 7-5 are operation mode bits, 010 is loopback
   // Bit 4 is transmission bit, 0 terminates request
   // Bit 3 is one shot mode bit, 1 is enabled
   // Bit 2 is clock enable bit, 0 is disabled
   // Bits 1-0 are prescaler bits, 01 is clock/2
-  uint8_t spi_message = 0b01001001;
   uint8_t rx_data = 0;
 
   // Send the SPI message
