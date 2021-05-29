@@ -125,7 +125,7 @@ msg {
   }
 }
 
-# IDs: 13-17 Reserved
+# IDs: 12-17 Reserved
 
 msg {
   id: 18
