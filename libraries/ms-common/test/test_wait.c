@@ -1,5 +1,3 @@
-#include "wait.h"
-
 #include <pthread.h>
 #include <unistd.h>
 
@@ -11,6 +9,7 @@
 #include "soft_timer.h"
 #include "test_helpers.h"
 #include "unity.h"
+#include "wait.h"
 #include "x86_interrupt.h"
 
 static uint8_t s_num_times_timer_callback_called;
@@ -40,94 +39,94 @@ typedef enum {
   TEST_CAN_EVENT_FAULT,
 } TestCanEvent;
 
-// static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  // printf("Received a message!\n");
+// static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply)
+// { printf("Received a message!\n");
 
-  // if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
-  //   printf("Data:\n\t");
-  //   uint8_t i;
-  //   for (i = 0; i < msg->dlc; i++) {
-  //     uint8_t byte = 0;
-  //     byte = msg->data >> (i * 8);
-  //     printf("%x ", byte);
-  //   }
-  //   printf("\n");
-  // }
-  // s_can_received = true;
+// if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
+//   printf("Data:\n\t");
+//   uint8_t i;
+//   for (i = 0; i < msg->dlc; i++) {
+//     uint8_t byte = 0;
+//     byte = msg->data >> (i * 8);
+//     printf("%x ", byte);
+//   }
+//   printf("\n");
+// }
+// s_can_received = true;
 //   return STATUS_CODE_OK;
 // }
 
 // static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
-  // s_num_times_timer_callback_called++;
+// s_num_times_timer_callback_called++;
 // }
 
 // static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
-  // printf("CALLBACK CALLED\n");
-  // s_num_times_gpio_callback_called++;
+// printf("CALLBACK CALLED\n");
+// s_num_times_gpio_callback_called++;
 // }
 
 // static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
-  // printf("X86 CALLBACK CALLED\n");
-  // s_num_times_x86_callback_called++;
+// printf("X86 CALLBACK CALLED\n");
+// s_num_times_x86_callback_called++;
 // }
 
 void setup_test(void) {
   printf("setup_test\n");
-  // gpio_init();
-  // event_queue_init();
-  // interrupt_init();
-  // soft_timer_init();
-  // gpio_it_init();
-  // s_test_output_pin.port = GPIO_PORT_A;
-  // s_test_output_pin.pin = 0;
-  // s_num_times_timer_callback_called = 0;
-  // s_num_times_gpio_callback_called = 0;
-  // s_num_times_x86_callback_called = 0;
-  // s_can_received = false;
+  gpio_init();
+  event_queue_init();
+  interrupt_init();
+  soft_timer_init();
+  gpio_it_init();
+  s_test_output_pin.port = GPIO_PORT_A;
+  s_test_output_pin.pin = 0;
+  s_num_times_timer_callback_called = 0;
+  s_num_times_gpio_callback_called = 0;
+  s_num_times_x86_callback_called = 0;
+  s_can_received = false;
 }
 
 // static void *prv_gpio_interrupt_thread(void *argument) {
-  // printf("prv_gpio_interrupt_thread\n");
-  // usleep(30);
-  // printf("trigger interrupt\n");
-  // gpio_it_trigger_interrupt(&s_test_output_pin);
-  // printf("INTERRUPT DONE\n");
-  // pthread_exit(NULL);
-  // return NULL;
+// printf("prv_gpio_interrupt_thread\n");
+// usleep(30);
+// printf("trigger interrupt\n");
+// gpio_it_trigger_interrupt(&s_test_output_pin);
+// printf("INTERRUPT DONE\n");
+// pthread_exit(NULL);
+// return NULL;
 // }
 
 // static void *prv_x86_interrupt_thread(void *argument) {
-  // printf("prv_x86_interrupt_thread\n");
-  // usleep(30);
-  // printf("trigger interrupt\n");
-  // x86_interrupt_trigger(s_interrupt_id);
-  // pthread_exit(NULL);
-  // return NULL;
+// printf("prv_x86_interrupt_thread\n");
+// usleep(30);
+// printf("trigger interrupt\n");
+// x86_interrupt_trigger(s_interrupt_id);
+// pthread_exit(NULL);
+// return NULL;
 // }
 
 // static void *prv_can_tx(void *argument) {
-  // printf("prv_can_tx\n");
-  // usleep(30);
-  // can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
-  // pthread_exit(NULL);
-  // return NULL;
+// printf("prv_can_tx\n");
+// usleep(30);
+// can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
+// pthread_exit(NULL);
+// return NULL;
 // }
 
 // static void prv_init_can(void) {
-  // printf("prv_init_can\n");
-  // CanSettings can_settings = {
-  //   .device_id = TEST_CAN_DEVICE_ID,
-  //   .bitrate = CAN_HW_BITRATE_500KBPS,
-  //   .rx_event = TEST_CAN_EVENT_RX,
-  //   .tx_event = TEST_CAN_EVENT_TX,
-  //   .fault_event = TEST_CAN_EVENT_FAULT,
-  //   .tx = { GPIO_PORT_A, 12 },
-  //   .rx = { GPIO_PORT_A, 11 },
-  //   .loopback = true,
-  // };
+// printf("prv_init_can\n");
+// CanSettings can_settings = {
+//   .device_id = TEST_CAN_DEVICE_ID,
+//   .bitrate = CAN_HW_BITRATE_500KBPS,
+//   .rx_event = TEST_CAN_EVENT_RX,
+//   .tx_event = TEST_CAN_EVENT_TX,
+//   .fault_event = TEST_CAN_EVENT_FAULT,
+//   .tx = { GPIO_PORT_A, 12 },
+//   .rx = { GPIO_PORT_A, 11 },
+//   .loopback = true,
+// };
 
-  // can_init(&s_can_storage, &can_settings);
-  // can_register_rx_default_handler(prv_rx_callback, NULL);
+// can_init(&s_can_storage, &can_settings);
+// can_register_rx_default_handler(prv_rx_callback, NULL);
 // }
 
 void teardown_test(void) {}
