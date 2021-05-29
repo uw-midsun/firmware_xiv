@@ -139,7 +139,7 @@ jobs:
         id: build-test
         run: |
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
-          make test_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+          make test_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}" &
 
       - name: Pytest
         id: py-test
