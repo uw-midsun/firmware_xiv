@@ -85,15 +85,15 @@ void setup_test(void) {
   s_can_received = false;
 }
 
-// static void *prv_gpio_interrupt_thread(void *argument) {
-// printf("prv_gpio_interrupt_thread\n");
-// usleep(30);
-// printf("trigger interrupt\n");
-// gpio_it_trigger_interrupt(&s_test_output_pin);
-// printf("INTERRUPT DONE\n");
-// pthread_exit(NULL);
-// return NULL;
-// }
+static void *prv_gpio_interrupt_thread(void *argument) {
+  printf("prv_gpio_interrupt_thread\n");
+  usleep(30);
+  printf("trigger interrupt\n");
+  gpio_it_trigger_interrupt(&s_test_output_pin);
+  printf("INTERRUPT DONE\n");
+  pthread_exit(NULL);
+  return NULL;
+}
 
 // static void *prv_x86_interrupt_thread(void *argument) {
 // printf("prv_x86_interrupt_thread\n");
