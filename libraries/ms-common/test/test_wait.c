@@ -154,33 +154,33 @@ void test_wait_works_timer(void) {
 }
 
 void test_wait_works_gpio(void) {
-  // printf("test_wait_works_gpio\n");
-  // uint8_t num_wait_cycles_timer = 0;
-  // pthread_t gpio_thread;
+  printf("test_wait_works_gpio\n");
+  uint8_t num_wait_cycles_timer = 0;
+  pthread_t gpio_thread;
 
-  // s_test_output_pin.port = GPIO_PORT_A;
-  // s_test_output_pin.pin = 0;
-  // static InterruptSettings s_it_settings = {
-  //   .type = INTERRUPT_TYPE_INTERRUPT,       //
-  //   .priority = INTERRUPT_PRIORITY_NORMAL,  //
-  // };
+  s_test_output_pin.port = GPIO_PORT_A;
+  s_test_output_pin.pin = 0;
+  static InterruptSettings s_it_settings = {
+    .type = INTERRUPT_TYPE_INTERRUPT,       //
+    .priority = INTERRUPT_PRIORITY_NORMAL,  //
+  };
 
-  // gpio_it_register_interrupt(&s_test_output_pin, &s_it_settings, INTERRUPT_EDGE_FALLING,
-  //                            prv_test_wait_gpio_thread_callback, NULL);
-  // printf("CREATING THREADS\n");
-  // pthread_create(&gpio_thread, NULL, prv_gpio_interrupt_thread, NULL);
+  gpio_it_register_interrupt(&s_test_output_pin, &s_it_settings, INTERRUPT_EDGE_FALLING,
+                             prv_test_wait_gpio_thread_callback, NULL);
+  printf("CREATING THREADS\n");
+  pthread_create(&gpio_thread, NULL, prv_gpio_interrupt_thread, NULL);
 
-  // while (s_num_times_gpio_callback_called < EXPECTED_TIMES_GPIO_CALLBACK_CALLED) {
-  //   printf("WAITING: %i\n", s_num_times_gpio_callback_called);
-  //   wait();
-  //   num_wait_cycles_timer++;
-  // }
+  while (s_num_times_gpio_callback_called < EXPECTED_TIMES_GPIO_CALLBACK_CALLED) {
+    printf("WAITING: %i\n", s_num_times_gpio_callback_called);
+    wait();
+    num_wait_cycles_timer++;
+  }
 
-  // pthread_join(gpio_thread, NULL);
-  // printf("JOINED THREADS: %i\n", s_num_times_gpio_callback_called);
+  pthread_join(gpio_thread, NULL);
+  printf("JOINED THREADS: %i\n", s_num_times_gpio_callback_called);
 
-  // TEST_ASSERT_EQUAL(EXPECTED_GPIO_INTERRUPT_CYCLES, num_wait_cycles_timer);
-  // TEST_ASSERT_EQUAL(EXPECTED_TIMES_GPIO_CALLBACK_CALLED, s_num_times_gpio_callback_called);
+  TEST_ASSERT_EQUAL(EXPECTED_GPIO_INTERRUPT_CYCLES, num_wait_cycles_timer);
+  TEST_ASSERT_EQUAL(EXPECTED_TIMES_GPIO_CALLBACK_CALLED, s_num_times_gpio_callback_called);
 }
 
 void test_wait_works_raw_x86(void) {
