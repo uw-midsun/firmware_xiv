@@ -40,7 +40,7 @@ typedef enum {
   TEST_CAN_EVENT_FAULT,
 } TestCanEvent;
 
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+// static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   // printf("Received a message!\n");
 
   // if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
@@ -54,22 +54,22 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   //   printf("\n");
   // }
   // s_can_received = true;
-  return STATUS_CODE_OK;
-}
+//   return STATUS_CODE_OK;
+// }
 
-static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
+// static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
   // s_num_times_timer_callback_called++;
-}
+// }
 
-static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
+// static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
   // printf("CALLBACK CALLED\n");
   // s_num_times_gpio_callback_called++;
-}
+// }
 
-static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
+// static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
   // printf("X86 CALLBACK CALLED\n");
   // s_num_times_x86_callback_called++;
-}
+// }
 
 void setup_test(void) {
   printf("setup_test\n");
@@ -86,7 +86,7 @@ void setup_test(void) {
   // s_can_received = false;
 }
 
-static void *prv_gpio_interrupt_thread(void *argument) {
+// static void *prv_gpio_interrupt_thread(void *argument) {
   // printf("prv_gpio_interrupt_thread\n");
   // usleep(30);
   // printf("trigger interrupt\n");
@@ -94,26 +94,26 @@ static void *prv_gpio_interrupt_thread(void *argument) {
   // printf("INTERRUPT DONE\n");
   // pthread_exit(NULL);
   // return NULL;
-}
+// }
 
-static void *prv_x86_interrupt_thread(void *argument) {
+// static void *prv_x86_interrupt_thread(void *argument) {
   // printf("prv_x86_interrupt_thread\n");
   // usleep(30);
   // printf("trigger interrupt\n");
   // x86_interrupt_trigger(s_interrupt_id);
   // pthread_exit(NULL);
   // return NULL;
-}
+// }
 
-static void *prv_can_tx(void *argument) {
+// static void *prv_can_tx(void *argument) {
   // printf("prv_can_tx\n");
   // usleep(30);
   // can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
   // pthread_exit(NULL);
   // return NULL;
-}
+// }
 
-static void prv_init_can(void) {
+// static void prv_init_can(void) {
   // printf("prv_init_can\n");
   // CanSettings can_settings = {
   //   .device_id = TEST_CAN_DEVICE_ID,
@@ -128,7 +128,7 @@ static void prv_init_can(void) {
 
   // can_init(&s_can_storage, &can_settings);
   // can_register_rx_default_handler(prv_rx_callback, NULL);
-}
+// }
 
 void teardown_test(void) {}
 
