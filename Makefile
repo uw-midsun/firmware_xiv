@@ -242,7 +242,7 @@ lint_quick:
 
 # Globally disable the following pylint messages:
 PYLINT_DISABLE := \
-	import-error redefined-outer-name unused-argument \
+	consider-using-with import-error redefined-outer-name unused-argument \
 	too-few-public-methods duplicate-code no-self-use
 
 # Disable these additional pylint messages for MU:
