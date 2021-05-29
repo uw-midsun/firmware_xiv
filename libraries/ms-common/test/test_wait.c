@@ -64,10 +64,9 @@ static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void 
   s_num_times_gpio_callback_called++;
 }
 
-// static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
-// printf("X86 CALLBACK CALLED\n");
-// s_num_times_x86_callback_called++;
-// }
+static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
+  s_num_times_x86_callback_called++;
+}
 
 void setup_test(void) {
   printf("setup_test\n");
@@ -94,14 +93,14 @@ static void *prv_gpio_interrupt_thread(void *argument) {
   return NULL;
 }
 
-// static void *prv_x86_interrupt_thread(void *argument) {
-// printf("prv_x86_interrupt_thread\n");
-// usleep(30);
-// printf("trigger interrupt\n");
-// x86_interrupt_trigger(s_interrupt_id);
-// pthread_exit(NULL);
-// return NULL;
-// }
+static void *prv_x86_interrupt_thread(void *argument) {
+  printf("prv_x86_interrupt_thread\n");
+  usleep(30);
+  printf("trigger interrupt\n");
+  x86_interrupt_trigger(s_interrupt_id);
+  pthread_exit(NULL);
+  return NULL;
+}
 
 // static void *prv_can_tx(void *argument) {
 // printf("prv_can_tx\n");
@@ -183,35 +182,35 @@ void test_wait_works_gpio(void) {
 }
 
 void test_wait_works_raw_x86(void) {
-  // printf("test_wait_works_raw_x86\n");
-  // uint8_t num_wait_cycles_timer = 0;
-  // pthread_t interrupt_thread;
+  printf("test_wait_works_raw_x86\n");
+  uint8_t num_wait_cycles_timer = 0;
+  pthread_t interrupt_thread;
 
-  // uint8_t handler_id;
+  uint8_t handler_id;
 
-  // x86_interrupt_register_handler(prv_test_wait_x86_thread_callback, &handler_id);
-  // InterruptSettings it_settings = {
-  //   .type = INTERRUPT_TYPE_INTERRUPT,       //
-  //   .priority = INTERRUPT_PRIORITY_NORMAL,  //
-  // };
+  x86_interrupt_register_handler(prv_test_wait_x86_thread_callback, &handler_id);
+  InterruptSettings it_settings = {
+    .type = INTERRUPT_TYPE_INTERRUPT,       //
+    .priority = INTERRUPT_PRIORITY_NORMAL,  //
+  };
 
-  // x86_interrupt_register_interrupt(handler_id, &it_settings, &s_interrupt_id);
+  x86_interrupt_register_interrupt(handler_id, &it_settings, &s_interrupt_id);
 
-  // printf("CREATING THREADS\n");
-  // printf("PIN: %d\n", s_test_output_pin.pin);
-  // pthread_create(&interrupt_thread, NULL, prv_x86_interrupt_thread, NULL);
+  printf("CREATING THREADS\n");
+  printf("PIN: %d\n", s_test_output_pin.pin);
+  pthread_create(&interrupt_thread, NULL, prv_x86_interrupt_thread, NULL);
 
-  // while (s_num_times_x86_callback_called < EXPECTED_TIMES_x86_CALLBACK_CALLED) {
-  //   printf("WAITING: %i\n", s_num_times_x86_callback_called);
-  //   wait();
-  //   num_wait_cycles_timer++;
-  // }
+  while (s_num_times_x86_callback_called < EXPECTED_TIMES_x86_CALLBACK_CALLED) {
+    printf("WAITING: %i\n", s_num_times_x86_callback_called);
+    wait();
+    num_wait_cycles_timer++;
+  }
 
-  // pthread_join(interrupt_thread, NULL);
-  // printf("JOINED THREADS: %i\n", s_num_times_x86_callback_called);
+  pthread_join(interrupt_thread, NULL);
+  printf("JOINED THREADS: %i\n", s_num_times_x86_callback_called);
 
-  // TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
-  // TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
+  TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
+  TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
 }
 
 void test_can_wake_works(void) {
