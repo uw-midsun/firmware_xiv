@@ -5,6 +5,7 @@
 #include "can.h"
 #include "can_transmit.h"
 #include "can_unpack.h"
+#include "data_store.h"
 #include "delay.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
@@ -33,34 +34,13 @@
 static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;
 
-static bool relay_err_rx_cb_called;
-static bool relay_assert_cb_called;
-
-static void prv_relay_assert_cb(void *context) {
-  relay_assert_cb_called = true;
-
-  if (context) {
-    RelayFsmStorage *storage = (RelayFsmStorage *)context;
-    // Right place to check isErrCalled, but not sure
-    // how to or where to call prv_err_rx_cb to set
-    // relay_err_rx_cb_called and isErrCalled to true
-    if (relay_err_rx_cb_called) {
-      TEST_ASSERT_TRUE(storage->isErrCalled);
-    } else {
-      TEST_ASSERT_FALSE(storage->isErrCalled);
-    }
-  }
-}
-static StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  relay_err_rx_cb_called = true;
-  if (context) {
-    RelayFsmStorage *storage = (RelayFsmStorage *)context;
-    storage->isErrCalled = true;
-  }
+static bool relay_assert_rx_cb_called;
+static StatusCode prv_assert_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  relay_assert_rx_cb_called = true;
   uint8_t solar_fault;
   uint8_t fault_data;
   CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &solar_fault, &fault_data);
-  TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_DRV120, solar_fault);
+  TEST_ASSERT_EQUAL(EE_SOLAR_RELAY_OPEN_ERROR, solar_fault);
   TEST_ASSERT_EQUAL(0, fault_data);
   return STATUS_CODE_OK;
 }
@@ -68,7 +48,7 @@ static StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStat
 void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
                                   SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_err_rx_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_assert_rx_cb, NULL);
   event_queue_init();
   gpio_it_init();
   fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_6_MPPTS));
@@ -209,27 +189,6 @@ void test_invalid_input(void) {
 void test_relay_it_cb(void) {
   gpio_it_trigger_interrupt(config_get_drv120_status_pin());
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE(relay_err_rx_cb_called);
+  TEST_ASSERT_TRUE(relay_assert_rx_cb_called);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-}
-
-void test_relay_assert_it_cb(void) {
-  relay_err_rx_cb_called = false;
-  relay_assert_cb_called = false;
-  s_storage.isErrCalled = false;
-
-  Drv120RelaySettings settings = {
-    .enable_pin = config_get_drv120_enable_pin(),
-    .status_pin = config_get_drv120_status_pin(),
-    .error_handler = prv_relay_assert_cb,
-    .context = &s_storage,
-  };
-
-  // If there is going to be an error
-  drv120_relay_init(&settings);
-  gpio_it_trigger_interrupt(config_get_drv120_status_pin());
-  // not sure
-  // how to and where to call prv_err_rx_cb to set
-  // relay_err_rx_cb_called and isErrCalled to true
-  TEST_ASSERT_TRUE(relay_assert_cb_called);
 }

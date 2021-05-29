@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "can_unpack.h"
+#include "can_transmit.h"
 #include "data_store.h"
 #include "event_queue.h"
 #include "fault_handler.h"
@@ -21,8 +22,9 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   // Cast context to storage
   RelayFsmStorage *storage = (RelayFsmStorage*)context;
   // Check if prv_realy_err_cb has been called
-  if (storage->isErrCalled  == true){
+  if (storage->isErrCalled  == true) {
     fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
+    return;
   }
 
   int32_t data_value;
@@ -30,23 +32,21 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   data_store_get_is_set(DATA_POINT_CURRENT, &isSet);
 
-  while (!isSet) {
+  if (!isSet) {
     soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
+    return;
   }
 
   data_store_get(DATA_POINT_CURRENT, (uint32_t *)&data_value);
 
   if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
-    fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0);
+    fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0); // relay error , maybe specify the reason
   } else {
     // success message
-    if(solar_mppt_count == 6){
+    if (solar_mppt_count == 6) {
       CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS();
-    }else if(solar_mppt_count == 5){
+    } else if (solar_mppt_count == 5) {
       CAN_TRANSMIT_RELAY_CURRENT_5_MPPTS();
-    }
-    else{
-      // could add a default fault message 
     }
   }
 }
@@ -57,7 +57,7 @@ static void prv_relay_err_cb(void *context) {
   RelayFsmStorage *storage = (RelayFsmStorage*)context;
   // Setting error flag true if this function is called
   storage->isErrCalled = true;
-  fault_handler_raise_fault(EE_SOLAR_FAULT_DRV120, 0);
+  fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0); // raise relay open
 }
 
 FSM_DECLARE_STATE(state_relay_open);
