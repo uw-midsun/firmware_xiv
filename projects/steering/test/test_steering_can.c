@@ -57,7 +57,7 @@ void test_steering_digital_input_cc_toggle() {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(3, count);
+  TEST_ASSERT_EQUAL(1, count);
 }
 
 void teardown_test(void) {}
