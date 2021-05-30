@@ -39,8 +39,7 @@ typedef enum {
   TEST_CAN_EVENT_FAULT,
 } TestCanEvent;
 
-static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply)
-{
+static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   printf("Received a message!\n");
 
   if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
