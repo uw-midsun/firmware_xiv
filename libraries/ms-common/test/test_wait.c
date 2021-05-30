@@ -221,8 +221,7 @@ void test_can_wake_works(void) {
     can_process_event(&e);
 
     num_wait_cycles_timer++;
-    if (num_wait_cycles_timer > 10)
-      break;
+    if (num_wait_cycles_timer > 10) break;
   }
 
   pthread_join(can_send_thread, NULL);
