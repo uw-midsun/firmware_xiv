@@ -217,10 +217,10 @@ void test_can_wake_works(void) {
   pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
   Event e = { 0 };
   while (!s_can_received) {
-    while (event_process(&e) == STATUS_CODE_OK) {
-      can_process_event(&e);
-    }
     wait();
+    while (event_process(&e) != STATUS_CODE_OK) {
+    }
+    can_process_event(&e);
 
     num_wait_cycles_timer++;
     if (num_wait_cycles_timer > 10) break;
