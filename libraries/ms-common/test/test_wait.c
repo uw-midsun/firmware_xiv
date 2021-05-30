@@ -102,7 +102,7 @@ static void *prv_x86_interrupt_thread(void *argument) {
 }
 
 static void *prv_can_tx(void *argument) {
-  usleep(30);
+  usleep(50);
   can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
   pthread_exit(NULL);
   return NULL;
@@ -217,10 +217,10 @@ void test_can_wake_works(void) {
   pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
   Event e = { 0 };
   while (!s_can_received) {
-    while (event_process(&e) == STATUS_CODE_OK) {
-      can_process_event(&e);
-    }
     wait();
+    while (event_process(&e) != STATUS_CODE_OK) {
+    }
+    can_process_event(&e);
 
     num_wait_cycles_timer++;
     if (num_wait_cycles_timer > 10) break;
