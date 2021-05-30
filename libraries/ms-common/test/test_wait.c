@@ -66,7 +66,7 @@ static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void 
 }
 
 static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
-  LOG_DEBUG("X86 CALLBACK CALLED\n")
+  LOG_DEBUG("X86 CALLBACK CALLED\n");
   s_num_times_x86_callback_called++;
 }
 
