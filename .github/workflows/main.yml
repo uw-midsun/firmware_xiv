@@ -102,32 +102,32 @@ jobs:
           make codegen
           make codegen_dbc
 
-      # - name: Check for uncommitted codegen changes
-      #   id: check-uncommitted-changes
-      #   continue-on-error: true
-      #   # https://stackoverflow.com/a/3879077
-      #   run: |
-      #     git update-index --refresh || true
-      #     git diff-index --quiet HEAD --
+      - name: Check for uncommitted codegen changes
+        id: check-uncommitted-changes
+        continue-on-error: true
+        # https://stackoverflow.com/a/3879077
+        run: |
+          git update-index --refresh || true
+          git diff-index --quiet HEAD --
 
-      # - name: Post PR comment on uncommitted changes
-      #   if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
-      #   uses: actions/github-script@v4
-      #   with:
-      #     script: |
-      #       const fs = require('fs');
-      #       const comment = fs.readFileSync(
-      #         './.github/workflows/uncommitted-codegen-changes.md', 'utf8');
-      #       github.issues.createComment({
-      #         issue_number: context.issue.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         body: comment,
-      #       });
+      - name: Post PR comment on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-codegen-changes.md', 'utf8');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
 
-      # - name: Fail on uncommitted changes
-      #   if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
-      #   run: exit 1
+      - name: Fail on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        run: exit 1
 
       - name: Build stm32f0xx
         id: build-stm32

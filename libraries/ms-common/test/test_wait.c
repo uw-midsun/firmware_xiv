@@ -40,15 +40,17 @@ typedef enum {
 } TestCanEvent;
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  LOG_DEBUG("Received a message!\n");
+
   if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
-    printf("Data:\n\t");
+    LOG_DEBUG("Data:\n\t");
     uint8_t i;
     for (i = 0; i < msg->dlc; i++) {
       uint8_t byte = 0;
       byte = msg->data >> (i * 8);
-      printf("%x ", byte);
+      LOG_DEBUG("%x ", byte);
     }
-    printf("\n");
+    LOG_DEBUG("\n");
   }
   s_can_received = true;
   return STATUS_CODE_OK;
@@ -59,10 +61,12 @@ static void prv_test_wait_interrupt_callback(SoftTimerId id, void *context) {
 }
 
 static void prv_test_wait_gpio_thread_callback(const GpioAddress *address, void *context) {
+  LOG_DEBUG("CALLBACK CALLED\n");
   s_num_times_gpio_callback_called++;
 }
 
 static void prv_test_wait_x86_thread_callback(uint8_t interrupt_id) {
+  LOG_DEBUG("X86 CALLBACK CALLED\n")
   s_num_times_x86_callback_called++;
 }
 
@@ -82,23 +86,22 @@ void setup_test(void) {
 
 static void *prv_gpio_interrupt_thread(void *argument) {
   usleep(30);
-  printf("trigger interrupt\n");
+  LOG_DEBUG("trigger interrupt\n");
   gpio_it_trigger_interrupt(&s_test_output_pin);
-  printf("INTERRUPT DONE\n");
+  LOG_DEBUG("INTERRUPT DONE\n");
   pthread_exit(NULL);
   return NULL;
 }
 
 static void *prv_x86_interrupt_thread(void *argument) {
   usleep(30);
-  printf("trigger interrupt\n");
+  LOG_DEBUG("trigger interrupt\n");
   x86_interrupt_trigger(s_interrupt_id);
   pthread_exit(NULL);
   return NULL;
 }
 
 static void *prv_can_tx(void *argument) {
-  printf("prv_can_tx\n");
   usleep(30);
   can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
   pthread_exit(NULL);
@@ -106,7 +109,6 @@ static void *prv_can_tx(void *argument) {
 }
 
 static void prv_init_can(void) {
-  printf("prv_init_can\n");
   CanSettings can_settings = {
     .device_id = TEST_CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -158,17 +160,17 @@ void test_wait_works_gpio(void) {
 
   gpio_it_register_interrupt(&s_test_output_pin, &s_it_settings, INTERRUPT_EDGE_FALLING,
                              prv_test_wait_gpio_thread_callback, NULL);
-  printf("CREATING THREADS\n");
+  LOG_DEBUG("CREATING THREADS\n");
   pthread_create(&gpio_thread, NULL, prv_gpio_interrupt_thread, NULL);
 
   while (s_num_times_gpio_callback_called < EXPECTED_TIMES_GPIO_CALLBACK_CALLED) {
-    printf("WAITING: %i\n", s_num_times_gpio_callback_called);
+    LOG_DEBUG("WAITING: %i\n", s_num_times_gpio_callback_called);
     wait();
     num_wait_cycles_timer++;
   }
 
   pthread_join(gpio_thread, NULL);
-  printf("JOINED THREADS: %i\n", s_num_times_gpio_callback_called);
+  LOG_DEBUG("JOINED THREADS: %i\n", s_num_times_gpio_callback_called);
 
   TEST_ASSERT_EQUAL(EXPECTED_GPIO_INTERRUPT_CYCLES, num_wait_cycles_timer);
   TEST_ASSERT_EQUAL(EXPECTED_TIMES_GPIO_CALLBACK_CALLED, s_num_times_gpio_callback_called);
@@ -188,18 +190,18 @@ void test_wait_works_raw_x86(void) {
 
   x86_interrupt_register_interrupt(handler_id, &it_settings, &s_interrupt_id);
 
-  printf("CREATING THREADS\n");
-  printf("PIN: %d\n", s_test_output_pin.pin);
+  LOG_DEBUG("CREATING THREADS\n");
+  LOG_DEBUG("PIN: %d\n", s_test_output_pin.pin);
   pthread_create(&interrupt_thread, NULL, prv_x86_interrupt_thread, NULL);
 
   while (s_num_times_x86_callback_called < EXPECTED_TIMES_x86_CALLBACK_CALLED) {
-    printf("WAITING: %i\n", s_num_times_x86_callback_called);
+    LOG_DEBUG("WAITING: %i\n", s_num_times_x86_callback_called);
     wait();
     num_wait_cycles_timer++;
   }
 
   pthread_join(interrupt_thread, NULL);
-  printf("JOINED THREADS: %i\n", s_num_times_x86_callback_called);
+  LOG_DEBUG("JOINED THREADS: %i\n", s_num_times_x86_callback_called);
 
   TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
   TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
