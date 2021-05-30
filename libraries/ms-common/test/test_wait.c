@@ -18,7 +18,7 @@ static uint8_t s_num_times_x86_callback_called;
 static GpioAddress s_test_output_pin = { .port = GPIO_PORT_A, .pin = 0 };
 static uint8_t s_interrupt_id;
 static CanStorage s_can_storage;
-static bool s_can_received;
+static volatile bool s_can_received;
 
 static uint32_t s_tx_id = 0x01;
 static uint64_t s_tx_data = 0x1122334455667788;
@@ -43,14 +43,14 @@ static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckSt
   LOG_DEBUG("Received a message!\n");
 
   if (LOG_LEVEL_VERBOSITY <= LOG_LEVEL_DEBUG) {
-    LOG_DEBUG("Data:\n\t");
+    printf("Data:\n\t");
     uint8_t i;
     for (i = 0; i < msg->dlc; i++) {
       uint8_t byte = 0;
       byte = msg->data >> (i * 8);
-      LOG_DEBUG("%x ", byte);
+      printf("%x ", byte);
     }
-    LOG_DEBUG("\n");
+    printf("\n");
   }
   s_can_received = true;
   return STATUS_CODE_OK;
