@@ -103,13 +103,13 @@ static void *prv_x86_interrupt_thread(void *argument) {
   return NULL;
 }
 
-// static void *prv_can_tx(void *argument) {
-// printf("prv_can_tx\n");
-// usleep(30);
-// can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
-// pthread_exit(NULL);
-// return NULL;
-// }
+static void *prv_can_tx(void *argument) {
+  printf("prv_can_tx\n");
+  usleep(30);
+  can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
+  pthread_exit(NULL);
+  return NULL;
+}
 
 static void prv_init_can(void) {
   printf("prv_init_can\n");
@@ -220,21 +220,21 @@ void test_can_wake_works(void) {
 
   prv_init_can();
 
-  // pthread_t can_send_thread;
+  pthread_t can_send_thread;
 
-  // pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
-  // Event e = { 0 };
-  // while (!s_can_received) {
-  //   wait();
-  //   while (event_process(&e) != STATUS_CODE_OK) {
-  //   }
-  //   can_process_event(&e);
+  pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
+  Event e = { 0 };
+  while (!s_can_received) {
+    wait();
+    while (event_process(&e) != STATUS_CODE_OK) {
+    }
+    can_process_event(&e);
 
-  //   num_wait_cycles_timer++;
-  // }
+    num_wait_cycles_timer++;
+  }
 
-  // pthread_join(can_send_thread, NULL);
+  pthread_join(can_send_thread, NULL);
 
-  // // we should only wait once
-  // TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
+  // we should only wait once
+  TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
 }
