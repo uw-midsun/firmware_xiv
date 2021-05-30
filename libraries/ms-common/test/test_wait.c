@@ -97,13 +97,13 @@ static void *prv_x86_interrupt_thread(void *argument) {
   return NULL;
 }
 
-// static void *prv_can_tx(void *argument) {
-//   printf("prv_can_tx\n");
-//   usleep(30);
-//   can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
-//   pthread_exit(NULL);
-//   return NULL;
-// }
+static void *prv_can_tx(void *argument) {
+  printf("prv_can_tx\n");
+  usleep(30);
+  can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
+  pthread_exit(NULL);
+  return NULL;
+}
 
 static void prv_init_can(void) {
   printf("prv_init_can\n");
