@@ -102,8 +102,11 @@ static void *prv_x86_interrupt_thread(void *argument) {
 }
 
 static void *prv_can_tx(void *argument) {
-  usleep(50);
-  can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
+  usleep(30);
+  StatusCode result;
+  do {
+    result = can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
+  } while (result != STATUS_CODE_OK);
   pthread_exit(NULL);
   return NULL;
 }
