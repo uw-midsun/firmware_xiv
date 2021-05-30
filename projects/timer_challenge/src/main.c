@@ -1,37 +1,33 @@
-// Firmware 102 Homework
-// Vaaranan Yogalingam
-// 2021-05-29
-
 #include <stdint.h>
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
-#define PERIOD 500
+#define DELAY_TIME_MS 500
 
 typedef struct counters {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-void increment_callback(SoftTimerId timer_id, void *context) {
+static void prv_increment_callback(SoftTimerId timer_id, void *context) {
   Counters *counter_data = context;
-  counter_data->counter_a += 1;
+  counter_data->counter_a++;
   LOG_DEBUG("Counter A: %d\n", counter_data->counter_a);
 
-  if (counter_data->counter_a % 2 == 0 && counter_data->counter_a != 0) {
-    counter_data->counter_b += 1;
+  if (counter_data->counter_a % 2 == 0) {
+    counter_data->counter_b++;
     LOG_DEBUG("Counter B: %d\n", counter_data->counter_b);
   }
-  soft_timer_start_millis(PERIOD, increment_callback, context, NULL);
+  soft_timer_start_millis(DELAY_TIME_MS, prv_increment_callback, counter_data, NULL);
 }
 
 int main() {
   interrupt_init();
   soft_timer_init();
 
-  Counters counters = { 0, 0 };
-  soft_timer_start_millis(PERIOD, increment_callback, &counters, NULL);
+  Counters counters = { 0 };
+  soft_timer_start_millis(DELAY_TIME_MS, prv_increment_callback, &counters, NULL);
 
   while (true) {
     wait();
