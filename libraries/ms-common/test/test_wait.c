@@ -103,14 +103,14 @@ static void *prv_x86_interrupt_thread(void *argument) {
 
 static void *prv_can_tx(void *argument) {
   usleep(30);
-  // can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
-  CanMessage msg = {
-    .msg_id = s_tx_id,
-    .type = CAN_MSG_TYPE_DATA,
-    .dlc = s_tx_len,
-    .data = s_tx_data,
-  };
-  can_transmit(&msg, NULL);
+  can_hw_transmit(s_tx_id, false, (uint8_t *)&s_tx_data, s_tx_len);
+  // CanMessage msg = {
+  //   .msg_id = s_tx_id,
+  //   .type = CAN_MSG_TYPE_DATA,
+  //   .dlc = s_tx_len,
+  //   .data = s_tx_data,
+  // };
+  // can_transmit(&msg, NULL);
   pthread_exit(NULL);
   return NULL;
 }
