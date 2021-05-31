@@ -29,6 +29,7 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "smoke_test.h"
 #include "voltage_regulator.h"
 #include "wait.h"
 
@@ -104,6 +105,16 @@ static void prv_current_measurement_data_ready_callback(void *context) {
   // called when current_measurement has new data: send it to publish_data for publishing
   CurrentMeasurementStorage *storage = current_measurement_get_storage();
   publish_data_publish(storage->measurements);
+}
+
+// Temporary smoke test: turn everything specified in smoke_test.h on.
+static void prv_smoke_test(bool is_front_pd) {
+  Output *turn_on = is_front_pd ? g_turn_on_front : g_turn_on_rear;
+  size_t num_outputs = is_front_pd ? SIZEOF_ARRAY(g_turn_on_front) : SIZEOF_ARRAY(g_turn_on_rear);
+  for (size_t i = 0; i < num_outputs; i++) {
+    LOG_DEBUG("Smoke test: turning on output %d\n", i);
+    output_set_state(turn_on[i], OUTPUT_STATE_ON);
+  }
 }
 
 int main(void) {
@@ -200,6 +211,8 @@ int main(void) {
   }
 
   LOG_DEBUG("Power distribution successfully initialized as %s.\n", is_front_pd ? "front" : "rear");
+
+  prv_smoke_test(is_front_pd);
 
   // process events
   Event e = { 0 };
