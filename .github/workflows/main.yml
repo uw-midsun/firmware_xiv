@@ -138,8 +138,8 @@ jobs:
       - name: Build and test
         id: build-test
         run: |
-          make build_all PLATFORM=x86 DEFINE="${DEFINES}"
-          make test_all PLATFORM=x86 DEFINE="${DEFINES}"
+          make build_all PLATFORM=x86
+          make test_all PLATFORM=x86
 
       # - name: Pytest
       #   id: py-test
