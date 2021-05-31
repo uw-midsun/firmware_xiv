@@ -138,8 +138,8 @@ jobs:
       - name: Build and test
         id: build-test
         run: |
-          make build_all PLATFORM=x86
-          make test_all PLATFORM=x86
+          make build_all PLATFORM=x86 DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_DEBUG"
+          make test_all PLATFORM=x86 DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_DEBUG"
 
       # - name: Pytest
       #   id: py-test
