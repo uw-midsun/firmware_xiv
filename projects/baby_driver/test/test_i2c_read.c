@@ -188,8 +188,8 @@ void test_multiple_msg_port_2(void) {
   MS_TEST_HELPER_CAN_TX_RX(TEST_CAN_EVENT_TX, TEST_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  // Compares data received to data sent
-  TEST_ASSERT_EQUAL(data_port, s_test_storage.port);
+      // Compares data received to data sent
+      TEST_ASSERT_EQUAL(data_port, s_test_storage.port);
   TEST_ASSERT_EQUAL(data_address, s_test_storage.address);
   TEST_ASSERT_EQUAL(0, s_test_storage.reg);
   TEST_ASSERT_EQUAL(data_rx_len, s_test_storage.rx_len);

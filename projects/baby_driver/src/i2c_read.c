@@ -61,7 +61,7 @@ static StatusCode prv_i2c_read_command_callback(uint8_t data[8], void *context, 
   s_rx_len = data[3];
   uint8_t is_reg = data[4];
   uint8_t reg = data[5];
-  
+
   // Initializes I2C module on the I2C port
   if (port == I2C_PORT_1) {
     I2CSettings i2c1_settings = {
