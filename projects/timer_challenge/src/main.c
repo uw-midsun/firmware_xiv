@@ -5,7 +5,7 @@
 #include "wait.h"
 #define DELAY_TIME_MS 500
 
-typedef struct counters {
+typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
