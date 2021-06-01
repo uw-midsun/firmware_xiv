@@ -7,15 +7,7 @@
 #include "i2c.h"
 #include "status.h"
 
-typedef struct I2CReadCommand {
-  I2CPort port;
-  I2CAddress address;
-  uint8_t rx_len;
-  uint8_t is_reg;
-  uint8_t reg;
-} I2CReadCommand;
-
 #define I2C_READ_DEFAULT_TX_DELAY_MS 5
 
 // Timeout period can be made shorter for testing
-StatusCode i2c_read_init(uint32_t timeout_soft_timer);
+StatusCode i2c_read_init(uint32_t tx_delay_ms);
