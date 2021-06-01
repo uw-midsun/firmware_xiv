@@ -63,7 +63,8 @@ typedef struct CanDatagramSettings {
   CanDatagramTxCb tx_cb;
   CanDatagramMode mode;
 
-  EventId transition_event;
+  EventId tx_event;
+  EventId rx_event;
   EventId repeat_event;
   EventId error_event;
 
@@ -79,7 +80,8 @@ typedef struct CanDatagramStorage {
   CanDatagramMode mode;
   CanDatagramTxCb tx_cb;
 
-  EventId transition_event;
+  EventId tx_event;
+  EventId rx_event;
   EventId repeat_event;
   EventId error_event;
 
@@ -106,3 +108,4 @@ CanDatagramStatus can_datagram_get_status(void);
 
 // Returns datagram for reading and verification purposes
 CanDatagram *can_datagram_get_datagram(void);
+
