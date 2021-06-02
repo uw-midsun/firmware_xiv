@@ -270,10 +270,11 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
 
   if (!s_socket_data.loopback) {
     // Unblock TX thread
+    print("here\n");
     sem_post(&s_tx_sem);
   } else {
-    fifo_pop(&s_socket_data.tx_fifo, &s_socket_data.rx_frame);
-
+    StatusCode code = fifo_pop(&s_socket_data.tx_fifo, &s_socket_data.rx_frame);
+    print("code: %d\n", code);
     // TX the frame since STM32 still TXes messages in loopback
     int bytes = write(s_socket_data.can_fd, &frame, sizeof(frame));
 
@@ -281,6 +282,7 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
     if (s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
       s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback(
           s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
+      print("calling callback\n");
     }
 
     s_socket_data.rx_frame_valid = true;
