@@ -9,7 +9,7 @@
 static void prv_log_adc_reading(const GpioAddress *address, void *context) {
   GpioAddress *adc_addr = context;
   uint16_t adc_data = 0;
-  adc_read_converted_pin(adc_addr, &adc_data);
+  adc_read_converted_pin(*adc_addr, &adc_data);
 
   LOG_DEBUG("The ADC converted reading is: %d\n", adc_data);
 }
