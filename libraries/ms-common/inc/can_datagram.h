@@ -28,7 +28,6 @@
 
 
 #define CAN_DATAGRAM_VERSION 1
-#define DATAGRAM_RX_BUFFER_LEN 256
 
 // Callback used to tx a datagram message, used to handle all CAN transmission
 // Called in each state as data becomes ready to be transmitted
@@ -85,8 +84,8 @@ typedef struct CanDatagramStorage {
   EventId repeat_event;
   EventId error_event;
 
-  uint16_t rx_bytes_read;
-  uint16_t tx_bytes_sent;
+  size_t rx_bytes_read;
+  size_t tx_bytes_sent;
   CanDatagramStatus status;
   bool start;
 } CanDatagramStorage;

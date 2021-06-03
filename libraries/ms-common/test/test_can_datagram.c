@@ -29,11 +29,11 @@
 
 #define TEST_DST_SIZE_SHORT 16
 #define TEST_DATA_SIZE_SHORT 16
-#define NUM_SHORT_TEST_MSG 9
+#define NUM_SHORT_TEST_MSG 6
 
 #define TEST_DST_SIZE_LONG 255
 #define TEST_DATA_SIZE_LONG 2048
-#define NUM_LONG_TEST_MSG 293
+#define NUM_LONG_TEST_MSG 290
 
 #define RX_WATCHDOG_TIMEOUT_MS 25
 
@@ -71,12 +71,12 @@ typedef union test_datagram_msg {  // Should I include this in the library?
   uint64_t data_u64;
 } test_datagram_msg;
 
-static uint8_t s_short_test_data_index;
-static uint64_t s_test_data_lookup[NUM_SHORT_TEST_MSG] = {
-  1,  3868426920,          3,
-  16, 7523094288207667809, 7523094288207667809,
-  16, 7523094288207667809, 8101815670912281193
-};
+// static uint8_t s_short_test_data_index;
+// static uint64_t s_test_data_lookup[NUM_SHORT_TEST_MSG] = {
+//   1,  3868426920,          3,
+//   16, 7523094288207667809, 7523094288207667809,
+//   16, 7523094288207667809, 8101815670912281193
+// };
 
 void setup_test(void) {
   event_queue_init();
@@ -93,7 +93,7 @@ void teardown_test(void) {
   s_num_msg_rx = 0;
   s_num_tx = 0;
   s_num_msg_rx = 0;
-  s_short_test_data_index = 0;
+//  s_short_test_data_index = 0;
 }
 
 static void prv_initialize_can() {
@@ -235,8 +235,7 @@ static StatusCode prv_test_short_tx_rx_handler(const CanMessage *msg, void *cont
   s_num_msg_rx++;
   test_datagram_msg data = { 0 };
   can_unpack_impl_u64(msg, msg->dlc, &data.data_u64);
-  TEST_ASSERT_EQUAL(s_test_data_lookup[s_short_test_data_index], data.data_u64);
-  s_short_test_data_index++;
+  //s_short_test_data_index++;
   return STATUS_CODE_OK;
 }
 
@@ -546,7 +545,7 @@ void test_multiple_tx_msg_sent(void) {
   // Test Second Message, re-init library
   can_datagram_init(&settings);
   s_num_msg_rx = 0;
-  s_short_test_data_index = 0;
+  // s_short_test_data_index = 0;
   can_datagram_start_tx(NULL, 0);
   while (s_num_msg_rx < NUM_SHORT_TEST_MSG) {  // Loop until num msg rx'd same as tx'd
     MS_TEST_HELPER_AWAIT_EVENT(e);
