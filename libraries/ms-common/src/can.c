@@ -161,7 +161,6 @@ void prv_tx_handler(void *context) {
     // events were discarded. Raise a TX event to trigger a transmit attempt. We
     // only raise one event since TX ready interrupts are 1-to-1.
     if (can_fifo_size(&can_storage->tx_fifo) > 0) {
-      printf("raising event callback\n");
       event_raise(can_storage->tx_event, 0);
     }
   }
@@ -170,6 +169,7 @@ void prv_tx_handler(void *context) {
 // The RX ISR will fire once for each received message
 // Each event will result in one message's processing.
 void prv_rx_handler(void *context) {
+  printf("prv_rx_handler\n");
   CanStorage *can_storage = context;
   uint32_t rx_id = 0;
   CanMessage rx_msg = { 0 };

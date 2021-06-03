@@ -270,7 +270,6 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
 
   if (!s_socket_data.loopback) {
     // Unblock TX thread
-    printf("here\n");
     sem_post(&s_tx_sem);
   } else {
     StatusCode code = fifo_pop(&s_socket_data.tx_fifo, &s_socket_data.rx_frame);
@@ -297,8 +296,9 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
         break;
       }
     }
-
+    printf("here callback\n");
     if (filter_match && s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback != NULL) {
+      printf("calling rx callback\n");
       s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
           s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
     }
