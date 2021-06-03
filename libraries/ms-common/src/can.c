@@ -159,7 +159,9 @@ void prv_tx_handler(void *context) {
     // If we failed to TX some messages or aren't transmitting fast enough, those
     // events were discarded. Raise a TX event to trigger a transmit attempt. We
     // only raise one event since TX ready interrupts are 1-to-1.
+    printf("prv_tx_handler callback\n");
     if (can_fifo_size(&can_storage->tx_fifo) > 0) {
+      printf("raising event callback\n");
       event_raise(can_storage->tx_event, 0);
     }
   }

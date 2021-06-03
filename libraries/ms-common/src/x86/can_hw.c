@@ -280,9 +280,9 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
 
     // Call handlers directly
     if (s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback != NULL) {
+      printf("calling callback\n");
       s_socket_data.handlers[CAN_HW_EVENT_TX_READY].callback(
           s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
-      printf("calling callback\n");
     }
 
     s_socket_data.rx_frame_valid = true;
