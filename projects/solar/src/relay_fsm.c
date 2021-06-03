@@ -17,7 +17,6 @@
 
 static SolarMpptCount solar_mppt_count;
 
-// look at test_drv120 last test
 static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   // Cast context to storage
   RelayFsmStorage *storage = (RelayFsmStorage*)context;
@@ -40,7 +39,7 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   data_store_get(DATA_POINT_CURRENT, (uint32_t *)&data_value);
 
   if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
-    fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0); // relay error , maybe specify the reason
+    fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0xF0);
   } else {
     // success message
     if (solar_mppt_count == 6) {
@@ -53,11 +52,9 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
-  // Cast context to storage
   RelayFsmStorage *storage = (RelayFsmStorage*)context;
-  // Setting error flag true if this function is called
   storage->isErrCalled = true;
-  fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0); // raise relay open
+  fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
 }
 
 FSM_DECLARE_STATE(state_relay_open);

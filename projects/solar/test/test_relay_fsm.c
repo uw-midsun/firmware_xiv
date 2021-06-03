@@ -35,6 +35,8 @@ static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;
 
 static bool relay_assert_rx_cb_called;
+static bool over_current;
+static uint32_t current_value;
 static StatusCode prv_assert_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   relay_assert_rx_cb_called = true;
   uint8_t solar_fault;
@@ -42,6 +44,15 @@ static StatusCode prv_assert_rx_cb(const CanMessage *msg, void *context, CanAckS
   CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &solar_fault, &fault_data);
   TEST_ASSERT_EQUAL(EE_SOLAR_RELAY_OPEN_ERROR, solar_fault);
   TEST_ASSERT_EQUAL(0, fault_data);
+  LOG_DEBUG("Waiting\n");
+  delay_ms(10000);
+  if(over_current == true){ 
+    LOG_DEBUG("Checking Current\n");
+    CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &solar_fault, &fault_data);
+    TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_OVERCURRENT, solar_fault); // Does not work
+    TEST_ASSERT_EQUAL(0xF0, fault_data);
+  }
+
   return STATUS_CODE_OK;
 }
 
@@ -187,7 +198,17 @@ void test_invalid_input(void) {
 }
 
 void test_relay_it_cb(void) {
+  over_current = false;
   gpio_it_trigger_interrupt(config_get_drv120_status_pin());
+  MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
+  TEST_ASSERT_TRUE(relay_assert_rx_cb_called);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+void test_relay_over_cuurent_cb(void) {
+  over_current = true;
+  gpio_it_trigger_interrupt(config_get_drv120_status_pin());
+  data_store_set(DATA_POINT_CURRENT, current_value);
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   TEST_ASSERT_TRUE(relay_assert_rx_cb_called);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
