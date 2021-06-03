@@ -107,6 +107,7 @@ msg {
   source: CENTRE_CONSOLE
   target: "MOTOR_CONTROLLER, TELEMETRY"
   msg_name: "regen braking"
+  is_critical: true
   can_data {
     u8 {
       field_name_1: "state"
