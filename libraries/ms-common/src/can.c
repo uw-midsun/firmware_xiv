@@ -185,6 +185,7 @@ void prv_rx_handler(void *context) {
     CAN_MSG_SET_RAW_ID(&rx_msg, rx_id);
 
     StatusCode result = can_fifo_push(&can_storage->rx_fifo, &rx_msg);
+    printf("inside\n");
     // TODO(ELEC-251): add error handling for FSMs
     if (result != STATUS_CODE_OK) {
       return;
