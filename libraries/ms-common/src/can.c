@@ -164,6 +164,7 @@ void prv_tx_handler(void *context) {
       event_raise(can_storage->tx_event, 0);
     }
   }
+  printf("prv_tx_handler callback done\n");
 }
 
 // The RX ISR will fire once for each received message
