@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """New target script.
+
 This module sets up the folder structure and rules.mk for a new project or library.
+
 Usage: python3 new_target.py project|library name
 """
 import os
@@ -15,6 +17,7 @@ RULES_TEMPLATE = Template("""\
     # $$(T)_SRC_ROOT: $$(T)_DIR/src
     # $$(T)_INC_DIRS: $$(T)_DIR/inc{/$$(PLATFORM)}
     # $$(T)_SRC: $$(T)_DIR/src{/$$(PLATFORM)}/*.{c,s}
+
     # Specify the libraries you want to include
     $$(T)_DEPS := $deps
     """)
@@ -35,13 +38,16 @@ README_TEMPLATE = Template("""\
             - How does it work? (architectural overview, e.g. what each module's purpose is or how data flows through the firmware)
     -->
     # $name
+
     """)
 
 
 def new_target(target_type, name):
     """Creates a new project or library.
+
     Creates a subfolder in the appropriate folder with the specified name
     with the following structure:
+
     projects/libraries
     └── name
         ├── inc
@@ -49,10 +55,13 @@ def new_target(target_type, name):
         ├── rules.mk
         ├── src
         └── test
+
     where rules.mk is required for the project or library to be valid.
+
     Args:
         target_type: Either 'project' or 'library'.
         name: The new project or library's name.
+
     Returns:
         None
     """
