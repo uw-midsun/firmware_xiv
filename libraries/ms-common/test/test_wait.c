@@ -208,6 +208,11 @@ void test_wait_works_raw_x86(void) {
   TEST_ASSERT_EQUAL(EXPECTED_TIMES_x86_CALLBACK_CALLED, s_num_times_x86_callback_called);
 }
 
+// Test that wait() wakes when we receive a CAN message at a time such that we can to process it.
+// This isn't perfect because x86 can_hw bypasses vcan in loopback mode, so it's not representative
+// of receiving a real external CAN message, but it's the best we can do from a unit test.
+// For this reason we don't count the number of wait cycles but just make sure that we wake up when
+// the RX event has been raised.
 void test_can_wake_works(void) {
   uint8_t num_wait_cycles_timer = 0;
 
@@ -217,17 +222,11 @@ void test_can_wake_works(void) {
 
   pthread_create(&can_send_thread, NULL, prv_can_tx, NULL);
   Event e = { 0 };
-  while (!s_can_received) {
+  while (!status_ok(event_process(&e))) {
     wait();
-    while (event_process(&e) != STATUS_CODE_OK) {
-    }
-    can_process_event(&e);
-
-    num_wait_cycles_timer++;
   }
+  can_process_event(&e);
+  TEST_ASSERT_TRUE(s_can_received);
 
   pthread_join(can_send_thread, NULL);
-
-  // we should only wait once
-  TEST_ASSERT_EQUAL(EXPECTED_x86_INTERRUPT_CYCLES, num_wait_cycles_timer);
 }
