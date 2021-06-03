@@ -309,7 +309,9 @@ StatusCode can_hw_transmit(uint32_t id, bool extended, const uint8_t *data, size
 
 // Must be called within the RX handler, returns whether a message was processed
 bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
+  printf("can_hw_receive\n");
   if (!s_socket_data.rx_frame_valid) {
+    printf("returning\n");
     return false;
   }
 
