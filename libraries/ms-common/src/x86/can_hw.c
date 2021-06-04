@@ -85,7 +85,7 @@ static void *prv_rx_thread(void *arg) {
   printf("after loopback\n");
   // Mutex is unlocked when the thread should exit
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
-     printf("while loop\n");
+    printf("while loop\n");
     // Select timeout is used to poll every now and then
     fd_set input_fds;
     FD_ZERO(&input_fds);
