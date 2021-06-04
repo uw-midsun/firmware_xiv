@@ -4,6 +4,7 @@
 #include "can_hw.h"
 #include "can_msg_defs.h"
 #include "can_rx.h"
+#include "log.h"
 
 FSM_DECLARE_STATE(can_rx_fsm_handle);
 FSM_DECLARE_STATE(can_tx_fsm_handle);
