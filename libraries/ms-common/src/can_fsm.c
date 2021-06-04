@@ -21,11 +21,13 @@ FSM_STATE_TRANSITION(can_tx_fsm_handle) {
 }
 
 static StatusCode prv_handle_data_msg(CanStorage *can_storage, const CanMessage *rx_msg) {
+  printf("prv_handle_data_msg\n");
   CanRxHandler *handler = can_rx_get_handler(&can_storage->rx_handlers, rx_msg->msg_id);
   CanAckStatus ack_status = CAN_ACK_STATUS_OK;
   StatusCode ret = STATUS_CODE_OK;
 
   if (handler != NULL) {
+    printf("handler->callback\n");
     ret = handler->callback(rx_msg, handler->context, &ack_status);
 
     if (CAN_MSG_IS_CRITICAL(rx_msg)) {
@@ -45,6 +47,7 @@ static StatusCode prv_handle_data_msg(CanStorage *can_storage, const CanMessage 
 }
 
 static void prv_handle_rx(Fsm *fsm, const Event *e, void *context) {
+  printf("can_fsm.c prv_handle_rx\n");
   CanStorage *can_storage = context;
   CanMessage rx_msg = { 0 };
 
