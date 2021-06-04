@@ -78,12 +78,14 @@ static void *prv_rx_thread(void *arg) {
 
   struct timeval timeout = { .tv_usec = CAN_HW_THREAD_EXIT_PERIOD_US };
 
+  printf("CAN HW RX thread here\n");
   if (s_socket_data.loopback) {
     return NULL;
   }
-
+  printf("after loopback\n");
   // Mutex is unlocked when the thread should exit
   while (pthread_mutex_trylock(&s_keep_alive) != 0) {
+     printf("while loop\n");
     // Select timeout is used to poll every now and then
     fd_set input_fds;
     FD_ZERO(&input_fds);
@@ -100,7 +102,7 @@ static void *prv_rx_thread(void *arg) {
         s_socket_data.handlers[CAN_HW_EVENT_MSG_RX].callback(
             s_socket_data.handlers[CAN_HW_EVENT_TX_READY].context);
       }
-
+      printf("waking up loopback\n");
       // Wakes the main thread
       x86_interrupt_wake();
       // Limit how often we can receive messages to simulate bus speed
