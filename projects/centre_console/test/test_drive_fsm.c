@@ -63,7 +63,7 @@ void prv_recover_from_fault(Event *event, ParkingBrakeState state) {
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   Event e = { 0 };
-   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e,
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e,
                                    (state == PARKING_BRAKE_STATE_PRESSED)
                                        ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_BRAKE_PRESSED
                                        : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED,
@@ -264,7 +264,7 @@ void test_transition_to_parking_drive_reverse_neutral_parking(void) {
 }
 
 void test_transition_to_fault_from_mci_output_and_recover_to_neutral(void) {
-  // neutral discharged-> neutral precharged -> set mci output -> fault -> 
+  // neutral discharged-> neutral precharged -> set mci output -> fault ->
   // neutral -> parking -> set precharge
   TEST_ASSERT_OK(drive_fsm_init(&s_drive_fsm));
 
@@ -286,28 +286,17 @@ void test_transition_to_fault_from_mci_output_and_recover_to_neutral(void) {
   // set mci output -> fault
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
   prv_recover_from_fault(&e, PARKING_BRAKE_STATE_RELEASED);
-  LOG_WARN("1. I see %s\n", test_get_state_happy(&s_drive_fsm)->name);
 
   // fault -> neutral discharged
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  LOG_WARN("2. I see %s\n", test_get_state_happy(&s_drive_fsm)->name);
 
   // neutral discharged -> set precharge
+  e.id = DRIVE_FSM_INPUT_EVENT_PARKING;
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
   prv_assert_set_discharge(&e);
-  LOG_WARN("3. I see %s\n", test_get_state_happy(&s_drive_fsm)->name);
 
   // set precharge -> parking
   TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
   prv_assert_output_event(DRIVE_FSM_OUTPUT_EVENT_PARKING);
-
-  e.id = DRIVE_FSM_INPUT_EVENT_REVERSE;
-  // parking -> set precharge
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  prv_assert_set_precharge(&e);
-
-  // set precharge -> neutral precharged
-  TEST_ASSERT_TRUE(drive_fsm_process_event(&s_drive_fsm, &e));
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, DRIVE_FSM_OUTPUT_EVENT_REVERSE, 0);
 }

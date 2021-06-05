@@ -48,5 +48,3 @@ StatusCode drive_fsm_init(DriveFsmStorage *storage);
 bool drive_fsm_process_event(DriveFsmStorage *storage, Event *e);
 
 DriveState drive_fsm_get_global_state(DriveFsmStorage *storage);
-
-FsmState* test_get_state_happy(DriveFsmStorage *storage);

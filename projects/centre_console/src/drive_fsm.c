@@ -101,7 +101,8 @@ static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
   FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_DRIVE_FSM, .reason = e->data } };
   CAN_TRANSMIT_DISCHARGE_PRECHARGE();
   CAN_TRANSMIT_STATE_TRANSITION_FAULT(reason.fields.area, reason.fields.reason);
-  EventId id = (TEST_PARKING_BRAKE_STATE == PARKING_BRAKE_STATE_PRESSED) // To be updated when parking sensor added
+  EventId id = (TEST_PARKING_BRAKE_STATE ==
+                PARKING_BRAKE_STATE_PRESSED)  // To be updated when parking sensor added
                    ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_BRAKE_PRESSED
                    : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;
   storage->destination = NUM_DRIVE_STATES;
@@ -196,8 +197,4 @@ bool drive_fsm_process_event(DriveFsmStorage *storage, Event *e) {
 
 DriveState drive_fsm_get_global_state(DriveFsmStorage *storage) {
   return storage->current_state;
-}
-
-FsmState* test_get_state_happy(DriveFsmStorage *storage) {
-  return storage->drive_fsm.current_state;
 }
