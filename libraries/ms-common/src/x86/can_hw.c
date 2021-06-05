@@ -30,8 +30,6 @@
 // Check for thread exit once every 10ms
 #define CAN_HW_THREAD_EXIT_PERIOD_US 10000
 
-static uint8_t s_handler_id;
-static uint8_t s_interrupt_id;
 typedef struct CanHwEventHandler {
   CanHwEventHandlerCb callback;
   void *context;
@@ -218,14 +216,6 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
   pthread_barrier_wait(&s_barrier);
   pthread_barrier_destroy(&s_barrier);
 
-  x86_interrupt_register_handler(NULL, &s_handler_id);
-  InterruptSettings it_settings = {
-    .type = INTERRUPT_TYPE_EVENT,
-    .priority = INTERRUPT_PRIORITY_NORMAL,
-  };
-
-  x86_interrupt_register_interrupt(s_handler_id, &it_settings, &s_interrupt_id);
-
   return STATUS_CODE_OK;
 }
 
@@ -330,7 +320,8 @@ bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
   memset(&s_socket_data.rx_frame, 0, sizeof(s_socket_data.rx_frame));
   s_socket_data.rx_frame_valid = false;
 
-  x86_interrupt_trigger(s_interrupt_id);
+  // Wakes the main thread
+  x86_interrupt_wake();
 
   return true;
 }
