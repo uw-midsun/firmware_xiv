@@ -3,7 +3,7 @@
 #include "can_ack.h"
 
 StatusCode ACK_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
-                        uint16_t num_remaining, void *context);
+                        uint16_t remaining, void *context);
 
 StatusCode CAN_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply);
 

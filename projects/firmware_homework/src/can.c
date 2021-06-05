@@ -6,26 +6,20 @@
 #include "log.h"
 #include "soft_timer.h"
 
-static CanStorage can_store;
-
 typedef enum {
   CAN_ACK_DEVICE_A = 0,
   CAN_ACK_DEVICE_B,
 } CAN_ACK_Devices;
-
-typedef enum {
-  CAN_EVENT_RX = 0,
-  CAN_EVENT_TX,
-  CAN_EVENT_FAULT,
-} CanEvent;
 
 #define CAN_SOURCE_ID 0x1
 #define CAN_A_MESSAGE_ID 0XA
 #define CAN_B_MESSAGE_ID 0xB
 #define CAN_PERIOD_MS 1000
 
-StatusCode ACK_callback(CanMessageId id, uint16_t device, CanAckStatus status, void *context) {
-  LOG_DEBUG("ACK Callback: status %d from %d (msg %d) \n", status, device, id);
+StatusCode ACK_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+                        uint16_t remaining, void *context) {
+  LOG_DEBUG("ACK Callback: status %d from %d (msg %d) (%d remaining)\n", status, device, msg_id,
+            remaining);
   if (status != CAN_ACK_STATUS_OK) {
     return status_msg(STATUS_CODE_UNKNOWN, "Error message");
   }
@@ -53,14 +47,11 @@ void CAN_A_send(SoftTimerId timer_id, void *context) {
                            .dlc = 2 };
 
   // ACK request message
-  CanAckRequest ack_request = {
-    .callback = ACK_callback,
-    .context = NULL,
-    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(CAN_ACK_DEVICE_A),
-  };
+  CanAckRequest ack_request = { .callback = ACK_callback,
+                                .context = NULL,
+                                .expected_bitset = CAN_ACK_EXPECTED_DEVICES(CAN_ACK_DEVICE_A) };
 
   can_transmit(&message_A, &ack_request);
-
   // Periodically send the CAN message
   soft_timer_start_millis(CAN_PERIOD_MS, CAN_A_send, NULL, NULL);
 }
@@ -72,31 +63,15 @@ void CAN_B_send(SoftTimerId timer_id, void *context) {
                            .msg_id = CAN_B_MESSAGE_ID,
                            .data_u16 = { can_b_data },
                            .type = CAN_MSG_TYPE_DATA,
-                           .dlc = 1 };
+                           .dlc = 2 };
 
   // Do not do an acknowledge for CAN B
   can_transmit(&message_B, NULL);
-
   // Periodically send the CAN message
   soft_timer_start_millis(CAN_PERIOD_MS, CAN_B_send, NULL, NULL);
 }
 
 void write_CAN_messages(void) {
-  // Set up the CAN settings
-  CanSettings can_settings = {
-    .device_id = CAN_SOURCE_ID,
-    .bitrate = CAN_HW_BITRATE_1000KBPS,
-    .rx_event = CAN_EVENT_RX,
-    .tx_event = CAN_EVENT_TX,
-    .fault_event = CAN_EVENT_FAULT,
-    .tx = { GPIO_PORT_A, 2 },  // Just using random pins since it hasn't been specified
-    .rx = { GPIO_PORT_A, 3 },
-    .loopback = false
-  };
-
-  can_init(&can_store, &can_settings);
-  can_register_rx_default_handler(CAN_callback, NULL);
-
   // Start the CAN message sending
   soft_timer_start_millis(CAN_PERIOD_MS, CAN_A_send, NULL, NULL);
   soft_timer_start_millis(CAN_PERIOD_MS, CAN_B_send, NULL, NULL);
