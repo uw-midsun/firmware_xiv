@@ -224,7 +224,7 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
     .priority = INTERRUPT_PRIORITY_NORMAL,  //
   };
 
-  x86_interrupt_register_interrupt(handler_id, &it_settings, &s_interrupt_id);
+  x86_interrupt_register_interrupt(s_handler_id, &it_settings, &s_interrupt_id);
 
   return STATUS_CODE_OK;
 }
