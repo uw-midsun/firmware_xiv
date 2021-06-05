@@ -26,11 +26,11 @@ StatusCode send_spi_message(void) {
   uint8_t rx_data = 0;
 
   // Send the SPI message
-  StatusCode status =
-      spi_exchange(port_to_use, &spi_message, sizeof(spi_message), &rx_data, sizeof(rx_data));
+  status_ok_or_return(
+      spi_exchange(port_to_use, &spi_message, sizeof(spi_message), &rx_data, sizeof(rx_data)));
 
   // Print control bit, bit three
   LOG_DEBUG("Control bit %d\n", (rx_data & 4) >> 2);
 
-  return status;
+  return STATUS_CODE_OK;
 }
