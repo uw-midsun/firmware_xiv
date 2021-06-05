@@ -10,7 +10,7 @@ static CanStorage can_store;
 
 typedef enum {
   CAN_ACK_DEVICE_A = 0,
-  CAN_ACK_DEVICE_B = 0,
+  CAN_ACK_DEVICE_B,
 } CAN_ACK_Devices;
 
 typedef enum {
@@ -19,15 +19,15 @@ typedef enum {
   CAN_EVENT_FAULT,
 } CanEvent;
 
-#define CAN_SOURCE_ID 0x2
+#define CAN_SOURCE_ID 0x1
 #define CAN_A_MESSAGE_ID 0XA
 #define CAN_B_MESSAGE_ID 0xB
 #define CAN_PERIOD_MS 1000
 
-StatusCode ACK_callback(CanMessageId id, uint16_t device, CanAckStatus status, uint16_t remaining,
-                        void *context) {
+StatusCode ACK_callback(CanMessageId id, uint16_t device, CanAckStatus status, void *context) {
+  LOG_DEBUG("ACK Callback: status %d from %d (msg %d) \n", status, device, id);
   if (status != CAN_ACK_STATUS_OK) {
-    return status_msg(status, "Error message");
+    return status_msg(STATUS_CODE_UNKNOWN, "Error message");
   }
   return STATUS_CODE_OK;
 }
