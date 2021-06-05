@@ -18,9 +18,8 @@
 static SolarMpptCount solar_mppt_count;
 
 static void prv_assert_relay(SoftTimerId timer_id, void *context) {
-  // Cast context to storage
+
   RelayFsmStorage *storage = (RelayFsmStorage*)context;
-  // Check if prv_realy_err_cb has been called
   if (storage->isErrCalled  == true) {
     fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
     return;
@@ -32,14 +31,22 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   data_store_get_is_set(DATA_POINT_CURRENT, &isSet);
 
   if (!isSet) {
-    soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
+    if(storage->isSetCounter >= 1000){
+      LOG_DEBUG("Aborting, The current is not set\n");
+      fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0xFF);
+      return;
+    }
+    storage->isSetCounter += 1;
+    prv_assert_relay(SOFT_TIMER_INVALID_TIMER, context);
+    //soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, &timer_id);
     return;
   }
 
   data_store_get(DATA_POINT_CURRENT, (uint32_t *)&data_value);
 
   if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
-    fault_handler_raise_fault(EE_SOLAR_FAULT_OVERCURRENT, 0xF0);
+    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0xF0);
+    return;
   } else {
     // success message
     if (solar_mppt_count == 6) {
@@ -72,8 +79,8 @@ static void prv_open_relay(Fsm *fsm, const Event *e, void *context) {
   LOG_DEBUG("Opening relay\n");
   drv120_relay_open();
 
-  // Call the assert function after delay
-  soft_timer_start_millis(RELAY_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
+  prv_assert_relay(SOFT_TIMER_INVALID_TIMER, context);
+  //soft_timer_start_millis(RELAY_ASSERTION_DELAY_MS, prv_assert_relay, context, &SOFT_TIMER_INVALID_TIMER);
 }
 
 static void prv_close_relay(Fsm *fsm, const Event *e, void *context) {
@@ -87,6 +94,7 @@ StatusCode relay_fsm_init(RelayFsmStorage *storage, SolarMpptCount mppt_count) {
   }
   // Setting storage error flag false intially
   storage->isErrCalled = false;
+  storage->isSetCounter = 0;
   // Set the mppt_count
   solar_mppt_count = mppt_count;
   // Init drv120

@@ -14,12 +14,13 @@
 
 #define CURRENT_ASSERT_THRESHOLD_uA 10
 
-#define RELAY_ASSERTION_DELAY_MS 50
+#define RELAY_ASSERTION_DELAY_MS 10
 #define DATA_STORE_ASSERTION_DELAY_MS 1000
 
 typedef struct RelayFsmStorage {
   Fsm fsm;
   bool isErrCalled;
+  uint32_t isSetCounter;
 } RelayFsmStorage;
 
 // Initialize the FSM. The relay is initialized to closed.
