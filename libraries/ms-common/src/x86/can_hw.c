@@ -220,8 +220,8 @@ StatusCode can_hw_init(const CanHwSettings *settings) {
 
   x86_interrupt_register_handler(NULL, &s_handler_id);
   InterruptSettings it_settings = {
-    .type = INTERRUPT_TYPE_INTERRUPT,       //
-    .priority = INTERRUPT_PRIORITY_NORMAL,  //
+    .type = INTERRUPT_TYPE_EVENT,
+    .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
   x86_interrupt_register_interrupt(s_handler_id, &it_settings, &s_interrupt_id);
