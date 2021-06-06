@@ -17,6 +17,7 @@ static void prv_log_adc_reading(const GpioAddress *address, void *context) {
 int main() {
   interrupt_init();
   gpio_init();
+  gpio_it_init();
 
   // gpio pin 6
   GpioAddress adc_addr = {
@@ -25,10 +26,10 @@ int main() {
   };
 
   GpioSettings adc_settings = {
-    GPIO_DIR_IN,
-    GPIO_STATE_LOW,
-    GPIO_RES_NONE,
-    GPIO_ALTFN_ANALOG,
+    .direction = GPIO_DIR_IN,
+    .state = GPIO_STATE_LOW,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_ANALOG,
   };
 
   gpio_init_pin(&adc_addr, &adc_settings);
@@ -42,17 +43,17 @@ int main() {
   };
 
   GpioSettings button_settings = {
-    GPIO_DIR_IN,
-    GPIO_STATE_LOW,
-    GPIO_RES_NONE,
-    GPIO_ALTFN_NONE,
+    .direction = GPIO_DIR_IN,
+    .state = GPIO_STATE_LOW,
+    .resistor = GPIO_RES_NONE,
+    .alt_function = GPIO_ALTFN_NONE,
   };
 
   gpio_init_pin(&button_addr, &button_settings);
 
   InterruptSettings interrupt_settings = {
-    INTERRUPT_TYPE_INTERRUPT,
-    INTERRUPT_PRIORITY_NORMAL,
+    .type = INTERRUPT_TYPE_INTERRUPT,
+    .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
   gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING,
@@ -61,4 +62,6 @@ int main() {
   while (true) {
     wait();
   }
+
+  return 0;
 }
