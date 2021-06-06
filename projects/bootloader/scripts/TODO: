@@ -1,0 +1,18 @@
+# pylint: skip-file
+TODO:
+
+- Review implementation, suggestions
+- Ask for strategies for testing
+
+
+
+
+FEEDBACK:
+- Create a listener class to get rid of asyncio stuff
+- Create a receiver class that handles listeners
+    - Remember that callback should be called on DATAGRAM, not message
+- Create a sender class that takes info from the datagram class and sends it
+- Create a datagram class that creates the datagram byte array from the input data 
+    - Note that num nodes acts a lot like data size
+    - Note that crc32 needs to be calculated (LOOK INTO THIS)
+        - Compare crc32 calculation with the one in c
