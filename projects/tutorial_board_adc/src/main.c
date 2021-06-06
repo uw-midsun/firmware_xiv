@@ -29,8 +29,11 @@ int main(void) {
 
   while (true) {
     uint16_t potentiometer_data = 0;
-    adc_read_raw_pin(potentiometer_addr, &potentiometer_data);
-    LOG_DEBUG("potentiometer data: %d\n", potentiometer_data);
+    if (adc_read_raw_pin(potentiometer_addr, &potentiometer_data) == STATUS_CODE_OK) {
+      LOG_DEBUG("potentiometer data: %d\n", potentiometer_data);
+    } else {
+      LOG_DEBUG("Failed to read potentiomter data");
+    }
     delay_ms(200);
   }
 
