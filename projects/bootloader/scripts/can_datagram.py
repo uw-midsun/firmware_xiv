@@ -26,9 +26,7 @@ class DatagramMessage:
         self._protocol_version = 0
         self._datagram_type_id = 0
         self._crc32 = 0
-        self._num_node_ids = 0
         self._node_ids = []
-        self._data_size = 0
         self._data = 0
         self._datagram_bytearray = bytearray(0)
 
@@ -43,13 +41,10 @@ class DatagramMessage:
         """This function sets the bytearray and datagram from arguments."""
         self._protocol_version = kwargs["protocol_version"] & 0xf
         self._datagram_type_id = kwargs["datagram_type_id"] & 0xf
-        self._num_node_ids = kwargs["num_node_ids"] & 0xf
 
         self._node_ids = []
         for val in kwargs["node_ids"]:
             self._node_ids.append(val & 0xf)
-
-        self._data_size = kwargs["data_size"] & 0xff
 
         self._data = []
         data = kwargs["data"]
@@ -88,9 +83,7 @@ class DatagramMessage:
         self._protocol_version = protocol_version
         self._datagram_type_id = datagram_type_id
         self._crc32 = crc32
-        self._num_node_ids = num_node_ids
         self._node_ids = node_ids
-        self._data_size = data_size
         self._data = data
         self._datagram_bytearray = datagram_bytearray
 
@@ -120,61 +113,37 @@ class DatagramMessage:
         self._datagram_type_id = datagram_type_id & 0xf
         self._update_bytearray()
 
-    def get_num_node_ids(self):
-        """This function retrieves the number of node ids."""
-        return self._num_node_ids
-
     def get_node_ids(self):
         """This function sets the node ids."""
         return self._node_ids
 
-    def set_node_ids(self, num_node_ids, node_ids):
+    def set_node_ids(self, node_ids):
         """This function sets the node ids."""
-        assert num_node_ids & 0xf == num_node_ids
-
+        assert isinstance(node_ids, list)
         for val in node_ids:
             assert val & 0xf == val
-
-        self._num_node_ids = num_node_ids & 0xf
-        self._node_ids = node_ids & 0xf
+            assert val < 64
+        self._node_ids = node_ids
         self._update_bytearray()
-
-    def get_data_size(self):
-        """This function retrieves the data size."""
-        return self._data_size
 
     def get_data(self):
         """This function retrieves the data."""
         return self._data
 
-    def set_data(self, data_size, data):
+    def set_data(self, data):
         """This function sets the data."""
-        assert data_size & 0xff == data_size
-
-        size = 0
-        tmp_data = data
-        while tmp_data != 0:
-            tmp_data = tmp_data >> 4
-            size += 1
-        assert size <= data_size
-
-        self._data_size = data_size
-
-        self._data = []
-        while data != 0:
-            self._data.append(data & 0xf)
-            data = data >> 4
-        self._update_bytearray()
+        assert isinstance(data, bytearray)
+        self._data = data
 
     # Utility function to update the bytearray when the datagram is changed
     def _update_bytearray(self):
         """This function updates the bytearray based on data."""
         crc32_array = bytearray([self._protocol_version,
                                  self._datagram_type_id,
-                                 self._num_node_ids,
+                                 len(self._node_ids),
                                  *(self._node_ids),
-                                 self._data_size & 0xf0,
-                                 self._data_size & 0x0f,
+                                 len(self._data) & 0xf0,
+                                 len(self._data) & 0x0f,
                                  *(self._data)])
 
         # Update the crc32
@@ -184,10 +153,10 @@ class DatagramMessage:
         self._datagram_bytearray = bytearray([self._protocol_version,
                                               self._crc32,
                                               self._datagram_type_id,
-                                              self._num_node_ids,
+                                              len(self._node_ids),
                                               *(self._node_ids),
-                                              self._data_size & 0xf0,
-                                              self._data_size & 0x0f,
+                                              len(self._data) & 0xf0,
+                                              len(self._data) & 0x0f,
                                               *(self._data)])
 
     def _check_kwargs(self, **kwargs):
@@ -196,11 +165,9 @@ class DatagramMessage:
         args = [
             "protocol_version",
             "datagram_type_id",
-            "num_node_ids",
             "node_ids",
-            "data_size",
             "data"]
-        values = ["protocol_version", "datagram_type_id", "num_node_ids", "data_size", "data"]
+        values = ["protocol_version", "datagram_type_id", "data"]
         arrays = ["node_ids"]
 
         # Check all arguments are present
@@ -216,15 +183,3 @@ class DatagramMessage:
         # Verify all inputs
         assert kwargs["protocol_version"] & 0xf == kwargs["protocol_version"]
         assert kwargs["datagram_type_id"] & 0xf == kwargs["datagram_type_id"]
-        num_node_ids = kwargs["num_node_ids"] & 0xf
-        assert num_node_ids == kwargs["num_node_ids"]
-        assert len(kwargs["node_ids"]) == num_node_ids
-        data_size = kwargs["data_size"] & 0xff
-        assert data_size == kwargs["data_size"]
-
-        data = kwargs["data"]
-        size = 0
-        while data != 0:
-            data = data >> 4
-            size += 1
-        assert size <= data_size
