@@ -21,4 +21,5 @@ void watchdog_kick(WatchdogStorage *storage) {
 
 void watchdog_cancel(WatchdogStorage *storage) {
   soft_timer_cancel(storage->timer_id);
+  storage->timer_id = SOFT_TIMER_INVALID_TIMER;
 }

@@ -33,16 +33,18 @@
 // Called in each state as data becomes ready to be transmitted
 typedef StatusCode (*CanDatagramTxCb)(uint8_t *data, size_t len, bool start_message);
 
+typedef enum {
+  HARD_ERROR = 0,
+  SOFT_ERROR,
+  DATAGRAM_TX,
+  DATAGRAM_RX,
+} DatagramEventData;
 
 typedef enum {
-  CAN_DATAGRAM_MODE_TX = 0,
-  CAN_DATAGRAM_MODE_RX,
-  NUM_CAN_DATAGRAM_MODES,
-} CanDatagramMode;
-
-typedef enum {
-  DATAGRAM_STATUS_ACTIVE = 0,
-  DATAGRAM_STATUS_COMPLETE,
+  DATAGRAM_STATUS_IDLE = 0,
+  DATAGRAM_STATUS_ACTIVE,
+  DATAGRAM_STATUS_TX_COMPLETE,
+  DATAGRAM_STATUS_RX_COMPLETE,
   DATAGRAM_STATUS_ERROR,
   NUM_DATAGRAM_STATUSES,
 } CanDatagramStatus;
@@ -59,45 +61,44 @@ typedef struct CanDatagram {
 } CanDatagram;
 
 typedef struct CanDatagramSettings {
-  CanDatagramTxCb tx_cb;
-  CanDatagramMode mode;
-
   EventId tx_event;
   EventId rx_event;
   EventId repeat_event;
   EventId error_event;
+} CanDatagramSettings;
 
+typedef struct CanDatagramTxConfig {
   uint8_t dgram_type;
   uint8_t destination_nodes_len;
   uint8_t *destination_nodes;
   uint16_t data_len;
   uint8_t *data;
-} CanDatagramSettings;
 
-typedef struct CanDatagramStorage {
-  CanDatagram dgram;
-  CanDatagramMode mode;
   CanDatagramTxCb tx_cb;
+} CanDatagramTxConfig;
 
-  EventId tx_event;
-  EventId rx_event;
-  EventId repeat_event;
-  EventId error_event;
+typedef struct CanDatagramRxConfig {
+  uint8_t dgram_type;
+  uint8_t destination_nodes_len;
+  uint16_t data_len;
 
-  size_t rx_bytes_read;
-  size_t tx_bytes_sent;
-  CanDatagramStatus status;
-  bool start;
-} CanDatagramStorage;
+  uint8_t *destination_nodes;
+  uint8_t *data;
+  uint8_t node_id;
+} CanDatagramRxConfig;
 
 // Initializes a can datagram instance and prepares for transmitting or receiving
 StatusCode can_datagram_init(CanDatagramSettings *settings);
 
-// Called after initialization to start txing datagram messages
-StatusCode can_datagram_start_tx(uint8_t *init_data, size_t len);
-
 // Called in the rx handler for datagram messages to process sequential messages
 StatusCode can_datagram_rx(uint8_t *data, size_t len, bool start_message);
+
+// Called after initialization to start txing datagram messages
+StatusCode can_datagram_start_tx(CanDatagramTxConfig *config);
+
+// Used to start listening for/processing rx can datagrams
+// Will continue to listen unless explicitly told to stop
+StatusCode can_datagram_start_listener(CanDatagramRxConfig *config);
 
 // Processes datagram state events
 bool can_datagram_process_event(Event *e);
