@@ -17,7 +17,6 @@ int main() {
   interrupt_init();
   soft_timer_init();
   gpio_init();
-  gpio_it();
   gpio_it_init();
 
   GpioAddress adc_addr = {
