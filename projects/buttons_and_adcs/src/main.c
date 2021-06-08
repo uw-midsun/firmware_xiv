@@ -13,7 +13,7 @@ static void prv_button_input(const GpioAddress *address, void *context) {
   LOG_DEBUG("ADC input value is %d\n", adc_data);
 }
 
-int main(void) {
+int main() {
   interrupt_init();
   soft_timer_init();
   gpio_init();
