@@ -7,19 +7,23 @@
 #include "wait.h"
 
 static void prv_button_input(const GpioAddress *address, void *context) {
-  GpioAddress *adc_addr = (GpioAddress *)context;
+  GpioAddress *adc_addr = context;
   uint16_t adc_data = 0;
   adc_read_converted_pin(*adc_addr, &adc_data);
-  LOG_DEBUG("ADC input value is %d", adc_data);
+  LOG_DEBUG("ADC input value is %d\n", adc_data);
 }
 
 int main(void) {
   interrupt_init();
   soft_timer_init();
   gpio_init();
+  gpio_it();
   gpio_it_init();
 
-  GpioAddress adc_addr = { .port = GPIO_PORT_A, .pin = 6 };
+  GpioAddress adc_addr = {
+    .port = GPIO_PORT_A,
+    .pin = 6,
+  };
 
   GpioSettings adc_settings = {
     .direction = GPIO_DIR_IN,
@@ -32,7 +36,10 @@ int main(void) {
   adc_init(ADC_MODE_SINGLE);
   adc_set_channel_pin(adc_addr, true);
 
-  GpioAddress button_addr = { .port = GPIO_PORT_B, .pin = 2 };
+  GpioAddress button_addr = {
+    .port = GPIO_PORT_B,
+    .pin = 2,
+  };
 
   GpioSettings button_settings = {
     .direction = GPIO_DIR_IN,
