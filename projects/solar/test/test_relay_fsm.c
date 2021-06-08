@@ -41,14 +41,14 @@
 static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;
 
-static bool relay_assert_rx_cb_called;
+static bool relay_error_rx_cb_called;
 static bool relay_5_mppts_rx_cb_called;
 static bool relay_6_mppts_rx_cb_called;
-static uint8_t error_array[10];
+static uint8_t error_array[5];
 static int current_error_num;
 
-static StatusCode prv_assert_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  relay_assert_rx_cb_called = true;
+static StatusCode prv_error_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  relay_error_rx_cb_called = true;
   uint8_t solar_fault;
   uint8_t fault_data;
   CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &solar_fault, &fault_data);
@@ -71,7 +71,7 @@ void setup_test(void) {
   data_store_set(DATA_POINT_CURRENT, 5);
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
                                   SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_assert_rx_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_error_rx_cb, NULL);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_RELAY_CURRENT_6_MPPTS, prv_current_6_mppts_rx_cb,
                           NULL);
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_RELAY_CURRENT_5_MPPTS, prv_current_5_mppts_rx_cb,
@@ -222,7 +222,7 @@ void test_invalid_input(void) {
 void test_relay_it_cb(void) {
   Event e = { 0 };
   current_error_num = 0;
-  relay_assert_rx_cb_called = false;
+  relay_error_rx_cb_called = false;
 
   // checking for error thrown by prv_relay_err_cb
   gpio_it_trigger_interrupt(config_get_drv120_status_pin());
@@ -235,7 +235,7 @@ void test_relay_it_cb(void) {
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  TEST_ASSERT_TRUE(relay_assert_rx_cb_called);
+  TEST_ASSERT_TRUE(relay_error_rx_cb_called);
   TEST_ASSERT_EQUAL(current_error_num, 2);
   TEST_ASSERT_EQUAL(error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
   TEST_ASSERT_EQUAL(error_array[1], EE_SOLAR_RELAY_OPEN_ERROR);
@@ -247,7 +247,7 @@ void test_relay_it_cb(void) {
 void test_relay_over_current_cb(void) {
   Event e = { 0 };
   current_error_num = 0;
-  relay_assert_rx_cb_called = false;
+  relay_error_rx_cb_called = false;
   data_store_set(DATA_POINT_CURRENT, 12);
 
   // checking for error thrown by prv_relay_assert_cb
@@ -257,7 +257,7 @@ void test_relay_over_current_cb(void) {
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  TEST_ASSERT_TRUE(relay_assert_rx_cb_called);
+  TEST_ASSERT_TRUE(relay_error_rx_cb_called);
   TEST_ASSERT_EQUAL(current_error_num, 1);
   TEST_ASSERT_EQUAL(error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
@@ -267,7 +267,7 @@ void test_relay_over_current_cb(void) {
 void test_relay_current_never_set(void) {
   Event e = { 0 };
   current_error_num = 0;
-  relay_assert_rx_cb_called = false;
+  relay_error_rx_cb_called = false;
   data_store_init();
 
   // checking for error thrown by prv_relay_assert_cb
@@ -277,7 +277,7 @@ void test_relay_current_never_set(void) {
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  TEST_ASSERT_TRUE(relay_assert_rx_cb_called);
+  TEST_ASSERT_TRUE(relay_error_rx_cb_called);
   TEST_ASSERT_EQUAL(current_error_num, 1);
   TEST_ASSERT_EQUAL(error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
 }

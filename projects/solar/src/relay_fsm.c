@@ -32,10 +32,9 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   if (!isSet) {
     if (storage->isSetCounter >= 30) {
       LOG_DEBUG("Aborting, The current is not set\n");
-      fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
+      fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0xFF);
       return;
     }
-    LOG_DEBUG("Waiting for current to be set\n");
     storage->isSetCounter += 1;
     soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
     return;
@@ -47,7 +46,7 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
     fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, data_value);
     return;
   } else {
-    // success message
+    // Success message
     if (solar_mppt_count == 6) {
       CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS();
     } else if (solar_mppt_count == 5) {
