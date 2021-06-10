@@ -26,7 +26,6 @@
 #include "event_queue.h"
 #include "status.h"
 
-
 #define CAN_DATAGRAM_VERSION 1
 
 // Callback used to tx a datagram message, used to handle all CAN transmission
@@ -41,8 +40,8 @@ typedef enum {
 } DatagramEventData;
 
 typedef enum {
-  DATAGRAM_STATUS_IDLE = 0,
-  DATAGRAM_STATUS_ACTIVE,
+  DATAGRAM_STATUS_ACTIVE = 0,
+  DATAGRAM_STATUS_IDLE,
   DATAGRAM_STATUS_TX_COMPLETE,
   DATAGRAM_STATUS_RX_COMPLETE,
   DATAGRAM_STATUS_ERROR,
@@ -78,13 +77,16 @@ typedef struct CanDatagramTxConfig {
 } CanDatagramTxConfig;
 
 typedef struct CanDatagramRxConfig {
-  uint8_t dgram_type;
-  uint8_t destination_nodes_len;
-  uint16_t data_len;
-
+  // These parameters must be passed 
   uint8_t *destination_nodes;
   uint8_t *data;
   uint8_t node_id;
+
+  // These parameters will be set by rcv'd data
+  uint8_t dgram_type;
+  uint8_t destination_nodes_len;
+  uint16_t data_len;
+  uint32_t crc;
 } CanDatagramRxConfig;
 
 // Initializes a can datagram instance and prepares for transmitting or receiving
@@ -106,6 +108,4 @@ bool can_datagram_process_event(Event *e);
 // Returns true if the datagram is complete (all data were sent/read)
 CanDatagramStatus can_datagram_get_status(void);
 
-// Returns datagram for reading and verification purposes
-CanDatagram *can_datagram_get_datagram(void);
 
