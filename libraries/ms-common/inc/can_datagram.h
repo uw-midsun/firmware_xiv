@@ -2,12 +2,12 @@
 // CAN DATAGRAM PROTOCOL LIBRARY
 //
 // Allows for transmitting and receiving variable length messages
-// over the fixed-latency CAN bus. 
+// over the fixed-latency CAN bus.
 //
 // Requires event queue, interrupts, soft timers and crc32 to be init'd
 //
-// A "datagram" refers to the object in which data and the 
-// associated metadata are grouped. See the design document at 
+// A "datagram" refers to the object in which data and the
+// associated metadata are grouped. See the design document at
 // https://uwmidsun.atlassian.net/l/c/fJ1gAPxP
 //
 // Usage:
@@ -17,7 +17,7 @@
 // 	- Data buffers for destination nodes and message data
 // For Rx:
 // 	- Data and destination node buffers large enough to hold
-// 	  however much data is sent
+//    however much data is sent
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -77,7 +77,7 @@ typedef struct CanDatagramTxConfig {
 } CanDatagramTxConfig;
 
 typedef struct CanDatagramRxConfig {
-  // These parameters must be passed 
+  // These parameters must be passed
   uint8_t *destination_nodes;
   uint8_t *data;
   uint8_t node_id;
@@ -107,5 +107,3 @@ bool can_datagram_process_event(Event *e);
 
 // Returns true if the datagram is complete (all data were sent/read)
 CanDatagramStatus can_datagram_get_status(void);
-
-
