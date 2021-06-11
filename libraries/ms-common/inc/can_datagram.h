@@ -13,10 +13,10 @@
 // Usage:
 // The Datagram settings struct must be initialized with either
 // For Tx:
-// 	- All information fields filled
-// 	- Data buffers for destination nodes and message data
+//      - All information fields filled
+//      - Data buffers for destination nodes and message data
 // For Rx:
-// 	- Data and destination node buffers large enough to hold
+//      - Data and destination node buffers large enough to hold
 //    however much data is sent
 
 #include <stdbool.h>
