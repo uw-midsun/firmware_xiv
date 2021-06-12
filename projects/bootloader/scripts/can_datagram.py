@@ -3,11 +3,13 @@
 
 import zlib
 import can
-import time
 
 DEFAULT_CHANNEL = "can0"
 PROT_VER = 1
 CAN_BITRATE = 500000
+
+MESSAGE_SIZE = 8
+HEADER_SIZE = 3
 
 
 class Datagram:
@@ -69,7 +71,7 @@ class Datagram:
                                  self._datagram_type_id,
                                  len(self._node_ids),
                                  *(self._node_ids),
-                                 len(self._data) & 0xf0,
+                                 (len(self._data) >> 4) & 0x0f,
                                  len(self._data) & 0x0f,
                                  *(self._data)])
 
@@ -82,7 +84,7 @@ class Datagram:
                           self._datagram_type_id,
                           len(self._node_ids),
                           *(self._node_ids),
-                          len(self._data) & 0xf0,
+                          (len(self._data) >> 4) & 0x0f,
                           len(self._data) & 0x0f,
                           *(self._data)])
 
@@ -152,6 +154,8 @@ class Datagram:
 
 
 class DatagramSender:
+    """This class acts as a distributor for the Datagram class on a bus."""
+
     def __init__(self, bustype="socketcan", channel=DEFAULT_CHANNEL, bitrate=CAN_BITRATE):
         print("Initializing CAN Bus...")
         self.bus = can.interface.Bus(bustype=bustype, channel=channel, bitrate=bitrate)
@@ -190,30 +194,121 @@ class DatagramSender:
 
 
 class DatagramListener(can.BufferedReader):
+    """This class handles a callback when a message is received."""
+
     def __init__(self, callback):
         """This registers the callback."""
         assert callable(callback)
         self.callback = callback
         self.datagram_messages = []
         self.receiving_datagram = False
+        self.num_node_id = -1
+        self.incomplete_data_bytes = False
+        self.num_data_bytes = -1
 
         super().__init__()
 
     def on_message_received(self, msg):
-        """This (SHOULD) wait for the first message in the datagram 0x010, and gets the whole datagram."""
+        """This (SHOULD) wait for the first message in the datagram 0x010."""
         super().on_message_received(msg)
 
-        print("=====MESSAGE=====", msg)
+        print("=====MESSAGE=====", *msg.data)
+
         if(msg.arbitration_id == 0x0010 and not self.receiving_datagram):
-            print("CASE 1 ")
+            # Here we want to handle what happens when we get the first message in a datagram
+            first_bytearray = msg.data
+
+            # Get the number of node ids
+            self.num_node_id = first_bytearray[HEADER_SIZE]
+
+            # Determine if there are node ids in this message.
+            # If ALL node ids are in this message, determine if the data size is in this message
+            bytes_remaining = MESSAGE_SIZE - (HEADER_SIZE + 1)
+            if self.num_node_id < bytes_remaining:
+                bytes_remaining = bytes_remaining - self.num_node_id
+                if bytes_remaining == 1:
+                    self.num_data_bytes = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 4
+                    self.incomplete_data_bytes = True
+                elif bytes_remaining >= 2:
+                    upper_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 4
+                    lower_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 2]
+                    self.num_data_bytes = upper_bits | lower_bits
+                    print("DATA BYTES REMAINING: ", self.num_data_bytes)
+                    self.incomplete_data_bytes = False
+
+                    if bytes_remaining > 2:
+                        # Determine the index of the first data byte (If this is 8, then it is in
+                        # the next message)
+                        first_data_index = HEADER_SIZE + self.num_node_id
+
+                        # If there are data bytes in this message, subtract that number and continue
+                        if first_data_index < MESSAGE_SIZE:
+                            self.num_data_bytes = self.num_data_bytes - \
+                                (MESSAGE_SIZE - (first_data_index))
+                        # Otherwise, we continue to the next message
+            self.num_node_id = self.num_node_id - bytes_remaining
+
+            # Add the data to the array, and continue receiving messages
             self.datagram_messages.append(msg.data)
             self.receiving_datagram = True
-        elif(msg.arbitration_id == 0x0000 and self.receiving_datagram):
-            print("CASE 2 ")
+
+        elif msg.arbitration_id == 0x0000 and self.receiving_datagram:
+            # Here we want to handle what happens when we get the next message in a datagram
+            message_bytearray = msg.data
+
+            # We handle if there are still node ids in this message
+            if self.num_node_id > 0:
+                # If there are more node ids than the message size, continue on to the next message
+                # Otherwise, locate the index of the data size
+
+                print("NODE IDS REMAINING: ", self.num_node_id)
+                if self.num_node_id >= MESSAGE_SIZE:
+                    self.num_node_id = self.num_node_id - MESSAGE_SIZE
+                else:
+                    bytes_remaining = MESSAGE_SIZE - self.num_node_id
+
+                    if bytes_remaining == 1:
+                        self.num_data_bytes = message_bytearray[self.num_node_id + 1] << 4
+                        self.incomplete_data_bytes = True
+                    elif bytes_remaining >= 2:
+                        self.num_data_bytes = message_bytearray[self.num_node_id +
+                                                                1] << 4 | message_bytearray[self.num_node_id + 2]
+                        self.incomplete_data_bytes = False
+
+                        if bytes_remaining > 2:
+                            # Determine the index of the first data byte (If this is 8, then it is
+                            # in the next message)
+                            first_data_index = self.num_node_id
+
+                            # If there are data bytes in this message, subtract that number and
+                            # continue
+                            if first_data_index < MESSAGE_SIZE:
+                                self.num_data_bytes = self.num_data_bytes - \
+                                    (MESSAGE_SIZE - (first_data_index))
+                            # Otherwise, we continue to the next message
+            else:
+                # There are no more node ids.
+                # If we only got half of the data bytes
+                bytes_remaining = MESSAGE_SIZE
+                if self.incomplete_data_bytes:
+                    self.num_data_bytes = self.num_data_bytes | message_bytearray[0]
+                    bytes_remaining -= 1
+                print("DATA BYTES REMAINING: ", self.num_data_bytes)
+                print("MESSAGE BYTES REMAINING: ", bytes_remaining)
+                # If we already have the data bytes, use how many is remaining (otherwise
+                # it was just set)
+                if self.num_data_bytes > bytes_remaining:
+                    self.num_data_bytes = self.num_data_bytes - bytes_remaining
+                else:
+                    # There are no more data bytes left, message is complete!
+                    self.receiving_datagram = False
             self.datagram_messages.append(msg.data)
-            self.receiving_datagram = True
-        elif(msg.arbitration_id != 0x0000 and self.receiving_datagram):
-            print("CASE 3 ")
-            self.callback(self.datagram_messages)
-            self.datagram_messages = []
-            self.receiving_datagram = False
+
+            # Once we're on the last message, call the callback
+            if not self.receiving_datagram:
+                self.callback(self.datagram_messages)
+                self.datagram_messages = []
+                self.receiving_datagram = False
+                self.num_node_id = -1
+                self.incomplete_data_bytes = False
+                self.num_data_bytes = -1
