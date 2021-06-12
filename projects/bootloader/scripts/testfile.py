@@ -1,20 +1,19 @@
 # pylint: skip-file
-# import can_datagram
-message = can_datagram.DatagramMessage(
+import can_datagram
+
+test_data = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8, 4, 6, 2, 6, 4, 3, 3]
+
+message = can_datagram.Datagram(
     protocol_version=1,
     datagram_type_id=2,
-    num_node_ids=2,
     node_ids=[
         1,
         1],
-    data_size=2,
-    data=77)
+    data=bytearray(test_data))
 
 assert message.get_protocol_version() == 1
 assert message.get_datagram_type_id() == 2
-assert message.get_num_node_ids() == 2
 assert message.get_node_ids()[1] == 1
-assert message.get_data_size() == 2
 assert message.get_data()[1] == 4
 assert message.get_bytearray() == bytearray(b'\x01\x06\x02\x02\x01\x01\x00\x02\r\x04')
 

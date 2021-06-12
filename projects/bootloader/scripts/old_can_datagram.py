@@ -116,6 +116,3 @@ class CanDatagram:
         assert sys.getsizeof(node_ids) == 1
         assert sys.getsizeof(data_size) == 2
         assert sys.getsizeof(data) == data_size
-
-# Testing
-# can_datagram = CanDatagram()
