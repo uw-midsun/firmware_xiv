@@ -9,7 +9,7 @@ PROT_VER = 1
 CAN_BITRATE = 500000
 
 MESSAGE_SIZE = 8
-HEADER_SIZE = 3
+HEADER_SIZE = 6
 
 
 class Datagram:
@@ -20,7 +20,6 @@ class Datagram:
         self._datagram_type_id = 0
         self._node_ids = []
         self._data = bytearray(0)
-        self._datagram_bytearray = bytearray(0)
 
         self._check_kwargs(**kwargs)
 
@@ -37,33 +36,36 @@ class Datagram:
         """This function sets the bytearray and datagram from the bytearray."""
         assert isinstance(datagram_bytearray, bytearray)
 
-        # "theoretical" lower limit
-        assert len(datagram_bytearray) > 9
+        # "theoretical" lower limit:
+        # 1 (prot) + 4 (crc32) + 1 (type) + 1 (num nodes) + 1 (nodes) + 2 (data size) + 1 (data)
+        #   = 11
+        assert len(datagram_bytearray) > 11
         protocol_version = datagram_bytearray[0]
-        datagram_type_id = datagram_bytearray[1]
-        # crc32 = datagram_bytearray[2] << 3 + datagram_bytearray[3] << 2 + \
-        #     datagram_bytearray[4] << 1 + datagram_bytearray[5]
+        datagram_type_id = datagram_bytearray[5]
 
         num_node_ids = datagram_bytearray[6]
         assert len(datagram_bytearray) > 7 + num_node_ids
         node_ids = []
         i = 0
         while i < num_node_ids:
-            node_ids.append(datagram_bytearray[6 + i])
+            node_ids.append(datagram_bytearray[7 + i])
             i += 1
 
-        data_size = datagram_bytearray[6 + num_node_ids]
-        assert len(datagram_bytearray) == 7 + num_node_ids + 1 + data_size
+        assert len(datagram_bytearray) > 7 + num_node_ids
+        data_size = (datagram_bytearray[7 + num_node_ids] &
+                     0xf) << 4 | datagram_bytearray[7 + num_node_ids + 1] & 0xf
+
+        assert len(datagram_bytearray) == 7 + num_node_ids + 2 + data_size
         data = []
+        i = 0
         while i < data_size:
-            data.append(datagram_bytearray[6 + i])
+            data.append(datagram_bytearray[7 + num_node_ids + 2 + i])
             i += 1
 
         self._protocol_version = protocol_version
         self._datagram_type_id = datagram_type_id
         self._node_ids = node_ids
-        self._data = data
-        self._datagram_bytearray = datagram_bytearray
+        self._data = bytearray(data)
 
     def serialize(self):
         """This function updates the bytearray based on data."""
@@ -78,9 +80,12 @@ class Datagram:
         # Update the crc32
         crc32 = zlib.crc32(crc32_array) & 0xf
 
+        crc32 = bytearray([(crc32 >> (4 * 3)) & 0xf, (crc32 >> (4 * 2))
+                          & 0xf, (crc32 >> (4 * 1)) & 0xf, crc32 & 0xf])
+
         # Update the bytearray
         return bytearray([self._protocol_version,
-                          crc32,
+                          *crc32,
                           self._datagram_type_id,
                           len(self._node_ids),
                           *(self._node_ids),
@@ -213,6 +218,13 @@ class DatagramListener(can.BufferedReader):
         super().on_message_received(msg)
 
         if(msg.arbitration_id == 0x0010 and not self.receiving_datagram):
+            # Every time we receive the first message, we reset the variables.
+            self.datagram_messages = []
+            self.receiving_datagram = False
+            self.num_node_id = -1
+            self.incomplete_data_bytes = False
+            self.num_data_bytes = -1
+
             # Here we want to handle what happens when we get the first message in a datagram
             first_bytearray = msg.data
 

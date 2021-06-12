@@ -3,6 +3,9 @@ import unittest
 
 from can_util import can_pack
 
+TEST_NODES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+TEST_DATA = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8, 4, 6, 2, 6, 4, 3, 3]
+
 
 class TestCanPack(unittest.TestCase):
     """Test Can Util data_pack function"""

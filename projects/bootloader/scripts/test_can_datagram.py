@@ -1,38 +1,93 @@
-import can_datagram
-
-can = CanDatagram()
-
 # pylint: skip-file
-# # USE vcan0 instead of can0
+"""This Module Tests methods in can_util.py"""
+import unittest
+import can
 
-prot_ver = 0x00
+from can_datagram import Datagram
+from can_datagram import DatagramSender
+from can_datagram import DatagramListener
 
-crc32 = 0x00000000
-type_id = 0x00
-num_node_ids = 0x00
-node_ids = 0x00
-data_size = 0x0003
-data = 0x112233
+DEFAULT_CHANNEL = "vcan0"
 
-
-def test_callback(message):
-    print(message)
+TEST_PROTOCOL_VERSION = 0
+TEST_DATAGRAM_TYPE_ID = 1
+TEST_NODES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+TEST_DATA = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8, 4, 6, 2, 6, 4, 3, 3]
 
 
-can.add_recv_callback(test_callback)
+class TestCanDatagram(unittest.TestCase):
+    """Test Can Datagram functions"""
 
-can.send_datagram_msg(prot_ver, crc32, type_id, num_node_ids, node_ids, data_size, data)
+    def test_create_message(self):
+        """Test the constructor of the Datagram class"""
 
-# USE THE PYTHON UNIT TEST MODULE
+        message = Datagram(
+            protocol_version=TEST_PROTOCOL_VERSION,
+            datagram_type_id=TEST_DATAGRAM_TYPE_ID,
+            node_ids=TEST_NODES,
+            data=bytearray(TEST_DATA))
 
-# KEY: LOOPBACK MODE FOR TESTING
+        self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
+        self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
+        self.assertEqual(message.get_node_ids(), TEST_NODES)
+        self.assertEqual(message.get_data(), bytearray(TEST_DATA))
 
-# Test sending
-# 1. Send the datagram
-# 2. Listen to the CAN channel
-# 3. Get the bytes back to check -> register it to listen to the message
-# sent (create new listeners within the test)
+    def test_modify_message(self):
+        """Test modifying values in the Datagram class"""
+        message = Datagram(
+            protocol_version=TEST_PROTOCOL_VERSION,
+            datagram_type_id=TEST_DATAGRAM_TYPE_ID,
+            node_ids=TEST_NODES,
+            data=bytearray(TEST_DATA))
 
-# Test receiving
-# 1. Create CAN messages, call receive method repeatedly for all
-# datagrams, compare received versus expected
+        self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
+        self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
+        self.assertEqual(message.get_node_ids(), TEST_NODES)
+        self.assertEqual(message.get_data(), bytearray(TEST_DATA))
+
+        protocol_version = 9
+        datagram_type_id = 8
+        test_nodes = list(reversed(TEST_NODES))
+        test_data = list(reversed(TEST_DATA))
+
+        message.set_protocol_version(protocol_version)
+        message.set_datagram_type_id(datagram_type_id)
+        message.set_node_ids(test_nodes)
+        message.set_data(bytearray(test_data))
+
+        self.assertEqual(message.get_protocol_version(), protocol_version)
+        self.assertEqual(message.get_datagram_type_id(), datagram_type_id)
+        self.assertEqual(message.get_node_ids(), test_nodes)
+        self.assertEqual(message.get_data(), bytearray(test_data))
+
+    def test_serialize(self):
+        """Test the serialize function"""
+        message = Datagram(
+            protocol_version=TEST_PROTOCOL_VERSION,
+            datagram_type_id=TEST_DATAGRAM_TYPE_ID,
+            node_ids=TEST_NODES,
+            data=bytearray(TEST_DATA))
+
+        self.assertEqual(message.serialize(), bytearray(
+            b'\x00\x00\x00\x00\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+
+    def test_deserialize(self):
+        """Test retrieving Datagram information from the bytearray"""
+        message = Datagram(
+            protocol_version=0,
+            datagram_type_id=0,
+            node_ids=[0],
+            data=bytearray(
+                [0]))
+
+        message.deserialize(bytearray(
+            b'\x00\x00\x00\x00\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+
+        self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
+        self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
+        self.assertEqual(message.get_node_ids(), TEST_NODES)
+        self.assertEqual(message.get_data(), bytearray(TEST_DATA))
+
+
+if __name__ == '__main__':
+    unittest.main()
