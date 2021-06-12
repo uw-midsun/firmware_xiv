@@ -3,18 +3,11 @@
 
 import zlib
 import can
-from itertools import zip_longest
+import time
 
 DEFAULT_CHANNEL = "can0"
 PROT_VER = 1
-
-# We use the standard 500kbps baudrate.
 CAN_BITRATE = 500000
-
-# class Datagram_Listener:
-#     def __init__(self):
-#         return
-#
 
 
 class Datagram:
@@ -70,6 +63,29 @@ class Datagram:
         self._data = data
         self._datagram_bytearray = datagram_bytearray
 
+    def serialize(self):
+        """This function updates the bytearray based on data."""
+        crc32_array = bytearray([self._protocol_version,
+                                 self._datagram_type_id,
+                                 len(self._node_ids),
+                                 *(self._node_ids),
+                                 len(self._data) & 0xf0,
+                                 len(self._data) & 0x0f,
+                                 *(self._data)])
+
+        # Update the crc32
+        crc32 = zlib.crc32(crc32_array) & 0xf
+
+        # Update the bytearray
+        return bytearray([self._protocol_version,
+                          crc32,
+                          self._datagram_type_id,
+                          len(self._node_ids),
+                          *(self._node_ids),
+                          len(self._data) & 0xf0,
+                          len(self._data) & 0x0f,
+                          *(self._data)])
+
     # Accessors and mutators for the datagram
     def get_protocol_version(self):
         """This function retrieves the protocol version."""
@@ -110,30 +126,6 @@ class Datagram:
         assert isinstance(data, bytearray)
         self._data = data
 
-    # Utility function to update the bytearray when the datagram is changed
-    def serialize(self):
-        """This function updates the bytearray based on data."""
-        crc32_array = bytearray([self._protocol_version,
-                                 self._datagram_type_id,
-                                 len(self._node_ids),
-                                 *(self._node_ids),
-                                 len(self._data) & 0xf0,
-                                 len(self._data) & 0x0f,
-                                 *(self._data)])
-
-        # Update the crc32
-        crc32 = zlib.crc32(crc32_array) & 0xf
-
-        # Update the bytearray
-        return bytearray([self._protocol_version,
-                          crc32,
-                          self._datagram_type_id,
-                          len(self._node_ids),
-                          *(self._node_ids),
-                          len(self._data) & 0xf0,
-                          len(self._data) & 0x0f,
-                          *(self._data)])
-
     def _check_kwargs(self, **kwargs):
         """ This function checks that all variables are as expected"""
 
@@ -164,25 +156,21 @@ class DatagramSender:
         print("Initializing CAN Bus...")
         self.bus = can.interface.Bus(bustype=bustype, channel=channel, bitrate=bitrate)
 
-    def send_datagram_msg(self, message):
-        """This class sends the Datagrams."""
+    def send(self, message):
+        """This sends the Datagrams."""
 
         assert isinstance(message, Datagram)
 
         chunk_messages = self._chunkify(message.serialize(), 8)
-        num_messages = 0
-
         can_messages = []
-
         message_arbitration_id = 0b00000010000
         message_extended_arbitration = False
 
         # Populate an array with the can message from the library
         for chunk_message in chunk_messages:
-            num_messages += 1
-            can_messages[num_messages] = can.Message(arbitration_id=message_arbitration_id,
-                                                     data=chunk_message,
-                                                     is_extended_id=message_extended_arbitration)
+            can_messages.append(can.Message(arbitration_id=message_arbitration_id,
+                                            data=chunk_message,
+                                            is_extended_id=message_extended_arbitration))
 
             # After the first message, set the arbitration ID to 0
             message_arbitration_id = 0b00000000000
@@ -191,10 +179,38 @@ class DatagramSender:
         try:
             for msg in can_messages:
                 self.bus.send(msg)
-            print("{} messages were sent on {}".format(num_messages + 1, self.bus.channel_info))
+            print("{} messages were sent on {}".format(len(can_messages), self.bus.channel_info))
 
         except can.CanError:
             print("Message could not be sent")
 
     def _chunkify(self, data, size):
+        """This chunks up the datagram bytearray for easy iteration."""
         return (data[pos:pos + size] for pos in range(0, len(data), size))
+
+
+class DatagramListener(can.BufferedReader):
+    def __init__(self, callback):
+        """This registers the callback."""
+        assert callable(callback)
+        self.callback = callback
+
+        super().__init__()
+
+    def on_message_received(self, msg):
+        """This (SHOULD) wait for the first message in the datagram 0x010, and gets the whole datagram."""
+        time.sleep(1)
+        print("DEBUG1: ", msg)
+
+        if(msg.arbitration_id == 0x0010):
+            messages = [msg]
+            message = self.get_message()
+            print("DEBUG2: ", message)
+            while message is not None and message.arbitration_id == 0x000:
+                messages.append(message.data)
+                print("DEBUG3: ", message)
+                message = self.get_message()
+
+            return self.callback(messages)
+
+        return super().on_message_received(msg)
