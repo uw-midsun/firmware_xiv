@@ -212,8 +212,6 @@ class DatagramListener(can.BufferedReader):
         """This (SHOULD) wait for the first message in the datagram 0x010."""
         super().on_message_received(msg)
 
-        print("=====MESSAGE=====", *msg.data)
-
         if(msg.arbitration_id == 0x0010 and not self.receiving_datagram):
             # Here we want to handle what happens when we get the first message in a datagram
             first_bytearray = msg.data
@@ -233,7 +231,6 @@ class DatagramListener(can.BufferedReader):
                     upper_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 4
                     lower_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 2]
                     self.num_data_bytes = upper_bits | lower_bits
-                    print("DATA BYTES REMAINING: ", self.num_data_bytes)
                     self.incomplete_data_bytes = False
 
                     if bytes_remaining > 2:
@@ -261,18 +258,15 @@ class DatagramListener(can.BufferedReader):
                 # If there are more node ids than the message size, continue on to the next message
                 # Otherwise, locate the index of the data size
 
-                print("NODE IDS REMAINING: ", self.num_node_id)
                 if self.num_node_id >= MESSAGE_SIZE:
                     self.num_node_id = self.num_node_id - MESSAGE_SIZE
                 else:
                     bytes_remaining = MESSAGE_SIZE - self.num_node_id
-
                     if bytes_remaining == 1:
-                        self.num_data_bytes = message_bytearray[self.num_node_id + 1] << 4
+                        self.num_data_bytes = message_bytearray[self.num_node_id] << 4
                         self.incomplete_data_bytes = True
                     elif bytes_remaining >= 2:
-                        self.num_data_bytes = message_bytearray[self.num_node_id +
-                                                                1] << 4 | message_bytearray[self.num_node_id + 2]
+                        self.num_data_bytes = message_bytearray[self.num_node_id] << 4 | message_bytearray[self.num_node_id + 1]
                         self.incomplete_data_bytes = False
 
                         if bytes_remaining > 2:
@@ -286,6 +280,7 @@ class DatagramListener(can.BufferedReader):
                                 self.num_data_bytes = self.num_data_bytes - \
                                     (MESSAGE_SIZE - (first_data_index))
                             # Otherwise, we continue to the next message
+                    self.num_node_id = 0
             else:
                 # There are no more node ids.
                 # If we only got half of the data bytes
@@ -293,8 +288,6 @@ class DatagramListener(can.BufferedReader):
                 if self.incomplete_data_bytes:
                     self.num_data_bytes = self.num_data_bytes | message_bytearray[0]
                     bytes_remaining -= 1
-                print("DATA BYTES REMAINING: ", self.num_data_bytes)
-                print("MESSAGE BYTES REMAINING: ", bytes_remaining)
                 # If we already have the data bytes, use how many is remaining (otherwise
                 # it was just set)
                 if self.num_data_bytes > bytes_remaining:

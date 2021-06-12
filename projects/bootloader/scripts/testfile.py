@@ -11,7 +11,7 @@ message = can_datagram.Datagram(
 
 assert message.get_protocol_version() == 1
 assert message.get_datagram_type_id() == 2
-assert message.get_node_ids()[1] == 1
+assert message.get_node_ids()[1] == 2
 assert message.get_data()[1] == 1
 
 # Create the Sender
@@ -21,9 +21,10 @@ bus = sender.bus
 # Create a Listener
 
 
-def StandardCallback(msg):
+def StandardCallback(msgs):
     print("Hey, you got a message! Here it is:")
-    print(msg)
+    for msg in msgs:
+        print(*msg)
 
 
 listener = can_datagram.DatagramListener(StandardCallback)
@@ -32,6 +33,10 @@ listener = can_datagram.DatagramListener(StandardCallback)
 notifier = can.Notifier(bus, [listener])
 
 # Send a message
+sender.send(message)
+
+sender.send(message)
+
 sender.send(message)
 
 while(True):
