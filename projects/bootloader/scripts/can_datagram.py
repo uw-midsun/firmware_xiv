@@ -194,23 +194,26 @@ class DatagramListener(can.BufferedReader):
         """This registers the callback."""
         assert callable(callback)
         self.callback = callback
+        self.datagram_messages = []
+        self.receiving_datagram = False
 
         super().__init__()
 
     def on_message_received(self, msg):
         """This (SHOULD) wait for the first message in the datagram 0x010, and gets the whole datagram."""
-        time.sleep(1)
-        print("DEBUG1: ", msg)
+        super().on_message_received(msg)
 
-        if(msg.arbitration_id == 0x0010):
-            messages = [msg]
-            message = self.get_message()
-            print("DEBUG2: ", message)
-            while message is not None and message.arbitration_id == 0x000:
-                messages.append(message.data)
-                print("DEBUG3: ", message)
-                message = self.get_message()
-
-            return self.callback(messages)
-
-        return super().on_message_received(msg)
+        print("=====MESSAGE=====", msg)
+        if(msg.arbitration_id == 0x0010 and not self.receiving_datagram):
+            print("CASE 1 ")
+            self.datagram_messages.append(msg.data)
+            self.receiving_datagram = True
+        elif(msg.arbitration_id == 0x0000 and self.receiving_datagram):
+            print("CASE 2 ")
+            self.datagram_messages.append(msg.data)
+            self.receiving_datagram = True
+        elif(msg.arbitration_id != 0x0000 and self.receiving_datagram):
+            print("CASE 3 ")
+            self.callback(self.datagram_messages)
+            self.datagram_messages = []
+            self.receiving_datagram = False
