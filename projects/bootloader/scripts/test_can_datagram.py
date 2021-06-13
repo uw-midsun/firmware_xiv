@@ -70,7 +70,6 @@ class TestCanDatagram(unittest.TestCase):
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
 
-        print(message.serialize())
         self.assertEqual(message.serialize(), bytearray(
             b'\x00\x00\n\x03\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
 
@@ -98,14 +97,10 @@ class TestCanDatagramSender(unittest.TestCase):
     def test_send_message(self):
         """Test the distributor of the Datagram class"""
 
-        sender = DatagramSender(channel=TEST_CHANNEL)
+        sender = DatagramSender(channel=TEST_CHANNEL, receive_own_messages=True)
 
         listener = can.BufferedReader()
-        # In order to listen to its own messages, we need to create a specific socketcanbus
-        #
-        loopbackbus = can.interfaces.socketcan.SocketcanBus(
-            channel="vcan0", receive_own_messages=True)
-        notifier = can.Notifier(loopbackbus, [listener])
+        notifier = can.Notifier(sender.get_bus(), [listener])
 
         message = Datagram(
             protocol_version=TEST_PROTOCOL_VERSION,
@@ -132,11 +127,9 @@ class TestCanDatagramListener(unittest.TestCase):
         self.callback_triggered = False
         self.message = []
 
-        sender = DatagramSender(channel=TEST_CHANNEL)
+        sender = DatagramSender(channel=TEST_CHANNEL, receive_own_messages=True)
         listener = DatagramListener(self.triggerCallback)
-        loopbackbus = can.interfaces.socketcan.SocketcanBus(
-            channel="vcan0", receive_own_messages=True)
-        notifier = can.Notifier(loopbackbus, [listener])
+        notifier = can.Notifier(sender.get_bus(), [listener])
 
         message = Datagram(
             protocol_version=TEST_PROTOCOL_VERSION,
@@ -151,7 +144,7 @@ class TestCanDatagramListener(unittest.TestCase):
                 break
             pass
 
-        self.assertNotEqual(self.message, [])
+        self.assertEqual(bytearray(self.message), message.serialize())
         self.assertEqual(self.callback_triggered, True)
 
     def triggerCallback(self, msg):

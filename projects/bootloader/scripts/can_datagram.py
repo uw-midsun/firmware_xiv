@@ -161,9 +161,14 @@ class Datagram:
 class DatagramSender:
     """This class acts as a distributor for the Datagram class on a bus."""
 
-    def __init__(self, bustype="socketcan", channel=DEFAULT_CHANNEL, bitrate=CAN_BITRATE):
+    def __init__(self, bustype="socketcan", channel=DEFAULT_CHANNEL,
+                 bitrate=CAN_BITRATE, receive_own_messages=False):
         print("Initializing CAN Bus...")
-        self.bus = can.interface.Bus(bustype=bustype, channel=channel, bitrate=bitrate)
+        self.bus = can.interface.Bus(
+            bustype=bustype,
+            channel=channel,
+            bitrate=bitrate,
+            receive_own_messages=receive_own_messages)
 
     def send(self, message):
         """This sends the Datagrams."""
