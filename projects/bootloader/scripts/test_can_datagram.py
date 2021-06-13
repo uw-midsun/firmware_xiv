@@ -2,12 +2,14 @@
 """This Module Tests methods in can_util.py"""
 import unittest
 import can
+import asyncio
+import time
 
 from can_datagram import Datagram
 from can_datagram import DatagramSender
 from can_datagram import DatagramListener
 
-DEFAULT_CHANNEL = "vcan0"
+TEST_CHANNEL = "vcan0"
 
 TEST_PROTOCOL_VERSION = 0
 TEST_DATAGRAM_TYPE_ID = 1
@@ -68,8 +70,9 @@ class TestCanDatagram(unittest.TestCase):
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
 
+        print(message.serialize())
         self.assertEqual(message.serialize(), bytearray(
-            b'\x00\x00\x00\x00\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+            b'\x00\x00\n\x03\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
 
     def test_deserialize(self):
         """Test retrieving Datagram information from the bytearray"""
@@ -81,12 +84,79 @@ class TestCanDatagram(unittest.TestCase):
                 [0]))
 
         message.deserialize(bytearray(
-            b'\x00\x00\x00\x00\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+            b'\x00\x00\n\x03\x00\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x01\n\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
 
         self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
         self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
         self.assertEqual(message.get_node_ids(), TEST_NODES)
         self.assertEqual(message.get_data(), bytearray(TEST_DATA))
+
+
+class TestCanDatagramSender(unittest.TestCase):
+    """Test Can Datagram functions"""
+
+    def test_send_message(self):
+        """Test the distributor of the Datagram class"""
+
+        sender = DatagramSender(channel=TEST_CHANNEL)
+
+        listener = can.BufferedReader()
+        # In order to listen to its own messages, we need to create a specific socketcanbus
+        #
+        loopbackbus = can.interfaces.socketcan.SocketcanBus(
+            channel="vcan0", receive_own_messages=True)
+        notifier = can.Notifier(loopbackbus, [listener])
+
+        message = Datagram(
+            protocol_version=TEST_PROTOCOL_VERSION,
+            datagram_type_id=TEST_DATAGRAM_TYPE_ID,
+            node_ids=TEST_NODES,
+            data=bytearray(TEST_DATA))
+        sender.send(message)
+
+        recv_datagram = []
+        listener_message = listener.get_message()
+        while listener_message is not None:
+            for byte in listener_message.data:
+                recv_datagram.append(byte)
+            listener_message = listener.get_message()
+
+        self.assertEqual(message.serialize(), bytearray(recv_datagram))
+
+
+class TestCanDatagramListener(unittest.TestCase):
+    """Test Can Datagram functions"""
+
+    def test_register_callback(self):
+        """Test the registering of a callback"""
+        self.callback_triggered = False
+        self.message = []
+
+        sender = DatagramSender(channel=TEST_CHANNEL)
+        listener = DatagramListener(self.triggerCallback)
+        loopbackbus = can.interfaces.socketcan.SocketcanBus(
+            channel="vcan0", receive_own_messages=True)
+        notifier = can.Notifier(loopbackbus, [listener])
+
+        message = Datagram(
+            protocol_version=TEST_PROTOCOL_VERSION,
+            datagram_type_id=TEST_DATAGRAM_TYPE_ID,
+            node_ids=TEST_NODES,
+            data=bytearray(TEST_DATA))
+        sender.send(message)
+
+        timeout = time.time() + 10
+        while not self.callback_triggered:
+            if time.time() > timeout:
+                break
+            pass
+
+        self.assertNotEqual(self.message, [])
+        self.assertEqual(self.callback_triggered, True)
+
+    def triggerCallback(self, msg):
+        self.message = msg
+        self.callback_triggered = True
 
 
 if __name__ == '__main__':

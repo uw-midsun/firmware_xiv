@@ -78,7 +78,7 @@ class Datagram:
                                  *(self._data)])
 
         # Update the crc32
-        crc32 = zlib.crc32(crc32_array) & 0xf
+        crc32 = zlib.crc32(crc32_array)
 
         crc32 = bytearray([(crc32 >> (4 * 3)) & 0xf, (crc32 >> (4 * 2))
                           & 0xf, (crc32 >> (4 * 1)) & 0xf, crc32 & 0xf])
@@ -193,13 +193,17 @@ class DatagramSender:
         except can.CanError:
             print("Message could not be sent")
 
+    def get_bus(self):
+        """Accessor for the bus"""
+        return self.bus
+
     def _chunkify(self, data, size):
         """This chunks up the datagram bytearray for easy iteration."""
         return (data[pos:pos + size] for pos in range(0, len(data), size))
 
 
 class DatagramListener(can.BufferedReader):
-    """This class handles a callback when a message is received."""
+    """This class handles a callback when a datagram is received."""
 
     def __init__(self, callback):
         """This registers the callback."""
@@ -258,7 +262,8 @@ class DatagramListener(can.BufferedReader):
             self.num_node_id = self.num_node_id - bytes_remaining
 
             # Add the data to the array, and continue receiving messages
-            self.datagram_messages.append(msg.data)
+            for byte in msg.data:
+                self.datagram_messages.append(byte)
             self.receiving_datagram = True
 
         elif msg.arbitration_id == 0x0000 and self.receiving_datagram:
@@ -307,7 +312,8 @@ class DatagramListener(can.BufferedReader):
                 else:
                     # There are no more data bytes left, message is complete!
                     self.receiving_datagram = False
-            self.datagram_messages.append(msg.data)
+            for byte in msg.data:
+                self.datagram_messages.append(byte)
 
             # Once we're on the last message, call the callback
             if not self.receiving_datagram:
@@ -317,3 +323,11 @@ class DatagramListener(can.BufferedReader):
                 self.num_node_id = -1
                 self.incomplete_data_bytes = False
                 self.num_data_bytes = -1
+        else:
+            # If the message gets interrupted, or regardless when theres a non datagram message,
+            #   just reset everything.
+            self.datagram_messages = []
+            self.receiving_datagram = False
+            self.num_node_id = -1
+            self.incomplete_data_bytes = False
+            self.num_data_bytes = -1
