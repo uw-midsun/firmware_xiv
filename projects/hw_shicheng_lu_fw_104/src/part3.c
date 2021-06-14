@@ -53,8 +53,12 @@ static void prv_can_transmit(SoftTimerId id, void *context) {
 }
 
 static StatusCode prv_rx_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  LOG_DEBUG("Recieved: (%x) data: %llx\n", msg->msg_id, msg->data);
-
+  LOG_DEBUG("Recieved: (%x) data: 0x", msg->msg_id);
+  for (uint8_t i = 0; i < msg->dlc; i++) {
+    uint8_t byte = (msg->data >> (i * 8)) & 0xFF;
+    LOG_DEBUG("%x", byte);
+  }
+  LOG_DEBUG("\n");
   if (msg->msg_id == 0xA) {
     // ack message
     *ack_reply = CAN_ACK_STATUS_OK;
