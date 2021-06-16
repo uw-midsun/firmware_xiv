@@ -44,6 +44,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
   }
   mu_ads1259_store__free_unpacked(msg, NULL);
   mu_ads1259_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__ADS1259, &s_store, NULL);
 }
 
 static void prv_init_store(void) {
@@ -56,6 +57,7 @@ static void prv_init_store(void) {
     (UpdateStoreFunc)update_store,
   };
   store_register(MU_STORE_TYPE__ADS1259, funcs, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADS1259, &s_store, NULL);
 }
 
 #endif

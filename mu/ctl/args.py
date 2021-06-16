@@ -1,6 +1,7 @@
 import argparse
 from mu.ctl.log import logs
 from mu.ctl import sims
+from mu.ctl import stores
 
 
 def get_args():
@@ -29,5 +30,26 @@ def get_args():
 
     sim_list = subparsers.add_parser('list', help='list running sims')
     sim_list.set_defaults(func=sims.sim_list)
+
+    view = subparsers.add_parser('view', help='view sim stores')
+    view.add_argument('sim')
+    view.add_argument('store_type', nargs='?', default='')
+    view.add_argument('key', nargs='?', default='')
+    view.set_defaults(func=stores.view)
+
+    update = subparsers.add_parser('update', help='update a store')
+    update.add_argument('sim')
+    update.add_argument('store_type')
+    update.add_argument('key', nargs='?', default='')
+    update.set_defaults(func=stores.update)
+
+    get_io = subparsers.add_parser('get', help='get sim inputs and outputs')
+    get_io.add_argument('name', nargs='?', default='')
+    get_io.set_defaults(func=stores.get_io)
+
+    set_io = subparsers.add_parser('set', help='set sim inputs')
+    set_io.add_argument('name')
+    set_io.add_argument('val')
+    set_io.set_defaults(func=stores.set_io)
 
     return parser.parse_args()
