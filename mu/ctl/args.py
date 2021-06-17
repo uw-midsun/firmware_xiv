@@ -2,6 +2,7 @@ import argparse
 from mu.ctl.log import logs
 from mu.ctl import sims
 
+
 def get_args():
     parser = argparse.ArgumentParser(prog='muctl', description='interact with musrv')
     parser.set_defaults(func=lambda _: parser.print_usage())

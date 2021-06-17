@@ -6,7 +6,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "soft_timer.h"
 #include "wait.h"
 
 void delay_us(uint32_t t) {
