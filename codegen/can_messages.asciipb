@@ -102,7 +102,19 @@ msg {
   }
 }
 
-# IDs: 11-17 Reserved
+msg {
+  id: 11
+  source: CENTRE_CONSOLE
+  target: "TELEMETRY"
+  msg_name: "ready to driver"
+  can_data {
+    u8 {
+      field_name_1: "ready_state"
+    }
+  }
+}
+
+# IDs: 12-17 Reserved
 
 msg {
   id: 18
