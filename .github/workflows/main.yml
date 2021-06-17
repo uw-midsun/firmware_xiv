@@ -128,10 +128,15 @@ jobs:
         if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
         run: exit 1
 
-      - name: Build and test
+      - name: Build stm32f0xx
+        id: build-stm32
         run: |
           make build_all PLATFORM=stm32f0xx DEFINE="${DEFINES}"
           make clean
+
+      - name: Build and test
+        id: build-test
+        run: |
           make build_all PLATFORM=x86 DEFINE="${DEFINES}"
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all

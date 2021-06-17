@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message UpdateName {
+  string new_name = 1;
+}
