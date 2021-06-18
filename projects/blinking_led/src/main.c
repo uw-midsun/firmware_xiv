@@ -10,17 +10,14 @@ typedef struct Counters {
   uint8_t counter_b;
 } Counters;
 
-void SoftTimerCallCounter(SoftTimerId timer_id, void *context) {
+static void SoftTimerCallCounter(SoftTimerId timer_id, void *context) {
   Counters *storage = context;
-  if ((storage->counter_a + 1) % 2 != 0 || storage->counter_a == 0) {
-    storage->counter_a++;
-    LOG_DEBUG("Counter A: %i\n", storage->counter_a);
-  } else {
-    storage->counter_a++;
+  storage->counter_a++;
+  LOG_DEBUG("Counter A: %i\n", storage->counter_a);
+  if ((storage->counter_a) % 2 == 0) {
     storage->counter_b++;
-    LOG_DEBUG("Counter A: %i\n", storage->counter_a);
     LOG_DEBUG("Counter B: %i\n", storage->counter_b);
-  }
+  } 
   soft_timer_start_millis(COUNTER_PERIOD_MS, SoftTimerCallCounter, storage, NULL);
 }
 
