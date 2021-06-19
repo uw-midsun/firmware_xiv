@@ -149,6 +149,7 @@ static void prv_state_none(Fsm *fsm, const Event *e, void *context) {
 
 static void prv_state_power_main_complete(Fsm *fsm, const Event *e, void *context) {
   event_raise(POWER_MAIN_SEQUENCE_EVENT_COMPLETE, 0);
+  CAN_TRANSMIT_READY_TO_DRIVER(true);
 }
 
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {

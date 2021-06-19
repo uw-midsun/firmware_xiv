@@ -40,6 +40,11 @@
 
 #define CAN_UNPACK_REGEN_BRAKING_TOGGLE_REQUEST(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
+#define CAN_UNPACK_READY_TO_DRIVER(msg_ptr, ready_state_u8_ptr)                           \
+  can_unpack_impl_u8((msg_ptr), 1, (ready_state_u8_ptr), CAN_UNPACK_IMPL_EMPTY,           \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32_ptr, brake_output_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (throttle_output_u32_ptr), (brake_output_u32_ptr))
 
