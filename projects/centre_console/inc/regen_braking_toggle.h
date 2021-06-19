@@ -14,10 +14,16 @@
 #include "event_queue.h"
 #include "status.h"
 
-StatusCode regen_braking_init();
+// Initializes regen braking by registering a handler for the toggle request
+// and sets the regen braking state to false by default
+StatusCode regen_braking_toggle_init(void);
 
-bool get_regen_braking_state();
+// Returns the state of regen braking
+bool get_regen_braking_state(void);
 
-StatusCode set_regen_braking(bool state);
+// Function used to manually set the regen braking state, if attempting to set the 
+// same state, the request is silently ignored, and no messages are sent
+StatusCode set_regen_braking_state(bool state);
 
+// Once power main sequence completes, regen braking is enabled
 bool regen_braking_process_event(Event *e);

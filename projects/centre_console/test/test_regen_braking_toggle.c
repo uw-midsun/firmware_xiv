@@ -27,12 +27,15 @@ static StatusCode prv_regen_callback(const CanMessage *msg, void *context,
 void setup_test(void) {
   s_times_callback_called = 0;
   s_ack_reply_value = CAN_ACK_STATUS_OK;
-  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
+  initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
                                   CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
                                   CENTRE_CONSOLE_EVENT_CAN_FAULT);
-  TEST_ASSERT_OK(regen_braking_init());
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_REGEN_BRAKING, prv_regen_callback, NULL));
+  TEST_ASSERT_OK(regen_braking_toggle_init());
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_FALSE(get_regen_braking_state());
+  TEST_ASSERT_EQUAL(1, s_times_callback_called);
 }
 
 void teardown_test(void) {}
@@ -44,25 +47,23 @@ void test_toggle_with_ack(void) {
   // Then process REGEN_BRAKING message with ACK
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(1, s_times_callback_called);
-
-  CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
-  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  TEST_ASSERT_FALSE(get_regen_braking_state());
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
   CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  TEST_ASSERT_TRUE(get_regen_braking_state());
+  TEST_ASSERT_FALSE(get_regen_braking_state());
   TEST_ASSERT_EQUAL(3, s_times_callback_called);
+
+  CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_TRUE(get_regen_braking_state());
+  TEST_ASSERT_EQUAL(4, s_times_callback_called);
 }
 
 void test_toggle_ack_failed(void) {
   s_ack_reply_value = CAN_ACK_STATUS_INVALID;
-  // False by default
-  TEST_ASSERT_FALSE(get_regen_braking_state());
 
   CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
   // First process REGEN_BRAKING_TOGGLE_REQUEST message
@@ -72,57 +73,62 @@ void test_toggle_ack_failed(void) {
   // Then process resulting REGEN_BRAKING message to revert state
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_FALSE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(3, s_times_callback_called);
 
   CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_FALSE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(4, s_times_callback_called);
+  TEST_ASSERT_EQUAL(5, s_times_callback_called);
+
+  CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_FALSE(get_regen_braking_state());
+  TEST_ASSERT_EQUAL(7, s_times_callback_called);
 }
 
 void test_manual_toggle_with_ack(void) {
   s_ack_reply_value = CAN_ACK_STATUS_OK;
-  TEST_ASSERT_OK(set_regen_braking(true));
+  TEST_ASSERT_OK(set_regen_braking_state(true));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(1, s_times_callback_called);
-
-  TEST_ASSERT_OK(set_regen_braking(false));
-  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  TEST_ASSERT_FALSE(get_regen_braking_state());
   TEST_ASSERT_EQUAL(2, s_times_callback_called);
 
-  TEST_ASSERT_OK(set_regen_braking(false));
+  TEST_ASSERT_OK(set_regen_braking_state(false));
+  MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_FALSE(get_regen_braking_state());
+  TEST_ASSERT_EQUAL(3, s_times_callback_called);
+
+  TEST_ASSERT_OK(set_regen_braking_state(false));
   // No message sent since setting to same state
   TEST_ASSERT_FALSE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(3, s_times_callback_called);
 
-  TEST_ASSERT_OK(set_regen_braking(true));
+  TEST_ASSERT_OK(set_regen_braking_state(true));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(3, s_times_callback_called);
+  TEST_ASSERT_EQUAL(4, s_times_callback_called);
 }
 
 void test_manual_toggle_ack_failed(void) {
   s_ack_reply_value = CAN_ACK_STATUS_INVALID;
-  // False by default
-  TEST_ASSERT_FALSE(get_regen_braking_state());
 
-  TEST_ASSERT_OK(set_regen_braking(true));
+  TEST_ASSERT_OK(set_regen_braking_state(true));
   // Then process REGEN_BRAKING message with ACK
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   // Then process resulting REGEN_BRAKING message to revert state
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   // No change to state
   TEST_ASSERT_FALSE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(3, s_times_callback_called);
 
-  TEST_ASSERT_OK(set_regen_braking(false));
+  TEST_ASSERT_OK(set_regen_braking_state(false));
   // No messages sent since setting to same state
   TEST_ASSERT_FALSE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(2, s_times_callback_called);
+  TEST_ASSERT_EQUAL(3, s_times_callback_called);
 }
 
 void test_event_trigger(void) {
@@ -134,5 +140,5 @@ void test_event_trigger(void) {
   TEST_ASSERT_TRUE(regen_braking_process_event(&power_sequence_event));
   MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(get_regen_braking_state());
-  TEST_ASSERT_EQUAL(1, s_times_callback_called);
+  TEST_ASSERT_EQUAL(2, s_times_callback_called);
 }
