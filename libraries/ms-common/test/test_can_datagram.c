@@ -43,11 +43,11 @@
 
 #define TEST_DST_SIZE_SHORT 16
 #define TEST_DATA_SIZE_SHORT 16
-#define NUM_SHORT_TEST_MSG 7
+#define NUM_SHORT_TEST_MSG 6
 
 #define TEST_DST_SIZE_LONG 255
 #define TEST_DATA_SIZE_LONG 2048
-#define NUM_LONG_TEST_MSG 290
+#define NUM_LONG_TEST_MSG 289
 
 #define RX_WATCHDOG_TIMEOUT_MS 1000
 
@@ -211,6 +211,18 @@ static StatusCode prv_can_datagram_rx_handler(const CanMessage *msg, void *conte
   return STATUS_CODE_OK;
 }
 
+static void prv_datagram_tx_cmpl(void) {
+  LOG_DEBUG("TX_COMPLETE!\n");
+}
+
+static void prv_datagram_rx_cmpl(void) {
+  LOG_DEBUG("RX_COMPLETE!\n");
+}
+
+static void prv_datagram_error(void) {
+  LOG_DEBUG("ERROR!\n");
+}
+
 void test_can_datagram_tx(void) {
   prv_initialize_can();
   CanDatagramSettings settings = {
@@ -230,15 +242,18 @@ void test_can_datagram_tx(void) {
     .destination_nodes = s_dst,
     .data_len = TEST_DATA_SIZE_SHORT,
     .data = s_data,
+    .tx_cmpl_cb = prv_datagram_tx_cmpl,
   };
   can_datagram_start_tx(&tx_config);
 
   Event e = { 0 };
-  while (s_num_msg_rx < NUM_SHORT_TEST_MSG) {  // Loop until num msg rx'd same as tx'd
+  while (can_datagram_get_status() ==
+         DATAGRAM_STATUS_ACTIVE) {  // Loop until num msg rx'd same as tx'd
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
     can_process_event(&e);
   }
+  TEST_ASSERT_EQUAL(NUM_SHORT_TEST_MSG, s_num_msg_rx);
   TEST_ASSERT_EQUAL(true, s_start_message_set);
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 }
@@ -263,6 +278,7 @@ void test_can_datagram_rx(void) {
     .data = rx_data_buf,
     .destination_nodes = rx_dst_buf,
     .node_id = 'a',
+    .rx_cmpl_cb = prv_datagram_rx_cmpl,
   };
   can_datagram_start_listener(&rx_config);
 
@@ -329,11 +345,13 @@ void test_long_can_datagram_tx(void) {
 
   Event e = { 0 };
   uint16_t count = 0;
-  while (s_num_msg_rx < NUM_LONG_TEST_MSG) {  // Loop until num msg rx'd same as tx'd
+  while (can_datagram_get_status() ==
+         DATAGRAM_STATUS_ACTIVE) {  // Loop until num msg rx'd same as tx'd
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
     can_process_event(&e);
   }
+  TEST_ASSERT_EQUAL(NUM_LONG_TEST_MSG, s_num_msg_rx);
   TEST_ASSERT_EQUAL(true, s_start_message_set);
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 }
@@ -450,6 +468,7 @@ void test_rx_timeout(void) {
     .rx_event = DATAGRAM_EVENT_RX,
     .repeat_event = DATAGRAM_EVENT_REPEAT,
     .error_event = DATAGRAM_EVENT_ERROR,
+    .error_cb = prv_datagram_error,
   };
   can_datagram_init(&settings);
   can_register_rx_handler(TEST_CAN_DGRAM_MSG_ID_RX, prv_can_datagram_rx_handler, NULL);
@@ -479,7 +498,7 @@ void test_rx_timeout(void) {
 }
 
 // Verify that Rx Message can be sent before and after Tx
-// Since processing real can messages adds a lot of complexity to tests,
+// Since processing real CAN messages adds a lot of complexity to tests,
 // will no longer be used
 void test_rx_tx_rx() {
   uint8_t rx_dst_buf[TEST_DST_SIZE_SHORT];

@@ -1,5 +1,6 @@
 #include "can_datagram.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -8,6 +9,7 @@
 #include "fsm.h"
 #include "interrupt.h"
 #include "log.h"
+#include "misc.h"
 #include "soft_timer.h"
 #include "watchdog.h"
 
@@ -20,7 +22,7 @@
 #define MAX_DATA_SIZE_BYTES 2048
 #define MAX_CAN_TX 4
 #define CRC_STREAM_SIZE \
-  DGRAM_TYPE_SIZE_BYTES + DEST_LEN_SIZE_BYTES + DATA_LEN_SIZE_BYTES + 2 * sizeof(uint32_t)
+  (DGRAM_TYPE_SIZE_BYTES + DEST_LEN_SIZE_BYTES + DATA_LEN_SIZE_BYTES + 2 * sizeof(uint32_t))
 
 #define DATAGRAM_BUFFER_LEN 2048
 
@@ -32,6 +34,10 @@ typedef struct CanDatagramStorage {
   CanDatagramTxCb tx_cb;
   CanDatagramStatus status;
   CanDatagramRxConfig *rx_info;
+
+  CanDatagramExitCb rx_cmpl_cb;
+  CanDatagramExitCb tx_cmpl_cb;
+  CanDatagramExitCb error_cb;
 
   EventId tx_event;
   EventId rx_event;
@@ -45,6 +51,14 @@ typedef struct CanDatagramStorage {
 } CanDatagramStorage;
 
 static CanDatagramStorage s_store;
+static_assert((sizeof(s_store.dgram.protocol_version) == PROTOCOL_VERSION_SIZE_BYTES),
+              "Protocol version is wrong size!");
+static_assert((sizeof(s_store.dgram.crc) == CRC_SIZE_BYTES), "CRC is wrong size!");
+static_assert((sizeof(s_store.dgram.dgram_type) == DGRAM_TYPE_SIZE_BYTES),
+              "Dgram type is wrong size!");
+static_assert((sizeof(s_store.dgram.destination_nodes_len) == DEST_LEN_SIZE_BYTES),
+              "Destination_nodes_len is wrong size!");
+static_assert((sizeof(s_store.dgram.data_len) == DATA_LEN_SIZE_BYTES), "Data_len is wrong size!");
 
 static Fsm s_dgram_fsm;
 static WatchdogStorage s_watchdog;
@@ -208,15 +222,15 @@ FSM_STATE_TRANSITION(state_done) {
 
 //  Write max 8 bytes to fifo on datagram frame rx
 static void prv_write_rx_buffer(uint8_t *data, size_t len) {
-  int ret = fifo_push_arr(&s_fifo, data, len);
+  StatusCode ret = fifo_push_arr(&s_fifo, data, len);
   // Catch buffer overflow as error
   if (ret == STATUS_CODE_RESOURCE_EXHAUSTED) {
     LOG_WARN("RX MSG BUFFER OVERFLOW. EXITING WITH ERROR...\n");
-    event_raise(s_store.error_event, HARD_ERROR);
+    event_raise(s_store.error_event, DATAGRAM_HARD_ERROR);
   }
 }
 
-// Read array of max length 2048 direct from fifo
+// FUNCTIONS USED TO WRITE AND READ FROM FIFO
 static bool prv_read_rx_buffer(uint8_t *data, size_t len) {
   // Check that data exists to be read
   return (fifo_pop_arr(&s_fifo, data, len) != STATUS_CODE_RESOURCE_EXHAUSTED);
@@ -224,15 +238,16 @@ static bool prv_read_rx_buffer(uint8_t *data, size_t len) {
 
 // Functions used to write and read to fifo
 static void prv_flush_tx_buffer(void) {
-  size_t tx_len = fifo_size(&s_fifo) < CAN_BUFFER_SIZE ? fifo_size(&s_fifo) : CAN_BUFFER_SIZE;
-  for (size_t i = 0; i < tx_len; i++) {
-    fifo_pop(&s_fifo, &s_can_buffer[i]);
-  }
+  size_t tx_len = MIN(fifo_size(&s_fifo), (size_t)CAN_BUFFER_SIZE);
   fifo_pop_arr(&s_fifo, s_can_buffer, tx_len);
-  s_store.tx_cb(s_can_buffer, tx_len, false);
+  if (s_store.tx_cb != NULL) {
+    s_store.tx_cb(s_can_buffer, tx_len, false);
+  } else {
+    LOG_WARN("TX_CALLBACK IS NULL. EXITING WITH ERROR...\n");
+    event_raise(s_store.error_event, DATAGRAM_HARD_ERROR);
+  }
 }
 
-// Functions used to write and read to fifo
 static void prv_write_tx_buffer(uint8_t *data, size_t len) {
   fifo_push_arr(&s_fifo, data, len);
   // If 8 bytes of data available, transmit
@@ -242,6 +257,7 @@ static void prv_write_tx_buffer(uint8_t *data, size_t len) {
   }
 }
 
+// Computes CRC of a datagram
 static uint32_t prv_can_datagram_compute_crc(void) {
   uint32_t crc;
   uint8_t stream[CRC_STREAM_SIZE];
@@ -268,57 +284,57 @@ static uint32_t prv_can_datagram_compute_crc(void) {
   return crc32_arr(stream, (size_t)(write - stream));
 }
 
+// Helper function for txing buffers
+static bool prv_tx_buffer(uint8_t *buf, size_t len) {
+  size_t bytes_remaining = len - s_store.tx_bytes_sent;
+  size_t bytes_to_send = MIN(bytes_remaining, (uint8_t)CAN_BUFFER_SIZE);
+  prv_write_tx_buffer(buf + s_store.tx_bytes_sent, bytes_to_send);
+  s_store.tx_bytes_sent += bytes_to_send;
+  if (s_store.tx_bytes_sent == len) {
+    s_store.tx_bytes_sent = 0;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // BEGIN FSM STATE FUNCTIONS
 static void prv_process_protocol_version_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
 
-  memcpy(s_can_buffer, &dgram->protocol_version, PROTOCOL_VERSION_SIZE_BYTES);
-  prv_write_tx_buffer(s_can_buffer, PROTOCOL_VERSION_SIZE_BYTES);
+  prv_write_tx_buffer(&dgram->protocol_version, PROTOCOL_VERSION_SIZE_BYTES);
   event_raise_no_data(store->tx_event);
 }
 
 static void prv_process_crc_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  memcpy(s_can_buffer, &dgram->crc, CRC_SIZE_BYTES);
-  prv_write_tx_buffer(s_can_buffer, CRC_SIZE_BYTES);
+  prv_write_tx_buffer((uint8_t *)&dgram->crc, CRC_SIZE_BYTES);
   event_raise_no_data(store->tx_event);
 }
 
 static void prv_process_dgram_type_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  memcpy(s_can_buffer, &dgram->dgram_type, DGRAM_TYPE_SIZE_BYTES);
-  prv_write_tx_buffer(s_can_buffer, sizeof(dgram->dgram_type));
+  prv_write_tx_buffer(&dgram->dgram_type, DGRAM_TYPE_SIZE_BYTES);
   event_raise_no_data(store->tx_event);
 }
 
 static void prv_process_dst_len_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  memcpy(s_can_buffer, &dgram->destination_nodes_len, DEST_LEN_SIZE_BYTES);
-  prv_write_tx_buffer(s_can_buffer, sizeof(dgram->destination_nodes_len));
-  int ret = event_raise_no_data(store->tx_event);
+  prv_write_tx_buffer(&dgram->destination_nodes_len, DEST_LEN_SIZE_BYTES);
+  event_raise_no_data(store->tx_event);
 }
 
 static void prv_process_dst_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  uint8_t dst_len = dgram->destination_nodes_len;
-  uint8_t dst_bytes_to_send = 0;
   // TX max of 4 messages at a time to prevent event queue overflow
-  for (int msg = 0; msg < MAX_CAN_TX; msg++) {
-    dst_bytes_to_send = (dst_len - s_store.tx_bytes_sent < CAN_BUFFER_SIZE)
-                            ? (dst_len - s_store.tx_bytes_sent)
-                            : CAN_BUFFER_SIZE;
-    memcpy(s_can_buffer, dgram->destination_nodes + s_store.tx_bytes_sent,
-           (size_t)dst_bytes_to_send);
-    s_store.tx_bytes_sent += dst_bytes_to_send;
-    prv_write_tx_buffer(s_can_buffer, dst_bytes_to_send);
-    if (s_store.tx_bytes_sent == dst_len) {
+  for (uint8_t msg = 0; msg < MAX_CAN_TX; msg++) {
+    if (prv_tx_buffer(dgram->destination_nodes, dgram->destination_nodes_len)) {
       event_raise_no_data(store->tx_event);
-      s_store.tx_bytes_sent = 0;
       return;
     }
   }
@@ -328,31 +344,21 @@ static void prv_process_dst_tx(Fsm *fsm, const Event *e, void *context) {
 static void prv_process_data_len_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  memcpy(s_can_buffer, &dgram->data_len, DATA_LEN_SIZE_BYTES);
-  prv_write_tx_buffer(s_can_buffer, sizeof(dgram->data_len));
+  prv_write_tx_buffer((uint8_t *)&dgram->data_len, DATA_LEN_SIZE_BYTES);
   event_raise_no_data(store->tx_event);
 }
 
 static void prv_process_data_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  uint16_t data_len = dgram->data_len;
-  uint8_t data_bytes_to_send = 0;
   // Push max of 4 messages, 8 bytes at a time to fifo for tx
-  for (int msg = 0; msg < MAX_CAN_TX; msg++) {
-    data_bytes_to_send = (data_len - s_store.tx_bytes_sent < CAN_BUFFER_SIZE)
-                             ? (data_len - s_store.tx_bytes_sent)
-                             : CAN_BUFFER_SIZE;
-    memcpy(s_can_buffer, dgram->data + s_store.tx_bytes_sent, (size_t)data_bytes_to_send);
-    s_store.tx_bytes_sent += data_bytes_to_send;
-    prv_write_tx_buffer(s_can_buffer, data_bytes_to_send);
-    if (s_store.tx_bytes_sent == data_len) {
+  for (uint8_t msg = 0; msg < MAX_CAN_TX; msg++) {
+    if (prv_tx_buffer(dgram->data, dgram->data_len)) {
       // tx any final data
-      if (fifo_size(&s_fifo) > 0) {
+      while (fifo_size(&s_fifo) > 0) {
         prv_flush_tx_buffer();
       }
       event_raise_no_data(store->tx_event);
-      s_store.tx_bytes_sent = 0;
       return;
     }
   }
@@ -370,7 +376,7 @@ static void prv_process_protocol_version_rx(Fsm *fsm, const Event *e, void *cont
     if (dgram->protocol_version != CAN_DATAGRAM_VERSION) {
       // Soft error, will return us to state idle
       LOG_WARN("DIFFERENT PROTOCOL VERSION, MSG IGNORED\n");
-      event_raise(store->error_event, SOFT_ERROR);
+      event_raise(store->error_event, DATAGRAM_SOFT_ERROR);
       return;
     }
     event_raise_no_data(store->rx_event);
@@ -418,11 +424,12 @@ static void prv_process_dst_rx(Fsm *fsm, const Event *e, void *context) {
     for (uint8_t id = 0; id < dgram->destination_nodes_len; id++) {
       if (dgram->destination_nodes[id] == s_store.node_id) {
         found_id = true;
+        break;
       }
     }
     if (!found_id) {
       LOG_WARN("CURRENT NODE NOT REQUESTED, MSG IGNORED\n");
-      event_raise(store->error_event, SOFT_ERROR);
+      event_raise(store->error_event, DATAGRAM_SOFT_ERROR);
     } else {
       event_raise_no_data(store->rx_event);
     }
@@ -448,9 +455,9 @@ static void prv_process_data_rx(Fsm *fsm, const Event *e, void *context) {
     if (prv_can_datagram_compute_crc() == dgram->crc) {
       event_raise_no_data(store->rx_event);
     } else {
-      LOG_WARN("CALCULATED CRC: %x, DID NOT MATCH TRANSMITTED: %x. EXITING WITH ERROR...\n",
+      LOG_WARN("CALCULATED CRC: 0x%lx, DID NOT MATCH TRANSMITTED: 0x%lx. EXITING WITH ERROR...\n",
                prv_can_datagram_compute_crc(), dgram->crc);
-      event_raise(store->error_event, HARD_ERROR);
+      event_raise(store->error_event, DATAGRAM_HARD_ERROR);
     }
   }
 }
@@ -459,10 +466,7 @@ static void prv_process_done(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   // Handle tx specific cleanup
   if (e->id == store->tx_event) {
-    // Clear last tx data
-    prv_flush_tx_buffer();
     event_raise_no_data(store->tx_event);
-
     // Handle rx specific cleanup
   } else if (e->id == store->rx_event) {
     // Write info to passed rx config
@@ -488,13 +492,22 @@ static void prv_process_idle(Fsm *fsm, const Event *e, void *context) {
   // Set exit status of state machine
   if (e->id == store->tx_event) {
     store->status = DATAGRAM_STATUS_TX_COMPLETE;
+    if (s_store.tx_cmpl_cb != NULL) {
+      s_store.tx_cmpl_cb();
+    }
   } else if (e->id == store->rx_event) {
     store->rx_listener_enabled = false;  // Don't receive any dgrams
     store->status = DATAGRAM_STATUS_RX_COMPLETE;
+    if (s_store.rx_cmpl_cb != NULL) {
+      s_store.rx_cmpl_cb();
+    }
   } else {
-    if (e->data == HARD_ERROR) {
+    if (e->data == DATAGRAM_HARD_ERROR) {
       store->rx_listener_enabled = false;
       store->status = DATAGRAM_STATUS_ERROR;
+      if (s_store.error_cb != NULL) {
+        s_store.error_cb();
+      }
     } else {
       s_store.soft_error_flag = true;
     }  // Soft errors just set flag and continue
@@ -525,7 +538,7 @@ static void prv_init_fsm(void *context) {
 
 static void prv_rx_watchdog_expiry_cb(void *context) {
   LOG_WARN("WATCHDOG EXPIRED. EXITING WITH ERROR...\n");
-  event_raise(s_store.error_event, HARD_ERROR);
+  event_raise(s_store.error_event, DATAGRAM_HARD_ERROR);
 }
 
 StatusCode can_datagram_init(CanDatagramSettings *settings) {
@@ -534,6 +547,14 @@ StatusCode can_datagram_init(CanDatagramSettings *settings) {
   s_store.rx_event = settings->rx_event;
   s_store.repeat_event = settings->repeat_event;
   s_store.error_event = settings->error_event;
+  s_store.error_cb = settings->error_cb;
+  // Reset the store
+  s_store.tx_cb = NULL;
+  s_store.rx_info = NULL;
+  s_store.tx_bytes_sent = 0;
+  s_store.rx_listener_enabled = false;
+  s_store.soft_error_flag = false;
+  s_store.node_id = 0;
 
   fifo_init(&s_fifo, s_buffer);
   prv_init_fsm((void *)&s_store);
@@ -585,11 +606,14 @@ StatusCode can_datagram_start_listener(CanDatagramRxConfig *config) {
   dgram->data = config->data;
   dgram->destination_nodes = config->destination_nodes;
 
-  // Store config * to be filled out after rx complete
+  // Store config* to be filled out after rx complete
   s_store.rx_info = config;
 
   // Store current node id
   s_store.node_id = config->node_id;
+
+  // Store completion callback
+  s_store.rx_cmpl_cb = config->rx_cmpl_cb;
 
   s_store.rx_listener_enabled = true;
   return STATUS_CODE_OK;
@@ -618,11 +642,12 @@ StatusCode can_datagram_start_tx(CanDatagramTxConfig *config) {
   dgram->data = config->data;
   dgram->crc = prv_can_datagram_compute_crc();
 
+  // Store completion callback
+  s_store.tx_cmpl_cb = config->tx_cmpl_cb;
   s_store.tx_cb = config->tx_cb;
   s_store.tx_cb(NULL, 0, true);
   s_store.status = DATAGRAM_STATUS_ACTIVE;
-  int ret = event_raise_no_data(s_store.tx_event);
-  return STATUS_CODE_OK;
+  return event_raise_no_data(s_store.tx_event);
 }
 
 CanDatagramStatus can_datagram_get_status(void) {
