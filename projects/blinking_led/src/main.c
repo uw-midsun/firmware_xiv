@@ -17,7 +17,7 @@ static void prv_SoftTimerCallCounter(SoftTimerId timer_id, void *context) {
   if ((storage->counter_a) % 2 == 0) {
     storage->counter_b++;
     LOG_DEBUG("Counter B: %i\n", storage->counter_b);
-  } 
+  }
   soft_timer_start_millis(COUNTER_PERIOD_MS, prv_SoftTimerCallCounter, storage, NULL);
 }
 
