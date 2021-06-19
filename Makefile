@@ -24,7 +24,7 @@
 #   make update_codegen - Update the codegen-tooling release
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
-#   make pytest_all - Runs all python tests in the scripts directory of every project 
+#   make pytest_all - Runs all python tests in the scripts directory of every project
 #   make install_requirements - Installs python requirements for every project
 #
 # Platform specific:
@@ -269,14 +269,14 @@ pytest_all:
 	@for i in $$(find projects -name "test_*.py"); 													\
 	do																								\
 		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done			
+	done
 
 .PHONY: install_requirements
 install_requirements:
 	@for i in $$(find projects -name "requirements.txt"); 		\
 	do															\
-		pip install -r $$i;										\
-	done								
+		pip3 install -r $$i;										\
+	done
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

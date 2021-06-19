@@ -310,10 +310,12 @@ void test_pca9539r_gpio_get_state_invalid_address(void) {
   Pca9539rGpioState state;
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, pca9539r_gpio_get_state(&address, &state));
 }
+
 void prv_test(const struct GpioAddress *address, void *context) {
   GpioState state = GPIO_STATE_LOW;
   gpio_get_state(address, &state);
 }
+
 void test_pca9539r_gpio_subscribe_interrupts(void) {
   GpioAddress address = { .pin = VALID_PORT_0_PIN, .port = 0 };
   TEST_ASSERT_OK(pca9539r_gpio_subscribe_interrupts(&address, &prv_test, NULL));

@@ -124,3 +124,12 @@ StatusCode pca9539r_gpio_get_state(const Pca9539rGpioAddress *address,
       ((gpio_data & (1 << bit)) == 0) ? PCA9539R_GPIO_STATE_LOW : PCA9539R_GPIO_STATE_HIGH;
   return STATUS_CODE_OK;
 }
+
+StatusCode pca9539r_gpio_subscribe_interrupts(const GpioAddress *interrupt_pin,
+                                              Pca9539rInterruptCallback callback, void *context) {
+  InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
+                                           .priority = INTERRUPT_PRIORITY_NORMAL };
+  gpio_it_register_interrupt(interrupt_pin, &interrupt_settings, INTERRUPT_EDGE_FALLING, *callback,
+                             context);
+  return status_get().code;
+}
