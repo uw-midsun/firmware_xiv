@@ -8,8 +8,10 @@ from mu.harness import logger, decoder
 from mu.harness.project import StoreUpdate
 from mu.protogen.stores_pb2 import MuStoreType
 
+
 class InternalError(Exception):
     pass
+
 
 class ReqHandler(http.server.BaseHTTPRequestHandler):
     def __init__(self, pm, *args, **kwargs):

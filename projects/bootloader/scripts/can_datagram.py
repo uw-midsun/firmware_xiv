@@ -23,12 +23,12 @@ class Datagram:
 
         self._check_kwargs(**kwargs)
 
-        self._protocol_version = kwargs["protocol_version"] & 0xf
-        self._datagram_type_id = kwargs["datagram_type_id"] & 0xf
+        self._protocol_version = kwargs["protocol_version"] & 0xff
+        self._datagram_type_id = kwargs["datagram_type_id"] & 0xff
 
         self._node_ids = []
         for val in kwargs["node_ids"]:
-            self._node_ids.append(val & 0xf)
+            self._node_ids.append(val & 0xff)
 
         self._data = kwargs["data"]
 
@@ -53,7 +53,7 @@ class Datagram:
 
         assert len(datagram_bytearray) > 7 + num_node_ids
         data_size = (datagram_bytearray[7 + num_node_ids] &
-                     0xf) << 4 | datagram_bytearray[7 + num_node_ids + 1] & 0xf
+                     0xff) << 8 | datagram_bytearray[7 + num_node_ids + 1] & 0xff
 
         assert len(datagram_bytearray) == 7 + num_node_ids + 2 + data_size
         data = []
@@ -69,19 +69,26 @@ class Datagram:
 
     def serialize(self):
         """This function updates the bytearray based on data."""
-        crc32_array = bytearray([self._protocol_version,
-                                 self._datagram_type_id,
-                                 len(self._node_ids),
-                                 *(self._node_ids),
-                                 (len(self._data) >> 4) & 0x0f,
-                                 len(self._data) & 0x0f,
-                                 *(self._data)])
 
+        node_crc32 = zlib.crc32(bytearray(self._node_ids))
+        node_crc32 = bytearray([(node_crc32 >> (8 * 3)) & 0xff, (node_crc32 >> (8 * 2))
+                                & 0xff, (node_crc32 >> (8 * 1)) & 0xff, node_crc32 & 0xff])
+
+        data_crc32 = zlib.crc32(self._data)
+        data_crc32 = bytearray([(data_crc32 >> (8 * 3)) & 0xff, (data_crc32 >> (8 * 2))
+                                & 0xff, (data_crc32 >> (8 * 1)) & 0xff, data_crc32 & 0xff])
+
+        crc32_array = bytearray([self._datagram_type_id,
+                                 len(self._node_ids),
+                                 *node_crc32,
+                                 (len(self._data) >> 8) & 0xff,
+                                 len(self._data) & 0xff,
+                                 *data_crc32])
         # Update the crc32
         crc32 = zlib.crc32(crc32_array)
 
-        crc32 = bytearray([(crc32 >> (4 * 3)) & 0xf, (crc32 >> (4 * 2))
-                          & 0xf, (crc32 >> (4 * 1)) & 0xf, crc32 & 0xf])
+        crc32 = bytearray([(crc32 >> (8 * 3)) & 0xff, (crc32 >> (8 * 2))
+                          & 0xff, (crc32 >> (8 * 1)) & 0xff, crc32 & 0xff])
 
         # Update the bytearray
         return bytearray([self._protocol_version,
@@ -89,7 +96,7 @@ class Datagram:
                           self._datagram_type_id,
                           len(self._node_ids),
                           *(self._node_ids),
-                          (len(self._data) >> 4) & 0x0f,
+                          (len(self._data) >> 8) & 0x0f,
                           len(self._data) & 0x0f,
                           *(self._data)])
 
@@ -100,8 +107,8 @@ class Datagram:
 
     def set_protocol_version(self, protocol_version):
         """This function sets the protocol version."""
-        assert protocol_version & 0xf == protocol_version
-        self._protocol_version = protocol_version & 0xf
+        assert protocol_version & 0xff == protocol_version
+        self._protocol_version = protocol_version & 0xff
 
     def get_datagram_type_id(self):
         """This function retrieves the type id."""
@@ -109,8 +116,8 @@ class Datagram:
 
     def set_datagram_type_id(self, datagram_type_id):
         """This function sets the type id."""
-        assert datagram_type_id & 0xf == datagram_type_id
-        self._datagram_type_id = datagram_type_id & 0xf
+        assert datagram_type_id & 0xff == datagram_type_id
+        self._datagram_type_id = datagram_type_id & 0xff
 
     def get_node_ids(self):
         """This function sets the node ids."""
@@ -120,7 +127,7 @@ class Datagram:
         """This function sets the node ids."""
         assert isinstance(node_ids, list)
         for val in node_ids:
-            assert val & 0xf == val
+            assert val & 0xff == val
             assert val < 64
         self._node_ids = node_ids
 
@@ -154,8 +161,8 @@ class Datagram:
         assert isinstance(kwargs["data"], bytearray)
 
         # Verify all inputs
-        assert kwargs["protocol_version"] & 0xf == kwargs["protocol_version"]
-        assert kwargs["datagram_type_id"] & 0xf == kwargs["datagram_type_id"]
+        assert kwargs["protocol_version"] & 0xff == kwargs["protocol_version"]
+        assert kwargs["datagram_type_id"] & 0xff == kwargs["datagram_type_id"]
 
 
 class DatagramSender:
@@ -246,10 +253,10 @@ class DatagramListener(can.BufferedReader):
             if self.num_node_id < bytes_remaining:
                 bytes_remaining = bytes_remaining - self.num_node_id
                 if bytes_remaining == 1:
-                    self.num_data_bytes = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 4
+                    self.num_data_bytes = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 8
                     self.incomplete_data_bytes = True
                 elif bytes_remaining >= 2:
-                    upper_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 4
+                    upper_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 8
                     lower_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 2]
                     self.num_data_bytes = upper_bits | lower_bits
                     self.incomplete_data_bytes = False
@@ -285,10 +292,10 @@ class DatagramListener(can.BufferedReader):
                 else:
                     bytes_remaining = MESSAGE_SIZE - self.num_node_id
                     if bytes_remaining == 1:
-                        self.num_data_bytes = message_bytearray[self.num_node_id] << 4
+                        self.num_data_bytes = message_bytearray[self.num_node_id] << 8
                         self.incomplete_data_bytes = True
                     elif bytes_remaining >= 2:
-                        self.num_data_bytes = message_bytearray[self.num_node_id] << 4 | message_bytearray[self.num_node_id + 1]
+                        self.num_data_bytes = message_bytearray[self.num_node_id] << 8 | message_bytearray[self.num_node_id + 1]
                         self.incomplete_data_bytes = False
 
                         if bytes_remaining > 2:
