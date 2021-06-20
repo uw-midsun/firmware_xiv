@@ -102,7 +102,30 @@ msg {
   }
 }
 
-# IDs: 11-17 Reserved
+msg {
+  id: 11
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, TELEMETRY"
+  msg_name: "regen braking"
+  can_data {
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+msg {
+  id: 12
+  source: STEERING
+  target: "CENTRE_CONSOLE"
+  msg_name: "regen braking toggle request"
+  can_data {
+    empty {
+    }
+  }
+}
+
+# IDs: 13-17 Reserved
 
 msg {
   id: 14
@@ -189,19 +212,7 @@ msg {
   }
 }
 
-msg {
-  id:26
-  source: STEERING
-  target: "REGEN_BRAKING"
-  msg_name: "regen braking"
-  can_data{
-    u8 {
-      field_name_1: "state"
-    }
-  }
-}
-
-# IDs: 27 Reserved
+# IDs: 26-27 Reserved
 
 msg {
   id: 28
@@ -417,7 +428,7 @@ msg {
   }
 }
 
-# IDs 46-47: Reserved
+# ID 47: Reserved
 
 msg {
   id: 48
