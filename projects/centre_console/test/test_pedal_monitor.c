@@ -48,8 +48,8 @@ void test_gets_correct_states(void) {
   float throttle_float = 12.4;
   float brake_float = PEDAL_STATE_THRESHOLD + 2.5;
 
-  uint32_t throttle_output = (uint32_t)(throttle_float * EE_PEDAL_VALUE_DENOMINATOR);
-  uint32_t brake_output = (uint32_t)(brake_float * EE_PEDAL_VALUE_DENOMINATOR);
+  uint32_t throttle_output = (uint32_t)(throttle_float);
+  uint32_t brake_output = (uint32_t)(brake_float);
   // transmitting a message
   CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
@@ -59,7 +59,7 @@ void test_gets_correct_states(void) {
   TEST_ASSERT_EQUAL(PEDAL_STATE_PRESSED, get_pedal_state());
 
   brake_float = PEDAL_STATE_THRESHOLD - 2.5;
-  brake_output = (uint32_t)(brake_float * EE_PEDAL_VALUE_DENOMINATOR);
+  brake_output = (uint32_t)(brake_float);
   CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
 
@@ -79,8 +79,104 @@ void test_timeout_gives_released(void) {
   delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
   TEST_ASSERT_EQUAL(PEDAL_STATE_PRESSED, get_pedal_state());
 
-  delay_ms(PEDAL_RX_TIMEOUT_MS);
+  // Ignore extraneous PEDAL_MONITOR_STATE_CHANGE events
   Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, PEDAL_MONITOR_STATE_CHANGE);
+
+  delay_ms(PEDAL_RX_TIMEOUT_MS);
+
   MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, PEDAL_MONITOR_RX_TIMED_OUT, 0);
   TEST_ASSERT_EQUAL(PEDAL_STATE_RELEASED, get_pedal_state());
+}
+
+// Test that no PEDAL_MONITOR_STATE_CHANGE events are raised
+// if pedal remains in one state (either pressed or released)
+void test_no_state_change_event_when_state_constant(void) {
+  float throttle_float = 12.4;
+  float brake_float = PEDAL_STATE_THRESHOLD + 2.5;
+
+  uint32_t throttle_output = (uint32_t)(throttle_float);
+  uint32_t brake_output = (uint32_t)(brake_float);
+
+  // Test for when the pedal state changes from pressed to pressed
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+
+  // Wait for update and then clear any events that may have been
+  // raised in pedal state initialization
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+  event_queue_init();
+
+  // transmitting another CAN pedal output with brake pressed should not raise an event
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output + 1);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  // Test for when the pedal state changes from released to released
+  throttle_float = 12.4;
+  brake_float = PEDAL_STATE_THRESHOLD - 2.5;
+
+  throttle_output = (uint32_t)(throttle_float);
+  brake_output = (uint32_t)(brake_float);
+
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+
+  // Wait for update and then clear any events that may have been
+  // raised in pedal state initialization
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+  event_queue_init();
+
+  // transmitting another CAN pedal output with brake released should not raise an event
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output - 1);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+// Test that a PEDAL_MONITOR_STATE_CHANGE event is raised when
+// the pedal state changes
+void test_state_change_event_raised_when_pedal_state_changes(void) {
+  float throttle_float = 12.4;
+  float brake_float = PEDAL_STATE_THRESHOLD + 2.5;
+
+  uint32_t throttle_output = (uint32_t)(throttle_float);
+  uint32_t brake_output = (uint32_t)(brake_float);
+
+  // Test for when the pedal state changes from pressed to released
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+
+  // Wait for update and then clear any events that may have been
+  // raised in pedal state initialization
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+  event_queue_init();
+
+  // Pedal State changes to released
+  throttle_float = 12.4;
+  brake_float = PEDAL_STATE_THRESHOLD - 2.5;
+
+  throttle_output = (uint32_t)(throttle_float);
+  brake_output = (uint32_t)(brake_float);
+
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+
+  Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, PEDAL_MONITOR_STATE_CHANGE, PEDAL_STATE_RELEASED);
+
+  // Test for when the pedal state changes from released to pressed
+  throttle_float = 12.4;
+  brake_float = PEDAL_STATE_THRESHOLD + 2.5;
+
+  throttle_output = (uint32_t)(throttle_float);
+  brake_output = (uint32_t)(brake_float);
+
+  CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output, brake_output);
+  MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  delay_ms(PEDAL_STATE_UPDATE_FREQUENCY_MS + 1);
+
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, PEDAL_MONITOR_STATE_CHANGE, PEDAL_STATE_PRESSED);
 }

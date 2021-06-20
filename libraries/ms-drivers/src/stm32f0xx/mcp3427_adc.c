@@ -144,6 +144,7 @@ StatusCode mcp3427_init(Mcp3427Storage *storage, Mcp3427Settings *settings) {
 
   storage->data_ready_event = settings->adc_data_ready_event;
   storage->data_trigger_event = settings->adc_data_trigger_event;
+  storage->sample_rate = settings->sample_rate;
 
   fsm_state_init(channel_1_trigger, prv_channel_trigger);
   fsm_state_init(channel_1_readback, prv_channel_ready);

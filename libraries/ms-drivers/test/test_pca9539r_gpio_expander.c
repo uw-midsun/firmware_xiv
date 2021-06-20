@@ -1,6 +1,7 @@
+#include "pca9539r_gpio_expander.h"
+
 #include "i2c.h"
 #include "log.h"
-#include "pca9539r_gpio_expander.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -13,11 +14,13 @@
 
 // I2C address of PCA9539R + pins that should be valid on stm32 and x86
 #define VALID_I2C_ADDRESS 0x74
-#define VALID_PORT_0_PIN PCA9539R_PIN_IO0_7
+#define VALID_PORT_0_PIN 0
 #define VALID_PORT_1_PIN PCA9539R_PIN_IO1_0
 
 // there's no invalid I2C address enforced in firmware currently
-#define INVALID_GPIO_PIN (NUM_PCA9539R_GPIO_PINS)
+#define INVALID_GPIO_PIN (GPIO_PINS_PER_PORT)
+
+static uint8_t s_times_interrupt_callback_called;
 
 void setup_test(void) {
   I2CSettings i2c_settings = {
@@ -27,6 +30,8 @@ void setup_test(void) {
   };
   i2c_init(TEST_I2C_PORT, &i2c_settings);
   gpio_it_init();
+
+  s_times_interrupt_callback_called = 0;
 }
 
 void teardown_test(void) {}
@@ -311,18 +316,30 @@ void test_pca9539r_gpio_get_state_invalid_address(void) {
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS, pca9539r_gpio_get_state(&address, &state));
 }
 
-void prv_test(const struct GpioAddress *address, void *context) {
+// pca9539r_pca9539r_gpio_subscribe_interrupts
+
+static void test_pca9539r_gpio_subscribe_interrupts_callback(const GpioAddress *address,
+                                                             void *context) {
   GpioState state = GPIO_STATE_LOW;
   gpio_get_state(address, &state);
+
+  s_times_interrupt_callback_called++;
 }
 
 void test_pca9539r_gpio_subscribe_interrupts(void) {
-  GpioAddress address = { .pin = VALID_PORT_0_PIN, .port = 0 };
-  TEST_ASSERT_OK(pca9539r_gpio_subscribe_interrupts(&address, &prv_test, NULL));
+  GpioAddress address = { .port = GPIO_PORT_A, .pin = VALID_PORT_0_PIN };
+  pca9539r_gpio_subscribe_interrupts(&address, &test_pca9539r_gpio_subscribe_interrupts_callback,
+                                     NULL);
+
+  gpio_it_trigger_interrupt(&address);
+
+  if (s_times_interrupt_callback_called == 1) {
+    return STATUS_CODE_OK
+  }
 }
 
 void test_pca9539r_gpio_subscribe_interrupts_invalid(void) {
-  GpioAddress invalid_address = { .pin = INVALID_GPIO_PIN, .port = 1 };
+  GpioAddress invalid_address = { .port = 1, .pin = INVALID_GPIO_PIN };
   TEST_ASSERT_EQUAL(STATUS_CODE_INVALID_ARGS,
                     pca9539r_gpio_subscribe_interrupts(&invalid_address, NULL, NULL));
 }

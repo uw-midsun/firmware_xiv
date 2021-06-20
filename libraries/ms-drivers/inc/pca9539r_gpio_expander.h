@@ -1,6 +1,7 @@
 #pragma once
 // GPIO HAL interface for the PCA9539RPW/Q900J GPIO expander.
-// Requires I2C , GPIO_IT to be initialized.
+// Requires I2C to be initialized.
+// If you want to subscribe to interrupts, you must initialize GPIO interrupts.
 // Note: we don't check the validity of the I2C address, and it can only be used on one
 // I2C port on one board.
 #include "gpio_it.h"

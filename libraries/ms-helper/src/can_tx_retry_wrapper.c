@@ -24,7 +24,7 @@ static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAc
       event_raise(storage->retry_request.fault_event_id, storage->retry_request.fault_event_data);
       if (!storage->retry_request.retry_indefinitely) {
         storage->retry_count = 0;
-        return STATUS_CODE_RESOURCE_EXHAUSTED;
+        return STATUS_CODE_OK;
       }
     }
     if (storage->retry_count < storage->retries || storage->retry_request.retry_indefinitely) {

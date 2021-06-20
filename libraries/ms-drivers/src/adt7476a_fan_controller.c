@@ -1,14 +1,55 @@
+#include "adt7476a_fan_controller.h"
 #include <math.h>
 #include <stddef.h>
 #include <string.h>
-
-#include "adt7476a_fan_controller.h"
 #include "adt7476a_fan_controller_defs.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "i2c.h"
 #include "interrupt.h"
 #include "soft_timer.h"
+
+#ifdef MU
+#include <stdlib.h>
+#include "adt7476a.pb-c.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+static MuAdt7476aStore s_store = MU_ADT7476A_STORE__INIT;
+
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  MuAdt7476aStore *msg = mu_adt7476a_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuAdt7476aStore *mask = mu_adt7476a_store__unpack(NULL, mask_buf.len, mask_buf.data);
+
+  for (AdtPwmPort i = 0; i < NUM_ADT_PWM_PORTS; i++) {
+    // only update state if mask is set
+    if (mask->status[i] != 0) {
+      s_store.speed[i] = msg->speed[i];
+      s_store.status[i] = msg->status[i];
+    }
+  }
+
+  mu_adt7476a_store__free_unpacked(msg, NULL);
+  mu_adt7476a_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
+}
+
+static void prv_init_store(void) {
+  store_config();
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mu_adt7476a_store__get_packed_size,
+    (PackFunc)mu_adt7476a_store__pack,
+    (UnpackFunc)mu_adt7476a_store__unpack,
+    (FreeUnpackedFunc)mu_adt7476a_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  s_store.n_speed = NUM_ADT_PWM_PORTS;
+  s_store.speed = malloc(NUM_ADT_PWM_PORTS * sizeof(uint32_t));
+  s_store.n_status = NUM_ADT_PWM_PORTS;
+  s_store.status = malloc(NUM_ADT_PWM_PORTS * sizeof(protobuf_c_boolean));
+  store_register(MU_STORE_TYPE__ADT7476A, funcs, &s_store, NULL);
+}
+#endif
 
 // need to set interrupt once fan goes out of range
 // PWM duty cycle is set from 0-100, in steps of 0.39 (0x00 - 0xFF)
@@ -27,12 +68,18 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
 
     status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
                                   SIZEOF_ARRAY(adt7476a_speed_register)));
+#ifdef MU
+    s_store.speed[0] = real_speed;
+#endif
 
   } else if (pwm_port == ADT_PWM_PORT_2) {
     uint8_t adt7476a_speed_register[] = { ADT7476A_PWM_3, real_speed };
 
     status_ok_or_return(i2c_write(port, adt7476a_i2c_address, adt7476a_speed_register,
                                   SIZEOF_ARRAY(adt7476a_speed_register)));
+#ifdef MU
+    s_store.speed[1] = real_speed;
+#endif
 
   } else if (pwm_port == ADT_PWM_PORT_3) {
     return STATUS_CODE_UNIMPLEMENTED;
@@ -40,19 +87,27 @@ StatusCode adt7476a_set_speed(I2CPort port, uint8_t speed_percent, AdtPwmPort pw
     return STATUS_CODE_INVALID_ARGS;
   }
 
+#ifdef MU
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
+#endif
   return STATUS_CODE_OK;
 }
 
 StatusCode adt7476a_get_status(I2CPort port, uint8_t adt7476a_i2c_read_address,
                                uint8_t *register_1_data, uint8_t *register_2_data) {
   // read interrupt status register
-  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_read_address,
-                                   ADT7476A_INTERRUPT_STATUS_REGISTER_1, register_1_data,
-                                   ADT7476A_REG_SIZE));
-  status_ok_or_return(i2c_read_reg(port, adt7476a_i2c_read_address,
-                                   ADT7476A_INTERRUPT_STATUS_REGISTER_2, register_2_data,
-                                   ADT7476A_REG_SIZE));
+  StatusCode reg1 =
+      (i2c_read_reg(port, adt7476a_i2c_read_address, ADT7476A_INTERRUPT_STATUS_REGISTER_1,
+                    register_1_data, ADT7476A_REG_SIZE));
+  StatusCode reg2 =
+      (i2c_read_reg(port, adt7476a_i2c_read_address, ADT7476A_INTERRUPT_STATUS_REGISTER_2,
+                    register_2_data, ADT7476A_REG_SIZE));
+#ifdef MU
+  s_store.status[0] = reg1 ? true : false;
+  s_store.status[1] = reg2 ? true : false;
 
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
+#endif
   return STATUS_CODE_OK;
 }
 
@@ -96,6 +151,11 @@ StatusCode adt7476a_init(Adt7476aStorage *storage, Adt7476aSettings *settings) {
 
   gpio_it_register_interrupt(&storage->smbalert_pin, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              storage->callback, storage->callback_context);
+
+#ifdef MU
+  prv_init_store();
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
+#endif
 
   return STATUS_CODE_OK;
 }

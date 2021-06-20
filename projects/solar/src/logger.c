@@ -19,7 +19,7 @@ static DataPointType s_data_point_type_order[] = {
   DATA_POINT_TYPE_CURRENT,       //
   DATA_POINT_TYPE_TEMPERATURE,   //
   DATA_POINT_TYPE_MPPT_PWM,      //
-  DATA_POINT_TYPE_CR_BIT,        //
+  DATA_POINT_TYPE_MPPT_STATUS,   //
 };
 
 static char *s_data_point_types_to_key_format[] = {
@@ -29,7 +29,7 @@ static char *s_data_point_types_to_key_format[] = {
   [DATA_POINT_TYPE_CURRENT] = "Total output current",            //
   [DATA_POINT_TYPE_TEMPERATURE] = "Thermistor %ld temperature",  //
   [DATA_POINT_TYPE_MPPT_PWM] = "MPPT %ld PWM duty cycle",        //
-  [DATA_POINT_TYPE_CR_BIT] = "MPPT %ld CR bit",                  //
+  [DATA_POINT_TYPE_MPPT_STATUS] = "MPPT %ld status",             //
 };
 
 static char *s_data_point_types_to_value_format[] = {
@@ -39,7 +39,7 @@ static char *s_data_point_types_to_value_format[] = {
   [DATA_POINT_TYPE_CURRENT] = "%ld uA",       //
   [DATA_POINT_TYPE_TEMPERATURE] = "%lu dC",   //
   [DATA_POINT_TYPE_MPPT_PWM] = "%lu/1000",    //
-  [DATA_POINT_TYPE_CR_BIT] = "%lu",           //
+  [DATA_POINT_TYPE_MPPT_STATUS] = "0x%lx",    //
 };
 
 static bool s_data_point_types_to_signed[] = {
@@ -49,7 +49,7 @@ static bool s_data_point_types_to_signed[] = {
   [DATA_POINT_TYPE_CURRENT] = true,        //
   [DATA_POINT_TYPE_TEMPERATURE] = false,   //
   [DATA_POINT_TYPE_MPPT_PWM] = false,      //
-  [DATA_POINT_TYPE_CR_BIT] = false,        //
+  [DATA_POINT_TYPE_MPPT_STATUS] = false,   //
 };
 
 static void prv_log_data_point(DataPointType type, Mppt mppt, DataPoint data_point) {
