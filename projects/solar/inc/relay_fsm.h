@@ -16,11 +16,13 @@
 
 #define RELAY_ASSERTION_DELAY_MS 10
 #define DATA_STORE_ASSERTION_DELAY_MS 1000
+#define MAX_NUMBER_OF_CURRENT_CHECKS 30
+
 
 typedef struct RelayFsmStorage {
   Fsm fsm;
-  bool isErrCalled;
-  uint32_t isSetCounter;
+  bool is_error_called;
+  uint32_t is_set_counter;
 } RelayFsmStorage;
 
 // Initialize the FSM. The relay is initialized to closed.

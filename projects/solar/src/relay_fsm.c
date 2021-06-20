@@ -15,27 +15,26 @@
 #include "solar_events.h"
 #include "status.h"
 
-static SolarMpptCount solar_mppt_count;
+static SolarMpptCount s_solar_mppt_count;
 
 static void prv_assert_relay(SoftTimerId timer_id, void *context) {
-  RelayFsmStorage *storage = (RelayFsmStorage *)context;
-  if (storage->isErrCalled == true) {
+  if (((RelayFsmStorage *)context)->is_error_called) {
     fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
     return;
   }
 
   int32_t data_value;
-  bool isSet = false;
+  bool is_set = false;
 
-  data_store_get_is_set(DATA_POINT_CURRENT, &isSet);
+  data_store_get_is_set(DATA_POINT_CURRENT, &is_set);
 
-  if (!isSet) {
-    if (storage->isSetCounter >= 30) {
+  if (!is_set) {
+    if (((RelayFsmStorage *)context)->is_set_counter >= MAX_NUMBER_OF_CURRENT_CHECKS) {
       LOG_DEBUG("Aborting, The current is not set\n");
       fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0xFF);
       return;
     }
-    storage->isSetCounter += 1;
+    ((RelayFsmStorage *)context)->is_set_counter++;
     soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
     return;
   }
@@ -44,12 +43,11 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
     fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, data_value);
-    return;
   } else {
     // Success message
-    if (solar_mppt_count == 6) {
+    if (s_solar_mppt_count == SOLAR_BOARD_6_MPPTS) {
       CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS();
-    } else if (solar_mppt_count == 5) {
+    } else if (s_solar_mppt_count == SOLAR_BOARD_5_MPPTS) {
       CAN_TRANSMIT_RELAY_CURRENT_5_MPPTS();
     }
   }
@@ -57,8 +55,7 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
-  RelayFsmStorage *storage = (RelayFsmStorage *)context;
-  storage->isErrCalled = true;
+  ((RelayFsmStorage *)context)->is_error_called = true;
   fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
 }
 
@@ -88,9 +85,9 @@ StatusCode relay_fsm_init(RelayFsmStorage *storage, SolarMpptCount mppt_count) {
   if (storage == NULL) {
     return status_code(STATUS_CODE_INVALID_ARGS);
   }
-  storage->isErrCalled = false;
-  storage->isSetCounter = 0;
-  solar_mppt_count = mppt_count;
+  storage->is_error_called = false;
+  storage->is_set_counter = 0;
+  s_solar_mppt_count = mppt_count;
   // Init drv120
   Drv120RelaySettings drv120_settings = {
     .enable_pin = config_get_drv120_enable_pin(),
