@@ -455,8 +455,8 @@ static void prv_process_data_rx(Fsm *fsm, const Event *e, void *context) {
     if (prv_can_datagram_compute_crc() == dgram->crc) {
       event_raise_no_data(store->rx_event);
     } else {
-      LOG_WARN("CALCULATED CRC: 0x%lx, DID NOT MATCH TRANSMITTED: 0x%lx. EXITING WITH ERROR...\n",
-               prv_can_datagram_compute_crc(), dgram->crc);
+      LOG_WARN("CALCULATED CRC: 0x%x, DID NOT MATCH TRANSMITTED: 0x%x. EXITING WITH ERROR...\n",
+               (unsigned int)prv_can_datagram_compute_crc(), (unsigned int)dgram->crc);
       event_raise(store->error_event, DATAGRAM_HARD_ERROR);
     }
   }
