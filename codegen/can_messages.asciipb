@@ -102,7 +102,30 @@ msg {
   }
 }
 
-# IDs: 11-17 Reserved
+msg {
+  id: 11
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER, TELEMETRY"
+  msg_name: "regen braking"
+  can_data {
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+msg {
+  id: 12
+  source: STEERING
+  target: "CENTRE_CONSOLE"
+  msg_name: "regen braking toggle request"
+  can_data {
+    empty {
+    }
+  }
+}
+
+# IDs: 13-17 Reserved
 
 msg {
   id: 18
@@ -167,19 +190,7 @@ msg {
   }
 }
 
-msg {
-  id:26
-  source: STEERING
-  target: "REGEN_BRAKING"
-  msg_name: "regen braking"
-  can_data{
-    u8 {
-      field_name_1: "state"
-    }
-  }
-}
-
-# IDs: 27 Reserved
+# IDs: 26-27 Reserved
 
 msg {
   id: 28
@@ -298,7 +309,18 @@ msg {
   }
 }
 
-# IDs: 37 Reserved
+msg { 
+  id: 37
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "motor status"
+  can_data {
+    u32 {
+      field_name_1: "motor_status_l"
+      field_name_2: "motor_status_r"
+    }
+  }
+}
 
 msg {
   id: 38
@@ -327,7 +349,50 @@ msg {
   }
 }
 
-# IDs: 42-44 Reserved
+msg {
+  id: 42
+  source: POWER_SELECT
+  target: "CENTRE_CONSOLE"
+  msg_name: "aux meas main voltage"
+  can_data {
+    u16 {
+      field_name_1: "aux_voltage"
+      field_name_2: "aux_current"
+      field_name_3: "aux_temp"
+      field_name_4: "main voltage"
+    }
+  }
+}
+
+msg {
+  id: 43
+  source: POWER_SELECT
+  target: "CENTRE_CONSOLE"
+  msg_name: "dcdc meas main current"
+  can_data {
+    u16 {
+      field_name_1: "dcdc_voltage"
+      field_name_2: "dcdc_current"
+      field_name_3: "dcdc_temp"
+      field_name_4: "main current"
+    }
+  }
+}
+
+msg {
+  id: 44
+  source: POWER_SELECT
+  target: "CENTRE_CONSOLE"
+  msg_name: "power select status"
+  can_data {
+    u16 {
+      field_name_1: "fault_bitset"
+      field_name_2: "warning_bitset"
+      field_name_3: "valid_bitset"
+      field_name_4: "cell_voltage"
+    }
+  }
+}
 
 msg {
   id: 45
@@ -341,7 +406,7 @@ msg {
   }
 }
 
-# IDs 46-47: Reserved
+# ID 47: Reserved
 
 msg {
   id: 48
@@ -440,19 +505,7 @@ msg {
   }
 }
 
-msg {
-  id: 56
-  source: POWER_SELECTION
-  target: ""
-  msg_name: "aux battery status"
-  can_data {
-    u16 {
-      field_name_1: "aux_battery_volt"
-      field_name_2: "aux_battery_temp"
-      field_name_3: "dcdc_status"
-    }
-  }
-}
+# ID 56: reserved
 
 msg {
   id: 57

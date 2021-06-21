@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message UpdateId {
+  uint32 new_id = 1;
+}
