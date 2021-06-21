@@ -26,28 +26,6 @@ static void prv_delay_us_sys_clock(uint32_t t) {
   }
 }
 
-// static uint32_t prv_get_time_us() {
-//   struct timespec timer;
-//   clock_gettime(CLOCK_MONOTONIC_RAW, &timer);
-//   return (timer.tv_sec * 1000000 + timer.tv_nsec / 1000);
-// }
-
-// void delay_us(uint32_t t) {
-//   uint32_t current_time = prv_get_time_us();
-//   uint32_t end_time = current_time + t;
-//   // since t is uint32, there is a max of 1 rollover
-//   bool rollover = (end_time < current_time);
-
-//   while (rollover || current_time < end_time) {
-//     // update time
-//     uint32_t time = prv_get_time_us();
-//     if (time < current_time) {  // rollover detection
-//       rollover = false;
-//     }
-//     current_time = time;
-//   }
-// }
-
 static void prv_delay_it(SoftTimerId timer_id, void *context) {
   volatile bool *block = context;
   *block = false;
