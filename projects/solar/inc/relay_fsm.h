@@ -12,12 +12,21 @@
 #include "solar_boards.h"
 #include "status.h"
 
+// The relay is disconnected  if current is
+// more than current thershold,
 #define CURRENT_ASSERT_THRESHOLD_uA 10
 
+// Delay time after opening relay and
+// before asserting
 #define RELAY_ASSERTION_DELAY_MS 10
-#define DATA_STORE_ASSERTION_DELAY_MS 1000
-#define MAX_NUMBER_OF_CURRENT_CHECKS 30
 
+// Delay time for re-checking relay current
+// if it is not set yet
+#define DATA_STORE_ASSERTION_DELAY_MS 1000
+
+// Maximum number of attempts for re-checking
+// if the current is set
+#define MAX_NUMBER_OF_CURRENT_CHECKS 30
 
 typedef struct RelayFsmStorage {
   Fsm fsm;

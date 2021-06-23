@@ -40,9 +40,9 @@
 
 #define CAN_UNPACK_REGEN_BRAKING_TOGGLE_REQUEST(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
-#define CAN_UNPACK_RELAY_CURRENT_5_MPPTS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+#define CAN_UNPACK_RELAY_OPEN_OK_5_MPPTS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
-#define CAN_UNPACK_RELAY_CURRENT_6_MPPTS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
+#define CAN_UNPACK_RELAY_OPEN_OK_6_MPPTS(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32_ptr, brake_output_u32_ptr) \
   can_unpack_impl_u32((msg_ptr), 8, (throttle_output_u32_ptr), (brake_output_u32_ptr))

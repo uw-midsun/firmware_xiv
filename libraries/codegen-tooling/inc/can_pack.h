@@ -50,13 +50,13 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, \
                       SYSTEM_CAN_MESSAGE_REGEN_BRAKING_TOGGLE_REQUEST)
 
-#define CAN_PACK_RELAY_CURRENT_5_MPPTS(msg_ptr)                   \
+#define CAN_PACK_RELAY_OPEN_OK_5_MPPTS(msg_ptr)                   \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS, \
-                      SYSTEM_CAN_MESSAGE_RELAY_CURRENT_5_MPPTS)
+                      SYSTEM_CAN_MESSAGE_RELAY_OPEN_OK_5_MPPTS)
 
-#define CAN_PACK_RELAY_CURRENT_6_MPPTS(msg_ptr)                   \
+#define CAN_PACK_RELAY_OPEN_OK_6_MPPTS(msg_ptr)                   \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, \
-                      SYSTEM_CAN_MESSAGE_RELAY_CURRENT_6_MPPTS)
+                      SYSTEM_CAN_MESSAGE_RELAY_OPEN_OK_6_MPPTS)
 
 #define CAN_PACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32, brake_output_u32)               \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, 8, \

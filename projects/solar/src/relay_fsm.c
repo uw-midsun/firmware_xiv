@@ -18,8 +18,11 @@
 static SolarMpptCount s_solar_mppt_count;
 
 static void prv_assert_relay(SoftTimerId timer_id, void *context) {
-  if (((RelayFsmStorage *)context)->is_error_called) {
-    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
+  RelayFsmStorage *storage = context;
+
+  // Checking if a relay open error has been raised
+  if (storage->is_error_called) {
+    fault_handler_raise_fault(EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN, 0);
     return;
   }
 
@@ -28,35 +31,38 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   data_store_get_is_set(DATA_POINT_CURRENT, &is_set);
 
+  // Checking if the current will ever be set
   if (!is_set) {
-    if (((RelayFsmStorage *)context)->is_set_counter >= MAX_NUMBER_OF_CURRENT_CHECKS) {
+    if (storage->is_set_counter >= MAX_NUMBER_OF_CURRENT_CHECKS) {
       LOG_DEBUG("Aborting, The current is not set\n");
-      fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0xFF);
+      fault_handler_raise_fault(EE_RELAY_ERROR_CURRENT_NEVER_SET, 0);
       return;
     }
-    ((RelayFsmStorage *)context)->is_set_counter++;
+    storage->is_set_counter++;
     soft_timer_start_millis(DATA_STORE_ASSERTION_DELAY_MS, prv_assert_relay, context, NULL);
     return;
   }
 
   data_store_get(DATA_POINT_CURRENT, (uint32_t *)&data_value);
 
-  if (data_value > CURRENT_ASSERT_THRESHOLD_uA) {
-    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, data_value);
+  // Checking if the current is valid
+  if (abs(data_value) > CURRENT_ASSERT_THRESHOLD_uA) {
+    fault_handler_raise_fault(EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN, 0);
   } else {
     // Success message
     if (s_solar_mppt_count == SOLAR_BOARD_6_MPPTS) {
-      CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS();
+      CAN_TRANSMIT_RELAY_OPEN_OK_6_MPPTS();
     } else if (s_solar_mppt_count == SOLAR_BOARD_5_MPPTS) {
-      CAN_TRANSMIT_RELAY_CURRENT_5_MPPTS();
+      CAN_TRANSMIT_RELAY_OPEN_OK_5_MPPTS();
     }
   }
 }
 
 static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
-  ((RelayFsmStorage *)context)->is_error_called = true;
-  fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, 0);
+  RelayFsmStorage *storage = context;
+  storage->is_error_called = true;
+  fault_handler_raise_fault(EE_SOLAR_RELAY_ERROR_DRV120, 0);
 }
 
 FSM_DECLARE_STATE(state_relay_open);

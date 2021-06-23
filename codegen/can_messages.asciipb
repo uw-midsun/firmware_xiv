@@ -125,13 +125,13 @@ msg {
   }
 }
 
-# IDs: 13-17 Reserved
+# IDs: 13 Reserved
 
 msg {
   id: 14
   source: SOLAR_5_MPPTS
   target: "TELEMETRY"
-  msg_name: "relay current 5 mppts"
+  msg_name: "relay open ok 5 mppts"
   can_data {
     empty {
     }
@@ -142,12 +142,14 @@ msg {
   id: 15
   source: SOLAR_6_MPPTS
   target: "TELEMETRY"
-  msg_name: "relay current 6 mppts"
+  msg_name: "relay open ok 6 mppts"
   can_data {
     empty {
     }
   }
 }
+
+# IDs: 16-17 Reserved
 
 msg {
   id: 18

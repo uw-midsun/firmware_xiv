@@ -79,18 +79,18 @@
     status;                                         \
   })
 
-#define CAN_TRANSMIT_RELAY_CURRENT_5_MPPTS()      \
+#define CAN_TRANSMIT_RELAY_OPEN_OK_5_MPPTS()      \
   ({                                              \
     CanMessage msg = { 0 };                       \
-    CAN_PACK_RELAY_CURRENT_5_MPPTS(&msg);         \
+    CAN_PACK_RELAY_OPEN_OK_5_MPPTS(&msg);         \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
 
-#define CAN_TRANSMIT_RELAY_CURRENT_6_MPPTS()      \
+#define CAN_TRANSMIT_RELAY_OPEN_OK_6_MPPTS()      \
   ({                                              \
     CanMessage msg = { 0 };                       \
-    CAN_PACK_RELAY_CURRENT_6_MPPTS(&msg);         \
+    CAN_PACK_RELAY_OPEN_OK_6_MPPTS(&msg);         \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
