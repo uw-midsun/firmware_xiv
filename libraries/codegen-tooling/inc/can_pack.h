@@ -50,6 +50,12 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, \
                       SYSTEM_CAN_MESSAGE_REGEN_BRAKING_TOGGLE_REQUEST)
 
+#define CAN_PACK_READY_TO_DRIVE(msg_ptr, ready_state_u8)                                           \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_READY_TO_DRIVE, \
+                   1, (ready_state_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32, brake_output_u32)               \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, 8, \
                     (throttle_output_u32), (brake_output_u32))

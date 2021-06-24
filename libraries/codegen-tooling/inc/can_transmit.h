@@ -79,6 +79,14 @@
     status;                                         \
   })
 
+#define CAN_TRANSMIT_READY_TO_DRIVE(ready_state_u8)  \
+  ({                                                 \
+    CanMessage msg = { 0 };                          \
+    CAN_PACK_READY_TO_DRIVE(&msg, (ready_state_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);    \
+    status;                                          \
+  })
+
 #define CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output_u32, brake_output_u32)    \
   ({                                                                        \
     CanMessage msg = { 0 };                                                 \
