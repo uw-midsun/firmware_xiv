@@ -40,6 +40,7 @@ static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_b
 
   mu_ads1015_store__free_unpacked(msg, NULL);
   mu_ads1015_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__ADS1015, &s_store, NULL);
 }
 
 static void prv_init_store(void) {
@@ -54,6 +55,7 @@ static void prv_init_store(void) {
   s_store.n_readings = NUM_ADS1015_CHANNELS;
   s_store.readings = malloc(NUM_ADS1015_CHANNELS * sizeof(int32_t));
   store_register(MU_STORE_TYPE__ADS1015, funcs, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADS1015, &s_store, NULL);
 }
 #endif
 

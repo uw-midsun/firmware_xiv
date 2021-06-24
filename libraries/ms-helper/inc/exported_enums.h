@@ -113,12 +113,6 @@ typedef enum {
   NUM_EE_RELAY_STATES,
 } EERelayState;
 
-typedef enum {
-  EE_EBRAKE_STATE_PRESSED = 0,
-  EE_EBRAKE_STATE_RELEASED,
-  NUM_EE_EBRAKE_STATES,
-} EEEbrakeState;
-
 // For battery heartbeat
 typedef enum EEBatteryHeartbeatFaultSource {
   EE_BPS_FAULT_SOURCE_KILLSWITCH = 0,
