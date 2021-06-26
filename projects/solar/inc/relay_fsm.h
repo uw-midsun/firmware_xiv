@@ -12,8 +12,8 @@
 #include "solar_boards.h"
 #include "status.h"
 
-// The relay is disconnected  if current is
-// more than current thershold,
+// if current is more than current threshold,
+// the relay is disconnected  
 #define CURRENT_ASSERT_THRESHOLD_uA 10
 
 // Delay time after opening relay and

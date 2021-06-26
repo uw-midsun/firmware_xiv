@@ -22,7 +22,7 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   // Checking if a relay open error has been raised
   if (storage->is_error_called) {
-    fault_handler_raise_fault(EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN, 0);
+    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
     return;
   }
 
@@ -35,7 +35,7 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
   if (!is_set) {
     if (storage->is_set_counter >= MAX_NUMBER_OF_CURRENT_CHECKS) {
       LOG_DEBUG("Aborting, The current is not set\n");
-      fault_handler_raise_fault(EE_RELAY_ERROR_CURRENT_NEVER_SET, 0);
+      fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, EE_RELAY_ERROR_CURRENT_NEVER_SET);
       return;
     }
     storage->is_set_counter++;
@@ -47,7 +47,7 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   // Checking if the current is valid
   if (abs(data_value) > CURRENT_ASSERT_THRESHOLD_uA) {
-    fault_handler_raise_fault(EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN, 0);
+    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
   } else {
     // Success message
     if (s_solar_mppt_count == SOLAR_BOARD_6_MPPTS) {
@@ -62,7 +62,7 @@ static void prv_relay_err_cb(void *context) {
   LOG_DEBUG("RELAY_ERROR CALLBACK\n");
   RelayFsmStorage *storage = context;
   storage->is_error_called = true;
-  fault_handler_raise_fault(EE_SOLAR_RELAY_ERROR_DRV120, 0);
+  fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, EE_SOLAR_RELAY_ERROR_DRV120);
 }
 
 FSM_DECLARE_STATE(state_relay_open);

@@ -194,8 +194,12 @@ typedef enum EESolarFault {
   // Fan failure detected. No data.
   EE_SOLAR_FAULT_FAN_FAIL,
 
+  // Relay failure to open
+  EE_SOLAR_RELAY_OPEN_ERROR,
+
   NUM_EE_SOLAR_FAULTS,
 } EESolarFault;
+
 typedef enum EESolarRelayOpenErrorReason {
   // The drv120 relay has signaled that overtemp/undervolt lockout conditions have been triggered
   EE_SOLAR_RELAY_ERROR_DRV120,

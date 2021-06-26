@@ -47,6 +47,7 @@ static bool s_relay_error_rx_cb_called;
 static bool s_relay_open_ok_5_mppts_rx_cb_called;
 static bool s_relay_open_ok_6_mppts_rx_cb_called;
 static uint8_t s_error_array[5];
+static uint8_t s_error_array_reason[5];
 static uint8_t s_current_error_num;
 
 static StatusCode prv_error_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
@@ -55,6 +56,7 @@ static StatusCode prv_error_rx_cb(const CanMessage *msg, void *context, CanAckSt
   uint8_t fault_data;
   CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &solar_fault, &fault_data);
   s_error_array[s_current_error_num] = solar_fault;
+  s_error_array_reason[s_current_error_num] = fault_data;
   s_current_error_num++;
   return STATUS_CODE_OK;
 }
@@ -242,8 +244,10 @@ void test_relay_it_cb(void) {
 
   TEST_ASSERT_TRUE(s_relay_error_rx_cb_called);
   TEST_ASSERT_EQUAL(s_current_error_num, 2);
-  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_ERROR_DRV120);
-  TEST_ASSERT_EQUAL(s_error_array[1], EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
+  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array[1], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array_reason[0], EE_SOLAR_RELAY_ERROR_DRV120);
+  TEST_ASSERT_EQUAL(s_error_array_reason[1], EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -264,7 +268,8 @@ void test_relay_over_current_cb(void) {
 
   TEST_ASSERT_TRUE(s_relay_error_rx_cb_called);
   TEST_ASSERT_EQUAL(s_current_error_num, 1);
-  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
+  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array_reason[0], EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 }
 
@@ -285,5 +290,6 @@ void test_relay_current_never_set(void) {
 
   TEST_ASSERT_TRUE(s_relay_error_rx_cb_called);
   TEST_ASSERT_EQUAL(s_current_error_num, 1);
-  TEST_ASSERT_EQUAL(s_error_array[0], EE_RELAY_ERROR_CURRENT_NEVER_SET);
+  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array_reason[0], EE_RELAY_ERROR_CURRENT_NEVER_SET);
 }
