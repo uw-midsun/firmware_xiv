@@ -79,7 +79,14 @@
     status;                                         \
   })
 
-<<<<<<< HEAD
+#define CAN_TRANSMIT_READY_TO_DRIVE(ready_state_u8)  \
+  ({                                                 \
+    CanMessage msg = { 0 };                          \
+    CAN_PACK_READY_TO_DRIVE(&msg, (ready_state_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);    \
+    status;                                          \
+  })
+
 #define CAN_TRANSMIT_RELAY_OPEN_OK_5_MPPTS()      \
   ({                                              \
     CanMessage msg = { 0 };                       \
@@ -94,14 +101,6 @@
     CAN_PACK_RELAY_OPEN_OK_6_MPPTS(&msg);         \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
-=======
-#define CAN_TRANSMIT_READY_TO_DRIVE(ready_state_u8)  \
-  ({                                                 \
-    CanMessage msg = { 0 };                          \
-    CAN_PACK_READY_TO_DRIVE(&msg, (ready_state_u8)); \
-    StatusCode status = can_transmit(&msg, NULL);    \
-    status;                                          \
->>>>>>> c182b732eb98cc9d9d35dc2dd88e1fb9a8b03ccd
   })
 
 #define CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output_u32, brake_output_u32)    \
