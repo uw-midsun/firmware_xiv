@@ -22,7 +22,8 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   // Checking if a relay open error has been raised
   if (storage->is_error_called) {
-    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
+    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR,
+                              EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
     return;
   }
 
@@ -47,7 +48,8 @@ static void prv_assert_relay(SoftTimerId timer_id, void *context) {
 
   // Checking if the current is valid
   if (abs(data_value) > CURRENT_ASSERT_THRESHOLD_uA) {
-    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR, EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
+    fault_handler_raise_fault(EE_SOLAR_RELAY_OPEN_ERROR,
+                              EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
   } else {
     // Success message
     if (s_solar_mppt_count == SOLAR_BOARD_6_MPPTS) {

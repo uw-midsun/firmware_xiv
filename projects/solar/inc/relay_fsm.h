@@ -13,7 +13,7 @@
 #include "status.h"
 
 // if current is more than current threshold,
-// the relay is disconnected  
+// the relay is disconnected
 #define CURRENT_ASSERT_THRESHOLD_uA 10
 
 // Delay time after opening relay and
