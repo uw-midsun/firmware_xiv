@@ -82,3 +82,7 @@ StatusCode mcp2515_register_cbs(Mcp2515Storage *storage, Mcp2515RxCb rx_cb,
 // Transmits a CAN message.
 StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                       size_t dlc);
+
+// Change the MCP2515 filters.  Takes in a list of new filters to configure the MCP2515 with
+// Note: sizeof(filters) must equal NUM_MCP2515_FILTER_IDs
+StatusCode mcp2515_set_filter(Mcp2515Storage *storage, Mcp2515Id *filters, bool loopback);

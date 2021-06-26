@@ -11,7 +11,8 @@ enum MuStoreType {
   ADC = 7;
   PCA9539R = 8;
   MCP23008 = 9;
-  END = 10;
+  MCP3427 = 10;
+  END = 11;
 }
 
 enum MuCmdType {

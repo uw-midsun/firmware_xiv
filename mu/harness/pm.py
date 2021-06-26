@@ -30,6 +30,7 @@ class ProjectManager:
         print('Configuration:', config)
         self.config = config
         self.fd_to_sim = {}
+        self.simios = {}
         self.proj_name_list = os.listdir(os.path.join(REPO_DIR, 'projects'))
         self.sim_catalog = self.sim_cat()
         self.killed = False
@@ -80,16 +81,26 @@ class ProjectManager:
     def register(self, sim):
         self.fd_to_sim[sim.fd] = sim
 
+    def sim_from_name(self, sim_name):
+        for sim in self.fd_to_sim.values():
+            if sim.__class__.__name__ == sim_name:
+                return sim
+        raise ValueError('Invalid sim, check list')
+
     def stop(self, sim):
         del self.fd_to_sim[sim.fd]
+        # avoid deleting from self.simios during iteration
+        simios = []
+        for name, simio in self.simios.items():
+            if simio.sim == sim:
+                simios.append(name)
+        for simio in simios:
+            del self.simios[simio]
         sim.stop()
 
     def stop_name(self, sim_name):
-        for sim in self.fd_to_sim.values():
-            if sim.__class__.__name__ == sim_name:
-                self.stop(sim)
-                return
-        raise ValueError('Invalid sim, check list')
+        sim = self.sim_from_name(sim_name)
+        self.stop(sim)
 
     def stop_all(self):
         for sim in self.fd_to_sim.values():
@@ -162,7 +173,7 @@ class ProjectManager:
         for sim_file in sim_files:
             if not sim_file.endswith('.py'):
                 continue
-            sim_name = sim_file[:len(sim_file)-3]
+            sim_name = sim_file[:len(sim_file) - 3]
             mod_name = 'mu.sims.{}'.format(sim_name)
             mod = importlib.import_module(mod_name)
             sim_classes = inspect.getmembers(mod, inspect.isclass)
@@ -171,6 +182,23 @@ class ProjectManager:
                     continue
                 catalog[sim_name] = sim_class
         return catalog
+
+    def new_io(self, simio):
+        if simio.name in self.simios:
+            raise ValueError('SimIo name taken')
+        self.simios[simio.name] = simio
+
+    def get_io(self, name):
+        return self.simios[name].get()
+
+    def get_all_io(self):
+        ret = {}
+        for name, simio in self.simios.items():
+            ret[name] = simio.get()
+        return ret
+
+    def set_io(self, name, val):
+        self.simios[name].set(val)
 
     def end(self):
         self.killed = True
