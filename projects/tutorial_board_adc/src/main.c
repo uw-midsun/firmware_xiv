@@ -1,4 +1,4 @@
-#include "adc.h"
+#include "../../../libraries/ms-common/inc/adc.h"
 #include "delay.h"
 #include "gpio.h"
 #include "interrupt.h"
