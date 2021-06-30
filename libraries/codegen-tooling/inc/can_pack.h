@@ -56,6 +56,14 @@
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,                  \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
+#define CAN_PACK_RELAY_OPEN_OK_5_MPPTS(msg_ptr)                   \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_5_MPPTS, \
+                      SYSTEM_CAN_MESSAGE_RELAY_OPEN_OK_5_MPPTS)
+
+#define CAN_PACK_RELAY_OPEN_OK_6_MPPTS(msg_ptr)                   \
+  can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS, \
+                      SYSTEM_CAN_MESSAGE_RELAY_OPEN_OK_6_MPPTS)
+
 #define CAN_PACK_PEDAL_OUTPUT(msg_ptr, throttle_output_u32, brake_output_u32)               \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_PEDAL, SYSTEM_CAN_MESSAGE_PEDAL_OUTPUT, 8, \
                     (throttle_output_u32), (brake_output_u32))

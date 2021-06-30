@@ -5,6 +5,7 @@
 #include "can.h"
 #include "can_transmit.h"
 #include "can_unpack.h"
+#include "data_store.h"
 #include "delay.h"
 #include "drv120_relay.h"
 #include "event_queue.h"
@@ -23,35 +24,69 @@
 
 #define IRRELEVANT_EVENT NUM_SOLAR_RELAY_EVENTS
 
-#define PROCESS_RELAY_FSM_EVENT(storage, e)    \
-  ({                                           \
-    MS_TEST_HELPER_AWAIT_EVENT(e);             \
-    relay_fsm_process_event(&(storage), &(e)); \
-    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();   \
+#define PROCESS_RELAY_FSM_OPEN_EVENT(storage, e)                      \
+  ({                                                                  \
+    MS_TEST_HELPER_AWAIT_EVENT(e);                                    \
+    relay_fsm_process_event(&(storage), &(e));                        \
+    MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX); \
+    TEST_ASSERT_TRUE(s_relay_open_ok_6_mppts_rx_cb_called);           \
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();                          \
+  })
+
+#define PROCESS_RELAY_FSM_OTHER_EVENT(storage, e) \
+  ({                                              \
+    MS_TEST_HELPER_AWAIT_EVENT(e);                \
+    relay_fsm_process_event(&(storage), &(e));    \
+    MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();      \
   })
 
 static CanStorage s_can_storage;
 static RelayFsmStorage s_storage;
 
-static bool relay_err_rx_cb_called;
-static StatusCode prv_err_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  relay_err_rx_cb_called = true;
+static bool s_relay_error_rx_cb_called;
+static bool s_relay_open_ok_5_mppts_rx_cb_called;
+static bool s_relay_open_ok_6_mppts_rx_cb_called;
+static uint8_t s_error_array[5];
+static uint8_t s_error_array_reason[5];
+static uint8_t s_current_error_num;
+
+static StatusCode prv_error_rx_cb(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+  s_relay_error_rx_cb_called = true;
   uint8_t solar_fault;
   uint8_t fault_data;
   CAN_UNPACK_SOLAR_FAULT_6_MPPTS(msg, &solar_fault, &fault_data);
-  TEST_ASSERT_EQUAL(EE_SOLAR_FAULT_DRV120, solar_fault);
-  TEST_ASSERT_EQUAL(0, fault_data);
+  s_error_array[s_current_error_num] = solar_fault;
+  s_error_array_reason[s_current_error_num] = fault_data;
+  s_current_error_num++;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_open_ok_5_mppts_rx_cb(const CanMessage *msg, void *context,
+                                            CanAckStatus *ack_reply) {
+  s_relay_open_ok_5_mppts_rx_cb_called = true;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_open_ok_6_mppts_rx_cb(const CanMessage *msg, void *context,
+                                            CanAckStatus *ack_reply) {
+  s_relay_open_ok_6_mppts_rx_cb_called = true;
   return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
+  // Setting a valid current equal to one less than the thershold
+  data_store_set(DATA_POINT_CURRENT, CURRENT_ASSERT_THRESHOLD_uA - 1);
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_SOLAR_6_MPPTS,
                                   SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX, SOLAR_CAN_EVENT_FAULT);
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_err_rx_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_SOLAR_FAULT_6_MPPTS, prv_error_rx_cb, NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_RELAY_OPEN_OK_6_MPPTS, prv_open_ok_6_mppts_rx_cb,
+                          NULL);
+  can_register_rx_handler(SYSTEM_CAN_MESSAGE_RELAY_OPEN_OK_5_MPPTS, prv_open_ok_5_mppts_rx_cb,
+                          NULL);
   event_queue_init();
   gpio_it_init();
   fault_handler_init(config_get_fault_handler_settings(SOLAR_BOARD_6_MPPTS));
-  TEST_ASSERT_OK(relay_fsm_init(&s_storage));
+  TEST_ASSERT_OK(relay_fsm_init(&s_storage, SOLAR_BOARD_6_MPPTS));
 }
 void teardown_test(void) {}
 
@@ -68,26 +103,28 @@ void test_relay_transitions(void) {
   bool closed;
 
   // reset to open
+  s_relay_open_ok_6_mppts_rx_cb_called = false;
   TEST_ASSERT_OK(relay_fsm_open());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OPEN_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_FALSE(closed);
 
   // open -> closed
   TEST_ASSERT_OK(relay_fsm_close());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_TRUE(closed);
 
   // closed -> open
+  s_relay_open_ok_6_mppts_rx_cb_called = false;
   TEST_ASSERT_OK(relay_fsm_open());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OPEN_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_FALSE(closed);
 
   // open -> closed
   TEST_ASSERT_OK(relay_fsm_close());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_TRUE(closed);
 }
@@ -98,26 +135,27 @@ void test_noop_relay_transitions(void) {
   bool closed;
 
   // reset to open
+  s_relay_open_ok_6_mppts_rx_cb_called = false;
   TEST_ASSERT_OK(relay_fsm_open());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OPEN_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_FALSE(closed);
 
   // open still (no-op)
   TEST_ASSERT_OK(relay_fsm_open());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_FALSE(closed);
 
   // open -> closed
   TEST_ASSERT_OK(relay_fsm_close());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_TRUE(closed);
 
   // closed still (no-op)
   TEST_ASSERT_OK(relay_fsm_close());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_TRUE(closed);
 }
@@ -128,8 +166,9 @@ void test_irrelevant_events(void) {
   bool closed;
 
   // reset to open
+  s_relay_open_ok_6_mppts_rx_cb_called = false;
   TEST_ASSERT_OK(relay_fsm_open());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OPEN_EVENT(s_storage, e);
   drv120_relay_get_is_closed(&closed);
   TEST_ASSERT_FALSE(closed);
 
@@ -144,7 +183,7 @@ void test_relay_fsm_process_event_return_value(void) {
   // force to closed at start - valid in case we don't initialize to closed in the future
   Event e = { 0 };
   TEST_ASSERT_OK(relay_fsm_close());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
 
   e.id = IRRELEVANT_EVENT;
   TEST_ASSERT_FALSE(relay_fsm_process_event(&s_storage, &e));
@@ -171,12 +210,12 @@ void test_relay_fsm_process_event_return_value(void) {
 
 // Test that the module gracefully handles null and invalid inputs.
 void test_invalid_input(void) {
-  TEST_ASSERT_NOT_OK(relay_fsm_init(NULL));
+  TEST_ASSERT_NOT_OK(relay_fsm_init(NULL, 0));
 
   // force to closed so we can get a state changing event
   Event e = { 0 };
   TEST_ASSERT_OK(relay_fsm_close());
-  PROCESS_RELAY_FSM_EVENT(s_storage, e);
+  PROCESS_RELAY_FSM_OTHER_EVENT(s_storage, e);
 
   TEST_ASSERT_OK(relay_fsm_open());
   MS_TEST_HELPER_AWAIT_EVENT(e);
@@ -185,9 +224,72 @@ void test_invalid_input(void) {
   TEST_ASSERT_FALSE(relay_fsm_process_event(NULL, NULL));
 }
 
+// Test that the module handles EE_SOLAR_RELAY_OPEN_ERROR gracefully
+// due to relay not opening properly
 void test_relay_it_cb(void) {
+  Event e = { 0 };
+  s_current_error_num = 0;
+  s_relay_error_rx_cb_called = false;
+
+  // checking for error thrown by prv_relay_err_cb
   gpio_it_trigger_interrupt(config_get_drv120_status_pin());
   MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
-  TEST_ASSERT_TRUE(relay_err_rx_cb_called);
+
+  // checking for error thrown by prv_relay_assert_cb
+  TEST_ASSERT_OK(relay_fsm_open());
+  MS_TEST_HELPER_AWAIT_EVENT(e);
+  TEST_ASSERT_TRUE(relay_fsm_process_event(&s_storage, &e));
+  MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  TEST_ASSERT_TRUE(s_relay_error_rx_cb_called);
+  TEST_ASSERT_EQUAL(s_current_error_num, 2);
+  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array[1], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array_reason[0], EE_SOLAR_RELAY_ERROR_DRV120);
+  TEST_ASSERT_EQUAL(s_error_array_reason[1], EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+// Test that the module handles EE_SOLAR_RELAY_OPEN_ERROR gracefully
+// due to over current
+void test_relay_over_current_cb(void) {
+  Event e = { 0 };
+  s_current_error_num = 0;
+  s_relay_error_rx_cb_called = false;
+  data_store_set(DATA_POINT_CURRENT, 12);
+
+  // checking for error thrown by prv_relay_assert_cb
+  TEST_ASSERT_OK(relay_fsm_open());
+  MS_TEST_HELPER_AWAIT_EVENT(e);
+  TEST_ASSERT_TRUE(relay_fsm_process_event(&s_storage, &e));
+  MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  TEST_ASSERT_TRUE(s_relay_error_rx_cb_called);
+  TEST_ASSERT_EQUAL(s_current_error_num, 1);
+  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array_reason[0], EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+}
+
+// Test that the module handles EE_SOLAR_RELAY_OPEN_ERROR gracefully
+// due to current never being set
+void test_relay_current_never_set(void) {
+  Event e = { 0 };
+  s_current_error_num = 0;
+  s_relay_error_rx_cb_called = false;
+  data_store_init();
+
+  // Checking for error thrown by prv_relay_assert_cb
+  TEST_ASSERT_OK(relay_fsm_open());
+  MS_TEST_HELPER_AWAIT_EVENT(e);
+  TEST_ASSERT_TRUE(relay_fsm_process_event(&s_storage, &e));
+  MS_TEST_HELPER_CAN_TX_RX(SOLAR_CAN_EVENT_TX, SOLAR_CAN_EVENT_RX);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+
+  TEST_ASSERT_TRUE(s_relay_error_rx_cb_called);
+  TEST_ASSERT_EQUAL(s_current_error_num, 1);
+  TEST_ASSERT_EQUAL(s_error_array[0], EE_SOLAR_RELAY_OPEN_ERROR);
+  TEST_ASSERT_EQUAL(s_error_array_reason[0], EE_RELAY_ERROR_CURRENT_NEVER_SET);
 }
