@@ -105,8 +105,9 @@ msg {
 msg {
   id: 11
   source: CENTRE_CONSOLE
-  target: "MOTOR_CONTROLLER, TELEMETRY"
+  target: "MOTOR_CONTROLLER"
   msg_name: "regen braking"
+  is_critical: true
   can_data {
     u8 {
       field_name_1: "state"
@@ -114,16 +115,7 @@ msg {
   }
 }
 
-msg {
-  id: 12
-  source: STEERING
-  target: "CENTRE_CONSOLE"
-  msg_name: "regen braking toggle request"
-  can_data {
-    empty {
-    }
-  }
-}
+# ID: 12 Reserved
 
 msg {
   id: 13
@@ -436,6 +428,17 @@ msg {
   can_data {
     empty {
 
+    }
+  }
+}
+
+msg {
+  id: 46
+  source: STEERING
+  target: "CENTRE_CONSOLE"
+  msg_name: "regen braking toggle request"
+  can_data {
+    empty {
     }
   }
 }

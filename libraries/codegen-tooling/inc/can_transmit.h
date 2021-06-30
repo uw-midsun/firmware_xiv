@@ -63,20 +63,12 @@
     status;                                                     \
   })
 
-#define CAN_TRANSMIT_REGEN_BRAKING(state_u8)      \
-  ({                                              \
-    CanMessage msg = { 0 };                       \
-    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));     \
-    StatusCode status = can_transmit(&msg, NULL); \
-    status;                                       \
-  })
-
-#define CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST() \
-  ({                                                \
-    CanMessage msg = { 0 };                         \
-    CAN_PACK_REGEN_BRAKING_TOGGLE_REQUEST(&msg);    \
-    StatusCode status = can_transmit(&msg, NULL);   \
-    status;                                         \
+#define CAN_TRANSMIT_REGEN_BRAKING(ack_ptr, state_u8)  \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));          \
+    StatusCode status = can_transmit(&msg, (ack_ptr)); \
+    status;                                            \
   })
 
 #define CAN_TRANSMIT_READY_TO_DRIVE(ready_state_u8)  \
@@ -277,6 +269,14 @@
     CAN_PACK_UV_CUTOFF_NOTIFICATION(&msg);        \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
+  })
+
+#define CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST() \
+  ({                                                \
+    CanMessage msg = { 0 };                         \
+    CAN_PACK_REGEN_BRAKING_TOGGLE_REQUEST(&msg);    \
+    StatusCode status = can_transmit(&msg, NULL);   \
+    status;                                         \
   })
 
 #define CAN_TRANSMIT_REQUEST_TO_CHARGE()          \
