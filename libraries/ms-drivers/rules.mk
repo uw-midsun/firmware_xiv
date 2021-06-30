@@ -20,4 +20,4 @@ endif
 $(T)_test_bts7200_load_switch_MOCKS := adc_read_converted_pin
 $(T)_test_bts7040_load_switch_MOCKS := adc_read_converted_pin
 $(T)_test_voltage_regulator_MOCKS := gpio_get_state
-$(T)_test_generic_gpio_MOCKS := gpio_set_state gpio_get_state pca9539r_gpio_set_state pca9539r_gpio_get_state
+$(T)_test_generic_gpio_MOCKS := gpio_set_state gpio_get_state pca9539r_gpio_set_state pca9539r_gpio_get_state mcp23008_gpio_set_state mcp23008_gpio_get_state
