@@ -105,7 +105,7 @@ msg {
 msg {
   id: 11
   source: CENTRE_CONSOLE
-  target: "MOTOR_CONTROLLER, TELEMETRY"
+  target: "MOTOR_CONTROLLER"
   msg_name: "regen braking"
   is_critical: true
   can_data {
