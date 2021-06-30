@@ -71,24 +71,22 @@ class Datagram:
         """This function updates the bytearray based on data."""
 
         node_crc32 = zlib.crc32(bytearray(self._node_ids))
-        node_crc32 = bytearray([(node_crc32 >> (8 * 3)) & 0xff, (node_crc32 >> (8 * 2))
-                                & 0xff, (node_crc32 >> (8 * 1)) & 0xff, node_crc32 & 0xff])
-
+        node_crc32 = bytearray([node_crc32 & 0xff, (node_crc32 >> (8 * 1)) & 0xff,
+                                (node_crc32 >> (8 * 2)) & 0xff, (node_crc32 >> (8 * 3)) & 0xff])
         data_crc32 = zlib.crc32(self._data)
-        data_crc32 = bytearray([(data_crc32 >> (8 * 3)) & 0xff, (data_crc32 >> (8 * 2))
-                                & 0xff, (data_crc32 >> (8 * 1)) & 0xff, data_crc32 & 0xff])
+        data_crc32 = bytearray([data_crc32 & 0xff, (data_crc32 >> (8 * 1)) & 0xff,
+                                (data_crc32 >> (8 * 2)) & 0xff, (data_crc32 >> (8 * 3)) & 0xff])
 
         crc32_array = bytearray([self._datagram_type_id,
                                  len(self._node_ids),
                                  *node_crc32,
-                                 (len(self._data) >> 8) & 0xff,
                                  len(self._data) & 0xff,
+                                 (len(self._data) >> 8) & 0xff,
                                  *data_crc32])
         # Update the crc32
         crc32 = zlib.crc32(crc32_array)
-
-        crc32 = bytearray([(crc32 >> (8 * 3)) & 0xff, (crc32 >> (8 * 2))
-                          & 0xff, (crc32 >> (8 * 1)) & 0xff, crc32 & 0xff])
+        crc32 = bytearray([crc32 & 0xff, (crc32 >> (8 * 1)) & 0xff,
+                           (crc32 >> (8 * 2)) & 0xff, (crc32 >> (8 * 3)) & 0xff])
 
         # Update the bytearray
         return bytearray([self._protocol_version,
@@ -96,8 +94,8 @@ class Datagram:
                           self._datagram_type_id,
                           len(self._node_ids),
                           *(self._node_ids),
-                          (len(self._data) >> 8) & 0x0f,
-                          len(self._data) & 0x0f,
+                          (len(self._data) >> 8) & 0xff,
+                          len(self._data) & 0xff,
                           *(self._data)])
 
     # Accessors and mutators for the datagram
