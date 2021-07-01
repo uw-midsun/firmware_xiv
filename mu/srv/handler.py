@@ -9,7 +9,6 @@ from mu.harness.project import StoreUpdate
 from mu.protogen.stores_pb2 import MuStoreType
 
 
-
 class InternalError(Exception):
     pass
 

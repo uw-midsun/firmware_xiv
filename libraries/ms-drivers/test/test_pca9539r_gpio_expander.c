@@ -334,7 +334,7 @@ void test_pca9539r_gpio_subscribe_interrupts(void) {
   gpio_it_trigger_interrupt(&address);
 
   if (s_times_interrupt_callback_called == 1) {
-    return STATUS_CODE_OK
+    return STATUS_CODE_OK;
   }
 }
 
