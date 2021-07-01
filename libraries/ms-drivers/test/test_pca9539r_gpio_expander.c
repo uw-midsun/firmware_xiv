@@ -328,14 +328,11 @@ static void test_pca9539r_gpio_subscribe_interrupts_callback(const GpioAddress *
 
 void test_pca9539r_gpio_subscribe_interrupts(void) {
   GpioAddress address = { .port = GPIO_PORT_A, .pin = VALID_PORT_0_PIN };
-  pca9539r_gpio_subscribe_interrupts(&address, &test_pca9539r_gpio_subscribe_interrupts_callback,
-                                     NULL);
+  TEST_ASSERT_EQUAL(STATUS_CODE_OK,
+                    pca9539r_gpio_subscribe_interrupts(
+                        &address, &test_pca9539r_gpio_subscribe_interrupts_callback, NULL));
 
   gpio_it_trigger_interrupt(&address);
-
-  if (s_times_interrupt_callback_called == 1) {
-    return STATUS_CODE_OK;
-  }
 }
 
 void test_pca9539r_gpio_subscribe_interrupts_invalid(void) {
