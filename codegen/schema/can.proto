@@ -62,7 +62,7 @@ message CanMsg {
     SOLAR_6_MPPTS = 9;
     CHARGER = 10;
     IMU = 11;
-    POWER_SELECTION = 12;
+    POWER_SELECT = 12;
 
     BABYDRIVER = 15;
   }

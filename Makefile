@@ -28,6 +28,7 @@
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
 # 	make codegen_protos - Generates protobuf files
+# 	make bootloader_protos - Generates protobuf files for the bootloader
 # 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86
 #   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
 #   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
@@ -103,6 +104,9 @@ endif
 MU_C_GEN_DIR := $(LIB_DIR)/mu-gen
 MU_PYTHON_GEN_DIR := $(MU_DIR)/protogen
 MU_PROTOS_DIR := $(MU_DIR)/protos
+
+# Bootloader directory
+BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
@@ -206,13 +210,14 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
 IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
+IGNORE_CLEANUP_PROJS := bootloader/protogen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
-FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
+FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS)) $(addprefix -o -path $(PROJ_DIR)/,$(IGNORE_CLEANUP_PROJS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
@@ -226,6 +231,7 @@ FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 
 lint:
 	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
+	@echo "Excluding project folders: $(IGNORE_CLEANUP_PROJS)"
 	@$(FIND) | xargs -r python2 lint.py
 
 # Quick lint on ONLY changed/new files
@@ -286,11 +292,17 @@ pyformat:
 	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
+.PHONY: bootloader_protos
+bootloader_protos:
+	@echo "Compiling protos..."
+	@mkdir -p $(BOOTLOADER_DIR)/protogen
+	@protoc -I=$(BOOTLOADER_DIR)/protos --c_out=$(BOOTLOADER_DIR)/protogen $(BOOTLOADER_DIR)/protos/*.proto
+
 # Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command
 .PHONY: codegen
 codegen: codegen_protos
 	@echo "Generating from templates..."
-	@cd $(CODEGEN_DIR) && python scripts/build.py
+	@cd $(CODEGEN_DIR) && python3 scripts/build.py
 	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' \) | xargs -r clang-format -i -fallback-style=Google
 	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
 
@@ -298,7 +310,7 @@ codegen: codegen_protos
 .PHONY: codegen_dbc
 codegen_dbc:
 	@echo "Generating DBC file"
-	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
+	@cd $(CODEGEN_DIR) && python3 scripts/build_dbc.py
 
 .PHONY: codegen_protos
 codegen_protos:
@@ -357,6 +369,8 @@ clean:
 	@rm -f $(LIB_DIR)/mu-gen/inc/*.pb-c.h
 	@rm -f $(LIB_DIR)/mu-gen/src/*.pb-c.c
 	@rm -f $(MU_DIR)/protogen/*_pb2.py
+	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.h
+	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.c
 
 .PHONY: mock_can_data
 mock_can_data: socketcan
