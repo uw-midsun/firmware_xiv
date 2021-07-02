@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-message MxAds1015Store {
-  repeated int32 readings = 1;
-}

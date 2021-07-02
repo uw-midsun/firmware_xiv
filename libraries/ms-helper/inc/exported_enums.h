@@ -113,12 +113,6 @@ typedef enum {
   NUM_EE_RELAY_STATES,
 } EERelayState;
 
-typedef enum {
-  EE_EBRAKE_STATE_PRESSED = 0,
-  EE_EBRAKE_STATE_RELEASED,
-  NUM_EE_EBRAKE_STATES,
-} EEEbrakeState;
-
 // For battery heartbeat
 typedef enum EEBatteryHeartbeatFaultSource {
   EE_BPS_FAULT_SOURCE_KILLSWITCH = 0,
@@ -194,8 +188,25 @@ typedef enum EESolarFault {
   // thermistor.
   EE_SOLAR_FAULT_OVERTEMPERATURE,
 
-  // The drv120 relay has signaled that overtemp/undervolt lockout conditions have been triggered
-  EE_SOLAR_FAULT_DRV120,
+  // The temperature of the fan is over the threshold. No data.
+  EE_SOLAR_FAULT_FAN_OVERTEMPERATURE,
+
+  // Fan failure detected. No data.
+  EE_SOLAR_FAULT_FAN_FAIL,
+
+  // Relay failure to open
+  EE_SOLAR_RELAY_OPEN_ERROR,
 
   NUM_EE_SOLAR_FAULTS,
 } EESolarFault;
+
+typedef enum EESolarRelayOpenErrorReason {
+  // The drv120 relay has signaled that overtemp/undervolt lockout conditions have been triggered
+  EE_SOLAR_RELAY_ERROR_DRV120,
+  // The drv120 relay has not opened or the current has exceeded
+  EE_SOLAR_RELAY_ERROR_CURRENT_EXCEEDED_NOT_OPEN,
+  // The drv120 relay's current has not been set
+  EE_RELAY_ERROR_CURRENT_NEVER_SET,
+
+  NUM_EE_SOLAR_RELAY_OPEN_ERROR_REASON
+} EESolarRelayOpenErrorReason;
