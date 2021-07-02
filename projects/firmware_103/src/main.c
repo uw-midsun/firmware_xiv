@@ -16,9 +16,9 @@ static GpioAddress button_addresses[] = {
 
 static GpioAddress sensor_addresses[] = { [A6_SENSOR] = { .port = GPIO_PORT_A, .pin = 6 } };
 
-static GpioSettings s_button_settings = {
-  .direction = GPIO_DIR_IN, .alt_function = GPIO_ALTFN_NONE, .resistor = GPIO_RES_PULLDOWN
-};
+static GpioSettings s_button_settings = { .direction = GPIO_DIR_IN,
+                                          .alt_function = GPIO_ALTFN_NONE,
+                                          .resistor = GPIO_RES_PULLDOWN };
 
 static GpioSettings sensor_settings = {
   .direction = GPIO_DIR_IN,           //
@@ -52,23 +52,6 @@ static void prv_register_interrupts(void) {
                              &sensor_addresses[A6_SENSOR]);
 }
 
-typedef struct Counters {
-  uint8_t counter_a;
-  uint8_t counter_b;
-} Counters;
-
-static void soft_counter_callback(const SoftTimerId timer_id, void *context) {
-  Counters *counter1 = (Counters *)context;
-  // LOG_DEBUG("counter1 address: %p \n", &counter1);
-  counter1->counter_a = counter1->counter_a + 1;
-  LOG_DEBUG("counter a: %i \n", counter1->counter_a);
-  if (counter1->counter_a % 2 == 0) {
-    counter1->counter_b = counter1->counter_b + 1;
-    LOG_DEBUG("counter b: %i \n", counter1->counter_b);
-  }
-  soft_timer_start_millis(500, soft_counter_callback, counter1, NULL);
-}
-
 int main(void) {
   interrupt_init();
   soft_timer_init();
@@ -83,13 +66,7 @@ int main(void) {
   adc_get_channel(sensor_addresses[A6_SENSOR], &sensor_channel);
   adc_set_channel(sensor_channel, true);
 
-  LOG_DEBUG("Hello world!\n");
-
   prv_register_interrupts();
-
-  Counters counter1 = { .counter_b = 0, .counter_a = 0 };
-  // LOG_DEBUG("counter1 address: %p \n", &counter1);
-  soft_timer_start_millis(500, soft_counter_callback, &counter1, NULL);
 
   while (true) {
   }
