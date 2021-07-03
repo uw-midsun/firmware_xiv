@@ -8,6 +8,7 @@ from mu.harness.pm import ProjectManager
 
 TCP_PORT = 8989
 
+
 class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     def __init__(self, pm, address, handler_class):
         super().__init__(address, handler_class)
