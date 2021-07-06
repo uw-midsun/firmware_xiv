@@ -29,6 +29,12 @@
 #define RX_WATCHDOG_TIMEOUT_MS 25
 #define CAN_BUFFER_SIZE 8
 
+// Converts value to a uint8_t buffer in little endian order
+#define LITTLE_ENDIANIZE(value, outbuf)                 \
+  for (size_t byte = 0; byte < sizeof(value); byte++) { \
+    outbuf[byte] = value >> (8 * byte) & 0xFF;          \
+  }
+
 typedef struct CanDatagramStorage {
   CanDatagram dgram;
   CanDatagramTxCb tx_cb;
@@ -249,6 +255,7 @@ static void prv_flush_tx_buffer(void) {
 }
 
 static void prv_write_tx_buffer(uint8_t *data, size_t len) {
+  // Write to buffer in little-endian format
   fifo_push_arr(&s_fifo, data, len);
   // If 8 bytes of data available, transmit
   // Final flush called from state_done
@@ -269,15 +276,15 @@ static uint32_t prv_can_datagram_compute_crc(void) {
   uint32_t data_crc = crc32_arr(dgram->data, dgram->data_len);
 
   // Copy metadata to stream, append dst and data crc
-  memcpy(write, &dgram->dgram_type, DGRAM_TYPE_SIZE_BYTES);
+  LITTLE_ENDIANIZE(dgram->dgram_type, write);
   write += DGRAM_TYPE_SIZE_BYTES;
-  memcpy(write, &dgram->destination_nodes_len, DEST_LEN_SIZE_BYTES);
+  LITTLE_ENDIANIZE(dgram->destination_nodes_len, write);
   write += DEST_LEN_SIZE_BYTES;
-  memcpy(write, &dst_crc, sizeof(uint32_t));
+  LITTLE_ENDIANIZE(dst_crc, write);
   write += sizeof(uint32_t);
-  memcpy(write, &dgram->data_len, DATA_LEN_SIZE_BYTES);
+  LITTLE_ENDIANIZE(dgram->data_len, write);
   write += DATA_LEN_SIZE_BYTES;
-  memcpy(write, &data_crc, sizeof(uint32_t));
+  LITTLE_ENDIANIZE(data_crc, write);
   write += sizeof(uint32_t);
 
   // process final crcs
@@ -310,7 +317,9 @@ static void prv_process_protocol_version_tx(Fsm *fsm, const Event *e, void *cont
 static void prv_process_crc_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  prv_write_tx_buffer((uint8_t *)&dgram->crc, CRC_SIZE_BYTES);
+  uint8_t outbuf[CRC_SIZE_BYTES];
+  LITTLE_ENDIANIZE(dgram->crc, outbuf);
+  prv_write_tx_buffer(outbuf, CRC_SIZE_BYTES);
   event_raise_no_data(store->tx_event);
 }
 
@@ -344,7 +353,9 @@ static void prv_process_dst_tx(Fsm *fsm, const Event *e, void *context) {
 static void prv_process_data_len_tx(Fsm *fsm, const Event *e, void *context) {
   CanDatagramStorage *store = context;
   CanDatagram *dgram = &store->dgram;
-  prv_write_tx_buffer((uint8_t *)&dgram->data_len, DATA_LEN_SIZE_BYTES);
+  uint8_t outbuf[DATA_LEN_SIZE_BYTES];
+  LITTLE_ENDIANIZE(dgram->data_len, outbuf);
+  prv_write_tx_buffer(outbuf, DATA_LEN_SIZE_BYTES);
   event_raise_no_data(store->tx_event);
 }
 
