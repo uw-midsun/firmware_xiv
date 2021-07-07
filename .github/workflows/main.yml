@@ -102,15 +102,26 @@ jobs:
           make codegen_dbc
 
       - name: Check for uncommitted codegen changes
-        id: check-uncommitted-changes
+        id: check-uncommited-codegen-changes
         continue-on-error: true
         # https://stackoverflow.com/a/3879077
         run: |
           git update-index --refresh || true
-          git diff-index --quiet HEAD --
-
+          git diff-index --quiet HEAD --        
+        
+      - name: Build MU protobuf
+        run: |
+          make mu_protos
+      
+      - name: Check for uncommitted protobuf changes
+        id: check-uncommitted-protobuf-changes
+        continue-on-error: true
+        run: |
+          git update-index --refresh || true
+          git diff-index --quiet HEAD --  
+        
       - name: Post PR comment on uncommitted changes
-        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        if: ${{ steps.check-uncommited-codegen-changes.outcome == 'failure' }}
         uses: actions/github-script@v4
         with:
           script: |
@@ -123,9 +134,24 @@ jobs:
               repo: context.repo.repo,
               body: comment,
             });
-
+        if: ${{ steps.check-uncommited-protobuf-changes.outcome == 'failure' }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-protobuf-changes.md', 'utf8');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+            
       - name: Fail on uncommitted changes
-        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        if: ${{ steps.check-uncommited-codegen-changes.outcome == 'failure' }}
+        run: exit 1
+        if: ${{ steps.check-uncommited-protobuf-changes.outcome == 'failure' }}
         run: exit 1
 
       - name: Build stm32f0xx
