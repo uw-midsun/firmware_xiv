@@ -3,6 +3,7 @@ from collections import namedtuple
 
 Config = namedtuple('Config', ['background', 'canbus', 'projlogs'])
 
+
 def get_config():
     parser = argparse.ArgumentParser(prog='musrv', description='Run MU as a server')
     parser.add_argument('-bg', dest='background', action='store_true',
