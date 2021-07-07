@@ -17,11 +17,20 @@ static const GpioAddress s_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS] = {
   [MCI_THERM_Q3_OVERTEMP] = MCI_Q3_OVERTEMP_ADDR,
 };
 
+// TODO(SOFT-275): figure out a more elegant way of doing this
+// (these need to be mapped somewhere in memory to pass them as context to the interrupt)
+static const uint8_t s_therm_indices[NUM_MCI_FAN_CONTROL_THERMS] = {
+  [MCI_THERM_DISCHARGE_OVERTEMP] = MCI_THERM_DISCHARGE_OVERTEMP,
+  [MCI_THERM_PRECHARGE_OVERTEMP] = MCI_THERM_PRECHARGE_OVERTEMP,
+  [MCI_THERM_Q1_OVERTEMP] = MCI_THERM_Q1_OVERTEMP,
+  [MCI_THERM_Q3_OVERTEMP] = MCI_THERM_Q3_OVERTEMP,
+};
+
 // Handle a fault interrupt.
 static void prv_handle_therm_it(const GpioAddress *address, void *context) {
   // Context holds the index of the fault pin
   uint8_t index = *((uint8_t *)(context));
-  LOG_DEBUG("Therm it fired for index %d\n", index);
+  LOG_DEBUG("Therm it fired for index %d pin %d\n", index, address->pin);
 
   GpioState state = NUM_GPIO_STATES;
   gpio_get_state(&s_therm_addrs[index], &state);
@@ -55,8 +64,9 @@ static StatusCode prv_configure_therm_it(GpioAddress *address, uint8_t pin_idx) 
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
+  LOG_DEBUG("registering with index %d\n", pin_idx);
   return gpio_it_register_interrupt(address, &it_settings, INTERRUPT_EDGE_RISING_FALLING,
-                                    prv_handle_therm_it, &pin_idx);
+                                    prv_handle_therm_it, &s_therm_indices[pin_idx]);
 }
 
 StatusCode mci_fan_control_init(MciFanControlSettings *settings) {
