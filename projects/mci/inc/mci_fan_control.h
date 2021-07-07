@@ -31,12 +31,19 @@
 
 // Fault types
 typedef enum {
-  MCI_FAN_CONTROL_DISCHARGE_OVERTEMP = 0,
-  MCI_FAN_CONTROL_PRECHARGE_OVERTEMP,
-  MCI_FAN_CONTROL_Q1_OVERTEMP,
-  MCI_FAN_CONTROL_Q3_OVERTEMP,
-  NUM_MCI_FAN_CONTROL_FAULTS,
-} MciFanControlFault;
+  MCI_THERM_DISCHARGE_OVERTEMP = 0,
+  MCI_THERM_PRECHARGE_OVERTEMP,
+  MCI_THERM_Q1_OVERTEMP,
+  MCI_THERM_Q3_OVERTEMP,
+  NUM_MCI_FAN_CONTROL_THERMS,
+} MciFanControlTherm;
+
+// Fan states
+typedef enum {
+  MCI_FAN_STATE_OFF = 0,
+  MCI_FAN_STATE_ON,
+  NUM_MCI_FAN_STATES,
+} MciFanState;
 
 // Called when a fault occurs/clears.
 typedef void (*MciFanControlFaultCallback)(uint8_t fault_bitset, void *context);
@@ -46,5 +53,13 @@ typedef struct {
   void *fault_context;
 } MciFanControlSettings;
 
+typedef struct {
+  MciFanControlFaultCallback fault_cb;
+  void *fault_context;
+  uint8_t fault_bitset;
+} MciFanControlStorage;
+
 // Initialize fan control and turn on the fan.
 StatusCode mci_fan_control_init(MciFanControlSettings *settings);
+
+StatusCode mci_fan_set_state(MciFanState state);
