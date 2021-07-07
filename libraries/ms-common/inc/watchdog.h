@@ -23,3 +23,5 @@ void watchdog_start(WatchdogStorage *storage, WatchdogTimeout timeout_ms,
                     WatchdogExpiryCallback callback, void *context);
 
 void watchdog_kick(WatchdogStorage *storage);
+
+void watchdog_cancel(WatchdogStorage *storage);
