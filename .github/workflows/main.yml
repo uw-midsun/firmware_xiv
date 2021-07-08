@@ -120,7 +120,7 @@ jobs:
           git update-index --refresh || true
           git diff-index --quiet HEAD --  
         
-      - name: Post PR comment on uncommitted changes
+      - name: Post PR comment on uncommitted codegen changes
         if: ${{ steps.check-uncommited-codegen-changes.outcome == 'failure' }}
         uses: actions/github-script@v4
         with:
@@ -134,6 +134,8 @@ jobs:
               repo: context.repo.repo,
               body: comment,
             });
+            
+      - name: Post PR comment on uncommited protobuf changes
         if: ${{ steps.check-uncommited-protobuf-changes.outcome == 'failure' }}
         uses: actions/github-script@v4
         with:
@@ -148,9 +150,11 @@ jobs:
               body: comment,
             });
             
-      - name: Fail on uncommitted changes
+      - name: Fail on uncommitted codegen changes
         if: ${{ steps.check-uncommited-codegen-changes.outcome == 'failure' }}
         run: exit 1
+        
+      - name: Fail on uncommited protobuf changes
         if: ${{ steps.check-uncommited-protobuf-changes.outcome == 'failure' }}
         run: exit 1
 
