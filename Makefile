@@ -12,6 +12,7 @@
 #   SD: [STDLIB_DEBUG=] - Set to true on STM32 to use an stdlib with debug symbols. See platform/stm32f0xx/newlib-debug/README.md.
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
+# 	CC: [COVERAGE=] - Specifies if code coverage symbols should be added to the build. Defaults to false [true | false]
 #
 # Usage:
 #   make [all] [PL] [PR] [SD] [DF] - Builds the target project and its dependencies
@@ -38,7 +39,7 @@
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
 #   make program [PL=stm32f0xx] [PR] [PB] - Programs and runs the project through OpenOCD
-#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]] [DF]
+#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]] [DF] [CC]
 #
 ###################################################################################################
 
@@ -347,6 +348,14 @@ endif
 .PHONY: build_all
 build_all: $(VALID_PROJECTS:%=$(BIN_DIR)/%$(PLATFORM_EXT))
 
+.PHONY: codecov
+codecov: 
+	@cd build/obj/x86 && \
+	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
+	lcov --capture --directory . --output-file coverage.info && \
+	lcov -r coverage.info '/usr/include/*' '*build/gen/x86/*' '*libraries/unity/*' -o coverage.info && \
+	genhtml coverage.info --output-directory out --legend --show-details
+
 $(DIRS):
 	@mkdir -p $@
 
@@ -394,7 +403,7 @@ socketcan:
 install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
-	@sudo apt-get install protobuf-compiler
+	@sudo apt-get install protobuf-compiler -y
 	@rm -rf $(VENV_DIR)
 	@mkdir $(VENV_DIR)
 	@virtualenv $(VENV_DIR)
