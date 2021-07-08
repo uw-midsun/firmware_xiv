@@ -28,4 +28,5 @@ typedef struct MotorTemperatureSettings {
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
 } MotorTemperatureSettings;
 
-StatusCode motor_temperature_init(MotorTemperatureStorage *storage, GenericCan *motor_can);
+StatusCode motor_temperature_init(MotorTemperatureStorage *storage,
+                                  MotorTemperatureSettings *setting);
