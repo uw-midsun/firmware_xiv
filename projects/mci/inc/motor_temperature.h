@@ -13,6 +13,11 @@ typedef enum {
   NUM_MOTOR_CONTROLLERS,
 } MotorController;
 
+typedef struct MotorTemperatureMeasurements {
+  WaveSculptorDspTempMeasurement dsp_measurements[NUM_MOTOR_CONTROLLERS];
+  WaveSculptorSinkMotorTempMeasurement sink_motor_measurements[NUM_MOTOR_CONTROLLERS];
+} MotorTemperatureMeasurements;
+
 typedef struct MotorTemperatureStorage {
   MotorTemperatureMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
@@ -23,10 +28,4 @@ typedef struct MotorTemperatureSettings {
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
 } MotorTemperatureSettings;
 
-typedef struct MotorTemperatureMeasurements {
-  WaveSculptorAirInCpuTempMeasurement cpu_measurements[NUM_MOTOR_CONTROLLERS];
-  WaveSculptorSinkMotorTempMeasurement sink_motor_measurements[NUM_MOTOR_CONTROLLERS];
-}
-
-StatusCode
-motor_temperature_init(MotorTemperatureStorage *storage, GenericCan *motor_can);
+StatusCode motor_temperature_init(MotorTemperatureStorage *storage, GenericCan *motor_can);

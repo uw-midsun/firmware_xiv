@@ -26,16 +26,16 @@ static void prv_handle_sink_temperature_rx(const GenericCanMsg *msg, void *conte
   }
 }
 
-static void prv_handle_cpu_temperature_rx(const GenericCanMsg *msg, void *context) {
+static void prv_handle_dsp_temperature_rx(const GenericCanMsg *msg, void *context) {
   MotorTemperatureStorage *storage = context;
-  WaveSculptorAirInCpuTempMeasurement *measurements = storage->measurements.cpu_measurements;
+  WaveSculptorDspTempMeasurement *measurements = storage->measurements.dsp_measurements;
 
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
 
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     if (can_id.device_id == storage->ids[motor_id]) {
-      measurements[motor_id] = can_data.air_in_cpu_temp_measurement;
+      measurements[motor_id] = can_data.dsp_temp_measurement;
     }
   }
 }
