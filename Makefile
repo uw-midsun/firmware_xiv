@@ -319,10 +319,10 @@ codegen_protos:
 	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
 	
 # Builds protos for MU
-.PHONY: build_mu_protos
-build_mu_protos:
+.PHONY: mu_protos
+mu_protos:
 	@echo "Building protos..."
-	$(call gen_mu)
+	$(call gen_mu) $(LIB_DIR)
 
 .PHONY: pytest
 pytest:
