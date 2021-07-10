@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "test_helpers.h"
+#include "ms_test_helpers.h"
 
 #include "can.h"
 #include "can_msg_defs.h"
@@ -25,6 +26,7 @@
 #include "mci_events.h"
 #include "motor_can.h"
 #include "wavesculptor.h"
+#include "regen_braking.h"
 
 #define TEST_CAN_DEVICE_ID 12
 #define TEST_MCI_OUTPUT_THRESHOLD 0.01f
@@ -114,6 +116,22 @@ static void prv_setup_motor_can(void) {
   mcp2515_init(&s_motor_can_storage, &mcp2515_settings);
 }
 
+static StatusCode prv_empty_ack_callback(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+                                         uint16_t num_remaining, void *context) {
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_set_regen_braking_state(uint8_t state) {
+  CanAckRequest req = { .callback = prv_empty_ack_callback,
+                        .context = NULL,
+                        .expected_bitset =
+                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+  CAN_TRANSMIT_REGEN_BRAKING(&req, state);
+  MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(state, get_regen_braking_state());
+  return STATUS_CODE_OK;
+}
+
 StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                                  size_t dlc) {
   // unpack data
@@ -170,7 +188,7 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-void test_mci_output_off_no_pedals(void) {
+void test_mci_output_off_no_pedals_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 0.0f,
@@ -186,7 +204,26 @@ void test_mci_output_off_no_pedals(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_off_only_throttle(void) {
+void test_mci_output_off_no_pedals_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+  // disabling regen will not affect
+  // since target velocity is equal to current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_off_only_throttle_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 50.0f,
@@ -202,7 +239,26 @@ void test_mci_output_off_only_throttle(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_off_only_brake(void) {
+void test_mci_output_off_only_throttle_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 0.0f,
+  };
+  // disabling regen will not affect
+  // since target velocity is equal to current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_off_only_brake_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 0.0f,
@@ -218,7 +274,26 @@ void test_mci_output_off_only_brake(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_off_both_pedals(void) {
+void test_mci_output_off_only_brake_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 50.0f,
+  };
+  // disabling regen will not affect
+  // since target velocity is equal to current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_off_both_pedals_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 50.0f,
@@ -234,7 +309,26 @@ void test_mci_output_off_both_pedals(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_drive_no_pedals(void) {
+void test_mci_output_off_both_pedals_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 50.0f,
+  };
+  // disabling regen will not affect
+  // since target velocity is equal to current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_OFF;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_drive_no_pedals_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 0.0f,
@@ -250,7 +344,26 @@ void test_mci_output_drive_no_pedals(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_drive_only_throttle(void) {
+void test_mci_output_drive_no_pedals_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+  // disabling regen will not affect
+  // since target velocity is equal to current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = WAVESCULPTOR_FORWARD_VELOCITY,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_drive_only_throttle_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 50.0f,
@@ -266,7 +379,26 @@ void test_mci_output_drive_only_throttle(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_drive_only_brake(void) {
+void test_mci_output_drive_only_throttle_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 0.0f,
+  };
+  // disabling regen will not affect
+  // since target velocity is equal to current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.5f,
+    .motor_velocity = WAVESCULPTOR_FORWARD_VELOCITY,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_drive_only_brake_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 0.0f,
@@ -282,7 +414,26 @@ void test_mci_output_drive_only_brake(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_drive_both_pedals(void) {
+void test_mci_output_drive_only_brake_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 50.0f,
+  };
+  // disabling regen will affect
+  // since target velocity is less than current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_drive_both_pedals_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 50.0f,
@@ -298,7 +449,26 @@ void test_mci_output_drive_both_pedals(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_reverse_no_pedals(void) {
+void test_mci_output_drive_both_pedals_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 50.0f,
+  };
+  // disabling regen will affect
+  // since target velocity is less than current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_reverse_no_pedals_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 0.0f,
@@ -314,7 +484,26 @@ void test_mci_output_reverse_no_pedals(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_reverse_only_throttle(void) {
+void test_mci_output_reverse_no_pedals_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+  // disabling regen won't affect
+  // since target velocity equals current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = WAVESCULPTOR_REVERSE_VELOCITY,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_reverse_only_throttle_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 50.0f,
@@ -330,7 +519,26 @@ void test_mci_output_reverse_only_throttle(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_reverse_only_brake(void) {
+void test_mci_output_reverse_only_throttle_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 0.0f,
+  };
+  // disabling regen won't affect
+  // since target velocity equals current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.5f,
+    .motor_velocity = WAVESCULPTOR_REVERSE_VELOCITY,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_reverse_only_brake_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 0.0f,
@@ -346,23 +554,26 @@ void test_mci_output_reverse_only_brake(void) {
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_reverse_both_pedals(void) {
+void test_mci_output_reverse_only_brake_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
   PedalValues test_values = {
-    .throttle = 50.0f,
+    .throttle = 0.0f,
     .brake = 50.0f,
   };
+  // disabling regen will not affect since
+  // target velocity is more than current velocity
   MotorCanDriveCommand expected_value = {
     .motor_current = 0.5f,
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
 
-void test_mci_output_off_regen_braking_disabled() {
+void test_mci_output_reverse_both_pedals_regen_enabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
   PedalValues test_values = {
     .throttle = 50.0f,
@@ -373,7 +584,26 @@ void test_mci_output_off_regen_braking_disabled() {
     .motor_velocity = 0.0f,
   };
   s_test_mci_output_storage.expected_value = expected_value;
-  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_reverse_both_pedals_regen_disabled(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 50.0f,
+  };
+  // disabling regen won't affect since
+  // target velocity is more than current velocity
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.5f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_REVERSE;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }

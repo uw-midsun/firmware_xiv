@@ -84,7 +84,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
 
   // Set current to zero if regen braking is disabled
   // target velocity is less than actual velocity
-  if (is_regen_brake == 0 && s_velocity_lookup[drive_state] < drive_command.motor_velocity) {
+  if (is_regen_brake == 0 && drive_command.motor_velocity < s_velocity_lookup[drive_state]) {
     drive_command.motor_current = 0.0f;
   }
 

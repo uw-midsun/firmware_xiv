@@ -1,12 +1,12 @@
 #include "regen_braking.h"
 
-#include "can.h"
-#include "can_transmit.h"
-#include "event_queue.h"
-#include "mci_events.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
-#include "test_helpers.h"
+
+#include "can.h"
+#include "can_transmit.h"
+
+#include "mci_events.h"
 
 static CanStorage s_can_storage = { 0 };
 
@@ -16,10 +16,10 @@ static StatusCode prv_empty_ack_callback(CanMessageId msg_id, uint16_t device, C
 }
 
 void setup_test(void) {
-  // s_times_callback_called = 0;
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
                                   MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX, MCI_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(regen_braking_init());
+  // Check the regen state set to default
   TEST_ASSERT_EQUAL(1, get_regen_braking_state());
 }
 
