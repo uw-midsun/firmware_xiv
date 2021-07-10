@@ -30,6 +30,7 @@ class Subscriber:
             raise NoLog from e
         return None
 
+
 class Logger:
     def __init__(self, max_logs=1000):
         self.max_logs = max_logs

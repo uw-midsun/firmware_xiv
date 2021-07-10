@@ -102,7 +102,56 @@ msg {
   }
 }
 
-# IDs: 11-17 Reserved
+msg {
+  id: 11
+  source: CENTRE_CONSOLE
+  target: "MOTOR_CONTROLLER"
+  msg_name: "regen braking"
+  is_critical: true
+  can_data {
+    u8 {
+      field_name_1: "state"
+    }
+  }
+}
+
+# ID: 12 Reserved
+
+msg {
+  id: 13
+  source: CENTRE_CONSOLE
+  target: "TELEMETRY"
+  msg_name: "ready to drive"
+  can_data {
+    u8 {
+      field_name_1: "ready_state"
+    }
+  }
+}
+
+msg {
+  id: 14
+  source: SOLAR_5_MPPTS
+  target: "TELEMETRY"
+  msg_name: "relay open ok 5 mppts"
+  can_data {
+    empty {
+    }
+  }
+}
+
+msg {
+  id: 15
+  source: SOLAR_6_MPPTS
+  target: "TELEMETRY"
+  msg_name: "relay open ok 6 mppts"
+  can_data {
+    empty {
+    }
+  }
+}
+
+# IDs: 16-17 Reserved
 
 msg {
   id: 18
@@ -167,19 +216,7 @@ msg {
   }
 }
 
-msg {
-  id:26
-  source: STEERING
-  target: "REGEN_BRAKING"
-  msg_name: "regen braking"
-  can_data{
-    u8 {
-      field_name_1: "state"
-    }
-  }
-}
-
-# IDs: 27 Reserved
+# IDs: 26-27 Reserved
 
 msg {
   id: 28
@@ -395,7 +432,18 @@ msg {
   }
 }
 
-# IDs 46-47: Reserved
+msg {
+  id: 46
+  source: STEERING
+  target: "CENTRE_CONSOLE"
+  msg_name: "regen braking toggle request"
+  can_data {
+    empty {
+    }
+  }
+}
+
+# ID 47: Reserved
 
 msg {
   id: 48

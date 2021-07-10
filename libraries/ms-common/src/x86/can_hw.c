@@ -319,5 +319,9 @@ bool can_hw_receive(uint32_t *id, bool *extended, uint64_t *data, size_t *len) {
 
   memset(&s_socket_data.rx_frame, 0, sizeof(s_socket_data.rx_frame));
   s_socket_data.rx_frame_valid = false;
+
+  // Wakes the main thread
+  x86_interrupt_wake();
+
   return true;
 }
