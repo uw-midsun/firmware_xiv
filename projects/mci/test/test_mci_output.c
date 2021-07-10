@@ -361,3 +361,19 @@ void test_mci_output_reverse_both_pedals(void) {
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
 }
+
+void test_mci_output_off_regen_braking_disabled() {
+  LOG_DEBUG("DOING %s\n", __func__);
+  PedalValues test_values = {
+    .throttle = 50.0f,
+    .brake = 50.0f,
+  };
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.5f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}

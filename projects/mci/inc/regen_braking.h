@@ -4,8 +4,8 @@
 
 #include "can.h"
 #include "can_msg_defs.h"
-#include "can_unpack.h"
 #include "can_transmit.h"
+#include "can_unpack.h"
 #include "status.h"
 
 StatusCode regen_braking_init(void);

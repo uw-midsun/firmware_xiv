@@ -6,6 +6,7 @@
 #include "drive_fsm.h"
 #include "mci_events.h"
 #include "motor_can.h"
+#include "regen_braking.h"
 #include "wavesculptor.h"
 
 #include "exported_enums.h"
@@ -59,6 +60,8 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
   bool is_cruise = drive_fsm_is_cruise();
+  uint8_t is_regen_brake = get_regen_braking_state();
+
   // TODO(SOFT-122): Make sure test ensures that maps are continues
   if (drive_state == EE_DRIVE_OUTPUT_OFF) {
     drive_command.motor_current = 0.0f;
@@ -78,6 +81,13 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
     drive_command.motor_velocity =
         is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[drive_state];
   }
+
+  // Set current to zero if regen braking is disabled
+  // target velocity is less than actual velocity
+  if (is_regen_brake == 0 && s_velocity_lookup[drive_state] < drive_command.motor_velocity) {
+    drive_command.motor_current = 0.0f;
+  }
+
   // Handling message
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
   prv_send_wavesculptor_message(storage, MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID, drive_command);
@@ -91,6 +101,7 @@ StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage
   };
   storage->motor_can = motor_can;
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
+  status_ok_or_return(regen_braking_init());
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
                                  NULL);
 }
