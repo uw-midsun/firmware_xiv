@@ -1,5 +1,4 @@
 #include "steering_digital_input.h"
-
 #include "event_queue.h"
 #include "gpio_it.h"
 #include "interrupt_def.h"
@@ -54,9 +53,9 @@ StatusCode steering_digital_input_init() {
 
     if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PPT ||
         i == STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED ||
-        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED || i == STEERING_DIGITAL_INPUT_CC_TOGGLE) {
+        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
-                                 INTERRUPT_EDGE_RISING, prv_callback_raise_event,
+                                 INTERRUPT_EDGE_RISING_FALLING, prv_callback_raise_event,
                                  &s_steering_event_lookup_table[i]);
     } else {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,

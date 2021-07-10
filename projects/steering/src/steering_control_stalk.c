@@ -1,5 +1,4 @@
 #include "steering_control_stalk.h"
-
 #include "adc_periodic_reader.h"
 #include "event_queue.h"
 #include "steering_can.h"
@@ -9,7 +8,7 @@ AdcPeriodicReaderSettings reader_settings = { .address = { .port = GPIO_PORT_A, 
                                               .callback = control_stalk_callback };
 
 // Stores event id of the previous event that was just raised
-static SteeringAnalogEvent prev = STEERING_CONTROL_STALK_EVENT_NO_SIGNAL;
+static SteeringAnalogEvent prev = 0;
 
 void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
   if (data > STEERING_CONTROL_STALK_LEFT_SIGNAL_VOLTAGE_MV - VOLTAGE_TOLERANCE_MV &&
@@ -22,11 +21,6 @@ void control_stalk_callback(uint16_t data, PeriodicReaderId id, void *context) {
              prev != STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL) {
     event_raise((EventId)STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL, data);
     prev = STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL;
-  } else if (data > STEERING_CONTROL_STALK_NO_SIGNAL_VOLTAGE_MV - VOLTAGE_TOLERANCE_MV &&
-             data < STEERING_CONTROL_STALK_NO_SIGNAL_VOLTAGE_MV + VOLTAGE_TOLERANCE_MV &&
-             prev != STEERING_CONTROL_STALK_EVENT_NO_SIGNAL) {
-    event_raise(STEERING_CONTROL_STALK_EVENT_NO_SIGNAL, data);
-    prev = STEERING_CONTROL_STALK_EVENT_NO_SIGNAL;
   }
 }
 
