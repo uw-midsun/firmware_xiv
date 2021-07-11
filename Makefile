@@ -109,6 +109,8 @@ MU_PROTOS_DIR := $(MU_DIR)/protos
 # Bootloader directory
 BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
 
+CODECOV_DIR := codecov
+
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
 
@@ -214,6 +216,7 @@ IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-
 IGNORE_CLEANUP_PROJS := bootloader/protogen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
+IGNORE_CODECOV_FILES := '/usr/include/*' '*build/gen/x86/*' '*libraries/unity/*'
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
@@ -348,14 +351,6 @@ endif
 .PHONY: build_all
 build_all: $(VALID_PROJECTS:%=$(BIN_DIR)/%$(PLATFORM_EXT))
 
-.PHONY: codecov
-codecov: 
-	@cd build/obj/x86 && \
-	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
-	lcov --capture --directory . --output-file coverage.info && \
-	lcov -r coverage.info '/usr/include/*' '*build/gen/x86/*' '*libraries/unity/*' -o coverage.info && \
-	genhtml coverage.info --output-directory ../../../codecov --legend --show-details
-
 $(DIRS):
 	@mkdir -p $@
 
@@ -409,6 +404,14 @@ install_requirements:
 	@virtualenv $(VENV_DIR)
 	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
+
+.PHONY: codecov
+codecov: 
+	@cd $(BUILD_DIR)/obj/x86 && \
+	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
+	lcov --capture --directory . --output-file coverage.info && \
+	lcov -r coverage.info $(IGNORE_CODECOV_FILES) -o coverage.info && \
+	genhtml coverage.info --output-directory ../../../$(CODECOV_DIR) --legend --show-details
 
 MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk
