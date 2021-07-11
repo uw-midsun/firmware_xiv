@@ -10,8 +10,16 @@ CAN_BITRATE = 500000
 
 MESSAGE_SIZE = 8
 HEADER_SIZE = 6
-
 MIN_BYTEARRAY_SIZE = 9
+DATA_SIZE_SIZE = 2
+
+PROTOCOL_VERSION_OFFSET = 0
+DATAGRAM_TYPE_OFFSET = 5
+NUM_NODE_ID_OFFSET = 6
+NODE_ID_OFFSET = 7
+
+CAN_START_ARBITRATION_ID = 0b00000010000
+CAN_ARBITRATION_ID = 0b00000000000
 
 
 class Datagram:
@@ -45,23 +53,24 @@ class Datagram:
             raise Exception(
                 "Invalid Datagram format from bytearray: Does not meet minimum size requirement")
 
-        protocol_version = datagram_bytearray[0]
-        datagram_type_id = datagram_bytearray[5]
+        protocol_version = datagram_bytearray[PROTOCOL_VERSION_OFFSET]
+        datagram_type_id = datagram_bytearray[DATAGRAM_TYPE_OFFSET]
 
-        num_node_ids = datagram_bytearray[6]
+        num_node_ids = datagram_bytearray[NUM_NODE_ID_OFFSET]
 
         if len(datagram_bytearray) < MIN_BYTEARRAY_SIZE + num_node_ids:
             raise Exception("Invalid Datagram format from bytearray: Not enough node ids")
 
-        node_ids = list(datagram_bytearray[7:7 + num_node_ids])
+        node_ids = list(datagram_bytearray[NODE_ID_OFFSET:NODE_ID_OFFSET + num_node_ids])
 
-        data_size = self._convert_from_bytearray(datagram_bytearray[7 + num_node_ids:], 2)
+        data_size = self._convert_from_bytearray(
+            datagram_bytearray[NODE_ID_OFFSET + num_node_ids:], 2)
 
-        if len(datagram_bytearray) != 9 + num_node_ids + data_size:
+        if len(datagram_bytearray) != MIN_BYTEARRAY_SIZE + num_node_ids + data_size:
             print("Data size: ", data_size)
             raise Exception("Invalid Datagram format from bytearray: Not enough data bytes")
 
-        data = datagram_bytearray[7 + num_node_ids + 2:]
+        data = datagram_bytearray[NODE_ID_OFFSET + num_node_ids + DATA_SIZE_SIZE:]
 
         self._protocol_version = protocol_version
         self._datagram_type_id = datagram_type_id
@@ -69,14 +78,12 @@ class Datagram:
         self._data = data
 
     def serialize(self):
-        """This function updates the bytearray based on data."""
+        """This function returns a bytearray based on set data."""
 
         node_crc32 = zlib.crc32(bytearray(self._node_ids))
-        node_crc32 = bytearray([node_crc32 & 0xff, (node_crc32 >> (8 * 1)) & 0xff,
-                                (node_crc32 >> (8 * 2)) & 0xff, (node_crc32 >> (8 * 3)) & 0xff])
+        node_crc32 = self._convert_to_bytearray(node_crc32, 4)
         data_crc32 = zlib.crc32(self._data)
-        data_crc32 = bytearray([data_crc32 & 0xff, (data_crc32 >> (8 * 1)) & 0xff,
-                                (data_crc32 >> (8 * 2)) & 0xff, (data_crc32 >> (8 * 3)) & 0xff])
+        data_crc32 = self._convert_to_bytearray(data_crc32, 4)
 
         crc32_array = bytearray([self._datagram_type_id,
                                  len(self._node_ids),
@@ -86,8 +93,7 @@ class Datagram:
                                  *data_crc32])
         # Update the crc32
         crc32 = zlib.crc32(crc32_array)
-        crc32 = bytearray([crc32 & 0xff, (crc32 >> (8 * 1)) & 0xff,
-                           (crc32 >> (8 * 2)) & 0xff, (crc32 >> (8 * 3)) & 0xff])
+        crc32 = self._convert_to_bytearray(crc32, 4)
 
         # Update the bytearray
         return bytearray([self._protocol_version,
@@ -195,7 +201,7 @@ class DatagramSender:
 
         chunk_messages = self._chunkify(message.serialize(), 8)
         can_messages = []
-        message_arbitration_id = 0b00000010000
+        message_arbitration_id = CAN_START_ARBITRATION_ID
         message_extended_arbitration = False
 
         # Populate an array with the can message from the library
@@ -205,7 +211,7 @@ class DatagramSender:
                                             is_extended_id=message_extended_arbitration))
 
             # After the first message, set the arbitration ID to 0
-            message_arbitration_id = 0b00000000000
+            message_arbitration_id = CAN_ARBITRATION_ID
 
         # Send the messages
         try:
