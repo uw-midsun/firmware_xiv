@@ -41,7 +41,7 @@ void test_watchdog_expiry(void) {
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
   TEST_ASSERT_FALSE(s_expiry_called);
 
-  delay_ms(TIMEOUT_MS + 5);
+  delay_ms(TIMEOUT_MS + 50);
 
   TEST_ASSERT_TRUE(s_expiry_called);
   TEST_ASSERT_EQUAL(&context_data, s_passed_context);
@@ -67,7 +67,7 @@ void test_watchdog_expired_does_not_call_callback_multiple_times(void) {
   uint32_t context_data = 0xdeadbeef;
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
 
-  delay_ms(TIMEOUT_MS + 5);
+  delay_ms(TIMEOUT_MS + 20);
 
   TEST_ASSERT_TRUE(s_expiry_called);
   TEST_ASSERT_EQUAL(&context_data, s_passed_context);
@@ -82,7 +82,7 @@ void test_watchdog_expired_can_start_again(void) {
   watchdog_start(&s_watchdog, TIMEOUT_MS, prv_expiry_callback, &context_data);
 
   // its expired
-  delay_ms(TIMEOUT_MS + 5);
+  delay_ms(TIMEOUT_MS + 20);
   TEST_ASSERT_TRUE(s_expiry_called);
   prv_reset_callback();
 

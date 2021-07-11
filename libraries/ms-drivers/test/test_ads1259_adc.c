@@ -12,6 +12,7 @@
 #define NUM_CONFIG_REGISTERS 3
 #define TEST_CHK_SUM_FLAG_BIT 0x80
 #define TEST_DATA_SETTLING_TIME_MS 17
+#define DATA_SETTLING_BUFFER_MS 3
 
 #define TEST_BAUDRATE 60000
 #define TEST_MOSI_PIN \
@@ -210,7 +211,7 @@ void test_ads1259_get_conversion_data() {
   s_test_mode = ADS1259_MODE_MAX_POS_DATA;
   uint32_t test_raw = 0x7FFFFF;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   TEST_ASSERT_EQUAL(0xFF, s_storage.conv_data.LSB | s_storage.conv_data.MID);
   TEST_ASSERT_EQUAL(0x7F, s_storage.conv_data.MSB);
   // Math changed as a result of hardware testing, so assertions on s_storage.reading are wrong.
@@ -222,32 +223,32 @@ void test_ads1259_get_conversion_data() {
   s_test_mode = ADS1259_MODE_MAX_NEG_DATA;
   test_raw = 0x800000;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   // TEST_ASSERT_EQUAL(-50, s_storage.reading);
 
   // test with min readable pos data
   s_test_mode = ADS1259_MODE_MIN_POS_DATA;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   // TEST_ASSERT_EQUAL(0.000095, s_storage.reading);
 
   // test with min readable neg data
   s_test_mode = ADS1259_MODE_MIN_NEG_DATA;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   // TEST_ASSERT_EQUAL(-0.000095, s_storage.reading);
 
   // test with zero data
   s_test_mode = ADS1259_MODE_ZERO_DATA;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   // TEST_ASSERT_EQUAL(0, s_storage.reading);
 
   // test with a random data set
   s_test_mode = ADS1259_MODE_MIXED_DATA;
   test_raw = 0x102030;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   TEST_ASSERT_EQUAL(0x10, s_storage.conv_data.MSB);
   TEST_ASSERT_EQUAL(0x20, s_storage.conv_data.MID);
   TEST_ASSERT_EQUAL(0x30, s_storage.conv_data.LSB);
@@ -258,13 +259,13 @@ void test_ads1259_get_conversion_data() {
   s_test_mode = ADS1259_MODE_CHECKSUM_FAULT;
   s_checksum = false;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   TEST_ASSERT_TRUE(s_checksum);
 
   // test out of range flag triggered
   s_test_mode = ADS1259_MODE_OUT_RANGE_FLAG_TRIGGERED;
   s_out_of_range = false;
   ads1259_get_conversion_data(&s_storage);
-  delay_ms(TEST_DATA_SETTLING_TIME_MS);
+  delay_ms(TEST_DATA_SETTLING_TIME_MS + DATA_SETTLING_BUFFER_MS);
   TEST_ASSERT_TRUE(s_out_of_range);
 }
