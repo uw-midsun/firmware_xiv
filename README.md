@@ -73,6 +73,12 @@ make codegen
 
 # Generate dbc file
 make codegen_dbc
+
+# Generate code coverage reports. Note: ALL projects must have been compiled with coverage symbols 
+# Only works for x86 with GCC currently.
+# After running clean, build_all COVERAGE=true, and test_all, run
+make codecov
+# and open codecov/index.html to view the report. 
 ```
 
 We use [GNU Make](https://www.gnu.org/software/make/manual/) for our build system. See [Managing Projects with GNU Make, 3.Xth Edition](http://wanderinghorse.net/computing/make/book/ManagingProjectsWithGNUMake-3.1.3.pdf) for a fantastic supplement to the manual.

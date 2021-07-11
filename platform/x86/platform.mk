@@ -6,6 +6,8 @@ ifeq (,$(COMPILER))
   $(error Invalid compiler. Expected: $(VALID_COMPILERS))
 endif
 
+COVERAGE := false
+
 CC := $(COMPILER)
 LD := $(COMPILER)
 OBJCPY := objcopy
