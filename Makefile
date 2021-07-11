@@ -354,7 +354,7 @@ codecov:
 	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
 	lcov --capture --directory . --output-file coverage.info && \
 	lcov -r coverage.info '/usr/include/*' '*build/gen/x86/*' '*libraries/unity/*' -o coverage.info && \
-	genhtml coverage.info --output-directory out --legend --show-details
+	genhtml coverage.info --output-directory ../../../codecov --legend --show-details
 
 $(DIRS):
 	@mkdir -p $@
