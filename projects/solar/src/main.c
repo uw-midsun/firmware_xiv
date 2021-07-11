@@ -95,7 +95,7 @@ static StatusCode prv_initialize_sense_modules(SolarMpptCount mppt_count) {
 }
 
 static StatusCode prv_initialize_action_modules(SolarMpptCount mppt_count) {
-  status_ok_or_return(relay_fsm_init(&s_relay_fsm_storage));
+  status_ok_or_return(relay_fsm_init(&s_relay_fsm_storage, mppt_count));
   status_ok_or_return(fault_handler_init(config_get_fault_handler_settings(mppt_count)));
   status_ok_or_return(command_rx_init());
   return STATUS_CODE_OK;
