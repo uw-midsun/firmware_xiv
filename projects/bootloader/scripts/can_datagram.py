@@ -11,6 +11,8 @@ CAN_BITRATE = 500000
 MESSAGE_SIZE = 8
 HEADER_SIZE = 6
 
+MIN_BYTEARRAY_SIZE = 9
+
 
 class Datagram:
     """This class acts as an easy modular interface for a datagram."""
@@ -37,35 +39,34 @@ class Datagram:
         assert isinstance(datagram_bytearray, bytearray)
 
         # "theoretical" lower limit:
-        # 1 (prot) + 4 (crc32) + 1 (type) + 1 (num nodes) + 1 (nodes) + 2 (data size) + 1 (data)
-        #   = 11
-        assert len(datagram_bytearray) > 11
+        # 1 (prot) + 4 (crc32) + 1 (type) + 1 (num nodes) + 0 (nodes) + 2 (data size) + 0 (data)
+        #   = 9
+        if len(datagram_bytearray) < MIN_BYTEARRAY_SIZE:
+            raise Exception(
+                "Invalid Datagram format from bytearray: Does not meet minimum size requirement")
+
         protocol_version = datagram_bytearray[0]
         datagram_type_id = datagram_bytearray[5]
 
         num_node_ids = datagram_bytearray[6]
-        assert len(datagram_bytearray) > 7 + num_node_ids
-        node_ids = []
-        i = 0
-        while i < num_node_ids:
-            node_ids.append(datagram_bytearray[7 + i])
-            i += 1
 
-        assert len(datagram_bytearray) > 7 + num_node_ids
-        data_size = (datagram_bytearray[7 + num_node_ids] &
-                     0xff) << 8 | datagram_bytearray[7 + num_node_ids + 1] & 0xff
+        if len(datagram_bytearray) < MIN_BYTEARRAY_SIZE + num_node_ids:
+            raise Exception("Invalid Datagram format from bytearray: Not enough node ids")
 
-        assert len(datagram_bytearray) == 7 + num_node_ids + 2 + data_size
-        data = []
-        i = 0
-        while i < data_size:
-            data.append(datagram_bytearray[7 + num_node_ids + 2 + i])
-            i += 1
+        node_ids = list(datagram_bytearray[7:7 + num_node_ids])
+
+        data_size = self._convert_from_bytearray(datagram_bytearray[7 + num_node_ids:], 2)
+
+        if len(datagram_bytearray) != 9 + num_node_ids + data_size:
+            print("Data size: ", data_size)
+            raise Exception("Invalid Datagram format from bytearray: Not enough data bytes")
+
+        data = datagram_bytearray[7 + num_node_ids + 2:]
 
         self._protocol_version = protocol_version
         self._datagram_type_id = datagram_type_id
         self._node_ids = node_ids
-        self._data = bytearray(data)
+        self._data = data
 
     def serialize(self):
         """This function updates the bytearray based on data."""
@@ -94,8 +95,8 @@ class Datagram:
                           self._datagram_type_id,
                           len(self._node_ids),
                           *(self._node_ids),
-                          (len(self._data) >> 8) & 0xff,
                           len(self._data) & 0xff,
+                          (len(self._data) >> 8) & 0xff,
                           *(self._data)])
 
     # Accessors and mutators for the datagram
@@ -161,6 +162,18 @@ class Datagram:
         # Verify all inputs
         assert kwargs["protocol_version"] & 0xff == kwargs["protocol_version"]
         assert kwargs["datagram_type_id"] & 0xff == kwargs["datagram_type_id"]
+
+    def _convert_to_bytearray(self, in_value, bytes):
+        out_bytearray = bytearray()
+        for i in range(0, bytes):
+            out_bytearray.append((in_value >> (8 * i)) & 0xff)
+        return out_bytearray
+
+    def _convert_from_bytearray(self, in_bytearray, bytes):
+        value = 0
+        for i in range(0, bytes):
+            value = value | ((in_bytearray[i] & 0xff) << (i * 8))
+        return value
 
 
 class DatagramSender:
@@ -251,11 +264,11 @@ class DatagramListener(can.BufferedReader):
             if self.num_node_id < bytes_remaining:
                 bytes_remaining = bytes_remaining - self.num_node_id
                 if bytes_remaining == 1:
-                    self.num_data_bytes = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 8
+                    self.num_data_bytes = first_bytearray[HEADER_SIZE + self.num_node_id + 1]
                     self.incomplete_data_bytes = True
                 elif bytes_remaining >= 2:
-                    upper_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 1] << 8
-                    lower_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 2]
+                    upper_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 2] << 8
+                    lower_bits = first_bytearray[HEADER_SIZE + self.num_node_id + 1]
                     self.num_data_bytes = upper_bits | lower_bits
                     self.incomplete_data_bytes = False
 
@@ -290,10 +303,11 @@ class DatagramListener(can.BufferedReader):
                 else:
                     bytes_remaining = MESSAGE_SIZE - self.num_node_id
                     if bytes_remaining == 1:
-                        self.num_data_bytes = message_bytearray[self.num_node_id] << 8
+                        self.num_data_bytes = message_bytearray[self.num_node_id]
                         self.incomplete_data_bytes = True
                     elif bytes_remaining >= 2:
-                        self.num_data_bytes = message_bytearray[self.num_node_id] << 8 | message_bytearray[self.num_node_id + 1]
+                        self.num_data_bytes = (
+                            message_bytearray[self.num_node_id + 1] << 8) | message_bytearray[self.num_node_id]
                         self.incomplete_data_bytes = False
 
                         if bytes_remaining > 2:
@@ -313,7 +327,7 @@ class DatagramListener(can.BufferedReader):
                 # If we only got half of the data bytes
                 bytes_remaining = MESSAGE_SIZE
                 if self.incomplete_data_bytes:
-                    self.num_data_bytes = self.num_data_bytes | message_bytearray[0]
+                    self.num_data_bytes = (message_bytearray[0] << 8) | self.num_data_bytes
                     bytes_remaining -= 1
                 # If we already have the data bytes, use how many is remaining (otherwise
                 # it was just set)
