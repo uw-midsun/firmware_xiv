@@ -1,9 +1,10 @@
 #pragma once
-// Fan control for MCI.  Currently hardcoded to turn the fan on to 100%
-// Requires GPIO to be initialized
+// Fan control for MCI based on thermistor status pins.
+// Requires GPIO, interrupts, and gpio interrupts to be initialized.
 #include <inttypes.h>
 
 #include "status.h"
+#include "gpio.h"
 
 // General pin definitions:
 #define MCI_FAN_EN_ADDR \
@@ -25,7 +26,7 @@
 #define MCI_Q3_OVERTEMP_ADDR \
   { GPIO_PORT_A, 7 }
 
-// Fault types
+// Thermistor indices
 typedef enum {
   MCI_THERM_DISCHARGE_OVERTEMP = 0,
   MCI_THERM_PRECHARGE_OVERTEMP,
@@ -33,6 +34,8 @@ typedef enum {
   MCI_THERM_Q3_OVERTEMP,
   NUM_MCI_FAN_CONTROL_THERMS,
 } MciFanControlTherm;
+
+extern const GpioAddress g_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS];
 
 // Fan states
 typedef enum {

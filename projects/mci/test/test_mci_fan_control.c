@@ -4,6 +4,7 @@
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "ms_test_helpers.h"
+#include "log.h"
 
 // Initialize fan control with no callbacks.
 static void prv_init_fan(void) {
@@ -94,7 +95,7 @@ void test_general_fault(void) {
   s_test_get_state = GPIO_STATE_HIGH;
   gpio_it_trigger_interrupt(&test_pin);
   TEST_ASSERT_EQUAL(1, s_times_cb_called);
-  TEST_ASSERT_EQUAL((1 << MCI_THERM_Q1_OVERTEMP), s_fault_bitset);
+  TEST_ASSERT_EQUAL((1 << MCI_FAULT_Q1_OVERTEMP), s_fault_bitset);
   // Fan should now be on
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
@@ -105,6 +106,26 @@ void test_general_fault(void) {
   TEST_ASSERT_EQUAL(0, s_fault_bitset);
   // Fan should now be off
   TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_test_en_set_state);
+}
+
+// Same as above, but without a callback to make sure there aren't any segfaults.
+void test_fault_no_cb(void) {
+  prv_init_fan();
+
+  TEST_ASSERT_EQUAL(0, s_times_cb_called);
+  TEST_ASSERT_EQUAL(0, s_fault_bitset);
+
+  // Q1 overtemp
+  GpioAddress test_pin = MCI_Q1_OVERTEMP_ADDR;
+  s_test_get_state = GPIO_STATE_HIGH;
+  gpio_it_trigger_interrupt(&test_pin);
+
+  // Callback shouldn't have been called
+  TEST_ASSERT_EQUAL(0, s_times_cb_called);
+  TEST_ASSERT_EQUAL(0, s_fault_bitset);
+
+  // Fan should now be on
+  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 }
 
 // Test all faults

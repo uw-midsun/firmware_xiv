@@ -9,14 +9,14 @@ static MciFanControlStorage storage;
 static const GpioAddress s_en_addr = MCI_FAN_EN_ADDR;
 
 // Thermistor pins
-static const GpioAddress s_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS] = {
+const GpioAddress g_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS] = {
   [MCI_THERM_DISCHARGE_OVERTEMP] = MCI_DISCHARGE_OVERTEMP_ADDR,
   [MCI_THERM_PRECHARGE_OVERTEMP] = MCI_PRECHARGE_OVERTEMP_ADDR,
   [MCI_THERM_Q1_OVERTEMP] = MCI_Q1_OVERTEMP_ADDR,
   [MCI_THERM_Q3_OVERTEMP] = MCI_Q3_OVERTEMP_ADDR,
 };
 
-// Store thermistor indices to pass as context to interrupt callback
+// Store fault indices to pass as context to interrupt callback
 static const uint8_t s_therm_indices[NUM_MCI_FAN_CONTROL_THERMS] = {
   [MCI_THERM_DISCHARGE_OVERTEMP] = MCI_THERM_DISCHARGE_OVERTEMP,
   [MCI_THERM_PRECHARGE_OVERTEMP] = MCI_THERM_PRECHARGE_OVERTEMP,
@@ -30,7 +30,7 @@ static void prv_handle_therm_it(const GpioAddress *address, void *context) {
   uint8_t index = *((uint8_t *)(context));
 
   GpioState state = NUM_GPIO_STATES;
-  gpio_get_state(&s_therm_addrs[index], &state);
+  gpio_get_state(&g_therm_addrs[index], &state);
 
   if (state == GPIO_STATE_HIGH) {
     // Set fault
@@ -53,7 +53,7 @@ static void prv_handle_therm_it(const GpioAddress *address, void *context) {
   }
 }
 
-// Set up a thermistor pin for interrupts
+// Set up a thermistor pin for interrupts.
 static StatusCode prv_configure_therm_it(GpioAddress *address, uint8_t pin_idx) {
   const GpioSettings settings = { .direction = GPIO_DIR_IN,
                                   .state = GPIO_STATE_LOW,
@@ -85,9 +85,9 @@ StatusCode mci_fan_control_init(MciFanControlSettings *settings) {
   storage.fault_cb = settings->fault_cb;
   storage.fault_context = settings->fault_context;
 
-  // Configure thermistor interrupts
+  // Configure all thermistor pins
   for (uint8_t i = 0; i < NUM_MCI_FAN_CONTROL_THERMS; i++) {
-    status_ok_or_return(prv_configure_therm_it(&s_therm_addrs[i], i));
+    status_ok_or_return(prv_configure_therm_it(&g_therm_addrs[i], i));
   }
 
   return STATUS_CODE_OK;
