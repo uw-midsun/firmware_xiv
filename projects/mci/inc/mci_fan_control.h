@@ -9,10 +9,6 @@
 #define MCI_FAN_EN_ADDR \
   { GPIO_PORT_A, 0 }
 
-// Possibly unused
-#define MCI_FAN_PWM_ADDR \
-  { GPIO_PORT_A, 1 }
-
 // Connected to fan tachometers
 #define MCI_FAN_1_SENSE_ADDR \
   { GPIO_PORT_A, 2 }
