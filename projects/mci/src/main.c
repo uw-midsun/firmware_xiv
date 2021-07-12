@@ -12,6 +12,7 @@
 #include "drive_fsm.h"
 #include "mci_broadcast.h"
 #include "mci_events.h"
+#include "mci_fan_control.h"
 #include "mci_output.h"
 #include "motor_can.h"
 #include "motor_controller.h"
@@ -60,6 +61,14 @@ void prv_mci_storage_init(void *context) {
   mci_output_init(&s_mci_storage.mci_output_storage, &s_can_mcp2515);
 }
 
+void prv_fan_control_init(void) {
+  MciFanControlSettings fan_settings = {
+    .fault_cb = NULL,
+    .fault_context = NULL,
+  };
+  mci_fan_control_init(&fan_settings);
+}
+
 int main(void) {
   event_queue_init();
   interrupt_init();
@@ -70,6 +79,9 @@ int main(void) {
   prv_setup_system_can();
 
   prv_mci_storage_init(&s_mci_storage);
+
+  prv_fan_control_init();
+
   drive_fsm_init();
   Event e = { 0 };
   while (true) {

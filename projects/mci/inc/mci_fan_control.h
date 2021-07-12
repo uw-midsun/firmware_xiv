@@ -1,6 +1,6 @@
 #pragma once
 // Fan control for MCI based on thermistor status pins.
-// Requires GPIO, interrupts, and gpio interrupts to be initialized.
+// Requires GPIO, interrupts, and GPIO interrupts to be initialized.
 #include <inttypes.h>
 
 #include "gpio.h"
