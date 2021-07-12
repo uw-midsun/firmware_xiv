@@ -3,8 +3,8 @@
 // Requires GPIO, interrupts, and gpio interrupts to be initialized.
 #include <inttypes.h>
 
-#include "status.h"
 #include "gpio.h"
+#include "status.h"
 
 // General pin definitions:
 #define MCI_FAN_EN_ADDR \
@@ -35,6 +35,7 @@ typedef enum {
   NUM_MCI_FAN_CONTROL_THERMS,
 } MciFanControlTherm;
 
+// Expose addresses for testing
 extern const GpioAddress g_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS];
 
 // Fan states

@@ -3,8 +3,8 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
-#include "ms_test_helpers.h"
 #include "log.h"
+#include "ms_test_helpers.h"
 
 // Initialize fan control with no callbacks.
 static void prv_init_fan(void) {
@@ -91,17 +91,16 @@ void test_general_fault(void) {
   TEST_ASSERT_EQUAL(0, s_fault_bitset);
 
   // Q1 overtemp
-  GpioAddress test_pin = MCI_Q1_OVERTEMP_ADDR;
   s_test_get_state = GPIO_STATE_HIGH;
-  gpio_it_trigger_interrupt(&test_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q1_OVERTEMP]);
   TEST_ASSERT_EQUAL(1, s_times_cb_called);
-  TEST_ASSERT_EQUAL((1 << MCI_FAULT_Q1_OVERTEMP), s_fault_bitset);
+  TEST_ASSERT_EQUAL((1 << MCI_THERM_Q1_OVERTEMP), s_fault_bitset);
   // Fan should now be on
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear fault
   s_test_get_state = GPIO_STATE_LOW;
-  gpio_it_trigger_interrupt(&test_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q1_OVERTEMP]);
   TEST_ASSERT_EQUAL(2, s_times_cb_called);
   TEST_ASSERT_EQUAL(0, s_fault_bitset);
   // Fan should now be off
@@ -116,9 +115,8 @@ void test_fault_no_cb(void) {
   TEST_ASSERT_EQUAL(0, s_fault_bitset);
 
   // Q1 overtemp
-  GpioAddress test_pin = MCI_Q1_OVERTEMP_ADDR;
   s_test_get_state = GPIO_STATE_HIGH;
-  gpio_it_trigger_interrupt(&test_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q1_OVERTEMP]);
 
   // Callback shouldn't have been called
   TEST_ASSERT_EQUAL(0, s_times_cb_called);
@@ -141,8 +139,7 @@ void test_all_faults(void) {
   s_test_get_state = GPIO_STATE_HIGH;
 
   // Q1 overtemp
-  GpioAddress test_q1_pin = MCI_Q1_OVERTEMP_ADDR;
-  gpio_it_trigger_interrupt(&test_q1_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q1_OVERTEMP]);
   TEST_ASSERT_EQUAL(1, s_times_cb_called);
   test_expected_bitset |= (1 << MCI_THERM_Q1_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
@@ -151,18 +148,16 @@ void test_all_faults(void) {
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Add Q3 overtemp
-  GpioAddress test_q3_pin = MCI_Q1_OVERTEMP_ADDR;
-  gpio_it_trigger_interrupt(&test_q3_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q3_OVERTEMP]);
   TEST_ASSERT_EQUAL(2, s_times_cb_called);
-  test_expected_bitset |= (1 << MCI_THERM_Q1_OVERTEMP);
+  test_expected_bitset |= (1 << MCI_THERM_Q3_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
 
   // Fan should still be on
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Add discharge overtemp
-  GpioAddress test_discharge_pin = MCI_DISCHARGE_OVERTEMP_ADDR;
-  gpio_it_trigger_interrupt(&test_discharge_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_DISCHARGE_OVERTEMP]);
   TEST_ASSERT_EQUAL(3, s_times_cb_called);
   test_expected_bitset |= (1 << MCI_THERM_DISCHARGE_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
@@ -171,8 +166,7 @@ void test_all_faults(void) {
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Add precharge overtemp
-  GpioAddress test_precharge_pin = MCI_PRECHARGE_OVERTEMP_ADDR;
-  gpio_it_trigger_interrupt(&test_precharge_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_PRECHARGE_OVERTEMP]);
   TEST_ASSERT_EQUAL(4, s_times_cb_called);
   test_expected_bitset |= (1 << MCI_THERM_PRECHARGE_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
@@ -184,7 +178,7 @@ void test_all_faults(void) {
   s_test_get_state = GPIO_STATE_LOW;
 
   // Clear Q1 overtemp
-  gpio_it_trigger_interrupt(&test_q1_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q1_OVERTEMP]);
   TEST_ASSERT_EQUAL(5, s_times_cb_called);
   test_expected_bitset &= ~(1 << MCI_THERM_Q1_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
@@ -193,16 +187,16 @@ void test_all_faults(void) {
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear Q3 overtemp
-  gpio_it_trigger_interrupt(&test_q3_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_Q3_OVERTEMP]);
   TEST_ASSERT_EQUAL(6, s_times_cb_called);
-  test_expected_bitset &= ~(1 << MCI_THERM_Q1_OVERTEMP);
+  test_expected_bitset &= ~(1 << MCI_THERM_Q3_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
 
   // Fan should still be on
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear discharge overtemp
-  gpio_it_trigger_interrupt(&test_discharge_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_DISCHARGE_OVERTEMP]);
   TEST_ASSERT_EQUAL(7, s_times_cb_called);
   test_expected_bitset &= ~(1 << MCI_THERM_DISCHARGE_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
@@ -211,7 +205,7 @@ void test_all_faults(void) {
   TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear precharge overtemp
-  gpio_it_trigger_interrupt(&test_precharge_pin);
+  gpio_it_trigger_interrupt(&g_therm_addrs[MCI_THERM_PRECHARGE_OVERTEMP]);
   TEST_ASSERT_EQUAL(8, s_times_cb_called);
   test_expected_bitset &= ~(1 << MCI_THERM_PRECHARGE_OVERTEMP);
   TEST_ASSERT_EQUAL(test_expected_bitset, s_fault_bitset);
