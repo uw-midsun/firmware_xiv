@@ -38,7 +38,6 @@ typedef enum {
 // Expose addresses for testing
 extern const GpioAddress g_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS];
 
-// Fan states
 typedef enum {
   MCI_FAN_STATE_OFF = 0,
   MCI_FAN_STATE_ON,
@@ -59,7 +58,8 @@ typedef struct {
   uint8_t fault_bitset;
 } MciFanControlStorage;
 
-// Initialize fan control and turn on the fan.
+// Initialize fan control with the fan off.
 StatusCode mci_fan_control_init(MciFanControlSettings *settings);
 
+// Turn the fan on or off.
 StatusCode mci_fan_set_state(MciFanState state);
