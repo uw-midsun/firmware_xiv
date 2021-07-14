@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "test_helpers.h"
 #include "ms_test_helpers.h"
+#include "test_helpers.h"
 
 #include "can.h"
 #include "can_msg_defs.h"
@@ -25,8 +25,8 @@
 
 #include "mci_events.h"
 #include "motor_can.h"
-#include "wavesculptor.h"
 #include "regen_braking.h"
+#include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
 #define TEST_MCI_OUTPUT_THRESHOLD 0.01f
