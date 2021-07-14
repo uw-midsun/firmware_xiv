@@ -21,6 +21,7 @@
 #include "power_main_sequence.h"
 #include "power_off_sequence.h"
 #include "race_switch.h"
+#include "regen_braking_toggle.h"
 #include "soft_timer.h"
 #include "speed_monitor.h"
 #include "wait.h"
@@ -101,6 +102,7 @@ int main(void) {
       led_manager_process_event(&e);
       race_switch_fsm_process_event(&s_race_switch_fsm_storage, &e);
       brake_light_control_process_event(&e);
+      regen_braking_process_event(&e);
     }
     wait();
   }

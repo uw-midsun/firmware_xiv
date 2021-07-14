@@ -14,5 +14,5 @@ $(T)_EXCLUDE_TESTS := precharge
 $(T)_test_drive_fsm_MOCKS := get_precharge_state
 $(T)_test_cruise_rx_MOCKS := get_precharge_state
 $(T)_test_mci_output_MOCKS := mcp2515_tx drive_fsm_get_drive_state
-$(T)_test_mci_broadcast_MOCKS := mcp2515_tx
+$(T)_test_mci_broadcast_MOCKS := 
 endif

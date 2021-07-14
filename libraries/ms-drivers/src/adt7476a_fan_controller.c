@@ -48,6 +48,7 @@ static void prv_init_store(void) {
   s_store.n_status = NUM_ADT_PWM_PORTS;
   s_store.status = malloc(NUM_ADT_PWM_PORTS * sizeof(protobuf_c_boolean));
   store_register(MU_STORE_TYPE__ADT7476A, funcs, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADT7476A, &s_store, NULL);
 }
 #endif
 

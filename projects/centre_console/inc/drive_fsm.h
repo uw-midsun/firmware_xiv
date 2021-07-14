@@ -8,7 +8,6 @@
 
 // Requires CAN, GPIO, soft timers, event queue, and interrupts to be initialized.
 
-#include "ebrake_tx.h"
 #include "fsm.h"
 #include "mci_output_tx.h"
 #include "precharge_monitor.h"
@@ -16,7 +15,16 @@
 #include "status.h"
 #include "stdbool.h"
 
+// Temporary defines to be updated when parking brake sensor added
+#define TEST_PARKING_BRAKE_STATE PARKING_BRAKE_STATE_RELEASED
 #define PRECHARGE_TIMEOUT_S 4
+
+// Temporary enum to be updated when parking brake sensor added
+typedef enum {
+  PARKING_BRAKE_STATE_PRESSED = 0,
+  PARKING_BRAKE_STATE_RELEASED,
+  NUM_PARKING_BRAKE_STATES
+} ParkingBrakeState;
 
 typedef enum {
   DRIVE_STATE_NEUTRAL = 0,
@@ -32,7 +40,6 @@ typedef struct DriveFsmStorage {
   DriveState destination;
   DriveState current_state;
   PrechargeMonitor precharge_monitor_storage;
-  EbrakeTxStorage ebrake_storage;
   MciOutputTxStorage mci_output_storage;
 } DriveFsmStorage;
 
