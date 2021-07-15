@@ -147,7 +147,6 @@ bool can_process_event(const Event *e) {
     LOG_WARN("CAN Storage uninitialized\n");
     return false;
   }
-
   return fsm_process_event(&s_can_storage->fsm, e);
 }
 

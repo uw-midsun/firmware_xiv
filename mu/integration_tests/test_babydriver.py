@@ -15,8 +15,6 @@ from mu.integration_tests import int_test
 from mu.harness.board_sim import BoardSim
 
 
-
-
 class TestBabyDriver(int_test.IntTest):
     def setUp(self):
         super().setUp()

@@ -1,8 +1,10 @@
 #pragma once
 // GPIO HAL interface for the PCA9539RPW/Q900J GPIO expander.
 // Requires I2C to be initialized.
+// If you want to subscribe to interrupts, you must initialize GPIO interrupts.
 // Note: we don't check the validity of the I2C address, and it can only be used on one
 // I2C port on one board.
+#include "gpio_it.h"
 #include "i2c.h"
 
 // Addresses of the 16 pins.
@@ -51,6 +53,8 @@ typedef struct {
   Pca9539rGpioState state;
 } Pca9539rGpioSettings;
 
+typedef GpioItCallback Pca9539rInterruptCallback;
+
 // Initialize PCA9539R GPIO at this I2C port and address.
 StatusCode pca9539r_gpio_init(const I2CPort i2c_port, const I2CAddress i2c_address);
 
@@ -68,3 +72,10 @@ StatusCode pca9539r_gpio_toggle_state(const Pca9539rGpioAddress *address);
 // Get the value of the input register for a pin.
 StatusCode pca9539r_gpio_get_state(const Pca9539rGpioAddress *address,
                                    Pca9539rGpioState *input_state);
+
+// Sets up a gpio interrupt on the given pin and calls the callback when it goes low
+
+// Callback MUST CALL gpio_get_state on the (possible) toggled pin(s),
+// This must be done as gpio_get_state is the only way to clear the interrupt
+StatusCode pca9539r_gpio_subscribe_interrupts(const GpioAddress *interrupt_pin,
+                                              Pca9539rInterruptCallback callback, void *context);

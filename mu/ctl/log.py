@@ -2,6 +2,7 @@ import os
 
 from mu.srv.server import TCP_PORT
 
+
 def logs(args):
     if args.sim == '':
         # tail passed twice since execlp passes as argv, where argv[0] should be tail
