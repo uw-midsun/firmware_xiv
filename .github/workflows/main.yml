@@ -111,7 +111,8 @@ jobs:
         
       - name: Build MU protobuf
         run: |
-          make mu_protos
+          make bootloader_protos
+          make mu_protos PROJECT=
       
       - name: Check for uncommitted protobuf changes
         id: check-uncommitted-protobuf-changes
