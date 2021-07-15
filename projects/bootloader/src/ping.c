@@ -6,10 +6,10 @@
 #include "can_datagram.h"
 #include "config.h"
 
-static uint16_t board_id;
+static uint8_t board_id;
 
 static StatusCode prv_tx_callback(uint8_t *data, size_t len, bool is_start_message) {
-  bootloader_can_transmit(board_id, data, len, is_start_message);
+  return bootloader_can_transmit(board_id, data, len, is_start_message);
 }
 
 // get the controller_board_id, if the config is not set, return 0xFF (not a valid id)
@@ -23,7 +23,7 @@ static uint8_t prv_get_board_id(void) {
 
 // send a ping response datagram
 StatusCode ping_response(void) {
-  board_id = prv_getBoard_id();
+  board_id = prv_get_board_id();
 
   CanDatagramTxConfig response_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_PING_RESPONSE,
