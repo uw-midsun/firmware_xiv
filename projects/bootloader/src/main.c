@@ -51,7 +51,7 @@ int main(void) {
   bootloader_can_init(&s_can_storage, &can_settings);
   can_datagram_init(&datagram_settings);
 
-  // dispatcher_init();
+  dispatcher_init();
   flash_init();
   interrupt_init();
   soft_timer_init();
@@ -68,6 +68,8 @@ int main(void) {
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
     }
+    can_process_event(&e);
+    can_datagram_process_event(&e);
     // I forgot how to do this :( event loop
   }
 
