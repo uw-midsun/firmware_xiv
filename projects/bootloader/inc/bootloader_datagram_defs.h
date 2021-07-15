@@ -26,4 +26,6 @@ typedef enum {
 
   // Id used by client to flash an application
   BOOTLOADER_DATAGRAM_FLASH_APP = 7,
-} BootloaderDatagramID;
+
+  NUM_BOOTLOADER_DATAGRAMS,
+} BootloaderDatagramId;

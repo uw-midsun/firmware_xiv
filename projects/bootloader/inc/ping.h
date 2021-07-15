@@ -3,6 +3,6 @@
 // This module impliments the ping operation on the bootloader
 #include "status.h"
 
-// send a datagram response to a ping message
-// datagram will have an ID of BOOTLOADER_DATAGRAM_PING_RESPONSE(3), and data contains the board id.
-StatusCode ping_response(void);
+// setup the ping response, when a ping is recieved, a response with
+// Datagram Id BOOTLOADER_DATAGRAM_PING_RESPONSE(3) will be sent, with data of the board id.
+StatusCode ping_init(void);
