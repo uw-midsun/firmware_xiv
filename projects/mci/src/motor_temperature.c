@@ -43,11 +43,30 @@ static void prv_handle_dsp_temperature_rx(const GenericCanMsg *msg, void *contex
 static void prv_temperature_tx(MotorTemperatureStorage *storage) {
   MotorTemperatureMeasurements measurements = storage->measurements;
   // Not finished: transmit CAN message
+
+  // Handle DSP temperature
+  uint32_t left_dsp = (uint32_t)measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c;
+  uint32_t right_dsp = (uint32_t)measurements.dsp_measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c;
+  CAN_TRANSMIT_MOTOR_TEMPS(left_dsp, right_dsp);
+
+  // Handle motor temperature
+  uint32_t left_motor =
+      (uint32_t)measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c;
+  uint32_t right_motor =
+      (uint32_t)measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c;
+  CAN_TRANSMIT_MOTOR_TEMPS(left_motor, right_motor);
+
+  // Handle heat sink temperature
+  uint32_t left_sink =
+      (uint32_t)measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c;
+  uint32_t right_sink =
+      (uint32_t)measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c;
+  CAN_TRANSMIT_MOTOR_TEMPS(left_sink, right_sink);
+
   return;
 }
-
 static void prv_handle_temperature_tx(SoftTimerId timer_id, void *context) {
-  // transmit data through CAN periodically
+  // Transmit data through CAN periodically
   MotorTemperatureStorage *storage = context;
   prv_temperature_tx(storage);
   soft_timer_start_millis(MOTOR_TEMPERATURE_TX_PERIOD_MS, prv_handle_temperature_tx, storage, NULL);
