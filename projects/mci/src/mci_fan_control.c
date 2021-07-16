@@ -3,7 +3,7 @@
 #include "gpio.h"
 #include "gpio_it.h"
 
-static MciFanControlStorage storage;
+static MciFanControlStorage s_storage;
 
 // Enable pin
 static const GpioAddress s_en_addr = MCI_FAN_EN_ADDR;
@@ -34,22 +34,15 @@ static void prv_handle_therm_it(const GpioAddress *address, void *context) {
 
   if (state == GPIO_STATE_HIGH) {
     // Set fault
-    storage.fault_bitset |= 1 << index;
+    s_storage.fault_bitset |= 1 << index;
   } else {
     // Clear fault
-    storage.fault_bitset &= ~(1 << index);
-  }
-
-  // If there's an active fault, fan on.  Otherwise, turn off.
-  if (storage.fault_bitset == 0) {
-    mci_fan_set_state(MCI_FAN_STATE_OFF);
-  } else {
-    mci_fan_set_state(MCI_FAN_STATE_ON);
+    s_storage.fault_bitset &= ~(1 << index);
   }
 
   // Only call the fault callback if it exists
-  if (storage.fault_cb) {
-    storage.fault_cb(storage.fault_bitset, storage.fault_context);
+  if (s_storage.fault_cb) {
+    s_storage.fault_cb(s_storage.fault_bitset, s_storage.fault_context);
   }
 }
 
@@ -82,8 +75,8 @@ StatusCode mci_fan_control_init(MciFanControlSettings *settings) {
   status_ok_or_return(gpio_init_pin(&s_en_addr, &pin_settings));
   status_ok_or_return(mci_fan_set_state(MCI_FAN_STATE_OFF));
 
-  storage.fault_cb = settings->fault_cb;
-  storage.fault_context = settings->fault_context;
+  s_storage.fault_cb = settings->fault_cb;
+  s_storage.fault_context = settings->fault_context;
 
   // Configure all thermistor pins
   for (uint8_t i = 0; i < NUM_MCI_FAN_CONTROL_THERMS; i++) {
@@ -96,4 +89,8 @@ StatusCode mci_fan_control_init(MciFanControlSettings *settings) {
 StatusCode mci_fan_set_state(MciFanState state) {
   GpioState gpio_state = (state == MCI_FAN_STATE_ON);
   return gpio_set_state(&s_en_addr, gpio_state);
+}
+
+uint8_t mci_fan_get_fault_bitset(void) {
+  return s_storage.fault_bitset;
 }

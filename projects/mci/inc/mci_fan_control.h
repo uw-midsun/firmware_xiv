@@ -63,3 +63,6 @@ StatusCode mci_fan_control_init(MciFanControlSettings *settings);
 
 // Turn the fan on or off.
 StatusCode mci_fan_set_state(MciFanState state);
+
+// Returns the fault bitset.
+uint8_t mci_fan_get_fault_bitset(void);

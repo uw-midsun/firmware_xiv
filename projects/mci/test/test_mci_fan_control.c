@@ -55,11 +55,17 @@ static void prv_gen_fault(MciFanControlTherm therm, bool fault) {
   if (fault) {
     s_test_get_state = GPIO_STATE_HIGH;
     gpio_it_trigger_interrupt(&g_therm_addrs[therm]);
+
+    // Check callback fault bitset as well as mci_fan_get_fault_bitset
     TEST_ASSERT_EQUAL(prev_bitset | (1 << therm), s_fault_bitset);
+    TEST_ASSERT_EQUAL(prev_bitset | (1 << therm), mci_fan_get_fault_bitset());
   } else {
     s_test_get_state = GPIO_STATE_LOW;
     gpio_it_trigger_interrupt(&g_therm_addrs[therm]);
+
+    // Check callback fault bitset as well as mci_fan_get_fault_bitset
     TEST_ASSERT_EQUAL(prev_bitset & ~(1 << therm), s_fault_bitset);
+    TEST_ASSERT_EQUAL(prev_bitset & ~(1 << therm), mci_fan_get_fault_bitset());
   }
   TEST_ASSERT_EQUAL(prev_times_cb_called + 1, s_times_cb_called);
 }
@@ -108,13 +114,9 @@ void test_general_fault(void) {
 
   // Q1 overtemp
   prv_gen_fault(MCI_THERM_Q1_OVERTEMP, true);
-  // Fan should now be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear fault
   prv_gen_fault(MCI_THERM_Q1_OVERTEMP, false);
-  // Fan should now be off
-  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_test_en_set_state);
 }
 
 // Same as above, but without a callback to make sure there aren't any segfaults.
@@ -131,9 +133,6 @@ void test_fault_no_cb(void) {
   // Callback shouldn't have been called
   TEST_ASSERT_EQUAL(0, s_times_cb_called);
   TEST_ASSERT_EQUAL(0, s_fault_bitset);
-
-  // Fan should now be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 }
 
 // Test all faults
@@ -147,45 +146,29 @@ void test_all_faults(void) {
 
   // Q1 overtemp
   prv_gen_fault(MCI_THERM_Q1_OVERTEMP, true);
-  // Fan should now be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Add Q3 overtemp
   prv_gen_fault(MCI_THERM_Q3_OVERTEMP, true);
-  // Fan should still be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Add discharge overtemp
   prv_gen_fault(MCI_THERM_DISCHARGE_OVERTEMP, true);
-  // Fan should still be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Add precharge overtemp
   prv_gen_fault(MCI_THERM_PRECHARGE_OVERTEMP, true);
-  // Fan should still be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Now clear all faults in same order they were added:
 
   // Clear Q1 overtemp
   prv_gen_fault(MCI_THERM_Q1_OVERTEMP, false);
-  // Fan should still be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear Q3 overtemp
   prv_gen_fault(MCI_THERM_Q3_OVERTEMP, false);
-  // Fan should still be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear discharge overtemp
   prv_gen_fault(MCI_THERM_DISCHARGE_OVERTEMP, false);
-  // Fan should still be on
-  TEST_ASSERT_EQUAL(GPIO_STATE_HIGH, s_test_en_set_state);
 
   // Clear precharge overtemp
   prv_gen_fault(MCI_THERM_PRECHARGE_OVERTEMP, false);
-  // Fan should now be off
-  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, s_test_en_set_state);
 
   // Double-check that all faults are cleared
   TEST_ASSERT_EQUAL(0, s_fault_bitset);
