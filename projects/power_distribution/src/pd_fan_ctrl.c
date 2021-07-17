@@ -57,13 +57,8 @@ static void prv_front_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_spee
     *fan_speed = 100;
     return;
   }
-  if (v_measured == 0) {
-    // just to be safe to avoid divide-by-zero errors
-    *fan_speed = 0;
-    return;
-  }
-
-  if (v_measured > (FRONT_FAN_CTRL_MAX_VALUE_MV + ADC_EPSILON_MV)) {
+  if ((v_measured == 0)
+   || (v_measured > (FRONT_FAN_CTRL_MAX_VALUE_MV + ADC_EPSILON_MV))) {
     *fan_speed = 0;
     return;
   }

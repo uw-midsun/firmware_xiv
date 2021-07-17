@@ -202,9 +202,15 @@ void test_front_pd_fan_ctrl_pot(void) {
   // Check max, min, and 50% potentiometer values transmit correct
   // values and execute properly
 
+  // set adc to open value
+  adc_ret_val = ADC_MAX_VAL;
+  TEST_ASSERT_EQUAL(STATUS_CODE_OK, pd_fan_ctrl_init(&s_fan_settings, true));
+  delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS + 10);
+  TEST_ASSERT_EQUAL(FAN_MIN_I2C_WRITE, i2c_buf1[1]);
+  TEST_ASSERT_EQUAL(FAN_MIN_I2C_WRITE, i2c_buf2[1]);
+
   // set adc to return max value
   adc_ret_val = FRONT_FAN_CTRL_MAX_VALUE_MV;
-  TEST_ASSERT_EQUAL(STATUS_CODE_OK, pd_fan_ctrl_init(&s_fan_settings, true));
   delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS + 10);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
