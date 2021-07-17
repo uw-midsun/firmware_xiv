@@ -1,3 +1,5 @@
+#include "pd_fan_ctrl.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -6,7 +8,6 @@
 #include "can_transmit.h"
 #include "log.h"
 #include "pd_error_defs.h"
-#include "pd_fan_ctrl.h"
 #include "pd_fan_ctrl_defs.h"
 #include "soft_timer.h"
 
@@ -57,8 +58,7 @@ static void prv_front_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_spee
     *fan_speed = 100;
     return;
   }
-  if ((v_measured == 0)
-   || (v_measured > (FRONT_FAN_CTRL_MAX_VALUE_MV + ADC_EPSILON_MV))) {
+  if ((v_measured == 0) || (v_measured > (FRONT_FAN_CTRL_MAX_VALUE_MV + ADC_EPSILON_MV))) {
     *fan_speed = 0;
     return;
   }
