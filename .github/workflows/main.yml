@@ -110,7 +110,7 @@ jobs:
           git update-index --refresh || true
           git diff-index --quiet HEAD --        
         
-      - name: Build MU and bootloader protobufs
+      - name: Build MU and bootloader protobufs # Currently uses old protobuf compiler
         run: |
           make bootloader_protos
           make mu_protos
