@@ -20,9 +20,15 @@
 #include "wait.h"
 
 #define SPI_PORT SPI_PORT_2
-// this is the mux output pin
-// or the address of the spv1020, change it according to which spv1020 you want to read
-#define SPV1020 0
+
+// these are the addresses of the spv1020s to read from
+static uint8_t s_test_devices[] = { 0, 1, 2 };
+
+// Set this to 1 if testing current sense, 0 otherwise
+#define RELAY_ENABLE 1
+
+#define RELAY_EN_PIN \
+  { .port = GPIO_PORT_B, .pin = 4 }
 
 // this is how often the reading will take place
 // modify if you want to read more or less
@@ -40,11 +46,11 @@
 
 // these are for setting the demux inputs
 #define SEL_PIN_0 \
-  { .port = GPIO_PORT_B, .pin = 3 }
+  { .port = GPIO_PORT_B, .pin = 0 }
 #define SEL_PIN_1 \
-  { .port = GPIO_PORT_B, .pin = 4 }
+  { .port = GPIO_PORT_B, .pin = 1 }
 #define SEL_PIN_2 \
-  { .port = GPIO_PORT_B, .pin = 5 }
+  { .port = GPIO_PORT_B, .pin = 2 }
 
 #define DISCONNECTED_MUX_OUTPUT 7
 
@@ -58,46 +64,50 @@ static MuxAddress s_mux_address = {
 
 // this checks the sepcific spv1020
 static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
-  uint8_t status = 0xFF;      // 8th bit is set
-  uint16_t pwm = 0xFFFF;      // over 900
-  uint16_t vin = 0xFFFF;      // over 10 bits
-  uint16_t current = 0xFFFF;  // over 10 bits
+  for (uint8_t addr_idx = 0; addr_idx < SIZEOF_ARRAY(s_test_devices); addr_idx++) {
+    uint8_t address = s_test_devices[addr_idx];
+    uint8_t status = 0xFF;      // 8th bit is set
+    uint16_t pwm = 0xFFFF;      // over 900
+    uint16_t vin = 0xFFFF;      // over 10 bits
+    uint16_t current = 0xFFFF;  // over 10 bits
 
-  mux_set(&s_mux_address, SPV1020);
+    mux_set(&s_mux_address, address);
 
-  spv1020_turn_on(SPI_PORT);
+    spv1020_turn_on(SPI_PORT);
 
-  spv1020_read_status(SPI_PORT, &status);
-  if (status == 0xFF) {
-    LOG_DEBUG("Reading Status failed\n");
-  } else {
-    LOG_DEBUG("SPV1020 #%d status is: 0x%x\n", SPV1020, status);
+    spv1020_read_status(SPI_PORT, &status);
+    if (status == 0xFF) {
+      LOG_DEBUG("Reading Status failed\n");
+    } else {
+      LOG_DEBUG("SPV1020 #%d status is: 0x%x\n", address, status);
+    }
+
+    spv1020_read_pwm(SPI_PORT, &pwm);
+    if (pwm == 0xFFFF) {
+      LOG_DEBUG("Reading PWM failed\n");
+    } else {
+      LOG_DEBUG("SPV1020 #%d pwm is: 0x%x\n", address, pwm);
+    }
+
+    spv1020_read_voltage_in(SPI_PORT, &vin);
+    if (vin == 0xFFFF) {
+      LOG_DEBUG("Reading Voltage failed\n");
+    } else {
+      int32_t scaled = (int32_t)(26.1f * (float)vin);
+      LOG_DEBUG("SPV1020 #%d voltage_in is: 0x%x, scaled: %ld\n", address, vin, scaled);
+    }
+
+    spv1020_read_current(SPI_PORT, &current);
+    if (current == 0xFFFF) {
+      LOG_DEBUG("Reading Current failed\n");
+    } else {
+      LOG_DEBUG("SPV1020 #%d current is: 0x%x\n", address, current);
+    }
+
+    spv1020_shut(SPI_PORT);
+
+    mux_set(&s_mux_address, DISCONNECTED_MUX_OUTPUT);
   }
-
-  spv1020_read_pwm(SPI_PORT, &pwm);
-  if (pwm == 0xFFFF) {
-    LOG_DEBUG("Reading PWM failed\n");
-  } else {
-    LOG_DEBUG("SPV1020 #%d pwm is: 0x%x\n", SPV1020, pwm);
-  }
-
-  spv1020_read_voltage_in(SPI_PORT, &vin);
-  if (vin == 0xFFFF) {
-    LOG_DEBUG("Reading Voltage failed\n");
-  } else {
-    LOG_DEBUG("SPV1020 #%d voltage_in is: 0x%x\n", SPV1020, vin);
-  }
-
-  spv1020_read_current(SPI_PORT, &current);
-  if (current == 0xFFFF) {
-    LOG_DEBUG("Reading Current failed\n");
-  } else {
-    LOG_DEBUG("SPV1020 #%d current is: 0x%x\n", SPV1020, current);
-  }
-
-  spv1020_shut(SPI_PORT);
-
-  mux_set(&s_mux_address, DISCONNECTED_MUX_OUTPUT);
 
   soft_timer_start_millis(SMOKETEST_WAIT_TIME_MS, prv_spv1020_check, NULL, NULL);
 }
@@ -118,6 +128,18 @@ int main(void) {
   spi_init(SPI_PORT, &spi_settings);
 
   mux_init(&s_mux_address);
+
+  if (RELAY_ENABLE) {
+    GpioAddress relay_en = RELAY_EN_PIN;
+    GpioSettings relay_en_settings = {
+      .direction = GPIO_DIR_OUT,        //
+      .state = GPIO_STATE_HIGH,         //
+      .resistor = GPIO_RES_NONE,        //
+      .alt_function = GPIO_ALTFN_NONE,  //
+    };
+    gpio_init_pin(&relay_en, &relay_en_settings);
+  }
+
 
   LOG_DEBUG("Initializing spv1020 smoke test\n");
 

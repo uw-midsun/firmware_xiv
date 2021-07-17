@@ -16,8 +16,8 @@
 #include "status.h"
 #include "wait.h"
 
-// Which channel on the MCP3427s to read from. By default channel 1 according to the schematics.
-#define SENSE_MCP3427_CHANNEL MCP3427_CHANNEL_1
+// Which channel on the MCP3427s to read from.
+#define SENSE_MCP3427_CHANNEL MCP3427_CHANNEL_2
 
 // MCP3427 device settings
 #define SMOKE_SAMPLE_RATE MCP3427_SAMPLE_RATE_12_BIT
@@ -55,7 +55,13 @@ static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427] = { 0 };
 // s_test_devices: hold the indices of specific mcp3427s being tested.
 // Voltage sense mcp3427 indices: 0 to 5.
 // Current sense mcp3427 indices: 6
-static uint8_t s_test_devices[] = { 0, 1, 2, 3, 4, 5, 6 };
+static uint8_t s_test_devices[] = { 6 };
+
+// Set this to 1 if testing current sense, 0 otherwise
+#define RELAY_ENABLE 1
+
+#define RELAY_EN_PIN \
+  { .port = GPIO_PORT_B, .pin = 4 }
 
 // Store the settings of each MCP3427
 static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
@@ -82,8 +88,8 @@ static Mcp3427Settings s_mcp3427_configs[MAX_NUM_MCP3427] = {
   },
   {
       .port = I2C_PORT_2,
-      .addr_pin_0 = MCP3427_PIN_STATE_LOW,
-      .addr_pin_1 = MCP3427_PIN_STATE_HIGH,
+      .addr_pin_0 = MCP3427_PIN_STATE_HIGH,
+      .addr_pin_1 = MCP3427_PIN_STATE_LOW,
       .sample_rate = SMOKE_SAMPLE_RATE,
       .amplifier_gain = SMOKE_AMP_GAIN,
       .conversion_mode = SMOKE_CONVERSION_MODE,
@@ -137,9 +143,17 @@ static void prv_mcp3427_callback(int16_t value_ch1, int16_t value_ch2, void *con
   SmokeMcp3427Data *data = context;
   int16_t value = (SENSE_MCP3427_CHANNEL == MCP3427_CHANNEL_1) ? value_ch1 : value_ch2;
   if (data->mcp3427_data_point < SMOKE_DATA_POINT_CURRENT) {
+    float scaling = 1.067f;
+    float bias = -47.3f;
+    int32_t scaled = (int32_t)(scaling * (float)value - bias);
     LOG_DEBUG("Voltage sense mcp3427 ID = %d; Value = %d\n", data->mcp3427_data_point, value);
+    LOG_DEBUG("vsense scaled: %ld\n", scaled);
   } else {
+    float scaling = 4.847f;
+    float bias = -123355.f;
+    int32_t scaled = (int32_t)(scaling * (float)value + bias);
     LOG_DEBUG("Current sense mcp3427 ID = %d; Value = %d\n", data->mcp3427_data_point, value);
+    LOG_DEBUG("isense scaled: %ld\n", scaled);
   }
 }
 
@@ -173,6 +187,17 @@ int main() {
     .scl = CONTROLLER_BOARD_ADDR_I2C2_SCL,
   };
   i2c_init(I2C_PORT_2, &i2c2_settings);
+
+  if (RELAY_ENABLE) {
+    GpioAddress relay_en = RELAY_EN_PIN;
+    GpioSettings relay_en_settings = {
+      .direction = GPIO_DIR_OUT,        //
+      .state = GPIO_STATE_HIGH,         //
+      .resistor = GPIO_RES_NONE,        //
+      .alt_function = GPIO_ALTFN_NONE,  //
+    };
+    gpio_init_pin(&relay_en, &relay_en_settings);
+  }
 
   for (size_t i = 0; i < SIZEOF_ARRAY(s_test_devices); i++) {
     SmokeMcp3427Data *data = &s_mcp3427_data[s_test_devices[i]];
