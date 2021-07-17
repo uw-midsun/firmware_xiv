@@ -19,10 +19,12 @@
 #include "spv1020_mppt.h"
 #include "wait.h"
 
+#include <math.h>
+
 #define SPI_PORT SPI_PORT_2
 
 // these are the addresses of the spv1020s to read from
-static uint8_t s_test_devices[] = { 0, 1, 2 };
+static uint8_t s_test_devices[] = { 0 };
 
 // Set this to 1 if testing current sense, 0 otherwise
 #define RELAY_ENABLE 1
@@ -32,7 +34,7 @@ static uint8_t s_test_devices[] = { 0, 1, 2 };
 
 // this is how often the reading will take place
 // modify if you want to read more or less
-#define SMOKETEST_WAIT_TIME_MS 1000
+#define SMOKETEST_WAIT_TIME_MS 200
 
 #define BAUDRATE 6000000
 #define MOSI_PIN \
@@ -76,32 +78,40 @@ static void prv_spv1020_check(SoftTimerId timer_id, void *context) {
     spv1020_turn_on(SPI_PORT);
 
     spv1020_read_status(SPI_PORT, &status);
+    spv1020_read_pwm(SPI_PORT, &pwm);
+    printf("........................\n");
+    spv1020_read_voltage_in(SPI_PORT, &vin);
+    spv1020_read_current(SPI_PORT, &current);
+  
     if (status == 0xFF) {
       LOG_DEBUG("Reading Status failed\n");
     } else {
       LOG_DEBUG("SPV1020 #%d status is: 0x%x\n", address, status);
     }
 
-    spv1020_read_pwm(SPI_PORT, &pwm);
     if (pwm == 0xFFFF) {
       LOG_DEBUG("Reading PWM failed\n");
     } else {
       LOG_DEBUG("SPV1020 #%d pwm is: 0x%x\n", address, pwm);
     }
 
-    spv1020_read_voltage_in(SPI_PORT, &vin);
     if (vin == 0xFFFF) {
       LOG_DEBUG("Reading Voltage failed\n");
     } else {
       int32_t scaled = (int32_t)(26.1f * (float)vin);
       LOG_DEBUG("SPV1020 #%d voltage_in is: 0x%x, scaled: %ld\n", address, vin, scaled);
     }
+    
 
-    spv1020_read_current(SPI_PORT, &current);
     if (current == 0xFFFF) {
       LOG_DEBUG("Reading Current failed\n");
     } else {
-      LOG_DEBUG("SPV1020 #%d current is: 0x%x\n", address, current);
+      float curf = (float)current;
+      int32_t scaled = (int32_t)(-0.0249f * curf * curf + 30.285f * curf - 3315.3f);
+      if (scaled < 0) {
+        scaled = 0;
+      }
+      LOG_DEBUG("SPV1020 #%d current is: %d, scaled = %ld\n", address, current, scaled);
     }
 
     spv1020_shut(SPI_PORT);
