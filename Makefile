@@ -399,6 +399,7 @@ install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler -y
+	@sudo apt-get install lcov -y
 	@rm -rf $(VENV_DIR)
 	@mkdir $(VENV_DIR)
 	@virtualenv $(VENV_DIR)
