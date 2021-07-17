@@ -109,10 +109,10 @@ jobs:
           git update-index --refresh || true
           git diff-index --quiet HEAD --        
         
-      - name: Build MU protobuf
+      - name: Build MU and bootloader protobufs
         run: |
           make bootloader_protos
-          make mu_protos PROJECT=centre_console
+          make mu_protos
       
       - name: Check for uncommitted protobuf changes
         id: check-uncommitted-protobuf-changes

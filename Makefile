@@ -322,13 +322,8 @@ codegen_protos:
 .PHONY: mu_protos
 mu_protos:
 	@echo "Building protos..."
-#	@$(call gen_mu) $(LIB_DIR)/mu-gen/inc/*.pb-c.h
-#	@$(call gen_mu) $(LIB_DIR)/mu-gen/src/*.pb-c.c
-#	@$(call gen_mu) $(MU_DIR)/protogen/*_pb2.py
-#	@$(call gen_mu) $(BOOTLOADER_DIR)/protogen/*.pb-c.h
-#	@$(call gen_mu) $(BOOTLOADER_DIR)/protogen/*.pb-c.c
-	@mkdir -p $(MU_DIR)/protogen
-	@protoc -I=$(MU_DIR)/protos --c_out=$(MU_DIR)/protogen $(MU_DIR)/protos/*.proto
+#	@mkdir -p $(MU_DIR)/protogen
+#	@protoc -I=$(MU_DIR)/protos --c_out=$(MU_DIR)/protogen $(MU_DIR)/protos/*.proto
 	@$(call gen_mu)
 
 .PHONY: pytest
