@@ -306,7 +306,7 @@ bootloader_protos:
 .PHONY: codegen
 codegen: codegen_protos
 	@echo "Generating from templates..."
-	@cd $(CODEGEN_DIR) && python scripts/build.py
+	@cd $(CODEGEN_DIR) && python3 scripts/build.py
 	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' \) | xargs -r clang-format -i -fallback-style=Google
 	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
 
@@ -314,7 +314,7 @@ codegen: codegen_protos
 .PHONY: codegen_dbc
 codegen_dbc:
 	@echo "Generating DBC file"
-	@cd $(CODEGEN_DIR) && python scripts/build_dbc.py
+	@cd $(CODEGEN_DIR) && python3 scripts/build_dbc.py
 
 .PHONY: codegen_protos
 codegen_protos:

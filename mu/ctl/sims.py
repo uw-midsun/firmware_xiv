@@ -9,13 +9,13 @@ def reset(args):
 
 
 def start(args):
-    params = { 'sim': args.sim, 'proj': args.proj }
+    params = {'sim': args.sim, 'proj': args.proj}
     r = req.send('start', params)
     print(r.text)
 
 
 def stop(args):
-    params = { 'sim': args.sim }
+    params = {'sim': args.sim}
     r = req.send('stop', params)
     print(r.text)
 
