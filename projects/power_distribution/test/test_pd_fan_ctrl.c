@@ -41,6 +41,7 @@
 #define FAN_ERR_FLAGS (FAN1_STATUS | FAN2_STATUS | FAN3_STATUS | FAN4_STATUS)
 
 #define ADC_MAX_VAL 3300
+#define FRONT_FAN_CTRL_MAX_VALUE_MV 1650
 
 #define FAN_UNDERTEMP_VOLTAGE 1163
 #define FAN_OVERTEMP_VOLTAGE 758
@@ -202,14 +203,14 @@ void test_front_pd_fan_ctrl_pot(void) {
   // values and execute properly
 
   // set adc to return max value
-  adc_ret_val = ADC_MAX_VAL;
+  adc_ret_val = FRONT_FAN_CTRL_MAX_VALUE_MV;
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, pd_fan_ctrl_init(&s_fan_settings, true));
   delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS + 10);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MAX_I2C_WRITE, i2c_buf2[1]);
 
   // set adc to return mid value
-  adc_ret_val = ADC_MAX_VAL / 2;
+  adc_ret_val = FRONT_FAN_CTRL_MAX_VALUE_MV / 2;
   delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS);
   TEST_ASSERT_EQUAL(FAN_50_PERC_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_50_PERC_I2C_WRITE, i2c_buf2[1]);
