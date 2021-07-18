@@ -136,7 +136,7 @@ class TestCanDatagramListener(unittest.TestCase):
                 break
             pass
 
-        self.assertEqual(bytearray(self.message), message.serialize())
+        self.assertEqual(self.message.serialize(), message.serialize())
         self.assertEqual(self.callback_triggered, True)
 
     def triggerCallback(self, msg):
