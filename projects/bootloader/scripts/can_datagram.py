@@ -33,7 +33,7 @@ class Datagram:
     def __init__(self, **kwargs):
         self._check_kwargs(**kwargs)
 
-        self._protocol_version = kwargs["protocol_version"] & 0xff
+        self._protocol_version = PROT_VER & 0xff
         self._datagram_type_id = kwargs["datagram_type_id"] & 0xff
 
         self._node_ids = []
@@ -161,24 +161,20 @@ class Datagram:
         """This function checks that all variables are as expected"""
 
         args = [
-            "protocol_version",
             "datagram_type_id",
             "node_ids",
             "data"]
-        values = ["protocol_version", "datagram_type_id"]
 
         # Check all arguments are present
         for arg in args:
             assert arg in kwargs
 
         # Check that types are as expected
-        for value in values:
-            assert not isinstance(kwargs[value], list)
+        assert not isinstance(kwargs["datagram_type_id"], list)
         assert isinstance(kwargs["node_ids"], list)
         assert isinstance(kwargs["data"], bytearray)
 
         # Verify all inputs
-        assert kwargs["protocol_version"] & 0xff == kwargs["protocol_version"]
         assert kwargs["datagram_type_id"] & 0xff == kwargs["datagram_type_id"]
 
     def _convert_to_bytearray(self, in_value, bytes):

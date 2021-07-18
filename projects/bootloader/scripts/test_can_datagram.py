@@ -11,7 +11,7 @@ from can_datagram import DatagramListener
 
 TEST_CHANNEL = "vcan0"
 
-TEST_PROTOCOL_VERSION = 0
+TEST_PROTOCOL_VERSION = 1
 TEST_DATAGRAM_TYPE_ID = 1
 TEST_NODES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 TEST_DATA = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2, 3, 8, 4, 6, 2, 6, 4, 3, 3]
@@ -24,7 +24,6 @@ class TestCanDatagram(unittest.TestCase):
         """Test the constructor of the Datagram class"""
 
         message = Datagram(
-            protocol_version=TEST_PROTOCOL_VERSION,
             datagram_type_id=TEST_DATAGRAM_TYPE_ID,
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
@@ -71,12 +70,12 @@ class TestCanDatagram(unittest.TestCase):
             data=bytearray(TEST_DATA))
 
         self.assertEqual(message.serialize(), bytearray(
-            b'\x00m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+            b'\x01m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
 
     def test_deserialize(self):
         """Test retrieving Datagram information from the bytearray"""
         message = Datagram.deserialize(bytearray(
-            b'\x00m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+            b'\x01m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
         self.assertEqual(message._protocol_version, TEST_PROTOCOL_VERSION)
         self.assertEqual(message._datagram_type_id, TEST_DATAGRAM_TYPE_ID)
         self.assertEqual(message._node_ids, TEST_NODES)
@@ -95,7 +94,6 @@ class TestCanDatagramSender(unittest.TestCase):
         notifier = can.Notifier(sender.bus, [listener])
 
         message = Datagram(
-            protocol_version=TEST_PROTOCOL_VERSION,
             datagram_type_id=TEST_DATAGRAM_TYPE_ID,
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
@@ -124,7 +122,6 @@ class TestCanDatagramListener(unittest.TestCase):
         notifier = can.Notifier(sender.bus, [listener])
 
         message = Datagram(
-            protocol_version=TEST_PROTOCOL_VERSION,
             datagram_type_id=TEST_DATAGRAM_TYPE_ID,
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
