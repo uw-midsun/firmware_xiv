@@ -158,7 +158,7 @@ class Datagram:
         self._data = value
 
     def _check_kwargs(self, **kwargs):
-        """ This function checks that all variables are as expected"""
+        """This function checks that all variables are as expected"""
 
         args = [
             "protocol_version",
@@ -182,12 +182,14 @@ class Datagram:
         assert kwargs["datagram_type_id"] & 0xff == kwargs["datagram_type_id"]
 
     def _convert_to_bytearray(self, in_value, bytes):
+        """This is a helper function that creates a little-endian bytearray"""
         out_bytearray = bytearray()
         for i in range(0, bytes):
             out_bytearray.append((in_value >> (8 * i)) & 0xff)
         return out_bytearray
 
     def _convert_from_bytearray(self, in_bytearray, bytes):
+        """This is a helper function that converts a bytearray into a value"""
         value = 0
         for i in range(0, bytes):
             value = value | ((in_bytearray[i] & 0xff) << (i * 8))
@@ -216,11 +218,10 @@ class Datagram:
 
 
 class DatagramSender:
-    """This class acts as a distributor for the Datagram class on a bus."""
+    """A class that acts as a distributor for the Datagram class on a bus."""
 
     def __init__(self, bustype="socketcan", channel=DEFAULT_CHANNEL,
                  bitrate=CAN_BITRATE, receive_own_messages=False):
-        print("Initializing CAN Bus...")
         self.bus = can.interface.Bus(
             bustype=bustype,
             channel=channel,
@@ -228,14 +229,19 @@ class DatagramSender:
             receive_own_messages=receive_own_messages)
 
     def send(self, message):
-        """This sends the Datagrams."""
+        """Sends the Datagrams."""
 
         assert isinstance(message, Datagram)
 
         chunk_messages = self._chunkify(message.serialize(), 8)
-        can_messages = []
-        message_arbitration_id = CAN_START_ARBITRATION_ID
+        message_arbitration_id = CAN_ARBITRATION_ID
         message_extended_arbitration = False
+
+        can_messages = [
+            can.Message(
+                arbitration_id=CAN_START_ARBITRATION_ID,
+                data=bytearray(),
+                is_extended_id=message_extended_arbitration)]
 
         # Populate an array with the can message from the library
         for chunk_message in chunk_messages:
@@ -257,10 +263,10 @@ class DatagramSender:
 
 
 class DatagramListener(can.BufferedReader):
-    """This class handles a callback when a datagram is received."""
+    """A class that handles a callback when a datagram is received."""
 
     def __init__(self, callback):
-        """This registers the callback."""
+        """Registers the callback."""
         assert callable(callback)
         self.callback = callback
         # Messages are stored in a dictionary where key = board ID, value = message
@@ -269,14 +275,14 @@ class DatagramListener(can.BufferedReader):
         super().__init__()
 
     def on_message_received(self, msg: can.Message):
-        """This (SHOULD) wait for the first message in the datagram 0x010."""
+        """Handles message sent from boards on the CAN."""
         super().on_message_received(msg)
 
         board_id = (msg.arbitration_id & 0b11111100000) >> 5
         start_message = (msg.arbitration_id & 0x10) >> 4
 
         if start_message == 1:
-            # Every time we receive the first message, we reset the variables.
+            # Reset the datagram message when receiving a start message
             self.datagram_messages[board_id] = msg.data
 
         if start_message == 0:
