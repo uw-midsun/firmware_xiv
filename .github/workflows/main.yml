@@ -80,23 +80,23 @@ jobs:
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
 
-      # - name: Install gcc  
-      #   if: steps.cache-gcc.outputs.cache-hit != 'true'
-      #   run: sudo apt-fast -y install gcc-6
+      - name: Install gcc  
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install gcc-6
 
-      - name: Install gcc
-        env:
-          CACHE_HIT: ${{steps.cache-gcc.outputs.cache-hit}}
-        run: |
-          if [[ "$CACHE_HIT" == 'true' ]]; then
-            sudo cp --force --recursive ~/gcc/* /
-          else
-            sudo apt-fast -y install gcc-6
-            mkdir -p ~/gcc
-            for dep in gcc-6; do
-                dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc/
-            done
-          fi
+      #- name: Install gcc
+      #  env:
+       #   CACHE_HIT: ${{steps.cache-gcc.outputs.cache-hit}}
+      #  run: |
+      #    if [[ "$CACHE_HIT" == 'true' ]]; then
+       #     sudo cp --force --recursive ~/gcc/* /
+      #    else
+       #     sudo apt-fast -y install gcc-6
+      #      mkdir -p ~/gcc
+       #     for dep in gcc-6; do
+       #         dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc/
+       #     done
+       #   fi
           
       - name: Install clang
         if: steps.cache-clang.outputs.cache-hit != 'true'
