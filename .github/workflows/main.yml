@@ -115,47 +115,17 @@ jobs:
         #  fi
 
       - name: Install clang-format
-        env: 
-          CACHE_HIT: ${{steps.cache-clang-format.outputs.cache-hit}}
-        run: |
-          if [[ "$CACHE_HIT" == 'true' ]]; then
-            sudo cp --force --recursive /usr/bin/clang-format-5.0/* /
-          else
-            sudo apt-fast -y install clang-format-5.0
-            mkdir -p /usr/bin/clang-format-5.0
-            for dep in clang-format-5.0; do 
-              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory /usr/bin/clang-format-5.0/
-            done
-          fi
+        if: steps.cache-clang-format.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install clang-format-5.0
 
       - name: Install libc6-i386
-        env: 
-          CACHE_HIT: ${{steps.cache-libc6-i386.outputs.cache-hit}}
-        run: |
-          if [[ "$CACHE_HIT" == 'true' ]]; then
-            sudo cp --force --recursive /var/lib/dpkg/info/libc6-i386/* /
-          else
-            sudo apt-fast -y install libc6-i386
-            mkdir -p /var/lib/dpkg/info/libc6-i386
-            for dep in libc6-i386; do 
-              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory /var/lib/dpkg/info/libc6-i386/
-            done
-          fi
+        if: steps.cache-libc6-i386.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install libc6-i386
 
         # for vcan module
       - name: Install linux modules
-        env: 
-          CACHE_HIT: ${{steps.cache-linux-module.outputs.cache-hit}}
-        run: |
-          if [[ "$CACHE_HIT" == 'true' ]]; then
-            sudo cp --force --recursive /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic/* /
-          else
-            sudo apt-fast -y install linux-modules-extra-$(uname -r)
-            mkdir -p /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic
-            for dep in linux-modules-extra-$(uname -r); do 
-              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic/
-            done
-          fi
+        if: steps.cache-linux-module.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install linux-modules-extra-$(uname -r)
 
       - name: Which gcc, clang, clang-format
         run: |
