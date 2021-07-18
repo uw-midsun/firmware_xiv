@@ -36,13 +36,15 @@ jobs:
       - uses: actions/cache@v2
         id: cache-clang
         with:
-          path: /usr/bin/clang-5.0
+          #path: /usr/bin/clang-5.0
+          path: /lib/llvm-5.0/bin/clang
           key: ${{ runner.os }}-clang
       
       - uses: actions/cache@v2
         id: cache-clang-format
         with:
-          path: /usr/bin/clang-format-5.0
+          #path: /usr/bin/clang-format-5.0
+          path: /lib/llvm-5.0/bin/clang-format
           key: ${{ runner.os }}-clang-format
 
       - uses: actions/cache@v2
