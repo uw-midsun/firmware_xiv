@@ -9,28 +9,37 @@
 #   CM: [COMPILER=] - Specifies the compiler to use on x86. Defaults to gcc [gcc | clang].
 #   CO: [COPTIONS=] - Specifies compiler options on x86 [asan | tsan].
 #   PB: [PROBE=] - Specifies which debug probe to use on STM32F0xx. Defaults to cmsis-dap [cmsis-dap | stlink-v2].
+#   SD: [STDLIB_DEBUG=] - Set to true on STM32 to use an stdlib with debug symbols. See platform/stm32f0xx/newlib-debug/README.md.
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
+# 	CC: [COVERAGE=] - Specifies if code coverage symbols should be added to the build. Defaults to false [true | false]
 #
 # Usage:
-#   make [all] [PL] [PR] [DF] - Builds the target project and its dependencies
+#   make [all] [PL] [PR] [SD] [DF] - Builds the target project and its dependencies
 #   make clean - Completely deletes all build output
 #   make format - Formats all non-vendor code
-#   make gdb [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test and connects an instance of GDB
+#   make gdb [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test and connects an instance of GDB
 #   make lint - Lints all non-vendor code
 #   make new [PR|LI] - Creates folder structure for new project or library
-#   make remake [PL] [PR] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
-#   make test [PL] [PR|LI] [TE] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
-#   make update_codegen - Update the codegen-tooling release
-#   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make remake [PL] [PR] [SD] [DF] - Cleans and rebuilds the target project (does not force-rebuild dependencies)
+#   make test [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
-#   make pytest_all - Runs all python tests in the scripts directory of every project 
+#   make pytest_all - Runs all python tests in the scripts directory of every project
 #   make install_requirements - Installs python requirements for every project
+#   make codegen - Generates header files for CAN messages used in firmware
+# 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
+# 	make codegen_protos - Generates protobuf files
+# 	make bootloader_protos - Generates protobuf files for the bootloader
+# 	make mock_can_data - Mocks CAN data based off DBC file to the CAN bus on x86
+#   make babydriver [PL] [CH] - Flash or run the Babydriver debug project and drop into its Python shell
+#   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
+#   make fastmu [TE] - Don't build and just run the MU integration test, or all if TE is not defined.
+#   make analyzestack [PR] - Analyzes the maximum stack size of the specified project
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
 #   make program [PL=stm32f0xx] [PR] [PB] - Programs and runs the project through OpenOCD
-#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]]
+#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]] [DF] [CC]
 #
 ###################################################################################################
 
@@ -41,8 +50,22 @@ PROJ_DIR := projects
 PLATFORMS_DIR := platform
 LIB_DIR := libraries
 MAKE_DIR := make
+CODEGEN_DIR := codegen
+MU_DIR := mu
 
+ifeq ($(MAKECMDGOALS),mu)
+PLATFORM ?= x86
+DEFINE += MU
+IS_MU := TRUE
+$(call gen_mu)
+else
 PLATFORM ?= stm32f0xx
+endif
+
+ifeq (analyzestack,$(MAKECMDGOALS))
+# Use debug symbols by default in the stack analyzer
+STDLIB_DEBUG ?= true
+endif
 
 # Include argument filters
 include $(MAKE_DIR)/filter.mk
@@ -78,13 +101,35 @@ else
 TARGET_BINARY = $(BIN_DIR)/test/$(LIBRARY)$(PROJECT)/test_$(TEST)_runner$(PLATFORM_EXT)
 endif
 
+# MU generated file directories
+MU_C_GEN_DIR := $(LIB_DIR)/mu-gen
+MU_PYTHON_GEN_DIR := $(MU_DIR)/protogen
+MU_PROTOS_DIR := $(MU_DIR)/protos
+
+# Bootloader directory
+BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
+
+CODECOV_DIR := codecov
+
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
+
+# Virtualenv directory
+VENV_DIR := .venv
 
 # Please don't touch anything below this line
 ###################################################################################################
 
 # AUTOMATED ACTIONS
+
+# $(call gen_mu)
+define gen_mu
+$(shell mkdir -p $(MU_C_GEN_DIR)/inc $(MU_C_GEN_DIR)/src $(MU_PYTHON_GEN_DIR))
+$(shell cd $(MU_PROTOS_DIR) && protoc --c_out=$(ROOT)/$(MU_C_GEN_DIR)/inc *)
+$(shell cd $(MU_PROTOS_DIR) && protoc --python_out=$(ROOT)/$(MU_PYTHON_GEN_DIR) *)
+$(shell mv $(MU_C_GEN_DIR)/inc/*.c $(MU_C_GEN_DIR)/src)
+$(shell rm -r -f $(MU_C_GEN_DIR)/inc/mu)
+endef
 
 # $(call include_lib,libname)
 define include_lib
@@ -136,6 +181,12 @@ ROOT := $(shell pwd)
 
 ###################################################################################################
 
+# PIP ENVIRONMENT SETUP
+
+export PATH := $(ROOT)/$(VENV_DIR)/bin:$(PATH)
+
+###################################################################################################
+
 # MAKE PROJECT
 
 # Actually calls the make
@@ -151,51 +202,86 @@ CFLAGS += $(addprefix -D,$(DEFINE))
 # Allow depending on the value of DEFINE so we rebuild after changing defines
 $(eval $(call dependable_var,DEFINE))
 
+ifneq (,$(IS_MU))
+$(eval $(call gen_mu))
+endif
+
 # Includes all libraries so make can find their targets
 $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
-IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs
+IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
+IGNORE_CLEANUP_PROJS := bootloader/protogen
 # This uses regex
-IGNORE_PY_FILES := ./lint.py ./libraries/unity.*
-# Find all python files excluding library files in project env (./venv)
-FIND_PY_FILES:= $(shell printf "! -regex %s " $(IGNORE_PY_FILES) | xargs find -path ./venv -prune -o -name '*.py')
+IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
+IGNORE_CODECOV_FILES := '/usr/include/*' '*build/gen/x86/*' '*libraries/unity/*'
+# Find all python files excluding ignored files
+IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
+FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
 AUTOPEP8_CONFIG:= -a --max-line-length 100 -r
-FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS))
+FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS)) $(addprefix -o -path $(PROJ_DIR)/,$(IGNORE_CLEANUP_PROJS))
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
-FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h'
-FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py'
+FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
+# ignore MU since it has a different pylint
+FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mu/*.py' ':(exclude)$(VENV_DIR)/*'
+FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mu/*.py' ':(exclude)$(VENV_DIR)/*'
 
 # Lints libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: lint
 lint:
 	@echo "Linting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
+	@echo "Excluding project folders: $(IGNORE_CLEANUP_PROJS)"
 	@$(FIND) | xargs -r python2 lint.py
 
-#Quick lint on ONLY changed/new files
+# Quick lint on ONLY changed/new files
 .PHONY: lint_quick
 lint_quick:
-	@echo "Quick linting on ONLY changed/new files"
+	@echo "Quick linting on ONLY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r python2 lint.py
 
-# Disable import error
+# Globally disable the following pylint messages:
+PYLINT_DISABLE := \
+	import-error redefined-outer-name unused-argument \
+	too-few-public-methods duplicate-code no-self-use
+
+# Disable these additional pylint messages for MU:
+MU_PYLINT_DISABLE := \
+	missing-module-docstring missing-class-docstring \
+	missing-function-docstring invalid-name
+
+PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE))
+MU_PYLINT := pylint $(addprefix --disable=,$(PYLINT_DISABLE)) $(addprefix --disable=,$(MU_PYLINT_DISABLE))
+
+# Lints Python files, excluding MU generated files
 .PHONY: pylint
 pylint:
-	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR)"
+	@echo "Linting *.py in $(MAKE_DIR), $(PLATFORMS_DIR), $(PROJECT_DIR), $(LIBRARY_DIR), $(MU_DIR), $(CODEGEN_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
-	@find $(MAKE_DIR) $(PLATFORMS_DIR) -iname "*.py" -print | xargs -r pylint --disable=F0401 --disable=duplicate-code
-	@$(FIND:"*.[ch]"="*.py") | xargs -r pylint --disable=F0401 --disable=duplicate-code
+	@find $(MAKE_DIR) $(PLATFORMS_DIR) $(CODEGEN_DIR)/scripts -iname "*.py" -print | xargs -r $(PYLINT)
+	@$(FIND:"*.[ch]"="*.py") | xargs -r $(PYLINT)
+	@find $(MU_DIR) -path $(MU_PYTHON_GEN_DIR) -prune -o -iname "*.py" -print | xargs -r $(MU_PYLINT)
+
+.PHONY: pylint_quick
+pylint_quick:
+	@echo "Quick linting ONLY changed/new Python files"
+	@$(FIND_MOD_NEW_PY) | xargs -r $(PYLINT)
+	@$(FIND_MOD_NEW_MU_PY) | xargs -r $(MU_PYLINT)
 
 .PHONY: format_quick
 format_quick:
-	@echo "Quick format on ONlY changed/new files"
+	@echo "Quick format on ONlY changed/new C files"
 	@$(FIND_MOD_NEW) | xargs -r clang-format -i -style=file
-	@$(FIND_MOD_NEW_PY) | xargs autopep8 $(AUTOPEP8_CONFIG) -i
+
+.PHONY: pyformat_quick
+pyformat_quick:
+	@echo "Quick format on ONLY changed/new Python files"
+	@$(FIND_MOD_NEW_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
+	@$(FIND_MOD_NEW_MU_PY) | xargs -r autopep8 $(AUTOPEP8_CONFIG) -i
 
 # Formats libraries and projects, excludes IGNORE_CLEANUP_LIBS
 .PHONY: format
@@ -203,15 +289,55 @@ format:
 	@echo "Formatting *.[ch] in $(PROJECT_DIR), $(LIBRARY_DIR)"
 	@echo "Excluding libraries: $(IGNORE_CLEANUP_LIBS)"
 	@$(FIND) | xargs -r clang-format -i -style=file
+
+.PHONY: pyformat
+pyformat:
 	@echo "Formatting all *.py files in repo"
 	@echo "Excluding: $(IGNORE_PY_FILES)"
 	@autopep8 $(AUTOPEP8_CONFIG) -i $(FIND_PY_FILES)
 
+.PHONY: bootloader_protos
+bootloader_protos:
+	@echo "Compiling protos..."
+	@mkdir -p $(BOOTLOADER_DIR)/protogen
+	@protoc -I=$(BOOTLOADER_DIR)/protos --c_out=$(BOOTLOADER_DIR)/protogen $(BOOTLOADER_DIR)/protos/*.proto
+
+# Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command
+.PHONY: codegen
+codegen: codegen_protos
+	@echo "Generating from templates..."
+	@cd $(CODEGEN_DIR) && python3 scripts/build.py
+	@find $(CODEGEN_DIR)/out -type f \( -iname '*.[ch]' \) | xargs -r clang-format -i -fallback-style=Google
+	@find $(CODEGEN_DIR)/out -name \*.h -exec cp {} libraries/codegen-tooling/inc/ \;
+
+# Note: build_dbc has same issue as build.py with local paths
+.PHONY: codegen_dbc
+codegen_dbc:
+	@echo "Generating DBC file"
+	@cd $(CODEGEN_DIR) && python3 scripts/build_dbc.py
+
+.PHONY: codegen_protos
+codegen_protos:
+	@echo "Compiling protos..."
+	@mkdir -p $(CODEGEN_DIR)/genfiles
+	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
+
+.PHONY: pytest
+pytest:
+	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
+
+.PHONY: pytest_all
+pytest_all:
+	@for i in $$(find . -path ./$(VENV_DIR) -prune -o -path ./mu/integration_tests -prune -o -name "test_*.py"); 			\
+	do																								\
+		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
+	done
+
 # Tests that all files have been run through the format target mainly for CI usage
 .PHONY: test_format
 test_format: format
-	@! git diff --name-only --diff-filter=ACMRT | xargs -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
-	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT | xargs -r -n1 clang-format -style=file -output-replacements-xml | grep '<replacements' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
+	@! git diff --name-only --diff-filter=ACMRT -- '*.py' | xargs -r -n1 autopep8 $(AUTOPEP8_CONFIG) -d | grep '@@' > /dev/null; if [ $$? -ne 0 ] ; then git --no-pager diff && exit 1 ; fi
 
 # Builds the project or library
 .PHONY: build
@@ -242,7 +368,17 @@ new:
 
 .PHONY: clean
 clean:
+	@echo cleaning
 	@rm -rf $(BUILD_DIR)
+	@rm -f $(LIB_DIR)/mu-gen/inc/*.pb-c.h
+	@rm -f $(LIB_DIR)/mu-gen/src/*.pb-c.c
+	@rm -f $(MU_DIR)/protogen/*_pb2.py
+	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.h
+	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.c
+
+.PHONY: mock_can_data
+mock_can_data: socketcan
+	@cd $(CODEGEN_DIR) && python3 mock_can_data.py
 
 .PHONY: remake
 remake: clean all
@@ -256,27 +392,42 @@ socketcan:
 	@sudo ip link set up vcan0 || true
 	@ip link show vcan0
 
-.PHONY: update_codegen
-update_codegen:
-	@python make/git_fetch.py -folder=libraries/codegen-tooling -user=uw-midsun -repo=codegen-tooling-msxiv -tag=latest -file=codegen-tooling-out.zip
-
-.PHONY: pytest
-pytest:
-	@python3 -m unittest discover -t $(PROJ_DIR)/$(PROJECT)/scripts -s $(PROJ_DIR)/$(PROJECT)/scripts -p "test_*$(TEST).py"
-
-.PHONY: pytest_all
-pytest_all:
-	@for i in $$(find projects -name "test_*.py"); 													\
-	do																								\
-		python -m unittest discover -t $$(dirname $$i) -s $$(dirname $$i) -p $$(basename $$i);		\
-	done			
-
+# Note: ". .venv/bin/activate" is the /sh/ (and more portable way) of bash's "source .venv/bin/activate"
+# If you are getting a "virtualenv: Command not found" error, try running `sudo pip3 install virtualenv`
 .PHONY: install_requirements
 install_requirements:
-	@for i in $$(find projects -name "requirements.txt"); 		\
-	do															\
-		pip install -r $$i;										\
-	done								
+	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
+	@sudo apt-get update
+	@sudo apt-get install protobuf-compiler -y
+	@sudo apt-get install lcov -y
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
+	pip install -r requirements.txt
+
+.PHONY: codecov
+codecov: 
+	@cd $(BUILD_DIR)/obj/x86 && \
+	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
+	lcov --capture --directory . --output-file coverage.info && \
+	lcov -r coverage.info $(IGNORE_CODECOV_FILES) -o coverage.info && \
+	genhtml coverage.info --output-directory ../../../$(CODECOV_DIR) --legend --show-details
+
+MU_PROJS :=
+-include $(MU_DIR)/integration_tests/deps.mk
+
+.PHONY: install_mu
+install_mu:
+	@sudo ln -s ~/shared/firmware_xiv/mu/muctl /usr/bin/muctl
+	@sudo ln -s ~/shared/firmware_xiv/mu/musrv /usr/bin/musrv
+
+.PHONY: fastmu
+fastmu:
+	@python3 -m unittest discover -t $(MU_DIR) -s $(MU_DIR)/integration_tests -p "test_*$(TEST).py"
+
+.PHONY: mu
+mu: $(MU_PROJS:%=$(BIN_DIR)/%) socketcan fastmu
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE

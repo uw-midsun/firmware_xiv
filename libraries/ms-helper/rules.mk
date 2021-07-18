@@ -7,6 +7,9 @@
 
 # Specify the libraries you want to include
 $(T)_DEPS := ms-common
+ifneq (,$(IS_MU))
+$(T)_DEPS += mu-gen mu-store
+endif
 
 ifeq (x86,$(PLATFORM))
 $(T)_EXCLUDE_TESTS := mcp2515 adc_periodic_reader

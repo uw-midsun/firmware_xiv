@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message MuGpioStore {
+  repeated bool state = 1;
+}

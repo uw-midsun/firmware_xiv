@@ -1,13 +1,61 @@
 #include "mcp2515.h"
+
 #include <stddef.h>
 #include <string.h>
+
 #include "critical_section.h"
 #include "debug_led.h"
 #include "delay.h"
 #include "gpio_it.h"
-#include "log.h"
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
+
+#ifdef MU
+#include <stdlib.h>
+
+#include "mcp2515.pb-c.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+static Mcp2515Storage *s_mu_storage;
+static MuMcp2515Store s_store = MU_MCP2515_STORE__INIT;
+
+static void prv_export() {
+  store_export(MU_STORE_TYPE__MCP2515, &s_store, NULL);
+}
+
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  MuMcp2515Store *msg = mu_mcp2515_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuMcp2515Store *mask = mu_mcp2515_store__unpack(NULL, mask_buf.len, mask_buf.data);
+
+  // Harness should never change tx values
+  if (mask->rx_id != 0) {
+    s_store.rx_id = msg->rx_id;
+    s_store.rx_extended = msg->rx_extended;
+    s_store.rx_dlc = msg->rx_dlc;
+    s_store.rx_data = msg->rx_data;
+    if (s_mu_storage->rx_cb != NULL) {
+      s_mu_storage->rx_cb(msg->rx_id, msg->rx_extended, msg->rx_data, msg->rx_dlc,
+                          s_mu_storage->context);
+    }
+  }
+
+  mu_mcp2515_store__free_unpacked(msg, NULL);
+  mu_mcp2515_store__free_unpacked(mask, NULL);
+}
+
+static void prv_init_store(void) {
+  store_config();
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mu_mcp2515_store__get_packed_size,
+    (PackFunc)mu_mcp2515_store__pack,
+    (UnpackFunc)mu_mcp2515_store__unpack,
+    (FreeUnpackedFunc)mu_mcp2515_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  store_register(MU_STORE_TYPE__MCP2515, funcs, &s_store, NULL);
+}
+#endif
 
 typedef struct Mcp2515TxBuffer {
   uint8_t id;
@@ -156,41 +204,17 @@ static void prv_handle_int(const GpioAddress *address, void *context) {
   critical_section_end(disabled);
 }
 
-StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
-  storage->spi_port = settings->spi_port;
-  storage->rx_cb = settings->rx_cb;
-  storage->bus_err_cb = settings->bus_err_cb;
-  storage->context = settings->context;
-  storage->int_pin = settings->int_pin;
-
-  const SpiSettings spi_settings = {
-    .baudrate = settings->spi_baudrate,
-    .mode = SPI_MODE_0,
-    .mosi = settings->mosi,
-    .miso = settings->miso,
-    .sclk = settings->sclk,
-    .cs = settings->cs,
-  };
-  status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
-
-  prv_reset(storage);
-
-  // Set to Config mode, CLKOUT /4
-  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
-                 MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
-                 MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
-
-  // set RXB0 ctrl BUKT bit on to enable rollover to rx1
-  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
-  Mcp2515Id default_filter = settings->filters[MCP2515_FILTER_ID_RXF0];
+// Call with MCP2515 in Config mode to set filters
+static void prv_configure_filters(Mcp2515Storage *storage, Mcp2515Id *filters) {
+  Mcp2515Id default_filter = filters[MCP2515_FILTER_ID_RXF0];
   for (size_t i = 0; i < NUM_MCP2515_FILTER_IDS; i++) {
-    Mcp2515Id filter = settings->filters[i];
+    Mcp2515Id filter = filters[i];
     if (default_filter.raw == 0) {
       continue;
     }
 
     // Prevents us from filtering for id 0x0
-    if (settings->filters[i].raw == 0) {
+    if (filters[i].raw == 0) {
       filter = default_filter;
     }
 
@@ -221,6 +245,37 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     // Set eid0-7
     prv_bit_modify(storage, filterRegH + 3, 0xff, filter.eid0);
   }
+}
+StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings) {
+#ifdef MU
+  prv_init_store();
+  s_mu_storage = storage;
+#endif
+  storage->spi_port = settings->spi_port;
+  storage->rx_cb = settings->rx_cb;
+  storage->bus_err_cb = settings->bus_err_cb;
+  storage->context = settings->context;
+  storage->int_pin = settings->int_pin;
+
+  const SpiSettings spi_settings = {
+    .baudrate = settings->spi_baudrate,
+    .mode = SPI_MODE_0,
+    .mosi = settings->mosi,
+    .miso = settings->miso,
+    .sclk = settings->sclk,
+    .cs = settings->cs,
+  };
+  status_ok_or_return(spi_init(settings->spi_port, &spi_settings));
+  prv_reset(storage);
+  // Set to Config mode, CLKOUT /4
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
+                 MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
+                 MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
+
+  // set RXB0 ctrl BUKT bit on to enable rollover to rx1
+  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
+
+  prv_configure_filters(storage, settings->filters);
 
   // 5.7 Timing configurations:
   // In order:
@@ -240,12 +295,10 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   };
 
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
-
   // Leave config mode
   uint8_t opmode =
       (settings->loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
-
   // Active-low interrupt pin
   const GpioSettings gpio_settings = {
     .direction = GPIO_DIR_IN,
@@ -327,6 +380,24 @@ StatusCode mcp2515_tx(Mcp2515Storage *storage, uint32_t id, bool extended, uint6
   // Send message
   uint8_t send_payload[] = { MCP2515_CMD_RTS | tx_buf->rts };
   spi_exchange(storage->spi_port, send_payload, sizeof(send_payload), NULL, 0);
+#ifdef MU
+  s_store.tx_id = id;
+  s_store.tx_data = data;
+  prv_export();
+#endif
+  return STATUS_CODE_OK;
+}
 
+StatusCode mcp2515_set_filter(Mcp2515Storage *storage, Mcp2515Id *filters, bool loopback) {
+  // Set to Config mode, CLKOUT /4
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL,
+                 MCP2515_CANCTRL_OPMODE_MASK | MCP2515_CANCTRL_CLKOUT_MASK,
+                 MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
+
+  prv_configure_filters(storage, filters);
+
+  // Leave config mode
+  uint8_t opmode = (loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
+  prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
   return STATUS_CODE_OK;
 }

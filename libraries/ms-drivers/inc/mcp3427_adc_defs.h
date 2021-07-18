@@ -17,4 +17,4 @@
 
 #define MCP3427_DATA_MASK_N_BIT(N) ((1 << N) - 1)
 
-#define MCP3427_MAX_CONV_TIME_MS 50
+#define MCP3427_MAX_CONV_TIME_MS 70

@@ -12,11 +12,11 @@ StatusCode steering_can_process_event(Event *e) {
     case STEERING_INPUT_HORN_EVENT:
       CAN_TRANSMIT_HORN((EEHornState)e->data);
       break;
-    case STEERING_HIGH_BEAM_FORWARD_EVENT:
-      CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_HIGH_BEAMS, (EELightState)e->data);
+    case STEERING_DRL_1_EVENT:
+      CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, (EELightState)e->data);
       break;
-    case STEERING_HIGH_BEAM_REAR_EVENT:
-      CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_HIGH_BEAMS, (EELightState)e->data);
+    case STEERING_DRL_2_EVENT:
+      CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, (EELightState)e->data);
       break;
     case STEERING_DIGITAL_INPUT_CC_TOGGLE_PRESSED_EVENT:
       CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(EE_CRUISE_CONTROL_COMMAND_TOGGLE);
@@ -32,6 +32,9 @@ StatusCode steering_can_process_event(Event *e) {
       break;
     case STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_RIGHT, (EELightState)e->data);
+      break;
+    case STEERING_REGEN_BRAKE_EVENT:
+      CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();
       break;
     default:
       return STATUS_CODE_OUT_OF_RANGE;

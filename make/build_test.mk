@@ -4,6 +4,12 @@ UNITY_SCRIPT_DIR := $(UNITY_ROOT)/auto
 UNITY_GEN_RUNNER_FLAGS := --setup_name=setup_test --teardown_name=teardown_test --use_param_tests=1
 UNITY_GEN_RUNNER := ruby $(UNITY_SCRIPT_DIR)/generate_test_runner.rb $(UNITY_GEN_RUNNER_FLAGS)
 
+# Enable code coverage
+ifeq (true,$(COVERAGE))
+	CFLAGS += -ftest-coverage -fprofile-arcs 
+	LDFLAGS += -ftest-coverage -fprofile-arcs -p
+endif
+
 # Test directories
 $(T)_GEN_DIR := $(BUILD_DIR)/gen/$(PLATFORM)/$(T)
 $(T)_TEST_BIN_DIR := $(BIN_DIR)/test/$(T)
@@ -56,7 +62,7 @@ $($(T)_TESTS): $($(T)_TEST_BIN_DIR)/%_runner$(PLATFORM_EXT): \
 	@$(CC) $($(firstword $|)_CFLAGS) -Wl,-Map=$(lastword $|)/$(notdir $(@:%$(PLATFORM_EXT)=%.map)) \
     $(addprefix -Wl$(COMMA)-wrap$(COMMA),$($(firstword $|)_$(notdir $(@:%_runner$(PLATFORM_EXT)=%))_MOCKS)) $^ -o $@ \
     -L$(STATIC_LIB_DIR) $(addprefix -l,$(foreach lib,$($(firstword $|)_TEST_DEPS),$($(lib)_DEPS))) \
-    $($(T)_LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS) $(unity_INC_DIRS))
+    $($(firstword $|)_LDFLAGS) $(addprefix -I,$($(firstword $|)_INC_DIRS) $(unity_INC_DIRS))
 
 .PHONY: test test_ test_$(T)
 

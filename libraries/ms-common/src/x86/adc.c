@@ -1,7 +1,8 @@
+#include "adc.h"
+
 #include <stddef.h>
 #include "log.h"
 
-#include "adc.h"
 #include "interrupt.h"
 #include "soft_timer.h"
 // x86 implementation very similar to STM32F0 implementation.
@@ -9,6 +10,18 @@
 // Vdda locked at 3300 mV.
 // adc_read_converted should always return close to 2V
 // temperature reading always returns 293 kelvin.
+
+#ifdef MU
+#include <stdlib.h>
+
+#include "adc.pb-c.h"
+#include "status.h"
+#include "store.h"
+#include "stores.pb-c.h"
+
+static MuAdcStore s_store = MU_ADC_STORE__INIT;
+
+#endif
 
 #define ADC_RETURNED_VOLTAGE_RAW 2500
 #define ADC_CONTINUOUS_CB_FREQ_MS 50
@@ -25,6 +38,37 @@ typedef struct AdcInterrupt {
 static AdcInterrupt s_adc_interrupts[NUM_ADC_CHANNELS];
 
 static bool s_active_channels[NUM_ADC_CHANNELS];
+
+#ifdef MU
+static void update_store(ProtobufCBinaryData msg_buf, ProtobufCBinaryData mask_buf) {
+  MuAdcStore *msg = mu_adc_store__unpack(NULL, msg_buf.len, msg_buf.data);
+  MuAdcStore *mask = mu_adc_store__unpack(NULL, mask_buf.len, mask_buf.data);
+
+  for (uint16_t i = 0; i < mask->n_reading; i++) {
+    if (mask->reading[i] != 0) {
+      s_store.reading[i] = msg->reading[i];
+    }
+  }
+  mu_adc_store__free_unpacked(msg, NULL);
+  mu_adc_store__free_unpacked(mask, NULL);
+  store_export(MU_STORE_TYPE__ADC, &s_store, NULL);
+}
+
+static void prv_init_store() {
+  StoreFuncs funcs = {
+    (GetPackedSizeFunc)mu_adc_store__get_packed_size,
+    (PackFunc)mu_adc_store__pack,
+    (UnpackFunc)mu_adc_store__unpack,
+    (FreeUnpackedFunc)mu_adc_store__free_unpacked,
+    (UpdateStoreFunc)update_store,
+  };
+  s_store.n_reading = NUM_ADC_CHANNELS;
+  s_store.reading = malloc(NUM_ADC_CHANNELS * sizeof(uint32_t));
+
+  store_register(MU_STORE_TYPE__ADC, funcs, &s_store, NULL);
+  store_export(MU_STORE_TYPE__ADC, &s_store, NULL);
+}
+#endif
 
 static uint16_t prv_get_temp(uint16_t reading) {
   return ADC_TEMP_RETURN;
@@ -85,6 +129,9 @@ void adc_init(AdcMode adc_mode) {
     prv_reset_channel(i);
   }
   adc_set_channel(ADC_CHANNEL_REF, true);
+#ifdef MU
+  prv_init_store();
+#endif
 }
 
 StatusCode adc_set_channel(AdcChannel adc_channel, bool new_state) {

@@ -6,6 +6,9 @@
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
 $(T)_DEPS := $(PLATFORM_LIB) libcore
+ifneq (,$(IS_MU))
+$(T)_DEPS += mu-gen mu-store
+endif
 
 ifeq (x86,$(PLATFORM))
 $(T)_EXCLUDE_TESTS := pwm pwm_input

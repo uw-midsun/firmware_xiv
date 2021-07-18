@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+enum MuStoreType {
+  LOG = 0;
+  CMD = 1;
+  GPIO = 2;
+  ADS1015 = 3;
+  MCP2515 = 4;
+  ADS1259 = 5;
+  ADT7476A = 6;
+  ADC = 7;
+  PCA9539R = 8;
+  MCP23008 = 9;
+  MCP3427 = 10;
+  END = 11;
+}
+
+enum MuCmdType {
+  NOP = 0;
+  FINISH_INIT_CONDS = 1;
+  NUM_CMDS = 3;
+}
+
+message MuLog {
+  bytes log = 1;
+}
+
+message MuCmd {
+  MuCmdType cmd = 1;
+}
+
+message MuStoreInfo {
+  uint64 key = 1;
+  MuStoreType type = 2;
+  bytes msg = 3;
+}
+
+message MuStoreUpdate {
+  uint64 key = 1;
+  MuStoreType type = 2;
+  bytes msg = 3;
+  bytes mask = 4;
+}

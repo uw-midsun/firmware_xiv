@@ -6,6 +6,8 @@ ifeq (,$(COMPILER))
   $(error Invalid compiler. Expected: $(VALID_COMPILERS))
 endif
 
+COVERAGE := false
+
 CC := $(COMPILER)
 LD := $(COMPILER)
 OBJCPY := objcopy
@@ -48,7 +50,13 @@ ifeq (clang,$(COMPILER))
 endif
 
 # Linker flags
-LDFLAGS := -lrt
+LDFLAGS := -lrt -lm
+
+CFLAGS += -I/usr/local/include
+
+ifneq (,$(IS_MU))
+  LDFLAGS += -L/usr/local/lib -lprotobuf-c
+endif
 
 # Shell environment variables
 FLASH_VAR := MIDSUN_X86_FLASH_FILE

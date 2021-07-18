@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "analyzestack.h"
 #include "gpio.h"
 #include "interrupt_def.h"
 #include "status.h"
@@ -10,6 +11,7 @@
 #include "stm32f0xx_syscfg.h"
 
 typedef struct GpioItInterrupt {
+  InterruptEdge edge;
   GpioAddress address;
   GpioItCallback callback;
   void *context;
@@ -34,6 +36,14 @@ static uint8_t prv_get_irq_channel(uint8_t pin) {
   return 7;
 }
 
+StatusCode gpio_it_get_edge(const GpioAddress *address, InterruptEdge *edge) {
+  if (s_gpio_it_interrupts[address->pin].callback != NULL) {
+    *edge = s_gpio_it_interrupts[address->pin].edge;
+    return STATUS_CODE_OK;
+  }
+  return STATUS_CODE_UNINITIALIZED;
+}
+
 StatusCode gpio_it_register_interrupt(const GpioAddress *address, const InterruptSettings *settings,
                                       InterruptEdge edge, GpioItCallback callback, void *context) {
   if (address->port >= NUM_GPIO_PORTS || address->pin >= GPIO_PINS_PER_PORT) {
@@ -44,6 +54,7 @@ StatusCode gpio_it_register_interrupt(const GpioAddress *address, const Interrup
 
   // Try to register on NVIC and EXTI. Both must succeed for the callback to be
   // set.
+  s_gpio_it_interrupts[address->pin].edge = edge;
   s_gpio_it_interrupts[address->pin].address = *address;
   s_gpio_it_interrupts[address->pin].callback = callback;
   s_gpio_it_interrupts[address->pin].context = context;
@@ -83,6 +94,8 @@ static void prv_run_gpio_callbacks(uint8_t lower_bound, uint8_t upper_bound) {
   for (int i = lower_bound; i <= upper_bound; i++) {
     stm32f0xx_interrupt_exti_get_pending(i, &pending);
     if (pending && s_gpio_it_interrupts[i].callback != NULL) {
+      // This call can be referenced in stack analyzer annotations by this alias.
+      ANALYZESTACK_ALIAS("gpio_interrupts")
       s_gpio_it_interrupts[i].callback(&s_gpio_it_interrupts[i].address,
                                        s_gpio_it_interrupts[i].context);
     }

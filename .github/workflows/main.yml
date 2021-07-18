@@ -16,6 +16,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-16.04
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v2
 
@@ -99,21 +100,65 @@ jobs:
           fi
           
       - name: Install clang
-        if: steps.cache-clang.outputs.cache-hit != 'true'
-        run: sudo apt-fast -y install clang-5.0
+        env: 
+          CACHE_HIT: ${{steps.cache-clang.outputs.cache-hit}}
+        run: |
+          if [[ "$CACHE_HIT" == 'true' ]]; then
+            sudo cp --force --recursive /usr/bin/clang-5.0/* /
+          else
+            sudo apt-fast -y install clang-5.0
+            mkdir -p /usr/bin/clang-5.0
+            for dep in clang-5.0; do 
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done |
+        xargs cp --parents --target-directory /usr/bin/clang-5.0/
+            done
+          fi
 
       - name: Install clang-format
-        if: steps.cache-clang-format.outputs.cache-hit != 'true'
-        run: sudo apt-fast -y install clang-format-5.0
+        env: 
+          CACHE_HIT: ${{steps.cache-clang-format.outputs.cache-hit}}
+        run: |
+          if [[ "$CACHE_HIT" == 'true' ]]; then
+            sudo cp --force --recursive /usr/bin/clang-format-5.0/* /
+          else
+            sudo apt-fast -y install clang-format-5.0
+            mkdir -p /usr/bin/clang-format-5.0
+            for dep in clang-format-5.0; do 
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done |
+        xargs cp --parents --target-directory /usr/bin/clang-format-5.0/
+            done
+          fi
 
       - name: Install libc6-i386
-        if: steps.cache-libc6-i386.outputs.cache-hit != 'true'
-        run: sudo apt-fast -y install libc6-i386
+        env: 
+          CACHE_HIT: ${{steps.cache-libc6-i386.outputs.cache-hit}}
+        run: |
+          if [[ "$CACHE_HIT" == 'true' ]]; then
+            sudo cp --force --recursive /var/lib/dpkg/info/libc6-i386/* /
+          else
+            sudo apt-fast -y install libc6-i386
+            mkdir -p /var/lib/dpkg/info/libc6-i386
+            for dep in libc6-i386; do 
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done |
+        xargs cp --parents --target-directory /var/lib/dpkg/info/libc6-i386/
+            done
+          fi
 
         # for vcan module
       - name: Install linux modules
-        if: steps.cache-linux-module.outputs.cache-hit != 'true'
-        run: sudo apt-fast -y install linux-modules-extra-$(uname -r)
+        env: 
+          CACHE_HIT: ${{steps.cache-linux-module.outputs.cache-hit}}
+        run: |
+          if [[ "$CACHE_HIT" == 'true' ]]; then
+            sudo cp --force --recursive /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic/* /
+          else
+            sudo apt-fast -y install linux-modules-extra-$(uname -r)
+            mkdir -p /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic
+            for dep in linux-modules-extra-$(uname -r); do 
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done |
+        xargs cp --parents --target-directory /var/lib/dpkg/info/linux-modules-extra-4.15.0-20-generic/
+            done
+          fi
 
       - name: Which gcc, clang, clang-format
         run: |
@@ -154,9 +199,9 @@ jobs:
       - name: Install Python tooling
         if: steps.cache-pip.outputs.cache-hit != 'true'
         run: |
-          pip install --user pylint
-          pip install --user autopep8
-          # Install dependencies from all requirements.txt in the repo
+          pip install --user virtualenv
+          pip install --upgrade pip
+          pip install --upgrade setuptools
           make install_requirements
 
       - name: Print versions of everything
@@ -171,8 +216,7 @@ jobs:
           make --version
           clang --version
           clang-format --version
-          pylint --version
-          autopep8 --version
+          .venv/bin/pip3 freeze
 
       - name: Format
         run: make test_format
@@ -184,8 +228,42 @@ jobs:
         run: make pylint
 
       - name: Build stm32f0xx
+      - name: Build codegen
         run: |
-          make build_all PLATFORM=stm32f0xx DEFINES="${DEFINES}"
+          make codegen
+          make codegen_dbc
+
+      - name: Check for uncommitted codegen changes
+        id: check-uncommitted-changes
+        continue-on-error: true
+        # https://stackoverflow.com/a/3879077
+        run: |
+          git update-index --refresh || true
+          git diff-index --quiet HEAD --
+
+      - name: Post PR comment on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-codegen-changes.md', 'utf8');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+
+      - name: Fail on uncommitted changes
+        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+        run: exit 1
+
+      - name: Build stm32f0xx
+        id: build-stm32
+        run: |
+          make build_all PLATFORM=stm32f0xx DEFINE="${DEFINES}"
           make clean
 
       - name: Build x86
