@@ -222,7 +222,7 @@ jobs:
       - name: Pylint
         run: make pylint
 
-      - name: Build stm32f0xx
+      #- name: Build stm32f0xx
       - name: Build codegen
         run: |
           make codegen
