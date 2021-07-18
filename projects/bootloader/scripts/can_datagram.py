@@ -23,6 +23,10 @@ CAN_START_ARBITRATION_ID = 0b00000010000
 CAN_ARBITRATION_ID = 0b00000000000
 
 
+class DatagramTypeError(Exception):
+    pass
+
+
 class Datagram:
     """This class acts as an easy modular interface for a datagram."""
 
@@ -47,7 +51,7 @@ class Datagram:
         # 1 (prot) + 4 (crc32) + 1 (type) + 1 (num nodes) + 0 (nodes) + 2 (data size) + 0 (data)
         #   = 9
         if len(datagram_bytearray) < MIN_BYTEARRAY_SIZE:
-            raise Exception(
+            raise DatagramTypeError(
                 "Invalid Datagram format from bytearray: Does not meet minimum size requirement")
 
         protocol_version = datagram_bytearray[PROTOCOL_VERSION_OFFSET]
@@ -57,7 +61,7 @@ class Datagram:
         num_node_ids = datagram_bytearray[NUM_NODE_ID_OFFSET]
 
         if len(datagram_bytearray) < MIN_BYTEARRAY_SIZE + num_node_ids:
-            raise Exception("Invalid Datagram format from bytearray: Not enough node ids")
+            raise DatagramTypeError("Invalid Datagram format from bytearray: Not enough node ids")
 
         node_ids = list(datagram_bytearray[NODE_ID_OFFSET:NODE_ID_OFFSET + num_node_ids])
 
@@ -65,14 +69,14 @@ class Datagram:
                                                 datagram_bytearray[NODE_ID_OFFSET + num_node_ids:], 2)
 
         if len(datagram_bytearray) != MIN_BYTEARRAY_SIZE + num_node_ids + data_size:
-            raise Exception("Invalid Datagram format from bytearray: Not enough data bytes")
+            raise DatagramTypeError("Invalid Datagram format from bytearray: Not enough data bytes")
 
         data = datagram_bytearray[NODE_ID_OFFSET + num_node_ids + DATA_SIZE_SIZE:]
 
         exp_crc32 = cls._calculate_crc32(cls, datagram_type_id, node_ids, data)
 
         if not exp_crc32 == crc32:
-            raise Exception("Invalid Datagram format from bytearray: Invalid crc32")
+            raise DatagramTypeError("Invalid Datagram format from bytearray: Invalid crc32")
 
         return cls(protocol_version=protocol_version,
                    datagram_type_id=datagram_type_id, node_ids=node_ids, data=data)
@@ -259,24 +263,28 @@ class DatagramListener(can.BufferedReader):
         """This registers the callback."""
         assert callable(callback)
         self.callback = callback
-        self.datagram_messages = []
+        # Messages are stored in a dictionary where key = board ID, value = message
+        self.datagram_messages = {}
 
         super().__init__()
 
-    def on_message_received(self, msg):
+    def on_message_received(self, msg: can.Message):
         """This (SHOULD) wait for the first message in the datagram 0x010."""
         super().on_message_received(msg)
 
-        if msg.arbitration_id == 0x0010:
-            # Every time we receive the first message, we reset the variables.
-            self.datagram_messages = msg.data
+        board_id = (msg.arbitration_id & 0b11111100000) >> 5
+        start_message = (msg.arbitration_id & 0x10) >> 4
 
-        if msg.arbitration_id == 0x0000:
-            self.datagram_messages += msg.data
+        if start_message == 1:
+            # Every time we receive the first message, we reset the variables.
+            self.datagram_messages[board_id] = msg.data
+
+        if start_message == 0:
+            self.datagram_messages[board_id] += msg.data
 
         try:
-            datagram = Datagram.deserialize(self.datagram_messages)
-        except BaseException:
+            datagram = Datagram.deserialize(self.datagram_messages[board_id])
+        except DatagramTypeError:
             # Datagram is incomplete, continue until complete
             pass
         else:
