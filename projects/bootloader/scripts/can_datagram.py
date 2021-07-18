@@ -14,6 +14,7 @@ MIN_BYTEARRAY_SIZE = 9
 DATA_SIZE_SIZE = 2
 
 PROTOCOL_VERSION_OFFSET = 0
+CRC_32_OFFSET = 1
 DATAGRAM_TYPE_OFFSET = 5
 NUM_NODE_ID_OFFSET = 6
 NODE_ID_OFFSET = 7
@@ -26,11 +27,6 @@ class Datagram:
     """This class acts as an easy modular interface for a datagram."""
 
     def __init__(self, **kwargs):
-        self._protocol_version = 0
-        self._datagram_type_id = 0
-        self._node_ids = []
-        self._data = bytearray(0)
-
         self._check_kwargs(**kwargs)
 
         self._protocol_version = kwargs["protocol_version"] & 0xff
@@ -42,8 +38,9 @@ class Datagram:
 
         self._data = kwargs["data"]
 
-    def deserialize(self, datagram_bytearray):
-        """This function sets the bytearray and datagram from the bytearray."""
+    @classmethod
+    def deserialize(cls, datagram_bytearray):
+        """This function returns an instance of the class from a bytearray."""
         assert isinstance(datagram_bytearray, bytearray)
 
         # "theoretical" lower limit:
@@ -54,6 +51,7 @@ class Datagram:
                 "Invalid Datagram format from bytearray: Does not meet minimum size requirement")
 
         protocol_version = datagram_bytearray[PROTOCOL_VERSION_OFFSET]
+        crc32 = datagram_bytearray[CRC_32_OFFSET:DATAGRAM_TYPE_OFFSET]
         datagram_type_id = datagram_bytearray[DATAGRAM_TYPE_OFFSET]
 
         num_node_ids = datagram_bytearray[NUM_NODE_ID_OFFSET]
@@ -63,8 +61,8 @@ class Datagram:
 
         node_ids = list(datagram_bytearray[NODE_ID_OFFSET:NODE_ID_OFFSET + num_node_ids])
 
-        data_size = self._convert_from_bytearray(
-            datagram_bytearray[NODE_ID_OFFSET + num_node_ids:], 2)
+        data_size = cls._convert_from_bytearray(cls,
+                                                datagram_bytearray[NODE_ID_OFFSET + num_node_ids:], 2)
 
         if len(datagram_bytearray) != MIN_BYTEARRAY_SIZE + num_node_ids + data_size:
             print("Data size: ", data_size)
@@ -72,10 +70,13 @@ class Datagram:
 
         data = datagram_bytearray[NODE_ID_OFFSET + num_node_ids + DATA_SIZE_SIZE:]
 
-        self._protocol_version = protocol_version
-        self._datagram_type_id = datagram_type_id
-        self._node_ids = node_ids
-        self._data = data
+        exp_crc32 = cls._calculate_crc32(cls, datagram_type_id, node_ids, data)
+
+        if not exp_crc32 == crc32:
+            raise Exception("Invalid Datagram format from bytearray: Invalid crc32")
+
+        return cls(protocol_version=protocol_version,
+                   datagram_type_id=datagram_type_id, node_ids=node_ids, data=data)
 
     def serialize(self):
         """This function returns a bytearray based on set data."""
@@ -106,44 +107,52 @@ class Datagram:
                           *(self._data)])
 
     # Accessors and mutators for the datagram
-    def get_protocol_version(self):
-        """This function retrieves the protocol version."""
+
+    @property
+    def protocol_version(self):
+        """This function describes the protocol version property."""
         return self._protocol_version
 
-    def set_protocol_version(self, protocol_version):
+    @protocol_version.setter
+    def protocol_version(self, value):
         """This function sets the protocol version."""
-        assert protocol_version & 0xff == protocol_version
-        self._protocol_version = protocol_version & 0xff
+        assert value & 0xff == value
+        self._protocol_version = value & 0xff
 
-    def get_datagram_type_id(self):
-        """This function retrieves the type id."""
+    @property
+    def datagram_type_id(self):
+        """This function describes the datagram type id property."""
         return self._datagram_type_id
 
-    def set_datagram_type_id(self, datagram_type_id):
-        """This function sets the type id."""
-        assert datagram_type_id & 0xff == datagram_type_id
-        self._datagram_type_id = datagram_type_id & 0xff
+    @datagram_type_id.setter
+    def datagram_type_id(self, value):
+        """This function sets the datagram type id."""
+        assert value & 0xff == value
+        self._datagram_type_id = value & 0xff
 
-    def get_node_ids(self):
-        """This function sets the node ids."""
+    @property
+    def node_ids(self):
+        """This function describes the node ids property."""
         return self._node_ids
 
-    def set_node_ids(self, node_ids):
+    @node_ids.setter
+    def node_ids(self, value):
         """This function sets the node ids."""
-        assert isinstance(node_ids, list)
-        for val in node_ids:
+        assert isinstance(value, list)
+        for val in value:
             assert val & 0xff == val
             assert val < 64
-        self._node_ids = node_ids
+        self._node_ids = value
 
-    def get_data(self):
-        """This function retrieves the data."""
+    @property
+    def data(self):
         return self._data
 
-    def set_data(self, data):
+    @data.setter
+    def data(self, value):
         """This function sets the data."""
-        assert isinstance(data, bytearray)
-        self._data = data
+        assert isinstance(value, bytearray)
+        self._data = value
 
     def _check_kwargs(self, **kwargs):
         """ This function checks that all variables are as expected"""
@@ -181,6 +190,27 @@ class Datagram:
             value = value | ((in_bytearray[i] & 0xff) << (i * 8))
         return value
 
+    def _calculate_crc32(self, datagram_type_id, node_ids, data):
+        """This function returns a bytearray based on set data."""
+
+        node_crc32 = zlib.crc32(bytearray(node_ids))
+        node_crc32 = self._convert_to_bytearray(self, node_crc32, 4)
+        data_crc32 = zlib.crc32(data)
+        data_crc32 = self._convert_to_bytearray(self, data_crc32, 4)
+
+        crc32_array = bytearray([datagram_type_id,
+                                 len(node_ids),
+                                 *node_crc32,
+                                 len(data) & 0xff,
+                                 (len(data) >> 8) & 0xff,
+                                 *data_crc32])
+        # Update the crc32
+        crc32 = zlib.crc32(crc32_array)
+        crc32 = self._convert_to_bytearray(self, crc32, 4)
+
+        # Update the bytearray
+        return crc32
+
 
 class DatagramSender:
     """This class acts as a distributor for the Datagram class on a bus."""
@@ -214,17 +244,9 @@ class DatagramSender:
             message_arbitration_id = CAN_ARBITRATION_ID
 
         # Send the messages
-        try:
-            for msg in can_messages:
-                self.bus.send(msg)
-            print("{} messages were sent on {}".format(len(can_messages), self.bus.channel_info))
-
-        except can.CanError:
-            print("Message could not be sent")
-
-    def get_bus(self):
-        """Accessor for the bus"""
-        return self.bus
+        for msg in can_messages:
+            self.bus.send(msg)
+        print("{} messages were sent on {}".format(len(can_messages), self.bus.channel_info))
 
     def _chunkify(self, data, size):
         """This chunks up the datagram bytearray for easy iteration."""

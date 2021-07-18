@@ -29,10 +29,10 @@ class TestCanDatagram(unittest.TestCase):
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
 
-        self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
-        self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
-        self.assertEqual(message.get_node_ids(), TEST_NODES)
-        self.assertEqual(message.get_data(), bytearray(TEST_DATA))
+        self.assertEqual(message._protocol_version, TEST_PROTOCOL_VERSION)
+        self.assertEqual(message._datagram_type_id, TEST_DATAGRAM_TYPE_ID)
+        self.assertEqual(message._node_ids, TEST_NODES)
+        self.assertEqual(message._data, bytearray(TEST_DATA))
 
     def test_modify_message(self):
         """Test modifying values in the Datagram class"""
@@ -42,25 +42,25 @@ class TestCanDatagram(unittest.TestCase):
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
 
-        self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
-        self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
-        self.assertEqual(message.get_node_ids(), TEST_NODES)
-        self.assertEqual(message.get_data(), bytearray(TEST_DATA))
+        self.assertEqual(message._protocol_version, TEST_PROTOCOL_VERSION)
+        self.assertEqual(message._datagram_type_id, TEST_DATAGRAM_TYPE_ID)
+        self.assertEqual(message._node_ids, TEST_NODES)
+        self.assertEqual(message._data, bytearray(TEST_DATA))
 
         protocol_version = 9
         datagram_type_id = 8
         test_nodes = list(reversed(TEST_NODES))
         test_data = list(reversed(TEST_DATA))
 
-        message.set_protocol_version(protocol_version)
-        message.set_datagram_type_id(datagram_type_id)
-        message.set_node_ids(test_nodes)
-        message.set_data(bytearray(test_data))
+        message.protocol_version = protocol_version
+        message.datagram_type_id = datagram_type_id
+        message.node_ids = test_nodes
+        message.data = bytearray(test_data)
 
-        self.assertEqual(message.get_protocol_version(), protocol_version)
-        self.assertEqual(message.get_datagram_type_id(), datagram_type_id)
-        self.assertEqual(message.get_node_ids(), test_nodes)
-        self.assertEqual(message.get_data(), bytearray(test_data))
+        self.assertEqual(message._protocol_version, protocol_version)
+        self.assertEqual(message._datagram_type_id, datagram_type_id)
+        self.assertEqual(message._node_ids, test_nodes)
+        self.assertEqual(message._data, bytearray(test_data))
 
     def test_serialize(self):
         """Test the serialize function"""
@@ -75,19 +75,12 @@ class TestCanDatagram(unittest.TestCase):
 
     def test_deserialize(self):
         """Test retrieving Datagram information from the bytearray"""
-        message = Datagram(
-            protocol_version=0,
-            datagram_type_id=0,
-            node_ids=[0],
-            data=bytearray(
-                [0]))
-
-        message.deserialize(bytearray(
+        message = Datagram.deserialize(bytearray(
             b'\x00m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
-        self.assertEqual(message.get_protocol_version(), TEST_PROTOCOL_VERSION)
-        self.assertEqual(message.get_datagram_type_id(), TEST_DATAGRAM_TYPE_ID)
-        self.assertEqual(message.get_node_ids(), TEST_NODES)
-        self.assertEqual(message.get_data(), bytearray(TEST_DATA))
+        self.assertEqual(message._protocol_version, TEST_PROTOCOL_VERSION)
+        self.assertEqual(message._datagram_type_id, TEST_DATAGRAM_TYPE_ID)
+        self.assertEqual(message._node_ids, TEST_NODES)
+        self.assertEqual(message._data, bytearray(TEST_DATA))
 
 
 class TestCanDatagramSender(unittest.TestCase):
@@ -99,7 +92,7 @@ class TestCanDatagramSender(unittest.TestCase):
         sender = DatagramSender(channel=TEST_CHANNEL, receive_own_messages=True)
 
         listener = can.BufferedReader()
-        notifier = can.Notifier(sender.get_bus(), [listener])
+        notifier = can.Notifier(sender.bus, [listener])
 
         message = Datagram(
             protocol_version=TEST_PROTOCOL_VERSION,
@@ -128,7 +121,7 @@ class TestCanDatagramListener(unittest.TestCase):
 
         sender = DatagramSender(channel=TEST_CHANNEL, receive_own_messages=True)
         listener = DatagramListener(self.triggerCallback)
-        notifier = can.Notifier(sender.get_bus(), [listener])
+        notifier = can.Notifier(sender.bus, [listener])
 
         message = Datagram(
             protocol_version=TEST_PROTOCOL_VERSION,
