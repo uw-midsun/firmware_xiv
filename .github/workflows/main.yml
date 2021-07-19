@@ -171,7 +171,7 @@ jobs:
           pip install --upgrade setuptools
           make install_requirements
 
-      - name: Print versions of everything
+      - name: Print version of arm
         run: |
           arm-none-eabi-gcc --version
           arm-none-eabi-objcopy --version
@@ -179,6 +179,17 @@ jobs:
           arm-none-eabi-size --version
           arm-none-eabi-gcc-ar --version
           arm-none-eabi-gdb --version
+        working-directory: /home/runner/.arm-none-eabi-gcc-cache
+
+      - name: Print versions of everything
+        #run: |
+        # arm-none-eabi-gcc --version
+        #  arm-none-eabi-objcopy --version
+        #  arm-none-eabi-objdump --version
+        #  arm-none-eabi-size --version
+        #  arm-none-eabi-gcc-ar --version
+        #  arm-none-eabi-gdb --version
+        run: |
           gcc --version
           make --version
           clang --version
