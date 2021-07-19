@@ -179,8 +179,7 @@ jobs:
           arm-none-eabi-size --version
           arm-none-eabi-gcc-ar --version
           arm-none-eabi-gdb --version
-        with: 
-          directory: /home/runner/.arm-none-eabi-gcc-cache
+        working-directory: /home/runner/.arm-none-eabi-gcc-cache
 
       - name: Print versions of everything
         #run: |
