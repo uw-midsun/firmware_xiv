@@ -21,11 +21,11 @@ const Output g_turn_on_front[] = {
   FRONT_OUTPUT_RIGHT_CAMERA,
   FRONT_OUTPUT_MAIN_PI,  // driver display + telemetry pi
   FRONT_OUTPUT_SPEAKER,
-  // FRONT_OUTPUT_FAN,  // on UV cutoff via gpio pin (not on load switch)
+  FRONT_OUTPUT_FAN,  // on UV cutoff via gpio pin (not on load switch)
   FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT,
   FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS,
-  // FRONT_OUTPUT_HORN,  // on UV cutoff via gpio pin (not on load switch)
+  FRONT_OUTPUT_HORN,  // on UV cutoff via gpio pin (not on load switch)
   FRONT_OUTPUT_5V_SPARE_1,
   FRONT_OUTPUT_5V_SPARE_2,
   FRONT_OUTPUT_SPARE_1,
