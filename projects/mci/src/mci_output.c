@@ -60,7 +60,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
   bool is_cruise = drive_fsm_is_cruise();
-  uint8_t is_regen_brake = get_regen_braking_state();
+  RegenBrakingState is_regen_brake = get_regen_braking_state();
 
   // TODO(SOFT-122): Make sure test ensures that maps are continues
   if (drive_state == EE_DRIVE_OUTPUT_OFF) {

@@ -121,11 +121,11 @@ static StatusCode prv_empty_ack_callback(CanMessageId msg_id, uint16_t device, C
   return STATUS_CODE_OK;
 }
 
-static StatusCode prv_set_regen_braking_state(uint8_t state) {
+static StatusCode prv_set_regen_braking_state(RegenBrakingState state) {
   CanAckRequest req = { .callback = prv_empty_ack_callback,
                         .context = NULL,
                         .expected_bitset =
-                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER) };
+                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER), };
   CAN_TRANSMIT_REGEN_BRAKING(&req, state);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(state, get_regen_braking_state());
@@ -206,7 +206,7 @@ void test_mci_output_off_no_pedals_regen_enabled(void) {
 
 void test_mci_output_off_no_pedals_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 0.0f,
     .brake = 0.0f,
@@ -241,7 +241,7 @@ void test_mci_output_off_only_throttle_regen_enabled(void) {
 
 void test_mci_output_off_only_throttle_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 50.0f,
     .brake = 0.0f,
@@ -276,7 +276,7 @@ void test_mci_output_off_only_brake_regen_enabled(void) {
 
 void test_mci_output_off_only_brake_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 0.0f,
     .brake = 50.0f,
@@ -311,7 +311,7 @@ void test_mci_output_off_both_pedals_regen_enabled(void) {
 
 void test_mci_output_off_both_pedals_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 50.0f,
     .brake = 50.0f,
@@ -346,7 +346,7 @@ void test_mci_output_drive_no_pedals_regen_enabled(void) {
 
 void test_mci_output_drive_no_pedals_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 0.0f,
     .brake = 0.0f,
@@ -381,7 +381,7 @@ void test_mci_output_drive_only_throttle_regen_enabled(void) {
 
 void test_mci_output_drive_only_throttle_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 50.0f,
     .brake = 0.0f,
@@ -416,7 +416,7 @@ void test_mci_output_drive_only_brake_regen_enabled(void) {
 
 void test_mci_output_drive_only_brake_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 0.0f,
     .brake = 50.0f,
@@ -451,7 +451,7 @@ void test_mci_output_drive_both_pedals_regen_enabled(void) {
 
 void test_mci_output_drive_both_pedals_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 50.0f,
     .brake = 50.0f,
@@ -486,7 +486,7 @@ void test_mci_output_reverse_no_pedals_regen_enabled(void) {
 
 void test_mci_output_reverse_no_pedals_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 0.0f,
     .brake = 0.0f,
@@ -521,7 +521,7 @@ void test_mci_output_reverse_only_throttle_regen_enabled(void) {
 
 void test_mci_output_reverse_only_throttle_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 50.0f,
     .brake = 0.0f,
@@ -556,7 +556,7 @@ void test_mci_output_reverse_only_brake_regen_enabled(void) {
 
 void test_mci_output_reverse_only_brake_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 0.0f,
     .brake = 50.0f,
@@ -591,7 +591,7 @@ void test_mci_output_reverse_both_pedals_regen_enabled(void) {
 
 void test_mci_output_reverse_both_pedals_regen_disabled(void) {
   LOG_DEBUG("DOING %s\n", __func__);
-  TEST_ASSERT_OK(prv_set_regen_braking_state(0));
+  TEST_ASSERT_OK(prv_set_regen_braking_state(REGEN_DISABLED));
   PedalValues test_values = {
     .throttle = 50.0f,
     .brake = 50.0f,
