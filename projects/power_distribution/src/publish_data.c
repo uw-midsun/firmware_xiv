@@ -47,6 +47,10 @@ static void prv_partially_publish(SoftTimerId timer_id, void *context) {
   while (index < transmit_up_to) {
     Output current_id = s_config->outputs_to_publish[index];
     StatusCode tx_code = s_config->transmitter(current_id, s_current_measurements[current_id]);
+    // special case for smoketesting
+    if (current_id == FRONT_OUTPUT_UV_VBAT) {
+      LOG_DEBUG("UV VBAT CURRENT IS %d mA\n", s_current_measurements[current_id]);
+    }
     if (!status_ok(tx_code)) {
       LOG_WARN("Failed to TX output %d: status code %d\n", current_id, tx_code);
     }
