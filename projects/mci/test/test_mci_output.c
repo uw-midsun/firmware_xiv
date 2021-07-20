@@ -122,10 +122,11 @@ static StatusCode prv_empty_ack_callback(CanMessageId msg_id, uint16_t device, C
 }
 
 static StatusCode prv_set_regen_braking_state(RegenBrakingState state) {
-  CanAckRequest req = { .callback = prv_empty_ack_callback,
-                        .context = NULL,
-                        .expected_bitset =
-                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER), };
+  CanAckRequest req = {
+    .callback = prv_empty_ack_callback,
+    .context = NULL,
+    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
+  };
   CAN_TRANSMIT_REGEN_BRAKING(&req, state);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(state, get_regen_braking_state());

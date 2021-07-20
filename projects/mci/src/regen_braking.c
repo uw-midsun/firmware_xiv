@@ -10,7 +10,7 @@ static RegenBrakingState s_regen_braking_state;
 // Callback function to set the regen braking state
 static StatusCode prv_regen_braking_callback(const CanMessage *msg, void *context,
                                              CanAckStatus *ack_reply) {
-  CAN_UNPACK_REGEN_BRAKING(msg, (uint8_t*)&s_regen_braking_state);
+  CAN_UNPACK_REGEN_BRAKING(msg, (uint8_t *)&s_regen_braking_state);
   return STATUS_CODE_OK;
 }
 

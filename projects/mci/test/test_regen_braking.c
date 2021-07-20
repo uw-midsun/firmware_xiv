@@ -26,20 +26,22 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_regen_state_off(void) {
-  CanAckRequest req = { .callback = prv_empty_ack_callback,
-                        .context = NULL,
-                        .expected_bitset =
-                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER), };
+  CanAckRequest req = {
+    .callback = prv_empty_ack_callback,
+    .context = NULL,
+    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
+  };
   CAN_TRANSMIT_REGEN_BRAKING(&req, REGEN_DISABLED);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(REGEN_DISABLED, get_regen_braking_state());
 }
 
 void test_regen_state_on(void) {
-  CanAckRequest req = { .callback = prv_empty_ack_callback,
-                        .context = NULL,
-                        .expected_bitset =
-                            CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER), };
+  CanAckRequest req = {
+    .callback = prv_empty_ack_callback,
+    .context = NULL,
+    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
+  };
   CAN_TRANSMIT_REGEN_BRAKING(&req, REGEN_ENABLED);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
   TEST_ASSERT_EQUAL(REGEN_ENABLED, get_regen_braking_state());
