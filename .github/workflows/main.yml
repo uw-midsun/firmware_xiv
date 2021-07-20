@@ -72,7 +72,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-arm-v1
         with:
-          path: /home/runner/.arm-none-eabi-gcc-cache
+          path: /$HOME/.arm-none-eabi-gcc-cache
           key: ${{ runner.os }}-arm-v1
       
       - name: Add repo and update
@@ -135,13 +135,15 @@ jobs:
   
       - name: Make arm cache directory
         run:
-          mkdir -p /home/runner/.arm-none-eabi-gcc-cache
+          #mkdir -p /home/runner/.arm-none-eabi-gcc-cache
+          mkdir -p ~/.arm-none-eabi-gcc-cache
+          echo "${HOME}/.arm-none-eabi-gcc-cache" >> $GITHUB_PATH
 
       - if: steps.cache-arm-v1.outputs.cache-hit != 'true'
         uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
-          directory: /home/runner/.arm-none-eabi-gcc-cache
+          directory: /$HOME/.arm-none-eabi-gcc-cache
 
       - name: Install GNU Make 4.1
         env:
@@ -171,7 +173,7 @@ jobs:
           pip install --upgrade setuptools
           make install_requirements
 
-      - name: Print version of arm
+      - name: Print versions of everything
         run: |
           arm-none-eabi-gcc --version
           arm-none-eabi-objcopy --version
@@ -179,17 +181,6 @@ jobs:
           arm-none-eabi-size --version
           arm-none-eabi-gcc-ar --version
           arm-none-eabi-gdb --version
-        working-directory: /home/runner/.arm-none-eabi-gcc-cache
-
-      - name: Print versions of everything
-        #run: |
-        # arm-none-eabi-gcc --version
-        #  arm-none-eabi-objcopy --version
-        #  arm-none-eabi-objdump --version
-        #  arm-none-eabi-size --version
-        #  arm-none-eabi-gcc-ar --version
-        #  arm-none-eabi-gdb --version
-        run: |
           gcc --version
           make --version
           clang --version
