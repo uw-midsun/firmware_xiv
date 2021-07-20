@@ -9,17 +9,17 @@
 #include "wait.h"
 
 #define HORN_GPIO_ADDR \
-  { .port = GPIO_PORT_B, .pin = 1 }
-#define LANE_ASSIST_GPIO_ADDR \
-  { .port = GPIO_PORT_A, .pin = 6 }
-#define HIGH_BEAM_FORWARD_GPIO_ADDR \
-  { .port = GPIO_PORT_A, .pin = 7 }
-#define HIGH_BEAM_REAR_GPIO_ADDR \
-  { .port = GPIO_PORT_B, .pin = 0 }
-#define REGEN_BRAKE_TOGGLE_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 4 }
-#define CC_TOGGLE_GPIO_ADDR \
+#define LANE_ASSIST_GPIO_ADDR \
+  { .port = GPIO_PORT_B, .pin = 1 }
+#define HIGH_BEAM_FORWARD_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 6 }
+#define HIGH_BEAM_REAR_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 5 }
+#define REGEN_BRAKE_TOGGLE_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 7 }
+#define CC_TOGGLE_GPIO_ADDR \
+  { .port = GPIO_PORT_B, .pin = 0 }
 #define CC_INCREASE_SPEED_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 2 }
 #define CC_DECREASE_SPEED_GPIO_ADDR \
