@@ -3,7 +3,7 @@
 #include "gpio.h"
 #include "gpio_it.h"
 
-static MciFanControlStorage s_storage;
+static MciFanControlStorage s_storage = { 0 };
 
 // Enable pin
 static const GpioAddress s_en_addr = MCI_FAN_EN_ADDR;
@@ -48,10 +48,12 @@ static void prv_handle_therm_it(const GpioAddress *address, void *context) {
 
 // Set up a thermistor pin for interrupts.
 static StatusCode prv_configure_therm_it(GpioAddress *address, uint8_t pin_idx) {
-  const GpioSettings settings = { .direction = GPIO_DIR_IN,
-                                  .state = GPIO_STATE_LOW,
-                                  .alt_function = GPIO_ALTFN_NONE,
-                                  .resistor = GPIO_RES_NONE };
+  const GpioSettings settings = {
+    .direction = GPIO_DIR_IN,
+    .state = GPIO_STATE_LOW,
+    .alt_function = GPIO_ALTFN_NONE,
+    .resistor = GPIO_RES_NONE,
+  };
   status_ok_or_return(gpio_init_pin(address, &settings));
 
   const InterruptSettings it_settings = {
@@ -87,7 +89,7 @@ StatusCode mci_fan_control_init(MciFanControlSettings *settings) {
 }
 
 StatusCode mci_fan_set_state(MciFanState state) {
-  GpioState gpio_state = (state == MCI_FAN_STATE_ON);
+  GpioState gpio_state = (state == MCI_FAN_STATE_ON) ? GPIO_STATE_HIGH : GPIO_STATE_LOW;
   return gpio_set_state(&s_en_addr, gpio_state);
 }
 

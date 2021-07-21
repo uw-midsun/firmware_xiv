@@ -15,8 +15,8 @@ static void prv_init_fan(void) {
 }
 
 // Used to make sure the fault callback is working as expected
-static volatile uint16_t s_times_cb_called;
-static volatile uint8_t s_fault_bitset;
+static uint16_t s_times_cb_called = 0;
+static uint8_t s_fault_bitset = 0;
 static void prv_test_fault_cb(uint8_t fault_bitset, void *context) {
   s_times_cb_called++;
   s_fault_bitset = fault_bitset;
@@ -31,14 +31,14 @@ static void prv_init_fan_with_cb(void) {
   TEST_ASSERT_OK(mci_fan_control_init(&settings));
 }
 
-static GpioState s_test_get_state;
+static GpioState s_test_get_state = GPIO_STATE_LOW;
 StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *input_state) {
   *input_state = s_test_get_state;
   return STATUS_CODE_OK;
 }
 
 // Only used to check EN pin
-static volatile GpioState s_test_en_set_state;
+static GpioState s_test_en_set_state = GPIO_STATE_LOW;
 static const GpioAddress s_en_pin_addr = MCI_FAN_EN_ADDR;
 StatusCode TEST_MOCK(gpio_set_state)(const GpioAddress *address, GpioState state) {
   if (address->pin == s_en_pin_addr.pin) {
@@ -79,6 +79,8 @@ void setup_test(void) {
 void teardown_test(void) {
   s_times_cb_called = 0;
   s_fault_bitset = 0;
+  s_test_get_state = GPIO_STATE_LOW;
+  s_test_en_set_state = GPIO_STATE_LOW;
 }
 
 // Confirm that fan control initializes as expected.
