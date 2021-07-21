@@ -66,7 +66,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-pip
         with:
-          path: /home/runner/.cache/pip
+          path: /$HOME/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - uses: actions/cache@v2
@@ -134,8 +134,9 @@ jobs:
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
   
       - name: Make arm cache directory
-        run:
+        #run: 
           #mkdir -p /home/runner/.arm-none-eabi-gcc-cache
+        run: |
           mkdir -p ~/.arm-none-eabi-gcc-cache
           echo "${HOME}/.arm-none-eabi-gcc-cache" >> $GITHUB_PATH
 
@@ -164,6 +165,11 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
+
+      - name: Make pip cache directory
+        run: |
+          mkdir -p ~/.cache/pip
+          echo "$HOME/.cache/pip" >> $GITHUB_PATH
 
       - name: Install Python tooling
         if: steps.cache-pip.outputs.cache-hit != 'true'
