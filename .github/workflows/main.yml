@@ -34,14 +34,14 @@ jobs:
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
           sudo apt-fast -y install gcc-9
-          sudo apt-fast -y install clang-5.0
-          sudo apt-fast -y install clang-format-5.0
+          sudo apt-fast -y install clang-10.0.0
+          sudo apt-fast -y install clang-format-10.0.0
           sudo apt-fast -y install libc6-i386
           # for vcan module
           sudo apt-fast -y install linux-modules-extra-$(uname -r)
-          ln -sf `which gcc-6` ~/.local/bin/gcc
-          ln -sf `which clang-5.0` ~/.local/bin/clang
-          ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
+          ln -sf `which gcc-9` ~/.local/bin/gcc
+          ln -sf `which clang-10.0.0` ~/.local/bin/clang
+          ln -sf `which clang-format-10.0.0` ~/.local/bin/clang-format
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
