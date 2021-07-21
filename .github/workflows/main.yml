@@ -38,6 +38,8 @@ jobs:
           sudo apt-fast -y install clang-format-5.0
           sudo apt-fast -y install libc6-i386
           sudo apt-fast -y install protobuf-compiler
+          echo 'export GOPATH=$HOME/Go' >> $HOME/.bashrc
+          source $HOME/.bashrc
           # for vcan module
           sudo apt-fast -y install linux-modules-extra-$(uname -r)
           ln -sf `which gcc-6` ~/.local/bin/gcc
