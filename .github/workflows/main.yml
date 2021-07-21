@@ -37,14 +37,19 @@ jobs:
           sudo apt-fast -y install clang-5.0
           sudo apt-fast -y install clang-format-5.0
           sudo apt-fast -y install libc6-i386
-          sudo apt-fast -y install protobuf-compiler
-          echo 'export GOPATH=$HOME/Go' >> $HOME/.bashrc
-          source $HOME/.bashrc
           # for vcan module
           sudo apt-fast -y install linux-modules-extra-$(uname -r)
           ln -sf `which gcc-6` ~/.local/bin/gcc
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
+
+      - name: Install Go and protobuf-compiler
+        run: |
+          rm -rf /usr/local/go && tar -C /usr/local -xzf go1.16.6.linux-amd64.tar.gz
+          export PATH=$PATH:/usr/local/go/bin
+          sudo apt-fast -y install protobuf-compiler
+          echo 'export PATH=$PATH:$GOPATH/bin' >> $HOME/.bashrc
+          source $HOME/.bashrc
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
@@ -91,6 +96,7 @@ jobs:
           make --version
           clang --version
           clang-format --version
+          go --version
           .venv/bin/pip3 freeze
 
       - name: Format and lint
