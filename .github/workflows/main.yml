@@ -97,7 +97,7 @@ jobs:
           make --version
           clang --version
           clang-format --version
-          go --version
+          go version
           .venv/bin/pip3 freeze
 
       - name: Format and lint
