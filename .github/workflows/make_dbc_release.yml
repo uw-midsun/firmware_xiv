@@ -1,0 +1,74 @@
+
+on:
+  #run on pushes to master
+  push:
+    branches: [ master ]
+
+jobs:
+  make_dbc:
+    #not sure what to put here, referenced main.yml
+    runs-on: ubuntu-16.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup directories
+        run: |
+          # create directory that will be on the PATH
+          mkdir -p ~/.local/bin
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+          mkdir -p ~/source
+
+      - name: Install gcc, clang, clang-format
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-fast -y install gcc-6
+          sudo apt-fast -y install clang-5.0
+          sudo apt-fast -y install clang-format-5.0
+          sudo apt-fast -y install libc6-i386
+          # for vcan module
+          sudo apt-fast -y install linux-modules-extra-$(uname -r)
+          ln -sf `which gcc-6` ~/.local/bin/gcc
+          ln -sf `which clang-5.0` ~/.local/bin/clang
+          ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
+
+      - uses: fiam/arm-none-eabi-gcc@v1
+        with:
+          release: '6-2017-q2'
+
+      - name: Install GNU Make 4.1
+        env:
+          MAKE_PATH: make-4.1
+          MAKE_ARCHIVE_PATH: make-4.1.tar.gz
+          MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
+        run: |
+          wget -nv $MAKE_URL
+          tar xvf $MAKE_ARCHIVE_PATH
+          cd $MAKE_PATH
+          ./configure --prefix=${HOME}/.local
+          make
+          make install
+          cd ..
+          rm -rf $MAKE_PATH
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Python tooling
+        run: |
+          pip install --user virtualenv
+          pip install --upgrade pip
+          pip install --upgrade setuptools
+          make install_requirements
+
+      - name: Build codegen & make release
+        run: |
+          make codegen
+          make codegen_dbc
+          echo ${{ secrets.GITHUB_TOKEN }} > github_token.txt
+          gh auth login --with-token < github_token.txt
+          CUR_COMMIT=$(git rev-parse master)
+          echo "Creating release under tag ${GITHUB_RUN_NUMBER}-${CUR_COMMIT}"
+          gh release create "${GITHUB_RUN_NUMBER}-${CUR_COMMIT}" codegen/system_can.dbc
