@@ -27,11 +27,11 @@ jobs:
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
      
-      #- uses: actions/cache@v2
-      #  id: cache-gcc
-      #  with:
-      #    path: "~/gcc"
-      #    key: ${{ runner.os }}-gcc
+      - uses: actions/cache@v2
+        id: cache-gcc-6
+        with:
+          path: "/user/bin/gcc-6"
+          key: ${{ runner.os }}-gcc-6
 
       - uses: actions/cache@v2
         id: cache-clang
@@ -81,7 +81,7 @@ jobs:
           sudo apt-get update
 
       - name: Install gcc  
-        #if: steps.cache-gcc.outputs.cache-hit != 'true'
+        if: steps.cache-gcc-6.outputs.cache-hit != 'true'
         run: sudo apt-fast -y install gcc-6
 
       #- name: Install gcc
