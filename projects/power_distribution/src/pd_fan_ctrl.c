@@ -1,5 +1,3 @@
-#include "pd_fan_ctrl.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -8,6 +6,7 @@
 #include "can_transmit.h"
 #include "log.h"
 #include "pd_error_defs.h"
+#include "pd_fan_ctrl.h"
 #include "pd_fan_ctrl_defs.h"
 #include "soft_timer.h"
 

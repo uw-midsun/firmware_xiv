@@ -217,13 +217,13 @@ void test_front_pd_fan_ctrl_pot(void) {
 
   // set adc to return mid value
   adc_ret_val = FRONT_FAN_CTRL_MAX_VALUE_MV / 2;
-  delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS);
+  delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS + 10);
   TEST_ASSERT_EQUAL(FAN_50_PERC_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_50_PERC_I2C_WRITE, i2c_buf2[1]);
 
   // set adc to return min value
   adc_ret_val = 0;
-  delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS);
+  delay_ms(REAR_FAN_CONTROL_REFRESH_PERIOD_MILLIS + 10);
   TEST_ASSERT_EQUAL(FAN_MIN_I2C_WRITE, i2c_buf1[1]);
   TEST_ASSERT_EQUAL(FAN_MIN_I2C_WRITE, i2c_buf2[1]);
 }
