@@ -11,21 +11,20 @@
 #define CLIENT_SCRIPT_CONTROLLER_BOARD_ID 0
 
 static BootloaderCanCallback s_callback = NULL;
-static void *s_context = NULL;
+static uint16_t s_board_id;
 
-StatusCode bootloader_can_init(CanStorage *storage, CanSettings *settings) {
+StatusCode bootloader_can_init(CanStorage *storage, CanSettings *settings, uint16_t board_id) {
   settings->device_id = SYSTEM_CAN_DEVICE_BOOTLOADER;
-
+  s_board_id = board_id;
   return can_init(storage, settings);
 }
 
-StatusCode bootloader_can_transmit(uint16_t board_id, uint8_t *data, size_t len,
-                                   bool is_start_message) {
+StatusCode bootloader_can_transmit(uint8_t *data, size_t len, bool is_start_message) {
   if (len > 8) {
     return STATUS_CODE_INVALID_ARGS;
   }
   CanMessage message = { .source_id = SYSTEM_CAN_DEVICE_BOOTLOADER,
-                         .msg_id = board_id,
+                         .msg_id = s_board_id,
                          .type = CAN_MSG_TYPE_DATA,
                          .dlc = len };
   // copy the message data over to the message to be transmitted
@@ -37,18 +36,21 @@ StatusCode bootloader_can_transmit(uint16_t board_id, uint8_t *data, size_t len,
   return can_transmit(&message, NULL);
 }
 
-StatusCode bootloader_can_register_handler(BootloaderCanCallback callback, void *context) {
+StatusCode bootloader_can_register_handler(BootloaderCanCallback callback) {
   if (callback == NULL) {
     return STATUS_CODE_INVALID_ARGS;
   }
   s_callback = callback;
-  s_context = context;
   return STATUS_CODE_OK;
 }
 
 StatusCode bootloader_can_receive(CanMessage *msg) {
   if (msg->msg_id == CLIENT_SCRIPT_CONTROLLER_BOARD_ID && s_callback != NULL) {
-    return s_callback(msg, s_context);
+    if (msg->type == CAN_MSG_TYPE_ACK) {  // msg is a start msg
+      return s_callback(msg->data_u8, msg->dlc, true);
+    } else {  // (msg->msg_id == CAN_MSG_TYPE_DATA) msg is a data msg
+      return s_callback(msg->data_u8, msg->dlc, false);
+    }
   }
   return STATUS_CODE_OK;
 }

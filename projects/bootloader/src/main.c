@@ -1,33 +1,21 @@
 #include "bootloader_can.h"
+#include "bootloader_events.h"
 #include "can_datagram.h"
 #include "config.h"
 #include "crc32.h"
 #include "dispatcher.h"
+#include "event_queue.h"
 #include "flash.h"
 #include "interrupt.h"
 #include "jump_to_application.h"
 #include "log.h"
 #include "ping.h"
 #include "soft_timer.h"
-
-typedef enum {
-  CAN_DATAGRAM_EVENT_RX = 0,
-  CAN_DATAGRAM_EVENT_TX,
-  CAN_DATAGRAM_EVENT_FAULT,
-  NUM_CAN_DATAGRAM_EVENTS,  // 3
-} CanDatagramCanEvent;
-
-typedef enum {
-  DATAGRAM_EVENT_TX = NUM_CAN_DATAGRAM_EVENTS,  // 3
-  DATAGRAM_EVENT_RX,
-  DATAGRAM_EVENT_REPEAT,
-  DATAGRAM_EVENT_ERROR,
-  NUM_DATAGRAM_DIGEST_EVENTS,
-} CanDatagramEvent;
+#include "wait.h"
 
 static CanStorage s_can_storage;
-static CanSettings can_settings = {
-  .loopback = true,
+static CanSettings s_can_settings = {
+  .loopback = false,
   .bitrate = CAN_HW_BITRATE_500KBPS,
   .rx_event = CAN_DATAGRAM_EVENT_RX,
   .tx_event = CAN_DATAGRAM_EVENT_TX,
@@ -36,7 +24,7 @@ static CanSettings can_settings = {
   .rx = { GPIO_PORT_A, 11 },
 };
 
-static CanDatagramSettings datagram_settings = {
+static CanDatagramSettings s_datagram_settings = {
   .tx_event = DATAGRAM_EVENT_TX,
   .rx_event = DATAGRAM_EVENT_RX,
   .repeat_event = DATAGRAM_EVENT_REPEAT,
@@ -46,18 +34,27 @@ static CanDatagramSettings datagram_settings = {
 
 int main(void) {
   LOG_DEBUG("Hello from the bootloader!\n");
-  // initialize all the modules
-  // can and datagram
-  bootloader_can_init(&s_can_storage, &can_settings);
-  can_datagram_init(&datagram_settings);
 
-  dispatcher_init();
   flash_init();
   interrupt_init();
   soft_timer_init();
   crc32_init();
+  event_queue_init();
   config_init();
-  ping_init();
+
+  // gets the board id
+  BootloaderConfig blconfig = {
+    .controller_board_id = 0xFF,
+  };
+  config_get(&blconfig);
+  uint8_t board_id = blconfig.controller_board_id;
+
+  // can and datagram
+  bootloader_can_init(&s_can_storage, &s_can_settings, board_id);
+  can_datagram_init(&s_datagram_settings);
+
+  dispatcher_init(board_id);
+  ping_init(board_id);
 
   jump_to_application();
   // not reached
@@ -67,10 +64,10 @@ int main(void) {
   Event e = { 0 };
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
+      can_process_event(&e);
+      can_datagram_process_event(&e);
     }
-    can_process_event(&e);
-    can_datagram_process_event(&e);
-    // I forgot how to do this :( event loop
+    wait();
   }
 
   return 0;
