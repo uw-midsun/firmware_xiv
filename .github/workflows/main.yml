@@ -43,15 +43,11 @@ jobs:
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
-      - name: Install Go and protobuf-compiler
+      - name: Install Protobufs
         run: |
-          wget https://golang.org/dl/go1.16.6.linux-amd64.tar.gz
-          sudo tar -xzf go1.16.6.linux-amd64.tar.gz
-          export PATH=$PATH:/usr/local/go/bin
-          sudo apt-fast -y install protobuf-compiler
-          echo 'export PATH=$PATH:$GOPATH/bin' >> $HOME/.bashrc
-          source $HOME/.bashrc
-          sudo apt-fast -y install golang-goprotobuf-dev
+          sudo apt-get install autoconf automake libtool curl make g++ unzip
+        #  ./configure && make && make install
+        #  wget https://golang.org/dl/go1.16.6.linux-amd64.tar.gz
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
@@ -98,7 +94,6 @@ jobs:
           make --version
           clang --version
           clang-format --version
-          go version
           .venv/bin/pip3 freeze
 
       - name: Format and lint
@@ -122,7 +117,6 @@ jobs:
         
       - name: Build MU and bootloader protobufs # Currently uses old protobuf compiler
         run: |
-          make bootloader_protos
           make mu_protos
       
       - name: Check for uncommitted protobuf changes
