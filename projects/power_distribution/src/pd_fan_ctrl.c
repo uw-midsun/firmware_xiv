@@ -63,7 +63,7 @@ static void prv_front_temp_to_fan_percent(uint16_t v_measured, uint8_t *fan_spee
   }
 
   double ratio = FRONT_FAN_CTRL_MAX_VALUE_MV / 100.0;
-  *fan_speed = v_measured / ratio;
+  *fan_speed = MIN(v_measured / ratio, 100);
 }
 
 // Converts rear pd adc reading of thermistor to fan speed percent
