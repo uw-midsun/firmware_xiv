@@ -46,16 +46,7 @@ jobs:
       - name: Install Protobufs
         run: |
           sudo apt-get install autoconf automake libtool curl make g++ unzip
-          # set up protobuf-c
-          cd ~/shared
-          git clone https://github.com/protobuf-c/protobuf-c
-          cd protobuf-c
-          ./autogen.sh
-          ./configure
-          sudo apt-get install libprotoc-dev
-          make
-          sudo make install
-          sudo ldconfig
+          ./configure && make && make install
         #  ./configure && make && make install
         #  wget https://golang.org/dl/go1.16.6.linux-amd64.tar.gz
 
