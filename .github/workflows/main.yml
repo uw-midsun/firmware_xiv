@@ -171,6 +171,7 @@ jobs:
         run: |
           mkdir -p ~/.cache/pip
           echo "$HOME/.cache/pip" >> $GITHUB_PATH
+          echo "$PATH"
 
       - name: Install Python tooling
         if: steps.cache-pip.outputs.cache-hit != 'true'
