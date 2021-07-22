@@ -1,8 +1,29 @@
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
+#include "can.h"
 #include "can_datagram.h"
+#include "can_pack_impl.h"
+#include "can_transmit.h"
+#include "can_unpack_impl.h"
+#include "crc32.h"
+#include "delay.h"
 #include "dispatcher.h"
+#include "event_queue.h"
+#include "fifo.h"
+#include "gpio.h"
+#include "gpio_it.h"
+#include "i2c.h"
+#include "interrupt.h"
+#include "log.h"
+#include "ms_test_helpers.h"
+#include "soft_timer.h"
+#include "status.h"
+#include "test_helpers.h"
 #include "unity.h"
+
+#define TEST_DATA_GRAM_ID 0
+#define CLIENT_SCRIPT_CONTROLLER_BOARD_ID 0
+#define NON_CLIENT_SCRIPT_CONTROLLER_BOARD_ID 2
 
 typedef enum {
   CAN_DATAGRAM_EVENT_RX = 0,
@@ -39,22 +60,50 @@ static CanDatagramSettings s_test_datagram_settings = {
 };
 
 void setup_test(void) {
-  bootloader_can_init(&s_test_can_storage, &s_test_can_settings);
+  bootloader_can_init(&s_test_can_storage, &s_test_can_settings,
+                      NON_CLIENT_SCRIPT_CONTROLLER_BOARD_ID);
   can_datagram_init(&s_test_datagram_settings);
 }
 
 void teardown_test(void) {}
 
-void test_init() {
-  // test dispatcher can setup rx for datagrams without errors
+void prv_dispatch_cb(uint8_t *data, uint16_t len, void *context) {
+  bool *complete = context;
+  *complete = true;
 }
 
-void test_register_callback(void) {
-  // test registering a callback does not cause any error
-}
+void test_dispatch(void) {
+  bool complete = false;
+  // test dispatch works with a callback
+  TEST_ASSERT_OK(dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_cb, &complete));
 
-void test_callback(void) {
-  // test a registered callback is called when datagram is recieved
+  // needs to send a start can msg with CAN (not CAN datagram)
+  // then send contents with CAN
+
+  // Send mock start message
+  CanMessage msg = { 0 };
+  can_pack_impl_empty(&msg, TEST_CAN_DEVICE_ID, TEST_CAN_START_MSG_ID);
+  can_transmit(&msg, NULL);
+  MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
+  TEST_ASSERT_EQUAL(true, s_start_message_set);
+
+  Event e = { 0 };
+  bool send_tx = true;
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
+    // Send txes one at a time -> can datagram will send 4 at a time
+    // but client in real scenario does not have to process tx's as well as rx's
+    if (send_tx) {
+      prv_mock_dgram_tx();
+      send_tx = false;
+    }
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    if (e.id == CAN_DATAGRAM_EVENT_TX) {
+      send_tx = true;
+    }
+    can_datagram_process_event(&e);
+    can_process_event(&e);
+  }
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
 }
 
 void test_datagram_completeness(void) {
