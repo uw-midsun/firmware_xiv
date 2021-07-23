@@ -1,6 +1,9 @@
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "wait.h"
+
+#define TIMER_INTERVAL_MS 500
 
 typedef struct Counters {
   uint8_t counter_a;
@@ -8,22 +11,17 @@ typedef struct Counters {
 } Counters;
 
 static void prv_counter_callback(SoftTimerId soft_timer_id, void *context) {
-  Counters *counter_ptr = (Counters *)context;
-  uint8_t *counter_a_ptr = &(counter_ptr->counter_a);
-  uint8_t *counter_b_ptr = &(counter_ptr->counter_b);
+  Counters *counter_ptr = context;
 
-  if ((*counter_a_ptr == 0) || ((*counter_a_ptr) % 2 == 1)) {
-    (*counter_a_ptr)++;
-    LOG_DEBUG("Counter A: %d\n", *counter_a_ptr);
-
-  } else {
-    (*counter_a_ptr)++;
-    (*counter_b_ptr)++;
-    LOG_DEBUG("Counter B: %d\n", *counter_b_ptr);
-    LOG_DEBUG("Counter A: %d\n", *counter_a_ptr);
+  if (counter_ptr->counter_a % 2 == 0 && counter_ptr->counter_a != 0) {
+    counter_ptr->counter_b++;
+    LOG_DEBUG("Counter B: %d\n", counter_ptr->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_counter_callback, counter_ptr, NULL);
+  counter_ptr->counter_a++;
+  LOG_DEBUG("Counter A: %d\n", counter_ptr->counter_a);
+
+  soft_timer_start_millis(TIMER_INTERVAL_MS, prv_counter_callback, counter_ptr, NULL);
 }
 
 int main() {
@@ -31,9 +29,10 @@ int main() {
   soft_timer_init();
 
   Counters counter = { 0 };
-  soft_timer_start_millis(500, prv_counter_callback, &counter, NULL);
+  soft_timer_start_millis(TIMER_INTERVAL_MS, prv_counter_callback, &counter, NULL);
 
   while (true) {
+    wait();
   }
   return 0;
 }
