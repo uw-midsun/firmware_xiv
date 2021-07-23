@@ -4,6 +4,8 @@
 #include "ping.h"
 #include "unity.h"
 
+#define NON_CLIENT_SCRIPT_BOARD_ID 2
+
 typedef enum {
   CAN_DATAGRAM_EVENT_RX = 0,
   CAN_DATAGRAM_EVENT_TX,
@@ -39,10 +41,10 @@ static CanDatagramSettings s_test_datagram_settings = {
 };
 
 void setup_test(void) {
-  bootloader_can_init(&s_test_can_storage, &s_test_can_settings);
+  bootloader_can_init(&s_test_can_storage, &s_test_can_settings, NON_CLIENT_SCRIPT_BOARD_ID);
   can_datagram_init(&s_test_datagram_settings);
 
-  dispatcher_init();
+  dispatcher_init(NON_CLIENT_SCRIPT_BOARD_ID);
 }
 
 void teardown_test(void) {}

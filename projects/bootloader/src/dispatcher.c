@@ -1,6 +1,7 @@
 #include "dispatcher.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"

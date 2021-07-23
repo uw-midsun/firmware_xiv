@@ -1,5 +1,7 @@
 #include "ping.h"
 
+#include <stdint.h>
+
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
 #include "can_datagram.h"

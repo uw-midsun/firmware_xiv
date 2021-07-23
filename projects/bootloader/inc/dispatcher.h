@@ -2,7 +2,7 @@
 
 // This module provides a small abstraction over the bootloader Can Datagram format.
 // It allows registering callbacks which will be run when a Datagram with a specific ID is received.
-// Requires interrupts, gpio, the event queue, and CAN to be initialized.
+// Requires interrupts, gpio, the event queue, bootloader CAN, and CAN datagram to be initialized.
 
 #include <stdint.h>
 
