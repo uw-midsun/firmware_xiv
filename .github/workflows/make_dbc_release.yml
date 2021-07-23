@@ -70,5 +70,5 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} > github_token.txt
           gh auth login --with-token < github_token.txt
           CUR_COMMIT=$(git rev-parse master)
-          echo "Creating release under tag ${GITHUB_RUN_NUMBER}-${CUR_COMMIT}"
-          gh release create "${GITHUB_RUN_NUMBER}-${CUR_COMMIT}" codegen/system_can.dbc
+          echo "Creating release under tag DBC-${GITHUB_RUN_NUMBER}-${CUR_COMMIT}"
+          gh release create "DBC-${GITHUB_RUN_NUMBER}-${CUR_COMMIT}" codegen/system_can.dbc
