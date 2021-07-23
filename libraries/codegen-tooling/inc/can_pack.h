@@ -127,10 +127,13 @@
                     SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, 4, (vehicle_velocity_left_u16),          \
                     (vehicle_velocity_right_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_MOTOR_STATUS(msg_ptr, motor_status_l_u32, motor_status_r_u32) \
-  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,             \
-                    SYSTEM_CAN_MESSAGE_MOTOR_STATUS, 8, (motor_status_l_u32),  \
-                    (motor_status_r_u32))
+#define CAN_PACK_MOTOR_STATUS(msg_ptr, mc_limit_flags_l_u8, mc_limit_flags_r_u8,                   \
+                              mc_error_flags_l_u8, mc_error_flags_r_u8, board_fan_faults_u8,       \
+                              mc_overtemp_u8)                                                      \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_MOTOR_STATUS, \
+                   6, (mc_limit_flags_l_u8), (mc_limit_flags_r_u8), (mc_error_flags_l_u8),         \
+                   (mc_error_flags_r_u8), (board_fan_faults_u8), (mc_overtemp_u8),                 \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32, motor_temp_r_u32)                          \
   can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_MOTOR_TEMPS, \

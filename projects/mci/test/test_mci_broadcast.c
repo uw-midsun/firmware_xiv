@@ -26,6 +26,7 @@
 #include "motor_can.h"
 #include "motor_controller.h"
 #include "wavesculptor.h"
+#include "mci_status.h"
 
 #define TEST_CAN_DEVICE_ID 12
 
@@ -63,7 +64,7 @@ typedef struct TestWaveSculptorBusMeasurement {
 typedef struct TestMotorControllerMeasurements {
   TestWaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   uint16_t vehicle_velocity[NUM_MOTOR_CONTROLLERS];
-  uint32_t status[NUM_MOTOR_CONTROLLERS];
+  MciStatusMessage status;
 } TestMotorControllerMeasurements;
 
 static TestMotorControllerMeasurements s_test_measurements = { 0 };
@@ -119,11 +120,12 @@ static StatusCode prv_handle_bus_measurement(const CanMessage *msg, void *contex
 }
 
 static StatusCode prv_handle_status(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  uint32_t status_left, status_right;
-  CAN_UNPACK_MOTOR_STATUS(msg, &status_left, &status_right);
+  MciStatusMessage message;
+  CAN_UNPACK_MOTOR_STATUS(msg, &message.mc_limit_bitset[LEFT_MOTOR_CONTROLLER], &message.mc_limit_bitset[RIGHT_MOTOR_CONTROLLER],
+  &message.mc_error_bitset[LEFT_MOTOR_CONTROLLER], &message.mc_error_bitset[RIGHT_MOTOR_CONTROLLER], &message.board_fault_bitset, 
+  &message.mc_overtemp_bitset);
   s_received_status = true;
-  s_test_measurements.status[LEFT_MOTOR_CONTROLLER] = status_left;
-  s_test_measurements.status[RIGHT_MOTOR_CONTROLLER] = status_right;
+  memcpy(&s_test_measurements.status, &message, sizeof(message));
   return STATUS_CODE_OK;
 }
 
@@ -139,7 +141,7 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
     can_data.bus_measurement.bus_current_a =
         measurements->bus_measurements[controller].bus_current_a;
   } else if (message_type == TEST_MCI_STATUS_MESSAGE) {
-    can_data.raw = measurements->status[controller];
+    can_data.raw = measurements->status.board_fault_bitset; // will fail, need to figure out a good way to do this
   }
 
   GenericCanMsg msg = {
@@ -207,8 +209,10 @@ static void prv_assert_eq_expected_storage_vel(MotorControllerMeasurements expec
 // Status
 static void prv_assert_eq_expected_storage_status(MotorControllerMeasurements expected_measurements,
                                                   MotorController controller) {
-  TEST_ASSERT_EQUAL((uint16_t)expected_measurements.status[controller],
-                    (uint16_t)s_broadcast_storage.measurements.status[controller]);
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_limit_bitset[controller], s_broadcast_storage.measurements.status.mc_limit_bitset[controller]);
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_error_bitset[controller], s_broadcast_storage.measurements.status.mc_error_bitset[controller]);
+  TEST_ASSERT_EQUAL(expected_measurements.status.board_fault_bitset, s_broadcast_storage.measurements.status.board_fault_bitset);
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_overtemp_bitset, s_broadcast_storage.measurements.status.mc_overtemp_bitset);
 }
 
 void setup_test(void) {
@@ -263,11 +267,14 @@ void test_left_all_right_all(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-            [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-        },
+    .status = {
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      .board_fault_bitset = 0xCA,
+      .mc_overtemp_bitset = 0xFE,
+    }
   };
 
   // need to send in this order because of how the filter works
@@ -299,7 +306,7 @@ void test_left_all_right_all(void) {
                       s_test_measurements.bus_measurements[motor_id].bus_current_a);
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
-    TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
+    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
   }
 }
 
@@ -329,11 +336,14 @@ void test_left_all_right_none(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-            [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-        },
+    .status = {
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      .board_fault_bitset = 0xCA,
+      .mc_overtemp_bitset = 0xFE,
+    }
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -384,11 +394,14 @@ void test_left_all_right_status(void) {
             [RIGHT_MOTOR_CONTROLLER] = 0,
         },
 
-    .status =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-            [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-        },
+    .status = {
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      .board_fault_bitset = 0xCA,
+      .mc_overtemp_bitset = 0xFE,
+    }
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -406,7 +419,7 @@ void test_left_all_right_status(void) {
   TEST_ASSERT_FALSE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
+    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
   }
 }
 
@@ -438,11 +451,14 @@ void test_left_all_right_status_bus(void) {
             [RIGHT_MOTOR_CONTROLLER] = 0,
         },
 
-    .status =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-            [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-        },
+    .status = {
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      .board_fault_bitset = 0xCA,
+      .mc_overtemp_bitset = 0xFE,
+    }
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -462,7 +478,7 @@ void test_left_all_right_status_bus(void) {
   TEST_ASSERT_TRUE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
+    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
@@ -494,11 +510,14 @@ void test_3x_left_all_right_all(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-            [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-        },
+    .status = {
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      .board_fault_bitset = 0xCA,
+      .mc_overtemp_bitset = 0xFE,
+    }
   };
 
   // Repeat full sequence 3 times
@@ -535,8 +554,7 @@ void test_3x_left_all_right_all(void) {
                         s_test_measurements.bus_measurements[motor_id].bus_current_a);
       TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                         s_test_measurements.vehicle_velocity[motor_id]);
-      TEST_ASSERT_EQUAL(expected_measurements.status[motor_id],
-                        s_test_measurements.status[motor_id]);
+      prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
     }
 
     // Reset before next iteration
@@ -569,11 +587,14 @@ void test_message_id_filter(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-            [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
-        },
+    .status = {
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      .board_fault_bitset = 0xCA,
+      .mc_overtemp_bitset = 0xFE,
+    }
   };
 
   // Should skip
@@ -648,7 +669,7 @@ void test_message_id_filter(void) {
                       s_test_measurements.bus_measurements[motor_id].bus_current_a);
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
-    TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
+    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
   }
 
   // Stored measurements should be unchanged

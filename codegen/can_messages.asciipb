@@ -341,9 +341,13 @@ msg {
   target: "TELEMETRY"
   msg_name: "motor status"
   can_data {
-    u32 {
-      field_name_1: "motor_status_l"
-      field_name_2: "motor_status_r"
+    u8 {
+      field_name_1: "mc_limit_flags_l"
+      field_name_2: "mc_limit_flags_r"
+      field_name_3: "mc_error_flags_l"
+      field_name_4: "mc_error_flags_r"
+      field_name_5: "board_fan_faults"
+      field_name_6: "mc_overtemp"
     }
   }
 }

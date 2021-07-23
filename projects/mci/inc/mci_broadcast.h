@@ -4,6 +4,7 @@
 
 #include "motor_can.h"
 #include "wavesculptor.h"
+#include "mci_status.h"
 
 #include "mcp2515.h"
 
@@ -35,7 +36,7 @@ typedef enum {
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
-  uint32_t status[NUM_MOTOR_CONTROLLERS];
+  MciStatusMessage status;
 } MotorControllerMeasurements;
 
 typedef struct MotorControllerBroadcastSettings {
