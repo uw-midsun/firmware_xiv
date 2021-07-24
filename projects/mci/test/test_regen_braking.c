@@ -20,7 +20,7 @@ void setup_test(void) {
                                   MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX, MCI_CAN_EVENT_FAULT);
   TEST_ASSERT_OK(regen_braking_init());
   // Check the regen state set to default
-  TEST_ASSERT_EQUAL(REGEN_ENABLED, get_regen_braking_state());
+  TEST_ASSERT_EQUAL(REGEN_BRAKING_ON, get_regen_braking_state());
 }
 
 void teardown_test(void) {}
@@ -31,9 +31,9 @@ void test_regen_state_off(void) {
     .context = NULL,
     .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
   };
-  CAN_TRANSMIT_REGEN_BRAKING(&req, REGEN_DISABLED);
+  CAN_TRANSMIT_REGEN_BRAKING(&req, REGEN_BRAKING_OFF);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(REGEN_DISABLED, get_regen_braking_state());
+  TEST_ASSERT_EQUAL(REGEN_BRAKING_OFF, get_regen_braking_state());
 }
 
 void test_regen_state_on(void) {
@@ -42,7 +42,7 @@ void test_regen_state_on(void) {
     .context = NULL,
     .expected_bitset = CAN_ACK_EXPECTED_DEVICES(SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER),
   };
-  CAN_TRANSMIT_REGEN_BRAKING(&req, REGEN_ENABLED);
+  CAN_TRANSMIT_REGEN_BRAKING(&req, REGEN_BRAKING_ON);
   MS_TEST_HELPER_CAN_TX_RX(MCI_CAN_EVENT_TX, MCI_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(REGEN_ENABLED, get_regen_braking_state());
+  TEST_ASSERT_EQUAL(REGEN_BRAKING_ON, get_regen_braking_state());
 }

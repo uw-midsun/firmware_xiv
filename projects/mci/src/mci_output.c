@@ -1,5 +1,6 @@
 #include "mci_output.h"
 
+#include <math.h>
 #include <string.h>
 
 #include "cruise_rx.h"
@@ -24,6 +25,12 @@ static float s_velocity_lookup[] = {
 
 static float s_max_regen_in_throttle = 0.0f;
 static float s_regen_threshold = 0.0f;
+static float s_actual_velocity_ms = 0.0f;
+
+// Updateds currents_current_velocity_ms
+void mci_output_update_velocity(float actual_velocity_ms) {
+  s_actual_velocity_ms = actual_velocity_ms;
+}
 
 // Basic implementation of throttle/brake maps
 static float prv_brake_to_regen_map(float brake_value) {
@@ -60,7 +67,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
   bool is_cruise = drive_fsm_is_cruise();
-  RegenBrakingState is_regen_brake = get_regen_braking_state();
+  bool is_regen_brake = get_regen_braking_state();
 
   // TODO(SOFT-122): Make sure test ensures that maps are continues
   if (drive_state == EE_DRIVE_OUTPUT_OFF) {
@@ -84,7 +91,8 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
 
   // Set current to zero if regen braking is disabled
   // target velocity is less than actual velocity
-  if (is_regen_brake == 0 && drive_command.motor_velocity < s_velocity_lookup[drive_state]) {
+  if (is_regen_brake == REGEN_BRAKING_OFF &&
+      fabs(drive_command.motor_velocity) < fabs(s_actual_velocity_ms)) {
     drive_command.motor_current = 0.0f;
   }
 
@@ -101,7 +109,7 @@ StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage
   };
   storage->motor_can = motor_can;
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
-  status_ok_or_return(regen_braking_init());
+  // status_ok_or_return(regen_braking_init());
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
                                  NULL);
 }

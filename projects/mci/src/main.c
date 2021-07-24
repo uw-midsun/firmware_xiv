@@ -40,7 +40,6 @@ void prv_setup_system_can() {
   can_init(&s_can_storage, &can_settings);
   drive_fsm_init();
   cruise_rx_init();
-  regen_braking_init();
 }
 
 void prv_mci_storage_init(void *context) {
@@ -73,6 +72,7 @@ int main(void) {
 
   prv_mci_storage_init(&s_mci_storage);
   drive_fsm_init();
+  regen_braking_init();
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {

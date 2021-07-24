@@ -5,7 +5,7 @@
 #include "can_unpack.h"
 #include "status.h"
 
-static RegenBrakingState s_regen_braking_state;
+static bool s_regen_braking_state;
 
 // Callback function to set the regen braking state
 static StatusCode prv_regen_braking_callback(const CanMessage *msg, void *context,
@@ -16,11 +16,11 @@ static StatusCode prv_regen_braking_callback(const CanMessage *msg, void *contex
 
 StatusCode regen_braking_init(void) {
   // Default to enabled
-  s_regen_braking_state = REGEN_ENABLED;
+  s_regen_braking_state = 1;
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REGEN_BRAKING, prv_regen_braking_callback, NULL);
   return STATUS_CODE_OK;
 }
 
-RegenBrakingState get_regen_braking_state(void) {
+bool get_regen_braking_state(void) {
   return s_regen_braking_state;
 }
