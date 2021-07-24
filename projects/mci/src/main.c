@@ -12,6 +12,7 @@
 #include "drive_fsm.h"
 #include "mci_broadcast.h"
 #include "mci_events.h"
+#include "mci_fan_control.h"
 #include "mci_output.h"
 #include "motor_can.h"
 #include "motor_controller.h"
@@ -24,7 +25,7 @@ static MotorControllerStorage s_mci_storage;
 
 static Mcp2515Storage s_can_mcp2515;
 
-void prv_setup_system_can() {
+static void prv_setup_system_can(void) {
   CanSettings can_settings = {
     .device_id = SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,
     .bitrate = CAN_HW_BITRATE_500KBPS,
@@ -41,7 +42,7 @@ void prv_setup_system_can() {
   cruise_rx_init();
 }
 
-void prv_mci_storage_init(void *context) {
+static void prv_mci_storage_init(void *context) {
   PrechargeControlSettings precharge_settings = {
     .precharge_control = { .port = GPIO_PORT_A, .pin = 9 },
     .precharge_monitor = { .port = GPIO_PORT_B, .pin = 0 },
@@ -60,6 +61,14 @@ void prv_mci_storage_init(void *context) {
   mci_output_init(&s_mci_storage.mci_output_storage, &s_can_mcp2515);
 }
 
+static void prv_fan_control_init(void) {
+  MciFanControlSettings fan_settings = {
+    .fault_cb = NULL,
+    .fault_context = NULL,
+  };
+  mci_fan_control_init(&fan_settings);
+}
+
 int main(void) {
   event_queue_init();
   interrupt_init();
@@ -70,6 +79,9 @@ int main(void) {
   prv_setup_system_can();
 
   prv_mci_storage_init(&s_mci_storage);
+
+  prv_fan_control_init();
+
   drive_fsm_init();
   Event e = { 0 };
   while (true) {
