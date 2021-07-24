@@ -46,22 +46,6 @@ jobs:
       - name: Install folly, pkg-config helper, and protobuf-c library
         run: |
           cd ~/shared
-          git clone https://github.com/uw-midsun/codegen-tooling-msxiv.git
-          cd codegen-tooling-msxiv  
-          sudo add-apt-repository ppa:maarten-fonville/protobuf
-          sudo apt-get update
-          sudo apt-get install protobuf-compiler
-          sudo apt-get install virtualenv
-          virtualenv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
-          mkdir -p genfiles
-          protoc -I=schema --python_out=genfiles schema/can.proto
-          make gen-dbc
-          deactivate
-          cp system_can.dbc ../system_can.dbc
-
-          cd ~/shared
           git clone https://github.com/protobuf-c/protobuf-c
           cd protobuf-c
           ./autogen.sh
@@ -70,7 +54,6 @@ jobs:
           make
           sudo make install
           sudo ldconfig
-
           cd ~/shared/firmware_xiv
           python3 -m pip install protobuf
           python3 -m pip install python-can cantools
