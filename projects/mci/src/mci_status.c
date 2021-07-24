@@ -1,4 +1,5 @@
 #include "mci_status.h"
+#include "log.h"
 
 // Track current message values
 static MciStatusMessage s_message = { 0 };
@@ -9,8 +10,10 @@ void mci_status_update_mc_flags(WaveSculptorStatusInfo *message, uint8_t motor) 
 
     // Extract flags from message and shift down to start at 0
     uint8_t limit = (message->limit_flags.raw & MCI_LIMIT_MASK) >> MCI_LIMIT_OFFSET;
-    uint8_t error = (message->error_flags.raw & MCI_ERROR_MASK) >> MCI_ERROR_OFFSET;
 
+    uint8_t error = (message->error_flags.raw & MCI_ERROR_MASK) >> MCI_ERROR_OFFSET;
+    
+    LOG_DEBUG("error flags raw 0x%x after conversion 0x%x\n", message->error_flags.raw, error);
     s_message.mc_limit_bitset[motor] = limit;
     s_message.mc_error_bitset[motor] = error;
 }

@@ -97,6 +97,13 @@ static MotorCanFrameId s_frame_id_map[] = {
       R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE),
 };
 
+
+// To allow for setting fan fault bitset
+static uint8_t s_test_fan_fault_bitset = 0;
+uint8_t TEST_MOCK(mci_fan_get_fault_bitset)(void) {
+  return s_test_fan_fault_bitset;
+}
+
 static StatusCode prv_handle_velocity(const CanMessage *msg, void *context,
                                       CanAckStatus *ack_reply) {
   uint16_t left_velocity, right_velocity;
@@ -141,7 +148,16 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
     can_data.bus_measurement.bus_current_a =
         measurements->bus_measurements[controller].bus_current_a;
   } else if (message_type == TEST_MCI_STATUS_MESSAGE) {
-    can_data.raw = measurements->status.board_fault_bitset; // will fail, need to figure out a good way to do this
+    // Populate status message flags we care about
+    WaveSculptorCanData ws_data = { 0 };
+    ws_data.status_info.error_flags.raw = measurements->status.mc_error_bitset[controller] << MCI_ERROR_OFFSET;
+    ws_data.status_info.limit_flags.raw = measurements->status.mc_limit_bitset[controller] << MCI_LIMIT_OFFSET;
+    
+    // Will get updated on status message broadcast
+    s_test_fan_fault_bitset = measurements->status.board_fault_bitset;
+    // TODO: update the overtemp bitset if needed
+    
+    can_data.raw = ws_data.raw;
   }
 
   GenericCanMsg msg = {
@@ -206,14 +222,22 @@ static void prv_assert_eq_expected_storage_vel(MotorControllerMeasurements expec
                     (uint16_t)s_broadcast_storage.measurements.vehicle_velocity[controller]);
 }
 
-// Status
-static void prv_assert_eq_expected_storage_status(MotorControllerMeasurements expected_measurements,
-                                                  MotorController controller) {
-  TEST_ASSERT_EQUAL(expected_measurements.status.mc_limit_bitset[controller], s_broadcast_storage.measurements.status.mc_limit_bitset[controller]);
-  TEST_ASSERT_EQUAL(expected_measurements.status.mc_error_bitset[controller], s_broadcast_storage.measurements.status.mc_error_bitset[controller]);
-  TEST_ASSERT_EQUAL(expected_measurements.status.board_fault_bitset, s_broadcast_storage.measurements.status.board_fault_bitset);
-  TEST_ASSERT_EQUAL(expected_measurements.status.mc_overtemp_bitset, s_broadcast_storage.measurements.status.mc_overtemp_bitset);
-}
+// // Status
+// static void prv_assert_eq_expected_storage_status(MotorControllerMeasurements expected_measurements,
+//                                                   MotorController controller) {
+//   TEST_ASSERT_EQUAL(expected_measurements.status.mc_limit_bitset[controller], s_broadcast_storage.measurements.status.mc_limit_bitset[controller]);
+//   TEST_ASSERT_EQUAL(expected_measurements.status.mc_error_bitset[controller], s_broadcast_storage.measurements.status.mc_error_bitset[controller]);
+//   TEST_ASSERT_EQUAL(expected_measurements.status.board_fault_bitset, s_broadcast_storage.measurements.status.board_fault_bitset);
+//   TEST_ASSERT_EQUAL(expected_measurements.status.mc_overtemp_bitset, s_broadcast_storage.measurements.status.mc_overtemp_bitset);
+// }
+
+// Use macros so we know what line they fail on
+#define ASSERT_EQ_STATUS_EXPECTED(expected_measurements, controller) do { \
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_limit_bitset[controller], s_broadcast_storage.measurements.status.mc_limit_bitset[controller]); \
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_error_bitset[controller], s_broadcast_storage.measurements.status.mc_error_bitset[controller]); \
+  TEST_ASSERT_EQUAL(expected_measurements.status.board_fault_bitset, s_broadcast_storage.measurements.status.board_fault_bitset); \
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_overtemp_bitset, s_broadcast_storage.measurements.status.mc_overtemp_bitset); \
+} while(0)
 
 void setup_test(void) {
   event_queue_init();
@@ -268,12 +292,13 @@ void test_left_all_right_all(void) {
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
     .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
       .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0xFE,
+      .mc_overtemp_bitset = 0x00, // currently always 0
     }
   };
 
@@ -306,7 +331,7 @@ void test_left_all_right_all(void) {
                       s_test_measurements.bus_measurements[motor_id].bus_current_a);
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
-    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
+    ASSERT_EQ_STATUS_EXPECTED(expected_measurements, motor_id);
   }
 }
 
@@ -337,12 +362,13 @@ void test_left_all_right_none(void) {
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
     .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
       .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0xFE,
+      .mc_overtemp_bitset = 0x00, // currently always 0
     }
   };
 
@@ -364,7 +390,7 @@ void test_left_all_right_none(void) {
   prv_assert_eq_expected_storage_bv(expected_measurements, LEFT_MOTOR_CONTROLLER);
   prv_assert_eq_expected_storage_bi(expected_measurements, LEFT_MOTOR_CONTROLLER);
   prv_assert_eq_expected_storage_vel(expected_measurements, LEFT_MOTOR_CONTROLLER);
-  prv_assert_eq_expected_storage_status(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  ASSERT_EQ_STATUS_EXPECTED(expected_measurements, LEFT_MOTOR_CONTROLLER);
 }
 
 // Test 3: Send left all + right status and check that only status outputs
@@ -395,12 +421,13 @@ void test_left_all_right_status(void) {
         },
 
     .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
       .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0xFE,
+      .mc_overtemp_bitset = 0x00, // currently always 0
     }
   };
 
@@ -419,7 +446,7 @@ void test_left_all_right_status(void) {
   TEST_ASSERT_FALSE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
+    ASSERT_EQ_STATUS_EXPECTED(expected_measurements, motor_id);
   }
 }
 
@@ -452,12 +479,13 @@ void test_left_all_right_status_bus(void) {
         },
 
     .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
       .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0xFE,
+      .mc_overtemp_bitset = 0x00, // currently always 0
     }
   };
 
@@ -478,7 +506,7 @@ void test_left_all_right_status_bus(void) {
   TEST_ASSERT_TRUE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
-    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
+    ASSERT_EQ_STATUS_EXPECTED(expected_measurements, motor_id);
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_current_a,
@@ -511,12 +539,13 @@ void test_3x_left_all_right_all(void) {
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
     .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
       .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0xFE,
+      .mc_overtemp_bitset = 0x00, // currently always 0
     }
   };
 
@@ -554,7 +583,7 @@ void test_3x_left_all_right_all(void) {
                         s_test_measurements.bus_measurements[motor_id].bus_current_a);
       TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                         s_test_measurements.vehicle_velocity[motor_id]);
-      prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
+      ASSERT_EQ_STATUS_EXPECTED(expected_measurements, motor_id);
     }
 
     // Reset before next iteration
@@ -588,12 +617,13 @@ void test_message_id_filter(void) {
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
     .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
       .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0xFE,
+      .mc_overtemp_bitset = 0x00, // currently always 0
     }
   };
 
@@ -602,7 +632,7 @@ void test_message_id_filter(void) {
 
   // Should process and store
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
-  prv_assert_eq_expected_storage_status(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  ASSERT_EQ_STATUS_EXPECTED(expected_measurements, LEFT_MOTOR_CONTROLLER);
 
   // Should process and store
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
@@ -633,7 +663,7 @@ void test_message_id_filter(void) {
 
   // Should process and store
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
-  prv_assert_eq_expected_storage_status(expected_measurements, RIGHT_MOTOR_CONTROLLER);
+  ASSERT_EQ_STATUS_EXPECTED(expected_measurements, RIGHT_MOTOR_CONTROLLER);
 
   // Should skip
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
@@ -669,7 +699,7 @@ void test_message_id_filter(void) {
                       s_test_measurements.bus_measurements[motor_id].bus_current_a);
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
-    prv_assert_eq_expected_storage_status(expected_measurements, motor_id);
+    ASSERT_EQ_STATUS_EXPECTED(expected_measurements, motor_id);
   }
 
   // Stored measurements should be unchanged
@@ -677,6 +707,6 @@ void test_message_id_filter(void) {
     prv_assert_eq_expected_storage_bv(expected_measurements, i);
     prv_assert_eq_expected_storage_bi(expected_measurements, i);
     prv_assert_eq_expected_storage_vel(expected_measurements, i);
-    prv_assert_eq_expected_storage_status(expected_measurements, i);
+    ASSERT_EQ_STATUS_EXPECTED(expected_measurements, i);
   }
 }

@@ -53,7 +53,9 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 
 static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
   mci_status_update_fan_fault(mci_fan_get_fault_bitset());
+  LOG_DEBUG("fan fault updated to %d\n", mci_fan_get_fault_bitset());
   mci_status_update_over_temp(0); // Currently unimplemented
+  storage->measurements.status = mci_status_get_message(); // REALLY BAD JUST REWORK THE FUNCTIONS
 
   MciStatusMessage message = mci_status_get_message();
   
@@ -74,7 +76,7 @@ static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
       bool disabled = critical_section_start();
       // Update status message
       mci_status_update_mc_flags(&can_data.status_info, motor_id);
-      
+      storage->measurements.status = mci_status_get_message(); // TODO FIX THIS, JUST PASS IT INTO THE FUNC
       // Update the bitset here since all other status message fields
       // are updated just prior to broadcasting
       storage->status_rx_bitset |= 1 << motor_id;
