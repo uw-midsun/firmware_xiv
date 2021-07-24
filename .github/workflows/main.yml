@@ -45,15 +45,35 @@ jobs:
 
       - name: Install folly, pkg-config helper, and protobuf library
         run: |
-          wget https://github.com/google/googletest/archive/release-1.8.0.tar.gz
-          tar zxf release-1.8.0.tar.gz
-          rm -f release-1.8.0.tar.gz
-          cd googletest-release-1.8.0
-          cmake . && make && make install
-          sudo apt-get update -y
-          sudo apt-get install -y pkg-config
-          autoreconf --install
-          autoconf && ./configure && make && make install
+          cd ~/shared
+          git clone https://github.com/uw-midsun/codegen-tooling-msxiv.git
+          cd codegen-tooling-msxiv  
+          sudo add-apt-repository ppa:maarten-fonville/protobuf
+          sudo apt-get update
+          sudo apt-get install protobuf-compiler
+          sudo apt-get install virtualenv
+          virtualenv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+          mkdir -p genfiles
+          protoc -I=schema --python_out=genfiles schema/can.proto
+          make gen-dbc
+          deactivate
+          cp system_can.dbc ../system_can.dbc
+        # set up protobuf-c
+          cd ~/shared
+          git clone https://github.com/protobuf-c/protobuf-c
+          cd protobuf-c
+          ./autogen.sh
+          ./configure
+          sudo apt-get install libprotoc-dev
+          make
+          sudo make install
+          sudo ldconfig
+        # get mpxe requirements
+          cd ~/shared/firmware_xiv
+          python3 -m pip install protobuf
+          python3 -m pip install python-can cantools # (maybe already have it installed)
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
