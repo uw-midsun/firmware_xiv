@@ -13,7 +13,7 @@ typedef struct Counters {
 static void prv_counter_callback(SoftTimerId soft_timer_id, void *context) {
   Counters *counter_ptr = context;
 
-  if (counter_ptr->counter_a % 2 == 0 && counter_ptr->counter_a != 0) {
+  if (counter_ptr->counter_a % 2 == 0) {
     counter_ptr->counter_b++;
     LOG_DEBUG("Counter B: %d\n", counter_ptr->counter_b);
   }
