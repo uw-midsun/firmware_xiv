@@ -43,7 +43,7 @@ jobs:
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
-      - name: Install folly, pkg-config helper, and protobuf library
+      - name: Install folly, pkg-config helper, and protobuf-c library
         run: |
           cd ~/shared
           git clone https://github.com/uw-midsun/codegen-tooling-msxiv.git
