@@ -47,7 +47,7 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y pkg-config
-          ./configure && make && make install
+          autoconf && ./configure && make && make install
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
