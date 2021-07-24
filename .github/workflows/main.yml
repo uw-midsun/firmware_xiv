@@ -60,7 +60,7 @@ jobs:
           make gen-dbc
           deactivate
           cp system_can.dbc ../system_can.dbc
-        # set up protobuf-c
+
           cd ~/shared
           git clone https://github.com/protobuf-c/protobuf-c
           cd protobuf-c
@@ -70,10 +70,10 @@ jobs:
           make
           sudo make install
           sudo ldconfig
-        # get mpxe requirements
+
           cd ~/shared/firmware_xiv
           python3 -m pip install protobuf
-          python3 -m pip install python-can cantools # (maybe already have it installed)
+          python3 -m pip install python-can cantools
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
