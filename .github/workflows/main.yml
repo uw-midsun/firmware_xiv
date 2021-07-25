@@ -31,7 +31,7 @@ jobs:
         id: cache-gcc
         with:
           #path: "/user/bin/gcc-6"
-          path: "~/gcc"
+          path: ~/gcc
           key: ${{ runner.os }}-gcc
 
       - uses: actions/cache@v2
