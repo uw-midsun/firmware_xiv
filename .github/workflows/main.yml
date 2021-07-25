@@ -75,7 +75,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-arm-v1
         with:
-          path: $HOME/.arm-none-eabi-gcc-cache
+          path: $HOME/.arm-none-eabi-gcc-cache/bin
           key: ${{ runner.os }}-arm-v1
       
       - name: Add repo and update
@@ -143,14 +143,14 @@ jobs:
         #run: 
           #mkdir -p /home/runner/.arm-none-eabi-gcc-cache
         run: |
-          mkdir -p ~/.arm-none-eabi-gcc-cache
-          echo "${HOME}/.arm-none-eabi-gcc-cache" >> $GITHUB_PATH
+          mkdir -p ~/.arm-none-eabi-gcc-cache/bin
+          echo "${HOME}/.arm-none-eabi-gcc-cache/bin" >> $GITHUB_PATH
 
       - if: steps.cache-arm-v1.outputs.cache-hit != 'true'
         uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
-          directory: $HOME/.arm-none-eabi-gcc-cache
+          directory: $HOME/.arm-none-eabi-gcc-cache/bin
 
       - name: Install GNU Make 4.1
         env:
