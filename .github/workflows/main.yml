@@ -28,11 +28,11 @@ jobs:
           mkdir -p ~/source
      
       - uses: actions/cache@v2
-        id: cache-gcc-6
+        id: cache-gcc
         with:
           #path: "/user/bin/gcc-6"
-          path: "~/gcc-6"
-          key: ${{ runner.os }}-gcc-6
+          path: "~/gcc"
+          key: ${{ runner.os }}-gcc
 
       - uses: actions/cache@v2
         id: cache-clang
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache-arm-v1
         with:
-          path: $HOME/.arm-none-eabi-gcc-cache/bin
+          path: $HOME/.arm-none-eabi-gcc-cache
           key: ${{ runner.os }}-arm-v1
       
       - name: Add repo and update
@@ -89,16 +89,16 @@ jobs:
 
       - name: Install gcc
         env:
-          CACHE_HIT: ${{steps.cache-gcc-6.outputs.cache-hit}}
+          CACHE_HIT: ${{steps.cache-gcc.outputs.cache-hit}}
         run: |
           if [[ "$CACHE_HIT" == 'true' ]]; then
-           sudo cp --force --recursive ~/gcc-6/* /
+           sudo cp --force --recursive ~/gcc/* /
           else
             sudo apt-fast -y install gcc-6
-            mkdir -p ~/gcc-6
-            sudo dpkg -L gcc-6 | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc-6/        
+            mkdir -p ~/gcc
+            sudo dpkg -L gcc-6 | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc/        
             for dep in cpp-6 gcc-6-base gcc-8-base libasan3 libgcc-6-dev libmpx2; do
-              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc-6/
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc/
             done
           fi
 
@@ -143,14 +143,14 @@ jobs:
         #run: 
           #mkdir -p /home/runner/.arm-none-eabi-gcc-cache
         run: |
-          mkdir -p ~/.arm-none-eabi-gcc-cache/bin
-          echo "${HOME}/.arm-none-eabi-gcc-cache/bin" >> $GITHUB_PATH
+          mkdir -p ~/.arm-none-eabi-gcc-cache
+          echo "${HOME}/.arm-none-eabi-gcc-cache" >> $GITHUB_PATH
 
       - if: steps.cache-arm-v1.outputs.cache-hit != 'true'
         uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
-          directory: $HOME/.arm-none-eabi-gcc-cache/bin
+          directory: $HOME/.arm-none-eabi-gcc-cache
 
       - name: Install GNU Make 4.1
         env:
