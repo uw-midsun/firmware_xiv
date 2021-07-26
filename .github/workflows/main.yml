@@ -31,7 +31,7 @@ jobs:
         id: cache-gcc
         with:
           #path: /user/bin/gcc-6
-          path: ~/gcc
+          path: ~/.gcc/bin
           key: ${{ runner.os }}-gcc
 
       - uses: actions/cache@v2
@@ -92,12 +92,12 @@ jobs:
           CACHE_HIT: ${{steps.cache-gcc.outputs.cache-hit}}
         run: |
           if [[ "$CACHE_HIT" == 'true' ]]; then
-           sudo cp --force --recursive ~/gcc/* /
+           sudo cp --force --recursive ~/.gcc/bin/* /
           else
             sudo apt-fast -y install gcc-6
-            sudo dpkg -L gcc-6 | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc/        
+            sudo dpkg -L gcc-6 | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/.gcc/bin/        
             for dep in cpp-6 gcc-6-base gcc-8-base libasan3 libgcc-6-dev libmpx2; do
-              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/gcc/
+              dpkg -L $dep | while IFS= read -r f; do if test -f $f; then echo $f; fi; done | xargs cp --parents --target-directory ~/.gcc/bin/
             done
           fi
 
