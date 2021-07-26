@@ -9,6 +9,7 @@
 #include "gpio_it.h"
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
+#include "log.h"
 
 #ifdef MU
 #include <stdlib.h>
@@ -294,7 +295,12 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
     0x00,
   };
 
+  uint8_t test = 0;
+  prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
+  LOG_DEBUG("before write %d\n", test);
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
+  prv_read(storage, MCP2515_CTRL_REG_CNF3, &test, sizeof(test));
+  LOG_DEBUG("after write %d\n", test);
   // Leave config mode
   uint8_t opmode =
       (settings->loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);

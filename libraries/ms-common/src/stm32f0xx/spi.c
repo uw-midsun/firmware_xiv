@@ -2,6 +2,8 @@
 #include "gpio.h"
 #include "spi_mcu.h"
 #include "stm32f0xx.h"
+#include "delay.h"
+#include "log.h"
 
 typedef struct {
   void (*rcc_cmd)(uint32_t periph, FunctionalState state);
@@ -118,6 +120,9 @@ StatusCode spi_exchange(SpiPort spi, uint8_t *tx_data, size_t tx_len, uint8_t *r
   spi_tx(spi, tx_data, tx_len);
 
   spi_rx(spi, rx_data, rx_len, 0x00);
+  LOG_DEBUG("STARTING DELAY\n");
+  delay_ms(10000);
+  LOG_DEBUG("DELAY FINISHED\n");
 
   spi_cs_set_state(spi, GPIO_STATE_HIGH);
 
