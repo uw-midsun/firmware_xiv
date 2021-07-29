@@ -27,7 +27,7 @@ static float s_max_regen_in_throttle = 0.0f;
 static float s_regen_threshold = 0.0f;
 static float s_actual_velocity_ms = 0.0f;
 
-// Updateds currents_current_velocity_ms
+// Updates s_actual_velocity_ms
 void mci_output_update_velocity(float actual_velocity_ms) {
   s_actual_velocity_ms = actual_velocity_ms;
 }
@@ -91,8 +91,7 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
 
   // Set current to zero if regen braking is disabled
   // target velocity is less than actual velocity
-  if (is_regen_brake == REGEN_BRAKING_OFF &&
-      fabs(drive_command.motor_velocity) < fabs(s_actual_velocity_ms)) {
+  if (!is_regen_brake && fabs(drive_command.motor_velocity) < fabs(s_actual_velocity_ms)) {
     drive_command.motor_current = 0.0f;
   }
 
@@ -109,7 +108,6 @@ StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage
   };
   storage->motor_can = motor_can;
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
-  // status_ok_or_return(regen_braking_init());
   return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
                                  NULL);
 }

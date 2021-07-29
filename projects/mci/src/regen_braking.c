@@ -16,7 +16,7 @@ static StatusCode prv_regen_braking_callback(const CanMessage *msg, void *contex
 
 StatusCode regen_braking_init(void) {
   // Default to enabled
-  s_regen_braking_state = 1;
+  s_regen_braking_state = true;
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_REGEN_BRAKING, prv_regen_braking_callback, NULL);
   return STATUS_CODE_OK;
 }
