@@ -23,10 +23,12 @@ StatusCode bootloader_can_transmit(uint8_t *data, size_t len, bool is_start_mess
   if (len > 8) {
     return STATUS_CODE_INVALID_ARGS;
   }
-  CanMessage message = { .source_id = SYSTEM_CAN_DEVICE_BOOTLOADER,
-                         .msg_id = s_board_id,
-                         .type = CAN_MSG_TYPE_DATA,
-                         .dlc = len };
+  CanMessage message = {
+    .source_id = SYSTEM_CAN_DEVICE_BOOTLOADER,
+    .msg_id = s_board_id,
+    .type = CAN_MSG_TYPE_DATA,
+    .dlc = len,
+  };
   // copy the message data over to the message to be transmitted
   memcpy(message.data_u8, data, len);
   // if the message is a start message, set the ACK bit to 1 by changing type to CAN_MSG_TYPE_ACK

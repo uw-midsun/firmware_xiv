@@ -20,12 +20,11 @@ static CanDatagramTxConfig s_response_config = {
   .tx_cmpl_cb = tx_cmpl_cb,
 };
 
-static StatusCode prv_ping_response(uint8_t data[2048], uint16_t data_len, void *context) {
+static StatusCode prv_ping_response(uint8_t *data, uint16_t data_len, void *context) {
   return can_datagram_start_tx(&s_response_config);
 }
 
 StatusCode ping_init(uint8_t board_id) {
   s_board_id = board_id;
-  dispatcher_register_callback(BOOTLOADER_DATAGRAM_PING_COMMAND, prv_ping_response, NULL);
-  return STATUS_CODE_OK;
+  return dispatcher_register_callback(BOOTLOADER_DATAGRAM_PING_COMMAND, prv_ping_response, NULL);
 }
