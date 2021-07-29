@@ -17,6 +17,7 @@
 #include "motor_can.h"
 #include "motor_controller.h"
 #include "precharge_control.h"
+#include "regen_braking.h"
 
 #include "log.h"
 
@@ -83,6 +84,7 @@ int main(void) {
   prv_fan_control_init();
 
   drive_fsm_init();
+  regen_braking_init();
   Event e = { 0 };
   while (true) {
     while (event_process(&e) != STATUS_CODE_OK) {
