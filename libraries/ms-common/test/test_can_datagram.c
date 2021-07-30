@@ -696,8 +696,7 @@ void test_tx_rx_tx() {
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
 }
 
-// Test node 0 is a part of destination node ids sent
-// every node_id should receive the datagram
+// Test every node Rx a datagram with destination id 0.
 void test_id_0_tx(void) {
   uint8_t rx_dst_buf[TEST_DST_SIZE_SHORT];
   uint8_t rx_data_buf[TEST_DATA_SIZE_SHORT];
@@ -717,7 +716,7 @@ void test_id_0_tx(void) {
     .node_id = 'a',
   };
 
-  uint8_t test_node_buf[1] = { 0 };
+  uint8_t test_node_buf[1] = { 0 };  // dest node id is 0, all node should receive the datagram
 
   prv_setup_tx_fifo(1, TEST_DATA_SIZE_SHORT, test_node_buf, s_data, 0xdd119380);
   // Start RX run
@@ -725,8 +724,6 @@ void test_id_0_tx(void) {
   // Rcv mock start message
   can_datagram_rx(NULL, 0, true);
   Event e = { 0 };
-  // Set timer to start a new message mock tx
-  // SoftTimerId test_soft;
   uint8_t msg_buffer[TEST_CAN_BUFFER_SIZE];
   for (int i = 0; i < 25; i++) {
     size_t msg_len =
@@ -751,7 +748,7 @@ void test_id_0_tx(void) {
   }
 }
 
-// Test node 0 rxes every datagram
+// Test node 0 Rx all datagram (ignores dest node ids)
 void test_id_0_rx(void) {
   uint8_t rx_dst_buf[TEST_DST_SIZE_SHORT];
   uint8_t rx_data_buf[TEST_DATA_SIZE_SHORT];
@@ -768,7 +765,7 @@ void test_id_0_rx(void) {
   CanDatagramRxConfig rx_config = {
     .data = rx_data_buf,
     .destination_nodes = rx_dst_buf,
-    .node_id = 0,
+    .node_id = 0,  // id 0 received all datagrams
   };
 
   prv_setup_tx_fifo(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data, 0x910d5058);
@@ -777,8 +774,6 @@ void test_id_0_rx(void) {
   // Rcv mock start message
   can_datagram_rx(NULL, 0, true);
   Event e = { 0 };
-  // Set timer to start a new message mock tx
-  // SoftTimerId test_soft;
   uint8_t msg_buffer[TEST_CAN_BUFFER_SIZE];
   for (int i = 0; i < 25; i++) {
     size_t msg_len =
