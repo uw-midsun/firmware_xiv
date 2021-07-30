@@ -55,7 +55,7 @@ static SmokeMcp3427Data s_mcp3427_data[MAX_NUM_MCP3427] = { 0 };
 // s_test_devices: hold the indices of specific mcp3427s being tested.
 // Voltage sense mcp3427 indices: 0 to 5.
 // Current sense mcp3427 indices: 6
-static uint8_t s_test_devices[] = { 6 };
+static uint8_t s_test_devices[] = { 0 };
 
 // Set this to 1 if testing current sense, 0 otherwise
 #define RELAY_ENABLE 1

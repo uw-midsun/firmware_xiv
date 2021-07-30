@@ -24,7 +24,7 @@
 #define SPI_PORT SPI_PORT_2
 
 // these are the addresses of the spv1020s to read from
-static uint8_t s_test_devices[] = { 0 };
+static uint8_t s_test_devices[] = { 0, 1, 2 };
 
 // Set this to 1 if testing current sense, 0 otherwise
 #define RELAY_ENABLE 1
@@ -34,7 +34,7 @@ static uint8_t s_test_devices[] = { 0 };
 
 // this is how often the reading will take place
 // modify if you want to read more or less
-#define SMOKETEST_WAIT_TIME_MS 200
+#define SMOKETEST_WAIT_TIME_MS 500
 
 #define BAUDRATE 6000000
 #define MOSI_PIN \
