@@ -69,13 +69,29 @@ class TestCanDatagram(unittest.TestCase):
             node_ids=TEST_NODES,
             data=bytearray(TEST_DATA))
 
-        self.assertEqual(message.serialize(), bytearray(
-            b'\x01m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+        bytes = bytearray([1,                   # Datagram Protocol Version
+                           109, 194, 24, 254,  # CRC32, little-endian
+                           1,                  # Datagram Type ID
+                           10,                 # Number of Node ID's
+                           *TEST_NODES,        # Node ID's
+                           26, 0,              # Data Size, little-endian
+                           *TEST_DATA          # Data
+                           ])
+
+        self.assertEqual(message.serialize(), bytes)
 
     def test_deserialize(self):
         """Test retrieving Datagram information from the bytearray"""
-        message = Datagram.deserialize(bytearray(
-            b'\x01m\xc2\x18\xfe\x01\n\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x1a\x00\x03\x01\x04\x01\x05\t\x02\x06\x05\x03\x05\x08\t\x07\t\x03\x02\x03\x08\x04\x06\x02\x06\x04\x03\x03'))
+        bytes = bytearray([1,                   # Datagram Protocol Version
+                           109, 194, 24, 254,  # CRC32, little-endian
+                           1,                  # Datagram Type ID
+                           10,                 # Number of Node ID's
+                           *TEST_NODES,        # Node ID's
+                           26, 0,              # Data Size, little-endian
+                           *TEST_DATA          # Data
+                           ])
+
+        message = Datagram.deserialize(bytes)
         self.assertEqual(message._protocol_version, TEST_PROTOCOL_VERSION)
         self.assertEqual(message._datagram_type_id, TEST_DATAGRAM_TYPE_ID)
         self.assertEqual(message._node_ids, TEST_NODES)
@@ -131,7 +147,6 @@ class TestCanDatagramListener(unittest.TestCase):
         while not self.callback_triggered:
             if time.time() > timeout:
                 break
-            pass
 
         self.assertEqual(self.message.serialize(), message.serialize())
         self.assertEqual(self.callback_triggered, True)
