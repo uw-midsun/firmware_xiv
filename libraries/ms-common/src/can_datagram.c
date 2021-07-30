@@ -54,6 +54,7 @@ typedef struct CanDatagramStorage {
   bool rx_listener_enabled;
   bool soft_error_flag;
   uint8_t node_id;
+  bool ignore_node_id_check;
 } CanDatagramStorage;
 
 static CanDatagramStorage s_store;
@@ -433,10 +434,13 @@ static void prv_process_dst_rx(Fsm *fsm, const Event *e, void *context) {
     // Check to see if current ID in list, otherwise ignore msg
     bool found_id = false;
     for (uint8_t id = 0; id < dgram->destination_nodes_len; id++) {
-      if (dgram->destination_nodes[id] == s_store.node_id) {
+      if (dgram->destination_nodes[id] == s_store.node_id || dgram->destination_nodes[id] == 0) {
         found_id = true;
         break;
       }
+    }
+    if (s_store.node_id == 0) {
+      found_id = true;
     }
     if (!found_id) {
       LOG_WARN("CURRENT NODE NOT REQUESTED, MSG IGNORED\n");

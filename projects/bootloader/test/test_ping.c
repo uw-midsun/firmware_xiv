@@ -50,6 +50,12 @@ static CanDatagramSettings s_test_datagram_settings = {
 
 #define TEST_DATA_LEN 32
 
+typedef struct TestCanDatagramMessage {
+  uint8_t data[8];  // 8 is the max len per CAN msg
+  size_t len;
+  bool is_start_msg;
+} TestCanDatagramMessage;
+
 static uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                                             'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
 
@@ -105,22 +111,19 @@ static void prv_send_tx_to_fifo(CanDatagramTxConfig tx_config) {
   s_tx_cmpl_cb();
 }
 
-static CanMessage s_rx_buffer[TEST_TX_FIFO_SIZE];
+static TestCanDatagramMessage s_rx_buffer[TEST_TX_FIFO_SIZE];
 static Fifo s_rx_fifo;
 
-static StatusCode prv_rx_to_fifo(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  bool *callback = context;
-  *callback = true;
-
-  LOG_DEBUG("rxed: %i -> %i\n", msg->msg_id, msg->type);
-  if (msg->type == CAN_MSG_TYPE_ACK) {
+static StatusCode prv_rx_to_fifo(uint8_t *data, size_t len, bool is_start_msg) {
+  if (is_start_msg) {
     fifo_init(&s_rx_fifo, s_rx_buffer);
-    fifo_push(&s_rx_fifo, msg);
-  } else {
-    fifo_push(&s_rx_fifo, msg);
   }
-
-  return STATUS_CODE_OK;
+  TestCanDatagramMessage msg = {
+    .len = len,
+    .is_start_msg = is_start_msg,
+  };
+  memcpy(msg.data, data, len);
+  return fifo_push(&s_rx_fifo, &msg);
 }
 
 void setup_test(void) {
@@ -149,8 +152,7 @@ void test_ping(void) {
   };
   prv_send_tx_to_fifo(tx_config);
 
-  // this rx handler not working...
-  TEST_ASSERT_OK(can_register_rx_handler(s_board_id, prv_rx_to_fifo, NULL));
+  TEST_ASSERT_OK(bootloader_can_register_debug_handler(prv_rx_to_fifo));
 
   Event e = { 0 };
   prv_tx_from_fifo();
@@ -168,15 +170,103 @@ void test_ping(void) {
     }
     MS_TEST_HELPER_AWAIT_EVENT(e);
     if (e.id == CAN_DATAGRAM_EVENT_TX) {
-      if (tx_left > 0) {
-        tx_left--;
-        prv_tx_from_fifo();
-      }
+      send_tx = true;
     }
     can_process_event(&e);
     can_datagram_process_event(&e);
   }
-  // LOG_DEBUG("rx size: %li\n", fifo_size(&s_rx_fifo)); // should be 3 if rx worked...
+  // LOG_DEBUG("rx size: %li\n", fifo_size(&s_rx_fifo));  // should be 3 if rx worked...
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
-  TEST_ASSERT_EQUAL(0, s_rx_data_len);
+
+#define MAX_DEST_NODES_SIZE_BYTES 255
+
+  uint8_t s_destination_nodes[MAX_DEST_NODES_SIZE_BYTES] = { 0 };
+  CanDatagramRxConfig rx_config = {
+    .destination_nodes = s_destination_nodes,
+    .data = s_rx_data,
+    .node_id = 0,  // listen to all
+    .rx_cmpl_cb = NULL,
+  };
+  can_datagram_start_listener(&rx_config);
+  TestCanDatagramMessage msg;
+  fifo_pop(&s_rx_fifo, &msg);
+  can_datagram_rx(msg.data, msg.len, msg.is_start_msg);
+  MS_TEST_HELPER_AWAIT_EVENT(e);
+  can_datagram_process_event(&e);
+
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
+    // listens from s_rx-fifo
+    TestCanDatagramMessage msg;
+    fifo_pop(&s_rx_fifo, &msg);
+    can_datagram_rx(msg.data, msg.len, msg.is_start_msg);
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    can_datagram_process_event(&e);
+  }
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
+}
+
+void test_ping_addressed_to_multiple(void) {
+  TEST_ASSERT_OK(ping_init(s_board_id));
+
+  CanDatagramTxConfig tx_config = {
+    .dgram_type = TEST_DATA_GRAM_ID,
+    .destination_nodes_len = 5,
+    .destination_nodes = &s_board_id,
+    .data_len = 0,
+    .data = NULL,
+    .tx_cmpl_cb = tx_cmpl_cb,
+  };
+  prv_send_tx_to_fifo(tx_config);
+
+  TEST_ASSERT_OK(bootloader_can_register_debug_handler(prv_rx_to_fifo));
+
+  Event e = { 0 };
+  prv_tx_from_fifo();
+  MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
+
+  size_t tx_left = fifo_size(&s_tx_fifo);
+  size_t response_size = 0;
+  bool send_tx = true;
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
+    // this loop will loop through both command rx and response tx
+    if (send_tx && tx_left > 0) {
+      prv_tx_from_fifo();
+      send_tx = false;
+      tx_left--;
+    }
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    if (e.id == CAN_DATAGRAM_EVENT_TX) {
+      send_tx = true;
+    }
+    can_process_event(&e);
+    can_datagram_process_event(&e);
+  }
+  // LOG_DEBUG("rx size: %li\n", fifo_size(&s_rx_fifo));  // should be 3 if rx worked...
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
+
+  uint8_t s_destination_nodes[64] = { 0 };
+  CanDatagramRxConfig rx_config = {
+    .destination_nodes = s_destination_nodes,
+    .data = s_rx_data,
+    .node_id = 0,  // listen to all
+    .rx_cmpl_cb = NULL,
+  };
+  can_datagram_start_listener(&rx_config);
+  TestCanDatagramMessage msg;
+  fifo_pop(&s_rx_fifo, &msg);
+  can_datagram_rx(msg.data, msg.len, msg.is_start_msg);
+  MS_TEST_HELPER_AWAIT_EVENT(e);
+  can_datagram_process_event(&e);
+
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
+    // listens from s_rx-fifo
+    TestCanDatagramMessage msg;
+    fifo_pop(&s_rx_fifo, &msg);
+    can_datagram_rx(msg.data, msg.len, msg.is_start_msg);
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    can_datagram_process_event(&e);
+  }
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
 }

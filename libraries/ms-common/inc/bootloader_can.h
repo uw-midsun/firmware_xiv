@@ -31,6 +31,10 @@ StatusCode bootloader_can_transmit(uint8_t *data, size_t len, bool is_start_mess
 // only one handler can be registered at a time.
 StatusCode bootloader_can_register_handler(BootloaderCanCallback callback);
 
+// Register a handler to be called when a datagram message is recieved
+// only to be used for testing
+StatusCode bootloader_can_register_debug_handler(BootloaderCanCallback callback);
+
 // This function is mainly for internal use in the CAN library, does not have to be called by user.
 // It calls the registered handler function of the message if the msg_id is equal to the
 // client ID, 0. Otherwise, the message is ignored.
