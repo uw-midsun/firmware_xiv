@@ -24,7 +24,7 @@
 #define SPI_PORT SPI_PORT_2
 
 // these are the addresses of the spv1020s to read from
-static uint8_t s_test_devices[] = { 0, 1, 2 };
+static uint8_t s_test_devices[] = { 0 };
 
 // Set this to 1 if testing current sense, 0 otherwise
 #define RELAY_ENABLE 1
