@@ -9,17 +9,17 @@
 #include "wait.h"
 
 #define HORN_GPIO_ADDR \
-  { .port = GPIO_PORT_B, .pin = 1 }
-#define LANE_ASSIST_GPIO_ADDR \
-  { .port = GPIO_PORT_A, .pin = 6 }
-#define HIGH_BEAM_FORWARD_GPIO_ADDR \
-  { .port = GPIO_PORT_A, .pin = 7 }
-#define HIGH_BEAM_REAR_GPIO_ADDR \
-  { .port = GPIO_PORT_B, .pin = 0 }
-#define REGEN_BRAKE_TOGGLE_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 4 }
-#define CC_TOGGLE_GPIO_ADDR \
+#define RADIO_PTT_GPIO_ADDR \
+  { .port = GPIO_PORT_B, .pin = 1 }
+#define DRL_1_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 6 }
+#define DRL_2_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 5 }
+#define REGEN_BRAKE_TOGGLE_GPIO_ADDR \
+  { .port = GPIO_PORT_A, .pin = 7 }
+#define CC_TOGGLE_GPIO_ADDR \
+  { .port = GPIO_PORT_B, .pin = 0 }
 #define CC_INCREASE_SPEED_GPIO_ADDR \
   { .port = GPIO_PORT_A, .pin = 2 }
 #define CC_DECREASE_SPEED_GPIO_ADDR \
@@ -36,9 +36,9 @@
 
 typedef enum {
   STEERING_DIGITAL_INPUT_HORN = 0,
-  STEERING_DIGITAL_INPUT_LANE_ASSIST,
-  STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD,
-  STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR,
+  STEERING_DIGITAL_INPUT_RADIO_PTT,
+  STEERING_DIGITAL_INPUT_DRL_1,
+  STEERING_DIGITAL_INPUT_DRL_2,
   STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE,
   STEERING_DIGITAL_INPUT_CC_TOGGLE,
   STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED,
@@ -48,9 +48,9 @@ typedef enum {
 
 static GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HORN] = HORN_GPIO_ADDR,
-  [STEERING_DIGITAL_INPUT_LANE_ASSIST] = LANE_ASSIST_GPIO_ADDR,
-  [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = HIGH_BEAM_FORWARD_GPIO_ADDR,
-  [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = HIGH_BEAM_REAR_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_RADIO_PTT] = RADIO_PTT_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_DRL_1] = DRL_1_GPIO_ADDR,
+  [STEERING_DIGITAL_INPUT_DRL_2] = DRL_2_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = REGEN_BRAKE_TOGGLE_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_CC_TOGGLE] = CC_TOGGLE_GPIO_ADDR,
   [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = CC_INCREASE_SPEED_GPIO_ADDR,
@@ -59,9 +59,9 @@ static GpioAddress s_steering_address_lookup_table[NUM_STEERING_DIGITAL_INPUTS] 
 
 static char *s_steering_input_lookup_table[NUM_STEERING_DIGITAL_INPUTS] = {
   [STEERING_DIGITAL_INPUT_HORN] = "Horn",
-  [STEERING_DIGITAL_INPUT_LANE_ASSIST] = "Lane Assist",
-  [STEERING_DIGITAL_INPUT_HIGH_BEAM_FORWARD] = "High Beam Forward",
-  [STEERING_DIGITAL_INPUT_HIGH_BEAM_REAR] = "High Beam Rear",
+  [STEERING_DIGITAL_INPUT_RADIO_PTT] = "Radio PTT (formerly lane assist)",
+  [STEERING_DIGITAL_INPUT_DRL_1] = "DRL 1 (formerly high beam forward)",
+  [STEERING_DIGITAL_INPUT_DRL_2] = "DRL 2 (formerly high beam rear)",
   [STEERING_DIGITAL_INPUT_REGEN_BRAKE_TOGGLE] = "Regenerative Braking",
   [STEERING_DIGITAL_INPUT_CC_TOGGLE] = "Cruise Control",
   [STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED] = "Increase Speed Cruise Control",
@@ -98,11 +98,11 @@ void prv_init_buttons() {
     InterruptSettings interrupt_settings = { .type = INTERRUPT_TYPE_INTERRUPT,
                                              .priority = INTERRUPT_PRIORITY_NORMAL };
 
-    if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_LANE_ASSIST ||
+    if (i == STEERING_DIGITAL_INPUT_HORN || i == STEERING_DIGITAL_INPUT_RADIO_PTT ||
         i == STEERING_DIGITAL_INPUT_CC_INCREASE_SPEED ||
-        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED || i == STEERING_DIGITAL_INPUT_CC_TOGGLE) {
+        i == STEERING_DIGITAL_INPUT_CC_DECREASE_SPEED) {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
-                                 INTERRUPT_EDGE_RISING, prv_callback_log_button,
+                                 INTERRUPT_EDGE_RISING_FALLING, prv_callback_log_button,
                                  s_steering_input_lookup_table[i]);
     } else {
       gpio_it_register_interrupt(&s_steering_address_lookup_table[i], &interrupt_settings,
