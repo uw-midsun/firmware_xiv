@@ -1,4 +1,5 @@
 #include "steering_can.h"
+
 #include "can.h"
 #include "can_transmit.h"
 #include "event_queue.h"
@@ -15,8 +16,7 @@ StatusCode steering_can_process_event(Event *e) {
       CAN_TRANSMIT_HORN((EEHornState)e->data);
       break;
     case STEERING_DRL_1_EVENT:
-      if (turning == false)
-        CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, EE_LIGHT_STATE_ON);
+      if (turning == false) CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, EE_LIGHT_STATE_ON);
       break;
     case STEERING_DRL_2_EVENT:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, EE_LIGHT_STATE_OFF);
@@ -32,8 +32,7 @@ StatusCode steering_can_process_event(Event *e) {
       break;
     case STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_LEFT, (EELightState)e->data);
-      if ((EELightState)e->data == EE_LIGHT_STATE_ON)
-      {
+      if ((EELightState)e->data == EE_LIGHT_STATE_ON) {
         turning = true;
       } else {
         turning = false;
@@ -41,8 +40,7 @@ StatusCode steering_can_process_event(Event *e) {
       break;
     case STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_RIGHT, (EELightState)e->data);
-      if ((EELightState)e->data == EE_LIGHT_STATE_ON)
-      {
+      if ((EELightState)e->data == EE_LIGHT_STATE_ON) {
         turning = true;
       } else {
         turning = false;
