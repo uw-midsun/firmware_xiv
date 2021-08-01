@@ -18,6 +18,8 @@
 // For Rx:
 //      - Data and destination node buffers large enough to hold
 //    however much data is sent
+//
+// The node id 0 is reserved for Tx and Rx all dgram messages
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,6 +29,9 @@
 #include "status.h"
 
 #define CAN_DATAGRAM_VERSION 1
+
+#define DGRAM_MAX_DEST_NODES_SIZE 255
+#define DGRAM_MAX_DATA_SIZE 2048
 
 // Callback used to tx a datagram message, used to handle all CAN transmission
 // Called in each state as data becomes ready to be transmitted
