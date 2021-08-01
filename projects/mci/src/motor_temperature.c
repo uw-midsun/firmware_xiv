@@ -8,6 +8,8 @@
 #include "soft_timer.h"
 #include "status.h"
 
+// Probably do not need this file anymore since most of this has been moved to the mci_broadcast.c
+
 static void prv_handle_sink_temperature_rx(const GenericCanMsg *msg, void *context) {
   // add data to storage
   MotorTemperatureStorage *storage = context;

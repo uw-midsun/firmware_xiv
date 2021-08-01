@@ -34,6 +34,8 @@ typedef enum {
 
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
+  WaveSculptorSinkMotorTempMeasurement temp_measurements[NUM_MOTOR_CONTROLLERS];
+  WaveSculptorDspTempMeasurement dsp_measurements[NUM_MOTOR_CONTROLLERS];
   float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
   uint32_t status[NUM_MOTOR_CONTROLLERS];
 } MotorControllerMeasurements;
@@ -43,11 +45,17 @@ typedef struct MotorControllerBroadcastSettings {
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
 } MotorControllerBroadcastSettings;
 
+// Kinda in a weird situation with the heat sink and motor temperature.
+// The WaveSculptor bundles the sink and motor temperatures as one but separates DSP temperature
+// Maybe one way we can do it is similar to the bus measurements with the voltage and current
 typedef struct MotorControllerBroadcastStorage {
   Mcp2515Storage *motor_can;
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
   uint8_t status_rx_bitset;
+  uint8_t sink_rx_bitset;
+  uint8_t temp_rx_bitset;
+  uint8_t dsp_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
   // What we're currently filtering for
