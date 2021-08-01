@@ -58,6 +58,8 @@ void prv_mci_storage_init(void *context) {
   mci_broadcast_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
 
   mci_output_init(&s_mci_storage.mci_output_storage, &s_can_mcp2515);
+
+  // motor_temperature_init(&s_mci_storage.broadcast_storage, &broadcast_settings);
 }
 
 int main(void) {

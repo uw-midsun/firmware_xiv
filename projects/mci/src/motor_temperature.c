@@ -1,4 +1,5 @@
 #include "motor_temperature.h"
+#include "mci_broadcast.h"
 
 #include "can_transmit.h"
 #include "can_unpack.h"
@@ -6,9 +7,6 @@
 #include "motor_can.h"
 #include "soft_timer.h"
 #include "status.h"
-
-// Retreiving temperature from left and right motor should be implemented,
-// transmitting the data still needs to be done.
 
 static void prv_handle_sink_temperature_rx(const GenericCanMsg *msg, void *context) {
   // add data to storage
@@ -40,9 +38,10 @@ static void prv_handle_dsp_temperature_rx(const GenericCanMsg *msg, void *contex
   }
 }
 
-static void prv_temperature_tx(MotorTemperatureStorage *storage) {
+static void prv_temperature_tx(SoftTimerId timer_id, void *context) {
+  // Transmit data through CAN periodically
+  MotorTemperatureStorage *storage = context;
   MotorTemperatureMeasurements measurements = storage->measurements;
-  // Not finished: transmit CAN message
 
   // Handle DSP temperature
   uint32_t left_dsp = (uint32_t)measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c;
@@ -63,13 +62,7 @@ static void prv_temperature_tx(MotorTemperatureStorage *storage) {
       (uint32_t)measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c;
   CAN_TRANSMIT_MOTOR_TEMPS(left_sink, right_sink);
 
-  return;
-}
-static void prv_handle_temperature_tx(SoftTimerId timer_id, void *context) {
-  // Transmit data through CAN periodically
-  MotorTemperatureStorage *storage = context;
-  prv_temperature_tx(storage);
-  soft_timer_start_millis(MOTOR_TEMPERATURE_TX_PERIOD_MS, prv_handle_temperature_tx, storage, NULL);
+  soft_timer_start_millis(MOTOR_TEMPERATURE_TX_PERIOD_MS, prv_temperature_tx, storage, NULL);
 }
 
 // Not finished: Function needs to be called in main.c
@@ -91,6 +84,5 @@ StatusCode motor_temperature_init(MotorTemperatureStorage *storage,
       setting->motor_can, prv_handle_dsp_temperature_rx, GENERIC_CAN_EMPTY_MASK,
       MOTOR_CAN_LEFT_DSP_TEMPERATURE_FRAME_ID, false, storage));
 
-  return soft_timer_start_millis(MOTOR_TEMPERATURE_TX_PERIOD_MS, prv_handle_temperature_tx, storage,
-                                 NULL);
+  return soft_timer_start_millis(MOTOR_TEMPERATURE_TX_PERIOD_MS, prv_temperature_tx, storage, NULL);
 }

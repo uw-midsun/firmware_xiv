@@ -2,16 +2,11 @@
 
 #include "generic_can.h"
 
+#include "mci_broadcast.h"
 #include "motor_can.h"
 #include "wavesculptor.h"
 
 #define MOTOR_TEMPERATURE_TX_PERIOD_MS 500
-
-typedef enum {
-  LEFT_MOTOR_CONTROLLER = 0,
-  RIGHT_MOTOR_CONTROLLER,
-  NUM_MOTOR_CONTROLLERS,
-} MotorController;
 
 typedef struct MotorTemperatureMeasurements {
   WaveSculptorDspTempMeasurement dsp_measurements[NUM_MOTOR_CONTROLLERS];
