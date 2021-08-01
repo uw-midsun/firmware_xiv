@@ -7,21 +7,18 @@
 #include "bootloader_datagram_defs.h"
 #include "can_datagram.h"
 
-#define MAX_DEST_NODES_SIZE_BYTES 255
-#define MAX_DATA_SIZE_BYTES 2048
-
 // callbacks and context
-static DispatcherCallback s_callback_map[NUM_BOOTLOADER_DATAGRAMS] = { NULL };
-static void *s_context_map[NUM_BOOTLOADER_DATAGRAMS] = { NULL };
+static DispatcherCallback s_callback_map[NUM_BOOTLOADER_DATAGRAMS];
+static void *s_context_map[NUM_BOOTLOADER_DATAGRAMS];
 
 // setup datagram rx config
 static void prv_dispatch(void);
-static uint8_t s_destination_nodes[MAX_DEST_NODES_SIZE_BYTES] = { 0 };
-static uint8_t s_data[MAX_DATA_SIZE_BYTES] = { 0 };
+static uint8_t s_destination_nodes[DGRAM_MAX_DEST_NODES_SIZE] = { 0 };
+static uint8_t s_data[DGRAM_MAX_DATA_SIZE] = { 0 };
 static CanDatagramRxConfig s_datagram_rx = {
   .destination_nodes = s_destination_nodes,
   .data = s_data,
-  // .node_id = 0, // node id is set at dispatcher_init
+  // .node_id = ?, // node id is set at dispatcher_init
   .rx_cmpl_cb = prv_dispatch,
 };
 
@@ -29,6 +26,9 @@ static CanDatagramRxConfig s_datagram_rx = {
 // is called with the datagram data and registered context
 static void prv_dispatch(void) {
   BootloaderDatagramId id = s_datagram_rx.dgram_type;
+  if (id >= NUM_BOOTLOADER_DATAGRAMS) {
+    LOG_ERROR("");
+  }
   if (id < NUM_BOOTLOADER_DATAGRAMS && s_callback_map[id] != NULL) {
     s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
   }
