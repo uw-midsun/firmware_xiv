@@ -81,7 +81,8 @@ void test_drl() {
   // Manually call the callback function with DRL_SIGNAL voltage
   drl_on_callback(DRL_SIGNAL_VOLTAGE_MV, PERIODIC_READER_ID_1, NULL);
   Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_ON_EVENT, (uint16_t)DRL_SIGNAL_VOLTAGE_MV);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_ON_EVENT,
+                                   (uint16_t)DRL_SIGNAL_VOLTAGE_MV);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
@@ -94,7 +95,8 @@ void test_drl() {
 
   // Manually call the callback function with DRL_SIGNAL voltage
   drl_off_callback(DRL_SIGNAL_VOLTAGE_MV, PERIODIC_READER_ID_2, NULL);
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_OFF_EVENT, (uint16_t)DRL_SIGNAL_VOLTAGE_MV);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_OFF_EVENT,
+                                   (uint16_t)DRL_SIGNAL_VOLTAGE_MV);
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
