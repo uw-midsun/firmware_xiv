@@ -145,6 +145,7 @@ static StatusCode prv_handle_sink_motor_measurement(const CanMessage *msg, void 
       left_sink_temp;
   s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c =
       right_sink_temp;
+  // Unpack the motor temperatures next
   CAN_UNPACK_MOTOR_TEMPS(msg, &left_motor_temp, &right_motor_temp);
   s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = left_motor_temp;
   s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c =
@@ -255,6 +256,31 @@ static void prv_assert_eq_expected_storage_status(MotorControllerMeasurements ex
                     (uint16_t)s_broadcast_storage.measurements.status[controller]);
 }
 
+// Sink temperature
+static void prv_assert_eq_expected_storage_ht(MotorControllerMeasurements expected_measurements,
+                                              MotorController controller) {
+  TEST_ASSERT_EQUAL(
+      (uint32_t)expected_measurements.sink_motor_measurements[controller].heatsink_temp_c,
+      (uint32_t)s_broadcast_storage.measurements.sink_motor_measurements[controller]
+          .heatsink_temp_c);
+}
+
+// Motor temperature
+static void prv_assert_eq_expected_storage_mt(MotorControllerMeasurements expected_measurements,
+                                              MotorController controller) {
+  TEST_ASSERT_EQUAL(
+      (uint32_t)expected_measurements.sink_motor_measurements[controller].motor_temp_c,
+      (uint32_t)s_broadcast_storage.measurements.sink_motor_measurements[controller].motor_temp_c);
+}
+
+// DSP temperature
+static void prv_assert_eq_expected_storage_dt(MotorControllerMeasurements expected_measurements,
+                                              MotorController controller) {
+  TEST_ASSERT_EQUAL(
+      (uint32_t)expected_measurements.dsp_measurements[controller].dsp_temp_c,
+      (uint32_t)s_broadcast_storage.measurements.dsp_measurements[controller].dsp_temp_c);
+}
+
 void setup_test(void) {
   event_queue_init();
   interrupt_init();
@@ -318,6 +344,33 @@ void test_left_all_right_all(void) {
             [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
             [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   // need to send in this order because of how the filter works
@@ -338,11 +391,13 @@ void test_left_all_right_all(void) {
 
   delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
 
-  // Velocity + bus measurement + status
-  prv_assert_num_broadcasts(3);
+  // Velocity + bus measurement + status + sink/motor temperature + DSP temperature
+  prv_assert_num_broadcasts(5);
   TEST_ASSERT_TRUE(s_received_velocity);
   TEST_ASSERT_TRUE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
+  TEST_ASSERT_FALSE(s_received_sink_motor_temp);
+  TEST_ASSERT_FALSE(s_received_dsp_temp);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -350,7 +405,12 @@ void test_left_all_right_all(void) {
                       s_test_measurements.bus_measurements[motor_id].bus_current_a);
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
-    TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
+    TEST_ASSERT_EQUAL(expected_measurements.sink_motor_measurements[motor_id].heatsink_temp_c,
+                      s_test_measurements.sink_motor_measurements[motor_id].heatsink_temp_c);
+    TEST_ASSERT_EQUAL(expected_measurements.sink_motor_measurements[motor_id].motor_temp_c,
+                      s_test_measurements.sink_motor_measurements[motor_id].motor_temp_c);
+    TEST_ASSERT_EQUAL((uint32_t)expected_measurements.dsp_measurements[motor_id].dsp_temp_c,
+                      s_test_measurements.dsp_measurements[motor_id]);
   }
 }
 
@@ -385,6 +445,33 @@ void test_left_all_right_none(void) {
             [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
             [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -401,12 +488,17 @@ void test_left_all_right_none(void) {
   TEST_ASSERT_FALSE(s_received_velocity);
   TEST_ASSERT_FALSE(s_received_bus_measurement);
   TEST_ASSERT_FALSE(s_received_status);
+  TEST_ASSERT_FALSE(s_received_sink_motor_temp);
+  TEST_ASSERT_FALSE(s_received_dsp_temp);
 
   // Make sure left measurements stored correctly still
   prv_assert_eq_expected_storage_bv(expected_measurements, LEFT_MOTOR_CONTROLLER);
   prv_assert_eq_expected_storage_bi(expected_measurements, LEFT_MOTOR_CONTROLLER);
   prv_assert_eq_expected_storage_vel(expected_measurements, LEFT_MOTOR_CONTROLLER);
   prv_assert_eq_expected_storage_status(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  prv_assert_eq_expected_storage_ht(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  prv_assert_eq_expected_storage_mt(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  prv_assert_eq_expected_storage_dt(expected_measurements, LEFT_MOTOR_CONTROLLER);
 }
 
 // Test 3: Send left all + right status and check that only status outputs
