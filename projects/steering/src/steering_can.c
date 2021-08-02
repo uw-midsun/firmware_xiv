@@ -15,10 +15,10 @@ StatusCode steering_can_process_event(Event *e) {
     case STEERING_INPUT_HORN_EVENT:
       CAN_TRANSMIT_HORN((EEHornState)e->data);
       break;
-    case STEERING_DRL_1_EVENT:
+    case STEERING_DRL_ON_EVENT:
       if (turning == false) CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, EE_LIGHT_STATE_ON);
       break;
-    case STEERING_DRL_2_EVENT:
+    case STEERING_DRL_OFF_EVENT:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_DRL, EE_LIGHT_STATE_OFF);
       break;
     case STEERING_DIGITAL_INPUT_CC_TOGGLE_PRESSED_EVENT:
@@ -32,19 +32,11 @@ StatusCode steering_can_process_event(Event *e) {
       break;
     case STEERING_CONTROL_STALK_EVENT_LEFT_SIGNAL:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_LEFT, (EELightState)e->data);
-      if ((EELightState)e->data == EE_LIGHT_STATE_ON) {
-        turning = true;
-      } else {
-        turning = false;
-      }
+      turning = ((EELightState)e->data == EE_LIGHT_STATE_ON);
       break;
     case STEERING_CONTROL_STALK_EVENT_RIGHT_SIGNAL:
       CAN_TRANSMIT_LIGHTS(EE_LIGHT_TYPE_SIGNAL_RIGHT, (EELightState)e->data);
-      if ((EELightState)e->data == EE_LIGHT_STATE_ON) {
-        turning = true;
-      } else {
-        turning = false;
-      }
+      turning = ((EELightState)e->data == EE_LIGHT_STATE_ON);
       break;
     case STEERING_REGEN_BRAKE_EVENT:
       CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST();

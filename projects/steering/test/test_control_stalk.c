@@ -34,6 +34,13 @@ static CanStorage s_can_storage;
 
 static int count = 0;
 
+StatusCode prv_test_high_beam_rx_cb_handler(const CanMessage *msg, void *context,
+                                            CanAckStatus *ack_reply) {
+  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, msg->msg_id);
+  count++;
+  return STATUS_CODE_OK;
+}
+
 StatusCode prv_test_signal_rx_cb_handler(const CanMessage *msg, void *context,
                                          CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, msg->msg_id);
@@ -68,6 +75,32 @@ void test_control_stalk_left_signal() {
   TEST_ASSERT_EQUAL(1, count);
 }
 
+void test_drl() {
+  TEST_ASSERT_OK(
+      can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_high_beam_rx_cb_handler, NULL));
+  // Manually call the callback function with DRL_SIGNAL voltage
+  drl_on_callback(DRL_SIGNAL_VOLTAGE_MV, PERIODIC_READER_ID_1, NULL);
+  Event e = { 0 };
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_ON_EVENT, (uint16_t)DRL_SIGNAL_VOLTAGE_MV);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_OK(steering_can_process_event(&e));
+  MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(2, count);
+
+  // Manually call the callback function with 0 voltage
+  drl_on_callback(0, PERIODIC_READER_ID_1, NULL);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_EQUAL(2, count);
+
+  // Manually call the callback function with DRL_SIGNAL voltage
+  drl_off_callback(DRL_SIGNAL_VOLTAGE_MV, PERIODIC_READER_ID_2, NULL);
+  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_OFF_EVENT, (uint16_t)DRL_SIGNAL_VOLTAGE_MV);
+  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
+  TEST_ASSERT_OK(steering_can_process_event(&e));
+  MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
+  TEST_ASSERT_EQUAL(3, count);
+}
+
 void test_control_stalk_right_signal_with_simultaneous_calls() {
   TEST_ASSERT_OK(
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_signal_rx_cb_handler, NULL));
@@ -85,7 +118,7 @@ void test_control_stalk_right_signal_with_simultaneous_calls() {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(2, count);
+  TEST_ASSERT_EQUAL(4, count);
 }
 
 void test_invalid_voltage() {
