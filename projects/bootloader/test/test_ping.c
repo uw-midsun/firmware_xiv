@@ -21,10 +21,8 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_DATA_GRAM_ID 3
 #define TEST_CLIENT_SCRIPT_ID 0
-#define TEST_MAX_DATA_LEN 8
-#define TEST_TX_FIFO_SIZE 8
+#define TEST_TX_FIFO_SIZE 32
 
 static uint8_t s_client_id = 0;
 static uint8_t s_board_id = 2;
@@ -59,7 +57,7 @@ typedef struct TestCanDatagramMessage {
 static uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                                             'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
 
-static uint8_t s_rx_data[TEST_DATA_LEN] = { 0 };
+static uint8_t s_rx_data[DGRAM_MAX_DATA_SIZE];
 static uint16_t s_rx_data_len;
 
 static CanMessage s_tx_buffer[TEST_TX_FIFO_SIZE];
@@ -143,7 +141,7 @@ void test_ping(void) {
   TEST_ASSERT_OK(ping_init(s_board_id));
 
   CanDatagramTxConfig tx_config = {
-    .dgram_type = TEST_DATA_GRAM_ID,
+    .dgram_type = BOOTLOADER_DATAGRAM_PING_COMMAND,
     .destination_nodes_len = 1,
     .destination_nodes = &s_board_id,
     .data_len = 0,
@@ -175,12 +173,10 @@ void test_ping(void) {
     can_process_event(&e);
     can_datagram_process_event(&e);
   }
-  // LOG_DEBUG("rx size: %li\n", fifo_size(&s_rx_fifo));  // should be 3 if rx worked...
+  // LOG_DEBUG("rx size: %li\n", fifo_size(&s_rx_fifo));  // should be 3 if rx worked
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 
-#define MAX_DEST_NODES_SIZE_BYTES 255
-
-  uint8_t s_destination_nodes[MAX_DEST_NODES_SIZE_BYTES] = { 0 };
+  uint8_t s_destination_nodes[DGRAM_MAX_DEST_NODES_SIZE] = { 0 };
   CanDatagramRxConfig rx_config = {
     .destination_nodes = s_destination_nodes,
     .data = s_rx_data,
@@ -210,7 +206,7 @@ void test_ping_addressed_to_multiple(void) {
   TEST_ASSERT_OK(ping_init(s_board_id));
 
   CanDatagramTxConfig tx_config = {
-    .dgram_type = TEST_DATA_GRAM_ID,
+    .dgram_type = BOOTLOADER_DATAGRAM_PING_COMMAND,
     .destination_nodes_len = 5,
     .destination_nodes = &s_board_id,
     .data_len = 0,
@@ -245,7 +241,7 @@ void test_ping_addressed_to_multiple(void) {
   // LOG_DEBUG("rx size: %li\n", fifo_size(&s_rx_fifo));  // should be 3 if rx worked...
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 
-  uint8_t s_destination_nodes[64] = { 0 };
+  uint8_t s_destination_nodes[DGRAM_MAX_DEST_NODES_SIZE] = { 0 };
   CanDatagramRxConfig rx_config = {
     .destination_nodes = s_destination_nodes,
     .data = s_rx_data,

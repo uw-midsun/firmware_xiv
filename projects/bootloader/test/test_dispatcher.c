@@ -22,8 +22,7 @@
 
 #define TEST_DATA_GRAM_ID 2
 #define TEST_CLIENT_SCRIPT_ID 0
-#define TEST_MAX_DATA_LEN 8
-#define TEST_TX_FIFO_SIZE 8
+#define TEST_TX_FIFO_SIZE 32
 
 static uint8_t s_client_id = 0;
 static uint8_t s_board_id = 1;
@@ -52,7 +51,7 @@ static CanDatagramSettings s_test_datagram_settings = {
 static uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                                             'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
 
-static uint8_t s_rx_data[TEST_DATA_LEN] = { 0 };
+static uint8_t s_rx_data[DGRAM_MAX_DATA_SIZE];
 static uint16_t s_rx_data_len;
 
 static CanMessage s_tx_buffer[TEST_TX_FIFO_SIZE];
