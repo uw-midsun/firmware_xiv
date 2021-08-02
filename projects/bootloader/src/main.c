@@ -56,11 +56,6 @@ int main(void) {
   dispatcher_init(board_id);
   ping_init(board_id);
 
-  // jump to application when BOOTLOADER_DATAGRAM_JUMP_TO_APP is received
-  // this will be here for now as a way to test ping and other commands while still
-  // allowing a way to jump to application. Not sure if jump to application is working.
-  dispatcher_register_callback(BOOTLOADER_DATAGRAM_JUMP_TO_APP, jump_to_application, NULL);
-
   Event e = { 0 };
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
