@@ -6,6 +6,7 @@
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
 #include "can_datagram.h"
+#include "log.h"
 
 // callbacks and context
 static DispatcherCallback s_callback_map[NUM_BOOTLOADER_DATAGRAMS];
@@ -27,11 +28,14 @@ static CanDatagramRxConfig s_datagram_rx = {
 static void prv_dispatch(void) {
   BootloaderDatagramId id = s_datagram_rx.dgram_type;
   if (id >= NUM_BOOTLOADER_DATAGRAMS) {
-    LOG_ERROR("");
+    LOG_WARN("Unrecognized Command! %i\n", id);
+    return;
   }
-  if (id < NUM_BOOTLOADER_DATAGRAMS && s_callback_map[id] != NULL) {
-    s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
+  if (s_callback_map[id] == NULL) {
+    LOG_WARN("Unregistered Callback for Command: %i\n", id);
+    return;
   }
+  s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
 }
 
 StatusCode dispatcher_init(uint8_t board_id) {
