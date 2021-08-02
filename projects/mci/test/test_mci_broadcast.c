@@ -47,6 +47,8 @@ static MotorControllerBroadcastStorage s_broadcast_storage;
 static bool s_received_velocity = false;
 static bool s_received_bus_measurement = false;
 static bool s_received_status = false;
+static bool s_received_motor_temp = false;
+static bool s_received_dsp_temp = false;
 
 static MotorControllerBroadcastSettings s_broadcast_settings =
     { .motor_can = &s_motor_can_storage,
@@ -60,10 +62,17 @@ typedef struct TestWaveSculptorBusMeasurement {
   uint16_t bus_current_a;
 } TestWaveSculptorBusMeasurement;
 
+typedef struct TestWaveSculptorSinkMotorTempMeasurement {
+  uint32_t heat_sink_temp_c;
+  uint32_t motor_temp_c;
+} TestWaveSculptorSinkMotorTempMeasurement;
+
 typedef struct TestMotorControllerMeasurements {
   TestWaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   uint16_t vehicle_velocity[NUM_MOTOR_CONTROLLERS];
   uint32_t status[NUM_MOTOR_CONTROLLERS];
+  TestWaveSculptorSinkMotorTempMeasurement temp_measurements[NUM_MOTOR_CONTROLLERS];
+  uint32_t dsp_measurements[NUM_MOTOR_CONTROLLERS];
 } TestMotorControllerMeasurements;
 
 static TestMotorControllerMeasurements s_test_measurements = { 0 };

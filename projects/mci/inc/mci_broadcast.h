@@ -16,7 +16,7 @@ typedef enum {
   MOTOR_CONTROLLER_BROADCAST_STATUS = 0,
   MOTOR_CONTROLLER_BROADCAST_BUS,
   MOTOR_CONTROLLER_BROADCAST_VELOCITY,
-  MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP,
+  MOTOR_CONTROLLER_BROADCAST_SINK_MOTOR_TEMP,
   MOTOR_CONTROLLER_BROADCAST_DSP_TEMP,
   NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS,
 } MotorControllerBroadcastMeasurement;
@@ -34,10 +34,10 @@ typedef enum {
 
 typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
-  WaveSculptorSinkMotorTempMeasurement temp_measurements[NUM_MOTOR_CONTROLLERS];
-  WaveSculptorDspTempMeasurement dsp_measurements[NUM_MOTOR_CONTROLLERS];
   float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
   uint32_t status[NUM_MOTOR_CONTROLLERS];
+  WaveSculptorSinkMotorTempMeasurement sink_motor_measurements[NUM_MOTOR_CONTROLLERS];
+  WaveSculptorDspTempMeasurement dsp_measurements[NUM_MOTOR_CONTROLLERS];
 } MotorControllerMeasurements;
 
 typedef struct MotorControllerBroadcastSettings {

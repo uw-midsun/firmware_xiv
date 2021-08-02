@@ -25,7 +25,7 @@ static const uint32_t s_offset_lookup[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENT
   [MOTOR_CONTROLLER_BROADCAST_STATUS] = WAVESCULPTOR_MEASUREMENT_ID_STATUS,
   [MOTOR_CONTROLLER_BROADCAST_BUS] = WAVESCULPTOR_MEASUREMENT_ID_BUS,
   [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = WAVESCULPTOR_MEASUREMENT_ID_VELOCITY,
-  [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE,
+  [MOTOR_CONTROLLER_BROADCAST_SINK_MOTOR_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE,
   [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE,
 };
 
@@ -61,14 +61,16 @@ static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
 
 // Motor temperature
 static void prv_broadcast_motor_temp(MotorControllerBroadcastStorage *storage) {
-  WaveSculptorSinkMotorTempMeasurement *measurements = storage->measurements.temp_measurements;
+  WaveSculptorSinkMotorTempMeasurement *measurements =
+      storage->measurements.sink_motor_measurements;
   CAN_TRANSMIT_MOTOR_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c,
                            (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c);
 }
 
 // Heat sink temperature
 static void prv_broadcast_sink_temp(MotorControllerBroadcastStorage *storage) {
-  WaveSculptorSinkMotorTempMeasurement *measurements = storage->measurements.temp_measurements;
+  WaveSculptorSinkMotorTempMeasurement *measurements =
+      storage->measurements.sink_motor_measurements;
   CAN_TRANSMIT_MOTOR_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c,
                            (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c);
 }
@@ -140,10 +142,11 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
   }
 }
 
-static void prv_handle_motor_temp_rx(const GenericCanMsg *msg, void *context) {
+static void prv_handle_sink_motor_temp_rx(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("Received motor temperature message\n");
   MotorControllerBroadcastStorage *storage = context;
-  WaveSculptorSinkMotorTempMeasurement *measurements = storage->measurements.temp_measurements;
+  WaveSculptorSinkMotorTempMeasurement *measurements =
+      storage->measurements.sink_motor_measurements;
 
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
@@ -180,7 +183,7 @@ static MotorControllerMeasurementCallback
       [MOTOR_CONTROLLER_BROADCAST_STATUS] = prv_handle_status_rx,
       [MOTOR_CONTROLLER_BROADCAST_BUS] = prv_handle_bus_measurement_rx,
       [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = prv_handle_speed_rx,
-      [MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP] = prv_handle_motor_temp_rx,
+      [MOTOR_CONTROLLER_BROADCAST_SINK_MOTOR_TEMP] = prv_handle_sink_motor_temp_rx,
       [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = prv_handle_dsp_temp_rx,
     };
 
