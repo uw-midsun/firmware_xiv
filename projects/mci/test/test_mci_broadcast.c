@@ -35,7 +35,7 @@ typedef enum {
   TEST_MCI_VELOCITY_MESSAGE = 0,
   TEST_MCI_BUS_MEASUREMENT_MESSAGE,
   TEST_MCI_STATUS_MESSAGE,
-  TEST_MCI_MOTOR_TEMP_MESSAGE,
+  TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
   TEST_MCI_DSP_TEMP_MESSAGE,
   NUM_TEST_MCI_MESSAGES
 } TestMciMessage;
@@ -47,7 +47,7 @@ static MotorControllerBroadcastStorage s_broadcast_storage;
 static bool s_received_velocity = false;
 static bool s_received_bus_measurement = false;
 static bool s_received_status = false;
-static bool s_received_motor_temp = false;
+static bool s_received_sink_motor_temp = false;
 static bool s_received_dsp_temp = false;
 
 static MotorControllerBroadcastSettings s_broadcast_settings =
@@ -63,7 +63,7 @@ typedef struct TestWaveSculptorBusMeasurement {
 } TestWaveSculptorBusMeasurement;
 
 typedef struct TestWaveSculptorSinkMotorTempMeasurement {
-  uint32_t heat_sink_temp_c;
+  uint32_t heatsink_temp_c;
   uint32_t motor_temp_c;
 } TestWaveSculptorSinkMotorTempMeasurement;
 
@@ -71,7 +71,7 @@ typedef struct TestMotorControllerMeasurements {
   TestWaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   uint16_t vehicle_velocity[NUM_MOTOR_CONTROLLERS];
   uint32_t status[NUM_MOTOR_CONTROLLERS];
-  TestWaveSculptorSinkMotorTempMeasurement temp_measurements[NUM_MOTOR_CONTROLLERS];
+  TestWaveSculptorSinkMotorTempMeasurement sink_motor_measurements[NUM_MOTOR_CONTROLLERS];
   uint32_t dsp_measurements[NUM_MOTOR_CONTROLLERS];
 } TestMotorControllerMeasurements;
 
@@ -94,9 +94,9 @@ static MotorCanFrameId s_frame_id_map[] = {
   [L_MTR_MSG_IDX(TEST_MCI_VELOCITY_MESSAGE)] = L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_VELOCITY),
   [R_MTR_MSG_IDX(TEST_MCI_VELOCITY_MESSAGE)] = R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_VELOCITY),
 
-  [L_MTR_MSG_IDX(TEST_MCI_MOTOR_TEMP_MESSAGE)] =
+  [L_MTR_MSG_IDX(TEST_MCI_SINK_MOTOR_TEMP_MESSAGE)] =
       L_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE),
-  [R_MTR_MSG_IDX(TEST_MCI_MOTOR_TEMP_MESSAGE)] =
+  [R_MTR_MSG_IDX(TEST_MCI_SINK_MOTOR_TEMP_MESSAGE)] =
       R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_SINK_MOTOR_TEMPERATURE),
 
   [L_MTR_MSG_IDX(TEST_MCI_DSP_TEMP_MESSAGE)] =
@@ -136,6 +136,33 @@ static StatusCode prv_handle_status(const CanMessage *msg, void *context, CanAck
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_handle_sink_motor_measurement(const CanMessage *msg, void *context,
+                                                    CanAckStatus *ack_reply) {
+  uint32_t left_sink_temp, left_motor_temp, right_sink_temp, right_motor_temp;
+  // Unpack the heat sink temperatures first
+  CAN_UNPACK_MOTOR_TEMPS(msg, &left_sink_temp, &right_sink_temp);
+  s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c =
+      left_sink_temp;
+  s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c =
+      right_sink_temp;
+  CAN_UNPACK_MOTOR_TEMPS(msg, &left_motor_temp, &right_motor_temp);
+  s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = left_motor_temp;
+  s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c =
+      right_motor_temp;
+  s_received_sink_motor_temp = true;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_handle_dsp_measurement(const CanMessage *msg, void *context,
+                                             CanAckStatus *ack_reply) {
+  uint32_t left_dsp_temp, right_dsp_temp;
+  CAN_UNPACK_MOTOR_TEMPS(msg, &left_dsp_temp, &right_dsp_temp);
+  s_test_measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER] = left_dsp_temp;
+  s_test_measurements.dsp_measurements[RIGHT_MOTOR_CONTROLLER] = right_dsp_temp;
+  s_received_dsp_temp = true;
+  return STATUS_CODE_OK;
+}
+
 static void prv_send_measurements(MotorController controller, TestMciMessage message_type,
                                   MotorControllerMeasurements *measurements) {
   WaveSculptorCanData can_data = { 0 };
@@ -149,6 +176,14 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
         measurements->bus_measurements[controller].bus_current_a;
   } else if (message_type == TEST_MCI_STATUS_MESSAGE) {
     can_data.raw = measurements->status[controller];
+  } else if (message_type == TEST_MCI_SINK_MOTOR_TEMP_MESSAGE) {
+    can_data.sink_motor_temp_measurement.heatsink_temp_c =
+        measurements->sink_motor_measurements[controller].heatsink_temp_c;
+    can_data.sink_motor_temp_measurement.motor_temp_c =
+        measurements->sink_motor_measurements[controller].motor_temp_c;
+  } else if (message_type == TEST_MCI_DSP_TEMP_MESSAGE) {
+    can_data.dsp_temp_measurement.dsp_temp_c =
+        measurements->dsp_measurements[controller].dsp_temp_c;
   }
 
   GenericCanMsg msg = {
@@ -233,6 +268,12 @@ void setup_test(void) {
       can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, prv_handle_velocity, NULL));
 
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_STATUS, prv_handle_status, NULL));
+
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_TEMPS,
+                                         prv_handle_sink_motor_measurement, NULL));
+
+  TEST_ASSERT_OK(
+      can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_TEMPS, prv_handle_dsp_measurement, NULL));
 }
 
 void teardown_test(void) {
@@ -284,13 +325,14 @@ void test_left_all_right_all(void) {
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
 
@@ -349,7 +391,8 @@ void test_left_all_right_none(void) {
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
 
   delay_ms(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
@@ -404,7 +447,8 @@ void test_left_all_right_status(void) {
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
 
@@ -458,7 +502,8 @@ void test_left_all_right_status_bus(void) {
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                         &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
@@ -517,7 +562,7 @@ void test_3x_left_all_right_all(void) {
     prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE,
                           &expected_measurements);
     prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
-    prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+    prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                           &expected_measurements);
     prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
     prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -525,7 +570,7 @@ void test_3x_left_all_right_all(void) {
                           &expected_measurements);
     prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE,
                           &expected_measurements);
-    prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+    prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                           &expected_measurements);
     prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE,
                           &expected_measurements);
@@ -599,7 +644,7 @@ void test_message_id_filter(void) {
   prv_assert_eq_expected_storage_bi(expected_measurements, LEFT_MOTOR_CONTROLLER);
 
   // Should skip
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                         &expected_measurements);
 
   // Should process and store
@@ -611,7 +656,8 @@ void test_message_id_filter(void) {
   // Should still skip
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &expected_measurements);
   // Should process
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE, &expected_measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
+                        &expected_measurements);
   // Should skip
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
   // Should process
@@ -624,7 +670,7 @@ void test_message_id_filter(void) {
   prv_assert_eq_expected_storage_status(expected_measurements, RIGHT_MOTOR_CONTROLLER);
 
   // Should skip
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                         &expected_measurements);
 
   // Should process and store
@@ -638,7 +684,7 @@ void test_message_id_filter(void) {
   prv_assert_eq_expected_storage_vel(expected_measurements, RIGHT_MOTOR_CONTROLLER);
 
   // Should process
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_MOTOR_TEMP_MESSAGE,
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                         &expected_measurements);
   // Should process
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
