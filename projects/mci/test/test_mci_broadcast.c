@@ -533,6 +533,33 @@ void test_left_all_right_status(void) {
             [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
             [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -549,6 +576,8 @@ void test_left_all_right_status(void) {
 
   TEST_ASSERT_FALSE(s_received_velocity);
   TEST_ASSERT_FALSE(s_received_bus_measurement);
+  TEST_ASSERT_FALSE(s_received_sink_motor_temp);
+  TEST_ASSERT_FALSE(s_received_dsp_temp);
   TEST_ASSERT_TRUE(s_received_status);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
@@ -588,6 +617,33 @@ void test_left_all_right_status_bus(void) {
             [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
             [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -605,6 +661,8 @@ void test_left_all_right_status_bus(void) {
   prv_assert_num_broadcasts(2);
 
   TEST_ASSERT_FALSE(s_received_velocity);
+  TEST_ASSERT_FALSE(s_received_sink_motor_temp);
+  TEST_ASSERT_FALSE(s_received_dsp_temp);
   TEST_ASSERT_TRUE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
@@ -645,6 +703,33 @@ void test_3x_left_all_right_all(void) {
             [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
             [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   // Repeat full sequence 3 times
@@ -669,8 +754,8 @@ void test_3x_left_all_right_all(void) {
 
     delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
 
-    // Velocity + bus measurement + status
-    prv_assert_num_broadcasts(3);
+    // Velocity + bus measurement + status + sink/motor temperature + DSP temperature
+    prv_assert_num_broadcasts(5);
     TEST_ASSERT_TRUE(s_received_velocity);
     TEST_ASSERT_TRUE(s_received_bus_measurement);
     TEST_ASSERT_TRUE(s_received_status);
@@ -683,12 +768,20 @@ void test_3x_left_all_right_all(void) {
                         s_test_measurements.vehicle_velocity[motor_id]);
       TEST_ASSERT_EQUAL(expected_measurements.status[motor_id],
                         s_test_measurements.status[motor_id]);
+      TEST_ASSERT_EQUAL(expected_measurements.sink_motor_measurements[motor_id].heatsink_temp_c,
+                        s_test_measurements.sink_motor_measurements[motor_id].heatsink_temp_c);
+      TEST_ASSERT_EQUAL(expected_measurements.sink_motor_measurements[motor_id].motor_temp_c,
+                        s_test_measurements.sink_motor_measurements[motor_id].motor_temp_c);
+      TEST_ASSERT_EQUAL((uint32_t)expected_measurements.dsp_measurements[motor_id].dsp_temp_c,
+                        s_test_measurements.dsp_measurements[motor_id]);
     }
 
     // Reset before next iteration
     s_received_velocity = false;
     s_received_bus_measurement = false;
     s_received_status = false;
+    s_received_sink_motor_temp = false;
+    s_received_dsp_temp = false;
   }
 }
 
@@ -720,6 +813,33 @@ void test_message_id_filter(void) {
             [LEFT_MOTOR_CONTROLLER] = 0xDEADBEEF,
             [RIGHT_MOTOR_CONTROLLER] = 0xDEADBEEF,
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   // Should skip
@@ -750,10 +870,14 @@ void test_message_id_filter(void) {
   // Should process
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                         &expected_measurements);
+  prv_assert_eq_expected_storage_ht(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  prv_assert_eq_expected_storage_mt(expected_measurements, LEFT_MOTOR_CONTROLLER);
   // Should skip
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
   // Should process
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
+  prv_assert_eq_expected_storage_dt(expected_measurements, LEFT_MOTOR_CONTROLLER);
+  prv_assert_eq_expected_storage_dt(expected_measurements, LEFT_MOTOR_CONTROLLER);
   // Should skip
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
 
@@ -778,16 +902,21 @@ void test_message_id_filter(void) {
   // Should process
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE,
                         &expected_measurements);
+  prv_assert_eq_expected_storage_ht(expected_measurements, RIGHT_MOTOR_CONTROLLER);
+  prv_assert_eq_expected_storage_mt(expected_measurements, RIGHT_MOTOR_CONTROLLER);
   // Should process
   prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &expected_measurements);
+  prv_assert_eq_expected_storage_dt(expected_measurements, RIGHT_MOTOR_CONTROLLER);
 
   delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
 
-  // Velocity + bus measurement + status
-  prv_assert_num_broadcasts(3);
+  // Velocity + bus measurement + status + sink/motor temperature + DSP temperature
+  prv_assert_num_broadcasts(5);
   TEST_ASSERT_TRUE(s_received_velocity);
   TEST_ASSERT_TRUE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
+  TEST_ASSERT_TRUE(s_received_sink_motor_temp);
+  TEST_ASSERT_TRUE(s_received_dsp_temp);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
@@ -796,6 +925,12 @@ void test_message_id_filter(void) {
     TEST_ASSERT_EQUAL((uint16_t)(expected_measurements.vehicle_velocity[motor_id] * 100),
                       s_test_measurements.vehicle_velocity[motor_id]);
     TEST_ASSERT_EQUAL(expected_measurements.status[motor_id], s_test_measurements.status[motor_id]);
+    TEST_ASSERT_EQUAL(expected_measurements.sink_motor_measurements[motor_id].heatsink_temp_c,
+                      s_test_measurements.sink_motor_measurements[motor_id].heatsink_temp_c);
+    TEST_ASSERT_EQUAL(expected_measurements.sink_motor_measurements[motor_id].motor_temp_c,
+                      s_test_measurements.sink_motor_measurements[motor_id].motor_temp_c);
+    TEST_ASSERT_EQUAL((uint32_t)expected_measurements.dsp_measurements[motor_id].dsp_temp_c,
+                      s_test_measurements.dsp_measurements[motor_id]);
   }
 
   // Stored measurements should be unchanged
@@ -804,5 +939,8 @@ void test_message_id_filter(void) {
     prv_assert_eq_expected_storage_bi(expected_measurements, i);
     prv_assert_eq_expected_storage_vel(expected_measurements, i);
     prv_assert_eq_expected_storage_status(expected_measurements, i);
+    prv_assert_eq_expected_storage_ht(expected_measurements, i);
+    prv_assert_eq_expected_storage_mt(expected_measurements, i);
+    prv_assert_eq_expected_storage_dt(expected_measurements, i);
   }
 }
