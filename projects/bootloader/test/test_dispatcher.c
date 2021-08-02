@@ -169,83 +169,83 @@ void test_dispatch_calls_cb(void) {
   TEST_ASSERT_EQUAL(0, s_rx_data_len);
 }
 
-void test_datagram_completeness(void) {
-  TEST_ASSERT_OK(dispatcher_init(s_board_id));
+// void test_datagram_completeness(void) {
+//   TEST_ASSERT_OK(dispatcher_init(s_board_id));
 
-  CanDatagramTxConfig tx_config = {
-    .dgram_type = TEST_DATA_GRAM_ID,
-    .destination_nodes_len = 1,
-    .destination_nodes = &s_board_id,
-    .data_len = TEST_DATA_LEN,
-    .data = s_tx_data,
-    .tx_cmpl_cb = tx_cmpl_cb,
-  };
-  prv_send_tx_to_fifo(tx_config);
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
+//   CanDatagramTxConfig tx_config = {
+//     .dgram_type = TEST_DATA_GRAM_ID,
+//     .destination_nodes_len = 1,
+//     .destination_nodes = &s_board_id,
+//     .data_len = TEST_DATA_LEN,
+//     .data = s_tx_data,
+//     .tx_cmpl_cb = tx_cmpl_cb,
+//   };
+//   prv_send_tx_to_fifo(tx_config);
+//   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 
-  bool cb_called = false;
-  TEST_ASSERT_OK(
-      dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
+//   bool cb_called = false;
+//   TEST_ASSERT_OK(
+//       dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
-  Event e = { 0 };
-  prv_tx_from_fifo();
-  MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
+//   Event e = { 0 };
+//   prv_tx_from_fifo();
+//   MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
 
-  bool send_tx = true;
-  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
-    if (send_tx) {
-      prv_tx_from_fifo();
-      send_tx = false;
-    }
-    MS_TEST_HELPER_AWAIT_EVENT(e);
-    if (e.id == CAN_DATAGRAM_EVENT_TX) {
-      send_tx = true;
-    }
-    can_datagram_process_event(&e);
-    can_process_event(&e);
-  }
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-  TEST_ASSERT_TRUE(cb_called);
-  TEST_ASSERT_EQUAL(TEST_DATA_LEN, s_rx_data_len);
-  for (int i = 0; i < s_rx_data_len; ++i) {
-    TEST_ASSERT_EQUAL(s_tx_data[i], s_rx_data[i]);  // test the data from dispatcher is complete
-  }
-}
+//   bool send_tx = true;
+//   while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
+//     if (send_tx) {
+//       prv_tx_from_fifo();
+//       send_tx = false;
+//     }
+//     MS_TEST_HELPER_AWAIT_EVENT(e);
+//     if (e.id == CAN_DATAGRAM_EVENT_TX) {
+//       send_tx = true;
+//     }
+//     can_datagram_process_event(&e);
+//     can_process_event(&e);
+//   }
+//   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+//   TEST_ASSERT_TRUE(cb_called);
+//   TEST_ASSERT_EQUAL(TEST_DATA_LEN, s_rx_data_len);
+//   for (int i = 0; i < s_rx_data_len; ++i) {
+//     TEST_ASSERT_EQUAL(s_tx_data[i], s_rx_data[i]);  // test the data from dispatcher is complete
+//   }
+// }
 
-void test_noexistant_callback(void) {
-  // send a datagram id with no associated callback
-  TEST_ASSERT_OK(dispatcher_init(s_board_id));
+// void test_noexistant_callback(void) {
+//   // send a datagram id with no associated callback
+//   TEST_ASSERT_OK(dispatcher_init(s_board_id));
 
-  CanDatagramTxConfig tx_config = {
-    .dgram_type = TEST_DATA_GRAM_ID,
-    .destination_nodes_len = 1,
-    .destination_nodes = &s_board_id,
-    .data_len = TEST_DATA_LEN,
-    .data = s_tx_data,
-    .tx_cmpl_cb = tx_cmpl_cb,
-  };
-  prv_send_tx_to_fifo(tx_config);
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
+//   CanDatagramTxConfig tx_config = {
+//     .dgram_type = TEST_DATA_GRAM_ID,
+//     .destination_nodes_len = 1,
+//     .destination_nodes = &s_board_id,
+//     .data_len = TEST_DATA_LEN,
+//     .data = s_tx_data,
+//     .tx_cmpl_cb = tx_cmpl_cb,
+//   };
+//   prv_send_tx_to_fifo(tx_config);
+//   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 
-  Event e = { 0 };
-  prv_tx_from_fifo();
-  MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
+//   Event e = { 0 };
+//   prv_tx_from_fifo();
+//   MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
 
-  bool send_tx = true;
-  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
-    if (send_tx) {
-      prv_tx_from_fifo();
-      send_tx = false;
-    }
-    MS_TEST_HELPER_AWAIT_EVENT(e);
-    if (e.id == CAN_DATAGRAM_EVENT_TX) {
-      send_tx = true;
-    }
-    can_datagram_process_event(&e);
-    can_process_event(&e);
-  }
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-}
+//   bool send_tx = true;
+//   while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {  // Loop until rx complete
+//     if (send_tx) {
+//       prv_tx_from_fifo();
+//       send_tx = false;
+//     }
+//     MS_TEST_HELPER_AWAIT_EVENT(e);
+//     if (e.id == CAN_DATAGRAM_EVENT_TX) {
+//       send_tx = true;
+//     }
+//     can_datagram_process_event(&e);
+//     can_process_event(&e);
+//   }
+//   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+// }
 
 void test_register_invalid_id(void) {
   TEST_ASSERT_NOT_OK(dispatcher_register_callback(NUM_BOOTLOADER_DATAGRAMS, NULL, NULL));
