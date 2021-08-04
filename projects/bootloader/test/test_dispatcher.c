@@ -68,6 +68,7 @@ static StatusCode prv_tx_to_fifo(uint8_t *data, size_t len, bool is_start_messag
     .msg_id = TEST_CLIENT_SCRIPT_ID,
     .type = is_start_message ? CAN_MSG_TYPE_ACK : CAN_MSG_TYPE_DATA,
     .dlc = len,
+    .data = 0,
   };
   // copy the message data over to the message to be transmitted
   memcpy(message.data_u8, data, len);
@@ -147,7 +148,7 @@ void test_dispatch_calls_cb(void) {
   //     dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
   // Event e = { 0 };
-  // prv_tx_from_fifo();  // start msg (first msg in fifo)
+  prv_tx_from_fifo();  // start msg (first msg in fifo)
   // MS_TEST_HELPER_CAN_TX_RX(CAN_DATAGRAM_EVENT_TX, CAN_DATAGRAM_EVENT_RX);
 
   // // datagram will be in rx mode while we send the datagram with can from fifo.
