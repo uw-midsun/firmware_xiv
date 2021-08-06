@@ -200,15 +200,17 @@ void test_ping(void) {
   }
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
 }
 
 void test_ping_addressed_to_multiple(void) {
   TEST_ASSERT_OK(ping_init(s_board_id));
 
+  uint8_t multiple_addr[5] = { 1, s_board_id, 3, 4, 5 };
   CanDatagramTxConfig tx_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_PING_COMMAND,
     .destination_nodes_len = 5,
-    .destination_nodes = &s_board_id,
+    .destination_nodes = multiple_addr,
     .data_len = 0,
     .data = NULL,
     .tx_cmpl_cb = tx_cmpl_cb,
@@ -265,4 +267,5 @@ void test_ping_addressed_to_multiple(void) {
   }
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
 }
