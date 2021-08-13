@@ -45,7 +45,7 @@ jobs:
 
       - name: Install folly, pkg-config helper, and protobuf-c library
         run: |
-          cd ~/shared
+          cd ~
           git clone https://github.com/protobuf-c/protobuf-c
           cd protobuf-c
           ./autogen.sh
@@ -54,7 +54,6 @@ jobs:
           make
           sudo make install
           sudo ldconfig
-          cd ~/shared/firmware_xiv
           python3 -m pip install protobuf
           python3 -m pip install python-can cantools
 
