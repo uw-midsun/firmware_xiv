@@ -46,7 +46,7 @@ jobs:
       - name: Install protobuf and dependencies
         run: |
           cd ~
-          sudo apt-get install libtool autoconf bison flex make python-protobuf python-numpy protobuf-compiler libprotobuf-lite9 libftdi-dev libftdi1 uuid-dev libcppunit-dev libmicrohttpd-dev libprotobuf-dev libprotoc-dev zlib1g-dev libusb-1.0-0-dev liblo-dev libavahi-client-dev
+          sudo apt-get install libtool autoconf bison flex make python-protobuf python-numpy protobuf-compiler libprotobuf-lite9v5 libftdi-dev libftdi1 uuid-dev libcppunit-dev libmicrohttpd-dev libprotobuf-dev libprotoc-dev zlib1g-dev libusb-1.0-0-dev liblo-dev libavahi-client-dev
           git clone https://github.com/protobuf-c/protobuf-c
           cd protobuf-c
           ./autogen.sh
