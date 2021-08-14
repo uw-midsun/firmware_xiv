@@ -51,6 +51,9 @@ jobs:
 
           sudo apt update
           sudo apt install protobuf-c-compiler
+          protoc --version
+
+          export PATH="$PATH:$HOME/.local/bin"
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
@@ -101,6 +104,7 @@ jobs:
 
       - name: Format and lint
         run: |
+          if: ${{ 'success' == 'failure' }}
           make test_format
           make lint
           make pylint
