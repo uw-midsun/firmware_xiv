@@ -45,6 +45,9 @@ jobs:
 
       - name: Install protobuf and dependencies
         run: |
+          sudo apt-get update -y
+          sudo apt-get install -y pkg-config
+          
           sudo apt update
           sudo apt install protobuf-c-compiler
 
