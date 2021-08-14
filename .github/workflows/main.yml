@@ -45,22 +45,8 @@ jobs:
 
       - name: Install protobuf and dependencies
         run: |
-          curl -OL https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
-          unzip protoc-3.2.0-linux-x86_64.zip -d protoc3
-          sudo mv protoc3/bin/* ~
-          sudo mv protoc3/include/* ~
-          cd ~
-          sudo apt-get install libtool autoconf bison flex make python-protobuf python-numpy protobuf-compiler libprotobuf-lite9v5 libftdi-dev libftdi1 uuid-dev libcppunit-dev libmicrohttpd-dev libprotobuf-dev libprotoc-dev zlib1g-dev libusb-1.0-0-dev liblo-dev libavahi-client-dev
-          git clone https://github.com/protobuf-c/protobuf-c
-          cd protobuf-c
-          ./autogen.sh
-          ./configure
-          sudo apt-get install libprotoc-dev
-          make
-          sudo make install
-          sudo ldconfig
-          python3 -m pip install protobuf
-          python3 -m pip install python-can cantools
+          sudo apt update
+          sudo apt install protobuf-c-compiler
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
