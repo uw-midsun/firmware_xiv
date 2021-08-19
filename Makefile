@@ -107,6 +107,7 @@ MU_PROTOS_DIR := $(MU_DIR)/protos
 
 # Bootloader directory
 BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
+PYTHONPATHNANO := /home/vagrant/shared/nanopb
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
@@ -221,7 +222,7 @@ FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS)) $(addpref
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
-FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*'
+FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*' ':(exclude)projects/bootloader/protogen'
 # ignore MU since it has a different pylint
 FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mu/*.py' ':(exclude)$(VENV_DIR)/*'
 FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mu/*.py' ':(exclude)$(VENV_DIR)/*'
@@ -296,7 +297,11 @@ pyformat:
 bootloader_protos:
 	@echo "Compiling protos..."
 	@mkdir -p $(BOOTLOADER_DIR)/protogen
-	@protoc -I=$(BOOTLOADER_DIR)/protos --c_out=$(BOOTLOADER_DIR)/protogen $(BOOTLOADER_DIR)/protos/*.proto
+	@for i in $$(ls $(BOOTLOADER_DIR)/protos); do \
+		protoc -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i; \
+		python $(PYTHONPATHNANO)/generator/nanopb_generator.py -I=$(BOOTLOADER_DIR)/protos command.pb; \
+	done
+	@mv *.pb *.pb.c *.pb.h $(BOOTLOADER_DIR)/protogen
 
 # Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command
 .PHONY: codegen
@@ -369,8 +374,6 @@ clean:
 	@rm -f $(LIB_DIR)/mu-gen/inc/*.pb-c.h
 	@rm -f $(LIB_DIR)/mu-gen/src/*.pb-c.c
 	@rm -f $(MU_DIR)/protogen/*_pb2.py
-	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.h
-	@rm -f $(BOOTLOADER_DIR)/protogen/*.pb-c.c
 
 .PHONY: mock_can_data
 mock_can_data: socketcan
@@ -400,6 +403,8 @@ install_requirements:
 	@virtualenv $(VENV_DIR)
 	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
+	@if [ ! -d $(PYTHONPATHNANO) ]; then cd ~/shared && git clone https://github.com/nanopb/nanopb.git \
+	&& cd $(PYTHONPATHNANO)/generator/proto && make; fi
 
 MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk
