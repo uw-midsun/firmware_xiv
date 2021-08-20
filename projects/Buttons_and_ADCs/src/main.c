@@ -4,7 +4,6 @@
 #include "gpio_it.h"
 #include "interrupt.h"
 #include "log.h"
-#include "soft_timer.h"
 
 static void prv_button_interrupt_handler(const GpioAddress *adc_address, void *context){
     GpioAddress *adc_position = context;
@@ -56,7 +55,7 @@ int main(void){
     adc_set_channel_pin(adc_addresses, true);
 
     gpio_it_register_interrupt(&button_addresses, &s_interrupt_settings,
-                            INTERRUPT_EDGE_RISING, prv_button_interrupt_handler,
+                            INTERRUPT_EDGE_FALLING, prv_button_interrupt_handler,
                             &adc_addresses);
     while (true) {
     }
