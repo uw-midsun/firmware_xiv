@@ -18,10 +18,6 @@ int main(void){
     gpio_init();
     gpio_it_init();
 
-    typedef enum { BUTTON_B2 = 0, NUM_BUTTONS } Button;
-
-    typedef enum { ADC_A6 = 0, NUM_SENSORS } ADC;
-
     //Button address
     static GpioAddress button_addresses = {
         .port = GPIO_PORT_B, 
