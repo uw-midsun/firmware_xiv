@@ -59,7 +59,6 @@ int main(void){
                             INTERRUPT_EDGE_RISING, prv_button_interrupt_handler,
                             &adc_addresses);
     while (true) {
-        wait();
     }
     return 0;
 }
