@@ -7,16 +7,16 @@
 #include "soft_timer.h"
 
 static void prv_button_interrupt_handler(const GpioAddress *adc_address, void *context){
-    GpioAddress *adc_address = context;
+    GpioAddress *adc_position = context;
     uint16_t adc = 0;
-    adc_read_converted_pin(*adc_address, &adc);
+    adc_read_converted_pin(*adc_position, &adc);
     LOG_DEBUG("ADC reading is: %d\n", adc);
 }
 
 int main(void){
     interrupt_init();
     gpio_init();
-    gpio_it();
+    gpio_it_init();
 
     typedef enum { BUTTON_B2 = 0, NUM_BUTTONS } Button;
 
