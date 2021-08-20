@@ -3,6 +3,7 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "wait.h"
 #include "log.h"
 
 static void prv_button_interrupt_handler(const GpioAddress *adc_address, void *context){
@@ -58,6 +59,7 @@ int main(void){
                             INTERRUPT_EDGE_FALLING, prv_button_interrupt_handler,
                             &adc_addresses);
     while (true) {
+        wait();
     }
     return 0;
 }
