@@ -27,7 +27,6 @@ jobs:
           # create directory that will be on the PATH
           mkdir -p ~/.local/bin
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
-          echo "$HOME/bin" >> $GITHUB_PATH
           mkdir -p ~/source
 
       - name: Install gcc, clang, clang-format
@@ -55,13 +54,13 @@ jobs:
 
           PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
           curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
-          sudo unzip -o $PROTOC_ZIP -d $HOME bin/protoc
-          sudo unzip -o $PROTOC_ZIP -d $HOME 'include/*'
+          sudo unzip -o $PROTOC_ZIP -d /usr/.local bin/protoc
+          sudo unzip -o $PROTOC_ZIP -d /usr/.local 'include/*'
           rm -f $PROTOC_ZIP
 
           sudo protoc --version
 
-          export PATH="$PATH:$HOME"
+          export PATH="$PATH:$HOME/.local/bin"
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
@@ -132,7 +131,7 @@ jobs:
         
       - name: Build MU and bootloader protobufs # Bootloader protobufs use nanopb and not protoc
         run: |
-          sudo make mu_protos
+          make mu_protos
       
       - name: Check for uncommitted protobuf changes
         id: check-uncommitted-protobuf-changes
