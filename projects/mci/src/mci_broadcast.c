@@ -59,27 +59,21 @@ static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
                             measurements[RIGHT_MOTOR_CONTROLLER]);
 }
 
-// Motor temperature
-static void prv_broadcast_motor_temp(MotorControllerBroadcastStorage *storage) {
+// Motor and heat sink temperatures
+static void prv_broadcast_motor_sink_temp(MotorControllerBroadcastStorage *storage) {
   WaveSculptorSinkMotorTempMeasurement *measurements =
       storage->measurements.sink_motor_measurements;
-  CAN_TRANSMIT_MOTOR_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c,
-                           (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c);
-}
-
-// Heat sink temperature
-static void prv_broadcast_sink_temp(MotorControllerBroadcastStorage *storage) {
-  WaveSculptorSinkMotorTempMeasurement *measurements =
-      storage->measurements.sink_motor_measurements;
-  CAN_TRANSMIT_MOTOR_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c,
-                           (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c);
+  CAN_TRANSMIT_MOTOR_SINK_TEMPS((uint16_t)measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c,
+                                (uint16_t)measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c,
+                                (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c,
+                                (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c);
 }
 
 // CPU/DSP temperature
 static void prv_broadcast_dsp_temp(MotorControllerBroadcastStorage *storage) {
   WaveSculptorDspTempMeasurement *measurements = storage->measurements.dsp_measurements;
-  CAN_TRANSMIT_MOTOR_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c,
-                           (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c);
+  CAN_TRANSMIT_DSP_BOARD_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c,
+                               (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c);
 }
 
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
@@ -142,7 +136,7 @@ static void prv_handle_bus_measurement_rx(const GenericCanMsg *msg, void *contex
   }
 }
 
-static void prv_handle_sink_motor_temp_rx(const GenericCanMsg *msg, void *context) {
+static void prv_handle_motor_sink_temp_rx(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("Received motor temperature message\n");
   MotorControllerBroadcastStorage *storage = context;
   WaveSculptorSinkMotorTempMeasurement *measurements =
@@ -154,8 +148,7 @@ static void prv_handle_sink_motor_temp_rx(const GenericCanMsg *msg, void *contex
     if (can_id.device_id == storage->ids[motor_id]) {
       bool disabled = critical_section_start();
       measurements[motor_id] = can_data.sink_motor_temp_measurement;
-      storage->sink_rx_bitset |= 1 << motor_id;
-      storage->temp_rx_bitset |= 1 << motor_id;
+      storage->motor_sink_rx_bitset |= 1 << motor_id;
       critical_section_end(disabled);
     }
   }
@@ -183,7 +176,7 @@ static MotorControllerMeasurementCallback
       [MOTOR_CONTROLLER_BROADCAST_STATUS] = prv_handle_status_rx,
       [MOTOR_CONTROLLER_BROADCAST_BUS] = prv_handle_bus_measurement_rx,
       [MOTOR_CONTROLLER_BROADCAST_VELOCITY] = prv_handle_speed_rx,
-      [MOTOR_CONTROLLER_BROADCAST_SINK_MOTOR_TEMP] = prv_handle_sink_motor_temp_rx,
+      [MOTOR_CONTROLLER_BROADCAST_SINK_MOTOR_TEMP] = prv_handle_motor_sink_temp_rx,
       [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = prv_handle_dsp_temp_rx,
     };
 
@@ -313,18 +306,12 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Sending status periodic broadcast\n");
     prv_broadcast_status(storage);
   }
-  if (storage->sink_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
+  if (storage->motor_sink_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
     // Received heat sink temperature measurements from all motor controllers - clear bitset and
     // broadcast
-    storage->sink_rx_bitset = 0;
-    LOG_DEBUG("Sending heat sink temperature periodic broadcast\n");
-    prv_broadcast_sink_temp(storage);
-  }
-  if (storage->temp_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
-    // Received motor temperature from all motor controllers - clear bitset and broadcast
-    storage->temp_rx_bitset = 0;
-    LOG_DEBUG("Sending motor temperature periodic broadcast\n");
-    prv_broadcast_motor_temp(storage);
+    storage->motor_sink_rx_bitset = 0;
+    LOG_DEBUG("Sending motor and heat sink temperature periodic broadcast\n");
+    prv_broadcast_motor_sink_temp(storage);
   }
   if (storage->dsp_rx_bitset == (1 << NUM_MOTOR_CONTROLLERS) - 1) {
     // Received DSP/CPU temperature from all motor controllers - clear bitset and broadcast
@@ -344,8 +331,7 @@ StatusCode mci_broadcast_init(MotorControllerBroadcastStorage *storage,
   }
   storage->velocity_rx_bitset = 0;
   storage->bus_rx_bitset = 0;
-  storage->sink_rx_bitset = 0;
-  storage->temp_rx_bitset = 0;
+  storage->motor_sink_rx_bitset = 0;
   storage->dsp_rx_bitset = 0;
   storage->motor_can = settings->motor_can;
   prv_setup_motor_can(storage);

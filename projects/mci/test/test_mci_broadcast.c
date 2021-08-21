@@ -138,18 +138,16 @@ static StatusCode prv_handle_status(const CanMessage *msg, void *context, CanAck
 
 static StatusCode prv_handle_sink_motor_measurement(const CanMessage *msg, void *context,
                                                     CanAckStatus *ack_reply) {
-  uint32_t left_sink_temp, left_motor_temp, right_sink_temp, right_motor_temp;
-  // Unpack the heat sink temperatures first
-  CAN_UNPACK_MOTOR_TEMPS(msg, &left_sink_temp, &right_sink_temp);
+  uint16_t left_motor_temp, left_sink_temp, right_motor_temp, right_sink_temp;
+  CAN_UNPACK_MOTOR_SINK_TEMPS(msg, &left_motor_temp, &left_sink_temp, &right_motor_temp,
+                              &right_sink_temp);
+  s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = left_motor_temp;
   s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c =
       left_sink_temp;
-  s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c =
-      right_sink_temp;
-  // Unpack the motor temperatures next
-  CAN_UNPACK_MOTOR_TEMPS(msg, &left_motor_temp, &right_motor_temp);
-  s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = left_motor_temp;
   s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c =
       right_motor_temp;
+  s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c =
+      right_sink_temp;
   s_received_sink_motor_temp = true;
   return STATUS_CODE_OK;
 }
@@ -157,7 +155,7 @@ static StatusCode prv_handle_sink_motor_measurement(const CanMessage *msg, void 
 static StatusCode prv_handle_dsp_measurement(const CanMessage *msg, void *context,
                                              CanAckStatus *ack_reply) {
   uint32_t left_dsp_temp, right_dsp_temp;
-  CAN_UNPACK_MOTOR_TEMPS(msg, &left_dsp_temp, &right_dsp_temp);
+  CAN_UNPACK_DSP_BOARD_TEMPS(msg, &left_dsp_temp, &right_dsp_temp);
   s_test_measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER] = left_dsp_temp;
   s_test_measurements.dsp_measurements[RIGHT_MOTOR_CONTROLLER] = right_dsp_temp;
   s_received_dsp_temp = true;
@@ -260,8 +258,8 @@ static void prv_assert_eq_expected_storage_status(MotorControllerMeasurements ex
 static void prv_assert_eq_expected_storage_ht(MotorControllerMeasurements expected_measurements,
                                               MotorController controller) {
   TEST_ASSERT_EQUAL(
-      (uint32_t)expected_measurements.sink_motor_measurements[controller].heatsink_temp_c,
-      (uint32_t)s_broadcast_storage.measurements.sink_motor_measurements[controller]
+      (uint16_t)expected_measurements.sink_motor_measurements[controller].heatsink_temp_c,
+      (uint16_t)s_broadcast_storage.measurements.sink_motor_measurements[controller]
           .heatsink_temp_c);
 }
 
@@ -269,8 +267,8 @@ static void prv_assert_eq_expected_storage_ht(MotorControllerMeasurements expect
 static void prv_assert_eq_expected_storage_mt(MotorControllerMeasurements expected_measurements,
                                               MotorController controller) {
   TEST_ASSERT_EQUAL(
-      (uint32_t)expected_measurements.sink_motor_measurements[controller].motor_temp_c,
-      (uint32_t)s_broadcast_storage.measurements.sink_motor_measurements[controller].motor_temp_c);
+      (uint16_t)expected_measurements.sink_motor_measurements[controller].motor_temp_c,
+      (uint16_t)s_broadcast_storage.measurements.sink_motor_measurements[controller].motor_temp_c);
 }
 
 // DSP temperature
@@ -295,17 +293,19 @@ void setup_test(void) {
 
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_STATUS, prv_handle_status, NULL));
 
-  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_TEMPS,
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_SINK_TEMPS,
                                          prv_handle_sink_motor_measurement, NULL));
 
-  TEST_ASSERT_OK(
-      can_register_rx_handler(SYSTEM_CAN_MESSAGE_MOTOR_TEMPS, prv_handle_dsp_measurement, NULL));
+  TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_DSP_BOARD_TEMPS,
+                                         prv_handle_dsp_measurement, NULL));
 }
 
 void teardown_test(void) {
   s_received_velocity = false;
   s_received_bus_measurement = false;
   s_received_status = false;
+  s_received_sink_motor_temp = false;
+  s_received_dsp_temp = false;
   memset(&s_test_measurements, 0, sizeof(s_test_measurements));
   memset(&s_broadcast_storage, 0, sizeof(s_broadcast_storage));
 }

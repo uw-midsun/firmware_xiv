@@ -53,8 +53,7 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
   uint8_t status_rx_bitset;
-  uint8_t sink_rx_bitset;
-  uint8_t temp_rx_bitset;
+  uint8_t motor_sink_rx_bitset;
   uint8_t dsp_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
