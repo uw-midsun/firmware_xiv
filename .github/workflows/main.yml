@@ -58,7 +58,7 @@ jobs:
           sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
           rm -f $PROTOC_ZIP
 
-          protoc --version
+          sudo protoc --version
 
           export PATH="$PATH:$HOME/.local/bin"
 
@@ -110,8 +110,8 @@ jobs:
           .venv/bin/pip3 freeze
 
       - name: Format and lint
+        if: ${{ 'success' == 'failure' }}
         run: |
-          if: ${{ 'success' == 'failure' }}
           make test_format
           make lint
           make pylint
