@@ -396,8 +396,8 @@ void test_left_all_right_all(void) {
   TEST_ASSERT_TRUE(s_received_velocity);
   TEST_ASSERT_TRUE(s_received_bus_measurement);
   TEST_ASSERT_TRUE(s_received_status);
-  TEST_ASSERT_FALSE(s_received_sink_motor_temp);
-  TEST_ASSERT_FALSE(s_received_dsp_temp);
+  TEST_ASSERT_TRUE(s_received_sink_motor_temp);
+  TEST_ASSERT_TRUE(s_received_dsp_temp);
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     TEST_ASSERT_EQUAL((uint16_t)expected_measurements.bus_measurements[motor_id].bus_voltage_v,
                       s_test_measurements.bus_measurements[motor_id].bus_voltage_v);
