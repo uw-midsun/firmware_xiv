@@ -131,7 +131,7 @@ jobs:
         
       - name: Build MU and bootloader protobufs # Bootloader protobufs use nanopb and not protoc
         run: |
-          make mu_protos
+          sudo make mu_protos
       
       - name: Check for uncommitted protobuf changes
         id: check-uncommitted-protobuf-changes
