@@ -11,7 +11,9 @@
 #include "adc.h"
 #include "adc_read.h"
 #include "can.h"
+#include "can_hook.h"
 #include "can_msg_defs.h"
+#include "can_uart.h"
 #include "dispatcher.h"
 #include "event_queue.h"
 #include "gpio.h"
@@ -25,6 +27,7 @@
 #include "log.h"
 #include "soft_timer.h"
 #include "spi_exchange.h"
+#include "uart.h"
 #include "wait.h"
 
 typedef enum {
@@ -46,6 +49,11 @@ static CanSettings s_can_settings = {
   .loopback = false,
 };
 
+static UartStorage s_uart;
+static CanUart s_can_uart = {
+  .uart = UART_PORT_1,
+};
+
 int main() {
   LOG_DEBUG("Welcome to BabyDriver!\n");
   interrupt_init();
@@ -56,6 +64,18 @@ int main() {
   adc_init(ADC_MODE_SINGLE);
 
   can_init(&s_can_storage, &s_can_settings);
+
+#ifndef UARTLOGS
+  // Enable CAN-over-UART for interacting with babydriver without a CAN adapter
+  UartSettings uart_settings = {
+    .baudrate = 115200,
+  };
+  uart_init(UART_PORT_1, &uart_settings, &s_uart);
+  can_hook_init(&s_can_storage);
+  can_uart_init(&s_can_uart);
+  can_uart_enable_auto_tx(&s_can_uart);
+  can_uart_enable_auto_rx(&s_can_uart);
+#endif
 
   dispatcher_init();
   adc_read_init();
