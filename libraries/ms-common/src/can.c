@@ -17,6 +17,7 @@
 #include "can.h"
 #include <string.h>
 #include "can_fsm.h"
+#include "can_hook.h"
 #include "can_hw.h"
 #include "log.h"
 #include "soft_timer.h"
@@ -139,7 +140,9 @@ StatusCode can_transmit(const CanMessage *msg, const CanAckRequest *ack_request)
   // postponed until the main event loop.
   event_raise(s_can_storage->tx_event, 1);
 
-  return can_fifo_push(&s_can_storage->tx_fifo, msg);
+  StatusCode ret = can_fifo_push(&s_can_storage->tx_fifo, msg);
+  can_hook_tx_trigger(msg);
+  return ret;
 }
 
 bool can_process_event(const Event *e) {

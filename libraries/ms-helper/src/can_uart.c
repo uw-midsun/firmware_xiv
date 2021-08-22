@@ -1,5 +1,10 @@
 #include "can_uart.h"
+
 #include <string.h>
+
+#include "can.h"
+#include "can_hook.h"
+#include "can_msg.h"
 #include "cobs.h"
 #include "log.h"
 
@@ -98,6 +103,26 @@ static void prv_handle_can_rx(void *context) {
   }
 }
 
+static void prv_handle_can_tx_send_over_uart(const CanMessage *msg, void *context) {
+  const CanUart *can_uart = context;
+  CanId id = {
+    .msg_id = msg->msg_id,
+    .source_id = msg->source_id,
+    .type = msg->type,
+  };
+  can_uart_req_slave_tx(can_uart, id.raw, false, &msg->data, msg->dlc);
+}
+
+static void prv_rx_uart_pass_to_can(const CanUart *can_uart, uint32_t id, bool extended,
+                                    const uint64_t *data, size_t dlc, void *context) {
+  CanMessage msg = {
+    .data = *data,
+    .dlc = dlc,
+  };
+  CAN_MSG_SET_RAW_ID(&msg, id);
+  can_hook_rx(&msg);
+}
+
 StatusCode can_uart_init(CanUart *can_uart) {
   // We use COBS encoding - 0 is reserved for packet framing
   status_ok_or_return(uart_set_delimiter(can_uart->uart, 0));
@@ -123,4 +148,16 @@ StatusCode can_uart_req_slave_tx(const CanUart *can_uart, uint32_t id, bool exte
 
   // TX - include the 0
   return uart_tx(can_uart->uart, encoded_data, encoded_len + 1);
+}
+
+StatusCode can_uart_enable_auto_tx(const CanUart *can_uart) {
+  return can_hook_tx_register(prv_handle_can_tx_send_over_uart, can_uart);
+}
+
+StatusCode can_uart_enable_auto_rx(CanUart *can_uart) {
+  if (can_uart == NULL) {
+    return STATUS_CODE_INVALID_ARGS;
+  }
+  can_uart->rx_cb = prv_rx_uart_pass_to_can;
+  return STATUS_CODE_OK;
 }

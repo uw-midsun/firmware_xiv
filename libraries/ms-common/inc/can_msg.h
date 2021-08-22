@@ -15,10 +15,10 @@
 
 #define CAN_MSG_SET_RAW_ID(can_msg, can_id) \
   do {                                      \
-    CanId id = { .raw = (can_id) };         \
-    (can_msg)->source_id = id.source_id;    \
-    (can_msg)->msg_id = id.msg_id;          \
-    (can_msg)->type = id.type;              \
+    CanId _id = { .raw = (can_id) };        \
+    (can_msg)->source_id = _id.source_id;   \
+    (can_msg)->msg_id = _id.msg_id;         \
+    (can_msg)->type = _id.type;             \
   } while (0)
 
 typedef enum {
