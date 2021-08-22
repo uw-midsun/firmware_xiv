@@ -343,6 +343,14 @@
     status;                                                                   \
   })
 
+#define CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(is_race_mode_u8)  \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_RACE_NORMAL_SWITCH_MODE(&msg, (is_race_mode_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);              \
+    status;                                                    \
+  })
+
 #define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8, fan_6_u8, \
                                        fan_7_u8, fan_8_u8)                                         \
   ({                                                                                               \
