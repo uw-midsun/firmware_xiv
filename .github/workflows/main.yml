@@ -50,13 +50,22 @@ jobs:
           sudo apt-get install -y pkg-config
           sudo apt update
           sudo apt install protobuf-c-compiler
-          PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
+          PROTOC_ZIP = protoc-3.14.0-linux-x86_64.zip
           curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
           sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
           sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
           rm -f $PROTOC_ZIP
           sudo protoc --version
           export PATH="$PATH:$HOME/.local/bin"
+
+          PROTOBUFC_ZIP = protobuf-c-master.zip
+          curl -OL https://github.com/protobuf-c/protobuf-c.git
+          sudo unzip -o $PROTOBUFC_ZIP -d /usr/local *
+          rm -f $PROTOBUFC_ZIP
+          sudo protoc --version
+          sudo pkg-config --version
+          ./autogen.sh && ./configure && make && make install
+
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
           release: '6-2017-q2'
