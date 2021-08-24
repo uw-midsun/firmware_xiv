@@ -8,12 +8,16 @@
 // To send a CAN message from Python write
 // can_util.send_message(<id>, <data>) to send can message
 
+#include "can_transmit.h"
+#include "debug_led.h"
+
 #include "adc.h"
 #include "adc_read.h"
 #include "can.h"
 #include "can_hook.h"
 #include "can_msg_defs.h"
 #include "can_uart.h"
+#include "controller_board_pins.h"
 #include "dispatcher.h"
 #include "event_queue.h"
 #include "gpio.h"
@@ -55,7 +59,6 @@ static CanUart s_can_uart = {
 };
 
 int main() {
-  LOG_DEBUG("Welcome to BabyDriver!\n");
   interrupt_init();
   gpio_init();
   gpio_it_init();
@@ -65,17 +68,30 @@ int main() {
 
   can_init(&s_can_storage, &s_can_settings);
 
-#ifndef UARTLOGS
+  debug_led_init(DEBUG_LED_BLUE_A);
+  debug_led_init(DEBUG_LED_BLUE_B);
+  debug_led_init(DEBUG_LED_GREEN);
+  debug_led_init(DEBUG_LED_RED);
+
+// #ifndef UARTLOGS
   // Enable CAN-over-UART for interacting with babydriver without a CAN adapter
   UartSettings uart_settings = {
     .baudrate = 115200,
+    .tx = CONTROLLER_BOARD_ADDR_DEBUG_USART1_TX,
+    .rx = CONTROLLER_BOARD_ADDR_DEBUG_USART1_RX,
+    .alt_fn = GPIO_ALTFN_0,  // see https://www.st.com/resource/en/datasheet/stm32f072cb.pdf, tbl 16
   };
   uart_init(UART_PORT_1, &uart_settings, &s_uart);
   can_hook_init(&s_can_storage);
   can_uart_init(&s_can_uart);
   can_uart_enable_auto_tx(&s_can_uart);
   can_uart_enable_auto_rx(&s_can_uart);
-#endif
+// #endif
+
+  // debug_led_set_state(DEBUG_LED_BLUE_A, true);
+  // debug_led_set_state(DEBUG_LED_BLUE_B, true);
+  // debug_led_set_state(DEBUG_LED_RED, true);
+  // debug_led_set_state(DEBUG_LED_GREEN, true);
 
   dispatcher_init();
   adc_read_init();
@@ -85,6 +101,9 @@ int main() {
   i2c_write_init(I2C_WRITE_DEFAULT_TIMEOUT_MS);
   i2c_read_init(I2C_READ_DEFAULT_TX_DELAY_MS);
   spi_exchange_init(DEFAULT_SPI_EXCHANGE_TIMEOUT_MS, DEFAULT_SPI_EXCHANGE_TX_DELAY);
+
+  LOG_DEBUG("Welcome to BabyDriver!\n");
+  CAN_TRANSMIT_BABYDRIVER(BABYDRIVER_MESSAGE_STATUS, 0xAA, 0, 0, 0, 0, 0, 0);
 
   Event e = { 0 };
   while (true) {

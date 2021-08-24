@@ -31,11 +31,16 @@ def setup_default_channel():
 
     parser = argparse.ArgumentParser(description="Setup the Babydriver REPL")
     parser.add_argument("--channel", default=None, help="Default CAN channel to use")
+    parser.add_argument("--serial", default=None, help="Serial device to use (default, use can0)")
 
     args = parser.parse_args()
 
     if args.channel is not None:
         can_util.default_channel = args.channel
+    
+    if args.serial is not None:
+        can_util.default_channel = args.serial
+        can_util.use_serial = True
 
     init_notifier_gpio_it()
 

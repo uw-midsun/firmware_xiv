@@ -10,6 +10,8 @@
 #include <string.h>
 #include "critical_section.h"
 #include "stm32f0xx.h"
+#include "log.h"
+#include "gpio.h"
 
 // basic idea: tx is stored in a buffer, interrupt-driven
 // rx is buffered, once a newline is hit or the buffer is full, call rx_handler
@@ -47,6 +49,7 @@ static void prv_rx_push(UartPort uart);
 static void prv_handle_irq(UartPort uart);
 
 StatusCode uart_init(UartPort uart, UartSettings *settings, UartStorage *storage) {
+  LOG_DEBUG("I AM ALIVE\n");
   s_port[uart].rcc_cmd(s_port[uart].periph, ENABLE);
 
   s_port[uart].storage = storage;
@@ -99,6 +102,7 @@ StatusCode uart_set_delimiter(UartPort uart, uint8_t delimiter) {
 
 StatusCode uart_tx(UartPort uart, uint8_t *tx_data, size_t len) {
   status_ok_or_return(fifo_push_arr(&s_port[uart].storage->tx_fifo, tx_data, len));
+  gpio_set_state(&(GpioAddress){ GPIO_PORT_B, 5 }, GPIO_STATE_HIGH);
 
   if (USART_GetFlagStatus(s_port[uart].base, USART_FLAG_TXE) == SET) {
     prv_tx_pop(uart);
@@ -122,6 +126,8 @@ static void prv_tx_pop(UartPort uart) {
 
 static void prv_rx_push(UartPort uart) {
   UartStorage *storage = s_port[uart].storage;
+  LOG_DEBUG("rx push\n");
+  gpio_set_state(&(GpioAddress){ GPIO_PORT_B, 5 }, GPIO_STATE_HIGH);
 
   uint8_t rx_data = USART_ReceiveData(s_port[uart].base);
   fifo_push(&storage->rx_fifo, &rx_data);
@@ -138,6 +144,8 @@ static void prv_rx_push(UartPort uart) {
 }
 
 static void prv_handle_irq(UartPort uart) {
+  gpio_set_state(&(GpioAddress){ GPIO_PORT_A, 15 }, GPIO_STATE_HIGH);
+  LOG_DEBUG("whyyyy\n");
   if (USART_GetITStatus(s_port[uart].base, USART_IT_TXE) == SET) {
     prv_tx_pop(uart);
     USART_ClearITPendingBit(s_port[uart].base, USART_IT_TXE);

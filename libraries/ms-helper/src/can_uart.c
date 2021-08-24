@@ -8,6 +8,8 @@
 #include "cobs.h"
 #include "log.h"
 
+#include "debug_led.h"
+
 // CTX in ASCII
 #define CAN_UART_TX_MARKER 0x585443
 // CRX in ASCII
@@ -43,6 +45,7 @@ typedef struct CanUartPacket {
 
 static void prv_rx_uart(const uint8_t *rx_arr, size_t len, void *context) {
   CanUart *can_uart = context;
+  debug_led_toggle_state(DEBUG_LED_GREEN);
 
   // Need to add an extra 0 for the packet delimiter
   if (len > (COBS_MAX_ENCODED_LEN(sizeof(CanUartPacket)) + 1)) {
@@ -126,6 +129,8 @@ static void prv_rx_uart_pass_to_can(const CanUart *can_uart, uint32_t id, bool e
 StatusCode can_uart_init(CanUart *can_uart) {
   // We use COBS encoding - 0 is reserved for packet framing
   status_ok_or_return(uart_set_delimiter(can_uart->uart, 0));
+  debug_led_init(DEBUG_LED_GREEN);
+  debug_led_set_state(DEBUG_LED_GREEN, true);
   return uart_set_rx_handler(can_uart->uart, prv_rx_uart, can_uart);
 }
 
@@ -145,6 +150,7 @@ StatusCode can_uart_req_slave_tx(const CanUart *can_uart, uint32_t id, bool exte
   status_ok_or_return(cobs_encode((uint8_t *)&packet, sizeof(packet), encoded_data, &encoded_len));
   // Frame the packet with a 0
   encoded_data[encoded_len] = 0;
+  LOG_DEBUG("txing %s\n", encoded_data);
 
   // TX - include the 0
   return uart_tx(can_uart->uart, encoded_data, encoded_len + 1);

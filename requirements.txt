@@ -13,6 +13,8 @@ PyYAML==5.4
 # Babydriver
 python-can==3.3.3
 cantools==35.5.0
+# pyserial==3.4
+# cobs==1.1.3
 
 # MPXE
 python-can==3.3.3

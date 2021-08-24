@@ -5,11 +5,16 @@ from collections import namedtuple
 
 import can
 
+import can_serial
 from message_defs import BABYDRIVER_DEVICE_ID, BABYDRIVER_CAN_MESSAGE_ID
 
 
 # The default CAN channel to use for this module. Changed dynamically by repl_setup.
 default_channel = "can0"  # pylint: disable=invalid-name
+
+# Whether we should use serial instead. Also changed by repl_setup.
+# If use_serial is True, default_channel is the default device to use.
+use_serial = False  # pylint: disable=invalid-name
 
 # We use the standard 500kbps baudrate.
 CAN_BITRATE = 500000
@@ -27,7 +32,10 @@ def get_bus_data(channel=None):
         channel = default_channel
 
     if channel not in channels_to_data:
-        bus = can.interface.Bus(bustype="socketcan", channel=channel, bitrate=CAN_BITRATE)
+        if use_serial:
+            bus = can_serial.SerialBus(channel)
+        else:
+            bus = can.interface.Bus(bustype="socketcan", channel=channel, bitrate=CAN_BITRATE)
 
         # We use a BufferedReader rather than reading straight from the Bus to prevent the scenario
         # where the time for the second message to be tx'd exceeds the time taken to process the
