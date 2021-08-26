@@ -135,9 +135,16 @@
                    (mc_error_flags_r_u8), (board_fan_faults_u8), (mc_overtemp_u8),                 \
                    CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32, motor_temp_r_u32)                          \
-  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_MOTOR_TEMPS, \
-                    8, (motor_temp_l_u32), (motor_temp_r_u32))
+#define CAN_PACK_MOTOR_SINK_TEMPS(msg_ptr, motor_temp_l_u16, sink_temp_l_u16, motor_temp_r_u16,    \
+                                  sink_temp_r_u16)                                                 \
+  can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,                                 \
+                    SYSTEM_CAN_MESSAGE_MOTOR_SINK_TEMPS, 8, (motor_temp_l_u16), (sink_temp_l_u16), \
+                    (motor_temp_r_u16), (sink_temp_r_u16))
+
+#define CAN_PACK_DSP_BOARD_TEMPS(msg_ptr, dsp_board_temp_l_u32, dsp_board_temp_r_u32) \
+  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,                    \
+                    SYSTEM_CAN_MESSAGE_DSP_BOARD_TEMPS, 8, (dsp_board_temp_l_u32),    \
+                    (dsp_board_temp_r_u32))
 
 #define CAN_PACK_CRUISE_CONTROL_COMMAND(msg_ptr, command_u8)                               \
   can_pack_impl_u8(                                                                        \
