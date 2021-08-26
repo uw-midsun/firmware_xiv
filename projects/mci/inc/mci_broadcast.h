@@ -45,9 +45,6 @@ typedef struct MotorControllerBroadcastSettings {
   MotorCanDeviceId device_ids[NUM_MOTOR_CONTROLLERS];
 } MotorControllerBroadcastSettings;
 
-// Kinda in a weird situation with the heat sink and motor temperature.
-// The WaveSculptor bundles the sink and motor temperatures as one but separates DSP temperature
-// Maybe one way we can do it is similar to the bus measurements with the voltage and current
 typedef struct MotorControllerBroadcastStorage {
   Mcp2515Storage *motor_can;
   uint8_t bus_rx_bitset;
