@@ -52,6 +52,7 @@ typedef struct CanDatagramStorage {
   bool rx_listener_enabled;
   bool soft_error_flag;
   uint8_t node_id;
+  bool ignore_node_id_check;
 } CanDatagramStorage;
 
 static CanDatagramStorage s_store;
