@@ -96,3 +96,22 @@ void test_mcp2515_extended(void) {
   TEST_ASSERT_EQUAL(0x8877665544332211, s_data);
   TEST_ASSERT_EQUAL(8, s_dlc);
 }
+
+void test_mcp2515_send_receive(void) {
+  LOG_DEBUG("Testing send and receive\n");
+  // shows that a filtered-out message does not update the static vars
+  TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x19999999, true, 0xBEEFDEADBEEFDEAD, 8));
+  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_mcp2515.int_pin));
+  delay_ms(50);
+  TEST_ASSERT_NOT_EQUAL(0x19999999, s_id);
+  TEST_ASSERT_NOT_EQUAL(0xBEEFDEADBEEFDEAD, s_data);
+
+  // shows that a filtered-in message updates static vars
+  TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x1EADBEEF, true, 0x8877665544332211, 8));
+  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_mcp2515.int_pin));
+  delay_ms(50);
+  TEST_ASSERT_EQUAL(0x1EADBEEF, s_id);
+  TEST_ASSERT_EQUAL(true, s_extended);
+  TEST_ASSERT_EQUAL(0x8877665544332211, s_data);
+  TEST_ASSERT_EQUAL(8, s_dlc);
+}
