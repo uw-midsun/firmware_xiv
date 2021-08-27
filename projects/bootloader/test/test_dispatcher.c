@@ -38,7 +38,9 @@ static CanDatagramSettings s_test_datagram_settings = {
 
 #define TEST_DATA_LEN 2048
 
-uint8_t s_rx_data[DGRAM_MAX_DATA_SIZE];
+static uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+                                            'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
+static uint8_t s_rx_data[DGRAM_MAX_DATA_SIZE];
 static uint16_t s_rx_data_len;
 
 void setup_test(void) {
@@ -62,9 +64,6 @@ void test_dispatch_calls_cb(void) {
   // tests basic dispatch calls the callback when datagram is recieved
   // and tests dispatch's tx_cmpl_cb resumes datagram rx correctly
   TEST_ASSERT_OK(dispatcher_init(s_board_id));
-
-  uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-                                       'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
 
   CanDatagramTxConfig tx_config = {
     .dgram_type = TEST_DATA_GRAM_ID,
@@ -91,9 +90,6 @@ void test_dispatch_calls_cb(void) {
 void test_datagram_completeness(void) {
   TEST_ASSERT_OK(dispatcher_init(s_board_id));
 
-  uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-                                       'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
-
   CanDatagramTxConfig tx_config = {
     .dgram_type = TEST_DATA_GRAM_ID,
     .destination_nodes_len = 1,
@@ -114,7 +110,7 @@ void test_datagram_completeness(void) {
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_TRUE(cb_called);
   TEST_ASSERT_EQUAL(TEST_DATA_LEN, s_rx_data_len);
-  for (int i = 0; i < s_rx_data_len; ++i) {
+  for (int i = 0; i < TEST_DATA_LEN; ++i) {
     TEST_ASSERT_EQUAL(s_tx_data[i], s_rx_data[i]);  // test the data from dispatcher is complete
   }
 }
@@ -122,9 +118,6 @@ void test_datagram_completeness(void) {
 void test_noexistant_callback(void) {
   // send a datagram id with no associated callback
   TEST_ASSERT_OK(dispatcher_init(s_board_id));
-
-  uint8_t s_tx_data[TEST_DATA_LEN] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-                                       'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
 
   CanDatagramTxConfig tx_config = {
     .dgram_type = TEST_DATA_GRAM_ID,

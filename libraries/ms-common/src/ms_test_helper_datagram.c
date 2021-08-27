@@ -10,61 +10,55 @@
 #include "string.h"
 
 #define TEST_CLIENT_SCRIPT_ID 0
+#define CAN_BUFFER_SIZE 8
 
 static EventId s_can_tx_event;
-
-typedef struct DatagramMsg {
-  union {
-    uint64_t data;
-    uint32_t data_u32[2];
-    uint16_t data_u16[4];
-    uint8_t data_u8[8];
-  };
-  size_t len;
-  bool is_start_msg;
-} DatagramMsg;
 
 // rx and tx uses the same fifo, buffer, and cmpl_cb storage
 // the fifo is not persistent across individual rx and tx helper calls
 // they are global as required by prv_dgram_to_fifo and prv_dgram_to_fifo_cmpl_cb
 static bool s_cmpl;
 static CanDatagramExitCb s_cmpl_cb;
-static Fifo s_dgram_can_fifo;
-static DatagramMsg s_dgram_can_buffer[260];  // 260 is enough to fix a max sized datagram
+static Fifo s_dgram_data_fifo;
+static uint8_t s_dgram_data_buffer[2060];  // 2058 is enough to fix a max sized datagram
+static bool s_transmit_start_msg;
 
-// send all the datagram can msgs to fifo
+// sends a datagram msg into fifo
 static StatusCode prv_dgram_to_fifo(uint8_t *data, size_t len, bool is_start_message) {
-  DatagramMsg message = { 0 };
   // a start message reinitalize the fifo and changes the msg type
-  if (is_start_message) {
-    // empty fifo
-    while (fifo_size(&s_dgram_can_fifo) > 0) {
-      fifo_pop(&s_dgram_can_fifo, &message);
-    }
+  if (is_start_message) {  // empty fifo
+    return fifo_init(&s_dgram_data_fifo, s_dgram_data_buffer);
   }
-  message.len = len;
-  message.is_start_msg = is_start_message;
-  memcpy(message.data_u8, data, len);
-
-  fifo_push(&s_dgram_can_fifo, &message);
-  return STATUS_CODE_OK;
+  return fifo_push_arr(&s_dgram_data_fifo, data, len);
 }
 
+static StatusCode prv_fifo_to_dgram(BootloaderCanCallback transmiter) {
+  if (s_transmit_start_msg) {
+    s_transmit_start_msg = false;
+    return transmiter(0, 0, true);
+  }
+  uint8_t data[CAN_BUFFER_SIZE];
+  size_t len = MIN(fifo_size(&s_dgram_data_fifo), (size_t)CAN_BUFFER_SIZE);
+  fifo_pop_arr(&s_dgram_data_fifo, data, len);
+  return transmiter(data, len, false);
+}
+
+// callback when datagram is finished with tx or rx-ing a datagram
 static void prv_dgram_to_fifo_cmpl_cb(void) {
   s_cmpl = true;
-  if (s_cmpl_cb != NULL) {
-    s_cmpl_cb();
-  }
+  if (s_cmpl_cb != NULL) s_cmpl_cb();
 }
 
-static StatusCode prv_send_dgram_msg(DatagramMsg *dgram_msg) {
+// sends a can message as a client script, effectively the same as bootloader_can_transmit
+// but with a different msg_id
+static StatusCode prv_tx_as_client(uint8_t *data, size_t len, bool is_start_msg) {
   CanMessage message = {
     .source_id = SYSTEM_CAN_DEVICE_BOOTLOADER,
     .msg_id = TEST_CLIENT_SCRIPT_ID,
-    .data = dgram_msg->data,
-    .dlc = dgram_msg->len,
-    .type = dgram_msg->is_start_msg ? CAN_MSG_TYPE_ACK : CAN_MSG_TYPE_DATA,
+    .dlc = len,
+    .type = is_start_msg ? CAN_MSG_TYPE_ACK : CAN_MSG_TYPE_DATA,
   };
+  memcpy(message.data_u8, data, len);
   return can_transmit(&message, NULL);
 }
 
@@ -83,13 +77,11 @@ StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
   }
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
 
-  // send can messages from tx_fifo
-  DatagramMsg message;
-  while (fifo_size(&s_dgram_can_fifo) > 0) {
-    fifo_pop(&s_dgram_can_fifo, &message);
-    prv_send_dgram_msg(&message);
+  // send messages from fifo to can
+  s_transmit_start_msg = true;
+  while (fifo_size(&s_dgram_data_fifo) > 0) {
+    prv_fifo_to_dgram(prv_tx_as_client);
     do {  // until another tx event is processed
       MS_TEST_HELPER_AWAIT_EVENT(e);
       can_datagram_process_event(&e);
@@ -114,21 +106,14 @@ StatusCode mock_rx_datagram(CanDatagramRxConfig *rx_config) {
     can_process_event(&e);
   } while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE);
 
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_TX_COMPLETE, can_datagram_get_status());
-
-  // sends all data from fifo to can_datagram
   can_datagram_start_listener(rx_config);
-  DatagramMsg message;
-  while (fifo_size(&s_dgram_can_fifo) > 0) {
-    fifo_pop(&s_dgram_can_fifo, &message);
-    can_datagram_rx(message.data_u8, message.len, message.is_start_msg);
-  }
+  // send data from fifo to can_datagram
+  s_transmit_start_msg = true;
   while (!s_cmpl) {
+    prv_fifo_to_dgram(can_datagram_rx);
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
   }
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-
   return STATUS_CODE_OK;
 }
 
@@ -147,5 +132,5 @@ void init_datagram_helper(CanStorage *can_storage, CanSettings *can_settings, ui
   // used to send tx from fifo only when the last tx is processed
   // prevents overflowing the event queue
   s_can_tx_event = can_storage->tx_event;
-  fifo_init(&s_dgram_can_fifo, s_dgram_can_buffer);
+  fifo_init(&s_dgram_data_fifo, s_dgram_data_buffer);
 }
