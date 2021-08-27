@@ -1,14 +1,8 @@
-#include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
 #include "bootloader_events.h"
-#include "delay.h"
 #include "dispatcher.h"
-#include "log.h"
 #include "ms_test_helper_datagram.h"
-#include "ms_test_helpers.h"
 #include "ping.h"
-#include "soft_timer.h"
-#include "string.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -74,9 +68,9 @@ void test_ping(void) {
   TEST_ASSERT_OK(mock_tx_datagram(&tx_config));
   TEST_ASSERT_OK(mock_rx_datagram(&rx_config));
 
-  // TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-  // TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
-  // TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
 }
 
 void test_ping_addressed_to_multiple(void) {
@@ -100,7 +94,7 @@ void test_ping_addressed_to_multiple(void) {
   TEST_ASSERT_OK(mock_tx_datagram(&tx_config));
   TEST_ASSERT_OK(mock_rx_datagram(&rx_config));
 
-  // TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-  // TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
-  // TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
 }

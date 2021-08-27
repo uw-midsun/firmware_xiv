@@ -4,7 +4,6 @@
 #include "event_queue.h"
 #include "fifo.h"
 #include "interrupt.h"
-#include "log.h"
 #include "ms_test_helpers.h"
 #include "soft_timer.h"
 #include "string.h"
@@ -23,7 +22,6 @@ static Fifo s_dgram_data_fifo;
 static uint8_t s_dgram_data_buffer[2060];  // 2058 is enough to fix a max sized datagram
 static bool s_transmit_start_msg;
 
-// sends a datagram msg into fifo
 static StatusCode prv_dgram_to_fifo(uint8_t *data, size_t len, bool is_start_message) {
   // a start message reinitalize the fifo and changes the msg type
   if (is_start_message) {  // empty fifo
@@ -49,8 +47,8 @@ static void prv_dgram_to_fifo_cmpl_cb(void) {
   if (s_cmpl_cb != NULL) s_cmpl_cb();
 }
 
-// sends a can message as a client script, effectively the same as bootloader_can_transmit
-// but with a different msg_id
+// sends a can message as a client script,
+// effectively the same as bootloader_can_transmit with msg_id of 0.
 static StatusCode prv_tx_as_client(uint8_t *data, size_t len, bool is_start_msg) {
   CanMessage message = {
     .source_id = SYSTEM_CAN_DEVICE_BOOTLOADER,
@@ -62,7 +60,7 @@ static StatusCode prv_tx_as_client(uint8_t *data, size_t len, bool is_start_msg)
   return can_transmit(&message, NULL);
 }
 
-// mock transmit a datagram from another device
+// mock transmit a datagram from the client
 StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
   tx_config->tx_cb = prv_dgram_to_fifo;
   s_cmpl = false;
@@ -71,7 +69,7 @@ StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
   tx_config->tx_cmpl_cb = prv_dgram_to_fifo_cmpl_cb;
   can_datagram_start_tx(tx_config);
 
-  // send the datagram to tx_fifo
+  // send the datagram to fifo
   Event e = { 0 };
   while (!s_cmpl) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
@@ -91,7 +89,7 @@ StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
   return STATUS_CODE_OK;
 }
 
-// mock recieve a datagram as another device
+// mock recieve a datagram as the client
 StatusCode mock_rx_datagram(CanDatagramRxConfig *rx_config) {
   s_cmpl_cb = rx_config->rx_cmpl_cb;
   s_cmpl = false;
@@ -129,8 +127,6 @@ void init_datagram_helper(CanStorage *can_storage, CanSettings *can_settings, ui
   bootloader_can_init(can_storage, can_settings, board_id);
   can_datagram_init(can_datagram_settings);
 
-  // used to send tx from fifo only when the last tx is processed
-  // prevents overflowing the event queue
   s_can_tx_event = can_storage->tx_event;
   fifo_init(&s_dgram_data_fifo, s_dgram_data_buffer);
 }

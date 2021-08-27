@@ -4,6 +4,7 @@
 
 #include "bootloader_can.h"
 #include "can_datagram.h"
+#include "ms_test_helpers.h"
 #include "status.h"
 
 #define DATAGRAM_PROCESS_ALL(e)                                 \
