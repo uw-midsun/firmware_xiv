@@ -48,23 +48,8 @@ jobs:
           release: '6-2017-q2'
 
       - name: Install GNU Make 4.1
-        env:
-          MAKE_PATH: make-4.1
-          MAKE_ARCHIVE_PATH: make-4.1.tar.gz
-          MAKE_URL: http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
         run: |
-          wget -nv $MAKE_URL
-          tar xvf $MAKE_ARCHIVE_PATH
-          cd $MAKE_PATH
-          ./configure --prefix=${HOME}/.local
-          make
-          make install
-          cd ..
-          rm -rf $MAKE_PATH
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+         sudo apt-get install build-essential
 
       - name: Install Python tooling
         run: |
