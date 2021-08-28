@@ -1,6 +1,8 @@
 #include "bootloader_datagram_defs.h"
 #include "bootloader_events.h"
+#include "crc32.h"
 #include "dispatcher.h"
+#include "interrupt.h"
 #include "ms_test_helper_datagram.h"
 #include "ping.h"
 #include "test_helpers.h"
@@ -41,8 +43,14 @@ static uint8_t s_rx_data[DGRAM_MAX_DATA_SIZE];
 static uint16_t s_rx_data_len;
 
 void setup_test(void) {
-  init_datagram_helper(&s_test_can_storage, &s_test_can_settings, s_board_id,
-                       &s_test_datagram_settings);
+  event_queue_init();
+  interrupt_init();
+  gpio_init();
+  soft_timer_init();
+  crc32_init();
+
+  ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
+                               &s_test_datagram_settings);
   dispatcher_init(s_board_id);
 }
 
@@ -65,8 +73,8 @@ void test_ping(void) {
     .node_id = 0,  // listen to all
     .rx_cmpl_cb = NULL,
   };
-  TEST_ASSERT_OK(mock_tx_datagram(&tx_config));
-  TEST_ASSERT_OK(mock_rx_datagram(&rx_config));
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_mock_rx_datagram(&rx_config);
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
@@ -91,8 +99,8 @@ void test_ping_addressed_to_multiple(void) {
     .node_id = 0,  // listen to all
     .rx_cmpl_cb = NULL,
   };
-  TEST_ASSERT_OK(mock_tx_datagram(&tx_config));
-  TEST_ASSERT_OK(mock_rx_datagram(&rx_config));
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_mock_rx_datagram(&rx_config);
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);

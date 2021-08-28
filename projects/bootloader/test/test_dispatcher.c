@@ -1,8 +1,13 @@
 #include "bootloader_datagram_defs.h"
 #include "bootloader_events.h"
+#include "crc32.h"
 #include "dispatcher.h"
+#include "event_queue.h"
+#include "gpio.h"
+#include "interrupt.h"
 #include "log.h"
 #include "ms_test_helper_datagram.h"
+#include "soft_timer.h"
 #include "string.h"
 #include "test_helpers.h"
 #include "unity.h"
@@ -39,8 +44,14 @@ static uint8_t s_rx_data[DGRAM_MAX_DATA_SIZE];
 static uint16_t s_rx_data_len;
 
 void setup_test(void) {
-  init_datagram_helper(&s_test_can_storage, &s_test_can_settings, s_board_id,
-                       &s_test_datagram_settings);
+  event_queue_init();
+  interrupt_init();
+  gpio_init();
+  soft_timer_init();
+  crc32_init();
+
+  ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
+                               &s_test_datagram_settings);
 }
 
 void teardown_test(void) {}
@@ -73,9 +84,8 @@ void test_dispatch_calls_cb(void) {
   TEST_ASSERT_OK(
       dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
-  mock_tx_datagram(&tx_config);
-  Event e = { 0 };
-  DATAGRAM_PROCESS_ALL(e);
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_process_all();
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_TRUE_MESSAGE(cb_called, "Callback wasn't called");
@@ -98,9 +108,8 @@ void test_datagram_completeness(void) {
   TEST_ASSERT_OK(
       dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
-  mock_tx_datagram(&tx_config);
-  Event e = { 0 };
-  DATAGRAM_PROCESS_ALL(e);
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_process_all();
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_TRUE(cb_called);
@@ -122,9 +131,8 @@ void test_noexistant_callback(void) {
     .data = s_tx_data,
     .tx_cmpl_cb = tx_cmpl_cb,
   };
-  mock_tx_datagram(&tx_config);
-  Event e = { 0 };
-  DATAGRAM_PROCESS_ALL(e);
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_process_all();
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
 }

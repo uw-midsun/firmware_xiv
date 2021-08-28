@@ -1,11 +1,8 @@
 #include "ms_test_helper_datagram.h"
 
-#include "crc32.h"
 #include "event_queue.h"
 #include "fifo.h"
-#include "interrupt.h"
 #include "ms_test_helpers.h"
-#include "soft_timer.h"
 #include "string.h"
 
 #define TEST_CLIENT_SCRIPT_ID 0
@@ -30,15 +27,15 @@ static StatusCode prv_dgram_to_fifo(uint8_t *data, size_t len, bool is_start_mes
   return fifo_push_arr(&s_dgram_data_fifo, data, len);
 }
 
-static StatusCode prv_fifo_to_dgram(BootloaderCanCallback transmiter) {
+static StatusCode prv_fifo_to_dgram(BootloaderCanCallback transmitter) {
   if (s_transmit_start_msg) {
     s_transmit_start_msg = false;
-    return transmiter(0, 0, true);
+    return transmitter(NULL, 0, true);
   }
   uint8_t data[CAN_BUFFER_SIZE];
   size_t len = MIN(fifo_size(&s_dgram_data_fifo), (size_t)CAN_BUFFER_SIZE);
   fifo_pop_arr(&s_dgram_data_fifo, data, len);
-  return transmiter(data, len, false);
+  return transmitter(data, len, false);
 }
 
 // callback when datagram is finished with tx or rx-ing a datagram
@@ -61,13 +58,13 @@ static StatusCode prv_tx_as_client(uint8_t *data, size_t len, bool is_start_msg)
 }
 
 // mock transmit a datagram from the client
-StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
+StatusCode dgram_helper_mock_tx_datagram(CanDatagramTxConfig *tx_config) {
   tx_config->tx_cb = prv_dgram_to_fifo;
   s_cmpl = false;
 
   s_cmpl_cb = tx_config->tx_cmpl_cb;
   tx_config->tx_cmpl_cb = prv_dgram_to_fifo_cmpl_cb;
-  can_datagram_start_tx(tx_config);
+  status_ok_or_return(can_datagram_start_tx(tx_config));
 
   // send the datagram to fifo
   Event e = { 0 };
@@ -79,7 +76,7 @@ StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
   // send messages from fifo to can
   s_transmit_start_msg = true;
   while (fifo_size(&s_dgram_data_fifo) > 0) {
-    prv_fifo_to_dgram(prv_tx_as_client);
+    status_ok_or_return(prv_fifo_to_dgram(prv_tx_as_client));
     do {  // until another tx event is processed
       MS_TEST_HELPER_AWAIT_EVENT(e);
       can_datagram_process_event(&e);
@@ -89,44 +86,49 @@ StatusCode mock_tx_datagram(CanDatagramTxConfig *tx_config) {
   return STATUS_CODE_OK;
 }
 
-// mock recieve a datagram as the client
-StatusCode mock_rx_datagram(CanDatagramRxConfig *rx_config) {
+// mock receive a datagram as the client
+StatusCode dgram_helper_mock_rx_datagram(CanDatagramRxConfig *rx_config) {
   s_cmpl_cb = rx_config->rx_cmpl_cb;
   s_cmpl = false;
   rx_config->rx_cmpl_cb = prv_dgram_to_fifo_cmpl_cb;
 
   // process the response to fifo
   Event e = { 0 };
-  bootloader_can_register_debug_handler(prv_dgram_to_fifo);
+  status_ok_or_return(bootloader_can_register_debug_handler(prv_dgram_to_fifo));
   do {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
     can_process_event(&e);
   } while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE);
 
-  can_datagram_start_listener(rx_config);
+  status_ok_or_return(can_datagram_start_listener(rx_config));
   // send data from fifo to can_datagram
   s_transmit_start_msg = true;
   while (!s_cmpl) {
-    prv_fifo_to_dgram(can_datagram_rx);
+    status_ok_or_return(prv_fifo_to_dgram(can_datagram_rx));
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
   }
   return STATUS_CODE_OK;
 }
 
-// initialize the datagram helper and dependencies
-void init_datagram_helper(CanStorage *can_storage, CanSettings *can_settings, uint8_t board_id,
-                          CanDatagramSettings *can_datagram_settings) {
-  event_queue_init();
-  interrupt_init();
-  gpio_init();
-  soft_timer_init();
-  crc32_init();
+// process all events until datagram is inactive
+void dgram_helper_process_all(void) {
+  Event e = { 0 };
+  while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
+    MS_TEST_HELPER_AWAIT_EVENT(e);
+    can_datagram_process_event(&e);
+    can_process_event(&e);
+  }
+}
 
-  bootloader_can_init(can_storage, can_settings, board_id);
-  can_datagram_init(can_datagram_settings);
+// initialize the datagram helper
+StatusCode ms_test_helper_datagram_init(CanStorage *can_storage, CanSettings *can_settings,
+                                        uint8_t board_id,
+                                        CanDatagramSettings *can_datagram_settings) {
+  status_ok_or_return(bootloader_can_init(can_storage, can_settings, board_id));
+  status_ok_or_return(can_datagram_init(can_datagram_settings));
 
   s_can_tx_event = can_storage->tx_event;
-  fifo_init(&s_dgram_data_fifo, s_dgram_data_buffer);
+  return fifo_init(&s_dgram_data_fifo, s_dgram_data_buffer);
 }
