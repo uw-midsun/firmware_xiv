@@ -10,29 +10,25 @@
 #endif
 
 /* Struct definitions */
-typedef struct _UpdateName {
-  pb_callback_t new_name;
+typedef struct _UpdateName { 
+    pb_callback_t new_name; 
 } UpdateName;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define UpdateName_init_default \
-  {                             \
-    { { NULL }, NULL }          \
-  }
-#define UpdateName_init_zero \
-  {                          \
-    { { NULL }, NULL }       \
-  }
+#define UpdateName_init_default                  {{{NULL}, NULL}}
+#define UpdateName_init_zero                     {{{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define UpdateName_new_name_tag 1
+#define UpdateName_new_name_tag                  1
 
 /* Struct field encoding specification for nanopb */
-#define UpdateName_FIELDLIST(X, a) X(a, CALLBACK, SINGULAR, STRING, new_name, 1)
+#define UpdateName_FIELDLIST(X, a) \
+X(a, CALLBACK, SINGULAR, STRING,   new_name,          1)
 #define UpdateName_CALLBACK pb_default_field_callback
 #define UpdateName_DEFAULT NULL
 

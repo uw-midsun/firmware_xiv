@@ -10,35 +10,34 @@
 #endif
 
 /* Struct definitions */
-typedef struct _FlashApplicationCode {
-  pb_callback_t name;
-  pb_callback_t git_version;
-  uint32_t application_crc;
-  uint32_t size;
+typedef struct _FlashApplicationCode { 
+    pb_callback_t name; 
+    pb_callback_t git_version; 
+    uint32_t application_crc; 
+    uint32_t size; 
 } FlashApplicationCode;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define FlashApplicationCode_init_default \
-  { { { NULL }, NULL }, { { NULL }, NULL }, 0, 0 }
-#define FlashApplicationCode_init_zero \
-  { { { NULL }, NULL }, { { NULL }, NULL }, 0, 0 }
+#define FlashApplicationCode_init_default        {{{NULL}, NULL}, {{NULL}, NULL}, 0, 0}
+#define FlashApplicationCode_init_zero           {{{NULL}, NULL}, {{NULL}, NULL}, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define FlashApplicationCode_name_tag 1
-#define FlashApplicationCode_git_version_tag 2
+#define FlashApplicationCode_name_tag            1
+#define FlashApplicationCode_git_version_tag     2
 #define FlashApplicationCode_application_crc_tag 3
-#define FlashApplicationCode_size_tag 4
+#define FlashApplicationCode_size_tag            4
 
 /* Struct field encoding specification for nanopb */
-#define FlashApplicationCode_FIELDLIST(X, a)         \
-  X(a, CALLBACK, SINGULAR, STRING, name, 1)          \
-  X(a, CALLBACK, SINGULAR, STRING, git_version, 2)   \
-  X(a, STATIC, SINGULAR, UINT32, application_crc, 3) \
-  X(a, STATIC, SINGULAR, UINT32, size, 4)
+#define FlashApplicationCode_FIELDLIST(X, a) \
+X(a, CALLBACK, SINGULAR, STRING,   name,              1) \
+X(a, CALLBACK, SINGULAR, STRING,   git_version,       2) \
+X(a, STATIC,   SINGULAR, UINT32,   application_crc,   3) \
+X(a, STATIC,   SINGULAR, UINT32,   size,              4)
 #define FlashApplicationCode_CALLBACK pb_default_field_callback
 #define FlashApplicationCode_DEFAULT NULL
 

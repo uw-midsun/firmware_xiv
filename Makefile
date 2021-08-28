@@ -107,7 +107,7 @@ MU_PROTOS_DIR := $(MU_DIR)/protos
 
 # Bootloader directory
 BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
-PYTHONPATHNANO := /home/vagrant/shared/nanopb
+PYTHONPATHNANO := $(realpath ..)/nanopb
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
@@ -302,6 +302,7 @@ bootloader_protos:
 		python $(PYTHONPATHNANO)/generator/nanopb_generator.py -I=$(BOOTLOADER_DIR)/protos command.pb; \
 	done
 	@mv *.pb *.pb.c *.pb.h $(BOOTLOADER_DIR)/protogen
+	@cd $(BOOTLOADER_DIR)/protogen && rm command.pb
 
 # Note: build.py relies on a lot of relative paths so it would be easier to just cd and execute command
 .PHONY: codegen
@@ -403,8 +404,10 @@ install_requirements:
 	@virtualenv $(VENV_DIR)
 	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
-	@if [ ! -d $(PYTHONPATHNANO) ]; then cd ~/shared && git clone https://github.com/nanopb/nanopb.git \
-	&& cd $(PYTHONPATHNANO)/generator/proto && make; fi
+	@if [ ! -d "$(PYTHONPATHNANO)" ]; then \
+	cd ~/shared && git clone https://github.com/nanopb/nanopb.git \
+	&& cd $(PYTHONPATHNANO)/generator/proto && make; \
+	fi
 
 MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk

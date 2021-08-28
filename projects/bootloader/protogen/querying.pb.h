@@ -10,46 +10,37 @@
 #endif
 
 /* Struct definitions */
-typedef struct _Querying {
-  pb_callback_t id;
-  pb_callback_t name;
-  pb_callback_t current_project;
-  pb_callback_t project_info;
-  pb_callback_t git_version;
+typedef struct _Querying { 
+    pb_callback_t id; 
+    pb_callback_t name; 
+    pb_callback_t current_project; 
+    pb_callback_t project_info; 
+    pb_callback_t git_version; 
 } Querying;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Querying_init_default                                                         \
-  {                                                                                   \
-    { { NULL }, NULL }, { { NULL }, NULL }, { { NULL }, NULL }, { { NULL }, NULL }, { \
-      { NULL }, NULL                                                                  \
-    }                                                                                 \
-  }
-#define Querying_init_zero                                                            \
-  {                                                                                   \
-    { { NULL }, NULL }, { { NULL }, NULL }, { { NULL }, NULL }, { { NULL }, NULL }, { \
-      { NULL }, NULL                                                                  \
-    }                                                                                 \
-  }
+#define Querying_init_default                    {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
+#define Querying_init_zero                       {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define Querying_id_tag 1
-#define Querying_name_tag 2
-#define Querying_current_project_tag 3
-#define Querying_project_info_tag 4
-#define Querying_git_version_tag 5
+#define Querying_id_tag                          1
+#define Querying_name_tag                        2
+#define Querying_current_project_tag             3
+#define Querying_project_info_tag                4
+#define Querying_git_version_tag                 5
 
 /* Struct field encoding specification for nanopb */
-#define Querying_FIELDLIST(X, a)                       \
-  X(a, CALLBACK, REPEATED, UINT32, id, 1)              \
-  X(a, CALLBACK, REPEATED, STRING, name, 2)            \
-  X(a, CALLBACK, REPEATED, STRING, current_project, 3) \
-  X(a, CALLBACK, REPEATED, STRING, project_info, 4)    \
-  X(a, CALLBACK, REPEATED, STRING, git_version, 5)
+#define Querying_FIELDLIST(X, a) \
+X(a, CALLBACK, REPEATED, UINT32,   id,                1) \
+X(a, CALLBACK, REPEATED, STRING,   name,              2) \
+X(a, CALLBACK, REPEATED, STRING,   current_project,   3) \
+X(a, CALLBACK, REPEATED, STRING,   project_info,      4) \
+X(a, CALLBACK, REPEATED, STRING,   git_version,       5)
 #define Querying_CALLBACK pb_default_field_callback
 #define Querying_DEFAULT NULL
 

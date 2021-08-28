@@ -10,25 +10,25 @@
 #endif
 
 /* Struct definitions */
-typedef struct _UpdateId {
-  uint32_t new_id;
+typedef struct _UpdateId { 
+    uint32_t new_id; 
 } UpdateId;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define UpdateId_init_default \
-  { 0 }
-#define UpdateId_init_zero \
-  { 0 }
+#define UpdateId_init_default                    {0}
+#define UpdateId_init_zero                       {0}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define UpdateId_new_id_tag 1
+#define UpdateId_new_id_tag                      1
 
 /* Struct field encoding specification for nanopb */
-#define UpdateId_FIELDLIST(X, a) X(a, STATIC, SINGULAR, UINT32, new_id, 1)
+#define UpdateId_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, UINT32,   new_id,            1)
 #define UpdateId_CALLBACK NULL
 #define UpdateId_DEFAULT NULL
 
@@ -38,7 +38,7 @@ extern const pb_msgdesc_t UpdateId_msg;
 #define UpdateId_fields &UpdateId_msg
 
 /* Maximum encoded size of messages (where known) */
-#define UpdateId_size 6
+#define UpdateId_size                            6
 
 #ifdef __cplusplus
 } /* extern "C" */
