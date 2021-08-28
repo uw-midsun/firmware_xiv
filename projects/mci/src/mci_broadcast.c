@@ -113,6 +113,7 @@ static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
       critical_section_end(disabled);
       if (motor_id == LEFT_MOTOR_CONTROLLER) {
         cruise_rx_update_velocity(can_data.velocity_measurement.vehicle_velocity_ms);
+        mci_output_update_velocity(can_data.velocity_measurement.vehicle_velocity_ms);
       }
       break;
     }
