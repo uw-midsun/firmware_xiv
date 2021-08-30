@@ -1,5 +1,4 @@
 #include "adc.h"
-#include "delay.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
@@ -8,9 +7,14 @@
 
 static void prv_button_interrupt_handler(const GpioAddress *adc_address, void *context) {
   GpioAddress *adc_position = context;
-  uint16_t adc = 0;
-  adc_read_converted_pin(*adc_position, &adc);
-  LOG_DEBUG("ADC reading is: %d\n", adc);
+  uint16_t adc_data = 0;
+  StatusCode adc_converted_data = adc_read_converted_pin(*adc_position, &adc_data);
+  if (adc_converted_data == STATUS_CODE_OK) {
+    LOG_DEBUG("ADC reading is: %d\n", adc_data);
+  }
+  else{
+    LOG_DEBUG("an error has occured.");
+  }
 }
 
 int main(void) {
@@ -19,7 +23,7 @@ int main(void) {
   gpio_it_init();
 
   // Button address
-  GpioAddress button_addresses = {
+  GpioAddress button_address = {
     .port = GPIO_PORT_B,
     .pin = 2,
   };
@@ -33,7 +37,7 @@ int main(void) {
   };
 
   // Adc address
-  GpioAddress adc_addresses = {
+  GpioAddress adc_address = {
     .port = GPIO_PORT_A,
     .pin = 6,
   };
@@ -51,14 +55,15 @@ int main(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  gpio_init_pin(&adc_addresses, &adc_setting);
+  gpio_init_pin(&button_address, &button_setting);
+  gpio_init_pin(&adc_address, &adc_setting);
   adc_init(ADC_MODE_SINGLE);
-  adc_set_channel_pin(adc_addresses, true);
-
-  gpio_it_register_interrupt(&button_addresses, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
-                             prv_button_interrupt_handler, &adc_addresses);
+  adc_set_channel_pin(adc_address, true);
+  gpio_it_register_interrupt(&button_address, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
+                             prv_button_interrupt_handler, &adc_address);
   while (true) {
     wait();
   }
+  
   return 0;
 }
