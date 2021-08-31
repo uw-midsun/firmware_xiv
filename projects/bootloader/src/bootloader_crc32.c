@@ -6,7 +6,7 @@
 #include "flash.h"
 #include "bootloader_mcu.h"
 
-
+// calculates
 uint32_t single_code_crc32(){
     uint8_t buffer[2048];
     uint32_t crc_temp;
@@ -17,6 +17,8 @@ uint32_t single_code_crc32(){
     return crc_temp;
 }
 
+// calculates the crc32 for the full address, with 2048 byte increments
+// and inserts them in crc32_codes array
 void bootloader_crc32(uintptr_t address, size_t size, uint32_t *crc32_codes){
     uint8_t code_number = 0;
     size_t curr_size = 0;
@@ -27,8 +29,11 @@ void bootloader_crc32(uintptr_t address, size_t size, uint32_t *crc32_codes){
         printf("address is %ld\n",address + curr_size);
         printf("CURRENT SIZE VS ACTUAL SIZE:\t%ld, %ld\n", curr_size, size);
         
+        // read from flash
         flash_read(address + curr_size, sizeof(buffer), (uint8_t *)&buffer, sizeof(buffer));
+        // claculate crc32
         crc_temp = crc32_arr((uint8_t *)&buffer, sizeof(buffer));
+
         crc32_codes[code_number] = crc_temp;
         code_number++;
         curr_size += sizeof(buffer);
