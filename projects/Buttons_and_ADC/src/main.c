@@ -21,13 +21,11 @@ int main(void) {
   gpio_init();
   gpio_it_init();
 
-  // Button address
   GpioAddress button_address = {
     .port = GPIO_PORT_B,
     .pin = 2,
   };
 
-  // Button setting
   GpioSettings button_setting = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
@@ -35,13 +33,11 @@ int main(void) {
     .resistor = GPIO_RES_NONE,
   };
 
-  // Adc address
   GpioAddress adc_address = {
     .port = GPIO_PORT_A,
     .pin = 6,
   };
 
-  // Adc setting
   GpioSettings adc_setting = {
     .direction = GPIO_DIR_IN,
     .state = GPIO_STATE_LOW,
