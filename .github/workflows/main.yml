@@ -58,10 +58,10 @@ jobs:
           sudo protoc --version
           export PATH="$PATH:$HOME/.local/bin"
 
-          cd /usr/local
           PROTOBUFC_ZIP=master.zip
           curl -OL https://github.com/protobuf-c/protobuf-c/archive/refs/heads/$PROTOBUFC_ZIP
           sudo unzip -o $PROTOBUFC_ZIP -d /usr/local '*'
+          cd /usr/local
           tree -d /usr/local
 
           rm -f $PROTOBUFC_ZIP
