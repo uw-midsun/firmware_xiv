@@ -60,7 +60,7 @@ jobs:
 
           PROTOBUFC_ZIP=master.zip
           curl -OL https://github.com/protobuf-c/protobuf-c/archive/refs/heads/$PROTOBUFC_ZIP
-          sudo unzip -o $PROTOBUFC_ZIP -d /usr/local *
+          sudo unzip -o $PROTOBUFC_ZIP -d /usr/local '*'
           rm -f $PROTOBUFC_ZIP
           sudo protoc --version
           sudo pkg-config --version
