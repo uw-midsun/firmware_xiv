@@ -50,21 +50,19 @@ jobs:
           sudo apt-get install -y pkg-config
           sudo apt update
           sudo apt install protobuf-c-compiler
-          PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
-          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
-          sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
-          sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
-          rm -f $PROTOC_ZIP
+          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
+          sudo unzip -o protoc-3.14.0-linux-x86_64.zip -d /usr/local bin/protoc
+          sudo unzip -o protoc-3.14.0-linux-x86_64.zip -d /usr/local 'include/*'
+          rm -f protoc-3.14.0-linux-x86_64.zip
           sudo protoc --version
           export PATH="$PATH:$HOME/.local/bin"
 
-          PROTOBUFC_ZIP=master.zip
-          curl -OL https://github.com/protobuf-c/protobuf-c/archive/refs/heads/$PROTOBUFC_ZIP
-          sudo unzip -o $PROTOBUFC_ZIP -d /usr/local '*'
+          curl -OL https://github.com/protobuf-c/protobuf-c/archive/refs/heads/master.zip
+          sudo unzip -o master.zip -d /usr/local '*'
           cd /usr/local
           tree
 
-          rm -f $PROTOBUFC_ZIP
+          rm -f master.zip
           sudo protoc --version
           sudo pkg-config --version
 
