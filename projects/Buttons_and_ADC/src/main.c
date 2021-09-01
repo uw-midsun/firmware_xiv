@@ -60,6 +60,7 @@ int main(void) {
   adc_set_channel_pin(adc_address, true);
   gpio_it_register_interrupt(&button_address, &s_interrupt_settings, INTERRUPT_EDGE_FALLING,
                              prv_button_interrupt_handler, &adc_address);
+
   while (true) {
     wait();
   }
