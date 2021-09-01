@@ -65,7 +65,7 @@ jobs:
           sudo protoc --version
           sudo pkg-config --version
 
-          cd protobuf-c-master
+          cd /usr/local/protobuf-c-master
           ./autogen.sh && ./configure && make && make install
 
       - uses: fiam/arm-none-eabi-gcc@v1
