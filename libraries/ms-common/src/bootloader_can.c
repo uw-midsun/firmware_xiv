@@ -48,9 +48,6 @@ StatusCode bootloader_can_register_handler(BootloaderCanCallback callback) {
 }
 
 StatusCode bootloader_can_register_debug_handler(BootloaderCanCallback callback) {
-  if (callback == NULL) {
-    return STATUS_CODE_INVALID_ARGS;
-  }
   s_debug_callback = callback;
   return STATUS_CODE_OK;
 }
@@ -66,7 +63,7 @@ StatusCode bootloader_can_receive(CanMessage *msg) {
   // s_test_callback is called for every message bootloader recieves
   if (s_debug_callback != NULL) {
     if (msg->type == CAN_MSG_TYPE_ACK) {  // msg is a start msg
-      return s_debug_callback(msg->data_u8, msg->dlc, true);
+      return s_debug_callback(0, 0, true);
     } else {  // (msg->msg_id == CAN_MSG_TYPE_DATA) msg is a data msg
       return s_debug_callback(msg->data_u8, msg->dlc, false);
     }
