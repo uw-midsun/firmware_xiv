@@ -5,7 +5,6 @@
 #include "log.h"
 #include "wait.h"
 
-// testing git hook
 static void prv_button_interrupt_handler(const GpioAddress *adc_address, void *context) {
   GpioAddress *adc_position = context;
   uint16_t adc_data = 0;
