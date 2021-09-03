@@ -49,6 +49,7 @@ jobs:
           sudo apt-get install gcc g++
           sudo apt-get update -y
           sudo apt-get install -y pkg-config
+          sudo apt-get install libtool
           sudo apt update
           sudo apt install protobuf-c-compiler
           curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
@@ -67,12 +68,7 @@ jobs:
           sudo pkg-config --version
 
           cd protobuf-c-master
-          ./autogen.sh
-      
-      - name: Autogen.sh twice
-        run: |
-          cd /usr/local/protobuf-c-master
-          ./autogen.sh && ./configure && make && make install
+          sudo ./autogen.sh && sudo ./configure && sudo make && sudo make install
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
