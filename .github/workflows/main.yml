@@ -59,15 +59,14 @@ jobs:
 
           curl -OL https://github.com/protobuf-c/protobuf-c/archive/refs/heads/master.zip
           sudo unzip -o master.zip -d /usr/local '*'
-          cd /usr/local
-          tree
-
           rm -f master.zip
+          cd /usr/local
+
           sudo protoc --version
           sudo pkg-config --version
 
           cd protobuf-c-master
-          ./autogen.sh && ./configure && make && make install
+          ./autogen.sh && ./autogen.sh && ./configure && make && make install
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
