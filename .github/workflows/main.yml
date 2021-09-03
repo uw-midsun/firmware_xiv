@@ -67,7 +67,11 @@ jobs:
           sudo pkg-config --version
 
           cd protobuf-c-master
-          ./autogen.sh && ./autogen.sh && ./configure && make && make install
+          ./autogen.sh
+      
+      - name: Autogen.sh twice
+        run: |  
+          ./autogen.sh && ./configure && make && make install
 
       - uses: fiam/arm-none-eabi-gcc@v1
         with:
