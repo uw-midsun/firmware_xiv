@@ -396,7 +396,6 @@ socketcan:
 # If you are getting a "virtualenv: Command not found" error, try running `sudo pip3 install virtualenv`
 .PHONY: install_requirements
 install_requirements:
-	@mkdir -p ~/shared
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
