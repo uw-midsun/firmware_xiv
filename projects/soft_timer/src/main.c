@@ -1,9 +1,9 @@
+#include <stdint.h>
+#include <stdlib.h>
+
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
-
-#include <stdint.h>
-#include <stdlib.h>
 
 // Values are in milliseconds.
 #define COUNTER_A_DELAY 500
