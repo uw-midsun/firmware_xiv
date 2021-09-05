@@ -6,10 +6,10 @@
 #include <stdint.h>
 
 // Values are in milliseconds.
-const int COUNTER_A_DELAY = 500;
-const int COUNTER_B_DELAY = 1000;
+#define COUNTER_A_DELAY 500
+#define COUNTER_B_DELAY 1000
 
-typedef struct counter {
+typedef struct {
 	uint8_t counter_a;
 	uint8_t counter_b;
 } Counters;
