@@ -52,6 +52,8 @@ jobs:
           sudo apt-get install libtool
           sudo apt update
           sudo apt install protobuf-c-compiler
+          sudo apt install protobuf-compiler
+          sudo apt-get install autoconf automake libtool curl make g++ unzip
           curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
           sudo unzip -o protoc-3.14.0-linux-x86_64.zip -d /usr/local bin/protoc
           sudo unzip -o protoc-3.14.0-linux-x86_64.zip -d /usr/local 'include/*'
@@ -66,6 +68,16 @@ jobs:
 
           sudo protoc --version
           sudo pkg-config --version
+
+          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-cpp-3.17.3.zip
+          sudo unzip -o protobuf-cpp-3.17.3.zip -d /usr/local '*'
+          rm -f protobuf-cpp-3.17.3.zip
+          cd /usr/local/protobuf-cpp-3.17.3
+          ./configure
+          make
+          make check
+          sudo make install
+          sudo ldconfig
 
           cd protobuf-c-master
           sudo ./autogen.sh && sudo ./configure && sudo make && sudo make install
