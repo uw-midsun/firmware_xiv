@@ -405,7 +405,7 @@ install_requirements:
 	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
 	@if [ ! -d "$(PYTHONPATHNANO)" ]; then \
-	cd ~/shared && git clone https://github.com/nanopb/nanopb.git \
+	cd $(PYTHONPATHNANO)/.. && git clone https://github.com/nanopb/nanopb.git \
 	&& cd $(PYTHONPATHNANO)/generator/proto && make; \
 	fi
 

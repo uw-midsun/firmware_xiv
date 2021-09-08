@@ -28,7 +28,6 @@ jobs:
           mkdir -p ~/.local/bin
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
-          mkdir -p ~/shared
 
       - name: Install gcc, clang, clang-format
         run: |
