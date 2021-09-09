@@ -171,6 +171,32 @@ static StatusCode prv_handle_dsp_measurement(const CanMessage *msg, void *contex
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_handle_sink_motor_measurement(const CanMessage *msg, void *context,
+                                                    CanAckStatus *ack_reply) {
+  uint16_t left_motor_temp, left_sink_temp, right_motor_temp, right_sink_temp;
+  CAN_UNPACK_MOTOR_SINK_TEMPS(msg, &left_motor_temp, &left_sink_temp, &right_motor_temp,
+                              &right_sink_temp);
+  s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = left_motor_temp;
+  s_test_measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c =
+      left_sink_temp;
+  s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c =
+      right_motor_temp;
+  s_test_measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c =
+      right_sink_temp;
+  s_received_sink_motor_temp = true;
+  return STATUS_CODE_OK;
+}
+
+static StatusCode prv_handle_dsp_measurement(const CanMessage *msg, void *context,
+                                             CanAckStatus *ack_reply) {
+  uint32_t left_dsp_temp, right_dsp_temp;
+  CAN_UNPACK_DSP_BOARD_TEMPS(msg, &left_dsp_temp, &right_dsp_temp);
+  s_test_measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER] = left_dsp_temp;
+  s_test_measurements.dsp_measurements[RIGHT_MOTOR_CONTROLLER] = right_dsp_temp;
+  s_received_dsp_temp = true;
+  return STATUS_CODE_OK;
+}
+
 static void prv_send_measurements(MotorController controller, TestMciMessage message_type,
                                   MotorControllerMeasurements *measurements) {
   WaveSculptorCanData can_data = { 0 };
@@ -303,6 +329,31 @@ static void prv_assert_eq_expected_storage_dt(MotorControllerMeasurements expect
       (uint32_t)s_broadcast_storage.measurements.dsp_measurements[controller].dsp_temp_c);
 }
 
+// Sink temperature
+static void prv_assert_eq_expected_storage_ht(MotorControllerMeasurements expected_measurements,
+                                              MotorController controller) {
+  TEST_ASSERT_EQUAL(
+      (uint16_t)expected_measurements.sink_motor_measurements[controller].heatsink_temp_c,
+      (uint16_t)s_broadcast_storage.measurements.sink_motor_measurements[controller]
+          .heatsink_temp_c);
+}
+
+// Motor temperature
+static void prv_assert_eq_expected_storage_mt(MotorControllerMeasurements expected_measurements,
+                                              MotorController controller) {
+  TEST_ASSERT_EQUAL(
+      (uint16_t)expected_measurements.sink_motor_measurements[controller].motor_temp_c,
+      (uint16_t)s_broadcast_storage.measurements.sink_motor_measurements[controller].motor_temp_c);
+}
+
+// DSP temperature
+static void prv_assert_eq_expected_storage_dt(MotorControllerMeasurements expected_measurements,
+                                              MotorController controller) {
+  TEST_ASSERT_EQUAL(
+      (uint32_t)expected_measurements.dsp_measurements[controller].dsp_temp_c,
+      (uint32_t)s_broadcast_storage.measurements.dsp_measurements[controller].dsp_temp_c);
+}
+
 void setup_test(void) {
   event_queue_init();
   interrupt_init();
@@ -372,6 +423,33 @@ void test_left_all_right_all(void) {
             .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
             .board_fault_bitset = 0xCA,
             .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
         },
     .sink_motor_measurements =
         {
@@ -507,6 +585,33 @@ void test_left_all_right_none(void) {
                     .reserved = 0.0,
                 },
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -600,6 +705,33 @@ void test_left_all_right_status(void) {
                     .reserved = 0.0,
                 },
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &expected_measurements);
@@ -658,6 +790,33 @@ void test_left_all_right_status_bus(void) {
             .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
             .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
             .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+        },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
         },
     .sink_motor_measurements =
         {
@@ -777,6 +936,33 @@ void test_3x_left_all_right_all(void) {
                     .reserved = 0.0,
                 },
         },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
+        },
   };
 
   // Repeat full sequence 3 times
@@ -862,6 +1048,33 @@ void test_message_id_filter(void) {
             .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
             .board_fault_bitset = 0xCA,
             .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 57.1967,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 56.1458,
+                    .reserved = 0.0,
+                },
         },
     .sink_motor_measurements =
         {

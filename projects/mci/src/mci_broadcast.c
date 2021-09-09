@@ -80,6 +80,23 @@ static void prv_broadcast_dsp_temp(MotorControllerBroadcastStorage *storage) {
                                (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c);
 }
 
+// Motor and heat sink temperatures
+static void prv_broadcast_motor_sink_temp(MotorControllerBroadcastStorage *storage) {
+  WaveSculptorSinkMotorTempMeasurement *measurements =
+      storage->measurements.sink_motor_measurements;
+  CAN_TRANSMIT_MOTOR_SINK_TEMPS((uint16_t)measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c,
+                                (uint16_t)measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c,
+                                (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c,
+                                (uint16_t)measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c);
+}
+
+// CPU/DSP temperature
+static void prv_broadcast_dsp_temp(MotorControllerBroadcastStorage *storage) {
+  WaveSculptorDspTempMeasurement *measurements = storage->measurements.dsp_measurements;
+  CAN_TRANSMIT_DSP_BOARD_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c,
+                               (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c);
+}
+
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
   LOG_DEBUG("Received status message\n");
   MotorControllerBroadcastStorage *storage = context;
@@ -126,6 +143,7 @@ static void prv_handle_speed_rx(const GenericCanMsg *msg, void *context) {
       critical_section_end(disabled);
       if (motor_id == LEFT_MOTOR_CONTROLLER) {
         cruise_rx_update_velocity(can_data.velocity_measurement.vehicle_velocity_ms);
+        mci_output_update_velocity(can_data.velocity_measurement.vehicle_velocity_ms);
       }
       break;
     }
