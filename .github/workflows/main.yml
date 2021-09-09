@@ -69,17 +69,17 @@ jobs:
           sudo protoc --version
           sudo pkg-config --version
 
-          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-cpp-3.17.3.zip
+          sudo curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-cpp-3.17.3.zip
           sudo unzip -o protobuf-cpp-3.17.3.zip -d /usr/local '*'
-          rm -f protobuf-cpp-3.17.3.zip
-          cd /usr/local/protobuf-cpp-3.17.3
-          ./configure
-          make
-          make check
+          sudo rm -f protobuf-cpp-3.17.3.zip
+          cd /usr/local/protobuf-3.17.3
+          sudo ./configure
+          sudo make
+          sudo make check
           sudo make install
           sudo ldconfig
 
-          cd protobuf-c-master
+          cd /usr/local/protobuf-c-master
           sudo ./autogen.sh && sudo ./configure && sudo make && sudo make install
 
       - uses: fiam/arm-none-eabi-gcc@v1
