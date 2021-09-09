@@ -15,4 +15,6 @@ typedef struct {
   PedalRxStorage pedal_storage;
 } MotorControllerOutputStorage;
 
+void mci_output_update_velocity(float actual_velocity_ms);
+
 StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can);

@@ -107,8 +107,13 @@
                      (board_fan_faults_u8_ptr), (mc_overtemp_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
                      CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_MOTOR_TEMPS(msg_ptr, motor_temp_l_u32_ptr, motor_temp_r_u32_ptr) \
-  can_unpack_impl_u32((msg_ptr), 8, (motor_temp_l_u32_ptr), (motor_temp_r_u32_ptr))
+#define CAN_UNPACK_MOTOR_SINK_TEMPS(msg_ptr, motor_temp_l_u16_ptr, sink_temp_l_u16_ptr, \
+                                    motor_temp_r_u16_ptr, sink_temp_r_u16_ptr)          \
+  can_unpack_impl_u16((msg_ptr), 8, (motor_temp_l_u16_ptr), (sink_temp_l_u16_ptr),      \
+                      (motor_temp_r_u16_ptr), (sink_temp_r_u16_ptr))
+
+#define CAN_UNPACK_DSP_BOARD_TEMPS(msg_ptr, dsp_board_temp_l_u32_ptr, dsp_board_temp_r_u32_ptr) \
+  can_unpack_impl_u32((msg_ptr), 8, (dsp_board_temp_l_u32_ptr), (dsp_board_temp_r_u32_ptr))
 
 #define CAN_UNPACK_CRUISE_CONTROL_COMMAND(msg_ptr, command_u8_ptr)                                 \
   can_unpack_impl_u8((msg_ptr), 1, (command_u8_ptr), CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \

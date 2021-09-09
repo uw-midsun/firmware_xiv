@@ -16,7 +16,7 @@ typedef enum {
   MOTOR_CONTROLLER_BROADCAST_STATUS = 0,
   MOTOR_CONTROLLER_BROADCAST_BUS,
   MOTOR_CONTROLLER_BROADCAST_VELOCITY,
-  MOTOR_CONTROLLER_BROADCAST_MOTOR_TEMP,
+  MOTOR_CONTROLLER_BROADCAST_SINK_MOTOR_TEMP,
   MOTOR_CONTROLLER_BROADCAST_DSP_TEMP,
   NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENTS,
 } MotorControllerBroadcastMeasurement;
@@ -76,6 +76,8 @@ typedef struct MotorControllerMeasurements {
   WaveSculptorBusMeasurement bus_measurements[NUM_MOTOR_CONTROLLERS];
   float vehicle_velocity[NUM_MOTOR_CONTROLLERS];
   MciStatusMessage status;
+  WaveSculptorSinkMotorTempMeasurement sink_motor_measurements[NUM_MOTOR_CONTROLLERS];
+  WaveSculptorDspTempMeasurement dsp_measurements[NUM_MOTOR_CONTROLLERS];
 } MotorControllerMeasurements;
 
 typedef struct MotorControllerBroadcastSettings {
@@ -88,6 +90,8 @@ typedef struct MotorControllerBroadcastStorage {
   uint8_t bus_rx_bitset;
   uint8_t velocity_rx_bitset;
   uint8_t status_rx_bitset;
+  uint8_t motor_sink_rx_bitset;
+  uint8_t dsp_rx_bitset;
   MotorControllerMeasurements measurements;
   MotorCanDeviceId ids[NUM_MOTOR_CONTROLLERS];
   // What we're currently filtering for

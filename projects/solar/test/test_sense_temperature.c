@@ -1,5 +1,3 @@
-#include "sense_temperature.h"
-
 #include <stdbool.h>
 
 #include "adc.h"
@@ -7,6 +5,7 @@
 #include "gpio.h"
 #include "log.h"
 #include "sense.h"
+#include "sense_temperature.h"
 #include "test_helpers.h"
 #include "unity.h"
 
@@ -15,7 +14,7 @@
 // The two test variables below are calculated from inputting 0x800 into the relative conversion
 // formulae (see sense_temperature.c)
 #define TEST_RTD_CONVERTED_READING (-541)
-#define TEST_NTC_CONVERTED_READING (272)
+#define TEST_NTC_CONVERTED_READING (258)
 
 static SenseCallback s_sense_callbacks[MAX_THERMISTORS];
 static void *s_sense_callback_contexts[MAX_THERMISTORS];
