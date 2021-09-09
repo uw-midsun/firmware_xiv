@@ -105,7 +105,6 @@ static MotorCanFrameId s_frame_id_map[] = {
       R_MTR_MSG_ID(WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE),
 };
 
-
 // To allow for setting fan fault bitset
 static uint8_t s_test_fan_fault_bitset = 0;
 uint8_t TEST_MOCK(mci_fan_get_fault_bitset)(void) {
@@ -136,9 +135,11 @@ static StatusCode prv_handle_bus_measurement(const CanMessage *msg, void *contex
 
 static StatusCode prv_handle_status(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   MciStatusMessage message;
-  CAN_UNPACK_MOTOR_STATUS(msg, &message.mc_limit_bitset[LEFT_MOTOR_CONTROLLER], &message.mc_limit_bitset[RIGHT_MOTOR_CONTROLLER],
-  &message.mc_error_bitset[LEFT_MOTOR_CONTROLLER], &message.mc_error_bitset[RIGHT_MOTOR_CONTROLLER], &message.board_fault_bitset, 
-  &message.mc_overtemp_bitset);
+  CAN_UNPACK_MOTOR_STATUS(msg, &message.mc_limit_bitset[LEFT_MOTOR_CONTROLLER],
+                          &message.mc_limit_bitset[RIGHT_MOTOR_CONTROLLER],
+                          &message.mc_error_bitset[LEFT_MOTOR_CONTROLLER],
+                          &message.mc_error_bitset[RIGHT_MOTOR_CONTROLLER],
+                          &message.board_fault_bitset, &message.mc_overtemp_bitset);
   s_received_status = true;
   memcpy(&s_test_measurements.status, &message, sizeof(message));
   return STATUS_CODE_OK;
@@ -186,11 +187,11 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
     WaveSculptorCanData ws_data = { 0 };
     ws_data.status_info.error_flags.raw = measurements->status.mc_error_bitset[controller];
     ws_data.status_info.limit_flags.raw = measurements->status.mc_limit_bitset[controller];
-    
+
     // Will get updated on status message broadcast
     s_test_fan_fault_bitset = measurements->status.board_fault_bitset;
-    // TODO: update the overtemp bitset if needed
-    
+    // TODO(SOFT-534): update the overtemp bitset if needed
+
     can_data.raw = ws_data.raw;
   } else if (message_type == TEST_MCI_SINK_MOTOR_TEMP_MESSAGE) {
     can_data.sink_motor_temp_measurement.heatsink_temp_c =
@@ -267,10 +268,14 @@ static void prv_assert_eq_expected_storage_vel(MotorControllerMeasurements expec
 // Status
 static void prv_assert_eq_expected_storage_status(MotorControllerMeasurements expected_measurements,
                                                   MotorController controller) {
-  TEST_ASSERT_EQUAL(expected_measurements.status.mc_limit_bitset[controller] & MCI_LIMIT_MASK, s_broadcast_storage.measurements.status.mc_limit_bitset[controller]);
-  TEST_ASSERT_EQUAL(expected_measurements.status.mc_error_bitset[controller] & MCI_ERROR_MASK, s_broadcast_storage.measurements.status.mc_error_bitset[controller]);
-  TEST_ASSERT_EQUAL(expected_measurements.status.board_fault_bitset, s_broadcast_storage.measurements.status.board_fault_bitset);
-  TEST_ASSERT_EQUAL(expected_measurements.status.mc_overtemp_bitset, s_broadcast_storage.measurements.status.mc_overtemp_bitset);
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_limit_bitset[controller] & MCI_LIMIT_MASK,
+                    s_broadcast_storage.measurements.status.mc_limit_bitset[controller]);
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_error_bitset[controller] & MCI_ERROR_MASK,
+                    s_broadcast_storage.measurements.status.mc_error_bitset[controller]);
+  TEST_ASSERT_EQUAL(expected_measurements.status.board_fault_bitset,
+                    s_broadcast_storage.measurements.status.board_fault_bitset);
+  TEST_ASSERT_EQUAL(expected_measurements.status.mc_overtemp_bitset,
+                    s_broadcast_storage.measurements.status.mc_overtemp_bitset);
 }
 
 // Sink temperature
@@ -358,15 +363,16 @@ void test_left_all_right_all(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status = {
-      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-      .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0x00, // currently always 0
-    },
+    .status =
+        {
+            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
     .sink_motor_measurements =
         {
             [LEFT_MOTOR_CONTROLLER] =
@@ -464,15 +470,16 @@ void test_left_all_right_none(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status = {
-      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-      .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0x00, // currently always 0
-    },
+    .status =
+        {
+            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
     .sink_motor_measurements =
         {
             [LEFT_MOTOR_CONTROLLER] =
@@ -556,15 +563,16 @@ void test_left_all_right_status(void) {
             [RIGHT_MOTOR_CONTROLLER] = 0,
         },
 
-    .status = {
-      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-      .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0x00, // currently always 0
-    },
+    .status =
+        {
+            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
     .sink_motor_measurements =
         {
             [LEFT_MOTOR_CONTROLLER] =
@@ -644,15 +652,16 @@ void test_left_all_right_status_bus(void) {
             [RIGHT_MOTOR_CONTROLLER] = 0,
         },
 
-    .status = {
-      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-      .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0x00, // currently always 0
-    },
+    .status =
+        {
+            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
     .sink_motor_measurements =
         {
             [LEFT_MOTOR_CONTROLLER] =
@@ -734,15 +743,16 @@ void test_3x_left_all_right_all(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status = {
-      // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-      .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0x00, // currently always 0
-    },
+    .status =
+        {
+            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
     .sink_motor_measurements =
         {
             [LEFT_MOTOR_CONTROLLER] =
@@ -847,14 +857,15 @@ void test_message_id_filter(void) {
             [LEFT_MOTOR_CONTROLLER] = 1.0101,
             [RIGHT_MOTOR_CONTROLLER] = 56.5665,
         },
-    .status = {
-      .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
-      .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
-      .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
-      .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
-      .board_fault_bitset = 0xCA,
-      .mc_overtemp_bitset = 0x00, // currently always 0
-    },
+    .status =
+        {
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0xDE,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0xAD,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0xBE,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0xEF,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
     .sink_motor_measurements =
         {
             [LEFT_MOTOR_CONTROLLER] =
