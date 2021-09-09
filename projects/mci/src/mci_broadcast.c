@@ -99,7 +99,9 @@ static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
       // Technically we only need to update these bitsets prior to broadcasting the status, but it
       // makes testing easier to update all status bitsets at the same time
       storage->measurements.status.board_fault_bitset = mci_fan_get_fault_bitset();
-      storage->measurements.status.mc_overtemp_bitset = 0;  // TODO(SOFT-IDK)
+
+      // TODO(SOFT-534): update this with the actual value
+      storage->measurements.status.mc_overtemp_bitset = 0;
 
       storage->status_rx_bitset |= 1 << motor_id;
       critical_section_end(disabled);

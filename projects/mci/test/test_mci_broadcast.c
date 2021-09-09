@@ -190,7 +190,7 @@ static void prv_send_measurements(MotorController controller, TestMciMessage mes
 
     // Will get updated on status message broadcast
     s_test_fan_fault_bitset = measurements->status.board_fault_bitset;
-    // TODO(SOFT-IDK): update the overtemp bitset if needed
+    // TODO(SOFT-534): update the overtemp bitset if needed
 
     can_data.raw = ws_data.raw;
   } else if (message_type == TEST_MCI_SINK_MOTOR_TEMP_MESSAGE) {
