@@ -10,6 +10,7 @@
 #include "controller_board_pins.h"
 #include "cruise_rx.h"
 #include "log.h"
+#include "mci_fan_control.h"
 #include "motor_can.h"
 #include "motor_controller.h"
 #include "soft_timer.h"
@@ -54,9 +55,12 @@ static void prv_broadcast_bus_measurement(MotorControllerBroadcastStorage *stora
 
 // Status
 static void prv_broadcast_status(MotorControllerBroadcastStorage *storage) {
-  uint32_t *measurements = storage->measurements.status;
-  CAN_TRANSMIT_MOTOR_STATUS(measurements[LEFT_MOTOR_CONTROLLER],
-                            measurements[RIGHT_MOTOR_CONTROLLER]);
+  MciStatusMessage message = storage->measurements.status;
+  CAN_TRANSMIT_MOTOR_STATUS(message.mc_limit_bitset[LEFT_MOTOR_CONTROLLER],
+                            message.mc_limit_bitset[RIGHT_MOTOR_CONTROLLER],
+                            message.mc_error_bitset[LEFT_MOTOR_CONTROLLER],
+                            message.mc_error_bitset[RIGHT_MOTOR_CONTROLLER],
+                            message.board_fault_bitset, message.mc_overtemp_bitset);
 }
 
 // Motor and heat sink temperatures
@@ -83,13 +87,22 @@ static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
   WaveSculptorCanId can_id = { .raw = msg->id };
   WaveSculptorCanData can_data = { .raw = msg->data };
 
-  // Cast out upper 32 bits so we can broadcast both status in one CAN message
-  uint32_t status = (uint32_t)(can_data.raw);
-
   for (size_t motor_id = 0; motor_id < NUM_MOTOR_CONTROLLERS; motor_id++) {
     if (can_id.device_id == storage->ids[motor_id]) {
       bool disabled = critical_section_start();
-      storage->measurements.status[motor_id] = status;
+      // Update status message with error/limit flags
+      storage->measurements.status.mc_error_bitset[motor_id] =
+          can_data.status_info.error_flags.raw & MCI_ERROR_MASK;
+      storage->measurements.status.mc_limit_bitset[motor_id] =
+          can_data.status_info.limit_flags.raw & MCI_LIMIT_MASK;
+
+      // Technically we only need to update these bitsets prior to broadcasting the status, but it
+      // makes testing easier to update all status bitsets at the same time
+      storage->measurements.status.board_fault_bitset = mci_fan_get_fault_bitset();
+
+      // TODO(SOFT-534): updatee this with the actual value
+      storage->measurements.status.mc_overtemp_bitset = 0;
+
       storage->status_rx_bitset |= 1 << motor_id;
       critical_section_end(disabled);
       break;
