@@ -13,6 +13,6 @@ void setup_test(void) {}
 
 void teardown_test(void) {}
 
-void test_ping(void) {
+void test_init(void) {
   query_init(&config);
 }
