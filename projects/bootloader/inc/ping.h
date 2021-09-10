@@ -2,6 +2,7 @@
 
 // This module implements the ping operation on the bootloader
 // Should be initialized after dispatcher
+
 #include "status.h"
 #include "stdint.h"
 

@@ -54,7 +54,9 @@ int main(void) {
   can_datagram_init(&s_datagram_settings);
 
   dispatcher_init(board_id);
+
   ping_init(board_id);
+  // query_init(blconfig);
 
   Event e = { 0 };
   while (true) {
