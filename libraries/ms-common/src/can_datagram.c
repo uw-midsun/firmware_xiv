@@ -17,9 +17,7 @@
 #define CRC_SIZE_BYTES 4
 #define DGRAM_TYPE_SIZE_BYTES 1
 #define DEST_LEN_SIZE_BYTES 1
-#define MAX_DEST_NODES_SIZE_BYTES 255
 #define DATA_LEN_SIZE_BYTES 2
-#define MAX_DATA_SIZE_BYTES 2048
 #define MAX_CAN_TX 4
 #define CRC_STREAM_SIZE \
   (DGRAM_TYPE_SIZE_BYTES + DEST_LEN_SIZE_BYTES + DATA_LEN_SIZE_BYTES + 2 * sizeof(uint32_t))
@@ -54,6 +52,7 @@ typedef struct CanDatagramStorage {
   bool rx_listener_enabled;
   bool soft_error_flag;
   uint8_t node_id;
+  bool ignore_node_id_check;
 } CanDatagramStorage;
 
 static CanDatagramStorage s_store;
@@ -433,10 +432,15 @@ static void prv_process_dst_rx(Fsm *fsm, const Event *e, void *context) {
     // Check to see if current ID in list, otherwise ignore msg
     bool found_id = false;
     for (uint8_t id = 0; id < dgram->destination_nodes_len; id++) {
-      if (dgram->destination_nodes[id] == s_store.node_id) {
+      // dgram addresses this node or 0
+      if (dgram->destination_nodes[id] == s_store.node_id || dgram->destination_nodes[id] == 0) {
         found_id = true;
         break;
       }
+    }
+    // Rx the datagram if the listening node has id 0
+    if (s_store.node_id == 0) {
+      found_id = true;
     }
     if (!found_id) {
       LOG_WARN("CURRENT NODE NOT REQUESTED, MSG IGNORED\n");
@@ -639,7 +643,7 @@ StatusCode can_datagram_start_tx(CanDatagramTxConfig *config) {
   if (config->tx_cb == NULL) {
     return STATUS_CODE_INVALID_ARGS;
   }
-  if (config->data_len > MAX_DATA_SIZE_BYTES) {
+  if (config->data_len > DGRAM_MAX_DATA_SIZE) {
     return STATUS_CODE_INVALID_ARGS;
   }
 

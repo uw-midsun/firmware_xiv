@@ -36,13 +36,6 @@ StatusCode prv_test_horn_rx_cb_handler(const CanMessage *msg, void *context,
   return STATUS_CODE_OK;
 }
 
-StatusCode prv_test_high_beam_rx_cb_handler(const CanMessage *msg, void *context,
-                                            CanAckStatus *ack_reply) {
-  TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_LIGHTS, msg->msg_id);
-  count++;
-  return STATUS_CODE_OK;
-}
-
 StatusCode prv_test_cc_toggle_rx_cb_handler(const CanMessage *msg, void *context,
                                             CanAckStatus *ack_reply) {
   TEST_ASSERT_EQUAL(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND, msg->msg_id);
@@ -73,19 +66,6 @@ void test_steering_digital_input_horn() {
   TEST_ASSERT_EQUAL(1, count);
 }
 
-void test_steering_digital_input_drl_1() {
-  TEST_ASSERT_OK(
-      can_register_rx_handler(SYSTEM_CAN_MESSAGE_LIGHTS, prv_test_high_beam_rx_cb_handler, NULL));
-  GpioAddress drl_1_address = DRL_1_GPIO_ADDR;
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&drl_1_address));
-  Event e = { 0 };
-  MS_TEST_HELPER_ASSERT_NEXT_EVENT(e, (EventId)STEERING_DRL_1_EVENT, (uint16_t)GPIO_STATE_LOW);
-  MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
-  TEST_ASSERT_OK(steering_can_process_event(&e));
-  MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(2, count);
-}
-
 void test_steering_digital_input_cc_toggle() {
   TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_CRUISE_CONTROL_COMMAND,
                                          prv_test_cc_toggle_rx_cb_handler, NULL));
@@ -97,7 +77,7 @@ void test_steering_digital_input_cc_toggle() {
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(steering_can_process_event(&e));
   MS_TEST_HELPER_CAN_TX_RX(STEERING_CAN_EVENT_TX, STEERING_CAN_EVENT_RX);
-  TEST_ASSERT_EQUAL(3, count);
+  TEST_ASSERT_EQUAL(2, count);
 }
 
 void test_invalid_can_message() {
