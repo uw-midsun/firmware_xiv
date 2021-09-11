@@ -4,7 +4,6 @@
  */
 
 #include "pb_encode.h"
-
 #include "pb.h"
 #include "pb_common.h"
 
