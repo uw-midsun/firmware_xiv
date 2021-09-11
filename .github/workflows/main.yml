@@ -21,6 +21,14 @@ jobs:
       - uses: actions/checkout@v2
 
       # TODO: cache all the setup
+      - name: Cache
+        uses: actions/cache@v2.1.6
+        id: cache-packages
+        with:
+          path: /usr/local
+          key: ${{ runner.os }}-packages-${{ hashFiles('**/packages*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-packages-
 
       - name: Setup directories
         run: |
@@ -44,6 +52,7 @@ jobs:
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
       - name: Install protobuf and dependencies
+        if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
           sudo apt-get install gcc g++
           sudo apt-get update -y
