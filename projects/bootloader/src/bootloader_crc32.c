@@ -10,7 +10,9 @@
 // at a time, returning the final crc32 code
 uint32_t calculated_application_crc32(uintptr_t address, size_t size) {
   // code array for holding crc32 codes per 2048 bytes
-  uint32_t crc32_codes[crc32_code_buffer_size];
+  // size of array is 54 since
+  // BOOTLOADER_APPLICATION_SIZE / 2048 = 54
+  uint32_t crc32_codes[54];
   uint8_t crc32_code_number = 0;
   size_t curr_size = 0;  // memory size that has been read
   uint8_t buffer[2048];  // buffer for holding 2048 bytes of flash

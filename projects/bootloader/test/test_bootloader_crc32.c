@@ -17,8 +17,9 @@ uint32_t s_crc32_codes_size = 54;
 void intialize_memory() {
   size_t curr_size = 0;
   uint8_t buffer[2048];
+  unsigned int seed = 42;
 
-  for (int i = 0; i < 2048; i++) buffer[i] = rand() % (255 + 1 - 0) + 0;
+  for (int i = 0; i < 2048; i++) buffer[i] = rand_r(&seed) % (255 + 1 - 0) + 0;
 
   while (curr_size <= BOOTLOADER_APPLICATION_SIZE) {
     // write flash
