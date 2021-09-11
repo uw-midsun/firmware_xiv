@@ -97,21 +97,33 @@ void test_mcp2515_extended(void) {
   TEST_ASSERT_EQUAL(8, s_dlc);
 }
 
-void test_mcp2515_send_receive(void) {
-  LOG_DEBUG("Testing send and receive\n");
-  // shows that a filtered-out message does not update the static vars
-  TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x19999999, true, 0xBEEFDEADBEEFDEAD, 8));
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_mcp2515.int_pin));
-  delay_ms(50);
-  TEST_ASSERT_NOT_EQUAL(0x19999999, s_id);
-  TEST_ASSERT_NOT_EQUAL(0xBEEFDEADBEEFDEAD, s_data);
+static void test_mcp2515_init_interrupts_callback(const GpioAddress *address, void *context) {
+  GpioState state = GPIO_STATE_LOW;
+  gpio_get_state(address, &state);
+}
 
-  // shows that a filtered-in message updates static vars
-  TEST_ASSERT_OK(mcp2515_tx(&s_mcp2515, 0x1EADBEEF, true, 0x8877665544332211, 8));
-  TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_mcp2515.int_pin));
-  delay_ms(50);
-  TEST_ASSERT_EQUAL(0x1EADBEEF, s_id);
-  TEST_ASSERT_EQUAL(true, s_extended);
-  TEST_ASSERT_EQUAL(0x8877665544332211, s_data);
-  TEST_ASSERT_EQUAL(8, s_dlc);
+void test_mcp2515_init_interrupts(void) {
+  GpioAddress address = { .port = GPIO_PORT_A,
+                          .pin = 8 };  // corresponds to mcp2515_settings .int_pin
+  const Mcp2515Settings mcp2515_settings = {
+    .spi_port = SPI_PORT_2,
+    .spi_baudrate = 6000000,
+    .mosi = { .port = GPIO_PORT_B, 15 },
+    .miso = { .port = GPIO_PORT_B, 14 },
+    .sclk = { .port = GPIO_PORT_B, 13 },
+    .cs = { .port = GPIO_PORT_B, 12 },
+    .int_pin = { .port = GPIO_PORT_A, 8 },
+
+    .filters =
+        {
+            [MCP2515_FILTER_ID_RXF0] = { .raw = 0x246 },
+            [MCP2515_FILTER_ID_RXF1] = { .raw = 0x1EADBEEF },
+        },
+
+    .loopback = true,
+    .can_bitrate = MCP2515_BITRATE_250KBPS,
+  };
+  TEST_ASSERT_EQUAL(STATUS_CODE_OK, mcp2515_init(&s_mcp2515, &mcp2515_settings));
+
+  gpio_it_trigger_interrupt(&address);
 }
