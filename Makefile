@@ -213,7 +213,7 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
-IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
+IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen nanopb
 IGNORE_CLEANUP_PROJS := bootloader/protogen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
