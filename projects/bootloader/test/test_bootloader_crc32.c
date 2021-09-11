@@ -18,9 +18,10 @@ void intialize_memory() {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
+  unsigned int seed = 42;
 
   // generating random values in range of uint8(0->255)
-  for (int i = 0; i < 2048; i++) buffer[i] = rand() % (255 + 1 - 0) + 0;
+  for (int i = 0; i < 2048; i++) buffer[i] = rand_r(&seed) % (255 + 1 - 0) + 0;
 
   while (curr_size <= BOOTLOADER_APPLICATION_SIZE) {
     // write flash
