@@ -16,7 +16,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-16.04
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
 
@@ -26,10 +26,20 @@ jobs:
         id: cache-packages
         with:
           path: |
-            /usr/local/
+            /usr/local/bin/protoc
+            /usr/local/bin/protoc-c
+            /usr/local/bin/protoc-gen-c
+            /usr/local/include/google/protobuf
+            /usr/local/include/google/protobuf-c
+            /usr/local/include/protobuf-c
+            /usr/local/lib
+            /usr/local/protobuf-3.17.3
+            /usr/local/protobuf-c-master
+
           key: ${{ runner.os }}-packages-${{ hashFiles('**/packages*.txt') }}
           restore-keys: |
             ${{ runner.os }}-packages-
+            ${{ runner.os }}-
 
       - name: Setup directories
         run: |
