@@ -7,6 +7,7 @@ BootloaderConfig config = {
   .git_version = "git",
   .project_name = "proj name",
   .project_info = "",
+  .project_present = false,
 };
 
 void setup_test(void) {}

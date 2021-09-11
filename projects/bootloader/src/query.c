@@ -30,12 +30,14 @@ static CanDatagramTxConfig s_response_config = {
 
 static bool s_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field, void *const *arg) {
   const char *str = (const char *)(*arg);
-
+  if (str == NULL) {
+    return true;
+  }
   if (!pb_encode_tag_for_field(stream, field)) return false;
   return pb_encode_string(stream, (uint8_t *)str, strlen(str));
 }
 
-static void prv_check_query(uint8_t *data, uint16_t data_len, void *context) {
+static StatusCode prv_check_query(uint8_t *data, uint16_t data_len, void *context) {
   pb_istream_t pb_istream = pb_istream_from_buffer(data, data_len);
   // pb_decode(pb_istream, Querying class?, &s_query);
 
@@ -56,9 +58,11 @@ static void prv_check_query(uint8_t *data, uint16_t data_len, void *context) {
   //   }
   // }
   // send_response;
+  return STATUS_CODE_OK;
 }
-
+#include "log.h"
 StatusCode query_init(BootloaderConfig *config) {
+  // set QueryingResponse fields
   s_response.id = config->controller_board_id;
   s_response.name.arg = config->controller_board_name;
   if (config->project_present) {
@@ -67,15 +71,23 @@ StatusCode query_init(BootloaderConfig *config) {
     s_response.git_version.arg = config->git_version;
   }
 
-  // set the pb_callback_t for string fields
+  // set the encode functions
   s_response.name.funcs.encode = s_encode_string;
-  s_response.current_project.funcs.encode = s_encode_string;
-  s_response.project_info.funcs.encode = s_encode_string;
-  s_response.git_version.funcs.encode = s_encode_string;
+  if (config->project_present) {
+    s_response.current_project.funcs.encode = s_encode_string;
+    s_response.project_info.funcs.encode = s_encode_string;
+    s_response.git_version.funcs.encode = s_encode_string;
+  }
+
+  // set the pb_callback_t for string fields
   // encode protobuf into s_response_config.data
   pb_ostream_t pb_ostream = pb_ostream_from_buffer(s_response_encoded, PROTOBUF_MAXSIZE);
   pb_encode(&pb_ostream, QueryingResponse_fields, &s_response);
   s_response_config.data_len = pb_ostream.bytes_written;
+
+  for (int i = 0; i < s_response_config.data_len; ++i) {
+    printf("%02x", s_response_encoded[i]);
+  }
 
   return dispatcher_register_callback(BOOTLOADER_DATAGRAM_QUERY_COMMAND, prv_check_query, NULL);
 }
