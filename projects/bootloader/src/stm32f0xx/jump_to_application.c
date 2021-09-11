@@ -7,6 +7,7 @@
 #include "bootloader_crc32.h"
 #include "bootloader_mcu.h"
 #include "config.h"
+#include "log.h"
 #include "stm32f0xx_misc.h"
 #include "stm32f0xx_syscfg.h"
 
