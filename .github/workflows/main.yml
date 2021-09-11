@@ -16,7 +16,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-16.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v2
 
@@ -25,7 +25,8 @@ jobs:
         uses: actions/cache@v2.1.6
         id: cache-packages
         with:
-          path: /usr/local
+          path: |
+            /usr/local/
           key: ${{ runner.os }}-packages-${{ hashFiles('**/packages*.txt') }}
           restore-keys: |
             ${{ runner.os }}-packages-
