@@ -12,6 +12,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 #include "log.h"
+#include "can_transmit.h"
 
 static CanStorage s_can_storage = { 0 };
 
@@ -27,6 +28,11 @@ StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *stat
   return STATUS_CODE_OK;
 }
 
+// StatusCode TEST_MOCK(prv_racemode_callback)(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
+//   s_times_callback_called++;
+//   return STATUS_CODE_OK;
+// }
+
 // static StatusCode prv_regen_callback(const CanMessage *msg, void *context,
 //                                      CanAckStatus *ack_reply) {
 //   *ack_reply = s_ack_reply_value;
@@ -36,6 +42,9 @@ StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *stat
 
 static bool prv_process_fsm_event_manually(void) {
   Event e;
+  // once for CAN
+  event_process(&e);
+  // another for fsm
   event_process(&e);
   bool transitioned = race_switch_fsm_process_event(&s_race_switch_fsm_storage, &e);
   return transitioned;
@@ -43,16 +52,11 @@ static bool prv_process_fsm_event_manually(void) {
 
 void setup_test(void) {
   s_times_callback_called = 0;
-  interrupt_init();
-  gpio_init();
-  gpio_it_init();
-  event_queue_init();
-  soft_timer_init();
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
                                   CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
                                   CENTRE_CONSOLE_EVENT_CAN_FAULT);
-  // TEST_ASSERT_OK(can_register_rx_handler(SYSTEM_CAN_MESSAGE_RACE_NORMAL_SWITCH_MODE,
-  //                                        prv_regen_callback, NULL));
+  gpio_it_init();
+  //MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   //MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   memset(&s_race_switch_fsm_storage, 0, sizeof(s_race_switch_fsm_storage));
   TEST_ASSERT_OK(race_switch_fsm_init(&s_race_switch_fsm_storage));
@@ -68,6 +72,37 @@ void teardown_test(void) {}
 
 void prv_assert_current_race_state(RaceState state) {
   TEST_ASSERT_EQUAL(state, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
+}
+
+void test_can_state_on(void) {
+
+  s_returned_state = GPIO_STATE_LOW;
+  TEST_ASSERT_EQUAL(RACE_STATE_OFF, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
+
+  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_EQUAL(RACE_STATE_ON, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
+}
+
+// TODO fix
+void test_can_state_off(void) {
+
+  s_returned_state = GPIO_STATE_LOW;
+  prv_assert_current_race_state(RACE_STATE_OFF);
+
+  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  // MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  // MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  prv_assert_current_race_state(RACE_STATE_ON);
 }
 
 void test_transition_to_race(void) {
@@ -94,6 +129,8 @@ void test_transition_to_race(void) {
   // No fsm state transition will occur so race_switch_fsm_process_event will return false
   TEST_ASSERT_FALSE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
+
+  LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }
 
 void test_transition_to_normal(void) {
@@ -110,6 +147,8 @@ void test_transition_to_normal(void) {
   //MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_OFF);
+
+  LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }
 
 void test_voltage_during_transition(void) {
@@ -146,4 +185,6 @@ void test_voltage_during_transition(void) {
   s_returned_state = GPIO_STATE_HIGH;
   gpio_get_state(&s_voltage_monitor_address, &voltage_monitor_state);
   TEST_ASSERT_EQUAL(voltage_monitor_state, s_returned_state);
+
+  LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }

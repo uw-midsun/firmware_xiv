@@ -72,7 +72,7 @@ static void prv_state_race_off_output(Fsm *fsm, const Event *e, void *context) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, true);
   storage->current_state = RACE_STATE_OFF;
-  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
+  //CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
 }
 
 // Triggered when the fsm switches to the race mode
@@ -81,13 +81,14 @@ static void prv_state_race_on_output(Fsm *fsm, const Event *e, void *context) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, false);
   storage->current_state = RACE_STATE_ON;
-  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
+  //CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
 }
 
 static StatusCode prv_racemode_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   uint8_t is_race_mode = false;
   CAN_UNPACK_RACE_NORMAL_SWITCH_MODE(msg, &is_race_mode);
+  voltage_regulator_set_enabled(&storage->voltage_storage, !is_race_mode);
   storage->current_state = is_race_mode;
   return STATUS_CODE_OK;
 }
@@ -127,6 +128,10 @@ StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
 
   // register CAN handler here
   // send CAN message depending on if edge is rising or falling 
+  
+  status_ok_or_return(
+    can_register_rx_handler(SYSTEM_CAN_MESSAGE_RACE_NORMAL_SWITCH_MODE, prv_racemode_callback, &storage)
+  );
 
   status_ok_or_return(
       voltage_regulator_init(&storage->voltage_storage, &s_voltage_regulator_settings));
@@ -146,14 +151,13 @@ StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
 
   if (is_race_mode) {
     fsm_init(&storage->race_switch_fsm, RACE_SWITCH_FSM_NAME, &race_switch_on, storage);
-    //CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
+    CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
   } else {
     fsm_init(&storage->race_switch_fsm, RACE_SWITCH_FSM_NAME, &race_switch_off, storage);
-    //CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
+    CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
   }
 
-  //return STATUS_CODE_OK;
-  return can_register_rx_handler(SYSTEM_CAN_MESSAGE_RACE_NORMAL_SWITCH_MODE, prv_racemode_callback, &storage);
+  return STATUS_CODE_OK; 
 }
 
 // Used mainly for testing purposes
