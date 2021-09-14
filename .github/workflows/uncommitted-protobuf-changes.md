@@ -1,7 +1,7 @@
 <!-- This is posted as a PR comment when CI detects uncommitted protobuf changes. -->
 ## Uncommitted MU protobuf changes detected!
 
-Message in progress!
+Message in progress! 
 
 It looks like the generated .pb-c.c .pb-c.h and _pb2.py files in libraries/codegen-tooling don't match the CAN message definition file at codegen/can_messages.asciipb. If you've changed the CAN message definitions, please run `make codegen` locally and push the changes.
 
