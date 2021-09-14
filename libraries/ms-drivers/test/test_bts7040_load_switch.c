@@ -367,7 +367,7 @@ void test_bts7040_current_sense_get_measurement_pca9539r_valid(void) {
 
 // Test that bts7040_get_measurement with the bts7004 scaling factor returns a different reading
 // than normal
-void test_bts7040_current_sense_get_measurement_stm32_valid(void) {
+void test_bts7004_current_sense_get_measurement_stm32_valid(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
@@ -406,7 +406,7 @@ void test_bts7040_current_sense_get_measurement_stm32_valid(void) {
 }
 
 // Same, but with pca9539r initialization.
-void test_bts7040_current_sense_get_measurement_pca9539r_valid(void) {
+void test_bts7004_current_sense_get_measurement_pca9539r_valid(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };  // EN pin
