@@ -6,7 +6,7 @@
 #include "soft_timer.h"
 
 // Values are in milliseconds.
-#define COUNTER_A_DELAY 500
+#define COUNTER_A_DELAY_MS 500
 
 typedef struct {
   uint8_t counter_a;
@@ -26,7 +26,7 @@ void prv_timer_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %d\n", counters->counter_b);
   }
 
-  soft_timer_start_millis(COUNTER_A_DELAY, prv_timer_callback, counters, NULL);
+  soft_timer_start_millis(COUNTER_A_DELAY_MS, prv_timer_callback, counters, NULL);
 }
 
 int main() {
@@ -35,8 +35,9 @@ int main() {
 
   Counters counters = { 0 };
 
-  soft_timer_start_millis(COUNTER_A_DELAY, prv_timer_callback, &counters, NULL);
+  soft_timer_start_millis(COUNTER_A_DELAY_MS, prv_timer_callback, &counters, NULL);
 
   while (true) {
+    wait();
   }
 }
