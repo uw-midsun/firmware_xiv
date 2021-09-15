@@ -53,6 +53,7 @@ jobs:
 
       - name: Install Python tooling
         run: |
+          make install_requirements
           sudo apt install python3-testresources
 
       - name: Force PATH to update
