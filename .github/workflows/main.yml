@@ -51,7 +51,9 @@ jobs:
         run: |
           wget -nv $GCC_URL
           mkdir -p $GCC_PATH
-          tar -xjvf $GCC_ARCHIVE_PATH
+          tar -xjf $GCC_ARCHIVE_PATH
+          pwd
+          ls
           ls ${HOME}
           ls ${HOME}/${GCC_PATH}
           echo "${HOME}/${GCC_PATH}/bin" >> $GITHUB_PATH
