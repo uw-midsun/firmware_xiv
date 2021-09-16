@@ -49,13 +49,10 @@ jobs:
           GCC_ARCHIVE_PATH: gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
           GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
         run: |
+          cd ${HOME}
           wget -nv $GCC_URL
           mkdir -p $GCC_PATH
           tar -xjf $GCC_ARCHIVE_PATH
-          pwd
-          ls
-          ls ${HOME}
-          ls ${HOME}/${GCC_PATH}
           echo "${HOME}/${GCC_PATH}/bin" >> $GITHUB_PATH
 
       - name: Install GNU Make 4.1
