@@ -43,7 +43,7 @@ jobs:
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
-      - uses: fiam/arm-none-eabi-gcc@v1
+      - uses: fiam/arm-none-eabi-gcc@v1.0.4
         with:
           release: '6-2017-q2'
 
