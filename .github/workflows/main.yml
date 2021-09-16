@@ -51,7 +51,7 @@ jobs:
         run: |
           wget -nv $GCC_URL
           mkdir -p $GCC_PATH
-          tar -xzf $GCC_ARCHIVE_PATH
+          tar -xjf $GCC_ARCHIVE_PATH
           echo "${HOME}/${GCC_PATH}/bin" >> $GITHUB_PATH
 
       - name: Install GNU Make 4.1
