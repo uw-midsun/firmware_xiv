@@ -4,9 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "delay.h"       // For real-time delays
-#include "gpio.h"        // General Purpose I/O control.
-#include "interrupt.h"   // For enabling interrupts.
+#include "delay.h"      // For real-time delays
+#include "gpio.h"       // General Purpose I/O control.
+#include "interrupt.h"  // For enabling interrupts.
+#include "log.h"
 #include "misc.h"        // Various helper functions/macros.
 #include "soft_timer.h"  // Software timers for scheduling future events.
 
@@ -53,6 +54,8 @@ int main(void) {
     for (size_t i = 0; i < SIZEOF_ARRAY(leds); i++) {
       gpio_toggle_state(&leds[i]);
       delay_ms(50);
+
+      LOG_DEBUG("Here\n");
     }
   }
 
