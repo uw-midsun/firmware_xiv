@@ -10,7 +10,6 @@
 #include "can_datagram.h"
 #include "config.h"
 #include "dispatcher.h"
-#include "log.h"
 #include "querying.pb.h"
 #include "querying_response.pb.h"
 
@@ -41,7 +40,6 @@ static CanDatagramTxConfig s_response_config = {
 };
 
 static bool prv_decode_cmp_varint(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
-  LOG_DEBUG("decoding field %i\n", field->index);
   if (s_results[field->index] == FOUND) {
     return true;
   }
@@ -52,7 +50,6 @@ static bool prv_decode_cmp_varint(pb_istream_t *stream, const pb_field_iter_t *f
   if (!pb_decode_varint(stream, &incoming)) {
     return false;
   }
-  LOG_DEBUG("incoming %li, target %i\n", incoming, *target);
   if (incoming == *target) {
     s_results[field->index] = FOUND;
   }
