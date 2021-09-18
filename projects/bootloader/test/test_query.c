@@ -12,8 +12,6 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-#define TEST_CLIENT_SCRIPT_ID 0
-
 static uint8_t s_client_id = 0;
 static uint8_t s_board_id = 2;
 
@@ -45,7 +43,7 @@ void prv_test_response(uint8_t *query, size_t query_len, uint8_t *expected, size
   CanDatagramTxConfig tx_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_QUERY_COMMAND,
     .destination_nodes_len = 1,
-    .destination_nodes = &s_client_id,
+    .destination_nodes = &s_client_id,  // send to all
     .data_len = query_len,
     .data = query,
     .tx_cmpl_cb = tx_cmpl_cb,
@@ -75,16 +73,10 @@ void prv_test_no_response(uint8_t *query, size_t query_len) {
   CanDatagramTxConfig tx_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_QUERY_COMMAND,
     .destination_nodes_len = 1,
-    .destination_nodes = &s_board_id,
+    .destination_nodes = &s_client_id,
     .data_len = query_len,
     .data = query,
     .tx_cmpl_cb = tx_cmpl_cb,
-  };
-  CanDatagramRxConfig rx_config = {
-    .destination_nodes = s_destination_nodes,
-    .data = s_rx_data,
-    .node_id = 0,  // listen to all
-    .rx_cmpl_cb = NULL,
   };
 
   dgram_helper_mock_tx_datagram(&tx_config);
