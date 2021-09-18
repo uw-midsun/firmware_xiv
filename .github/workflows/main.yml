@@ -240,3 +240,7 @@ jobs:
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+
+      - name: Permissions for caching
+        run: |
+          chmod a+w /usr/local/include/google
