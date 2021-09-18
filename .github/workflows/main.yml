@@ -243,13 +243,13 @@ jobs:
 
       - name: Permissions for caching
         run: |
-          chmod a+w /usr/local/include/google
-          chmod a+w /usr/local/bin/protoc
-          chmod a+w /usr/local/bin/protoc-c
-          chmod a+w /usr/local/bin/protoc-gen-c
-          chmod a+w /usr/local/include/google/protobuf
-          chmod a+w /usr/local/include/google/protobuf-c
-          chmod a+w /usr/local/include/protobuf-c
-          chmod a+w /usr/local/lib
-          chmod a+w /usr/local/protobuf-3.17.3
-          chmod a+w /usr/local/protobuf-c-master
+          sudo chmod a+w /usr/local/include/google
+          sudo chmod a+w /usr/local/bin/protoc
+          sudo chmod a+w /usr/local/bin/protoc-c
+          sudo chmod a+w /usr/local/bin/protoc-gen-c
+          sudo chmod a+w /usr/local/include/google/protobuf
+          sudo chmod a+w /usr/local/include/google/protobuf-c
+          sudo chmod a+w /usr/local/include/protobuf-c
+          sudo chmod a+w /usr/local/lib
+          sudo chmod a+w /usr/local/protobuf-3.17.3
+          sudo chmod a+w /usr/local/protobuf-c-master
