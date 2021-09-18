@@ -327,6 +327,14 @@ codegen_protos:
 	@echo "Compiling protos..."
 	@mkdir -p $(CODEGEN_DIR)/genfiles
 	@protoc -I=$(CODEGEN_DIR)/schema --python_out=$(CODEGEN_DIR)/genfiles $(CODEGEN_DIR)/schema/can.proto
+	
+# Builds protos for MU
+.PHONY: mu_protos
+mu_protos:
+	@echo "Building protos..."
+#	@mkdir -p $(MU_DIR)/protogen
+#	@protoc -I=$(MU_DIR)/protos --c_out=$(MU_DIR)/protogen $(MU_DIR)/protos/*.proto
+	@$(call gen_mu)
 
 .PHONY: pytest
 pytest:

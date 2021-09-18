@@ -16,11 +16,30 @@ env:
 jobs:
   build:
     runs-on: ubuntu-16.04
-    timeout-minutes: 12
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
 
       # TODO: cache all the setup
+      - name: Cache
+        uses: actions/cache@v2.1.6
+        id: cache-packages
+        with:
+          path: |
+            /usr/local/bin/protoc
+            /usr/local/bin/protoc-c
+            /usr/local/bin/protoc-gen-c
+            /usr/local/include/google/protobuf
+            /usr/local/include/google/protobuf-c
+            /usr/local/include/protobuf-c
+            /usr/local/lib
+            /usr/local/protobuf-3.17.3
+            /usr/local/protobuf-c-master
+
+          key: ${{ runner.os }}-packages-${{ hashFiles('**/packages*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-packages-
+            ${{ runner.os }}-
 
       - name: Setup directories
         run: |
@@ -28,7 +47,7 @@ jobs:
           mkdir -p ~/.local/bin
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
           mkdir -p ~/source
-
+          
       - name: Install gcc, clang, clang-format
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -43,6 +62,48 @@ jobs:
           ln -sf `which clang-5.0` ~/.local/bin/clang
           ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
+      - name: Install protobuf and dependencies
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install gcc g++
+          sudo apt-get update -y
+          sudo apt-get install -y pkg-config
+          sudo apt-get install libtool
+          sudo apt update
+          sudo apt install protobuf-c-compiler
+          sudo apt install protobuf-compiler
+          sudo apt-get install autoconf automake libtool curl make g++ unzip
+          curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
+          sudo unzip -o protoc-3.14.0-linux-x86_64.zip -d /usr/local bin/protoc
+          sudo unzip -o protoc-3.14.0-linux-x86_64.zip -d /usr/local 'include/*'
+          rm -f protoc-3.14.0-linux-x86_64.zip
+          sudo protoc --version
+          export PATH="$PATH:$HOME/.local/bin"
+
+          curl -OL https://github.com/protobuf-c/protobuf-c/archive/refs/heads/master.zip
+          sudo unzip -o master.zip -d /usr/local '*'
+          rm -f master.zip
+          cd /usr/local
+
+          sudo protoc --version
+          sudo pkg-config --version
+
+          sudo curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-cpp-3.17.3.zip
+          sudo unzip -o protobuf-cpp-3.17.3.zip -d /usr/local '*'
+          sudo rm -f protobuf-cpp-3.17.3.zip
+          cd /usr/local/protobuf-3.17.3
+          sudo ./configure
+          sudo make
+          sudo make install
+          sudo ldconfig
+
+          cd /usr/local/protobuf-c-master
+          sudo ./autogen.sh && sudo ./configure && sudo make && sudo make install
+
+      - uses: fiam/arm-none-eabi-gcc@v1
+        with:
+          release: '6-2017-q2'
+          
       - name: Install STM32 toolchain
         env:
           GCC_PATH: gcc-arm-none-eabi-6-2017-q2-update
@@ -69,7 +130,6 @@ jobs:
           make install
           cd ..
           rm -rf $MAKE_PATH
-
       - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
@@ -99,6 +159,7 @@ jobs:
           .venv/bin/pip3 freeze
 
       - name: Format and lint
+        if: ${{ 'success' == 'failure' }}
         run: |
           make test_format
           make lint
@@ -110,15 +171,26 @@ jobs:
           make codegen_dbc
 
       - name: Check for uncommitted codegen changes
-        id: check-uncommitted-changes
+        id: check-uncommited-codegen-changes
         continue-on-error: true
         # https://stackoverflow.com/a/3879077
         run: |
           git update-index --refresh || true
-          git diff-index --quiet HEAD --
-
-      - name: Post PR comment on uncommitted changes
-        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+          git diff-index --quiet HEAD --        
+        
+      - name: Build MU and bootloader protobufs # Bootloader protobufs use nanopb and not protoc
+        run: |
+          make mu_protos
+      
+      - name: Check for uncommitted protobuf changes
+        id: check-uncommitted-protobuf-changes
+        continue-on-error: true
+        run: |
+          git update-index --refresh || true
+          git diff-index --quiet HEAD --  
+        
+      - name: Post PR comment on uncommitted codegen changes
+        if: ${{ steps.check-uncommited-codegen-changes.outcome == 'failure' }}
         uses: actions/github-script@v4
         with:
           script: |
@@ -131,9 +203,28 @@ jobs:
               repo: context.repo.repo,
               body: comment,
             });
-
-      - name: Fail on uncommitted changes
-        if: ${{ steps.check-uncommitted-changes.outcome == 'failure' }}
+            
+      - name: Post PR comment on uncommited protobuf changes
+        if: ${{ steps.check-uncommited-protobuf-changes.outcome == 'failure' }}
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync(
+              './.github/workflows/uncommitted-protobuf-changes.md', 'utf8');
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+            
+      - name: Fail on uncommitted codegen changes
+        if: ${{ steps.check-uncommited-codegen-changes.outcome == 'failure' }}
+        run: exit 1
+        
+      - name: Fail on uncommited protobuf changes
+        if: ${{ steps.check-uncommited-protobuf-changes.outcome == 'failure' }}
         run: exit 1
 
       - name: Build stm32f0xx
@@ -149,3 +240,16 @@ jobs:
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+
+      - name: Permissions for caching
+        run: |
+          sudo chmod a+w /usr/local/include/google
+          sudo chmod a+w /usr/local/bin/protoc
+          sudo chmod a+w /usr/local/bin/protoc-c
+          sudo chmod a+w /usr/local/bin/protoc-gen-c
+          sudo chmod a+w /usr/local/include/google/protobuf
+          sudo chmod a+w /usr/local/include/google/protobuf-c
+          sudo chmod a+w /usr/local/include/protobuf-c
+          sudo chmod a+w /usr/local/lib
+          sudo chmod a+w /usr/local/protobuf-3.17.3
+          sudo chmod a+w /usr/local/protobuf-c-master
