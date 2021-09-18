@@ -24,13 +24,9 @@ typedef enum {
   NON_EXISTANT,
 } CompareResult;
 
-typedef struct Search {
-  void *field;
-  size_t size;
-  CompareResult result;
-} Search;
-
-static Search s_search[NUM_QUERY_FIELDS];
+static void *s_targets[NUM_QUERY_FIELDS];
+static CompareResult s_results[NUM_QUERY_FIELDS];
+static Querying s_querying = Querying_init_zero;
 
 static uint8_t s_datagram_data[PROTOBUF_MAXSIZE];
 
@@ -45,56 +41,53 @@ static CanDatagramTxConfig s_response_config = {
 };
 
 static bool prv_decode_cmp_varint(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
-  Search *search_field = s_search + field->index;
-  uint8_t *id = (uint8_t *)search_field->field;
-  uint64_t query_id;
-  if (!pb_decode_varint(stream, &query_id)) {
+  LOG_DEBUG("decoding field %i\n", field->index);
+  if (s_results[field->index] == FOUND) {
+    return true;
+  }
+  s_results[field->index] = NOT_FOUND;
+
+  uint8_t *target = s_targets[field->index];
+  uint64_t incoming;
+  if (!pb_decode_varint(stream, &incoming)) {
     return false;
   }
-  if (query_id == *id) {
-    search_field->result = FOUND;
-  } else if (search_field->result != FOUND) {
-    search_field->result = NOT_FOUND;
+  LOG_DEBUG("incoming %li, target %i\n", incoming, *target);
+  if (incoming == *target) {
+    s_results[field->index] = FOUND;
   }
   return true;
 }
 
 // compares the query field to the board field directly without storying the query
 static bool prv_decode_cmp_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
-  Search *search_field = s_search + field->index;
-  // found in a previous query
-  if (search_field->result == FOUND) {
+  if (s_results[field->index] == FOUND) {
+    return true;
+  }
+  s_results[field->index] = NOT_FOUND;
+
+  char *target = (char *)s_targets[field->index];
+  if (target == NULL) {
     return true;
   }
   // compare the field to the board field
-  if (search_field->size != stream->bytes_left) {
-    search_field->result = NOT_FOUND;
-  } else if (strncmp(search_field->field, stream->state, stream->bytes_left) == 0) {
-    search_field->result = FOUND;
-  } else {
-    search_field->result = NOT_FOUND;
+  if (strncmp(target, stream->state, stream->bytes_left) == 0) {
+    s_results[field->index] = FOUND;
   }
+  pb_read(stream, NULL, stream->bytes_left);
   return true;
 }
 
 static StatusCode prv_check_query(uint8_t *data, uint16_t data_len, void *context) {
   for (int i = 0; i < NUM_QUERY_FIELDS; ++i) {
-    s_search[i].result = NON_EXISTANT;
+    s_results[i] = NON_EXISTANT;
   }
 
-  Querying query = Querying_init_zero;
-
-  query.id.funcs.decode = prv_decode_cmp_varint;
-  query.name.funcs.decode = prv_decode_cmp_string;
-  query.current_project.funcs.decode = prv_decode_cmp_string;
-  query.project_info.funcs.decode = prv_decode_cmp_string;
-  query.git_version.funcs.decode = prv_decode_cmp_string;
-
   pb_istream_t pb_istream = pb_istream_from_buffer(data, data_len);
-  pb_decode(&pb_istream, Querying_fields, &query);
+  pb_decode(&pb_istream, Querying_fields, &s_querying);
 
   for (int i = 0; i < NUM_QUERY_FIELDS; ++i) {
-    if (s_search[i].result == NOT_FOUND) {
+    if (s_results[i] == NOT_FOUND) {
       // do not match the query
       return STATUS_CODE_OK;
     }
@@ -106,34 +99,47 @@ static StatusCode prv_check_query(uint8_t *data, uint16_t data_len, void *contex
 static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field,
                               void *const *arg) {
   const char *str = (const char *)(*arg);
-  // add to search target
-  Search *search_field = s_search + field->index;
-  search_field->field = str;
-  search_field->size = strlen(str);
   // add to stream
-  if (str == NULL) {  // if the field is not set, don't write anything
-    return true;
-  }
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
   }
   return pb_encode_string(stream, (uint8_t *)str, strlen(str));  // write sting
 }
 
-StatusCode prv_setup_querying_response(uint8_t *id, char *name, char *current_project,
-                                       char *project_info, char *git_version) {
+StatusCode query_init(BootloaderConfig *config) {
+  // set up the search variables to compare the query to
+  // tag - 1 as the tags start at index 0
+  s_targets[Querying_id_tag - 1] = &config->controller_board_id;
+  s_targets[Querying_name_tag - 1] = config->controller_board_name;
+  if (config->project_present) {
+    s_targets[Querying_current_project_tag - 1] = config->project_name;
+    s_targets[Querying_project_info_tag - 1] = config->project_info;
+    s_targets[Querying_git_version_tag - 1] = config->git_version;
+  }
+  // querying's decode functions
+  s_querying.id.funcs.decode = prv_decode_cmp_varint;
+  s_querying.name.funcs.decode = prv_decode_cmp_string;
+  s_querying.current_project.funcs.decode = prv_decode_cmp_string;
+  s_querying.project_info.funcs.decode = prv_decode_cmp_string;
+  s_querying.git_version.funcs.decode = prv_decode_cmp_string;
+
+  // set up the response data
   QueryingResponse response = QueryingResponse_init_zero;
   // set QueryingResponse fields
-  response.id = *id;
-  response.name.arg = name;
-  response.current_project.arg = current_project;
-  response.project_info.arg = project_info;
-  response.git_version.arg = git_version;
+  response.id = config->controller_board_id;
+  response.name.arg = config->controller_board_name;
+  if (config->project_present) {
+    response.current_project.arg = config->project_name;
+    response.project_info.arg = config->project_info;
+    response.git_version.arg = config->git_version;
+  }
   // set the encode functions
   response.name.funcs.encode = prv_encode_string;
-  response.current_project.funcs.encode = prv_encode_string;
-  response.project_info.funcs.encode = prv_encode_string;
-  response.git_version.funcs.encode = prv_encode_string;
+  if (config->project_present) {
+    response.current_project.funcs.encode = prv_encode_string;
+    response.project_info.funcs.encode = prv_encode_string;
+    response.git_version.funcs.encode = prv_encode_string;
+  }
 
   // encode protobuf into s_response_config.data
   pb_ostream_t pb_ostream = pb_ostream_from_buffer(s_datagram_data, PROTOBUF_MAXSIZE);
@@ -144,15 +150,5 @@ StatusCode prv_setup_querying_response(uint8_t *id, char *name, char *current_pr
   // set datagram length to protobuf length
   s_response_config.data_len = pb_ostream.bytes_written;
 
-  // set the field for id, not set during protobuf encoding
-  s_search[0].field = id;
-
-  return STATUS_CODE_OK;
-}
-
-StatusCode query_init(uint8_t *id, char *name, char *current_project, char *project_info,
-                      char *git_version) {
-  prv_setup_querying_response(id, name, current_project, project_info, git_version);
-  LOG_DEBUG("data len: %i", s_response_config.data_len);
   return dispatcher_register_callback(BOOTLOADER_DATAGRAM_QUERY_COMMAND, prv_check_query, NULL);
 }
