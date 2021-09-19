@@ -54,6 +54,7 @@ jobs:
       - name: Install Python tooling
         run: |
           sudo apt install python3-testresources
+          make install_requirements
 
       - name: Force PATH to update
         run: hash -r
