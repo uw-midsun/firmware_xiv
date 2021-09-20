@@ -335,15 +335,19 @@ msg {
   }
 }
 
-msg { 
+msg {
   id: 37
   source: MOTOR_CONTROLLER
   target: "TELEMETRY"
   msg_name: "motor status"
   can_data {
-    u32 {
-      field_name_1: "motor_status_l"
-      field_name_2: "motor_status_r"
+    u8 {
+      field_name_1: "mc_limit_flags_l"
+      field_name_2: "mc_limit_flags_r"
+      field_name_3: "mc_error_flags_l"
+      field_name_4: "mc_error_flags_r"
+      field_name_5: "board_fan_faults"
+      field_name_6: "mc_overtemp"
     }
   }
 }
@@ -352,16 +356,31 @@ msg {
   id: 38
   source: MOTOR_CONTROLLER
   target: "TELEMETRY"
-  msg_name: "motor temps"
+  msg_name: "motor sink temps"
   can_data {
-    u32 {
+    u16 {
       field_name_1: "motor_temp_l"
-      field_name_2: "motor_temp_r"
+      field_name_2: "sink_temp_l"
+      field_name_3: "motor_temp_r"
+      field_name_4: "sink_temp_r"
     }
   }
 }
 
-# IDs: 39-40 Reserved
+msg {
+  id: 39
+  source: MOTOR_CONTROLLER
+  target: "TELEMETRY"
+  msg_name: "dsp board temps"
+  can_data {
+    u32 {
+      field_name_1: "dsp_board_temp_l"
+      field_name_2: "dsp_board_temp_r"
+    }
+  }
+}
+
+# ID 40: Reserved
 
 msg {
   id: 41

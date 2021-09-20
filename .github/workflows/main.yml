@@ -43,9 +43,17 @@ jobs:
           ln -sf `which clang-10.0.0` ~/.local/bin/clang
           ln -sf `which clang-format-10.0.0` ~/.local/bin/clang-format
 
-      - uses: fiam/arm-none-eabi-gcc@v1
-        with:
-          release: '6-2017-q2'
+      - name: Install STM32 toolchain
+        env:
+          GCC_PATH: gcc-arm-none-eabi-6-2017-q2-update
+          GCC_ARCHIVE_PATH: gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+          GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+        run: |
+          cd ${HOME}
+          wget -nv $GCC_URL
+          mkdir -p $GCC_PATH
+          tar -xjf $GCC_ARCHIVE_PATH
+          echo "${HOME}/${GCC_PATH}/bin" >> $GITHUB_PATH
 
       - name: Install GNU Make 4.1
         run: |

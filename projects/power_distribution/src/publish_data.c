@@ -12,8 +12,8 @@
 // messages with ITERATION_WAIT_MS between batches.
 // These parameters should be good enough to not overwhelm the event queue, but they can be changed
 // if needed - just make sure that all messages are TXed within CURRENT_MEASUREMENT_INTERVAL_US.
-#define NUM_MSG_PER_ITERATION 8
-#define ITERATION_WAIT_MS 100
+#define NUM_MSG_PER_ITERATION 4
+#define ITERATION_WAIT_MS 200
 
 static PublishDataConfig *s_config = { 0 };
 static uint16_t *s_current_measurements = NULL;
