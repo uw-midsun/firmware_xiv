@@ -422,6 +422,18 @@ codecov:
 	lcov -r coverage.info $(IGNORE_CODECOV_FILES) -o coverage.info && \
 	genhtml coverage.info --output-directory ../../../$(CODECOV_DIR) --legend --show-details
 
+# Required for CI to build successfully
+.PHONY: install_requirements_ci
+install_requirements_ci:
+	@sudo apt-get install lcov -y
+	@sudo apt-get update
+	@sudo apt-get install protobuf-compiler
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
+	pip install -r requirements.txt
+
 MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk
 
