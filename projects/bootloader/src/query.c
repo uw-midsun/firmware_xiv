@@ -39,6 +39,7 @@ static CanDatagramTxConfig s_response_config = {
   .tx_cmpl_cb = tx_cmpl_cb,
 };
 
+// compare the int query field to the board field
 static bool prv_decode_cmp_varint(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
   if (s_results[field->index] == FOUND) {
     return true;
@@ -71,7 +72,6 @@ static bool prv_decode_cmp_string(pb_istream_t *stream, const pb_field_iter_t *f
   if (strncmp(target, stream->state, stream->bytes_left) == 0) {
     s_results[field->index] = FOUND;
   }
-  pb_read(stream, NULL, stream->bytes_left);
   return true;
 }
 
@@ -105,7 +105,7 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
 
 StatusCode query_init(BootloaderConfig *config) {
   // set up the search variables to compare the query to
-  // tag - 1 as the tags start at index 0
+  // [tag - 1] as the tags start at index 0
   s_targets[Querying_id_tag - 1] = &config->controller_board_id;
   s_targets[Querying_name_tag - 1] = config->controller_board_name;
   if (config->project_present) {
