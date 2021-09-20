@@ -424,7 +424,7 @@ codecov:
 
 .PHONY: install_requirements_ci
 install_requirements_ci:
-	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
+	@sudo apt-get install lcov -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
 	@rm -rf $(VENV_DIR)
