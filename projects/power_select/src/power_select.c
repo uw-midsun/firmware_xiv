@@ -64,15 +64,15 @@ static void prv_handle_status(void) {
 }
 
 // Broadcast sense measurements from storage.
-static StatusCode prv_broadcast_measurements(void) {
-  StatusCode status = CAN_TRANSMIT_AUX_MEAS_MAIN_VOLTAGE(
-      s_storage.voltages[POWER_SELECT_AUX], s_storage.currents[POWER_SELECT_AUX],
-      s_storage.temps[POWER_SELECT_AUX], s_storage.voltages[POWER_SELECT_PWR_SUP]);
-  status_ok_or_return(CAN_TRANSMIT_DCDC_MEAS_MAIN_CURRENT(
-      s_storage.voltages[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_DCDC],
-      s_storage.temps[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_PWR_SUP]));
-  return status;
-}
+// static StatusCode prv_broadcast_measurements(void) {
+//   StatusCode status = CAN_TRANSMIT_AUX_MEAS_MAIN_VOLTAGE(
+//       s_storage.voltages[POWER_SELECT_AUX], s_storage.currents[POWER_SELECT_AUX],
+//       s_storage.temps[POWER_SELECT_AUX], s_storage.voltages[POWER_SELECT_PWR_SUP]);
+//   status_ok_or_return(CAN_TRANSMIT_DCDC_MEAS_MAIN_CURRENT(
+//       s_storage.voltages[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_DCDC],
+//       s_storage.temps[POWER_SELECT_DCDC], s_storage.currents[POWER_SELECT_PWR_SUP]));
+//   return status;
+// }
 
 // Helper function to read, output, and store pin validity
 static void prv_read_valid(void) {
@@ -97,6 +97,7 @@ static void prv_read_voltages(void) {
     if (s_storage.valid_bitset & (1 << i)) {
       adc_read_converted_pin(g_power_select_voltage_pins[i], &s_storage.voltages[i]);
       // Convert
+      LOG_DEBUG("voltage at pin %d: %d\n", i, s_storage.voltages[i]);
       temp_reading = s_storage.voltages[i];
       temp_reading *= V_TO_MV;
       temp_reading /= POWER_SELECT_VSENSE_SCALING;
@@ -112,20 +113,20 @@ static void prv_read_voltages(void) {
     } else {
       s_storage.voltages[i] = 0;
     }
-    LOG_DEBUG("Voltage %" PRIu8 ": %" PRIu16 " mV\n", i, s_storage.voltages[i]);
+    LOG_DEBUG("Voltage %d : %d mV\n", i, s_storage.voltages[i]);
   }
 }
 
-// Helper function to read, output, and store temperature values
-static void prv_read_temps(void) {
-  for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
-    uint16_t temp = 0;
-    adc_read_converted_pin(g_power_select_temp_pins[i], &temp);
+// // Helper function to read, output, and store temperature values
+// static void prv_read_temps(void) {
+//   for (uint8_t i = 0; i < NUM_POWER_SELECT_TEMP_MEASUREMENTS; i++) {
+//     uint16_t temp = 0;
+//     adc_read_converted_pin(g_power_select_temp_pins[i], &temp);
 
-    s_storage.temps[i] = (int32_t)resistance_to_temp(voltage_to_res(temp));
-    LOG_DEBUG("Temp %" PRIu8 ": %" PRIi32 " C\n", i, s_storage.temps[i]);
-  }
-}
+//     s_storage.temps[i] = (int32_t)resistance_to_temp(voltage_to_res(temp));
+//     LOG_DEBUG("Temp %" PRIu8 ": %" PRIi32 " C\n", i, s_storage.temps[i]);
+//   }
+// }
 
 // Helper function to read, output, and store current values
 static void prv_read_currents(void) {
@@ -154,26 +155,26 @@ static void prv_read_currents(void) {
   }
 }
 
-// Read the voltage at the 3V3 cell and flag if it needs to be replaced
-static void prv_read_cell(void) {
-  uint16_t cell_voltage = 0;
-  adc_read_converted_pin(g_power_select_cell_pin, &cell_voltage);
+// // Read the voltage at the 3V3 cell and flag if it needs to be replaced
+// static void prv_read_cell(void) {
+//   uint16_t cell_voltage = 0;
+//   adc_read_converted_pin(g_power_select_cell_pin, &cell_voltage);
 
-  uint32_t cell_voltage_u32 = (uint32_t)cell_voltage;
-  cell_voltage_u32 *= V_TO_MV;
-  cell_voltage_u32 /= POWER_SELECT_CELL_VSENSE_SCALING;
+//   uint32_t cell_voltage_u32 = (uint32_t)cell_voltage;
+//   cell_voltage_u32 *= V_TO_MV;
+//   cell_voltage_u32 /= POWER_SELECT_CELL_VSENSE_SCALING;
 
-  LOG_DEBUG("3V3 cell voltage: %" PRIu32 "\n", cell_voltage_u32);
+//   LOG_DEBUG("3V3 cell voltage: %" PRIu32 "\n", cell_voltage_u32);
 
-  if (cell_voltage_u32 < POWER_SELECT_CELL_MIN_VOLTAGE_MV) {
-    LOG_WARN("Warning - 3V3 cell battery low, please replace\n");
-    s_storage.warning_bitset |= (1 << POWER_SELECT_WARNING_BAT_LOW);
-  } else {
-    s_storage.warning_bitset &= ~(1 << POWER_SELECT_WARNING_BAT_LOW);
-  }
+//   if (cell_voltage_u32 < POWER_SELECT_CELL_MIN_VOLTAGE_MV) {
+//     LOG_WARN("Warning - 3V3 cell battery low, please replace\n");
+//     s_storage.warning_bitset |= (1 << POWER_SELECT_WARNING_BAT_LOW);
+//   } else {
+//     s_storage.warning_bitset &= ~(1 << POWER_SELECT_WARNING_BAT_LOW);
+//   }
 
-  s_storage.cell_voltage = (uint16_t)cell_voltage_u32;
-}
+//   s_storage.cell_voltage = (uint16_t)cell_voltage_u32;
+// }
 
 // Read current, voltage, and temp measurements to storage
 static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
@@ -187,14 +188,14 @@ static void prv_periodic_measure(SoftTimerId timer_id, void *context) {
 
   prv_read_currents();
 
-  prv_read_temps();
+  // prv_read_temps();
 
-  prv_read_cell();
+  // prv_read_cell();
 
-  // Broadcast
-  prv_broadcast_measurements();
+  // // Broadcast
+  // prv_broadcast_measurements();
 
-  prv_handle_status();
+  // prv_handle_status();
 
   soft_timer_start(s_storage.interval_us, prv_periodic_measure, &s_storage, &s_storage.timer_id);
 }
