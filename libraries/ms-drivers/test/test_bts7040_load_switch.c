@@ -372,7 +372,7 @@ void test_bts7004_current_sense_get_measurement_stm32_valid(void) {
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
   uint32_t interval_us = 500;                                       // 0.5 ms
-  Bts7040Stm32Settings bts7004settings = {
+  Bts7040Stm32Settings bts7004_settings = {
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -382,11 +382,11 @@ void test_bts7004_current_sense_get_measurement_stm32_valid(void) {
     .callback = &prv_callback_increment,
     .use_bts7004_scaling = true,
   };
-  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &bts7004settings));
-  uint16_t bts7004reading = 0;
-  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7004reading));
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &bts7004_settings));
+  uint16_t bts7004_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7004_reading));
 
-  Bts7040Stm32Settings bts7040settings = {
+  Bts7040Stm32Settings bts7040_settings = {
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
     .interval_us = interval_us,
@@ -397,12 +397,12 @@ void test_bts7004_current_sense_get_measurement_stm32_valid(void) {
     .use_bts7004_scaling = false,
   };
 
-  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &bts7040settings));
-  uint16_t bts7040reading = 0;
-  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7040reading));
-  LOG_DEBUG("STM32 reading: bts7004 scaling: %d, bts7040 scaling: %d\n", bts7004reading,
-            bts7040reading);
-  TEST_ASSERT_NOT_EQUAL(bts7004reading, bts7040reading);
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &bts7040_settings));
+  uint16_t bts7040_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7040_reading));
+  LOG_DEBUG("STM32 reading: bts7004 scaling: %d, bts7040 scaling: %d\n", bts7004_reading,
+            bts7040_reading);
+  TEST_ASSERT_NOT_EQUAL(bts7004_reading, bts7040_reading);
 }
 
 // Same, but with pca9539r initialization.
@@ -411,7 +411,7 @@ void test_bts7004_current_sense_get_measurement_pca9539r_valid(void) {
   GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
   Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };  // EN pin
   uint32_t interval_us = 500;                                                             // 0.5 ms
-  Bts7040Pca9539rSettings bts7004settings = {
+  Bts7040Pca9539rSettings bts7004_settings = {
     .i2c_port = TEST_I2C_PORT,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
@@ -422,12 +422,12 @@ void test_bts7004_current_sense_get_measurement_pca9539r_valid(void) {
     .use_bts7004_scaling = true,
   };
 
-  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &bts7004settings));
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &bts7004_settings));
 
-  uint16_t bts7004reading = 0;
-  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7004reading));
+  uint16_t bts7004_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7004_reading));
 
-  Bts7040Pca9539rSettings bts7040settings = {
+  Bts7040Pca9539rSettings bts7040_settings = {
     .i2c_port = TEST_I2C_PORT,
     .sense_pin = &test_sense_pin,
     .enable_pin = &test_enable_pin,
@@ -438,13 +438,13 @@ void test_bts7004_current_sense_get_measurement_pca9539r_valid(void) {
     .use_bts7004_scaling = false,
   };
 
-  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &bts7040settings));
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &bts7040_settings));
 
-  uint16_t bts7040reading = 0;
-  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7040reading));
-  LOG_DEBUG("PCA9539R reading: bts7004 scaling: %d, bts7040 scaling: %d\n", bts7004reading,
-            bts7040reading);
-  TEST_ASSERT_NOT_EQUAL(bts7004reading, bts7040reading);
+  uint16_t bts7040_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7040_reading));
+  LOG_DEBUG("PCA9539R reading: bts7004 scaling: %d, bts7040 scaling: %d\n", bts7004_reading,
+            bts7040_reading);
+  TEST_ASSERT_NOT_EQUAL(bts7004_reading, bts7040_reading);
 }
 
 // Test that the context is actually passed to the function
