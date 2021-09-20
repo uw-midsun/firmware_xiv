@@ -55,12 +55,11 @@ jobs:
           tar -xjf $GCC_ARCHIVE_PATH
           echo "${HOME}/${GCC_PATH}/bin" >> $GITHUB_PATH
 
-      - name: Install GNU Make 4.1
-        run: |
-        - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.x'
-         sudo apt-get install build-essential
+          
+          sudo apt-get install build-essential
 
       - name: Install Python tooling
         run: |
