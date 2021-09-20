@@ -422,6 +422,7 @@ codecov:
 	lcov -r coverage.info $(IGNORE_CODECOV_FILES) -o coverage.info && \
 	genhtml coverage.info --output-directory ../../../$(CODECOV_DIR) --legend --show-details
 
+# Required for CI to build successfully
 .PHONY: install_requirements_ci
 install_requirements_ci:
 	@sudo apt-get install lcov -y
