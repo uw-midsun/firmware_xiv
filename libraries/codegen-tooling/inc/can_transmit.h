@@ -209,20 +209,33 @@
     status;                                                                                   \
   })
 
-#define CAN_TRANSMIT_MOTOR_STATUS(motor_status_l_u32, motor_status_r_u32)    \
-  ({                                                                         \
-    CanMessage msg = { 0 };                                                  \
-    CAN_PACK_MOTOR_STATUS(&msg, (motor_status_l_u32), (motor_status_r_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                            \
-    status;                                                                  \
+#define CAN_TRANSMIT_MOTOR_STATUS(mc_limit_flags_l_u8, mc_limit_flags_r_u8, mc_error_flags_l_u8, \
+                                  mc_error_flags_r_u8, board_fan_faults_u8, mc_overtemp_u8)      \
+  ({                                                                                             \
+    CanMessage msg = { 0 };                                                                      \
+    CAN_PACK_MOTOR_STATUS(&msg, (mc_limit_flags_l_u8), (mc_limit_flags_r_u8),                    \
+                          (mc_error_flags_l_u8), (mc_error_flags_r_u8), (board_fan_faults_u8),   \
+                          (mc_overtemp_u8));                                                     \
+    StatusCode status = can_transmit(&msg, NULL);                                                \
+    status;                                                                                      \
   })
 
-#define CAN_TRANSMIT_MOTOR_TEMPS(motor_temp_l_u32, motor_temp_r_u32)    \
-  ({                                                                    \
-    CanMessage msg = { 0 };                                             \
-    CAN_PACK_MOTOR_TEMPS(&msg, (motor_temp_l_u32), (motor_temp_r_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                       \
-    status;                                                             \
+#define CAN_TRANSMIT_MOTOR_SINK_TEMPS(motor_temp_l_u16, sink_temp_l_u16, motor_temp_r_u16,     \
+                                      sink_temp_r_u16)                                         \
+  ({                                                                                           \
+    CanMessage msg = { 0 };                                                                    \
+    CAN_PACK_MOTOR_SINK_TEMPS(&msg, (motor_temp_l_u16), (sink_temp_l_u16), (motor_temp_r_u16), \
+                              (sink_temp_r_u16));                                              \
+    StatusCode status = can_transmit(&msg, NULL);                                              \
+    status;                                                                                    \
+  })
+
+#define CAN_TRANSMIT_DSP_BOARD_TEMPS(dsp_board_temp_l_u32, dsp_board_temp_r_u32)    \
+  ({                                                                                \
+    CanMessage msg = { 0 };                                                         \
+    CAN_PACK_DSP_BOARD_TEMPS(&msg, (dsp_board_temp_l_u32), (dsp_board_temp_r_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                                   \
+    status;                                                                         \
   })
 
 #define CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(command_u8)  \
