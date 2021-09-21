@@ -5,6 +5,10 @@
 #include "soft_timer.h"
 #include "wait.h"
 
+//Variable Definitions:
+#define COUNTER_A_PERIOD_MS 500
+uint8_t internal_counter = 1;
+
 // Counters Struct
 typedef struct Counters {
   uint8_t counter_a;
@@ -12,26 +16,20 @@ typedef struct Counters {
 } Counters;
 
 // Counter functions:
-void counter_a_func(SoftTimerId timer_id, void *context) {
+void counter_func(SoftTimerId timer_id, void *context) {
   Counters *storage = context;
-  uint8_t counter_a = 1;
 
   LOG_DEBUG("Counter A: %i\n", storage->counter_a++);
 
-  soft_timer_start(500000, counter_a_func, storage, NULL);
-}
+  if (internal_counter % 2 == 0) { //Only increment counter_b every other 0.5s cycle
+     LOG_DEBUG("Counter B: %i\n", storage->counter_b++);
+  }
 
-void counter_b_func(SoftTimerId timer_id, void *context) {
-  Counters *storage = context;
-  uint8_t counter_b = 1;
-
-  LOG_DEBUG("Counter B: %i\n", storage->counter_b++);
-
-  soft_timer_start(1000000, counter_b_func, storage, NULL);
+  internal_counter++; 
+  soft_timer_start_millis(COUNTER_A_PERIOD_MS, counter_func, storage, NULL);
 }
 
 // Main Loop:
-
 int main(void) {
   // Library initializations:
   interrupt_init();
@@ -41,12 +39,8 @@ int main(void) {
   Counters storage = { 0 };
 
   // Initialize timer loop:
-  soft_timer_start(10000,
-                   counter_a_func,  // function callback
-                   &storage, NULL);
-
-  soft_timer_start(50000,
-                   counter_b_func,  // functioncallback
+  soft_timer_start_millis(2*COUNTER_A_PERIOD_MS,
+                   counter_func,  // function callback
                    &storage, NULL);
 
   while (true) {
