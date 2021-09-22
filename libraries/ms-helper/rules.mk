@@ -12,7 +12,7 @@ $(T)_DEPS += mu-gen mu-store
 endif
 
 ifeq (x86,$(PLATFORM))
-$(T)_EXCLUDE_TESTS := mcp2515 adc_periodic_reader
+$(T)_EXCLUDE_TESTS := adc_periodic_reader
 endif
 
 $(T)_test_thermistor_MOCKS := adc_read_converted adc_get_channel adc_set_channel

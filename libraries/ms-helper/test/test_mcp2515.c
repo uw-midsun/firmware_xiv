@@ -96,34 +96,3 @@ void test_mcp2515_extended(void) {
   TEST_ASSERT_EQUAL(0x8877665544332211, s_data);
   TEST_ASSERT_EQUAL(8, s_dlc);
 }
-
-static void test_mcp2515_init_interrupts_callback(const GpioAddress *address, void *context) {
-  GpioState state = GPIO_STATE_LOW;
-  gpio_get_state(address, &state);
-}
-
-void test_mcp2515_init_interrupts(void) {
-  GpioAddress address = { .port = GPIO_PORT_A,
-                          .pin = 8 };  // corresponds to mcp2515_settings .int_pin
-  const Mcp2515Settings mcp2515_settings = {
-    .spi_port = SPI_PORT_2,
-    .spi_baudrate = 6000000,
-    .mosi = { .port = GPIO_PORT_B, 15 },
-    .miso = { .port = GPIO_PORT_B, 14 },
-    .sclk = { .port = GPIO_PORT_B, 13 },
-    .cs = { .port = GPIO_PORT_B, 12 },
-    .int_pin = { .port = GPIO_PORT_A, 8 },
-
-    .filters =
-        {
-            [MCP2515_FILTER_ID_RXF0] = { .raw = 0x246 },
-            [MCP2515_FILTER_ID_RXF1] = { .raw = 0x1EADBEEF },
-        },
-
-    .loopback = true,
-    .can_bitrate = MCP2515_BITRATE_250KBPS,
-  };
-  TEST_ASSERT_EQUAL(STATUS_CODE_OK, mcp2515_init(&s_mcp2515, &mcp2515_settings));
-
-  gpio_it_trigger_interrupt(&address);
-}
