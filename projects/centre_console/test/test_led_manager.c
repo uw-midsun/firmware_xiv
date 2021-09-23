@@ -142,22 +142,55 @@ static const EventId s_drive_state_triggering_events[] = {
 // Test that the drive state LEDs (drive, reverse, neutral, parking) can be toggled by the
 // appropriate drive FSM events and are mutually exclusive.
 void test_drive_state_leds(void) {
+  // complete the main sequence to turn on the drive state LEDs
+  const Event power_main_sequence_complete = { .id = POWER_MAIN_SEQUENCE_EVENT_COMPLETE };
+  TEST_ASSERT_TRUE(led_manager_process_event(&power_main_sequence_complete));
+
   Event e = { 0 };
 
   // for each drive state LED, we send an event to enable it, then check that it's the only one on
-  for (uint8_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
+  for (size_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
     e.id = s_drive_state_triggering_events[i];
     TEST_ASSERT_TRUE(led_manager_process_event(&e));
 
     // make sure the corresponding LED is the only one on
     CentreConsoleLed on_led = s_drive_state_leds[i];
-    for (uint8_t j = 0; j < SIZEOF_ARRAY(s_drive_state_leds); j++) {
+    for (size_t j = 0; j < SIZEOF_ARRAY(s_drive_state_leds); j++) {
       CentreConsoleLed led = s_drive_state_leds[j];
       Mcp23008GpioState expected_state =
           (led == on_led) ? MCP23008_GPIO_STATE_HIGH : MCP23008_GPIO_STATE_LOW;
       TEST_ASSERT_LED_STATE(led, expected_state);
     }
   }
+}
+
+// Test that the drive state LEDs are on only when on main power, not aux or off.
+void test_drive_state_leds_main_aux_sequencing(void) {
+  const Event power_main_sequence_complete = { .id = POWER_MAIN_SEQUENCE_EVENT_COMPLETE };
+  const Event power_aux_sequence_complete = { .id = POWER_AUX_SEQUENCE_EVENT_COMPLETE };
+  const Event power_off_sequence_complete = { .id = POWER_OFF_SEQUENCE_EVENT_COMPLETE };
+  Event e = { 0 };
+
+  // initially: all of them off
+  for (size_t i = 0; i < SIZEOF_ARRAY(s_drive_state_leds); i++) {
+    TEST_ASSERT_LED_STATE(s_drive_state_leds[i], MCP23008_GPIO_STATE_LOW);
+  }
+
+  // change to main power, neutral turns on
+  TEST_ASSERT_TRUE(led_manager_process_event(&power_main_sequence_complete));
+  TEST_ASSERT_LED_STATE(CENTRE_CONSOLE_LED_NEUTRAL, MCP23008_GPIO_STATE_HIGH);
+
+  // change to aux power, turns off
+  TEST_ASSERT_TRUE(led_manager_process_event(&power_aux_sequence_complete));
+  TEST_ASSERT_LED_STATE(CENTRE_CONSOLE_LED_NEUTRAL, MCP23008_GPIO_STATE_LOW);
+
+  // back to main power, turns on
+  TEST_ASSERT_TRUE(led_manager_process_event(&power_main_sequence_complete));
+  TEST_ASSERT_LED_STATE(CENTRE_CONSOLE_LED_NEUTRAL, MCP23008_GPIO_STATE_HIGH);
+
+  // change to power off, turns off
+  TEST_ASSERT_TRUE(led_manager_process_event(&power_off_sequence_complete));
+  TEST_ASSERT_LED_STATE(CENTRE_CONSOLE_LED_NEUTRAL, MCP23008_GPIO_STATE_LOW);
 }
 
 // Test that |led_manager_process_event| returns false on valid inputs it doesn't process, and

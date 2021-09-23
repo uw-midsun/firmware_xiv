@@ -12,7 +12,14 @@
 #include "test_helpers.h"
 #include "unity.h"
 
-static const Event s_hazard_event = { .id = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_HAZARD, .data = 0 };
+static const Event s_hazard_on_event = {
+  .id = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_HAZARD,
+  .data = HAZARD_BUTTON_ACTIVE_STATE,
+};
+static const Event s_hazard_off_event = {
+  .id = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_HAZARD,
+  .data = (HAZARD_BUTTON_ACTIVE_STATE == GPIO_STATE_LOW) ? GPIO_STATE_HIGH : GPIO_STATE_LOW,
+};
 static const Event s_unrecognized_event = { .id = CENTRE_CONSOLE_BUTTON_PRESS_EVENT_HAZARD + 1 };
 
 static CanStorage s_can_storage;
@@ -30,40 +37,39 @@ void setup_test(void) {
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
                                   CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
                                   CENTRE_CONSOLE_EVENT_CAN_FAULT);
-  hazard_tx_init();
 
   can_register_rx_handler(SYSTEM_CAN_MESSAGE_HAZARD, prv_rx_hazard_msg, NULL);
   s_rx_state = NUM_EE_LIGHT_STATES;
 }
 void teardown_test(void) {}
 
-// Test that hazard initializes to low and sends CAN messages each change.
+// Test that hazard sends CAN messages each change.
 void test_hazard_happy_path(void) {
   Event e = { 0 };
 
   // no TX of initial state upon initialization
   MS_TEST_HELPER_ASSERT_NO_EVENT_RAISED();
 
-  // starts low => transitions to high on first
-  hazard_tx_process_event(&s_hazard_event);
+  // transitions to high with on event
+  hazard_tx_process_event(&s_hazard_on_event);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_ON);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_ON, s_rx_state);
 
-  // then transitions to low
-  hazard_tx_process_event(&s_hazard_event);
+  // transitions to low with off event
+  hazard_tx_process_event(&s_hazard_off_event);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_OFF);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_OFF, s_rx_state);
 
-  // then high again
-  hazard_tx_process_event(&s_hazard_event);
+  // high again with on event
+  hazard_tx_process_event(&s_hazard_on_event);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_ON);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_ON, s_rx_state);
 
-  // then low again
-  hazard_tx_process_event(&s_hazard_event);
+  // low again with off event
+  hazard_tx_process_event(&s_hazard_off_event);
   MS_TEST_HELPER_ASSERT_NEXT_EVENT_ID(e, HAZARD_EVENT_OFF);
   MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_EQUAL(EE_LIGHT_STATE_OFF, s_rx_state);
@@ -84,7 +90,8 @@ void test_hazard_invalid_input(void) {
 
 // Test that |hazard_tx_process_event| returns true exactly when given a hazard event.
 void test_hazard_tx_process_event_return_value(void) {
-  TEST_ASSERT_TRUE(hazard_tx_process_event(&s_hazard_event));
+  TEST_ASSERT_TRUE(hazard_tx_process_event(&s_hazard_on_event));
+  TEST_ASSERT_TRUE(hazard_tx_process_event(&s_hazard_off_event));
   TEST_ASSERT_FALSE(hazard_tx_process_event(NULL));
   TEST_ASSERT_FALSE(hazard_tx_process_event(&s_unrecognized_event));
 }

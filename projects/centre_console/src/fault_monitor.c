@@ -4,6 +4,7 @@
 #include "can_unpack.h"
 #include "centre_console_events.h"
 #include "centre_console_fault_reason.h"
+#include "log.h"
 #include "power_fsm.h"
 #include "status.h"
 #include "watchdog.h"
@@ -20,6 +21,7 @@ static void prv_update_centre_console_status(StatusCode status) {
 }
 
 static void prv_watchdog_expiry(void *context) {
+  LOG_DEBUG("bps heartbeat watchdog expiry\n");
   prv_update_centre_console_status(STATUS_CODE_INTERNAL_ERROR);
 }
 

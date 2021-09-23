@@ -1,4 +1,5 @@
 #include "main_event_generator.h"
+
 #include "centre_console_events.h"
 #include "charging_manager.h"
 #include "drive_fsm.h"
@@ -31,13 +32,20 @@ bool prv_process_power_event(MainEventGeneratorStorage *storage, const Event *e)
   if (power_state == POWER_STATE_OFF) {
     output_event = (pedal_state == PEDAL_STATE_PRESSED) ? CENTRE_CONSOLE_POWER_EVENT_ON_MAIN
                                                         : CENTRE_CONSOLE_POWER_EVENT_ON_AUX;
+    LOG_DEBUG("raising %s\n", output_event == CENTRE_CONSOLE_POWER_EVENT_ON_MAIN ? "power on main"
+                                                                                 : "power on aux");
   } else if (power_state == POWER_STATE_AUX) {
     output_event = (pedal_state == PEDAL_STATE_PRESSED) ? CENTRE_CONSOLE_POWER_EVENT_ON_MAIN
                                                         : CENTRE_CONSOLE_POWER_EVENT_OFF;
+    LOG_DEBUG("raising %s\n",
+              output_event == CENTRE_CONSOLE_POWER_EVENT_ON_MAIN ? "power on main" : "power off");
   } else if (power_state == POWER_STATE_MAIN) {
     output_event = (drive_state == DRIVE_STATE_NEUTRAL || drive_state == DRIVE_STATE_PARKING)
                        ? CENTRE_CONSOLE_POWER_EVENT_OFF
                        : NUM_CENTRE_CONSOLE_POWER_EVENTS;
+    LOG_DEBUG("raising %s\n", output_event == CENTRE_CONSOLE_POWER_EVENT_OFF
+                                  ? "power off"
+                                  : "nevermind not raising");
   }
   if (output_event == NUM_CENTRE_CONSOLE_POWER_EVENTS) {
     return false;
@@ -49,6 +57,7 @@ bool prv_process_power_event(MainEventGeneratorStorage *storage, const Event *e)
 #define prv_power_main_or_return(storage)                                         \
   const PowerState power_state = power_fsm_get_current_state(storage->power_fsm); \
   if (power_state != POWER_STATE_MAIN) {                                          \
+    LOG_DEBUG("not on main, returning\n");                                        \
     return false;                                                                 \
   }
 
@@ -70,6 +79,7 @@ bool prv_process_drive_reverse_event(MainEventGeneratorStorage *storage, const E
 
   const ChargingState charging_state = get_global_charging_state();
   if (charging_state == CHARGING_STATE_CHARGING) {
+    LOG_DEBUG("not drive/reversing because we're charging\n");
     return false;
   }
 
@@ -84,10 +94,13 @@ bool prv_process_drive_reverse_event(MainEventGeneratorStorage *storage, const E
       output_event = e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE
                          ? DRIVE_FSM_INPUT_EVENT_DRIVE
                          : DRIVE_FSM_INPUT_EVENT_REVERSE;
+      LOG_DEBUG("not neutral but stationary, now %sing\n",
+                e->id == DRIVE_FSM_INPUT_EVENT_DRIVE ? "driv" : "revers");
     }
   } else {
     output_event = e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_DRIVE ? DRIVE_FSM_INPUT_EVENT_DRIVE
                                                                     : DRIVE_FSM_INPUT_EVENT_REVERSE;
+    LOG_DEBUG("now %sing\n", e->id == DRIVE_FSM_INPUT_EVENT_DRIVE ? "driv" : "revers");
   }
   if (output_event == NUM_DRIVE_FSM_INPUT_EVENTS) {
     return false;
@@ -102,7 +115,8 @@ bool prv_process_neutral_parking_event(MainEventGeneratorStorage *storage, const
     return false;
   }
   const PowerState power_state = power_fsm_get_current_state(storage->power_fsm);
-  if (power_state == POWER_STATE_OFF) {
+  if (power_state == POWER_STATE_OFF || power_state == POWER_STATE_AUX) {
+    LOG_DEBUG("not on main power, so not going neutral/parking\n");
     return false;
   }
   EventId output_event = NUM_DRIVE_FSM_INPUT_EVENTS;
@@ -110,7 +124,7 @@ bool prv_process_neutral_parking_event(MainEventGeneratorStorage *storage, const
 
   output_event = e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_NEUTRAL ? DRIVE_FSM_INPUT_EVENT_NEUTRAL
                                                                     : DRIVE_FSM_INPUT_EVENT_PARKING;
-
+  LOG_DEBUG("raising %s\n", e->id == DRIVE_FSM_INPUT_EVENT_NEUTRAL ? "neutral" : "parking");
   if ((e->id == CENTRE_CONSOLE_BUTTON_PRESS_EVENT_PARKING) && speed_state == SPEED_STATE_MOVING) {
     output_event = NUM_DRIVE_FSM_INPUT_EVENTS;
   }
