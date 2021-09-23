@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include "interrupt.h"
 #include "log.h"
