@@ -81,7 +81,7 @@ analyzestack: clean build
 ifeq (,$(MACOS_SSH_USERNAME))
 
 program: $(TARGET_BINARY:$(PLATFORM_EXT)=.bin)
-	@$(OPENOCD) $(OPENOCD_CFG) -c "stm_flash $<" -c shutdown
+	@sudo $(OPENOCD) $(OPENOCD_CFG) -c "stm_flash $<" -c shutdown
 
 gdb: $(TARGET_BINARY)
 	@pkill $(OPENOCD) || true
