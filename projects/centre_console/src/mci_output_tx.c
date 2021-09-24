@@ -1,5 +1,6 @@
 #include "mci_output_tx.h"
 #include "can_transmit.h"
+#include "log.h"
 
 static void prv_tx_mci_output(CanAckRequest *ack_ptr, void *context) {
   MciOutputTxStorage *storage = (MciOutputTxStorage *)context;
@@ -25,5 +26,6 @@ StatusCode mci_output_tx_drive_output(MciOutputTxStorage *storage, RetryTxReques
                                                      .tx_callback = prv_tx_mci_output,
                                                      .tx_callback_context = storage };
   can_tx_retry_send(&storage->can_retry_wrapper_storage, &retry_wrapper_request);
+  LOG_DEBUG("outputting to mci EEDriveOutput %d\n", drive_output);
   return STATUS_CODE_OK;
 }
