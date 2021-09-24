@@ -105,6 +105,7 @@ typedef struct OutputBts7200Spec {
 typedef struct OutputBts7040Spec {
   Pca9539rGpioAddress enable_pin;
   uint8_t mux_selection;  // what should we select on the mux to read current from the BTS7040?
+  bool use_bts7004_scaling;
 } OutputBts7040Spec;
 
 typedef struct OutputSpec {

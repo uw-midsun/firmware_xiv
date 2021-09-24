@@ -356,6 +356,58 @@ void test_output_read_current_bts7040(void) {
   TEST_ASSERT_NOT_EQUAL(0, current);
 }
 
+// check that read current with the bts7004 flag has different value than normal bts7040
+void test_output_read_current_bts7004(void) {
+  OutputConfig bts7004_config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_BTS7040,
+                    .on_front = false,
+                    .bts7040_spec =
+                        {
+                            .enable_pin = s_test_en_pin,
+                            .mux_selection = TEST_MUX_SEL,
+                            .use_bts7004_scaling = true,
+                        },
+                },
+        },
+  };
+  prv_set_config_boilerplate(&bts7004_config);
+  TEST_ASSERT_OK(output_init(&bts7004_config, false));
+
+  uint16_t bts7004_current;
+  TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &bts7004_current));
+  TEST_ASSERT_NOT_EQUAL(0, bts7004_current);
+
+  OutputConfig bts7040_config = {
+    .specs =
+        {
+            [TEST_OUTPUT] =
+                {
+                    .type = OUTPUT_TYPE_BTS7040,
+                    .on_front = false,
+                    .bts7040_spec =
+                        {
+                            .enable_pin = s_test_en_pin,
+                            .mux_selection = TEST_MUX_SEL,
+                            .use_bts7004_scaling = false,
+                        },
+                },
+        },
+  };
+
+  prv_set_config_boilerplate(&bts7040_config);
+  TEST_ASSERT_OK(output_init(&bts7040_config, false));
+
+  uint16_t bts7040_current;
+  TEST_ASSERT_OK(output_read_current(TEST_OUTPUT, &bts7040_current));
+  TEST_ASSERT_EQUAL(2, s_times_adc_read);
+  TEST_ASSERT_EQUAL_GPIO_ADDRESS(s_test_mux_output_pin, s_adc_read_address);
+  TEST_ASSERT_NOT_EQUAL(bts7004_current, bts7040_current);
+}
+
 // Test that output_set_state works for a GPIO output.
 void test_output_set_state_gpio(void) {
   OutputConfig config = {

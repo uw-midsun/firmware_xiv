@@ -23,6 +23,8 @@
 // and 1800 with I(load) >= 1A.
 #define BTS7040_IS_SCALING_NOMINAL 1775
 
+#define BTS7004_IS_SCALING_NOMINAL 20000
+
 // Max possible delay after input pin pulled low on fault, + 10 ms for buffer
 // (see p.g. 39 of datasheet)
 #define BTS7040_FAULT_RESTART_DELAY_MS BTS7XXX_FAULT_RESTART_DELAY_MS
@@ -46,6 +48,7 @@ typedef struct {
   int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   // Faults are indicated by high voltage on the sense pin, see section 8.3 of BTS7200 datasheet.
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  bool use_bts7004_scaling;
 } Bts7040Stm32Settings;
 
 // Use when the select pin is through a PCA9539R GPIO expander
@@ -62,6 +65,7 @@ typedef struct {
   int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   // Faults are indicated by high voltage on the sense pin, see section 8.3 of BTS7200 datasheet.
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  bool use_bts7004_scaling;
 } Bts7040Pca9539rSettings;
 
 typedef struct {
@@ -77,6 +81,7 @@ typedef struct {
   uint32_t resistor;  // resistor value (in ohms) used to convert SENSE voltage to current
   int32_t bias;       // experimental bias to be subtracted from the resulting current, in mA
   uint16_t min_fault_voltage_mv;  // min voltage representing a fault, in mV
+  bool use_bts7004_scaling;
 } Bts7040Storage;
 
 // Initialize the BTS7040 with the given settings; the enable pin is a STM32 GPIO pins.
