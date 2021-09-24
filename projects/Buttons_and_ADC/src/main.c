@@ -8,8 +8,7 @@
 static void prv_button_interrupt_handler(const GpioAddress *adc_address, void *context) {
   GpioAddress *adc_position = context;
   uint16_t adc_data = 0;
-  StatusCode adc_converted_data = adc_read_converted_pin(*adc_position, &adc_data);
-  if (adc_converted_data == STATUS_CODE_OK) {
+  if (adc_read_converted_pin(*adc_position, &adc_data); == STATUS_CODE_OK) {
     LOG_DEBUG("ADC reading is: %d\n", adc_data);
   } else {
     LOG_DEBUG("an error has occured.\n");
