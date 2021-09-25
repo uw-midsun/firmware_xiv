@@ -1,18 +1,18 @@
 #include <string.h>
 
+#include "can_transmit.h"
 #include "centre_console_events.h"
 #include "event_queue.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
+#include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "race_switch.h"
 #include "status.h"
 #include "test_helpers.h"
 #include "unity.h"
-#include "log.h"
-#include "can_transmit.h"
 
 static CanStorage s_can_storage = { 0 };
 
@@ -28,23 +28,8 @@ StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *stat
   return STATUS_CODE_OK;
 }
 
-// StatusCode TEST_MOCK(prv_racemode_callback)(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-//   s_times_callback_called++;
-//   return STATUS_CODE_OK;
-// }
-
-// static StatusCode prv_regen_callback(const CanMessage *msg, void *context,
-//                                      CanAckStatus *ack_reply) {
-//   *ack_reply = s_ack_reply_value;
-//   s_times_callback_called++;
-//   return STATUS_CODE_OK;
-// }
-
 static bool prv_process_fsm_event_manually(void) {
   Event e;
-  // once for CAN
-  event_process(&e);
-  // another for fsm
   event_process(&e);
   bool transitioned = race_switch_fsm_process_event(&s_race_switch_fsm_storage, &e);
   return transitioned;
@@ -56,16 +41,8 @@ void setup_test(void) {
                                   CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
                                   CENTRE_CONSOLE_EVENT_CAN_FAULT);
   gpio_it_init();
-  //MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
-  //MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   memset(&s_race_switch_fsm_storage, 0, sizeof(s_race_switch_fsm_storage));
   TEST_ASSERT_OK(race_switch_fsm_init(&s_race_switch_fsm_storage));
-  //MS_TEST_HELPER_CAN_TX_RX_WITH_ACK(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  // process race switch on FSM
-  //MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  // process race switch off FSM
-  //MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  //LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }
 
 void teardown_test(void) {}
@@ -75,34 +52,33 @@ void prv_assert_current_race_state(RaceState state) {
 }
 
 void test_can_state_on(void) {
-
-  s_returned_state = GPIO_STATE_LOW;
-  TEST_ASSERT_EQUAL(RACE_STATE_OFF, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
-
-  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
-  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
-  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
-  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
-  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
-  TEST_ASSERT_EQUAL(RACE_STATE_ON, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
-}
-
-// TODO fix
-void test_can_state_off(void) {
-
-  s_returned_state = GPIO_STATE_LOW;
   prv_assert_current_race_state(RACE_STATE_OFF);
 
   CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
-  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+  TEST_ASSERT_EQUAL(RACE_STATE_ON, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
+}
+
+void test_can_state_off(void) {
+  prv_assert_current_race_state(RACE_STATE_OFF);
+
+  // turn on
+  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
-  // MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
-  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
-  // MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
   prv_assert_current_race_state(RACE_STATE_ON);
+
+  // then turn off
+  CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+  TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+  TEST_ASSERT_EQUAL(RACE_STATE_OFF, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
 }
 
 void test_transition_to_race(void) {
@@ -116,11 +92,7 @@ void test_transition_to_race(void) {
 
   // Trigger interrupt to change fsm state from normal to race
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  //MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
-  //LOG_DEBUG("times callback called: %u", s_times_callback_called);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
-  //MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
-  //MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // Test if no error when interrupt is triggered with same edge multiple times
@@ -144,7 +116,7 @@ void test_transition_to_normal(void) {
 
   // Trigger interrupt to change fsm state from race to normal
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  //MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_OFF);
 
@@ -166,7 +138,7 @@ void test_voltage_during_transition(void) {
 
   // Switch to race mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  //MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
+  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
 
@@ -177,7 +149,6 @@ void test_voltage_during_transition(void) {
 
   // Switch to normal mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  //MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_OFF);
 

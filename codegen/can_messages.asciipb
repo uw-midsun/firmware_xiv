@@ -545,7 +545,7 @@ msg {
 msg {
   id: 56
   source: CENTRE_CONSOLE
-  target: "CENTRE_CONSOLE"
+  target: "CENTRE_CONSOLE, MOTOR_CONTROLLER"
   msg_name: "race normal switch mode"
   can_data {
     u8 {
