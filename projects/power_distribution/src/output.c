@@ -140,6 +140,7 @@ static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
     .min_fault_voltage_mv = BTS7040_MIN_FAULT_VOLTAGE_MV,
     .fault_callback = prv_bts7040_fault_callback,
     .fault_callback_context = (void *)(uintptr_t)output,
+    .use_bts7004_scaling = spec->use_bts7004_scaling,
   };
   return bts7040_init_pca9539r(storage, &settings);
 }

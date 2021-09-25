@@ -92,6 +92,15 @@ static EventId s_next_event_lookup[NUM_EE_POWER_MAIN_SEQUENCES] = {
   [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] = POWER_MAIN_SEQUENCE_EVENT_TURNED_ON_EVERYTHING,
 };
 
+static const char *s_main_sequence_names[] = {
+  [EE_POWER_MAIN_SEQUENCE_CONFIRM_AUX_STATUS] = "confirm aux status",
+  [EE_POWER_MAIN_SEQUENCE_TURN_ON_DRIVER_BMS] = "turn on driver bms",
+  [EE_POWER_MAIN_SEQUENCE_CONFIRM_BATTERY_STATUS] = "confirm battery status",
+  [EE_POWER_MAIN_SEQUENCE_CLOSE_BATTERY_RELAYS] = "close battery relays",
+  [EE_POWER_MAIN_SEQUENCE_CONFIRM_DCDC] = "confirm dcdc",
+  [EE_POWER_MAIN_SEQUENCE_TURN_ON_EVERYTHING] = "turn on everything",
+};
+
 static void prv_advance_sequence(PowerMainSequenceFsmStorage *storage) {
   storage->current_sequence++;
 }
@@ -107,15 +116,22 @@ static void prv_reset_ack_count(void) {
 static StatusCode prv_can_simple_ack(CanMessageId msg_id, uint16_t device, CanAckStatus status,
                                      uint16_t num_remaining, void *context) {
   PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
+  if (status == CAN_ACK_STATUS_TIMEOUT) {
+    LOG_DEBUG("ack timed out\n");
+  }
   EventId next_event = s_next_event_lookup[storage->current_sequence];
   s_ack_count[storage->current_sequence]--;
   if (s_ack_count[storage->current_sequence]) {
+    LOG_DEBUG("ack from %d for sequence %s\n", device,
+              s_main_sequence_names[storage->current_sequence]);
     return STATUS_CODE_OK;
   }
   if (num_remaining == 0 && status == CAN_ACK_STATUS_OK) {
+    LOG_DEBUG("got enough acks, continuing sequence (device %d)\n", device);
     prv_advance_sequence(storage);
     return event_raise(next_event, 0);
   }
+  LOG_DEBUG("bad ack dev %d status %d\n", device, status);
   return event_raise(POWER_MAIN_SEQUENCE_EVENT_FAULT, storage->current_sequence);
 }
 
@@ -129,6 +145,7 @@ static void prv_state_power_main_sequence_output(Fsm *fsm, const Event *e, void 
   PowerMainSequenceFsmStorage *storage = (PowerMainSequenceFsmStorage *)context;
   CanAckRequest ack_req = { 0 };
   prv_populate_ack(storage, &ack_req);
+  LOG_DEBUG("current sequence: %s\n", s_main_sequence_names[storage->current_sequence]);
   CAN_TRANSMIT_POWER_ON_MAIN_SEQUENCE(&ack_req, storage->current_sequence);
 }
 
@@ -138,6 +155,7 @@ static void prv_state_close_main_battery_relays_output(Fsm *fsm, const Event *e,
   prv_populate_ack(storage, &ack_req);
   uint16_t relay_state = EE_CHARGER_SET_RELAY_STATE_CLOSE << EE_RELAY_ID_BATTERY;
   uint16_t relay_mask = 1 << EE_RELAY_ID_BATTERY;
+  LOG_DEBUG("requesting closing relays\n");
   CAN_TRANSMIT_SET_RELAY_STATES(&ack_req, relay_mask, relay_state);
 }
 
@@ -148,6 +166,7 @@ static void prv_state_none(Fsm *fsm, const Event *e, void *context) {
 }
 
 static void prv_state_power_main_complete(Fsm *fsm, const Event *e, void *context) {
+  LOG_DEBUG("power main complete\n");
   event_raise(POWER_MAIN_SEQUENCE_EVENT_COMPLETE, 0);
   CAN_TRANSMIT_READY_TO_DRIVE(true);
 }
@@ -155,6 +174,7 @@ static void prv_state_power_main_complete(Fsm *fsm, const Event *e, void *contex
 static void prv_state_fault(Fsm *fsm, const Event *e, void *context) {
   FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_POWER_MAIN,
                                      .reason = e->data } };
+  LOG_DEBUG("faulted\n");
   event_raise(CENTRE_CONSOLE_POWER_EVENT_FAULT, reason.raw);
 }
 

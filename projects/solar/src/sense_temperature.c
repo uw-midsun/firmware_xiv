@@ -34,10 +34,16 @@ static void prv_sense_callback(void *context) {
     case NTC_THERMISTOR:
       // NTC: T = 1 / ( ( ln(0.56 * V / (3.3 - V)) / 3428 ) + 1/298.15 ) in KELVIN. For Celsius,
       // subtract 273.15
-      converted_reading =
-          (1 /
-           ((ln(0.56 * converted_reading / (3.3 - converted_reading)) / 3428.0) + 1.0 / 298.15)) -
-          273.15;
+      // NEW NTC CURVE (BASED ON EXPERIMENTAL DATA): T = (-14.195)*V^3 + (37.9434)*V^2 - 64.8244V +
+      // 121.362 (already in celsius)
+      // converted_reading =
+      //     (1 /
+      //      ((ln(0.56 * converted_reading / (3.3 - converted_reading)) / 3428.0) + 1.0 / 298.15))
+      //      -
+      //     273.15;
+      converted_reading = (-14.195) * pow(converted_reading, 3) +
+                          (37.9434) * pow(converted_reading, 2) - 64.8244 * converted_reading +
+                          121.362;
 
       // Convert from Celsius to deciCelsius
       converted_reading = converted_reading * 10;
