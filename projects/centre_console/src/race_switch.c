@@ -10,7 +10,6 @@
 #include "fsm.h"
 #include "gpio.h"
 #include "gpio_it.h"
-#include "log.h"
 #include "status.h"
 #include "voltage_regulator.h"
 
@@ -70,7 +69,6 @@ FSM_STATE_TRANSITION(race_switch_on) {
 // Triggered when the fsm switches to the normal mode
 // 5V regulator is enabled
 static void prv_state_race_off_output(Fsm *fsm, const Event *e, void *context) {
-  LOG_DEBUG("state off\n");
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, true);
   storage->current_state = RACE_STATE_OFF;
@@ -79,7 +77,6 @@ static void prv_state_race_off_output(Fsm *fsm, const Event *e, void *context) {
 // Triggered when the fsm switches to the race mode
 // 5V regulator is disabled
 static void prv_state_race_on_output(Fsm *fsm, const Event *e, void *context) {
-  LOG_DEBUG("state on\n");
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, false);
   storage->current_state = RACE_STATE_ON;
@@ -102,7 +99,6 @@ static StatusCode prv_racemode_callback(const CanMessage *msg, void *context,
 }
 
 bool race_switch_fsm_process_event(RaceSwitchFsmStorage *storage, Event *e) {
-  LOG_DEBUG("fsm process\n");
   return fsm_process_event(&storage->race_switch_fsm, e);
 }
 

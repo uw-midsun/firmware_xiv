@@ -6,7 +6,6 @@
 #include "gpio.h"
 #include "gpio_it.h"
 #include "interrupt.h"
-#include "log.h"
 #include "ms_test_helper_can.h"
 #include "ms_test_helpers.h"
 #include "race_switch.h"
@@ -20,8 +19,6 @@ static RaceSwitchFsmStorage s_race_switch_fsm_storage;
 static GpioState s_returned_state;
 static GpioAddress s_race_switch_address = { .port = GPIO_PORT_A, .pin = 4 };
 static GpioAddress s_voltage_monitor_address = { .port = GPIO_PORT_B, .pin = 7 };
-static uint8_t s_times_callback_called;
-static CanAckStatus s_ack_reply_value;
 
 StatusCode TEST_MOCK(gpio_get_state)(const GpioAddress *address, GpioState *state) {
   *state = s_returned_state;
@@ -36,7 +33,6 @@ static bool prv_process_fsm_event_manually(void) {
 }
 
 void setup_test(void) {
-  s_times_callback_called = 0;
   initialize_can_and_dependencies(&s_can_storage, SYSTEM_CAN_DEVICE_CENTRE_CONSOLE,
                                   CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX,
                                   CENTRE_CONSOLE_EVENT_CAN_FAULT);
@@ -58,7 +54,9 @@ void test_can_state_on(void) {
 
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
   TEST_ASSERT_EQUAL(RACE_STATE_ON, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
 }
 
@@ -67,17 +65,22 @@ void test_can_state_off(void) {
 
   // turn on
   CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
+
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
 
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // then turn off
   CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
+
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
   TEST_ASSERT_EQUAL(RACE_STATE_OFF, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
 }
 
@@ -101,8 +104,6 @@ void test_transition_to_race(void) {
   // No fsm state transition will occur so race_switch_fsm_process_event will return false
   TEST_ASSERT_FALSE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
-
-  LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }
 
 void test_transition_to_normal(void) {
@@ -116,11 +117,8 @@ void test_transition_to_normal(void) {
 
   // Trigger interrupt to change fsm state from race to normal
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_OFF);
-
-  LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }
 
 void test_voltage_during_transition(void) {
@@ -138,7 +136,6 @@ void test_voltage_during_transition(void) {
 
   // Switch to race mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
-  // MS_TEST_HELPER_CAN_TX_RX(CENTRE_CONSOLE_EVENT_CAN_TX, CENTRE_CONSOLE_EVENT_CAN_RX);
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
   prv_assert_current_race_state(RACE_STATE_ON);
 
@@ -156,6 +153,4 @@ void test_voltage_during_transition(void) {
   s_returned_state = GPIO_STATE_HIGH;
   gpio_get_state(&s_voltage_monitor_address, &voltage_monitor_state);
   TEST_ASSERT_EQUAL(voltage_monitor_state, s_returned_state);
-
-  LOG_DEBUG("times callback called: %u", s_times_callback_called);
 }
