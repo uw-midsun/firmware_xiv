@@ -94,3 +94,8 @@ codegen/system_can.dbc
 *.gcda
 *.gcno
 codecov/
+projects/hello_world/README.md
+projects/hello_world/rules.mk
+projects/hello_world/src/main.c
+projects/103_homework/README.md
+projects/103_homework/rules.mk
