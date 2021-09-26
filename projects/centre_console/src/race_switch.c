@@ -10,6 +10,7 @@
 #include "fsm.h"
 #include "gpio.h"
 #include "gpio_it.h"
+#include "log.h"
 #include "status.h"
 #include "voltage_regulator.h"
 
