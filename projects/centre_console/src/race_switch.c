@@ -130,7 +130,6 @@ StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
                                                  INTERRUPT_EDGE_RISING_FALLING,
                                                  prv_gpio_interrupt_handler, storage));
 
-  // register CAN handler here
   status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_RACE_NORMAL_SWITCH_MODE,
                                               prv_racemode_callback, storage));
 
