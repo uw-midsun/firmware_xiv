@@ -25,7 +25,7 @@
 #   make test [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
 #   make pytest_all - Runs all python tests in the scripts directory of every project
-#   make install_requirements - Installs python requirements for every project
+#   make install_requirements - Installs python requirements for every project, LCOV, protocol buffer dependencies and nanopb
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
 # 	make codegen_protos - Generates protobuf files
