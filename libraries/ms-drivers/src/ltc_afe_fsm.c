@@ -12,7 +12,7 @@ FSM_DECLARE_STATE(afe_aux_complete);
 
 static bool prv_all_aux_complete(const struct Fsm *fsm, const Event *e, void *context) {
   LtcAfeStorage *afe = fsm->context;
-  return e->data >= afe->settings.num_thermistors;
+  return e->data >= afe->settings.num_thermistors / afe->settings.num_devices;
 }
 
 FSM_STATE_TRANSITION(afe_idle) {
@@ -89,6 +89,7 @@ static void prv_afe_trigger_cell_conv_output(struct Fsm *fsm, const Event *e, vo
   if (status_ok(ret)) {
     soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, afe, NULL);
   } else {
+    LOG_DEBUG("cell conv fault\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
                          LTC_AFE_FSM_FAULT_TRIGGER_CELL_CONV);
   }
@@ -113,6 +114,7 @@ static void prv_afe_read_cells_output(struct Fsm *fsm, const Event *e, void *con
     afe->retry_count++;
     soft_timer_start_millis(LTC_AFE_FSM_CELL_CONV_DELAY_MS, prv_cell_conv_timeout, afe, NULL);
   } else {
+    LOG_DEBUG("read cells fault\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
                          LTC_AFE_FSM_FAULT_READ_ALL_CELLS);
   }
@@ -122,10 +124,10 @@ static void prv_afe_trigger_aux_conv_output(struct Fsm *fsm, const Event *e, voi
   LtcAfeStorage *afe = context;
   LtcAfeEventList *afe_events = &afe->settings.ltc_events;
 
-  uint32_t device_cell = e->data;
-  StatusCode ret = ltc_afe_impl_trigger_aux_conv(afe, device_cell);
+  uint16_t thermistor = e->data;
+  StatusCode ret = ltc_afe_impl_trigger_aux_conv(afe, thermistor);
   if (status_ok(ret)) {
-    afe->aux_index = device_cell;
+    afe->aux_index = thermistor;
     soft_timer_start_millis(LTC_AFE_FSM_AUX_CONV_DELAY_MS, prv_aux_conv_timeout, afe, NULL);
   } else {
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
@@ -137,18 +139,19 @@ static void prv_afe_read_aux_output(struct Fsm *fsm, const Event *e, void *conte
   LtcAfeStorage *afe = context;
   LtcAfeEventList *afe_events = &afe->settings.ltc_events;
 
-  uint16_t device_cell = e->data;
+  uint16_t thermistor = e->data;
 
-  StatusCode ret = ltc_afe_impl_read_aux(afe, device_cell);
+  StatusCode ret = ltc_afe_impl_read_aux(afe, thermistor);
   if (status_ok(ret)) {
     // Kick-off the next aux conversion
     afe->retry_count = 0;
-    event_raise(afe_events->trigger_aux_conv_event, device_cell + 1);
+    event_raise(afe_events->trigger_aux_conv_event, thermistor + 1);
   } else if (afe->retry_count < LTC_AFE_FSM_MAX_RETRY_COUNT) {
     // Attempt to retry the read after delaying
     afe->retry_count++;
     soft_timer_start_millis(LTC_AFE_FSM_AUX_CONV_DELAY_MS, prv_aux_conv_timeout, afe, NULL);
   } else {
+    LOG_DEBUG("aux conv fault\n");
     event_raise_priority(EVENT_PRIORITY_HIGHEST, afe_events->fault_event,
                          LTC_AFE_FSM_FAULT_READ_AUX);
   }
@@ -163,7 +166,7 @@ static void prv_afe_aux_complete_output(struct Fsm *fsm, const Event *e, void *c
 
   // 12 aux conversions complete - the array should be fully populated
   if (afe->settings.aux_result_cb != NULL) {
-    afe->settings.aux_result_cb(afe->aux_voltages, afe->settings.num_cells,
+    afe->settings.aux_result_cb(afe->aux_voltages, afe->settings.num_thermistors,
                                 afe->settings.result_context);
   }
 }

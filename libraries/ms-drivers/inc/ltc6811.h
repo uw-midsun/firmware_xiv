@@ -61,7 +61,7 @@ typedef enum {
 // SPI Packets
 typedef struct {
   uint8_t adcopt : 1;
-  uint8_t swtrd : 1;
+  uint8_t dten : 1;
   uint8_t refon : 1;
 
   uint8_t gpio : 5;  // GPIO pin control
@@ -76,19 +76,24 @@ static_assert(sizeof(LtcAfeConfigRegisterData) == 6, "LtcAfeConfigRegisterData m
 
 // COMM Register, refer to LTC6803 datasheet page 31, Table 15
 typedef struct {
+  uint8_t d0_msb : 4;
   uint8_t icom0 : 4;
-  uint8_t d0 : 8;
   uint8_t fcom0 : 4;
+  uint8_t d0_lsb : 4;
 
+  uint8_t d1_msb : 4;
   uint8_t icom1 : 4;
-  uint8_t d1 : 8;
   uint8_t fcom1 : 4;
+  uint8_t d1_lsb : 4;
 
+  uint8_t d2_msb : 4;
   uint8_t icom2 : 4;
-  uint8_t d2 : 8;
   uint8_t fcom2 : 4;
+  uint8_t d2_lsb : 4;
 } _PACKED LtcAfeCommRegisterData;
 static_assert(sizeof(LtcAfeCommRegisterData) == 6, "LtcAfeCommRegisterData must be 6 bytes");
+#define LTC6811_EXTRACT_DATA_MSB(x) ((x) >> 4)
+#define LTC6811_EXTRACT_DATA_LSB(x) ((x) & 0xF)
 
 // CFGR packet
 typedef struct {
@@ -97,12 +102,18 @@ typedef struct {
   uint16_t pec;
 } _PACKED LtcAfeWriteDeviceConfigPacket;
 
+typedef struct {
+  LtcAfeCommRegisterData reg;
+  uint16_t pec;
+} _PACKED LtcAfeWriteDeviceCommRegPacket;
+
 // WRCOMM + mux pin
 typedef struct {
   uint8_t wrcomm[LTC6811_CMD_SIZE];
-  LtcAfeCommRegisterData reg;
-  uint8_t pec;
+  LtcAfeWriteDeviceCommRegPacket devices[LTC_AFE_MAX_DEVICES];
 } _PACKED LtcAfeWriteCommRegPacket;
+#define SIZEOF_LTC_AFE_WRITE_COMM_PACKET(devices) \
+  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteDeviceCommRegPacket))
 
 // STMCOMM + clock cycles
 typedef struct {
@@ -115,10 +126,10 @@ typedef struct {
   uint8_t wrcfg[LTC6811_CMD_SIZE];
 
   // devices are ordered with the last slave first
-  LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_CELLS_PER_DEVICE];
+  LtcAfeWriteDeviceConfigPacket devices[LTC_AFE_MAX_DEVICES];
 } _PACKED LtcAfeWriteConfigPacket;
 #define SIZEOF_LTC_AFE_WRITE_CONFIG_PACKET(devices) \
-  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteConfigPacket))
+  (LTC6811_CMD_SIZE + (devices) * sizeof(LtcAfeWriteDeviceConfigPacket))
 
 typedef union {
   uint16_t voltages[3];
@@ -215,7 +226,7 @@ static_assert(sizeof(LtcAfeAuxRegisterGroupPacket) == 8,
 
 #define LTC6811_ADCOPT (1 << 0)
 
-#define LTC6811_SWTRD (1 << 1)
+#define LTC6811_DTEN (1 << 1)
 
 #define LTC6811_ADAX_GPIO1 0x01
 #define LTC6811_ADAX_MODE_FAST (0 << 8) | (1 << 7)

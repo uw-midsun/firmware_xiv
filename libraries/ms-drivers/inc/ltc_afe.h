@@ -25,7 +25,8 @@
 // This is a device limitation
 #define LTC_AFE_MAX_CELLS_PER_DEVICE 12
 #define LTC_AFE_MAX_CELLS (LTC_AFE_MAX_DEVICES * LTC_AFE_MAX_CELLS_PER_DEVICE)
-#define LTC_AFE_MAX_THERMISTORS LTC_AFE_MAX_CELLS
+#define LTC_AFE_MAX_THERMISTORS_PER_DEVICE 32
+#define LTC_AFE_MAX_THERMISTORS (LTC_AFE_MAX_DEVICES * LTC_AFE_MAX_THERMISTORS_PER_DEVICE)
 
 #if defined(__GNUC__)
 #define _PACKED __attribute__((packed))
@@ -34,7 +35,7 @@
 #endif
 
 // Function to run when a conversion is complete
-typedef void (*LtcAfeResultCallback)(uint16_t *result_arr, size_t len, void *context);
+typedef void (*LtcAfeResultCallback)(uint16_t *result_arr, uint16_t len, void *context);
 
 // select the ADC mode (trade-off between speed or minimizing noise)
 // see p.50 for conversion times and p.23 for noise
@@ -74,11 +75,11 @@ typedef struct LtcAfeSettings {
   LtcAfeAdcMode adc_mode;
 
   uint16_t cell_bitset[LTC_AFE_MAX_DEVICES];
-  uint16_t aux_bitset[LTC_AFE_MAX_DEVICES];
+  uint32_t aux_bitset[LTC_AFE_MAX_DEVICES];
 
-  size_t num_devices;
-  size_t num_cells;
-  size_t num_thermistors;
+  uint16_t num_devices;
+  uint16_t num_cells;
+  uint16_t num_thermistors;
 
   LtcAfeEventList ltc_events;
   LtcAfeResultCallback cell_result_cb;
@@ -90,12 +91,13 @@ typedef struct LtcAfeStorage {
   Fsm fsm;
 
   // Only used for storage in the FSM so we store data for the correct cells
-  uint16_t aux_index;
+  uint32_t aux_index;
   uint16_t retry_count;
 
   uint16_t cell_voltages[LTC_AFE_MAX_CELLS];
   uint16_t aux_voltages[LTC_AFE_MAX_THERMISTORS];
 
+  uint16_t prev_discharges[LTC_AFE_MAX_DEVICES];
   uint16_t discharge_bitset[LTC_AFE_MAX_DEVICES];
 
   uint16_t cell_result_lookup[LTC_AFE_MAX_CELLS];

@@ -88,7 +88,7 @@ StatusCode TEST_MOCK(spi_exchange)(SpiPort spi, uint8_t *tx_data, size_t tx_len,
   return STATUS_CODE_OK;
 }
 
-static void prv_conv_cb(uint16_t *result_arr, size_t len, void *context) {
+static void prv_conv_cb(uint16_t *result_arr, uint16_t len, void *context) {
   TEST_ASSERT_EQUAL(TEST_LTC_AFE_NUM_CELLS, len);
   memcpy(s_result_arr, result_arr, sizeof(s_result_arr));
 }
@@ -196,13 +196,13 @@ void test_ltc_afe_toggle_discharge_cells_mapping(void) {
   }
 
   // Now turn on bleed resistors for these specific modules
-  for (size_t i = 0u; i < SIZEOF_ARRAY(enable_modules); ++i) {
+  for (uint16_t i = 0u; i < SIZEOF_ARRAY(enable_modules); ++i) {
     status = ltc_afe_toggle_cell_discharge(&s_afe, enable_modules[i], true);
     TEST_ASSERT_OK(status);
   }
 
   // Check the discharge mapping
-  for (size_t i = 0u; i < SIZEOF_ARRAY(enable_modules); ++i) {
+  for (uint16_t i = 0u; i < SIZEOF_ARRAY(enable_modules); ++i) {
     // First lookup the physical index via the discharge_cell_lookup map
     uint16_t physical_index = s_afe.discharge_cell_lookup[enable_modules[i]];
 
