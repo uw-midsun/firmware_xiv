@@ -8,22 +8,22 @@
 // You can use hex with 0x... or binary with 0b...
 
 // FILL IN THIS PACKAGE WITH THE BYTES TO SEND
-static uint8_t tx_bytes[] = { 0b00000001, 0b00001111 };
+static uint8_t tx_bytes[] = { 0x88 };
 
 // FILL IN THIS VARIABLE WITH THE EXPECTED RESPONSE LENGTH
-#define EXPECTED_RESPONSE_LENGTH 2
+#define EXPECTED_RESPONSE_LENGTH 1
 
 // FILL THIS VARIABLE WITH THE DESIRED SPI PORT
-static SpiPort port_to_use = SPI_PORT_2;
+static SpiPort port_to_use = SPI_PORT_1;
 
 const SpiSettings settings_to_use = {
   .baudrate = 6000000,
-  .mode = SPI_MODE_0,
+  .mode = SPI_MODE_1,
   // Adjust GPIO pins as needed
-  .mosi = { .port = GPIO_PORT_B, 15 },
-  .miso = { .port = GPIO_PORT_B, 14 },
-  .sclk = { .port = GPIO_PORT_B, 13 },
-  .cs = { .port = GPIO_PORT_B, 12 },
+  .mosi = { .port = GPIO_PORT_A, 7 },
+  .miso = { .port = GPIO_PORT_A, 6 },
+  .sclk = { .port = GPIO_PORT_A, 5 },
+  .cs = { .port = GPIO_PORT_A, 4 },
 };
 
 int main(void) {
