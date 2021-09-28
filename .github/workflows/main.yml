@@ -82,8 +82,8 @@ jobs:
           sudo apt-get update
 
       - name: Install gcc  
-       if: steps.cache-gcc-6.outputs.cache-hit != 'true'
-       run: sudo apt-fast -y install gcc-6
+        if: steps.cache-gcc-6.outputs.cache-hit != 'true'
+        run: sudo apt-fast -y install gcc-6
 
       # - name: Install gcc
       #   env:
