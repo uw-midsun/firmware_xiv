@@ -203,7 +203,6 @@ static StatusCode prv_write_config(LtcAfeStorage *afe, uint8_t gpio_enable_pins)
   // }
   prv_wakeup_idle(afe);
   uint8_t status = spi_exchange(settings->spi_port, (uint8_t *)&config_packet, len, NULL, 0);
-  // exit(0);
   return status;
 }
 

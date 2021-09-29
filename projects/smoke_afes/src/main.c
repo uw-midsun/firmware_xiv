@@ -10,9 +10,9 @@
 // Test setup (do change)
 #define NUM_AFES 3
 #define CELLS_PER_AFE 12
-#define THERMS_PER_AFE 32
+#define THERMS_PER_AFE 0
 #define CELL_BITSET 0xFFF        // 12 bits for 12 cells
-#define THERM_BITSET 0xFFFFFFFF  // 32 bits for 32 therms, also ~(uint32_t)0
+#define THERM_BITSET 0x0  // 32 bits for 32 therms, also ~(uint32_t)0
 
 // Optional delay between readings
 #define READ_DELAY_MS 2000
@@ -20,7 +20,7 @@
 // Features to enable
 #define LOG_VOLTS true
 #define LOG_TEMPS false
-#define PASSIVE_BALANCE false
+#define PASSIVE_BALANCE true
 #define PASSIVE_BALANCE_DIFF_MV 25
 
 static LtcAfeStorage s_afe = { 0 };
@@ -39,26 +39,28 @@ static void prv_log_table(uint16_t *results, uint16_t len, const char *name) {
 static void prv_log_volts(uint16_t *results, uint16_t len, void *context) {
   ltc_afe_request_aux_conversion(&s_afe);
 
-  if (PASSIVE_BALANCE) {
-    bool to_balance[CELLS_PER_AFE * NUM_AFES] = { 0 };
+  bool to_balance[CELLS_PER_AFE * NUM_AFES] = { 0 };
 
-    for (uint8_t dev = 0; dev < NUM_AFES; dev++) {
-      uint16_t cell_max = 0;
-      uint16_t cell_min = 0;
-      for (uint16_t cell = 0; cell < CELLS_PER_AFE; cell++) {
-        uint16_t idx = cell + dev * CELLS_PER_AFE;
-        if (results[cell_max] < results[idx]) {
-          cell_max = idx;
-        }
-        if (results[cell_min] > results[idx]) {
-          cell_min = idx;
-        }
+  for (uint8_t dev = 0; dev < NUM_AFES; dev++) {
+    uint16_t cell_max = dev * CELLS_PER_AFE;
+    uint16_t cell_min = dev * CELLS_PER_AFE;
+    for (uint16_t cell = 0; cell < CELLS_PER_AFE; cell++) {
+      uint16_t idx = cell + dev * CELLS_PER_AFE;
+      if (results[cell_max] < results[idx]) {
+        cell_max = idx;
       }
-      if (results[cell_max] - results[cell_min] >= PASSIVE_BALANCE_DIFF_MV * 10) {
-        to_balance[cell_max] = true;
+      if (results[cell_min] > results[idx]) {
+        cell_min = idx;
       }
     }
+    if (results[cell_max] - results[cell_min] >= PASSIVE_BALANCE_DIFF_MV * 10) {
+      to_balance[cell_max] = true;
+    }
+    LOG_DEBUG("AFE %d max(%d)-min(%d) diff: %d\n", dev, cell_max - (dev*CELLS_PER_AFE),
+      cell_min - (dev*CELLS_PER_AFE), results[cell_max] - results[cell_min]);
+  }
 
+  if (PASSIVE_BALANCE) {
     for (uint16_t i = 0; i < len; i++) {
       ltc_afe_toggle_cell_discharge(&s_afe, i, to_balance[i]);
     }
@@ -71,7 +73,8 @@ static void prv_log_volts(uint16_t *results, uint16_t len, void *context) {
   LOG_DEBUG("Voltage logging\n");
   prv_log_table(results, len, "cell");
   for (uint8_t i = 0; i < NUM_AFES; i++) {
-    printf("AFE %d discharge bitset: 0x%03x\n", i, s_afe.discharge_bitset[i]);
+    int16_t cell_num = __builtin_ctz(s_afe.discharge_bitset[i]);
+    printf("AFE %d discharge bitset: 0x%03x = cell #%d\n", i, s_afe.discharge_bitset[i], cell_num);
   }
 
   delay_ms(READ_DELAY_MS);
