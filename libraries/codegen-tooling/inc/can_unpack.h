@@ -139,6 +139,11 @@
 
 #define CAN_UNPACK_REGEN_BRAKING_TOGGLE_REQUEST(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
+#define CAN_UNPACK_RACE_NORMAL_STATUS(msg_ptr, is_race_mode_u8_ptr)                       \
+  can_unpack_impl_u8((msg_ptr), 1, (is_race_mode_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_REQUEST_TO_CHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_ALLOW_CHARGING(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)

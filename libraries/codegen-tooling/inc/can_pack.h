@@ -178,6 +178,12 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, \
                       SYSTEM_CAN_MESSAGE_REGEN_BRAKING_TOGGLE_REQUEST)
 
+#define CAN_PACK_RACE_NORMAL_STATUS(msg_ptr, is_race_mode_u8)                                \
+  can_pack_impl_u8(                                                                          \
+      (msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_RACE_NORMAL_STATUS, 1, \
+      (is_race_mode_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,      \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_REQUEST_TO_CHARGE(msg_ptr) \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_REQUEST_TO_CHARGE)
 

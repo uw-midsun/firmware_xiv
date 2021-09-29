@@ -52,10 +52,15 @@ void test_can_state_on(void) {
 
   CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
 
+  // sending CAN message to switch race mode
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
 
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
+  // sending CAN message out to notify others e.g telemetry
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
 
   TEST_ASSERT_EQUAL(RACE_STATE_ON, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
 }
@@ -63,7 +68,6 @@ void test_can_state_on(void) {
 void test_can_state_off(void) {
   prv_assert_current_race_state(RACE_STATE_OFF);
 
-  // turn on
   CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_ON);
 
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
@@ -71,15 +75,20 @@ void test_can_state_off(void) {
 
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
 
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   prv_assert_current_race_state(RACE_STATE_ON);
 
-  // then turn off
   CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(RACE_STATE_OFF);
 
   MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
   MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
 
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
 
   TEST_ASSERT_EQUAL(RACE_STATE_OFF, race_switch_fsm_get_current_state(&s_race_switch_fsm_storage));
 }
@@ -88,21 +97,34 @@ void test_transition_to_race(void) {
   // Test state machine when normal -> race
   // Initially the module begins in normal mode so PA4 is low
   s_returned_state = GPIO_STATE_LOW;
+
+  // MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  // MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   prv_assert_current_race_state(RACE_STATE_OFF);
 
   // Mock rising edge on race switch pin
   s_returned_state = GPIO_STATE_HIGH;
 
+  // MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  // MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   // Trigger interrupt to change fsm state from normal to race
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // Test if no error when interrupt is triggered with same edge multiple times
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
 
   // No fsm state transition will occur so race_switch_fsm_process_event will return false
+  // no tx needed if state transition didn't occur
   TEST_ASSERT_FALSE(prv_process_fsm_event_manually());
+
   prv_assert_current_race_state(RACE_STATE_ON);
 }
 
@@ -118,6 +140,10 @@ void test_transition_to_normal(void) {
   // Trigger interrupt to change fsm state from race to normal
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  // MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   prv_assert_current_race_state(RACE_STATE_OFF);
 }
 
@@ -137,6 +163,10 @@ void test_voltage_during_transition(void) {
   // Switch to race mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   prv_assert_current_race_state(RACE_STATE_ON);
 
   // Mock low state on voltage monitor pin
@@ -147,6 +177,10 @@ void test_voltage_during_transition(void) {
   // Switch to normal mode
   TEST_ASSERT_OK(gpio_it_trigger_interrupt(&s_race_switch_address));
   TEST_ASSERT_TRUE(prv_process_fsm_event_manually());
+
+  MS_TEST_HELPER_CAN_TX(CENTRE_CONSOLE_EVENT_CAN_TX);
+  MS_TEST_HELPER_CAN_RX(CENTRE_CONSOLE_EVENT_CAN_RX);
+
   prv_assert_current_race_state(RACE_STATE_OFF);
 
   // Mock high state on voltage monitor pin

@@ -462,7 +462,17 @@ msg {
   }
 }
 
-# ID 47: Reserved
+msg {
+  id: 47
+  source: CENTRE_CONSOLE
+  target: "CENTRE_CONSOLE, MOTOR_CONTROLLER"
+  msg_name: "race normal status"
+  can_data {
+    u8 {
+      field_name_1: "is_race_mode"
+    }
+  }
+}
 
 msg {
   id: 48

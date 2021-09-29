@@ -73,6 +73,7 @@ static void prv_state_race_off_output(Fsm *fsm, const Event *e, void *context) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, true);
   storage->current_state = RACE_STATE_OFF;
+  CAN_TRANSMIT_RACE_NORMAL_STATUS(false);
 }
 
 // Triggered when the fsm switches to the race mode
@@ -81,6 +82,7 @@ static void prv_state_race_on_output(Fsm *fsm, const Event *e, void *context) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, false);
   storage->current_state = RACE_STATE_ON;
+  CAN_TRANSMIT_RACE_NORMAL_STATUS(true);
 }
 
 static StatusCode prv_racemode_callback(const CanMessage *msg, void *context,
