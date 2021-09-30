@@ -45,7 +45,7 @@ static uint8_t s_destination_nodes[DGRAM_MAX_DEST_NODES_SIZE];
 static uint8_t s_rx_data[PROTOBUF_MAXSIZE];
 static uint16_t s_rx_data_len;
 
-CanDatagramTxConfig s_tx_config = {
+static CanDatagramTxConfig s_tx_config = {
   .dgram_type = BOOTLOADER_DATAGRAM_QUERY_COMMAND,
   .destination_nodes_len = 1,
   .destination_nodes = &s_client_id,
@@ -53,7 +53,7 @@ CanDatagramTxConfig s_tx_config = {
   .tx_cmpl_cb = tx_cmpl_cb,
 };
 
-CanDatagramRxConfig s_rx_config = {
+static CanDatagramRxConfig s_rx_config = {
   .destination_nodes = s_destination_nodes,
   .data = s_rx_data,
   .node_id = 0,  // listen to all
