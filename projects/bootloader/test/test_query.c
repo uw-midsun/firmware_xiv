@@ -69,7 +69,7 @@ static size_t prv_strnlen(const char *str, size_t maxlen) {
     len++;
     str++;
   }
-  return len - 1;
+  return len;
 }
 
 // encode a NULL terminated array of strings
