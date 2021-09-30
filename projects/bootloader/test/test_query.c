@@ -63,6 +63,15 @@ CanDatagramRxConfig s_rx_config = {
 static uint8_t s_expected_response[PROTOBUF_MAXSIZE];
 static size_t s_expected_len;
 
+static size_t prv_strnlen(const char *str, size_t maxlen) {
+  size_t len = 0;
+  while (str && len < maxlen) {
+    len++;
+    str++;
+  }
+  return len - 1;
+}
+
 // encode a NULL terminated array of strings
 static bool prv_encode_string_array(pb_ostream_t *stream, const pb_field_iter_t *field,
                                     void *const *arg) {
@@ -70,7 +79,8 @@ static bool prv_encode_string_array(pb_ostream_t *stream, const pb_field_iter_t 
   uint8_t index = 0;
   while (array[index] != NULL) {
     if (!pb_encode_tag_for_field(stream, field) ||
-        !pb_encode_string(stream, (uint8_t *)(array[index]), strlen(array[index]))) {
+        !pb_encode_string(stream, (uint8_t *)(array[index]),
+                          prv_strnlen(array[index], MAX_STRING_SIZE))) {
       return false;
     }
     ++index;
@@ -100,7 +110,8 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
   }
-  return pb_encode_string(stream, (uint8_t *)str, strlen(str));  // write sting
+  return pb_encode_string(stream, (uint8_t *)str,
+                          prv_strnlen(str, MAX_STRING_SIZE));  // write sting
 }
 
 static void prv_setup_query(BootloaderConfig *config) {

@@ -39,6 +39,15 @@ static CanDatagramTxConfig s_response_config = {
   .tx_cmpl_cb = tx_cmpl_cb,
 };
 
+static size_t prv_strnlen(const char *str, size_t maxlen) {
+  size_t len = 0;
+  while (str && len < maxlen) {
+    len++;
+    str++;
+  }
+  return len - 1;
+}
+
 // compare the int query field to the board field
 static bool prv_decode_cmp_varint(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
   if (s_results[field->index] == FOUND) {
@@ -100,7 +109,8 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
   }
-  return pb_encode_string(stream, (uint8_t *)str, strlen(str));  // write sting
+  return pb_encode_string(stream, (uint8_t *)str,
+                          prv_strnlen(str, MAX_STRING_SIZE));  // write sting
 }
 
 StatusCode query_init(BootloaderConfig *config) {
