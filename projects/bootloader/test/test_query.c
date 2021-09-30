@@ -16,6 +16,7 @@
 #include "test_helpers.h"
 #include "unity.h"
 
+#define MAX_STRING_SIZE 64
 #define PROTOBUF_MAXSIZE 270  // enough to fit the max possible encoded protobuf
 
 static uint8_t s_client_id = 0;
@@ -101,7 +102,7 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
   }
-  return pb_encode_string(stream, (uint8_t *)str, strlen(str));  // write sting
+  return pb_encode_string(stream, (uint8_t *)str, strnlen(str, MAX_STRING_SIZE));  // write sting
 }
 
 static void prv_setup_query(BootloaderConfig *config) {
