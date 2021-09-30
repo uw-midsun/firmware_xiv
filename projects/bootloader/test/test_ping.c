@@ -107,7 +107,7 @@ void test_ping_addressed_to_multiple(void) {
   TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
 }
 
-void test_ping_no_resopnse(void) {
+void test_ping_no_response(void) {
   TEST_ASSERT_OK(ping_init(s_board_id));
 
   uint8_t multiple_addr[4] = { 1, 3, 4, 5 };

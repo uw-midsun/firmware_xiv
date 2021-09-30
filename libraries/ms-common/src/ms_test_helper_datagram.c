@@ -114,7 +114,7 @@ StatusCode dgram_helper_mock_rx_datagram(CanDatagramRxConfig *rx_config) {
 }
 
 StatusCode prv_no_response_helper(uint8_t *data, size_t len, bool is_start_msg) {
-  TEST_ASSERT_FALSE(is_start_msg);
+  TEST_ASSERT_FALSE_MESSAGE(is_start_msg, "Detected datagram response, expected none");
   return STATUS_CODE_OK;
 }
 // process all events until datagram is inactive

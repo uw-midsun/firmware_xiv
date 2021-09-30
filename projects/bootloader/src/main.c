@@ -10,6 +10,7 @@
 #include "jump_to_application.h"
 #include "log.h"
 #include "ping.h"
+#include "query.h"
 #include "soft_timer.h"
 #include "wait.h"
 
@@ -56,7 +57,7 @@ int main(void) {
   dispatcher_init(board_id);
 
   ping_init(board_id);
-  // query_init(blconfig);
+  query_init(&blconfig);
 
   Event e = { 0 };
   while (true) {

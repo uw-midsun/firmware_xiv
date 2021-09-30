@@ -1,8 +1,5 @@
 #include "query.h"
 
-#include <pb_common.h>
-#include <pb_decode.h>
-#include <pb_encode.h>
 #include <string.h>
 
 #include "bootloader_can.h"
@@ -10,6 +7,9 @@
 #include "can_datagram.h"
 #include "config.h"
 #include "dispatcher.h"
+#include "pb_common.h"
+#include "pb_decode.h"
+#include "pb_encode.h"
 #include "querying.pb.h"
 #include "querying_response.pb.h"
 
@@ -20,7 +20,7 @@
 typedef enum {
   NOT_FOUND = 0,
   FOUND,
-  NON_EXISTANT,
+  NONEXISTENT,
 } CompareResult;
 
 static void *s_targets[NUM_QUERY_FIELDS];
@@ -64,7 +64,7 @@ static bool prv_decode_cmp_string(pb_istream_t *stream, const pb_field_iter_t *f
   }
   s_results[field->index] = NOT_FOUND;
 
-  char *target = (char *)s_targets[field->index];
+  char *target = s_targets[field->index];
   if (target == NULL) {
     return true;
   }
@@ -76,14 +76,14 @@ static bool prv_decode_cmp_string(pb_istream_t *stream, const pb_field_iter_t *f
 }
 
 static StatusCode prv_check_query(uint8_t *data, uint16_t data_len, void *context) {
-  for (int i = 0; i < NUM_QUERY_FIELDS; ++i) {
-    s_results[i] = NON_EXISTANT;
+  for (uint8_t i = 0; i < NUM_QUERY_FIELDS; ++i) {
+    s_results[i] = NONEXISTENT;
   }
 
   pb_istream_t pb_istream = pb_istream_from_buffer(data, data_len);
   pb_decode(&pb_istream, Querying_fields, &s_querying);
 
-  for (int i = 0; i < NUM_QUERY_FIELDS; ++i) {
+  for (uint8_t i = 0; i < NUM_QUERY_FIELDS; ++i) {
     if (s_results[i] == NOT_FOUND) {
       // do not match the query
       return STATUS_CODE_OK;
@@ -95,7 +95,7 @@ static StatusCode prv_check_query(uint8_t *data, uint16_t data_len, void *contex
 // encode a string to a pb_ostream_t
 static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field,
                               void *const *arg) {
-  const char *str = (const char *)(*arg);
+  const char *str = *arg;
   // add to stream
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
