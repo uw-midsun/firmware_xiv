@@ -84,6 +84,8 @@ StatusCode dgram_helper_mock_tx_datagram(CanDatagramTxConfig *tx_config) {
       can_process_event(&e);
     } while (e.id != s_can_tx_event);
   }
+  // set tx_cmpl_cb back
+  tx_config->tx_cmpl_cb = s_cmpl_cb;
   return STATUS_CODE_OK;
 }
 
@@ -110,6 +112,8 @@ StatusCode dgram_helper_mock_rx_datagram(CanDatagramRxConfig *rx_config) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
   }
+  // set rx_cmpl_cb back
+  rx_config->rx_cmpl_cb = s_cmpl_cb;
   return STATUS_CODE_OK;
 }
 

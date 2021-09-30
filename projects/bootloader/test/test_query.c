@@ -6,10 +6,8 @@
 #include "dispatcher.h"
 #include "interrupt.h"
 #include "log.h"
-#include "misc.h"
 #include "ms_test_helper_datagram.h"
 #include "pb_encode.h"
-#include "ping.h"
 #include "query.h"
 #include "querying.pb.h"
 #include "querying_response.pb.h"
@@ -102,7 +100,7 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
   }
-  return pb_encode_string(stream, (uint8_t *)str, strnlen(str, MAX_STRING_SIZE));  // write sting
+  return pb_encode_string(stream, (uint8_t *)str, strlen(str));  // write sting
 }
 
 static void prv_setup_query(BootloaderConfig *config) {
@@ -155,6 +153,19 @@ static void prv_encode_query(uint8_t *id, char **name, char **current_project, c
   LOG_DEBUG("encode tx complete\n");
 }
 
+static void prv_test_query_response() {
+  dgram_helper_mock_tx_datagram(&s_tx_config);
+  dgram_helper_mock_rx_datagram(&s_rx_config);
+
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_QUERY_RESPONSE, s_rx_config.dgram_type);
+  TEST_ASSERT_EQUAL(s_expected_len, s_rx_config.data_len);
+  for (uint16_t i = 0; i < s_rx_config.data_len; ++i) {
+    TEST_ASSERT_EQUAL(s_rx_config.data[i], s_expected_response[i]);
+  }
+}
+
 void setup_test(void) {
   event_queue_init();
   interrupt_init();
@@ -188,17 +199,7 @@ void test_query(void) {
   char *git_ver[] = { "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz12345678910", NULL };
 
   prv_encode_query(id, name, cur_proj, proj_info, git_ver);
-
-  dgram_helper_mock_tx_datagram(&s_tx_config);
-  dgram_helper_mock_rx_datagram(&s_rx_config);
-
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-
-  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_QUERY_RESPONSE, s_rx_config.dgram_type);
-  TEST_ASSERT_EQUAL(s_expected_len, s_rx_config.data_len);
-  for (uint16_t i = 0; i < s_rx_config.data_len; ++i) {
-    TEST_ASSERT_EQUAL(s_rx_config.data[i], s_expected_response[i]);
-  }
+  prv_test_query_response();
 }
 
 void test_repeated_field(void) {
@@ -219,17 +220,7 @@ void test_repeated_field(void) {
   char *git_ver[] = { NULL };
 
   prv_encode_query(id, name, cur_proj, proj_info, git_ver);
-
-  dgram_helper_mock_tx_datagram(&s_tx_config);
-  dgram_helper_mock_rx_datagram(&s_rx_config);
-
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-
-  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_QUERY_RESPONSE, s_rx_config.dgram_type);
-  TEST_ASSERT_EQUAL(s_expected_len, s_rx_config.data_len);
-  for (uint16_t i = 0; i < s_rx_config.data_len; ++i) {
-    TEST_ASSERT_EQUAL(s_rx_config.data[i], s_expected_response[i]);
-  }
+  prv_test_query_response();
 }
 
 void test_empty_query(void) {
@@ -250,17 +241,7 @@ void test_empty_query(void) {
   char *git_ver[] = { NULL };
 
   prv_encode_query(id, name, cur_proj, proj_info, git_ver);
-
-  dgram_helper_mock_tx_datagram(&s_tx_config);
-  dgram_helper_mock_rx_datagram(&s_rx_config);
-
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-
-  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_QUERY_RESPONSE, s_rx_config.dgram_type);
-  TEST_ASSERT_EQUAL(s_expected_len, s_rx_config.data_len);
-  for (uint16_t i = 0; i < s_rx_config.data_len; ++i) {
-    TEST_ASSERT_EQUAL(s_rx_config.data[i], s_expected_response[i]);
-  }
+  prv_test_query_response();
 }
 
 void test_no_match(void) {
@@ -281,7 +262,6 @@ void test_no_match(void) {
   char *git_ver[] = { NULL };
 
   prv_encode_query(id, name, cur_proj, proj_info, git_ver);
-
   dgram_helper_mock_tx_datagram(&s_tx_config);
   dgram_helper_assert_no_response();
 }
@@ -301,17 +281,7 @@ void test_no_project_on_board(void) {
   char *git_ver[] = { NULL };
 
   prv_encode_query(id, name, cur_proj, proj_info, git_ver);
-
-  dgram_helper_mock_tx_datagram(&s_tx_config);
-  dgram_helper_mock_rx_datagram(&s_rx_config);
-
-  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-
-  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_QUERY_RESPONSE, s_rx_config.dgram_type);
-  TEST_ASSERT_EQUAL(s_expected_len, s_rx_config.data_len);
-  for (uint16_t i = 0; i < s_rx_config.data_len; ++i) {
-    TEST_ASSERT_EQUAL(s_rx_config.data[i], s_expected_response[i]);
-  }
+  prv_test_query_response();
 }
 
 void test_no_project_on_board_no_response(void) {
@@ -329,7 +299,6 @@ void test_no_project_on_board_no_response(void) {
   char *git_ver[] = { NULL };
 
   prv_encode_query(id, name, cur_proj, proj_info, git_ver);
-
   dgram_helper_mock_tx_datagram(&s_tx_config);
   dgram_helper_assert_no_response();
 }

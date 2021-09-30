@@ -100,7 +100,7 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
   if (!pb_encode_tag_for_field(stream, field)) {  // write tag and wire type
     return false;
   }
-  return pb_encode_string(stream, (uint8_t *)str, strnlen(str, MAX_STRING_SIZE));  // write sting
+  return pb_encode_string(stream, (uint8_t *)str, strlen(str));  // write sting
 }
 
 StatusCode query_init(BootloaderConfig *config) {
