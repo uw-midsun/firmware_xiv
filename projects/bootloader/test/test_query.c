@@ -64,12 +64,13 @@ static uint8_t s_expected_response[PROTOBUF_MAXSIZE];
 static size_t s_expected_len;
 
 static size_t prv_strnlen(const char *str, size_t maxlen) {
-  size_t len = 0;
-  while (str && len < maxlen) {
-    len++;
-    str++;
+  size_t i;
+  for (i = 0; i < maxlen; ++i) {
+    if (str[i] == '\0') {
+      break;
+    }
   }
-  return len;
+  return i;
 }
 
 // encode a NULL terminated array of strings
