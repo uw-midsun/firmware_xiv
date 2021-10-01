@@ -7,7 +7,7 @@
 #define SMOKE_TEST_MODE_CURRENT_MEASUREMENT 1  // see smoke_current_measurement.c
 
 // Change this to another SMOKE_TEST_MODE_* macro to run a smoke test instead of normal PD.
-#define SMOKE_TEST_MODE SMOKE_TEST_MODE_CURRENT_MEASUREMENT
+#define SMOKE_TEST_MODE SMOKE_TEST_MODE_NORMAL
 
 #include <stdbool.h>
 #include <stdint.h>
