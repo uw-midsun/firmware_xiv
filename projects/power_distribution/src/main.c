@@ -1,6 +1,14 @@
 // Uncomment this line to force firmware to run as front or rear power distribution.
 // #define FORCE_IS_FRONT_POWER_DISTRIBUTION true
 
+// SMOKE TEST MODES: each macro is a different smoke test you can run.
+
+#define SMOKE_TEST_MODE_NORMAL 0               // run as normal PD
+#define SMOKE_TEST_MODE_CURRENT_MEASUREMENT 1  // see smoke_current_measurement.c
+
+// Change this to another SMOKE_TEST_MODE_* macro to run a smoke test instead of normal PD.
+#define SMOKE_TEST_MODE SMOKE_TEST_MODE_CURRENT_MEASUREMENT
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -29,8 +37,11 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "smoke_current_measurement.h"
 #include "voltage_regulator.h"
 #include "wait.h"
+
+#if SMOKE_TEST_MODE == SMOKE_TEST_MODE_NORMAL
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 1500000  // 1.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000          // 0.5s between blinks of the signal lights
@@ -106,7 +117,12 @@ static void prv_current_measurement_data_ready_callback(void *context) {
   publish_data_publish(storage->measurements);
 }
 
+#endif  // SMOKE_TEST_MODE == SMOKE_TEST_MODE_NORMAL
+
 int main(void) {
+#if SMOKE_TEST_MODE == SMOKE_TEST_MODE_CURRENT_MEASUREMENT
+  smoke_current_measurement_perform();
+#else
   LOG_DEBUG("Initializing power distribution...\n");
 
   // initialize all libraries
@@ -120,7 +136,7 @@ int main(void) {
 
   // test if it's front or rear PD, and log for easier debugging if initialization fails
   bool is_front_pd = prv_determine_is_front_pd();
-  LOG_DEBUG("Detected %s power distribution board...", is_front_pd ? "front" : "rear");
+  LOG_DEBUG("Detected %s power distribution board...\n", is_front_pd ? "front" : "rear");
 
   BUG(prv_init_can(is_front_pd));
 
@@ -214,6 +230,7 @@ int main(void) {
     }
     wait();
   }
+#endif  // smoke test modes
 
   return 0;
 }

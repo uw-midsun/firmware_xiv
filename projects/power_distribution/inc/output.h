@@ -76,6 +76,12 @@ typedef enum {
   NUM_OUTPUTS,
 } Output;
 
+// Is the output on front PD? (Please update this if you change the Output enum.)
+#define IS_FRONT_OUTPUT(output) ((output) < REAR_OUTPUT_BMS)
+
+// Names for each output, for use in logging and smoke test modes.
+extern const char *g_output_names[NUM_OUTPUTS];
+
 typedef enum {
   OUTPUT_TYPE_IGNORE = 0,  // so that unspecified OutputSpecs default to ignore
   OUTPUT_TYPE_GPIO,
