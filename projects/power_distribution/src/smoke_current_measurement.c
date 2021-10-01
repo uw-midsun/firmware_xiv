@@ -89,7 +89,7 @@ static void prv_measure_output(Output output, bool warn_on_unsupported) {
 
   uint16_t current;
   StatusCode code = output_read_current(output, &current);
-  if (code == STATUS_CODE_INVALID_ARGS) {
+  if (code == STATUS_CODE_UNIMPLEMENTED) {
     // current measurement isn't supported
     if (warn_on_unsupported) {
       LOG_WARN("Output '%s' (%d) does not support current measurement!\n", g_output_names[output],

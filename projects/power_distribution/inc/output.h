@@ -150,7 +150,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro);
 StatusCode output_set_state(Output output, OutputState state);
 
 // Read the current that the output is drawing into |*current| in mA.
-// STATUS_CODE_INVALID_ARGS is returned if current sense isn't supported by this output.
+// STATUS_CODE_UNIMPLEMENTED is returned if current sense isn't supported by this output.
 StatusCode output_read_current(Output output, uint16_t *current);
 
 // Get the BTS7200 storage associated with an output, or NULL if it isn't OUTPUT_TYPE_BTS7200.
