@@ -680,7 +680,7 @@ void test_mci_output_cruise_on_brake_continuity(void) {
 
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
 
-  // Iterate through range of pedal values, comparing each output to the previous output 
+  // Iterate through range of pedal values, comparing each output to the previous output
   for (float pedal_value = 0.0; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
        pedal_value += TEST_CONTINUITY_INCREMENT) {
     PedalValues test_values = {
@@ -709,7 +709,7 @@ void test_mci_output_cruise_off_brake_continuity(void) {
   s_is_cruise = false;
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
 
-  // Iterate through range of pedal values, comparing each output to the previous output 
+  // Iterate through range of pedal values, comparing each output to the previous output
   for (float pedal_value = TEST_CONTINUITY_INCREMENT; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
        pedal_value += TEST_CONTINUITY_INCREMENT) {
     PedalValues test_values = {
@@ -741,7 +741,7 @@ void test_mci_output_cruise_on_throttle_continuity(void) {
 
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
 
-  // Iterate through range of pedal values, comparing each output to the previous output 
+  // Iterate through range of pedal values, comparing each output to the previous output
   for (float pedal_value = TEST_CONTINUITY_INCREMENT; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
        pedal_value += TEST_CONTINUITY_INCREMENT) {
     PedalValues test_values = {
@@ -771,7 +771,7 @@ void test_mci_output_cruise_off_throttle_continuity(void) {
 
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
 
-  // Iterate through range of pedal values, comparing each output to the previous output 
+  // Iterate through range of pedal values, comparing each output to the previous output
   for (float pedal_value = TEST_CONTINUITY_INCREMENT; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
        pedal_value += TEST_CONTINUITY_INCREMENT) {
     PedalValues test_values = {
