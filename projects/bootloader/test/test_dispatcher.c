@@ -85,7 +85,7 @@ void test_dispatch_calls_cb(void) {
       dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
   dgram_helper_mock_tx_datagram(&tx_config);
-  dgram_helper_process_all();
+  dgram_helper_assert_no_response();
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_TRUE_MESSAGE(cb_called, "Callback wasn't called");
@@ -109,7 +109,7 @@ void test_datagram_completeness(void) {
       dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
   dgram_helper_mock_tx_datagram(&tx_config);
-  dgram_helper_process_all();
+  dgram_helper_assert_no_response();
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_TRUE(cb_called);
@@ -132,7 +132,7 @@ void test_noexistant_callback(void) {
     .tx_cmpl_cb = tx_cmpl_cb,
   };
   dgram_helper_mock_tx_datagram(&tx_config);
-  dgram_helper_process_all();
+  dgram_helper_assert_no_response();
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
 }
