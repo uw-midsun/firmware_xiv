@@ -3,6 +3,7 @@
 #include "flash.h"
 #include "interrupt.h"
 #include "jump_to_application.h"
+#include "jump_to_bootloader.h"
 #include "log.h"
 #include "soft_timer.h"
 
@@ -16,6 +17,8 @@ int main(void) {
   config_init();
 
   jump_to_application();
+  jump_to_bootloader();
+
   // not reached
   return 0;
 }
