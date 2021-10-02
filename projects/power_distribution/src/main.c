@@ -29,14 +29,18 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "smoke_uv_cutoff.h"
 #include "voltage_regulator.h"
 #include "wait.h"
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 1500000  // 1.5s between current measurements
-#define SIGNAL_BLINK_INTERVAL_US 500000          // 0.5s between blinks of the signal lights
-#define STROBE_BLINK_INTERVAL_US 100000          // 0.1s between blinks of the strobe light
+#define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
+#define STROBE_BLINK_INTERVAL_US 100000         // 0.1s between blinks of the strobe light
 #define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
 #define VOLTAGE_REGULATOR_DELAY_MS 25
+#define SMOKE_TEST_MODE SMOKE_TEST_NONE  // Set it to the choice of smoke test
+
+enum SmokeTestMode { SMOKE_TEST_NONE = 0, SMOKE_TEST_UV_CUTOFF, NUM_SMOKE_TEST_MODES };
 
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
@@ -107,6 +111,15 @@ static void prv_current_measurement_data_ready_callback(void *context) {
 }
 
 int main(void) {
+#ifdef SMOKE_TEST_MODE
+  if (SMOKE_TEST_MODE == SMOKE_TEST_UV_CUTOFF) {
+    // do nothing if SMOKE_TEST_MODE == SMOKE_TEST_UV_CUTOFF
+    // other wise continue with main as normal
+  } else {
+    continue;
+  }
+#endif
+
   LOG_DEBUG("Initializing power distribution...\n");
 
   // initialize all libraries
