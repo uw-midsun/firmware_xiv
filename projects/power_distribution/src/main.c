@@ -33,9 +33,9 @@
 #include "voltage_regulator.h"
 #include "wait.h"
 
-#define CURRENT_MEASUREMENT_INTERVAL_US 500000  // 0.5s between current measurements
-#define SIGNAL_BLINK_INTERVAL_US 500000         // 0.5s between blinks of the signal lights
-#define STROBE_BLINK_INTERVAL_US 100000         // 0.1s between blinks of the strobe light
+#define CURRENT_MEASUREMENT_INTERVAL_US 1500000  // 1.5s between current measurements
+#define SIGNAL_BLINK_INTERVAL_US 500000          // 0.5s between blinks of the signal lights
+#define STROBE_BLINK_INTERVAL_US 100000          // 0.1s between blinks of the strobe light
 #define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
 #define VOLTAGE_REGULATOR_DELAY_MS 25
 #define SMOKE_TEST_MODE SMOKE_TEST_NONE  // Set it to the choice of smoke test
