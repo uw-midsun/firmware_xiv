@@ -25,5 +25,5 @@ extern uint32_t _bootloader_size;
 #define BOOTLOADER_RAM_START ((void *)&_ram_start)
 #define BOOTLOADER_RAM_SIZE ((size_t)&_ram_size)
 #define BOOTLOADER_VECTOR_TABLE_SIZE ((size_t)&_vector_table_size)
-#define BOOTLOADER_DEFAULT_LOCATION ((size_t)&_bootloader_start)
+#define BOOTLOADER_DEFAULT_LOCATION ((void *)&_bootloader_start)
 #define BOOTLOADER_SIZE ((size_t)&_bootloader_size)
