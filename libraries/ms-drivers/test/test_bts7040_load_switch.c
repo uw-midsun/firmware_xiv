@@ -365,6 +365,88 @@ void test_bts7040_current_sense_get_measurement_pca9539r_valid(void) {
   LOG_DEBUG("PCA9539R reading: %d\n", reading);
 }
 
+// Test that bts7040_get_measurement with the bts7004 scaling factor returns a different reading
+// than normal
+void test_bts7004_current_sense_get_measurement_stm32_valid(void) {
+  // this doesn't matter (adc isn't reading anything) but can't be null
+  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  GpioAddress test_enable_pin = { .port = GPIO_PORT_A, .pin = 1 };  // EN pin
+  uint32_t interval_us = 500;                                       // 0.5 ms
+  Bts7040Stm32Settings bts7004_settings = {
+    .sense_pin = &test_sense_pin,
+    .enable_pin = &test_enable_pin,
+    .interval_us = interval_us,
+    .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .callback = &prv_callback_increment,
+    .use_bts7004_scaling = true,
+  };
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &bts7004_settings));
+  uint16_t bts7004_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7004_reading));
+
+  Bts7040Stm32Settings bts7040_settings = {
+    .sense_pin = &test_sense_pin,
+    .enable_pin = &test_enable_pin,
+    .interval_us = interval_us,
+    .resistor = BTS7040_TEST_RESISTOR,
+    .bias = BTS7040_TEST_BIAS,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .callback = &prv_callback_increment,
+    .use_bts7004_scaling = false,
+  };
+
+  TEST_ASSERT_OK(bts7040_init_stm32(&s_storage, &bts7040_settings));
+  uint16_t bts7040_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7040_reading));
+  LOG_DEBUG("STM32 reading: bts7004 scaling: %d, bts7040 scaling: %d\n", bts7004_reading,
+            bts7040_reading);
+  TEST_ASSERT_NOT_EQUAL(bts7004_reading, bts7040_reading);
+}
+
+// Same, but with pca9539r initialization.
+void test_bts7004_current_sense_get_measurement_pca9539r_valid(void) {
+  // this doesn't matter (adc isn't reading anything) but can't be null
+  GpioAddress test_sense_pin = { .port = GPIO_PORT_A, .pin = 0 };
+  Pca9539rGpioAddress test_enable_pin = { .i2c_address = 0, .pin = PCA9539R_PIN_IO0_1 };  // EN pin
+  uint32_t interval_us = 500;                                                             // 0.5 ms
+  Bts7040Pca9539rSettings bts7004_settings = {
+    .i2c_port = TEST_I2C_PORT,
+    .sense_pin = &test_sense_pin,
+    .enable_pin = &test_enable_pin,
+    .interval_us = interval_us,
+    .resistor = BTS7040_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .callback = &prv_callback_increment,
+    .use_bts7004_scaling = true,
+  };
+
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &bts7004_settings));
+
+  uint16_t bts7004_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7004_reading));
+
+  Bts7040Pca9539rSettings bts7040_settings = {
+    .i2c_port = TEST_I2C_PORT,
+    .sense_pin = &test_sense_pin,
+    .enable_pin = &test_enable_pin,
+    .interval_us = interval_us,
+    .resistor = BTS7040_TEST_RESISTOR,
+    .min_fault_voltage_mv = ADC_MIN_FAULT_VOLTAGE,
+    .callback = &prv_callback_increment,
+    .use_bts7004_scaling = false,
+  };
+
+  TEST_ASSERT_OK(bts7040_init_pca9539r(&s_storage, &bts7040_settings));
+
+  uint16_t bts7040_reading = 0;
+  TEST_ASSERT_OK(bts7040_get_measurement(&s_storage, &bts7040_reading));
+  LOG_DEBUG("PCA9539R reading: bts7004 scaling: %d, bts7040 scaling: %d\n", bts7004_reading,
+            bts7040_reading);
+  TEST_ASSERT_NOT_EQUAL(bts7004_reading, bts7040_reading);
+}
+
 // Test that the context is actually passed to the function
 void test_bts7040_current_sense_context_passed(void) {
   // this doesn't matter (adc isn't reading anything) but can't be null
