@@ -63,6 +63,38 @@
     status;                                                     \
   })
 
+#define CAN_TRANSMIT_REGEN_BRAKING(ack_ptr, state_u8)  \
+  ({                                                   \
+    CanMessage msg = { 0 };                            \
+    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));          \
+    StatusCode status = can_transmit(&msg, (ack_ptr)); \
+    status;                                            \
+  })
+
+#define CAN_TRANSMIT_READY_TO_DRIVE(ready_state_u8)  \
+  ({                                                 \
+    CanMessage msg = { 0 };                          \
+    CAN_PACK_READY_TO_DRIVE(&msg, (ready_state_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);    \
+    status;                                          \
+  })
+
+#define CAN_TRANSMIT_RELAY_OPEN_OK_5_MPPTS()      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_RELAY_OPEN_OK_5_MPPTS(&msg);         \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
+#define CAN_TRANSMIT_RELAY_OPEN_OK_6_MPPTS()      \
+  ({                                              \
+    CanMessage msg = { 0 };                       \
+    CAN_PACK_RELAY_OPEN_OK_6_MPPTS(&msg);         \
+    StatusCode status = can_transmit(&msg, NULL); \
+    status;                                       \
+  })
+
 #define CAN_TRANSMIT_PEDAL_OUTPUT(throttle_output_u32, brake_output_u32)    \
   ({                                                                        \
     CanMessage msg = { 0 };                                                 \
@@ -99,14 +131,6 @@
   ({                                              \
     CanMessage msg = { 0 };                       \
     CAN_PACK_HORN(&msg, (state_u8));              \
-    StatusCode status = can_transmit(&msg, NULL); \
-    status;                                       \
-  })
-
-#define CAN_TRANSMIT_REGEN_BRAKING(state_u8)      \
-  ({                                              \
-    CanMessage msg = { 0 };                       \
-    CAN_PACK_REGEN_BRAKING(&msg, (state_u8));     \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
   })
@@ -185,20 +209,33 @@
     status;                                                                                   \
   })
 
-#define CAN_TRANSMIT_MOTOR_STATUS(motor_status_l_u32, motor_status_r_u32)    \
-  ({                                                                         \
-    CanMessage msg = { 0 };                                                  \
-    CAN_PACK_MOTOR_STATUS(&msg, (motor_status_l_u32), (motor_status_r_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                            \
-    status;                                                                  \
+#define CAN_TRANSMIT_MOTOR_STATUS(mc_limit_flags_l_u8, mc_limit_flags_r_u8, mc_error_flags_l_u8, \
+                                  mc_error_flags_r_u8, board_fan_faults_u8, mc_overtemp_u8)      \
+  ({                                                                                             \
+    CanMessage msg = { 0 };                                                                      \
+    CAN_PACK_MOTOR_STATUS(&msg, (mc_limit_flags_l_u8), (mc_limit_flags_r_u8),                    \
+                          (mc_error_flags_l_u8), (mc_error_flags_r_u8), (board_fan_faults_u8),   \
+                          (mc_overtemp_u8));                                                     \
+    StatusCode status = can_transmit(&msg, NULL);                                                \
+    status;                                                                                      \
   })
 
-#define CAN_TRANSMIT_MOTOR_TEMPS(motor_temp_l_u32, motor_temp_r_u32)    \
-  ({                                                                    \
-    CanMessage msg = { 0 };                                             \
-    CAN_PACK_MOTOR_TEMPS(&msg, (motor_temp_l_u32), (motor_temp_r_u32)); \
-    StatusCode status = can_transmit(&msg, NULL);                       \
-    status;                                                             \
+#define CAN_TRANSMIT_MOTOR_SINK_TEMPS(motor_temp_l_u16, sink_temp_l_u16, motor_temp_r_u16,     \
+                                      sink_temp_r_u16)                                         \
+  ({                                                                                           \
+    CanMessage msg = { 0 };                                                                    \
+    CAN_PACK_MOTOR_SINK_TEMPS(&msg, (motor_temp_l_u16), (sink_temp_l_u16), (motor_temp_r_u16), \
+                              (sink_temp_r_u16));                                              \
+    StatusCode status = can_transmit(&msg, NULL);                                              \
+    status;                                                                                    \
+  })
+
+#define CAN_TRANSMIT_DSP_BOARD_TEMPS(dsp_board_temp_l_u32, dsp_board_temp_r_u32)    \
+  ({                                                                                \
+    CanMessage msg = { 0 };                                                         \
+    CAN_PACK_DSP_BOARD_TEMPS(&msg, (dsp_board_temp_l_u32), (dsp_board_temp_r_u32)); \
+    StatusCode status = can_transmit(&msg, NULL);                                   \
+    status;                                                                         \
   })
 
 #define CAN_TRANSMIT_CRUISE_CONTROL_COMMAND(command_u8)  \
@@ -245,6 +282,22 @@
     CAN_PACK_UV_CUTOFF_NOTIFICATION(&msg);        \
     StatusCode status = can_transmit(&msg, NULL); \
     status;                                       \
+  })
+
+#define CAN_TRANSMIT_REGEN_BRAKING_TOGGLE_REQUEST() \
+  ({                                                \
+    CanMessage msg = { 0 };                         \
+    CAN_PACK_REGEN_BRAKING_TOGGLE_REQUEST(&msg);    \
+    StatusCode status = can_transmit(&msg, NULL);   \
+    status;                                         \
+  })
+
+#define CAN_TRANSMIT_RACE_NORMAL_STATUS(is_race_mode_u8)  \
+  ({                                                      \
+    CanMessage msg = { 0 };                               \
+    CAN_PACK_RACE_NORMAL_STATUS(&msg, (is_race_mode_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);         \
+    status;                                               \
   })
 
 #define CAN_TRANSMIT_REQUEST_TO_CHARGE()          \
@@ -309,6 +362,14 @@
     CAN_PACK_REAR_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
     StatusCode status = can_transmit(&msg, NULL);                             \
     status;                                                                   \
+  })
+
+#define CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(is_race_mode_u8)  \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_RACE_NORMAL_SWITCH_MODE(&msg, (is_race_mode_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);              \
+    status;                                                    \
   })
 
 #define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8, fan_6_u8, \

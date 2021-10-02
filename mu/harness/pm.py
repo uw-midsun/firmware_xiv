@@ -173,7 +173,7 @@ class ProjectManager:
         for sim_file in sim_files:
             if not sim_file.endswith('.py'):
                 continue
-            sim_name = sim_file[:len(sim_file)-3]
+            sim_name = sim_file[:len(sim_file) - 3]
             mod_name = 'mu.sims.{}'.format(sim_name)
             mod = importlib.import_module(mod_name)
             sim_classes = inspect.getmembers(mod, inspect.isclass)
