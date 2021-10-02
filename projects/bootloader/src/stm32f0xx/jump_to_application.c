@@ -22,18 +22,6 @@ static noreturn __attribute__((naked)) void prv_perform_jump(uint32_t sp, uint32
 }
 
 void jump_to_application(void) {
-  BootloaderConfig config = { 0 };
-  config_get(&config);
-
-  // get the computed crc32 code
-  uint32_t computed_crc32 = calculated_application_crc32((uintptr_t)BOOTLOADER_APPLICATION_START,
-                                                         BOOTLOADER_APPLICATION_SIZE);
-
-  if (config.application_crc32 != computed_crc32) {
-    LOG_DEBUG("CRC32 codes do not match returning");
-    return;
-  }
-
   __disable_irq();   // we don't want any interrupts while we're messing with the vector table
   __set_CONTROL(0);  // use MSP (main stack pointer) as the stack pointer
 

@@ -2,31 +2,26 @@
 
 #include "bootloader_crc32.h"
 #include "bootloader_mcu.h"
-#include "config.h"
 #include "crc32.h"
 #include "flash.h"
-#include "interrupt.h"
 #include "log.h"
 #include "persist.h"
 #include "test_helpers.h"
 #include "unity.h"
 
-uint32_t s_crc32_codes_size = 54;
-
 // intialize memory with random numbers for testing
-void intialize_memory() {
+void initialize_memory(void) {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
-  unsigned int seed = 42;
+  srand(42);
 
   // generating random values in range of uint8(0->255)
-  for (int i = 0; i < 2048; i++) buffer[i] = rand_r(&seed) % (255 + 1 - 0) + 0;
+  for (uint16_t i = 0; i < 2048; i++) buffer[i] = rand() % (255 + 1 - 0) + 0;
 
   while (curr_size <= BOOTLOADER_APPLICATION_SIZE) {
     // write flash
-    flash_write((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, (uint8_t *)&buffer,
-                sizeof(buffer));
+    flash_write((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, buffer, sizeof(buffer));
     curr_size += sizeof(buffer);
   }
 }
@@ -34,8 +29,7 @@ void intialize_memory() {
 void setup_test(void) {
   flash_init();
   crc32_init();
-  config_init();
-  intialize_memory();
+  initialize_memory();
 }
 
 void teardown_test(void) {}
@@ -43,12 +37,9 @@ void teardown_test(void) {}
 // test to check if computed crc32 code matches with the config
 // application_crc32
 void test_bootloader_application_crc32() {
-  BootloaderConfig config = { 0 };
-  config_get(&config);
-
   // compute crc32 code
-  uint32_t computed_crc32 = calculated_application_crc32((uintptr_t)BOOTLOADER_APPLICATION_START,
-                                                         BOOTLOADER_APPLICATION_SIZE);
+  uint32_t computed_crc32 = calculate_application_crc32((uintptr_t)BOOTLOADER_APPLICATION_START,
+                                                        BOOTLOADER_APPLICATION_SIZE);
 
   // fails, not sure if it is neccessary becuase we don't have the actual device?
   // TEST_ASSERT_EQUAL(config.application_crc32, computed_crc32);
