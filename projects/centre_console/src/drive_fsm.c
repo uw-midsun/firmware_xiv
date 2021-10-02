@@ -99,12 +99,10 @@ static DestinationTransitionInfo s_destination_transition_lookup[NUM_DRIVE_STATE
 static void prv_fault_output(Fsm *fsm, const Event *e, void *context) {
   DriveFsmStorage *storage = (DriveFsmStorage *)context;
   FaultReason reason = { .fields = { .area = EE_CONSOLE_FAULT_AREA_DRIVE_FSM, .reason = e->data } };
+  LOG_DEBUG("faulted, discharging precharge and raising transition fault\n");
   CAN_TRANSMIT_DISCHARGE_PRECHARGE();
   CAN_TRANSMIT_STATE_TRANSITION_FAULT(reason.fields.area, reason.fields.reason);
-  EventId id = (TEST_PARKING_BRAKE_STATE ==
-                PARKING_BRAKE_STATE_PRESSED)  // To be updated when parking sensor added
-                   ? DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_BRAKE_PRESSED
-                   : DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;
+  EventId id = DRIVE_FSM_INPUT_EVENT_FAULT_RECOVER_RELEASED;
   storage->destination = NUM_DRIVE_STATES;
   event_raise(id, 0);
 }
@@ -130,6 +128,7 @@ static void prv_drive_fsm_destination_output(Fsm *fsm, const Event *e, void *con
   }
   storage->current_state = storage->destination;
   DestinationTransitionInfo info = s_destination_transition_lookup[storage->destination];
+  LOG_DEBUG("destination %d\n", storage->destination);
   event_raise(info.fsm_output_event_id, 0);
 }
 

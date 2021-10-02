@@ -15,4 +15,5 @@ $(T)_test_drive_fsm_MOCKS := get_precharge_state
 $(T)_test_cruise_rx_MOCKS := get_precharge_state
 $(T)_test_mci_output_MOCKS := mcp2515_tx drive_fsm_get_drive_state
 $(T)_test_mci_fan_control_MOCKS := gpio_get_state gpio_set_state
+$(T)_test_mci_broadcast_MOCKS := mci_fan_get_fault_bitset
 endif

@@ -3,6 +3,10 @@
 // Receives button presses on GPIO, and raises events.
 // Requires interrupts and gpio to be initialized.
 
+// CentreConsoleButtonPressEvents are raised. The event data is the state of the button pin at the
+// time of the interrupt; this is relevant for latching buttons. The interrupt is triggered on the
+// rising edge for non-latching buttons and on both edges for latching buttons.
+
 #include "gpio.h"
 #include "status.h"
 

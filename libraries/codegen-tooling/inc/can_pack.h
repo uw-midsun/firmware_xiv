@@ -127,10 +127,13 @@
                     SYSTEM_CAN_MESSAGE_MOTOR_VELOCITY, 4, (vehicle_velocity_left_u16),          \
                     (vehicle_velocity_right_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
-#define CAN_PACK_MOTOR_STATUS(msg_ptr, motor_status_l_u32, motor_status_r_u32) \
-  can_pack_impl_u32((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER,             \
-                    SYSTEM_CAN_MESSAGE_MOTOR_STATUS, 8, (motor_status_l_u32),  \
-                    (motor_status_r_u32))
+#define CAN_PACK_MOTOR_STATUS(msg_ptr, mc_limit_flags_l_u8, mc_limit_flags_r_u8,                   \
+                              mc_error_flags_l_u8, mc_error_flags_r_u8, board_fan_faults_u8,       \
+                              mc_overtemp_u8)                                                      \
+  can_pack_impl_u8((msg_ptr), SYSTEM_CAN_DEVICE_MOTOR_CONTROLLER, SYSTEM_CAN_MESSAGE_MOTOR_STATUS, \
+                   6, (mc_limit_flags_l_u8), (mc_limit_flags_r_u8), (mc_error_flags_l_u8),         \
+                   (mc_error_flags_r_u8), (board_fan_faults_u8), (mc_overtemp_u8),                 \
+                   CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_MOTOR_SINK_TEMPS(msg_ptr, motor_temp_l_u16, sink_temp_l_u16, motor_temp_r_u16,    \
                                   sink_temp_r_u16)                                                 \
@@ -175,6 +178,12 @@
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_STEERING, \
                       SYSTEM_CAN_MESSAGE_REGEN_BRAKING_TOGGLE_REQUEST)
 
+#define CAN_PACK_RACE_NORMAL_STATUS(msg_ptr, is_race_mode_u8)                                \
+  can_pack_impl_u8(                                                                          \
+      (msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_RACE_NORMAL_STATUS, 1, \
+      (is_race_mode_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,      \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
 #define CAN_PACK_REQUEST_TO_CHARGE(msg_ptr) \
   can_pack_impl_empty((msg_ptr), SYSTEM_CAN_DEVICE_CHARGER, SYSTEM_CAN_MESSAGE_REQUEST_TO_CHARGE)
 
@@ -214,6 +223,12 @@
   can_pack_impl_u16((msg_ptr), SYSTEM_CAN_DEVICE_POWER_DISTRIBUTION_REAR,             \
                     SYSTEM_CAN_MESSAGE_REAR_CURRENT_MEASUREMENT, 4, (current_id_u16), \
                     (current_u16), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
+
+#define CAN_PACK_RACE_NORMAL_SWITCH_MODE(msg_ptr, is_race_mode_u8)                                \
+  can_pack_impl_u8(                                                                               \
+      (msg_ptr), SYSTEM_CAN_DEVICE_CENTRE_CONSOLE, SYSTEM_CAN_MESSAGE_RACE_NORMAL_SWITCH_MODE, 1, \
+      (is_race_mode_u8), CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY,           \
+      CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY, CAN_PACK_IMPL_EMPTY)
 
 #define CAN_PACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8,      \
                                    fan_6_u8, fan_7_u8, fan_8_u8)                                   \

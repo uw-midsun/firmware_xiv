@@ -99,8 +99,13 @@
                       (vehicle_velocity_right_u16_ptr), CAN_UNPACK_IMPL_EMPTY, \
                       CAN_UNPACK_IMPL_EMPTY)
 
-#define CAN_UNPACK_MOTOR_STATUS(msg_ptr, motor_status_l_u32_ptr, motor_status_r_u32_ptr) \
-  can_unpack_impl_u32((msg_ptr), 8, (motor_status_l_u32_ptr), (motor_status_r_u32_ptr))
+#define CAN_UNPACK_MOTOR_STATUS(msg_ptr, mc_limit_flags_l_u8_ptr, mc_limit_flags_r_u8_ptr,   \
+                                mc_error_flags_l_u8_ptr, mc_error_flags_r_u8_ptr,            \
+                                board_fan_faults_u8_ptr, mc_overtemp_u8_ptr)                 \
+  can_unpack_impl_u8((msg_ptr), 6, (mc_limit_flags_l_u8_ptr), (mc_limit_flags_r_u8_ptr),     \
+                     (mc_error_flags_l_u8_ptr), (mc_error_flags_r_u8_ptr),                   \
+                     (board_fan_faults_u8_ptr), (mc_overtemp_u8_ptr), CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_MOTOR_SINK_TEMPS(msg_ptr, motor_temp_l_u16_ptr, sink_temp_l_u16_ptr, \
                                     motor_temp_r_u16_ptr, sink_temp_r_u16_ptr)          \
@@ -134,6 +139,11 @@
 
 #define CAN_UNPACK_REGEN_BRAKING_TOGGLE_REQUEST(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
+#define CAN_UNPACK_RACE_NORMAL_STATUS(msg_ptr, is_race_mode_u8_ptr)                       \
+  can_unpack_impl_u8((msg_ptr), 1, (is_race_mode_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
 #define CAN_UNPACK_REQUEST_TO_CHARGE(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
 
 #define CAN_UNPACK_ALLOW_CHARGING(msg_ptr) can_unpack_impl_empty((msg_ptr), 0)
@@ -163,6 +173,11 @@
 #define CAN_UNPACK_REAR_CURRENT_MEASUREMENT(msg_ptr, current_id_u16_ptr, current_u16_ptr) \
   can_unpack_impl_u16((msg_ptr), 4, (current_id_u16_ptr), (current_u16_ptr),              \
                       CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
+
+#define CAN_UNPACK_RACE_NORMAL_SWITCH_MODE(msg_ptr, is_race_mode_u8_ptr)                  \
+  can_unpack_impl_u8((msg_ptr), 1, (is_race_mode_u8_ptr), CAN_UNPACK_IMPL_EMPTY,          \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, \
+                     CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY, CAN_UNPACK_IMPL_EMPTY)
 
 #define CAN_UNPACK_BATTERY_FAN_STATE(msg_ptr, fan_1_u8_ptr, fan_2_u8_ptr, fan_3_u8_ptr,            \
                                      fan_4_u8_ptr, fan_5_u8_ptr, fan_6_u8_ptr, fan_7_u8_ptr,       \

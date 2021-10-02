@@ -341,9 +341,13 @@ msg {
   target: "TELEMETRY"
   msg_name: "motor status"
   can_data {
-    u32 {
-      field_name_1: "motor_status_l"
-      field_name_2: "motor_status_r"
+    u8 {
+      field_name_1: "mc_limit_flags_l"
+      field_name_2: "mc_limit_flags_r"
+      field_name_3: "mc_error_flags_l"
+      field_name_4: "mc_error_flags_r"
+      field_name_5: "board_fan_faults"
+      field_name_6: "mc_overtemp"
     }
   }
 }
@@ -458,7 +462,17 @@ msg {
   }
 }
 
-# ID 47: Reserved
+msg {
+  id: 47
+  source: CENTRE_CONSOLE
+  target: "CENTRE_CONSOLE, MOTOR_CONTROLLER"
+  msg_name: "race normal status"
+  can_data {
+    u8 {
+      field_name_1: "is_race_mode"
+    }
+  }
+}
 
 msg {
   id: 48
@@ -557,7 +571,17 @@ msg {
   }
 }
 
-# ID 56: reserved
+msg {
+  id: 56
+  source: CENTRE_CONSOLE
+  target: "CENTRE_CONSOLE, MOTOR_CONTROLLER"
+  msg_name: "race normal switch mode"
+  can_data {
+    u8 {
+      field_name_1: "is_race_mode"
+    }
+  }
+}
 
 msg {
   id: 57
