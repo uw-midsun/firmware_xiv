@@ -7,6 +7,7 @@
 #include "debug_led.h"
 #include "delay.h"
 #include "gpio_it.h"
+#include "log.h"
 #include "mcp2515_defs.h"
 #include "soft_timer.h"
 
@@ -295,6 +296,14 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   };
 
   prv_write(storage, MCP2515_CTRL_REG_CNF3, registers, SIZEOF_ARRAY(registers));
+
+  // Sanity check: read register after first write
+  // If new reg value corresponds to expected
+  uint8_t reg_val = 0;
+  prv_read(storage, MCP2515_CTRL_REG_CNF3, &reg_val, 1);
+  LOG_DEBUG("MCP2515 Init Status: %s\n",
+            reg_val == 0x05 ? "Connection SUCCESSFUL\n" : "Connection UNSUCCESSFUL\n");
+
   // Leave config mode
   uint8_t opmode =
       (settings->loopback ? MCP2515_CANCTRL_OPMODE_LOOPBACK : MCP2515_CANCTRL_OPMODE_NORMAL);
