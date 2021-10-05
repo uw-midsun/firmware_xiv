@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "can.h"
+#include "log.h"
 #include "can_transmit.h"
 #include "charger_controller.h"
 #include "charger_events.h"
@@ -22,20 +23,21 @@ static StatusCode prv_sequence(const CanMessage *msg, void *context, CanAckStatu
   GpioState state = NUM_GPIO_STATES;
 
   // 1. Ensure charger is on
-  gpio_get_state(&s_charger_sense, &state);
-  if (state != GPIO_STATE_HIGH) {
-    CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_CHARGER_OFF);
-    return STATUS_CODE_INTERNAL_ERROR;
-  }
+  // gpio_get_state(&s_charger_sense, &state);
+  // if (state != GPIO_STATE_HIGH) {
+  //   CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_CHARGER_OFF);
+  //   return STATUS_CODE_INTERNAL_ERROR;
+  // }
 
   // 2. Get control pilot PWM reading
   uint16_t cp_pwm_ret = control_pilot_get_current();
 
-  // 3. Set relay and load switch state
-  gpio_set_state(&s_relay_en, GPIO_STATE_HIGH);
-  gpio_set_state(&s_load_sw_en, GPIO_STATE_HIGH);
+  // // 3. Set relay and load switch state
+  // gpio_set_state(&s_relay_en, GPIO_STATE_HIGH);
+  // gpio_set_state(&s_load_sw_en, GPIO_STATE_HIGH);
 
   // 4. Enable charging via control pilot
+  LOG_DEBUG("SETTING PIN\n");
   gpio_set_state(&s_cp_select, GPIO_STATE_HIGH);
 
   // 5. Activate charger
@@ -63,8 +65,8 @@ StatusCode begin_sequence_init() {
 
   settings.direction = GPIO_DIR_IN;
   gpio_init_pin(&s_charger_sense, &settings);
-
-  can_register_rx_handler(SYSTEM_CAN_MESSAGE_ALLOW_CHARGING, prv_sequence, NULL);
+  prv_sequence(NULL, NULL, NULL);
+  //can_register_rx_handler(SYSTEM_CAN_MESSAGE_ALLOW_CHARGING, prv_sequence, NULL);
   control_pilot_init();
 
   return STATUS_CODE_OK;

@@ -41,6 +41,7 @@ static uint16_t prv_duty_to_current(uint32_t duty) {
 uint16_t control_pilot_get_current() {
   PwmInputReading reading = { 0 };
   pwm_input_get_reading(PWM_TIMER_3, &reading);
+  // LOG_DEBUG("PERCENT: %ld, PERIOD: %ld\n", reading.dc_percent, reading.period_us);
   return prv_duty_to_current(reading.dc_percent);
 }
 
@@ -53,7 +54,7 @@ StatusCode control_pilot_init() {
     .resistor = GPIO_RES_NONE,    //
     .alt_function = GPIO_ALTFN_1  //
   };
-
+  LOG_DEBUG("INITIALIZING PWM\n");
   gpio_init_pin(&cp_address, &cp_settings);
   pwm_input_init(input_timer, CONTROL_PILOT_PWM_CHANNEL);
   return STATUS_CODE_OK;

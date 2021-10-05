@@ -13,6 +13,19 @@
 #define CHARGER_TX_CAN_ID 0x1806E5F4
 #define CHARGER_RX_CAN_ID 0x18FF50E5
 
+typedef union ChargerCanJ1939Id {
+  uint32_t raw_id;
+  struct {
+    uint32_t source_address : 8;  // Source
+    uint32_t pdu_specifics : 8;   // Destination
+    uint32_t pdu_format : 8;      // Packet Format
+    uint32_t dp : 1;              // Always 0
+    uint32_t r : 1;               // Always 0
+    uint32_t priority : 3;        // Anything
+  };
+} ChargerCanJ1939Id;
+
+
 typedef union TxMsgData {
   struct {
     uint8_t max_voltage_high;

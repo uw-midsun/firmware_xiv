@@ -4,6 +4,7 @@
 #include "can.h"
 #include "can_msg_defs.h"
 #include "charger_controller.h"
+#include "control_pilot.h"
 #include "charger_events.h"
 #include "connection_sense.h"
 #include "event_queue.h"
@@ -11,6 +12,7 @@
 #include "interrupt.h"
 #include "soft_timer.h"
 #include "stop_sequence.h"
+#include "log.h"
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
@@ -24,6 +26,23 @@ static CanSettings s_can_settings = {
   .loopback = false                        //
 };
 
+
+static void prv_start_periodic_read(SoftTimerId id, void *context) {
+  uint16_t current = control_pilot_get_current();
+  GpioAddress ad = {
+    .pin = 5,
+    .port = GPIO_PORT_A,
+  };
+  GpioAddress sense = CHARGER_SENSE_PIN;
+  GpioState sense_state = GPIO_STATE_LOW;
+  gpio_get_state(&sense, &sense_state);
+  uint16_t reading = 0;
+  adc_read_converted_pin(ad, &reading);
+
+  LOG_DEBUG("CHARGER SENSE: %d, ADC VALUE: %d\n", sense_state, reading);
+  soft_timer_start_millis(1000, prv_start_periodic_read, NULL, NULL);
+}
+
 int main(void) {
   gpio_init();
   interrupt_init();
@@ -32,9 +51,35 @@ int main(void) {
   event_queue_init();
   can_init(&s_can_storage, &s_can_settings);
 
+
+  GpioSettings settings = {
+    .direction = GPIO_DIR_IN,       //
+    .state = GPIO_STATE_LOW,         //
+    .resistor = GPIO_RES_NONE,       //
+    .alt_function = GPIO_ALTFN_ANALOG  //
+  };
+
+  GpioSettings sense_set = {
+    .direction = GPIO_DIR_IN,       //
+    .state = GPIO_STATE_LOW,         //
+    .resistor = GPIO_RES_NONE,       //
+    .alt_function = GPIO_ALTFN_NONE //
+  };
+
+  GpioAddress ad = {
+    .pin = 5,
+    .port = GPIO_PORT_A,
+  };
+
+  GpioAddress sense = CHARGER_SENSE_PIN;
+  gpio_init_pin(&ad, &settings);
+  gpio_init_pin(&ad, &sense_set);
+
+  charger_controller_init();
   begin_sequence_init();
-  battery_monitor_init();
-  connection_sense_init();
+  // battery_monitor_init();
+
+  soft_timer_start_millis(1000, prv_start_periodic_read, NULL, NULL);
 
   Event e = { 0 };
   while (true) {
