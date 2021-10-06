@@ -95,6 +95,7 @@ static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void
                               ? (PD_5V_REG_ERROR | PD_5V_REG_DATA)
                               : PD_5V_REG_ERROR;
   bool is_front_pd = *(bool *)context;
+  LOG_WARNING("5V voltage regulator error raised!\n");
 
   if (is_front_pd) {
     CAN_TRANSMIT_FRONT_PD_FAULT(pd_err_flags, 0);
