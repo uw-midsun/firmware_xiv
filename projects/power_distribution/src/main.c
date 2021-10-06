@@ -29,8 +29,11 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
+#include "smoketests_pd.h"
 #include "voltage_regulator.h"
 #include "wait.h"
+
+#ifndef PD_SMOKE_TEST
 
 #define CURRENT_MEASUREMENT_INTERVAL_US 1500000  // 1.5s between current measurements
 #define SIGNAL_BLINK_INTERVAL_US 500000          // 0.5s between blinks of the signal lights
@@ -92,6 +95,7 @@ static void prv_voltage_monitor_error_callback(VoltageRegulatorError error, void
                               ? (PD_5V_REG_ERROR | PD_5V_REG_DATA)
                               : PD_5V_REG_ERROR;
   bool is_front_pd = *(bool *)context;
+  LOG_WARNING("5V voltage regulator error raised!\n");
 
   if (is_front_pd) {
     CAN_TRANSMIT_FRONT_PD_FAULT(pd_err_flags, 0);
@@ -106,7 +110,12 @@ static void prv_current_measurement_data_ready_callback(void *context) {
   publish_data_publish(storage->measurements);
 }
 
+#endif  // PD_SMOKE_TEST
+
 int main(void) {
+#ifdef PD_SMOKE_TEST
+  RUN_SMOKE_TEST(PD_SMOKE_TEST);
+#else
   LOG_DEBUG("Initializing power distribution...\n");
 
   // initialize all libraries
@@ -120,7 +129,7 @@ int main(void) {
 
   // test if it's front or rear PD, and log for easier debugging if initialization fails
   bool is_front_pd = prv_determine_is_front_pd();
-  LOG_DEBUG("Detected %s power distribution board...", is_front_pd ? "front" : "rear");
+  LOG_DEBUG("Detected %s power distribution board...\n", is_front_pd ? "front" : "rear");
 
   BUG(prv_init_can(is_front_pd));
 
@@ -214,6 +223,7 @@ int main(void) {
     }
     wait();
   }
+#endif  // PD_SMOKE_TEST
 
   return 0;
 }
