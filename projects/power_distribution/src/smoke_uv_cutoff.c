@@ -9,7 +9,6 @@
 #include "wait.h"
 
 void smoke_uv_cutoff_perform(void) {
-  interrupt_init();
   gpio_init();
   gpio_it_init();
   event_queue_init();
