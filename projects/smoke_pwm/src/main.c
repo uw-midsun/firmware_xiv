@@ -16,7 +16,7 @@
   { .port = GPIO_PORT_A, .pin = 6, }
 
 #define TEST_ADC_PIN \
-  { .port = GPIO_PORT_A, .pin = 5, }
+  { .port = GPIO_PORT_A, .pin = 6, }
 
 #define CONTROL_PILOT_SEL_PIN \
   { GPIO_PORT_A, 2 }
@@ -36,7 +36,7 @@ static void prv_get_pwm(SoftTimerId id, void *context) {
   adc_read_converted_pin(adc_pin, &reading);
 
   print_reading(&reading);
-  soft_timer_start_millis(1000, prv_get_pwm, NULL, NULL);
+  soft_timer_start(500, prv_get_pwm, NULL, NULL);
 }
 
 int main(void) {
@@ -74,6 +74,9 @@ int main(void) {
   gpio_set_state(&cp_sel, GPIO_STATE_HIGH);
 
   adc_init(ADC_MODE_SINGLE);
+
+  adc_set_channel_pin(adc, true);
+
   // gpio_init_pin(&input, &input_settings);
   // pwm_input_init(input_timer, TEST_INPUT_PWM_CHANNEL);
   soft_timer_start_millis(1000, prv_get_pwm, NULL, NULL);
