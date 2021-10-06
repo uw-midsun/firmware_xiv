@@ -17,6 +17,23 @@ void smoke_uv_cutoff_perform(void) {
 
   // Initialize module for UV cutoff notification
   StatusCode front_uv_detector_init(GpioAddress * detector_pin);
+  // initialize lights_signal_fsm
+  SignalFsmSettings lights_signal_fsm_settings = {
+    .signal_left_input_event = PD_SIGNAL_EVENT_LEFT,
+    .signal_right_input_event = PD_SIGNAL_EVENT_RIGHT,
+    .signal_hazard_input_event = PD_SIGNAL_EVENT_HAZARD,
+    .signal_left_output_event = PD_GPIO_EVENT_SIGNAL_LEFT,
+    .signal_right_output_event = PD_GPIO_EVENT_SIGNAL_RIGHT,
+    .signal_hazard_output_event = PD_GPIO_EVENT_SIGNAL_HAZARD,
+    .event_priority = PD_ACTION_EVENT_PRIORITY,
+    .blink_interval_us = SIGNAL_BLINK_INTERVAL_US,
+    .sync_behaviour = is_front_pd ? LIGHTS_SYNC_BEHAVIOUR_RECEIVE_SYNC_MSGS
+                                  : LIGHTS_SYNC_BEHAVIOUR_SEND_SYNC_MSGS,
+    .sync_event = PD_SYNC_EVENT_LIGHTS,
+    .num_blinks_between_syncs = NUM_SIGNAL_BLINKS_BETWEEN_SYNCS,
+  };
+  BUG(lights_signal_fsm_init(&s_lights_signal_fsm_storage, &lights_signal_fsm_settings));
+  static SignalFsmStorage s_lights_signal_fsm_storage;
 
   Event e = { 0 };
   while (true) {
