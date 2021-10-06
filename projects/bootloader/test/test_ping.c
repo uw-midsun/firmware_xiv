@@ -106,3 +106,25 @@ void test_ping_addressed_to_multiple(void) {
   TEST_ASSERT_EQUAL(s_board_id, rx_config.data[0]);
   TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_PING_RESPONSE, rx_config.dgram_type);
 }
+
+void test_ping_no_response(void) {
+  TEST_ASSERT_OK(ping_init(s_board_id));
+
+  uint8_t multiple_addr[4] = { 1, 3, 4, 5 };
+  CanDatagramTxConfig tx_config = {
+    .dgram_type = BOOTLOADER_DATAGRAM_PING_COMMAND,
+    .destination_nodes_len = 4,
+    .destination_nodes = multiple_addr,
+    .data_len = 0,
+    .data = NULL,
+    .tx_cmpl_cb = tx_cmpl_cb,
+  };
+  CanDatagramRxConfig rx_config = {
+    .destination_nodes = s_destination_nodes,
+    .data = s_rx_data,
+    .node_id = 0,  // listen to all
+    .rx_cmpl_cb = NULL,
+  };
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_assert_no_response();
+}
