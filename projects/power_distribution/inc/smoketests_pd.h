@@ -12,6 +12,11 @@ typedef enum {
   NUM_SMOKE_TESTS,
 } SmokeTest;
 
+typedef enum {
+  SMOKE_TEST_UV_CUTOFF = 0,  // see smoke_uv_cutoff.c
+  NUM_SMOKE_TESTs,
+} SmokeTest;
+
 // Run the given smoke test.
 #define RUN_SMOKE_TEST(smoke_test) smoketests_pd_run((smoke_test), STRINGIFY(smoke_test))
 

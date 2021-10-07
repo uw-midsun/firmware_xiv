@@ -1,4 +1,4 @@
 #pragma once
 
-// Calls the smoke_uv_cutoff_perform function to start the smoke test for front UV cutoff
+// A smoke test mode for the UV detector
 void smoke_uv_cutoff_perform(void);

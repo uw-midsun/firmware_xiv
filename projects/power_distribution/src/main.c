@@ -41,9 +41,6 @@
 #define STROBE_BLINK_INTERVAL_US 100000          // 0.1s between blinks of the strobe light
 #define NUM_SIGNAL_BLINKS_BETWEEN_SYNCS 10
 #define VOLTAGE_REGULATOR_DELAY_MS 25
-#define SMOKE_TEST_MODE SMOKE_TEST_NONE  // Set it to the choice of smoke test
-
-enum SmokeTestMode { SMOKE_TEST_NONE = 0, SMOKE_TEST_UV_CUTOFF, NUM_SMOKE_TEST_MODES };
 
 static CanStorage s_can_storage;
 static SignalFsmStorage s_lights_signal_fsm_storage;
