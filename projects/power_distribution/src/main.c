@@ -29,7 +29,6 @@
 #include "publish_data.h"
 #include "publish_data_config.h"
 #include "rear_strobe_blinker.h"
-#include "smoke_uv_cutoff.h"
 #include "smoketests_pd.h"
 #include "voltage_regulator.h"
 #include "wait.h"

@@ -2,6 +2,7 @@
 
 #include "log.h"
 #include "smoke_current_measurement.h"
+#include "smoke_uv_cutoff.h"
 
 // Smoke test perform functions must obey this signature.
 typedef void (*SmokeTestFunction)(void);
@@ -9,6 +10,7 @@ typedef void (*SmokeTestFunction)(void);
 // Add a line to this lookup table to add a smoke test.
 static SmokeTestFunction s_smoke_tests[NUM_SMOKE_TESTS] = {
   [SMOKE_TEST_CURRENT_MEASUREMENT] = smoke_current_measurement_perform,
+  [SMOKE_TEST_UV_CUTOFF] = smoke_uv_cutoff_perform,
 };
 
 void smoketests_pd_run(SmokeTest smoke_test, const char *smoke_test_name) {
