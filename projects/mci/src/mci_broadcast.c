@@ -4,13 +4,12 @@
 
 #include "can_transmit.h"
 #include "can_unpack.h"
-#include "critical_section.h"
-#include "mcp2515.h"
-
 #include "controller_board_pins.h"
+#include "critical_section.h"
 #include "cruise_rx.h"
 #include "log.h"
 #include "mci_fan_control.h"
+#include "mcp2515.h"
 #include "motor_can.h"
 #include "motor_controller.h"
 #include "soft_timer.h"
@@ -30,6 +29,7 @@ static const uint32_t s_offset_lookup[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENT
   [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE,
 };
 
+static bool should_turn_off_fan = true;
 // Uncomment when testing with only the left motor controller
 // #define RIGHT_MOTOR_CONTROLLER_UNUSED
 
@@ -78,6 +78,21 @@ static void prv_broadcast_dsp_temp(MotorControllerBroadcastStorage *storage) {
   WaveSculptorDspTempMeasurement *measurements = storage->measurements.dsp_measurements;
   CAN_TRANSMIT_DSP_BOARD_TEMPS((uint32_t)measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c,
                                (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c);
+}
+
+static void prv_temperature_fan_toggle(MotorControllerBroadcastStorage *storage) {
+  WaveSculptorSinkMotorTempMeasurement *sink_motor = storage->measurements.sink_motor_measurements;
+  WaveSculptorDspTempMeasurement *dsp_temp = storage->measurements.dsp_measurements;
+  if (sink_motor[LEFT_MOTOR_CONTROLLER].motor_temp_c >= MCI_FAN_ON_THRESHOLD ||
+      sink_motor[LEFT_MOTOR_CONTROLLER].heatsink_temp_c >= MCI_FAN_ON_THRESHOLD ||
+      sink_motor[RIGHT_MOTOR_CONTROLLER].motor_temp_c >= MCI_FAN_ON_THRESHOLD ||
+      sink_motor[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c >= MCI_FAN_ON_THRESHOLD ||
+      dsp_temp[LEFT_MOTOR_CONTROLLER].dsp_temp_c >= MCI_FAN_ON_THRESHOLD ||
+      dsp_temp[RIGHT_MOTOR_CONTROLLER].dsp_temp_c >= MCI_FAN_ON_THRESHOLD) {
+    mci_fan_set_state(MCI_FAN_STATE_ON);
+  } else {
+    mci_fan_set_state(MCI_FAN_STATE_OFF);
+  }
 }
 
 static void prv_handle_status_rx(const GenericCanMsg *msg, void *context) {
@@ -333,6 +348,8 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Sending DSP temperature periodic broadcast\n");
     prv_broadcast_dsp_temp(storage);
   }
+
+  prv_temperature_fan_toggle(storage);
 
   soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                           storage, NULL);
