@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "bootloader_mcu.h"
+#include "jump.h"
 #include "stm32f0xx_misc.h"
 #include "stm32f0xx_syscfg.h"
 
