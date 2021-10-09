@@ -15,7 +15,7 @@ void smoke_uv_cutoff_perform(void) {
   gpio_it_init();
   event_queue_init();
 
-  BUG(StatusCode front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN));
+  BUG(front_uv_detector_init(&(GpioAddress)FRONT_UV_COMPARATOR_PIN));
   LOG_DEBUG("The UV cutoff smoke test has been successfully initialized.");
 
   Event e = { 0 };
