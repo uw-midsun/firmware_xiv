@@ -3,10 +3,11 @@
 #include "bootloader_mcu.h"
 #include "crc32.h"
 #include "flash.h"
+#include "stdio.h"
 
 // calculates the crc32 for the full address, with 2048 byte increments
 // at a time, returning the final crc32 code
-uint32_t calculate_application_crc32(uintptr_t address, size_t size) {
+uint32_t calculate_application_crc32() {
   // code array for holding crc32 codes per 2048 bytes
   // size of array is BOOTLOADER_APPLICATION_SIZE / BUFFER_LEN + 1
   uint32_t crc32_codes[BOOTLOADER_APPLICATION_SIZE / BUFFER_LEN + 1];
@@ -15,9 +16,9 @@ uint32_t calculate_application_crc32(uintptr_t address, size_t size) {
   uint8_t buffer[BUFFER_LEN];  // buffer for holding 2048 bytes of flash
   uint32_t crc_temp;
 
-  while (curr_size <= size) {
+  while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
     // read from flash
-    flash_read(address + curr_size, sizeof(buffer), buffer, sizeof(buffer));
+    flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer), buffer, sizeof(buffer));
     // calculate crc32
     crc_temp = crc32_arr(buffer, sizeof(buffer));
 
