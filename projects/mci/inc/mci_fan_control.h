@@ -6,6 +6,10 @@
 #include "gpio.h"
 #include "status.h"
 
+// Fan control temperatures
+#define MCI_FAN_ON_THRESHOLD 60  // degrees C
+// #define MCI_FAN_OFF_THRESHOLD 60 // degrees C
+
 // General pin definitions:
 #define MCI_FAN_EN_ADDR \
   { GPIO_PORT_A, 0 }
@@ -34,10 +38,6 @@ typedef enum {
   MCI_THERM_Q3_OVERTEMP,
   NUM_MCI_FAN_CONTROL_THERMS,
 } MciFanControlTherm;
-
-// Fan control temperatures
-#define MCI_FAN_ON_THRESHOLD 60  // degrees C
-// #define MCI_FAN_OFF_THRESHOLD 60 // degrees C
 
 // Expose addresses for testing
 extern const GpioAddress g_therm_addrs[NUM_MCI_FAN_CONTROL_THERMS];
