@@ -9,4 +9,4 @@
 
 // calculates the crc32 for the full address, with 2048 byte increments
 // at a time, returning the final crc32 code
-uint32_t calculate_application_crc32(uintptr_t address, size_t size);
+uint32_t calculate_application_crc32();
