@@ -26,5 +26,5 @@ void jump_to_bootloader(void) {
   // re-enable interrupts
   __enable_irq();
   // jump to bootloader
-  prv_perform_jump(initial_sp, reset_handler_pc);
+  perform_jump(initial_sp, reset_handler_pc);
 }
