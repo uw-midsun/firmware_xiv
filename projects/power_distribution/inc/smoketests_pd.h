@@ -5,10 +5,11 @@
 // Smoke test control for PD.
 
 // To run a smoke test, uncomment this and set PD_SMOKE_TEST to the smoke test you want to run.
-#define PD_SMOKE_TEST SMOKE_TEST_CURRENT_MEASUREMENT
+// #define PD_SMOKE_TEST SMOKE_TEST_UV_CUTOFF
 
 typedef enum {
   SMOKE_TEST_CURRENT_MEASUREMENT = 0,  // see smoke_current_measurement.c
+  SMOKE_TEST_UV_CUTOFF,                // see smoke_uv_cutoff.c
   NUM_SMOKE_TESTS,
 } SmokeTest;
 
