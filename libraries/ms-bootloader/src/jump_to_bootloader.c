@@ -9,17 +9,6 @@
 #include "stm32f0xx_misc.h"
 #include "stm32f0xx_syscfg.h"
 
-static noreturn __attribute__((naked)) void prv_perform_jump(uint32_t sp, uint32_t pc) {
-  __asm(
-      "msr msp, %[sp] \n"  // reset the main stack pointer (msp) to sp
-      "bx %[pc] \n"        // jump to pc
-
-      // this bizarre syntax associates the "sp" and "pc" in asm with the sp and pc parameters
-      // see http://www.ethernut.de/en/documents/arm-inline-asm.html
-      :
-      : [sp] "r"(sp), [pc] "r"(pc));
-}
-
 void jump_to_bootloader(void) {
   // Disable all interrupts so their is no interference when working with vector tables
   __disable_irq();
