@@ -30,7 +30,7 @@ typedef union ChargerCanTxData {
 static const ChargerCanTxData tx_data = { .data_impl = {
   .max_voltage = 1512,
   .max_current = 1224,
-  .charging = 1,
+  .charging = 0,
   }};
 
 // Explicit for readability.
@@ -72,7 +72,7 @@ static Mcp2515Settings mcp2515_settings = {
   .loopback = false,                             //
 };
 
-static TxMsgData prv_build_charger_tx(TxControl charge) {
+static TxMsgData  prv_build_charger_tx(TxControl charge) {
   TxMsgData tx_data = {
     .fields.max_voltage_high = s_vc.values.bytes.voltage_high,  //
     .fields.max_voltage_low = s_vc.values.bytes.voltage_low,    //
@@ -101,33 +101,61 @@ static void prv_periodic_charger_tx(SoftTimerId timer_id, void *context) {
 }
 
 static void prv_charger_can_rx(const GenericCanMsg *msg, void *context) {
+  LOG_DEBUG("RX_CALLBACK CALLED: %ld\n", msg->id);
   if (msg->id != CHARGER_RX_CAN_ID) {
     return;
   }
   RxMsgData rx_msg = { .raw = msg->data };
-  if (rx_msg.fields.status_flags.raw) {
-    charger_controller_deactivate();
-  }
-  if (rx_msg.fields.status_flags.flags.hardware_failure) {
+  LOG_DEBUG("OUT_VOLTAGE %d, OUT_CURRENT: %d, FLAGS: %x\n", rx_msg.fields.out_voltage_high << 8 | rx_msg.fields.out_voltage_high,
+      rx_msg.fields.out_current_high << 8 | rx_msg.fields.out_current_high, rx_msg.fields.status_flags);
+  // if (rx_msg.fields.status_flags.fields) {
+  //   charger_controller_deactivate();
+  // }
+
+  if (rx_msg.fields.status_flags & ELCON_STATUS_HW_FAULT) {
     CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_HARDWARE_FAILURE);
     LOG_DEBUG("Charger fault hardware\n");
   }
-  if (rx_msg.fields.status_flags.flags.over_temp) {
+  if (rx_msg.fields.status_flags & ELCON_STATUS_OVERTEMP) {
     CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_OVER_TEMP);
     LOG_DEBUG("Charger fault overtemp\n");
   }
-  if (rx_msg.fields.status_flags.flags.wrong_voltage) {
+  if (rx_msg.fields.status_flags & ELCON_STATUS_INP_VOLTAGE_WRONG) {
     CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_WRONG_VOLTAGE);
     LOG_DEBUG("Charger fault wrong_voltage\n");
   }
-  if (rx_msg.fields.status_flags.flags.polarity_failure) {
+  if (rx_msg.fields.status_flags & ELCON_STATUS_REVERSE_POLARITY) {
     CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_POLARITY_FAILURE);
     LOG_DEBUG("Charger fault polarity failure\n");
   }
-  if (rx_msg.fields.status_flags.flags.communication_timeout) {
+  if (rx_msg.fields.status_flags & ELCON_STATUS_COMMS_TIMEOUT) {
     CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_COMMUNICATION_TIMEOUT);
     LOG_DEBUG("Charger fault communication target\n");
   }
+
+  // if (rx_msg.fields.status_flags.raw) {
+  //   charger_controller_deactivate();
+  // }
+  // if (rx_msg.fields.status_flags.flags.hardware_failure) {
+  //   CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_HARDWARE_FAILURE);
+  //   LOG_DEBUG("Charger fault hardware\n");
+  // }
+  // if (rx_msg.fields.status_flags.flags.over_temp) {
+  //   CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_OVER_TEMP);
+  //   LOG_DEBUG("Charger fault overtemp\n");
+  // }
+  // if (rx_msg.fields.status_flags.flags.wrong_voltage) {
+  //   CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_WRONG_VOLTAGE);
+  //   LOG_DEBUG("Charger fault wrong_voltage\n");
+  // }
+  // if (rx_msg.fields.status_flags.flags.polarity_failure) {
+  //   CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_POLARITY_FAILURE);
+  //   LOG_DEBUG("Charger fault polarity failure\n");
+  // }
+  // if (rx_msg.fields.status_flags.flags.communication_timeout) {
+  //   CAN_TRANSMIT_CHARGER_FAULT(EE_CHARGER_FAULT_COMMUNICATION_TIMEOUT);
+  //   LOG_DEBUG("Charger fault communication target\n");
+  // }
 }
 
 StatusCode charger_controller_activate(uint16_t max_allowable_current) {

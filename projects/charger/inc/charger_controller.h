@@ -38,23 +38,21 @@ typedef union TxMsgData {
   uint64_t raw;
 } TxMsgData;
 
+
+// Use Bitmasks instead of bitfield
+#define ELCON_STATUS_HW_FAULT 0x1
+#define ELCON_STATUS_OVERTEMP 0x2
+#define ELCON_STATUS_INP_VOLTAGE_WRONG 0x4
+#define ELCON_STATUS_REVERSE_POLARITY 0x8
+#define ELCON_STATUS_COMMS_TIMEOUT 0x10
+
 typedef union RxMsgData {
   struct {
     uint8_t out_voltage_high;
     uint8_t out_voltage_low;
     uint8_t out_current_high;
     uint8_t out_current_low;
-    union {
-      struct {
-        uint8_t hardware_failure : 1;
-        uint8_t over_temp : 1;
-        uint8_t wrong_voltage : 1;
-        uint8_t polarity_failure : 1;
-        uint8_t communication_timeout : 1;
-        uint8_t reserved : 3;
-      } flags;
-      uint8_t raw;
-    } status_flags;
+    uint8_t status_flags;
     uint32_t reserved : 24;
   } fields;
   uint64_t raw;

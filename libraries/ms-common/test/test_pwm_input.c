@@ -15,17 +15,17 @@
 
 // To run this test, connect the input and output pins
 
-#define TEST_OUTPUT_PWM_TIMER PWM_TIMER_1
-#define TEST_OUTPUT_PWM_ALTFN GPIO_ALTFN_2
-#define TEST_OUTPUT_PWM_PERIOD_US 1000
-#define TEST_OUTPUT_PWM_ADDR \
-  { .port = GPIO_PORT_A, .pin = 8, }
+// #define TEST_OUTPUT_PWM_TIMER PWM_TIMER_1
+// #define TEST_OUTPUT_PWM_ALTFN GPIO_ALTFN_2
+// #define TEST_OUTPUT_PWM_PERIOD_US 1000
+// #define TEST_OUTPUT_PWM_ADDR \
+//   { .port = GPIO_PORT_A, .pin = 8, }
 
 #define TEST_INPUT_PWM_TIMER PWM_TIMER_3
 #define TEST_INPUT_PWM_ALTFN GPIO_ALTFN_1
 #define TEST_INPUT_PWM_CHANNEL PWM_CHANNEL_2
 #define TEST_INPUT_PWM_ADDR \
-  { .port = GPIO_PORT_B, .pin = 5, }
+  { .port = GPIO_PORT_A, .pin = 6, }
 
 #define TOLERANCE (2)
 
@@ -42,9 +42,9 @@ void print_reading(uint32_t dc, PwmInputReading *reading) {
             (int)reading->dc_percent, TEST_OUTPUT_PWM_PERIOD_US, (int)reading->period_us);
 }
 
-void check_pwm_value(uint32_t dc, PwmInputReading *reading) {
-  TEST_ASSERT_OK(pwm_set_dc(TEST_OUTPUT_PWM_TIMER, dc));
-  delay_ms(50);
+void check_pwm_value(PwmInputReading *reading) {
+  // TEST_ASSERT_OK(pwm_set_dc(TEST_OUTPUT_PWM_TIMER, dc));
+  // delay_ms(50);
   TEST_ASSERT_OK(pwm_input_get_reading(TEST_INPUT_PWM_TIMER, reading));
   print_reading(dc, reading);
 
@@ -83,7 +83,7 @@ void test_pwm_input(void) {
     .alt_function = TEST_OUTPUT_PWM_ALTFN,
   };
 
-  TEST_ASSERT_OK(gpio_init_pin(&output, &output_settings));
+  // TEST_ASSERT_OK(gpio_init_pin(&output, &output_settings));
   TEST_ASSERT_OK(gpio_init_pin(&input, &input_settings));
 
   TEST_ASSERT_OK(pwm_init(TEST_OUTPUT_PWM_TIMER, TEST_OUTPUT_PWM_PERIOD_US));
