@@ -5,6 +5,10 @@
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
+#include "debouncer.h"
+
+#define DEBOUNCE true
+static DebouncerStorage s_debouncer = { 0 };
 
 // ks toggle = toggle relay state + log / check if set correctly
 // periodic AFE temp and voltage readings
@@ -61,12 +65,19 @@ int main(void) {
     .priority = INTERRUPT_PRIORITY_NORMAL,
     .type = INTERRUPT_TYPE_INTERRUPT,
   };
-  gpio_it_register_interrupt(&ks, &it_settings, INTERRUPT_EDGE_RISING_FALLING, prv_ks_handler,
-                             NULL);
+  if (DEBOUNCE) {
+    debouncer_init_pin(&s_debouncer, &ks, prv_ks_handler, NULL);
+  } else {
+    gpio_it_register_interrupt(&ks, &it_settings, INTERRUPT_EDGE_RISING_FALLING, prv_ks_handler,
+                              NULL);
+  }
   gpio_init_pin(&r_gnd, &en_settings);
   gpio_init_pin(&r_hv, &en_settings);
   while (true) {
     gpio_toggle_state(&debug_led);
-    delay_ms(500);
+    uint8_t state = 2;
+    gpio_get_state(&ks, &state);
+    // LOG_DEBUG("pin %d.%d state %d\n", ks.port, ks.pin, state);
+    delay_ms(200);
   }
 }

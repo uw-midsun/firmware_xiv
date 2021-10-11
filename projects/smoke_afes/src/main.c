@@ -23,6 +23,10 @@
 #define PASSIVE_BALANCE true
 #define PASSIVE_BALANCE_DIFF_MV 25
 
+static uint16_t s_balance_period_counter = 0;
+// number of periods before switching balanced cells
+#define BALANCE_PERIOD 1
+
 static LtcAfeStorage s_afe = { 0 };
 
 static void prv_log_table(uint16_t *results, uint16_t len, const char *name) {
@@ -60,11 +64,12 @@ static void prv_log_volts(uint16_t *results, uint16_t len, void *context) {
       cell_min - (dev*CELLS_PER_AFE), results[cell_max] - results[cell_min]);
   }
 
-  if (PASSIVE_BALANCE) {
+  if (PASSIVE_BALANCE && (s_balance_period_counter % BALANCE_PERIOD == 0)) {
     for (uint16_t i = 0; i < len; i++) {
       ltc_afe_toggle_cell_discharge(&s_afe, i, to_balance[i]);
     }
   }
+  s_balance_period_counter++;
 
   if (!LOG_VOLTS) {
     return;
