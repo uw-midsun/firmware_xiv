@@ -1,7 +1,12 @@
+#include "mci_broadcast.h"
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+
+#include "ms_test_helpers.h"
+#include "test_helpers.h"
 
 #include "can.h"
 #include "can_msg_defs.h"
@@ -13,16 +18,14 @@
 #include "generic_can_mcp2515.h"
 #include "interrupt.h"
 #include "log.h"
-#include "mci_broadcast.h"
-#include "mci_events.h"
-#include "mci_fan_control.h"
 #include "mcp2515.h"
-#include "motor_can.h"
-#include "motor_controller.h"
-#include "ms_test_helpers.h"
 #include "soft_timer.h"
 #include "status.h"
-#include "test_helpers.h"
+
+#include "mci_events.h"
+#include "mci_fan_control.h"
+#include "motor_can.h"
+#include "motor_controller.h"
 #include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
