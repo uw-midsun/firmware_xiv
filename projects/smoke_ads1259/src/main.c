@@ -49,12 +49,12 @@ static void prv_periodic_read(SoftTimerId id, void *context) {
 
 int main() {
   const Ads1259Settings settings = {
-    .spi_port = SPI_PORT_1,
+    .spi_port = SPI_PORT_2,
     .spi_baudrate = 600000,
-    .mosi = { .port = GPIO_PORT_A, 7 },
-    .miso = { .port = GPIO_PORT_A, 6 },
-    .sclk = { .port = GPIO_PORT_A, 5 },
-    .cs = { .port = GPIO_PORT_A, 4 },
+    .mosi = { .port = GPIO_PORT_B, 15 },
+    .miso = { .port = GPIO_PORT_B, 14 },
+    .sclk = { .port = GPIO_PORT_B, 13 },
+    .cs = { .port = GPIO_PORT_B, 12 },
     .handler = prv_rx_error_handler_cb,
   };
   interrupt_init();
