@@ -832,174 +832,6 @@ void test_3x_left_all_right_all(void) {
   }
 }
 
-void test_mci_fan_temp_control(void) {
-  // fan init without fault handling
-  GpioState state = NUM_GPIO_STATES;
-  const GpioAddress s_en_addr = MCI_FAN_EN_ADDR;
-  MciFanControlSettings settings = { 0 };
-  TEST_ASSERT_OK(mci_fan_control_init(&settings));
-  // init mci broadcast
-  MotorControllerBroadcastStorage broadcast_storage = { 0 };
-  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
-
-  MotorControllerMeasurements overtemp = {
-    .bus_measurements =
-        {
-            [LEFT_MOTOR_CONTROLLER] =
-                {
-                    .bus_voltage_v = 12.345,
-                    .bus_current_a = 5.9876,
-                },
-            [RIGHT_MOTOR_CONTROLLER] =
-                {
-                    .bus_voltage_v = 4.8602,
-                    .bus_current_a = 1.3975,
-                },
-        },
-    .vehicle_velocity =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 1.0101,
-            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-        },
-    .status =
-        {
-            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-            .board_fault_bitset = 0xCA,
-            .mc_overtemp_bitset = 0x00,  // currently always 0
-        },
-    .sink_motor_measurements =
-        {
-            [LEFT_MOTOR_CONTROLLER] =
-                {
-                    .motor_temp_c = 50.0221,
-                    .heatsink_temp_c = 25.1245,
-                },
-            [RIGHT_MOTOR_CONTROLLER] =
-                {
-                    .motor_temp_c = 60,
-                    .heatsink_temp_c = 28.4287,
-                },
-        },
-    .dsp_measurements =
-        {
-            // Set reserved field to 0.0
-            [LEFT_MOTOR_CONTROLLER] =
-                {
-                    .dsp_temp_c = 45.8910,
-                    .reserved = 0.0,
-                },
-            [RIGHT_MOTOR_CONTROLLER] =
-                {
-                    .dsp_temp_c = 60.0001,
-                    .reserved = 0.0,
-                },
-        },
-  };
-  MotorControllerMeasurements undertemp = {
-    .bus_measurements =
-        {
-            [LEFT_MOTOR_CONTROLLER] =
-                {
-                    .bus_voltage_v = 12.345,
-                    .bus_current_a = 5.9876,
-                },
-            [RIGHT_MOTOR_CONTROLLER] =
-                {
-                    .bus_voltage_v = 4.8602,
-                    .bus_current_a = 1.3975,
-                },
-        },
-    .vehicle_velocity =
-        {
-            [LEFT_MOTOR_CONTROLLER] = 1.0101,
-            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
-        },
-    .status =
-        {
-            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
-            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
-            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
-            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
-            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
-            .board_fault_bitset = 0xCA,
-            .mc_overtemp_bitset = 0x00,  // currently always 0
-        },
-    .sink_motor_measurements =
-        {
-            [LEFT_MOTOR_CONTROLLER] =
-                {
-                    .motor_temp_c = 50.0221,
-                    .heatsink_temp_c = 25.1245,
-                },
-            [RIGHT_MOTOR_CONTROLLER] =
-                {
-                    .motor_temp_c = 57.1967,
-                    .heatsink_temp_c = 28.4287,
-                },
-        },
-    .dsp_measurements =
-        {
-            // Set reserved field to 0.0
-            [LEFT_MOTOR_CONTROLLER] =
-                {
-                    .dsp_temp_c = 45.8910,
-                    .reserved = 0.0,
-                },
-            [RIGHT_MOTOR_CONTROLLER] =
-                {
-                    .dsp_temp_c = 56.1458,
-                    .reserved = 0.0,
-                },
-        },
-  };
-
-  // fan start off
-  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
-  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, state);
-  // motor over temperature
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &overtemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &overtemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &overtemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &overtemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &overtemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &overtemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &overtemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &overtemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &overtemp);
-  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
-  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state, "fan was not set from sink-motor overtemp\n");
-
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &overtemp);
-  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
-  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state, "fan was turned off with DSP overtemp???\n");
-
-  // under temperature threshold
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &undertemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &undertemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &undertemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &undertemp);
-  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &undertemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &undertemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &undertemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &undertemp);
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &undertemp);
-  // doesn't set fan until DSP is also read and under temp
-  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
-  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state, "fan was turned off without checking DSP\n");
-
-  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &undertemp);
-  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
-  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
-  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_LOW, state, "fan did not turn off when undertemp\n");
-}
-
 // Test 6: Same as test 1, but with broadcasts with the wrong ID sprinkled in.
 void test_message_id_filter(void) {
   MotorControllerBroadcastStorage broadcast_storage = { 0 };
@@ -1162,4 +994,145 @@ void test_message_id_filter(void) {
     prv_assert_eq_expected_storage_mt(expected_measurements, i);
     prv_assert_eq_expected_storage_dt(expected_measurements, i);
   }
+}
+
+void test_mci_fan_temp_control(void) {
+  // fan init without fault handling
+  GpioState state = NUM_GPIO_STATES;
+  const GpioAddress s_en_addr = MCI_FAN_EN_ADDR;
+  MciFanControlSettings settings = { 0 };
+  TEST_ASSERT_OK(mci_fan_control_init(&settings));
+  // init mci broadcast
+  MotorControllerBroadcastStorage broadcast_storage = { 0 };
+  mci_broadcast_init(&s_broadcast_storage, &s_broadcast_settings);
+
+  MotorControllerMeasurements measurements = {
+    .bus_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 12.345,
+                    .bus_current_a = 5.9876,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .bus_voltage_v = 4.8602,
+                    .bus_current_a = 1.3975,
+                },
+        },
+    .vehicle_velocity =
+        {
+            [LEFT_MOTOR_CONTROLLER] = 1.0101,
+            [RIGHT_MOTOR_CONTROLLER] = 56.5665,
+        },
+    .status =
+        {
+            // Note that, due to the reserved bit 0, error bitsets can't have their MSB high
+            .mc_limit_bitset[LEFT_MOTOR_CONTROLLER] = 0x11,
+            .mc_limit_bitset[RIGHT_MOTOR_CONTROLLER] = 0x13,
+            .mc_error_bitset[LEFT_MOTOR_CONTROLLER] = 0x32,
+            .mc_error_bitset[RIGHT_MOTOR_CONTROLLER] = 0x5F,
+            .board_fault_bitset = 0xCA,
+            .mc_overtemp_bitset = 0x00,  // currently always 0
+        },
+    .sink_motor_measurements =
+        {
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 50.0221,
+                    .heatsink_temp_c = 25.1245,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .motor_temp_c = 60,
+                    .heatsink_temp_c = 28.4287,
+                },
+        },
+    .dsp_measurements =
+        {
+            // Set reserved field to 0.0
+            [LEFT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 45.8910,
+                    .reserved = 0.0,
+                },
+            [RIGHT_MOTOR_CONTROLLER] =
+                {
+                    .dsp_temp_c = 60.0001,
+                    .reserved = 0.0,
+                },
+        },
+  };
+
+  // fan start off
+  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
+  TEST_ASSERT_EQUAL(GPIO_STATE_LOW, state);
+  // motor over temperature
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &measurements);
+  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
+  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state, "fan was not set from sink-motor overtemp\n");
+
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &measurements);
+  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
+  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state, "fan was turned off with DSP overtemp???\n");
+
+  // under over-temperature threshold
+  measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c = 45.8910;
+  measurements.dsp_measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c = 56.1458;
+  measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = 50.0221;
+  measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c = 25.1245;
+  measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c = 57.1967;
+  measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c = 28.4287;
+
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &measurements);
+  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
+  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state,
+                            "fan turned off when above off threshold, below on threshold\n");
+
+  // under under-temperature threshold
+  measurements.dsp_measurements[LEFT_MOTOR_CONTROLLER].dsp_temp_c = 45.8910;
+  measurements.dsp_measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c = 45.8910;
+  measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].motor_temp_c = 49.9999;
+  measurements.sink_motor_measurements[LEFT_MOTOR_CONTROLLER].heatsink_temp_c = 45.8910;
+  measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].motor_temp_c = 45.8910;
+  measurements.sink_motor_measurements[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c = 25.1245;
+
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(LEFT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_STATUS_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_BUS_MEASUREMENT_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_VELOCITY_MESSAGE, &measurements);
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_SINK_MOTOR_TEMP_MESSAGE, &measurements);
+  // doesn't set fan until DSP is also read and under temp
+  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
+  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_HIGH, state, "fan was turned off without checking DSP\n");
+
+  prv_send_measurements(RIGHT_MOTOR_CONTROLLER, TEST_MCI_DSP_TEMP_MESSAGE, &measurements);
+  delay_ms(2 * MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS + 50);
+  TEST_ASSERT_OK(gpio_get_state(&s_en_addr, &state));
+  TEST_ASSERT_EQUAL_MESSAGE(GPIO_STATE_LOW, state, "fan did not turn off when undertemp\n");
 }

@@ -83,6 +83,7 @@ static void prv_broadcast_dsp_temp(MotorControllerBroadcastStorage *storage) {
 static void prv_temperature_fan_toggle(MotorControllerBroadcastStorage *storage) {
   WaveSculptorSinkMotorTempMeasurement *sink_motor = storage->measurements.sink_motor_measurements;
   WaveSculptorDspTempMeasurement *dsp_temp = storage->measurements.dsp_measurements;
+
   if (sink_motor[LEFT_MOTOR_CONTROLLER].motor_temp_c >= MCI_FAN_ON_THRESHOLD ||
       sink_motor[LEFT_MOTOR_CONTROLLER].heatsink_temp_c >= MCI_FAN_ON_THRESHOLD ||
       sink_motor[RIGHT_MOTOR_CONTROLLER].motor_temp_c >= MCI_FAN_ON_THRESHOLD ||
@@ -90,7 +91,12 @@ static void prv_temperature_fan_toggle(MotorControllerBroadcastStorage *storage)
       dsp_temp[LEFT_MOTOR_CONTROLLER].dsp_temp_c >= MCI_FAN_ON_THRESHOLD ||
       dsp_temp[RIGHT_MOTOR_CONTROLLER].dsp_temp_c >= MCI_FAN_ON_THRESHOLD) {
     mci_fan_set_state(MCI_FAN_STATE_ON);
-  } else {
+  } else if (sink_motor[LEFT_MOTOR_CONTROLLER].motor_temp_c < MCI_FAN_OFF_THRESHOLD &&
+             sink_motor[LEFT_MOTOR_CONTROLLER].heatsink_temp_c < MCI_FAN_OFF_THRESHOLD &&
+             sink_motor[RIGHT_MOTOR_CONTROLLER].motor_temp_c < MCI_FAN_OFF_THRESHOLD &&
+             sink_motor[RIGHT_MOTOR_CONTROLLER].heatsink_temp_c < MCI_FAN_OFF_THRESHOLD &&
+             dsp_temp[LEFT_MOTOR_CONTROLLER].dsp_temp_c < MCI_FAN_OFF_THRESHOLD &&
+             dsp_temp[RIGHT_MOTOR_CONTROLLER].dsp_temp_c < MCI_FAN_OFF_THRESHOLD) {
     mci_fan_set_state(MCI_FAN_STATE_OFF);
   }
 }

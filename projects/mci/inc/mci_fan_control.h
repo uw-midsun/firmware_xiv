@@ -7,8 +7,8 @@
 #include "status.h"
 
 // Fan control temperatures
-#define MCI_FAN_ON_THRESHOLD 60  // degrees C
-// #define MCI_FAN_OFF_THRESHOLD 60 // degrees C
+#define MCI_FAN_ON_THRESHOLD 60   // degrees C
+#define MCI_FAN_OFF_THRESHOLD 50  // degrees C
 
 // General pin definitions:
 #define MCI_FAN_EN_ADDR \
