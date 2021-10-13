@@ -181,11 +181,6 @@ bool TEST_MOCK(drive_fsm_is_cruise)() {
   return s_is_cruise;
 }
 
-// Mocking this function is somehow required to prevent a Segfault.
-bool TEST_MOCK(drive_fsm_toggle_cruise)() {
-  return true;
-}
-
 static void prv_do_tx_rx_pedal_values(TestMciOutputStorage *storage, PedalValues *pedal_values) {
   // Send pedal value
   s_mci_output_storage.pedal_storage.pedal_values = *pedal_values;
@@ -199,6 +194,7 @@ void setup_test(void) {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
+  drive_fsm_init();
 
   prv_setup_system_can();
   prv_setup_motor_can();
