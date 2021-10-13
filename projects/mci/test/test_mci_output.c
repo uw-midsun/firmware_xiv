@@ -200,7 +200,8 @@ void setup_test(void) {
   prv_setup_motor_can();
 
   TEST_ASSERT_OK(regen_braking_init());
-  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage, TEST_MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS));
+  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage,
+                                 TEST_MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS));
 }
 
 void teardown_test(void) {}

@@ -103,7 +103,8 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can, uint32_t tx_delay) {
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can,
+                           uint32_t tx_delay) {
   PedalRxSettings pedal_settings = {
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
     .timeout_ms = MCI_PEDAL_RX_TIMEOUT_MS,
@@ -112,6 +113,5 @@ StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage
   mci_tx_period_ms = tx_delay;
 
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
-  return soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage,
-                                 NULL);
+  return soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage, NULL);
 }
