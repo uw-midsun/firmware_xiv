@@ -14,10 +14,11 @@ void initialize_memory(void) {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
-  srand(42);
 
   // generating random values in range of uint8(0->255)
-  for (uint16_t i = 0; i < 2048; i++) buffer[i] = i % 231;
+  for (uint16_t i = 0; i < 2048; i++){
+    buffer[i] = i % 231;
+  }
 
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
     // write flash

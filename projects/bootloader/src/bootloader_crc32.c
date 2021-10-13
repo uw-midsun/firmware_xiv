@@ -19,6 +19,7 @@ uint32_t calculate_application_crc32() {
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
     // read from flash
     flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer), buffer, sizeof(buffer));
+
     // calculate crc32
     crc_temp = crc32_arr(buffer, sizeof(buffer));
 
