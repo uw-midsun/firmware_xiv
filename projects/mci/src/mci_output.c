@@ -27,6 +27,8 @@ static float s_max_regen_in_throttle = 0.0f;
 static float s_regen_threshold = 0.0f;
 static float s_actual_velocity_ms = 0.0f;
 
+static uint32_t mci_tx_period_ms = MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS;
+
 // Updates s_actual_velocity_ms
 void mci_output_update_velocity(float actual_velocity_ms) {
   s_actual_velocity_ms = actual_velocity_ms;
@@ -98,16 +100,18 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   // Handling message
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
   prv_send_wavesculptor_message(storage, MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID, drive_command);
-  soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
+  soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can) {
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can, uint32_t tx_delay) {
   PedalRxSettings pedal_settings = {
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
     .timeout_ms = MCI_PEDAL_RX_TIMEOUT_MS,
   };
   storage->motor_can = motor_can;
+  mci_tx_period_ms = tx_delay;
+
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
-  return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
+  return soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage,
                                  NULL);
 }

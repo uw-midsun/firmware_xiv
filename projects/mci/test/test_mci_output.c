@@ -29,6 +29,9 @@
 #include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
+
+#define TEST_MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS 5
+
 #define TEST_MCI_OUTPUT_THRESHOLD 0.01f
 #define TEST_CONTINUITY_INCREMENT 0.95f
 
@@ -188,7 +191,7 @@ static void prv_do_tx_rx_pedal_values(TestMciOutputStorage *storage, PedalValues
   s_mci_output_storage.pedal_storage.pedal_values = *pedal_values;
   storage->pedal_sent = true;
   LOG_DEBUG("START DELAY\n");
-  delay_ms(300);
+  delay_ms(10);
   LOG_DEBUG("END DELAY\n");
 }
 
@@ -201,7 +204,7 @@ void setup_test(void) {
   prv_setup_motor_can();
 
   TEST_ASSERT_OK(regen_braking_init());
-  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage));
+  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage, TEST_MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS));
 }
 
 void teardown_test(void) {}
