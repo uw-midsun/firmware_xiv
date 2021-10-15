@@ -8,6 +8,7 @@
 #include "gpio.h"
 #include "log.h"
 #include "soft_timer.h"
+#include "wait.h"
 
 #define COUNTER_PERIOD_MS 10000  // The time between each softtimer call in ms
 
@@ -23,11 +24,10 @@ void smoke_charger_controll_perform(void) {
   event_queue_init();
   can_init();
   charger_controller_init();
+
+  LOG_DEBUG("Initializing soft timer for charger controller smoke test\n");
+  soft_timer_start_millis(COUNTER_PERIOD_MS, prv_softtimer_charger_controller_call, NULL, NULL);
   while (true) {
-    {
-      soft_timer_start_millis(COUNTER_PERIOD_MS, prv_softtimer_charger_controller_call, NULL, NULL);
-      LOG_DEBUG("Initializing soft timer for charger controller smoke test\n");
-    }
     wait();
   }
 }
