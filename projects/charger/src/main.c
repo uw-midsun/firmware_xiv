@@ -9,8 +9,8 @@
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
-#include "soft_timer.h"
 #include "smoketests_charger.h"
+#include "soft_timer.h"
 #include "stop_sequence.h"
 
 #ifndef CHARGER_SMOKE_TEST
@@ -27,7 +27,7 @@ static CanSettings s_can_settings = {
   .loopback = false                        //
 };
 
-#endif //CHARGER_SMOKE_TEST
+#endif  // CHARGER_SMOKE_TEST
 
 int main(void) {
 #ifdef CHARGER_SMOKE_TEST
