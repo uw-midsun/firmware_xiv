@@ -26,6 +26,7 @@ static CanDatagramTxConfig s_response_config = {
 
 static StatusCode prv_jump_to_application_response(uint8_t *data, uint16_t data_len,
                                                    void *context) {
+  
   BootloaderConfig config = { 0 };
   config_get(&config);
 
@@ -33,12 +34,13 @@ static StatusCode prv_jump_to_application_response(uint8_t *data, uint16_t data_
   uint32_t computed_crc32 = calculate_application_crc32();
   if (config.application_crc32 != computed_crc32) {
     LOG_DEBUG("CRC32 codes do not match returning\n");
-    s_status = FAILURE_STATUS; 
+    //printf("%d | %d\n", config.application_crc32, computed_crc32);
+    s_status = FAILURE_STATUS;
     return can_datagram_start_tx(&s_response_config);
   }
 
   jump_to_application();
-  s_status = SUCCESS_STATUS; 
+  s_status = SUCCESS_STATUS;
   return can_datagram_start_tx(&s_response_config);
 }
 

@@ -4,6 +4,7 @@
 #include "crc32.h"
 #include "flash.h"
 #include "stdio.h"
+#include "log.h"
 
 // calculates the crc32 for the full address, with 2048 byte increments
 // at a time, returning the final crc32 code
@@ -19,7 +20,7 @@ uint32_t calculate_application_crc32() {
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
     // read from flash
     flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer), buffer, sizeof(buffer));
-
+    
     // calculate crc32
     crc_temp = crc32_arr(buffer, sizeof(buffer));
 
