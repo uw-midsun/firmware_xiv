@@ -8,7 +8,7 @@ typedef void (*SmokeTestFunction)(void);
 
 // Add a line to this lookup table to add a smoke test.
 static SmokeTestFunction s_smoke_tests[NUM_SMOKE_TESTS] = {
-  [SMOKE_TEST_CHARGER_COMMS] = smoke_current_measurement_perform,
+  [SMOKE_TEST_CHARGER_COMMS] = smoke_charger_controll_perform,
 };
 
 void smoketests_charger_run(SmokeTest smoke_test, const char *smoke_test_name) {

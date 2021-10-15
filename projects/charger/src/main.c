@@ -9,6 +9,7 @@
 #include "event_queue.h"
 #include "gpio.h"
 #include "interrupt.h"
+#include "log.h"
 #include "smoketests_charger.h"
 #include "soft_timer.h"
 #include "stop_sequence.h"
@@ -33,7 +34,7 @@ int main(void) {
 #ifdef CHARGER_SMOKE_TEST
   RUN_SMOKE_TEST(CHARGER_SMOKE_TEST);
 #else
-  LOG_DEBUG("Initializing charger...\n");
+  LOG_DEBUG("Intializing charger... \n");
 
   gpio_init();
   adc_init(ADC_MODE_SINGLE);
@@ -54,6 +55,6 @@ int main(void) {
       stop_sequence_process_event(&e);
     }
   }
-
+#endif  // PD_SMOKE_TEST
   return 0;
 }
