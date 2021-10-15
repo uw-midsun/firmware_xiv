@@ -32,9 +32,9 @@ static InterruptSettings interrupt_settings = {
 };
 
 static void prv_button_interrupt_handler(const GpioAddress *address, void *context) {
-  uint16_t potentiometer_data = 0;
-  if (adc_read_converted_pin(pot_address, &potentiometer_data) == STATUS_CODE_OK) {
-    LOG_DEBUG("potentiometer data: %d\n", potentiometer_data);
+  uint16_t pot_data = 0;
+  if (adc_read_converted_pin(pot_address, &pot_data) == STATUS_CODE_OK) {
+    LOG_DEBUG("potentiometer data: %d\n", pot_data);
   } else {
     LOG_DEBUG("Failed to read potentiomter data");
   }
