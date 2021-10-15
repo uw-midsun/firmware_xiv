@@ -55,6 +55,6 @@ int main(void) {
       stop_sequence_process_event(&e);
     }
   }
-#endif  // PD_SMOKE_TEST
+#endif  // CHARGER_SMOKE_TEST
   return 0;
 }
