@@ -27,7 +27,7 @@ static CanSettings s_can_settings = {
   .loopback = false                        //
 };
 
-#endif  // CHARGER_SMOKE_TEST
+#endif //CHARGER_SMOKE_TEST
 
 int main(void) {
 #ifdef CHARGER_SMOKE_TEST
