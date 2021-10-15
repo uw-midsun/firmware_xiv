@@ -10,7 +10,10 @@
 #include "gpio.h"
 #include "interrupt.h"
 #include "soft_timer.h"
+#include "smoketests_charger.h"
 #include "stop_sequence.h"
+
+#ifndef CHARGER_SMOKE_TEST
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
@@ -25,6 +28,11 @@ static CanSettings s_can_settings = {
 };
 
 int main(void) {
+#ifdef CHARGER_SMOKE_TEST
+  RUN_SMOKE_TEST(CHARGER_SMOKE_TEST);
+#else
+  LOG_DEBUG("Initializing charger...\n");
+
   gpio_init();
   adc_init(ADC_MODE_SINGLE);
   interrupt_init();

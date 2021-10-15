@@ -15,5 +15,5 @@ void smoke_charger_controll_perform(void){
     event_queue_init();
     can_init();
     charger_controller_init();
-
+    
 }
