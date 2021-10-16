@@ -41,6 +41,58 @@
 #define NUM_BTS7200 9
 #define NUM_BTS7040 7  // including 2 on UV cutoff
 
+const char *g_output_names[NUM_OUTPUTS] = {
+  [FRONT_OUTPUT_CENTRE_CONSOLE] = "[front] centre console",
+  [FRONT_OUTPUT_PEDAL] = "[front] pedal",
+  [FRONT_OUTPUT_STEERING] = "[front] steering",
+  [FRONT_OUTPUT_DRIVER_DISPLAY] = "[front] driver display",
+  [FRONT_OUTPUT_INFOTAINMENT_DISPLAY] = "[front] infotainment",
+  [FRONT_OUTPUT_LEFT_DISPLAY] = "[front] left display",
+  [FRONT_OUTPUT_RIGHT_DISPLAY] = "[front] right display",
+  [FRONT_OUTPUT_REAR_DISPLAY] = "[front] rear display",
+  [FRONT_OUTPUT_LEFT_CAMERA] = "[front] left camera",
+  [FRONT_OUTPUT_RIGHT_CAMERA] = "[front] right camera",
+  [FRONT_OUTPUT_MAIN_PI] = "[front] main rPi",
+  [FRONT_OUTPUT_SPEAKER] = "[front] speaker",
+  [FRONT_OUTPUT_FAN] = "[front] fan",
+  [FRONT_OUTPUT_LEFT_FRONT_TURN_LIGHT] = "[front] left front turn light",
+  [FRONT_OUTPUT_RIGHT_FRONT_TURN_LIGHT] = "[front] right front turn light",
+  [FRONT_OUTPUT_DAYTIME_RUNNING_LIGHTS] = "[front] DRL",
+  [FRONT_OUTPUT_HORN] = "[front] horn",
+  [FRONT_OUTPUT_UV_VBAT] = "[front] UV cutoff",
+  [FRONT_OUTPUT_5V_SPARE_1] = "[front] 5V spare 1",
+  [FRONT_OUTPUT_5V_SPARE_2] = "[front] 5V spare 2",
+  [FRONT_OUTPUT_SPARE_1] = "[front] spare 1",
+  [FRONT_OUTPUT_SPARE_2] = "[front] spare 2",
+  [FRONT_OUTPUT_SPARE_3] = "[front] spare 3",
+  [FRONT_OUTPUT_SPARE_4] = "[front] spare 4",
+  [FRONT_OUTPUT_SPARE_5] = "[front] spare 5",
+  [FRONT_OUTPUT_SPARE_6] = "[front] spare 6",
+  [REAR_OUTPUT_BMS] = "[rear] BMS",
+  [REAR_OUTPUT_MCI] = "[rear] MCI",
+  [REAR_OUTPUT_CHARGER] = "[rear] charger",
+  [REAR_OUTPUT_SOLAR_SENSE] = "[rear] solar sense",
+  [REAR_OUTPUT_REAR_CAMERA] = "[rear] rear camera",
+  [REAR_OUTPUT_FAN_1] = "[rear] fan 1",
+  [REAR_OUTPUT_FAN_2] = "[rear] fan 2",
+  [REAR_OUTPUT_LEFT_REAR_TURN_LIGHT] = "[rear] left rear turn light",
+  [REAR_OUTPUT_RIGHT_REAR_TURN_LIGHT] = "[rear] right rear turn light",
+  [REAR_OUTPUT_BRAKE_LIGHT] = "[rear] brake light",
+  [REAR_OUTPUT_BPS_STROBE_LIGHT] = "[rear] BPS strobe light",
+  [REAR_OUTPUT_5V_SPARE_1] = "[rear] 5V spare 1",
+  [REAR_OUTPUT_5V_SPARE_2] = "[rear] 5V spare 2",
+  [REAR_OUTPUT_SPARE_1] = "[rear] spare 1",
+  [REAR_OUTPUT_SPARE_2] = "[rear] spare 2",
+  [REAR_OUTPUT_SPARE_3] = "[rear] spare 3",
+  [REAR_OUTPUT_SPARE_4] = "[rear] spare 4",
+  [REAR_OUTPUT_SPARE_5] = "[rear] spare 5",
+  [REAR_OUTPUT_SPARE_6] = "[rear] spare 6",
+  [REAR_OUTPUT_SPARE_7] = "[rear] spare 7",
+  [REAR_OUTPUT_SPARE_8] = "[rear] spare 8",
+  [REAR_OUTPUT_SPARE_9] = "[rear] spare 9",
+  [REAR_OUTPUT_SPARE_10] = "[rear] spare 10",
+};
+
 static Bts7200Storage s_bts7200_storage[NUM_BTS7200];
 static uint8_t s_num_bts7200_storages;
 static Bts7040Storage s_bts7040_storage[NUM_BTS7040];
@@ -140,6 +192,7 @@ static StatusCode prv_init_bts7040(Output output, OutputBts7040Spec *spec) {
     .min_fault_voltage_mv = BTS7040_MIN_FAULT_VOLTAGE_MV,
     .fault_callback = prv_bts7040_fault_callback,
     .fault_callback_context = (void *)(uintptr_t)output,
+    .use_bts7004_scaling = spec->use_bts7004_scaling,
   };
   return bts7040_init_pca9539r(storage, &settings);
 }

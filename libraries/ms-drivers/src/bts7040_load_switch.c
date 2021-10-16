@@ -55,6 +55,8 @@ StatusCode bts7040_init_stm32(Bts7040Storage *storage, Bts7040Stm32Settings *set
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
 
+  storage->use_bts7004_scaling = settings->use_bts7004_scaling;
+
   // Initialize the enable pin
   status_ok_or_return(bts7xxx_init_pin(&storage->enable_pin));
 
@@ -78,6 +80,8 @@ StatusCode bts7040_init_pca9539r(Bts7040Storage *storage, Bts7040Pca9539rSetting
   storage->bias = settings->bias;
 
   storage->min_fault_voltage_mv = settings->min_fault_voltage_mv;
+
+  storage->use_bts7004_scaling = settings->use_bts7004_scaling;
 
   // initialize PCA9539R on the relevant port
   pca9539r_gpio_init(settings->i2c_port, storage->enable_pin.enable_pin_pca9539r->i2c_address);
@@ -107,7 +111,8 @@ static void prv_convert_voltage_to_current(Bts7040Storage *storage, uint16_t *me
   } else {
     // using 32 bits to avoid overflow, and signed ints to get around C's janky type system
     uint32_t meas32 = (uint32_t)*meas;
-    meas32 *= BTS7040_IS_SCALING_NOMINAL;
+    meas32 *=
+        (storage->use_bts7004_scaling ? BTS7004_IS_SCALING_NOMINAL : BTS7040_IS_SCALING_NOMINAL);
     meas32 /= storage->resistor;
     int32_t unbiased_meas32 = (int32_t)meas32 - storage->bias;
     *meas = (uint16_t)MAX(unbiased_meas32, 0);

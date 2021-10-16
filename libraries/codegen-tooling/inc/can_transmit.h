@@ -292,6 +292,14 @@
     status;                                         \
   })
 
+#define CAN_TRANSMIT_RACE_NORMAL_STATUS(is_race_mode_u8)  \
+  ({                                                      \
+    CanMessage msg = { 0 };                               \
+    CAN_PACK_RACE_NORMAL_STATUS(&msg, (is_race_mode_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);         \
+    status;                                               \
+  })
+
 #define CAN_TRANSMIT_REQUEST_TO_CHARGE()          \
   ({                                              \
     CanMessage msg = { 0 };                       \
@@ -354,6 +362,14 @@
     CAN_PACK_REAR_CURRENT_MEASUREMENT(&msg, (current_id_u16), (current_u16)); \
     StatusCode status = can_transmit(&msg, NULL);                             \
     status;                                                                   \
+  })
+
+#define CAN_TRANSMIT_RACE_NORMAL_SWITCH_MODE(is_race_mode_u8)  \
+  ({                                                           \
+    CanMessage msg = { 0 };                                    \
+    CAN_PACK_RACE_NORMAL_SWITCH_MODE(&msg, (is_race_mode_u8)); \
+    StatusCode status = can_transmit(&msg, NULL);              \
+    status;                                                    \
   })
 
 #define CAN_TRANSMIT_BATTERY_FAN_STATE(fan_1_u8, fan_2_u8, fan_3_u8, fan_4_u8, fan_5_u8, fan_6_u8, \
