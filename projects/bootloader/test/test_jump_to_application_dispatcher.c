@@ -5,19 +5,15 @@
 #include "bootloader_events.h"
 #include "bootloader_mcu.h"
 #include "crc32.h"
-#include "flash.h"
 #include "dispatcher.h"
+#include "flash.h"
 #include "interrupt.h"
-#include "persist.h"
-#include "ms_test_helper_datagram.h"
-#include "test_helpers.h"
 #include "log.h"
+#include "ms_test_helper_datagram.h"
+#include "persist.h"
+#include "test_helpers.h"
 #include "unity.h"
 
-
-#define TEST_CLIENT_SCRIPT_ID 0
-
-static uint8_t s_client_id = 0;
 static uint8_t s_board_id = 2;
 
 static CanStorage s_test_can_storage;
@@ -77,7 +73,7 @@ void setup_test(void) {
 
 void teardown_test(void) {}
 
-void test_jump_to_application(void) {
+void test_jump_to_application_failure(void) {
   TEST_ASSERT_OK(jump_to_application_dispatcher_init());
   CanDatagramTxConfig tx_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
@@ -102,3 +98,6 @@ void test_jump_to_application(void) {
   TEST_ASSERT_EQUAL(FAILURE_STATUS, *(rx_config.data));
   TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_JUMP_TO_APP, rx_config.dgram_type);
 }
+
+// to be developed once flash bug is fixed
+void test_jump_to_application_success(void) {}

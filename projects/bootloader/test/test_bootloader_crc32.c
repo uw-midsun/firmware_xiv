@@ -42,5 +42,5 @@ void test_bootloader_application_crc32() {
   uint32_t computed_crc32 = calculate_application_crc32();
 
   // this number does not match with what I got from python zlib.crc32
-  // TEST_ASSERT_EQUAL(3373242028, computed_crc32);
+  // TEST_ASSERT_EQUAL(578525373, computed_crc32);
 }
