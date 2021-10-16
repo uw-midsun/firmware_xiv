@@ -17,10 +17,8 @@
 
 #define TEST_CLIENT_SCRIPT_ID 0
 
-static uint8_t s_status_msg = 0;
-
 static uint8_t s_client_id = 0;
-static uint8_t s_board_id = 0;
+static uint8_t s_board_id = 2;
 
 static CanStorage s_test_can_storage;
 static CanSettings s_test_can_settings = {
@@ -50,8 +48,6 @@ void initialize_memory(void) {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
-  
-  
 
   // generating random values in range of uint8(0->255)
   for (uint16_t i = 0; i < 2048; i++) {
@@ -85,14 +81,15 @@ void test_jump_to_application(void) {
   TEST_ASSERT_OK(jump_to_application_dispatcher_init());
   CanDatagramTxConfig tx_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
-    .destination_nodes_len = 0,
-    .destination_nodes = NULL,
+    .destination_nodes_len = 1,
+    .destination_nodes = &s_board_id,
     .data_len = 0,
     .data = NULL,
     .tx_cmpl_cb = tx_cmpl_cb,
   };
   CanDatagramRxConfig rx_config = {
     .destination_nodes = NULL,
+    .data_len = 1,
     .data = &s_rx_data,
     .node_id = 0,
     .rx_cmpl_cb = NULL,
@@ -102,6 +99,6 @@ void test_jump_to_application(void) {
   dgram_helper_mock_rx_datagram(&rx_config);
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
-  TEST_ASSERT_EQUAL(SUCCESS_STATUS, rx_config.data);
+  TEST_ASSERT_EQUAL(FAILURE_STATUS, *(rx_config.data));
   TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_JUMP_TO_APP, rx_config.dgram_type);
 }
