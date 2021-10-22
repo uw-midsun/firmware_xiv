@@ -47,7 +47,5 @@ void teardown_test(void) {}
 void test_bootloader_application_crc32() {
   // compute crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-
-  // this number does not match with what I got from python zlib.crc32
-  TEST_ASSERT_EQUAL(578525373, computed_crc32);
+  TEST_ASSERT_EQUAL(3900764041, computed_crc32);
 }

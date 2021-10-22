@@ -12,7 +12,6 @@ uint32_t calculate_application_crc32() {
   // code array for holding crc32 codes per 2048 bytes
   // size of array is BOOTLOADER_APPLICATION_SIZE / BUFFER_LEN + 1
   uint8_t crc32_codes[(BOOTLOADER_APPLICATION_SIZE / BUFFER_LEN + 1) * 4];
-  uint8_t buffer_bytes[BUFFER_LEN * 4];
   uint8_t buffer_bytes_size = 0;
   uint8_t crc32_code_number = 0;
   size_t curr_size = 0;        // memory size that has been read
@@ -25,28 +24,8 @@ uint32_t calculate_application_crc32() {
     flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer[0]) * BUFFER_LEN,
                buffer, sizeof(buffer[0]) * BUFFER_LEN);
 
-    // extact bytes of each buffer value in little endian form
-    for (uint16_t i = 0; i < BUFFER_LEN; i++) {
-      firstByte = (buffer[i] << 24) >> 24;
-      buffer_bytes[buffer_bytes_size] = firstByte;
-
-      secondByte = (buffer[i] << 16) >> 24;
-      buffer_bytes[buffer_bytes_size + 1] = secondByte;
-
-      thirdByte = (buffer[i] << 8) >> 24;
-      buffer_bytes[buffer_bytes_size + 2] = thirdByte;
-
-      fourthByte = buffer[i] >> 24;
-      buffer_bytes[buffer_bytes_size + 3] = fourthByte;
-
-      buffer_bytes_size += 4;
-    }
-    // uncomment this to see if array vals are consistent
-    printf("number at index 2047 of buffer: %d\n", buffer[2047]);
-
     // calculate crc32
-    crc_temp = crc32_arr(buffer_bytes, sizeof(buffer_bytes[0]) * BUFFER_LEN * 4);
-    // printf("crc32 is %d\n", crc_temp);
+    crc_temp = crc32_arr(buffer, sizeof(buffer[0]) * BUFFER_LEN);
 
     // extact bytes of each buffer value in little endian form
     firstByte = (crc_temp << 24) >> 24;
@@ -64,8 +43,6 @@ uint32_t calculate_application_crc32() {
     crc32_code_number += 4;
     curr_size += sizeof(buffer);
   }
-  // printf("bytes are:\n\tfirst: %d\n\tsecond: %d\n\tthird: %d\n\tfourth: %d\n",
-  // firstByte,secondByte,thirdByte,fourthByte);
 
   // calculate the final crc32 and return it
   return crc32_arr(crc32_codes, sizeof(crc32_codes[0]) * crc32_code_number);
