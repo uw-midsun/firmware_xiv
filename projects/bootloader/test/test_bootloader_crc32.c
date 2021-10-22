@@ -1,10 +1,13 @@
 #include <stdlib.h>
 
 #include "bootloader_crc32.h"
+
 #include "bootloader_mcu.h"
 #include "crc32.h"
 #include "flash.h"
+#include "interrupt.h"
 #include "log.h"
+#include "ms_test_helper_datagram.h"
 #include "persist.h"
 #include "test_helpers.h"
 #include "unity.h"
@@ -28,6 +31,10 @@ void initialize_memory(void) {
 }
 
 void setup_test(void) {
+  event_queue_init();
+  interrupt_init();
+  gpio_init();
+  soft_timer_init();
   flash_init();
   crc32_init();
   initialize_memory();
@@ -42,5 +49,5 @@ void test_bootloader_application_crc32() {
   uint32_t computed_crc32 = calculate_application_crc32();
 
   // this number does not match with what I got from python zlib.crc32
-  // TEST_ASSERT_EQUAL(578525373, computed_crc32);
+  TEST_ASSERT_EQUAL(578525373, computed_crc32);
 }
