@@ -302,7 +302,7 @@ bootloader_protos:
 	@echo "Compiling protos..."
 	@mkdir -p $(BOOTLOADER_DIR)/protogen
 	@for i in $$(ls $(BOOTLOADER_DIR)/protos); do \
-		protoc -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i; \
+		protoc -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i --python_out=$(BOOTLOADER_DIR/protogen); \
 		python $(PYTHONPATHNANO)/generator/nanopb_generator.py -I=$(BOOTLOADER_DIR)/protos command.pb; \
 	done
 	@mv *.pb *.pb.c *.pb.h $(BOOTLOADER_DIR)/protogen

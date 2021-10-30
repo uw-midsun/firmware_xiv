@@ -276,4 +276,4 @@ class DatagramListener(can.BufferedReader):
             pass
         else:
             # Datagram is complete, call the callback with formed datagram
-            self.callback(datagram)
+            self.callback(datagram, board_id)
