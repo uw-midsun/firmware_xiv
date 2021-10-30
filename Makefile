@@ -12,6 +12,7 @@
 #   SD: [STDLIB_DEBUG=] - Set to true on STM32 to use an stdlib with debug symbols. See platform/stm32f0xx/newlib-debug/README.md.
 #   DF: [DEFINE=] - Specifies space-separated preprocessor symbols to define.
 #   CH: [CHANNEL=] - Specifies the default CAN channel for Babydriver. Defaults to vcan0 on x86 and can0 on stm32f0xx.
+# 	CC: [COVERAGE=] - Specifies if code coverage symbols should be added to the build. Defaults to false [true | false]
 #
 # Usage:
 #   make [all] [PL] [PR] [SD] [DF] - Builds the target project and its dependencies
@@ -24,7 +25,7 @@
 #   make test [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
 #   make pytest_all - Runs all python tests in the scripts directory of every project
-#   make install_requirements - Installs python requirements for every project
+#   make install_requirements - Installs python requirements for every project, LCOV, protocol buffer dependencies and nanopb
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
 # 	make codegen_protos - Generates protobuf files
@@ -38,7 +39,7 @@
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
 #   make program [PL=stm32f0xx] [PR] [PB] - Programs and runs the project through OpenOCD
-#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]] [DF]
+#   make <build | test | remake | all> [PL=x86] [CM=clang [CO]] [DF] [CC]
 #
 ###################################################################################################
 
@@ -108,6 +109,8 @@ MU_PROTOS_DIR := $(MU_DIR)/protos
 # Bootloader directory
 BOOTLOADER_DIR := $(PROJ_DIR)/bootloader
 PYTHONPATHNANO := $(realpath ..)/nanopb
+
+CODECOV_DIR := codecov
 
 DIRS := $(BUILD_DIR) $(BIN_DIR) $(STATIC_LIB_DIR) $(OBJ_CACHE) $(DEP_VAR_DIR)
 COMMA := ,
@@ -210,10 +213,11 @@ $(foreach lib,$(VALID_LIBRARIES),$(call include_lib,$(lib)))
 # Includes all projects so make can find their targets
 $(foreach proj,$(VALID_PROJECTS),$(call include_proj,$(proj)))
 
-IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen
+IGNORE_CLEANUP_LIBS := CMSIS FreeRTOS STM32F0xx_StdPeriph_Driver unity FatFs mu-gen nanopb
 IGNORE_CLEANUP_PROJS := bootloader/protogen
 # This uses regex
 IGNORE_PY_FILES := ./lint.py ./libraries/unity $(VENV_DIR)
+IGNORE_CODECOV_FILES := '/usr/include/*' '*build/gen/x86/*' '*libraries/unity/*'
 # Find all python files excluding ignored files
 IGNORE_TO_FIND_CMD := $(foreach dir, $(IGNORE_PY_FILES), $(if $(findstring $(lastword $(IGNORE_PY_FILES)), $(dir)), -path $(dir), -path $(dir) -o))
 FIND_PY_FILES:= $(shell find . \( $(IGNORE_TO_FIND_CMD) \) -prune -o -name '*.py' -print)
@@ -222,7 +226,7 @@ FIND_PATHS := $(addprefix -o -path $(LIB_DIR)/,$(IGNORE_CLEANUP_LIBS)) $(addpref
 FIND := find $(PROJECT_DIR) $(LIBRARY_DIR) \
 			  \( $(wordlist 2,$(words $(FIND_PATHS)),$(FIND_PATHS)) \) -prune -o \
 				-iname "*.[ch]" -print
-FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*' ':(exclude)projects/bootloader/protogen'
+FIND_MOD_NEW := git diff origin/master --name-only --diff-filter=ACMRT -- '*.c' '*.h' ':(exclude)*.mako.*' ':(exclude)projects/bootloader/protogen' ':(exclude)libraries/nanopb'
 # ignore MU since it has a different pylint
 FIND_MOD_NEW_PY := git diff origin/master --name-only --diff-filter=ACMRT -- '*.py' ':(exclude)mu/*.py' ':(exclude)$(VENV_DIR)/*'
 FIND_MOD_NEW_MU_PY := git diff origin/master --name-only --diff-filter=ACMRT -- 'mu/*.py' ':(exclude)$(VENV_DIR)/*'
@@ -397,6 +401,31 @@ socketcan:
 .PHONY: install_requirements
 install_requirements:
 	@sudo add-apt-repository ppa:maarten-fonville/protobuf -y
+	@sudo apt-get update
+	@sudo apt-get install protobuf-compiler -y
+	@sudo apt-get install lcov -y
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
+	pip install -r requirements.txt
+	@if [ ! -d "$(PYTHONPATHNANO)" ]; then \
+	cd $(PYTHONPATHNANO)/.. && git clone https://github.com/nanopb/nanopb.git \
+	&& cd $(PYTHONPATHNANO)/generator/proto && make; \
+	fi
+
+.PHONY: codecov
+codecov:
+	@cd $(BUILD_DIR)/obj/x86 && \
+	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
+	lcov --capture --directory . --output-file coverage.info && \
+	lcov -r coverage.info $(IGNORE_CODECOV_FILES) -o coverage.info && \
+	genhtml coverage.info --output-directory ../../../$(CODECOV_DIR) --legend --show-details
+
+# Required for CI to build successfully
+.PHONY: install_requirements_ci
+install_requirements_ci:
+	@sudo apt-get install lcov -y
 	@sudo apt-get update
 	@sudo apt-get install protobuf-compiler
 	@rm -rf $(VENV_DIR)

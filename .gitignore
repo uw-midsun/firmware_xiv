@@ -89,3 +89,8 @@ codegen/system_can.dbc
 
 # Python generated code
 *.pyc
+
+# Code coverage files
+*.gcda
+*.gcno
+codecov/

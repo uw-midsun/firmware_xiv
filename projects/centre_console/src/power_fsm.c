@@ -64,6 +64,14 @@ static void prv_bps_fault(void) {
   }
 }
 
+static const char *s_power_state_names[] = {
+  [POWER_STATE_TRANSITIONING] = "transitioning",
+  [POWER_STATE_OFF] = "off",
+  [POWER_STATE_MAIN] = "main",
+  [POWER_STATE_AUX] = "aux",
+  [POWER_STATE_FAULT] = "fault",
+};
+
 static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   // Go back to previous state
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
@@ -76,11 +84,13 @@ static void prv_state_fault_output(Fsm *fsm, const Event *e, void *context) {
   } else {
     prv_bps_fault();
   }
+  LOG_DEBUG("faulting, going to state %s\n", s_power_state_names[power_fsm->previous_state]);
 }
 
 static void prv_destination_state_output(Fsm *fsm, const Event *e, void *context) {
   PowerFsmStorage *power_fsm = (PowerFsmStorage *)context;
   power_fsm->current_state = power_fsm->destination_state;
+  LOG_DEBUG("moved to state %s\n", s_power_state_names[power_fsm->current_state]);
 }
 
 static PowerState s_destination_lookup[] = {

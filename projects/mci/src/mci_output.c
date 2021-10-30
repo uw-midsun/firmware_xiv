@@ -1,11 +1,13 @@
 #include "mci_output.h"
 
+#include <math.h>
 #include <string.h>
 
 #include "cruise_rx.h"
 #include "drive_fsm.h"
 #include "mci_events.h"
 #include "motor_can.h"
+#include "regen_braking.h"
 #include "wavesculptor.h"
 
 #include "exported_enums.h"
@@ -23,6 +25,14 @@ static float s_velocity_lookup[] = {
 
 static float s_max_regen_in_throttle = 0.0f;
 static float s_regen_threshold = 0.0f;
+static float s_actual_velocity_ms = 0.0f;
+
+static uint32_t mci_tx_period_ms = MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS;
+
+// Updates s_actual_velocity_ms
+void mci_output_update_velocity(float actual_velocity_ms) {
+  s_actual_velocity_ms = actual_velocity_ms;
+}
 
 // Basic implementation of throttle/brake maps
 static float prv_brake_to_regen_map(float brake_value) {
@@ -59,6 +69,8 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
   MotorCanDriveCommand drive_command = { 0 };
   EEDriveOutput drive_state = drive_fsm_get_drive_state();
   bool is_cruise = drive_fsm_is_cruise();
+  bool is_regen_brake = get_regen_braking_state();
+
   // TODO(SOFT-122): Make sure test ensures that maps are continues
   if (drive_state == EE_DRIVE_OUTPUT_OFF) {
     drive_command.motor_current = 0.0f;
@@ -78,19 +90,28 @@ static void prv_handle_drive(SoftTimerId timer_id, void *context) {
     drive_command.motor_velocity =
         is_cruise ? cruise_rx_get_target_velocity() : s_velocity_lookup[drive_state];
   }
+
+  // Set current to zero if regen braking is disabled
+  // target velocity is less than actual velocity
+  if (!is_regen_brake && fabs(drive_command.motor_velocity) < fabs(s_actual_velocity_ms)) {
+    drive_command.motor_current = 0.0f;
+  }
+
   // Handling message
   prv_send_wavesculptor_message(storage, MOTOR_CAN_LEFT_DRIVE_COMMAND_FRAME_ID, drive_command);
   prv_send_wavesculptor_message(storage, MOTOR_CAN_RIGHT_DRIVE_COMMAND_FRAME_ID, drive_command);
-  soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage, NULL);
+  soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage, NULL);
 }
 
-StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can) {
+StatusCode mci_output_init(MotorControllerOutputStorage *storage, Mcp2515Storage *motor_can,
+                           uint32_t tx_delay) {
   PedalRxSettings pedal_settings = {
     .timeout_event = MCI_PEDAL_RX_EVENT_TIMEOUT,
     .timeout_ms = MCI_PEDAL_RX_TIMEOUT_MS,
   };
   storage->motor_can = motor_can;
+  mci_tx_period_ms = tx_delay;
+
   status_ok_or_return(pedal_rx_init(&storage->pedal_storage, &pedal_settings));
-  return soft_timer_start_millis(MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS, prv_handle_drive, storage,
-                                 NULL);
+  return soft_timer_start_millis(mci_tx_period_ms, prv_handle_drive, storage, NULL);
 }

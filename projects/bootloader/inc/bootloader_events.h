@@ -1,0 +1,17 @@
+#pragma once
+// define the bootloader events
+
+typedef enum {
+  CAN_DATAGRAM_EVENT_RX = 0,
+  CAN_DATAGRAM_EVENT_TX,
+  CAN_DATAGRAM_EVENT_FAULT,
+  NUM_CAN_DATAGRAM_EVENTS,  // 3
+} CanDatagramCanEvent;
+
+typedef enum {
+  DATAGRAM_EVENT_TX = NUM_CAN_DATAGRAM_EVENTS,  // 3
+  DATAGRAM_EVENT_RX,
+  DATAGRAM_EVENT_REPEAT,
+  DATAGRAM_EVENT_ERROR,
+  NUM_DATAGRAM_DIGEST_EVENTS,
+} CanDatagramEvent;

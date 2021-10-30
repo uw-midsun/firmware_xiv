@@ -34,12 +34,10 @@
 #define CRC_SIZE_BYTES 4
 #define DGRAM_TYPE_SIZE_BYTES 1
 #define DEST_LEN_SIZE_BYTES 1
-#define MAX_DEST_NODES_SIZE_BYTES 255
 #define DATA_LEN_SIZE_BYTES 2
-#define MAX_DATA_SIZE_BYTES 2048
 #define TX_FIFO_SIZE                                                                            \
   (PROTOCOL_VERSION_SIZE_BYTES + CRC_SIZE_BYTES + DGRAM_TYPE_SIZE_BYTES + DEST_LEN_SIZE_BYTES + \
-   MAX_DEST_NODES_SIZE_BYTES + DATA_LEN_SIZE_BYTES + MAX_DATA_SIZE_BYTES)
+   DGRAM_MAX_DEST_NODES_SIZE + DATA_LEN_SIZE_BYTES + DGRAM_MAX_DATA_SIZE)
 
 #define TEST_DST_SIZE_SHORT 16
 #define TEST_DATA_SIZE_SHORT 16
@@ -571,7 +569,8 @@ void test_soft_error_rx_successful(void) {
   uint8_t rx_dst_buf[TEST_DST_SIZE_SHORT];
   uint8_t rx_data_buf[TEST_DATA_SIZE_SHORT];
   prv_initialize_can();
-  prv_setup_tx_fifo(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data, 0xf2bab4ac);
+  // prv_setup_tx_fifo(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data, 0xf2bab4ac); //
+  // this line was never used...
 
   CanDatagramSettings settings = {
     .tx_event = DATAGRAM_EVENT_TX,
@@ -587,8 +586,9 @@ void test_soft_error_rx_successful(void) {
     .node_id = 'a',  // Not a member of the data
   };
 
-  uint8_t test_node_buf[TEST_DST_SIZE_SHORT] = { 0 };
-  prv_setup_tx_fifo(TEST_DST_SIZE_SHORT, 0, test_node_buf, NULL, 0xfaf23014);
+  uint8_t test_node_buf[TEST_DST_SIZE_SHORT] = { 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+                                                 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q' };
+  prv_setup_tx_fifo(TEST_DST_SIZE_SHORT, 0, test_node_buf, NULL, 0x8f4d35c1);
   // Start RX run
   can_datagram_start_listener(&rx_config);
   // Rcv mock start message
@@ -694,4 +694,108 @@ void test_tx_rx_tx() {
     }
   }
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+}
+
+// Test every node Rx a datagram with destination id 0.
+void test_id_0_tx(void) {
+  uint8_t rx_dst_buf[TEST_DST_SIZE_SHORT];
+  uint8_t rx_data_buf[TEST_DATA_SIZE_SHORT];
+  prv_initialize_can();
+
+  CanDatagramSettings settings = {
+    .tx_event = DATAGRAM_EVENT_TX,
+    .rx_event = DATAGRAM_EVENT_RX,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
+  };
+  can_datagram_init(&settings);
+
+  CanDatagramRxConfig rx_config = {
+    .data = rx_data_buf,
+    .destination_nodes = rx_dst_buf,
+    .node_id = 'a',
+  };
+
+  uint8_t test_node_buf[1] = { 0 };  // dest node id is 0, all node should receive the datagram
+
+  prv_setup_tx_fifo(1, TEST_DATA_SIZE_SHORT, test_node_buf, s_data, 0xdd119380);
+  // Start RX run
+  can_datagram_start_listener(&rx_config);
+  // Rcv mock start message
+  can_datagram_rx(NULL, 0, true);
+  Event e = { 0 };
+  uint8_t msg_buffer[TEST_CAN_BUFFER_SIZE];
+  for (int i = 0; i < 25; i++) {
+    size_t msg_len =
+        fifo_size(&s_tx_fifo) < TEST_CAN_BUFFER_SIZE ? fifo_size(&s_tx_fifo) : TEST_CAN_BUFFER_SIZE;
+    if (msg_len) {
+      fifo_pop_arr(&s_tx_fifo, msg_buffer, msg_len);
+      can_datagram_rx(msg_buffer, msg_len, false);
+    }
+    if (event_process(&e) == STATUS_CODE_OK) {
+      can_datagram_process_event(&e);
+    }
+  }
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  // Verify relevant data set in rx config
+  TEST_ASSERT_EQUAL(0xdd119380, rx_config.crc);
+  TEST_ASSERT_EQUAL(1, rx_config.destination_nodes_len);
+  TEST_ASSERT_EQUAL(TEST_DATA_SIZE_SHORT, rx_config.data_len);
+  // add data checking
+  TEST_ASSERT_EQUAL(0, rx_dst_buf[0]);
+  for (uint16_t i = 0; i < TEST_DATA_SIZE_SHORT; i++) {
+    TEST_ASSERT_EQUAL(s_data[i], rx_data_buf[i]);
+  }
+}
+
+// Test node 0 Rx all datagram (ignores dest node ids)
+void test_id_0_rx(void) {
+  uint8_t rx_dst_buf[TEST_DST_SIZE_SHORT];
+  uint8_t rx_data_buf[TEST_DATA_SIZE_SHORT];
+  prv_initialize_can();
+
+  CanDatagramSettings settings = {
+    .tx_event = DATAGRAM_EVENT_TX,
+    .rx_event = DATAGRAM_EVENT_RX,
+    .repeat_event = DATAGRAM_EVENT_REPEAT,
+    .error_event = DATAGRAM_EVENT_ERROR,
+  };
+  can_datagram_init(&settings);
+
+  CanDatagramRxConfig rx_config = {
+    .data = rx_data_buf,
+    .destination_nodes = rx_dst_buf,
+    .node_id = 0,  // id 0 received all datagrams
+  };
+
+  prv_setup_tx_fifo(TEST_DST_SIZE_SHORT, TEST_DATA_SIZE_SHORT, s_dst, s_data, 0x910d5058);
+  // Start RX run
+  can_datagram_start_listener(&rx_config);
+  // Rcv mock start message
+  can_datagram_rx(NULL, 0, true);
+  Event e = { 0 };
+  uint8_t msg_buffer[TEST_CAN_BUFFER_SIZE];
+  for (int i = 0; i < 25; i++) {
+    size_t msg_len =
+        fifo_size(&s_tx_fifo) < TEST_CAN_BUFFER_SIZE ? fifo_size(&s_tx_fifo) : TEST_CAN_BUFFER_SIZE;
+    if (msg_len) {
+      fifo_pop_arr(&s_tx_fifo, msg_buffer, msg_len);
+      can_datagram_rx(msg_buffer, msg_len, false);
+    }
+    if (event_process(&e) == STATUS_CODE_OK) {
+      can_datagram_process_event(&e);
+    }
+  }
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  // Verify relevant data set in rx config
+  TEST_ASSERT_EQUAL(0x910d5058, rx_config.crc);
+  TEST_ASSERT_EQUAL(TEST_DST_SIZE_SHORT, rx_config.destination_nodes_len);  // 16
+  TEST_ASSERT_EQUAL(TEST_DATA_SIZE_SHORT, rx_config.data_len);              // 16
+  // add data checking
+  for (uint16_t i = 0; i < TEST_DST_SIZE_SHORT; i++) {
+    TEST_ASSERT_EQUAL(s_dst[i], rx_dst_buf[i]);
+  }
+  for (uint16_t i = 0; i < TEST_DATA_SIZE_SHORT; i++) {
+    TEST_ASSERT_EQUAL(s_data[i], rx_data_buf[i]);
+  }
 }
