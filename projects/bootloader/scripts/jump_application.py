@@ -14,22 +14,19 @@ def jump_to_application(node_ids):
     listener = DatagramListener(trigger_callback)
     notifier = can.Notifier(sender.bus, [listener])
 
-    # 'data' attribute represents whether callback was called or not
     message = Datagram(
         datagram_type_id=5,
         node_ids=node_ids,
-        data=False)
+        data=[])
     sender.send(message)
 
-    timeout = time.time() + 10
-    while not message.data:
-        if time.time() > timeout:
-            break
+    listener_message = listener.get_message()
+    while listener_message is not None:
+        listener.on_message_received(listener_message)
+        listener_message = listener.get_message()
 
 
 def trigger_callback(datagram):
     '''Returns datagram status from boards'''
-    # callback has been called, breaking while loop
-    datagram.data = True
     print("Response status code is {}".format(datagram.data))
     return datagram.data
