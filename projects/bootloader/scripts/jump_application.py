@@ -9,23 +9,27 @@ from can_datagram import DatagramListener
 
 def jump_to_application(node_ids):
     '''Sends datagram to specific boards, receives response, then returns status'''
-    # creates datagram to be sent to boards
-    datagram = Datagram(datagram_type_id=5, node_ids=node_ids, data=None)
-    # listens for messages and adds them to queue
-    listener = DatagramListener(return_status)
-    # sends instructions to relevant node ids
-    DatagramSender().send(datagram)
-    # Source: https://github.com/hardbyte/python-can/issues/352
-    time.sleep(5) 
-    msg = None
-    while msg is None:
-        # retrieves messages in queue
-        msg = listener.get_message()
-        if msg:
-            listener.on_message_received(msg)
+    sender = DatagramSender(receive_own_messages=True)
+
+    listener = DatagramListener(trigger_callback)
+    notifier = can.Notifier(sender.bus, [listener])
+
+    # 'data' attribute represents whether callback was called or not
+    message = Datagram(
+        datagram_type_id=5,
+        node_ids=node_ids,
+        data=False)
+    sender.send(message)
+
+    timeout = time.time() + 10
+    while not message.data:
+        if time.time() > timeout:
+            break
 
 
-def return_status(datagram):
+def trigger_callback(datagram):
     '''Returns datagram status from boards'''
+    # callback has been called, breaking while loop
+    datagram.data = True
     print("Response status code is {}".format(datagram.data))
     return datagram.data
