@@ -1,17 +1,20 @@
 """This client script handles the jump-to-application process of controller boards."""
 
 import time
-import can_datagram as cd
+
+from can_datagram import Datagram
+from can_datagram import DatagramSender
+from can_datagram import DatagramListener
 
 
 def jump_to_application(node_ids):
     '''Sends datagram to specific boards, receives response, then returns status'''
     # creates datagram to be sent to boards
-    datagram = cd.Datagram(datagram_type_id=5, node_ids=node_ids, data=None)
+    datagram = Datagram(datagram_type_id=5, node_ids=node_ids, data=None)
     # listens for messages and adds them to queue
-    listener = cd.DatagramListener(return_status)
+    listener = DatagramListener(return_status)
     # sends instructions to relevant node ids
-    cd.DatagramSender().send(datagram)
+    DatagramSender().send(datagram)
     # Source: https://github.com/hardbyte/python-can/issues/352
     time.sleep(5) 
     msg = None
