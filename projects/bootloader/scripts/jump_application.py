@@ -19,10 +19,11 @@ def jump_to_application(node_ids):
         node_ids=node_ids,
         data=[])
     sender.send(message)
-
+    # implement possible timeout
     listener_message = listener.get_message()
     while listener_message is not None:
-        listener.on_message_received(listener_message)
+        # gets messages until there are no more
+        # should implement a timer that breaks when too much time passes
         listener_message = listener.get_message()
 
 
