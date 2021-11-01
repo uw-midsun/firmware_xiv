@@ -1,7 +1,8 @@
+#include "i2c.h"
+
 #include <stdbool.h>
 
 #include "gpio.h"
-#include "i2c.h"
 #include "log.h"
 
 #define WRITE_I2C_PORT I2C_PORT_2
