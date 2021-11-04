@@ -2,8 +2,9 @@
 #include "ads1015.h"
 #include "pedal_calib.h"
 
-#define BRAKE_CHANNEL ADS1015_CHANNEL_1
 #define THROTTLE_CHANNEL ADS1015_CHANNEL_0
+#define STEERING_ANGLE_CHANNEL ADS1015_CHANNEL_1  // Steering Angle Channel currently unused
+#define BRAKE_CHANNEL ADS1015_CHANNEL_2
 
 StatusCode pedal_resources_init(Ads1015Storage *storage, PedalCalibBlob *calib_blob);
 

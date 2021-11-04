@@ -15,16 +15,16 @@
 // used to adjust time between gpio pin toggling
 #define WAIT_TIME_MILLIS 500
 
-#define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address
-#define I2C_PORT I2C_PORT_2
+#define PCA9539_I2C_ADDRESS 0x74  // PCA9539 address, either 0x74 or 0x76
+#define I2C_PORT I2C_PORT_1
 
 // I2C_PORT_1 has SDA on PB9 and SCL on PB8
 // I2C_PORT_2 has SDA on PB11 and SCL on PB10
 
 #define PIN_I2C_SCL \
-  { GPIO_PORT_B, 10 }
+  { GPIO_PORT_B, 8 }
 #define PIN_I2C_SDA \
-  { GPIO_PORT_B, 11 }
+  { GPIO_PORT_B, 9 }
 
 static void prv_setup_test(void) {
   I2CSettings i2c_settings = {

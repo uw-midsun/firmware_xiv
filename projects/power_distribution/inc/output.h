@@ -76,6 +76,12 @@ typedef enum {
   NUM_OUTPUTS,
 } Output;
 
+// Is the output on front PD? (Please update this if you change the Output enum.)
+#define IS_FRONT_OUTPUT(output) ((output) < REAR_OUTPUT_BMS)
+
+// Names for each output, for use in logging and smoke test modes.
+extern const char *g_output_names[NUM_OUTPUTS];
+
 typedef enum {
   OUTPUT_TYPE_IGNORE = 0,  // so that unspecified OutputSpecs default to ignore
   OUTPUT_TYPE_GPIO,
@@ -105,6 +111,7 @@ typedef struct OutputBts7200Spec {
 typedef struct OutputBts7040Spec {
   Pca9539rGpioAddress enable_pin;
   uint8_t mux_selection;  // what should we select on the mux to read current from the BTS7040?
+  bool use_bts7004_scaling;
 } OutputBts7040Spec;
 
 typedef struct OutputSpec {
@@ -143,7 +150,7 @@ StatusCode output_init(OutputConfig *config, bool is_front_power_distro);
 StatusCode output_set_state(Output output, OutputState state);
 
 // Read the current that the output is drawing into |*current| in mA.
-// STATUS_CODE_INVALID_ARGS is returned if current sense isn't supported by this output.
+// STATUS_CODE_UNIMPLEMENTED is returned if current sense isn't supported by this output.
 StatusCode output_read_current(Output output, uint16_t *current);
 
 // Get the BTS7200 storage associated with an output, or NULL if it isn't OUTPUT_TYPE_BTS7200.
