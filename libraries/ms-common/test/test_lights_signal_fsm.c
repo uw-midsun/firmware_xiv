@@ -14,6 +14,7 @@
 #include "unity.h"
 
 #define TEST_BLINK_INTERVAL_US 30000
+#define TEST_BUFFER_US 1000  // time after the blink should have happened that we check
 #define TEST_BLINKS_BETWEEN_SYNCS 2
 
 // Sending sync events requires that we're rear power distribution
@@ -234,14 +235,14 @@ void test_lights_signal_fsm_restarts_receiving_sync_event(void) {
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
   delay_us(TEST_BLINK_INTERVAL_US / 2);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
-  delay_us(TEST_BLINK_INTERVAL_US / 2 + 10);
+  delay_us(TEST_BLINK_INTERVAL_US / 2 + TEST_BUFFER_US);
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_LEFT, 0);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
 
   // hazard on: transition to hazard-left, test sync event restarting
   TEST_ASSERT_OK(lights_signal_fsm_process_event(&s_storage, &s_hazard_on_event));
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_HAZARD, 1);
-  delay_us(TEST_BLINK_INTERVAL_US + 5);
+  delay_us(TEST_BLINK_INTERVAL_US + TEST_BUFFER_US);
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_HAZARD, 0);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(lights_signal_fsm_process_event(&s_storage, &s_sync_event));
@@ -254,7 +255,7 @@ void test_lights_signal_fsm_restarts_receiving_sync_event(void) {
   TEST_ASSERT_OK(lights_signal_fsm_process_event(&s_storage, &s_sync_event));
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_HAZARD, 1);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
-  delay_us(TEST_BLINK_INTERVAL_US + 5);
+  delay_us(TEST_BLINK_INTERVAL_US + TEST_BUFFER_US);
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_HAZARD, 0);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
 
@@ -270,7 +271,7 @@ void test_lights_signal_fsm_restarts_receiving_sync_event(void) {
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_HAZARD, 0);
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_RIGHT, 1);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
-  delay_us(TEST_BLINK_INTERVAL_US + 5);
+  delay_us(TEST_BLINK_INTERVAL_US + TEST_BUFFER_US);
   TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_RIGHT, 0);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
   TEST_ASSERT_OK(lights_signal_fsm_process_event(&s_storage, &s_sync_event));
@@ -294,7 +295,7 @@ void test_lights_signal_fsm_sends_sync_msgs(void) {
 
   // nothing happens at the beginning (CAN messages use TX events)
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
-  delay_us(TEST_BLINK_INTERVAL_US + 5);
+  delay_us(TEST_BLINK_INTERVAL_US + TEST_BUFFER_US);
   TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
 
   // left on: transition to left, wait for the sync event
@@ -302,7 +303,7 @@ void test_lights_signal_fsm_sends_sync_msgs(void) {
   for (uint8_t i = 0; i < TEST_BLINKS_BETWEEN_SYNCS - 1; i++) {
     TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_LEFT, 1);
     TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
-    delay_us(TEST_BLINK_INTERVAL_US + (i == 0 ? 5 : 0));  // extra delay first time
+    delay_us(TEST_BLINK_INTERVAL_US + (i == 0 ? TEST_BUFFER_US : 0));  // extra delay first time
     TEST_LIGHTS_SIGNAL_ASSERT_EVENT_RAISED(TEST_SIGNAL_OUTPUT_EVENT_LEFT, 0);
     TEST_LIGHTS_SIGNAL_ASSERT_NO_EVENT_RAISED();
     delay_us(TEST_BLINK_INTERVAL_US);
