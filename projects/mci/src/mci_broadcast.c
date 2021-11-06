@@ -29,7 +29,6 @@ static const uint32_t s_offset_lookup[NUM_MOTOR_CONTROLLER_BROADCAST_MEASUREMENT
   [MOTOR_CONTROLLER_BROADCAST_DSP_TEMP] = WAVESCULPTOR_MEASUREMENT_ID_DSP_BOARD_TEMPERATURE,
 };
 
-static bool should_turn_off_fan = true;
 // Uncomment when testing with only the left motor controller
 // #define RIGHT_MOTOR_CONTROLLER_UNUSED
 
@@ -80,7 +79,7 @@ static void prv_broadcast_dsp_temp(MotorControllerBroadcastStorage *storage) {
                                (uint32_t)measurements[RIGHT_MOTOR_CONTROLLER].dsp_temp_c);
 }
 
-static void prv_temperature_fan_toggle(MotorControllerBroadcastStorage *storage) {
+static void prv_fan_temperator_update(MotorControllerBroadcastStorage *storage) {
   WaveSculptorSinkMotorTempMeasurement *sink_motor = storage->measurements.sink_motor_measurements;
   WaveSculptorDspTempMeasurement *dsp_temp = storage->measurements.dsp_measurements;
 
@@ -355,7 +354,7 @@ static void prv_periodic_broadcast_tx(SoftTimerId timer_id, void *context) {
     prv_broadcast_dsp_temp(storage);
   }
 
-  prv_temperature_fan_toggle(storage);
+  prv_fan_temperator_update(storage);
 
   soft_timer_start_millis(MOTOR_CONTROLLER_BROADCAST_TX_PERIOD_MS, prv_periodic_broadcast_tx,
                           storage, NULL);
