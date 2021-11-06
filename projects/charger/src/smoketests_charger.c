@@ -21,7 +21,7 @@ void smoketests_charger_run(SmokeTest smoke_test, const char *smoke_test_name) {
     return;
   }
   if (s_smoke_tests[smoke_test] == NULL) {
-    LOG_CRITICAL(
+    LOG_DEBUG(
         "Smoke test '%s' (%d) has no entry in lookup table! Please add it to s_smoke_tests "
         "in smoke_tests_charger.c\n",
         smoke_test_name, smoke_test);
