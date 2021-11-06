@@ -8,7 +8,7 @@ from can_datagram import DatagramListener
 
 
 def jump_to_application(node_ids):
-    '''Sends datagram to specific boards, receives response, then returns status'''
+    '''Sends datagram to specified boards, receives response, then returns status'''
     sender = DatagramSender(receive_own_messages=True)
 
     listener = DatagramListener(trigger_callback)
@@ -19,11 +19,12 @@ def jump_to_application(node_ids):
         node_ids=node_ids,
         data=[])
     sender.send(message)
-    # implement possible timeout
+    
+    timeout = time.time() + 10
     listener_message = listener.get_message()
     while listener_message is not None:
-        # gets messages until there are no more
-        # should implement a timer that breaks when too much time passes
+        if time.time() > timeout:
+                break
         listener_message = listener.get_message()
 
 
