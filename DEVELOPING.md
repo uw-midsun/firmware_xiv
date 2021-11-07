@@ -4,9 +4,9 @@
 
 You will want to download and install the following:
 
-* [Vagrant](https://www.vagrantup.com/downloads.html): The installer should prompt you to add `vagrant` to your system path so that it is available in terminals. If it is not found, please try logging out and logging back in
+* [Vagrant](https://www.vagrantup.com/downloads.html): The installer should prompt you to add `vagrant` to your system path so that it is available in terminals. If it is not found, please try logging out and logging back in.
 * [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads): select the version that matches your version of VirtualBox
+* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads): select the version that matches your version of VirtualBox.
 * [git](https://git-scm.com/downloads)
 
 **Note**: You may also need go into your BIOS to ensure that VT-x/AMD-v (also known as *Intel(R) Virtualization Technology*) settings are enabled.
@@ -36,7 +36,7 @@ We expose a shared folder between your host operating system and the virtual env
 cd ~/shared
 
 # Clone the firmware repo
-git clone https://github.com/uw-midsun/firmware.git && cd firmware
+git clone https://github.com/uw-midsun/firmware_xiv.git && cd firmware
 
 # Try to build the firmware
 make build_all
@@ -66,9 +66,9 @@ vagrant up
 vagrant ssh
 
 # Move to the firmware folder
-cd shared/firmware
+cd shared/firmware_xiv
 
-# See https://github.com/uw-midsun/firmware#usage for some common commands
+# See https://github.com/uw-midsun/firmware_xiv#usage for some common commands
 make [cmd] ...
 ```
 

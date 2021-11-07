@@ -2,6 +2,7 @@
 
 #include "event_queue.h"
 #include "fifo.h"
+#include "log.h"
 #include "ms_test_helpers.h"
 #include "string.h"
 
@@ -9,6 +10,7 @@
 #define CAN_BUFFER_SIZE 8
 
 static EventId s_can_tx_event;
+static EventId s_dgram_error_event;
 
 // rx and tx uses the same fifo, buffer, and cmpl_cb storage
 // the fifo is not persistent across individual rx and tx helper calls
@@ -72,7 +74,6 @@ StatusCode dgram_helper_mock_tx_datagram(CanDatagramTxConfig *tx_config) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
   }
-
   // send messages from fifo to can
   s_transmit_start_msg = true;
   while (fifo_size(&s_dgram_data_fifo) > 0) {
@@ -83,6 +84,8 @@ StatusCode dgram_helper_mock_tx_datagram(CanDatagramTxConfig *tx_config) {
       can_process_event(&e);
     } while (e.id != s_can_tx_event);
   }
+  // set tx_cmpl_cb back
+  tx_config->tx_cmpl_cb = s_cmpl_cb;
   return STATUS_CODE_OK;
 }
 
@@ -109,16 +112,30 @@ StatusCode dgram_helper_mock_rx_datagram(CanDatagramRxConfig *rx_config) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
   }
+  // set rx_cmpl_cb back
+  rx_config->rx_cmpl_cb = s_cmpl_cb;
   return STATUS_CODE_OK;
 }
 
+StatusCode prv_no_response_helper(uint8_t *data, size_t len, bool is_start_msg) {
+  TEST_ASSERT_FALSE_MESSAGE(is_start_msg, "Detected datagram response, expected none");
+  return STATUS_CODE_OK;
+}
 // process all events until datagram is inactive
-void dgram_helper_process_all(void) {
+// make sure no more
+void dgram_helper_assert_no_response(void) {
+  // checks that no more datagram is started
+  bootloader_can_register_debug_handler(prv_no_response_helper);
   Event e = { 0 };
   while (can_datagram_get_status() == DATAGRAM_STATUS_ACTIVE) {
     MS_TEST_HELPER_AWAIT_EVENT(e);
     can_datagram_process_event(&e);
     can_process_event(&e);
+
+    // exit the loop if there is a datagram error
+    if (e.id == s_dgram_error_event) {
+      break;
+    }
   }
 }
 
@@ -130,5 +147,6 @@ StatusCode ms_test_helper_datagram_init(CanStorage *can_storage, CanSettings *ca
   status_ok_or_return(can_datagram_init(can_datagram_settings));
 
   s_can_tx_event = can_storage->tx_event;
+  s_dgram_error_event = can_datagram_settings->error_event;
   return fifo_init(&s_dgram_data_fifo, s_dgram_data_buffer);
 }
