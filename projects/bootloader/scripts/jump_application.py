@@ -12,8 +12,8 @@ DATAGRAM_DATA = []
 
 
 def jump_to_application(node_ids):
-    """This function sends jump-to-application datagrams to specified boards,
-    receives, response, then returns status"""
+    """This function sends a jump-to-application datagram to specified boards,
+    receives a response, then returns the status"""
     sender = DatagramSender(receive_own_messages=True)
     listener = DatagramListener(trigger_callback)
 
