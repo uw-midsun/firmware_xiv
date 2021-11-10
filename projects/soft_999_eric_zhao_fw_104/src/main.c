@@ -51,10 +51,6 @@ static void prv_can_transmit_a(SoftTimerId timer_id, void *context) {
 }
 
 static StatusCode prv_rx_a_callback(const CanMessage *msg, void *context, CanAckStatus *ack_reply) {
-  // What happens if no acknowledgement is detected? Does this callback still run?
-  *ack_reply = CAN_ACK_STATUS_OK;
-  // Also, what happens if I set the *ack_reply to some other value?
-
   LOG_DEBUG("Received an A message!\n");
 
   uint16_t data = 0;
