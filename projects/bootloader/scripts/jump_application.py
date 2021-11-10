@@ -35,6 +35,6 @@ def jump_to_application(node_ids):
 
 
 def trigger_callback(msg):
-    """Returns status of response datagrams from specified boards"""
+    """This function returns the response datagrams' status code"""
     print(f"Response status code of datagram id {msg.datagram_type_id} is {msg.data}")
     return msg.data
