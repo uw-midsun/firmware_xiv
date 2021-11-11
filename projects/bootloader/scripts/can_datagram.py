@@ -212,7 +212,7 @@ class DatagramSender:
             bitrate=bitrate,
             receive_own_messages=receive_own_messages)
 
-    def send(self, message):
+    def send(self, message, sender_id=0):
         """Sends the Datagrams."""
 
         assert isinstance(message, Datagram)
@@ -220,15 +220,18 @@ class DatagramSender:
         chunk_messages = self._chunkify(message.serialize(), 8)
         message_extended_arbitration = False
 
+        start_arbitration_board_id = (CAN_START_ARBITRATION_ID | sender_id << 5)
+        arbitration_board_id = (CAN_ARBITRATION_ID | sender_id << 5)
+
         can_messages = [
             can.Message(
-                arbitration_id=CAN_START_ARBITRATION_ID,
+                arbitration_id=start_arbitration_board_id,
                 data=bytearray(),
                 is_extended_id=message_extended_arbitration)]
 
         # Populate an array with the can message from the library
         for chunk_message in chunk_messages:
-            can_messages.append(can.Message(arbitration_id=CAN_ARBITRATION_ID,
+            can_messages.append(can.Message(arbitration_id=arbitration_board_id,
                                             data=chunk_message,
                                             is_extended_id=message_extended_arbitration))
 
