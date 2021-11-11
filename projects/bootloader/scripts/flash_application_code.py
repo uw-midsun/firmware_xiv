@@ -2,15 +2,16 @@
 """This script handles the client side of the flash application code protocol."""
 
 # Import protobuf
-import os, sys
+from protogen import flash_application_code_pb2 as pb2
+from can_datagram import Datagram, DatagramListener, DatagramSender
+import can
+import time
+import os
+import sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import time
-import can
-from can_datagram import Datagram, DatagramListener, DatagramSender
-from protogen import flash_application_code_pb2 as pb2
 
 class FlashApplication():
     """Flash Application Code Protocol"""
@@ -27,7 +28,7 @@ class FlashApplication():
     def listener_callback(self, datagram: Datagram, board_id):
         """Check whether the datagram has an OK status code"""
 
-        if datagram._data!= bytearray(0):
+        if datagram._data != bytearray(0):
             self.status_code = 1
 
     def chunks(self, app_code: bytearray, chunk_size):
@@ -56,7 +57,7 @@ class FlashApplication():
             if time.time() > timeout:
                 self.status_code = 2
                 break
-        
+
         # Return if status code fails
         if self.status_code != 0:
             return
