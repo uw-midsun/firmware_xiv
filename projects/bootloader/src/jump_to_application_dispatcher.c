@@ -18,7 +18,7 @@
 // response config datagram setup
 static uint8_t s_status;
 
-void prv_jump_to_application_tx_cmpl_cb(){
+void prv_jump_to_application_tx_cmpl_cb() {
   LOG_DEBUG("TX CALLEDDDDD\n");
   jump_to_application();
 }
