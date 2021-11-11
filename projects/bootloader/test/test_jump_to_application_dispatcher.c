@@ -8,11 +8,15 @@
 #include "dispatcher.h"
 #include "flash.h"
 #include "interrupt.h"
+#include "config.h"
 #include "log.h"
 #include "ms_test_helper_datagram.h"
 #include "persist.h"
 #include "test_helpers.h"
 #include "unity.h"
+
+#define FAILURE_STATUS 1
+#define SUCCESS_STATUS 0
 
 static uint8_t s_board_id = 2;
 
@@ -64,6 +68,7 @@ void setup_test(void) {
   soft_timer_init();
   flash_init();
   crc32_init();
+  config_init();
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
@@ -96,7 +101,7 @@ void test_jump_to_application_failure(void) {
 
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
   TEST_ASSERT_EQUAL(FAILURE_STATUS, *(rx_config.data));
-  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_JUMP_TO_APP, rx_config.dgram_type);
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_STATUS_RESPONSE, rx_config.dgram_type);
 }
 
 // to be developed once flash bug is fixed
