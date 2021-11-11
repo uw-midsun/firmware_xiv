@@ -302,7 +302,7 @@ bootloader_protos:
 	@echo "Compiling protos..."
 	@mkdir -p $(BOOTLOADER_DIR)/protogen
 	@for i in $$(ls $(BOOTLOADER_DIR)/protos); do \
-		protoc -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i; \
+		protoc --python_out=$(BOOTLOADER_DIR)/protogen -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i; \
 		python $(PYTHONPATHNANO)/generator/nanopb_generator.py -I=$(BOOTLOADER_DIR)/protos command.pb; \
 	done
 	@mv *.pb *.pb.c *.pb.h $(BOOTLOADER_DIR)/protogen
@@ -415,7 +415,7 @@ install_requirements:
 	fi
 
 .PHONY: codecov
-codecov: 
+codecov:
 	@cd $(BUILD_DIR)/obj/x86 && \
 	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
 	lcov --capture --directory . --output-file coverage.info && \
@@ -433,6 +433,10 @@ install_requirements_ci:
 	@virtualenv $(VENV_DIR)
 	@. $(VENV_DIR)/bin/activate; \
 	pip install -r requirements.txt
+	@if [ ! -d "$(PYTHONPATHNANO)" ]; then \
+	cd $(PYTHONPATHNANO)/.. && git clone https://github.com/nanopb/nanopb.git \
+	&& cd $(PYTHONPATHNANO)/generator/proto && make; \
+	fi
 
 MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk
