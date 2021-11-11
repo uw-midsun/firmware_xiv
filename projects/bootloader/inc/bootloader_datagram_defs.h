@@ -21,11 +21,16 @@ typedef enum {
   // Id used by client to jump to application
   BOOTLOADER_DATAGRAM_JUMP_TO_APP = 5,
 
-  // Id used by client to command an update to name/board id
-  BOOTLOADER_DATAGRAM_UPDATE = 6,
+  // Id used by client to command an update to name
+  BOOTLOADER_DATAGRAM_UPDATE_NAME = 6,
+
+  // Id used by client to command an update to id
+  BOOTLOADER_DATAGRAM_UPDATE_ID = 7,
 
   // Id used by client to flash an application
-  BOOTLOADER_DATAGRAM_FLASH_APP = 7,
+  BOOTLOADER_DATAGRAM_FLASH_APPLICATION_META = 8,
+
+  BOOTLOADER_DATAGRAM_FLASH_APPLICATION_DATA = 9,
 
   NUM_BOOTLOADER_DATAGRAMS,
 } BootloaderDatagramId;

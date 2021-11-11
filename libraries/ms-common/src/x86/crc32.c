@@ -1,4 +1,5 @@
 #include "crc32.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 // Generated using pyCRC --model crc-32 --algorithm table-driven
@@ -49,6 +50,21 @@ StatusCode crc32_init(void) {
 uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
   // Begin with initial value of 0xFFFFFFFF
   uint32_t crc = 0xffffffff;
+  uint8_t tbl_idx = 0;
+
+  while (buffer_len--) {
+    tbl_idx = (crc ^ *buffer) & 0xff;
+    crc = (s_crc_table[tbl_idx] ^ (crc >> 8)) & 0xffffffff;
+    buffer++;
+  }
+
+  // Invert the result
+  return ~crc & 0xffffffff;
+}
+
+uint32_t crc32_append_arr(const uint8_t *buffer, size_t buffer_len, uint32_t initial_crc) {
+  // Begin with initial value of inverted crc
+  uint32_t crc = ~initial_crc;
   uint8_t tbl_idx = 0;
 
   while (buffer_len--) {

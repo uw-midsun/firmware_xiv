@@ -27,3 +27,6 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
 // this should be used as the tx_cmpl_cb in every tx datagram
 // this function should not be called directly
 void tx_cmpl_cb(void);
+
+// respond with a status code
+StatusCode status_code_response(StatusCode code);
