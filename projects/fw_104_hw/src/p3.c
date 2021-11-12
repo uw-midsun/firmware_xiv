@@ -21,7 +21,7 @@ Run the program in two terminals at the same time, and send a screenshot of the 
 #define CAN_DEVICE_ID 0xA
 #define CAN_MSG_ID 0xA
 
-#define SEND_TIME_MS 1000
+#define SEND_TIME_MS 1
 
 #define DATA \
   { 0xfef }
@@ -59,6 +59,7 @@ static StatusCode prv_ack_handler(CanMessageId msg_id, uint16_t device, CanAckSt
 }
 
 static void prv_can_transmit(SoftTimerId timer_id, void *context) {
+  LOG_DEBUG("Iteration....");
   CanMessage can_message = {
     .source_id = CAN_DEVICE_ID,
     .msg_id = CAN_MSG_ID,
@@ -76,10 +77,6 @@ static void prv_can_transmit(SoftTimerId timer_id, void *context) {
   can_transmit(&can_message, &ack_request);
 }
 
-void prv_message_handler(void) {
-  soft_timer_start(SEND_TIME_MS, prv_can_transmit, NULL, NULL);
-}
-
 int main(void) {
   gpio_init();
   event_queue_init();
@@ -88,5 +85,9 @@ int main(void) {
 
   init_can();
 
-  prv_message_handler();
+  soft_timer_start(SEND_TIME_MS, prv_can_transmit, NULL, NULL);
+
+  Event e = { 0 };
+  while (true) {
+  }
 }
