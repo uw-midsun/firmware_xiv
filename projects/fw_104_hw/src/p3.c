@@ -18,7 +18,7 @@ Run the program in two terminals at the same time, and send a screenshot of the 
 #include "log.h"
 #include "soft_timer.h"
 
-#define CAN_DEVICE_A_ID 0xA
+#define CAN_DEVICE_ID 0xA
 #define CAN_MSG_ID 0xA
 
 #define SEND_TIME_MS 1000
@@ -37,7 +37,7 @@ static CanStorage s_can_storage;
 
 void init_can(void) {
   CanSettings can_settings = {
-    .device_id = CAN_DEVICE_A_ID,
+    .device_id = CAN_DEVICE_ID,
     .bitrate = CAN_HW_BITRATE_500KBPS,
     .rx_event = CAN_EVENT_RX,
     .tx_event = CAN_EVENT_TX,
@@ -50,20 +50,34 @@ void init_can(void) {
   can_init(&s_can_storage, &can_settings);
 }
 
-static void prv_can_transmit_a(SoftTimerId timer_id, void *context) {
+static StatusCode prv_ack_handler(CanMessageId msg_id, uint16_t device, CanAckStatus status,
+                                  uint16_t num_remaining, void *context) {
+  if (status == CAN_ACK_STATUS_OK) {
+    LOG_DEBUG("Yo, I'm acknowledged and I'm status code okay!");
+  }
+  return STATUS_CODE_OK;
+}
+
+static void prv_can_transmit(SoftTimerId timer_id, void *context) {
   CanMessage can_message = {
-    .source_id = CAN_DEVICE_A_ID,
+    .source_id = CAN_DEVICE_ID,
     .msg_id = CAN_MSG_ID,
     .data_u16 = DATA,
     .type = CAN_MSG_TYPE_ACK,
     .dlc = 16,
   };
 
-  can_transmit(&can_message, NULL);
+  CanAckRequest ack_request = {
+    .callback = prv_ack_handler,
+    .context = NULL,
+    .expected_bitset = CAN_ACK_EXPECTED_DEVICES(CAN_DEVICE_ID),
+  };
+
+  can_transmit(&can_message, &ack_request);
 }
 
-void prv_message_a_handler(void) {
-  soft_timer_start(SEND_TIME_MS, prv_can_transmit_a, NULL, NULL);
+void prv_message_handler(void) {
+  soft_timer_start(SEND_TIME_MS, prv_can_transmit, NULL, NULL);
 }
 
 int main(void) {
@@ -74,5 +88,5 @@ int main(void) {
 
   init_can();
 
-  prv_message_a_handler();
+  prv_message_handler();
 }
