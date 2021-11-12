@@ -27,16 +27,16 @@ static uint8_t total_crc = 0;
 static StatusCode prv_start_flash(uint8_t *data, uint16_t data_len, void *context) {
   pb_istream_t pb_istream = pb_istream_from_buffer(data, data_len);
   if (!pb_decode(&pb_istream, FlashApplicationCode_fields, &s_meta_data)) {
-    return status_code_return(STATUS_CODE_INVALID_ARGS);
+    return STATUS_CODE_INVALID_ARGS;
   }
 
-  return status_code_response(STATUS_CODE_OK);
+  return STATUS_CODE_OK;
 }
 
 static StatusCode prv_finish_flash() {}
 
 static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context) {
-  // # This process assumes maximum of |data_len| is equal to FLASH_PAGE_BYTES #
+  // # This process assumes |data_len| less than FLASH_PAGE_BYTES #
 
   // erase page
   flash_erase(s_page);

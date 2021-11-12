@@ -30,8 +30,8 @@ uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
 }
 
 uint32_t crc32_append_arr(const uint8_t *buffer, size_t buffer_len, uint32_t initial_crc) {
-  CRC_ResetDR();
   CRC_SetInitRegister(~initial_crc);
+  CRC_ResetDR();
 
   // The CRC32 peripheral consumes words (u32) by default - split into u32 and
   // remaining bytes so we can process the remaining bytes separately
