@@ -18,7 +18,7 @@ void jump_to_bootloader(void) {
       SYSCFG_MemoryRemap_Flash);  // change where the vector table is stored to beginning of flash
 
   // story memory location of bootloader starting point at the beginning of flash?
-  uint32_t *bootloader_in_flash = BOOTLOADER_DEFAULT_LOCATION;
+  uint32_t *bootloader_in_flash = BOOTLOADER_START;
   // setting the stack pointer to the bootloader location now
   uint32_t initial_sp = bootloader_in_flash[0];
   uint32_t reset_handler_pc = bootloader_in_flash[1];
