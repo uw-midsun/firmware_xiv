@@ -1,6 +1,6 @@
 #include "jump.h"
 
-noreturn void prv_perform_jump(uint32_t sp, uint32_t pc) {
+__attribute__((naked)) noreturn void prv_perform_jump(uint32_t sp, uint32_t pc) {
   __asm(
       "msr msp, %[sp] \n"  // reset the main stack pointer (msp) to sp
       "bx %[pc] \n"        // jump to pc
