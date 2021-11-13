@@ -2,6 +2,8 @@
 
 #include <pb_common.h>
 #include <pb_decode.h>
+#include <pb_encode.h>
+
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
 #include "can_datagram.h"
@@ -9,6 +11,10 @@
 #include "crc32.h"
 #include "reset.h"
 #include "update_id.pb.h"
+
+// Note: Certain functionality will be given to the client script to control
+// The client script will make sure only one board is edited per command and
+// will make sure the id given is not currently used
 
 static CanDatagramTxConfig s_response_config = {
   .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
@@ -21,14 +27,11 @@ static CanDatagramTxConfig s_response_config = {
 };
 
 static StatusCode prv_callback_update_id(uint8_t *data, uint16_t data_len, void *context) {
-  if ()  // find a way to access multiple targets from datagram message
-    // second if should be a way to find if there is another with the same id
-
-    UpdateId id_proto = UpdateId_init_zero;
+  UpdateId id_proto = UpdateId_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(data, data_len);
-  status = pb_decode(&stream, UpdateId_fields, &id_proto)
+  bool status = pb_decode(&stream, UpdateId_fields, &id_proto);
 
-      if (!status) {
+  if (!status) {
     printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     s_response_config.data = STATUS_CODE_INTERNAL_ERROR;
     return can_datagram_start_tx(&s_response_config);

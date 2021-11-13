@@ -1,6 +1,9 @@
 #include "update_name.h"
+
 #include <pb_common.h>
 #include <pb_decode.h>
+#include <pb_encode.h>
+
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
 #include "can_datagram.h"
@@ -8,6 +11,10 @@
 #include "crc32.h"
 #include "reset.h"
 #include "update_name.pb.h"
+
+// Note: Certain functionality will be given to the client script to control
+// The client script will make sure only one board is edited per command and
+// will make sure the id given is not currently used
 
 static CanDatagramTxConfig s_response_config = {
   .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
