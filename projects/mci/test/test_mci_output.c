@@ -29,7 +29,11 @@
 #include "wavesculptor.h"
 
 #define TEST_CAN_DEVICE_ID 12
+
+#define TEST_MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS 5
+
 #define TEST_MCI_OUTPUT_THRESHOLD 0.01f
+#define TEST_CONTINUITY_INCREMENT 0.95f
 
 typedef enum {
   TEST_MCI_OUTPUT_PEDAL_EVENT_RX = 0,
@@ -47,6 +51,9 @@ static MotorControllerOutputStorage s_mci_output_storage;
 static Mcp2515Storage s_motor_can_storage;
 static TestMciOutputStorage s_test_mci_output_storage;
 static EEDriveOutput s_drive_state;
+static bool s_is_cruise;
+
+static MotorCanDriveCommand previous_result;
 
 static inline uint32_t unpack_left_shift_u32(uint8_t value, uint8_t shift, uint8_t mask) {
   return (uint32_t)((uint32_t)(value & mask) << shift);
@@ -135,7 +142,6 @@ static StatusCode prv_set_regen_braking_state(bool state) {
 
 StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool extended, uint64_t data,
                                  size_t dlc) {
-  // unpack data
   if (!s_test_mci_output_storage.pedal_sent) {
     return STATUS_CODE_OK;
   }
@@ -159,6 +165,9 @@ StatusCode TEST_MOCK(mcp2515_tx)(Mcp2515Storage *storage, uint32_t id, bool exte
   TEST_ASSERT_FLOAT_WITHIN(TEST_MCI_OUTPUT_THRESHOLD, expected_value->motor_current,
                            actual_value.motor_current);
 
+  // Store the test's velocity and current for continuity tests.
+  previous_result = actual_value;
+
   s_test_mci_output_storage.pedal_sent = false;
   // verify id and dlc are as expected
   return STATUS_CODE_OK;
@@ -168,12 +177,16 @@ EEDriveOutput TEST_MOCK(drive_fsm_get_drive_state)() {
   return s_drive_state;
 }
 
+bool TEST_MOCK(drive_fsm_is_cruise)() {
+  return s_is_cruise;
+}
+
 static void prv_do_tx_rx_pedal_values(TestMciOutputStorage *storage, PedalValues *pedal_values) {
   // Send pedal value
   s_mci_output_storage.pedal_storage.pedal_values = *pedal_values;
   storage->pedal_sent = true;
   LOG_DEBUG("START DELAY\n");
-  delay_ms(300);
+  delay_ms(10);
   LOG_DEBUG("END DELAY\n");
 }
 
@@ -181,12 +194,14 @@ void setup_test(void) {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
+  drive_fsm_init();
 
   prv_setup_system_can();
   prv_setup_motor_can();
 
   TEST_ASSERT_OK(regen_braking_init());
-  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage));
+  TEST_ASSERT_OK(mci_output_init(&s_mci_output_storage, &s_motor_can_storage,
+                                 TEST_MOTOR_CONTROLLER_DRIVE_TX_PERIOD_MS));
 }
 
 void teardown_test(void) {}
@@ -645,4 +660,126 @@ void test_mci_output_reverse_both_pedals_regen_disabled(void) {
   mci_output_update_velocity(-10.0f);
   prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
   TEST_ASSERT_FALSE(s_test_mci_output_storage.pedal_sent);
+}
+
+void test_mci_output_cruise_on_brake_continuity(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_is_cruise = true;
+
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0f,
+    .motor_velocity = 0.0f,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+
+  // Iterate through range of pedal values, comparing each output to the previous output
+  for (float pedal_value = 0.0; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
+       pedal_value += TEST_CONTINUITY_INCREMENT) {
+    PedalValues test_values = {
+      .throttle = 0.0f,
+      .brake = pedal_value,
+    };
+
+    s_test_mci_output_storage.expected_value = previous_result;
+    prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  }
+}
+
+void test_mci_output_cruise_off_brake_continuity(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0,
+    .motor_velocity = WAVESCULPTOR_FORWARD_VELOCITY,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_is_cruise = false;
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+
+  // Iterate through range of pedal values, comparing each output to the previous output
+  for (float pedal_value = TEST_CONTINUITY_INCREMENT; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
+       pedal_value += TEST_CONTINUITY_INCREMENT) {
+    PedalValues test_values = {
+      .throttle = 0.0f,
+      .brake = pedal_value,
+    };
+
+    previous_result.motor_velocity = 0.0;
+
+    s_test_mci_output_storage.expected_value = previous_result;
+    prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  }
+}
+
+void test_mci_output_cruise_on_throttle_continuity(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0,
+    .motor_velocity = 0.0,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_is_cruise = true;
+
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+
+  // Iterate through range of pedal values, comparing each output to the previous output
+  for (float pedal_value = TEST_CONTINUITY_INCREMENT; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
+       pedal_value += TEST_CONTINUITY_INCREMENT) {
+    PedalValues test_values = {
+      .throttle = pedal_value,
+      .brake = 0.0f,
+    };
+
+    s_test_mci_output_storage.expected_value = previous_result;
+    prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  }
+}
+
+void test_mci_output_cruise_off_throttle_continuity(void) {
+  LOG_DEBUG("DOING %s\n", __func__);
+  PedalValues test_values = {
+    .throttle = 0.0f,
+    .brake = 0.0f,
+  };
+
+  MotorCanDriveCommand expected_value = {
+    .motor_current = 0.0,
+    .motor_velocity = WAVESCULPTOR_FORWARD_VELOCITY,
+  };
+  s_test_mci_output_storage.expected_value = expected_value;
+  s_drive_state = EE_DRIVE_OUTPUT_DRIVE;
+  s_is_cruise = false;
+
+  prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+
+  // Iterate through range of pedal values, comparing each output to the previous output
+  for (float pedal_value = TEST_CONTINUITY_INCREMENT; pedal_value < MOTOR_CONTROLLER_PEDAL_MAX;
+       pedal_value += TEST_CONTINUITY_INCREMENT) {
+    PedalValues test_values = {
+      .throttle = pedal_value,
+      .brake = 0.0f,
+    };
+
+    s_test_mci_output_storage.expected_value = previous_result;
+    prv_do_tx_rx_pedal_values(&s_test_mci_output_storage, &test_values);
+  }
 }

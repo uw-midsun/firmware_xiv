@@ -1,6 +1,5 @@
-#include "adc.h"
-#include "battery_monitor.h"
-#include "begin_sequence.h"
+#include "smoke_charger_comms.h"
+
 #include "can.h"
 #include "can_msg_defs.h"
 #include "charger_controller.h"
@@ -8,13 +7,11 @@
 #include "connection_sense.h"
 #include "event_queue.h"
 #include "gpio.h"
-#include "interrupt.h"
 #include "log.h"
-#include "smoketests_charger.h"
 #include "soft_timer.h"
-#include "stop_sequence.h"
+#include "wait.h"
 
-#ifndef CHARGER_SMOKE_TEST
+#define COUNTER_PERIOD_MS 10000  // The time between each softtimer call in ms
 
 static CanStorage s_can_storage;
 static CanSettings s_can_settings = {
@@ -28,33 +25,22 @@ static CanSettings s_can_settings = {
   .loopback = false                        //
 };
 
-#endif  // CHARGER_SMOKE_TEST
+static void prv_softtimer_charger_controller_call(SoftTimerId timer_id, void *context) {
+  StatusCode charger_controller_active();
+  StatusCode charger_controller_deactive();
+  soft_timer_start_millis(COUNTER_PERIOD_MS, prv_softtimer_charger_controller_call, NULL, NULL);
+}
 
-int main(void) {
-#ifdef CHARGER_SMOKE_TEST
-  RUN_SMOKE_TEST(CHARGER_SMOKE_TEST);
-#else
-  LOG_DEBUG("Intializing charger... \n");
-
+void smoke_charger_controll_perform(void) {
   gpio_init();
-  adc_init(ADC_MODE_SINGLE);
-  interrupt_init();
   soft_timer_init();
   event_queue_init();
   can_init(&s_can_storage, &s_can_settings);
+  charger_controller_init();
 
-  begin_sequence_init();
-  battery_monitor_init();
-  connection_sense_init();
-
-  Event e = { 0 };
+  LOG_DEBUG("Initializing soft timer for charger controller smoke test\n");
+  soft_timer_start_millis(COUNTER_PERIOD_MS, prv_softtimer_charger_controller_call, NULL, NULL);
   while (true) {
-    while (event_process(&e) == STATUS_CODE_OK) {
-      can_process_event(&e);
-      begin_sequence_process_event(&e);
-      stop_sequence_process_event(&e);
-    }
+    wait();
   }
-#endif  // CHARGER_SMOKE_TEST
-  return 0;
 }
