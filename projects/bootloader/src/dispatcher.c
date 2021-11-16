@@ -10,6 +10,7 @@
 
 // callbacks and context
 static DispatcherCallback s_callback_map[NUM_BOOTLOADER_DATAGRAMS];
+static bool s_respond_with_status[NUM_BOOTLOADER_DATAGRAMS];
 static void *s_context_map[NUM_BOOTLOADER_DATAGRAMS];
 
 // setup datagram rx config
@@ -35,7 +36,21 @@ static void prv_dispatch(void) {
     LOG_WARN("Unregistered Callback for Command: %i\n", id);
     return;
   }
-  s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
+  // call the callback function
+  StatusCode status = s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
+
+  if (s_respond_with_status[id]) {  // should respond with statuscode
+    CanDatagramTxConfig s_response_config = {
+      .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
+      .destination_nodes_len = 0,  // client listens to all datagrams
+      .destination_nodes = NULL,
+      .data_len = 1,
+      .data = (uint8_t *)&status,
+      .tx_cb = bootloader_can_transmit,
+      .tx_cmpl_cb = tx_cmpl_cb,
+    };
+    can_datagram_start_tx(&s_response_config);
+  }
 }
 
 StatusCode dispatcher_init(uint8_t board_id) {
@@ -62,17 +77,4 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
 
 void tx_cmpl_cb(void) {
   can_datagram_start_listener(&s_datagram_rx);
-}
-
-StatusCode status_code_response(StatusCode status) {
-  CanDatagramTxConfig s_response_config = {
-    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
-    .destination_nodes_len = 0,  // client listens to all datagrams
-    .destination_nodes = NULL,
-    .data_len = 1,
-    .data = &status,
-    .tx_cb = bootloader_can_transmit,
-    .tx_cmpl_cb = tx_cmpl_cb,
-  };
-  return can_datagram_start_tx(&s_response_config);
 }
