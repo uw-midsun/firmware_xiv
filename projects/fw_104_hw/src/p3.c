@@ -21,7 +21,7 @@ Run the program in two terminals at the same time, and send a screenshot of the 
 #define CAN_DEVICE_ID 0xA
 #define CAN_MSG_ID 0xA
 
-#define SEND_TIME_MS 1
+#define SEND_TIME_MS 1000
 
 #define DATA \
   { 0xfef }
@@ -59,7 +59,8 @@ static StatusCode prv_ack_handler(CanMessageId msg_id, uint16_t device, CanAckSt
 }
 
 static void prv_can_transmit(SoftTimerId timer_id, void *context) {
-  LOG_DEBUG("Iteration....");
+  uint8_t *counter = context;
+  LOG_DEBUG("Iteration....%d", *++counter);
   CanMessage can_message = {
     .source_id = CAN_DEVICE_ID,
     .msg_id = CAN_MSG_ID,
@@ -75,6 +76,7 @@ static void prv_can_transmit(SoftTimerId timer_id, void *context) {
   };
 
   can_transmit(&can_message, &ack_request);
+  soft_timer_start_millis(SEND_TIME_MS, prv_can_transmit, counter, NULL);
 }
 
 int main(void) {
@@ -82,10 +84,13 @@ int main(void) {
   event_queue_init();
   interrupt_init();
   soft_timer_init();
+  LOG_DEBUG("I'm in the CAN workspace");
 
   init_can();
 
-  soft_timer_start(SEND_TIME_MS, prv_can_transmit, NULL, NULL);
+  uint8_t counter = 0;
+
+  soft_timer_start_millis(SEND_TIME_MS, prv_can_transmit, &counter, NULL);
 
   Event e = { 0 };
   while (true) {
