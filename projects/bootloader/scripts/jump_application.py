@@ -15,10 +15,11 @@ DATAGRAM_DATA = []
 def jump_to_application(node_ids, sender: DatagramSender):
     """This function sends a jump-to-application datagram to specified boards,
     receives a response, then returns the status"""
+    statuses = {}
 
     def trigger_callback(msg, board_id):
         """This function is nested because it needs access to the dictionary of board ids to store their corresponding status. It removes the board_id from node_ids to statisfy while loop condition"""
-        statuses[board_id] = msg.data
+        statuses[board_id] = int.from_bytes(msg.data, "big")
         node_ids.remove(board_id)
 
     listener = DatagramListener(trigger_callback)
@@ -31,7 +32,6 @@ def jump_to_application(node_ids, sender: DatagramSender):
         data=bytearray(DATAGRAM_DATA))
     sender.send(message)
 
-    statuses = {}
     timeout = time.time() + 10
     # Retrieves response datagrams until there are none or timeout
     while node_ids != []:
