@@ -25,6 +25,7 @@ static FlashApplicationCode s_meta_data = FlashApplicationCode_init_default;
 static FlashPage s_page;
 static uint8_t s_app_crc;
 static uint32_t s_remaining_size;
+static StatusCode status;
 
 static char name[64];
 static char git_version[64];
@@ -69,12 +70,13 @@ static StatusCode prv_flash_complete() {
     // send respond datagram
 
     // restart mcu ?
+    return STATUS_CODE_OK;
   }
 }
 
 static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context) {
   // # This process assumes |data_len| less than FLASH_PAGE_BYTES #
-  if (s_remaining_size - data_len < 0) {
+  if (s_remaining_size < data_len) {
     return STATUS_CODE_OUT_OF_RANGE;
   }
   // flash page, set data_len to the next multiple of 4
@@ -97,6 +99,21 @@ static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_dgram_respond_status(uint8_t *data, uint16_t data_len, void *context) {
+  status = ((DispatcherCallback)context)(data, data_len, NULL);
+  CanDatagramTxConfig tx = {
+    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
+    .destination_nodes_len = 0,
+    .destination_nodes = NULL,
+    .data_len = 1,
+    .data = (uint8_t *)&status,
+    .tx_cb = bootloader_can_transmit,
+    .tx_cmpl_cb = tx_cmpl_cb,
+  };
+  can_datagram_start_tx(&tx);
+  return status;
+}
+
 // static void prv_reset();
 
 StatusCode flash_application_init() {
@@ -106,8 +123,8 @@ StatusCode flash_application_init() {
   s_meta_data.name.funcs.decode = prv_decode_string;
 
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_META,
-                                                   prv_start_flash, true));
+                                                   prv_dgram_respond_status, prv_start_flash));
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_DATA,
-                                                   prv_flash_page, true));
+                                                   prv_dgram_respond_status, prv_flash_page));
   return STATUS_CODE_OK;
 }
