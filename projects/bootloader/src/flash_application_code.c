@@ -12,6 +12,7 @@
 #include "flash.h"
 #include "flash_application_code.pb.h"
 #include "pb_decode.h"
+#include "status.h"
 
 // process:
 // 1. listen for datagram id 8
@@ -23,7 +24,7 @@
 
 static FlashApplicationCode s_meta_data = FlashApplicationCode_init_default;
 static FlashPage s_page;
-static uint8_t s_app_crc;
+static uint32_t s_app_crc;
 static uint32_t s_remaining_size;
 static StatusCode status;
 
@@ -48,15 +49,19 @@ static StatusCode prv_start_flash(uint8_t *data, uint16_t data_len, void *contex
   return STATUS_CODE_OK;
 }
 
+#include "log.h"
 static StatusCode prv_flash_complete() {
   BootloaderConfig s_updated_config;
   config_get(&s_updated_config);
   if (s_app_crc != s_meta_data.application_crc) {
+    LOG_DEBUG("crc did not match, expected: %x actual: %x\n", s_meta_data.application_crc,
+              s_app_crc);
     // crc does not match
     strncpy(s_updated_config.git_version, "", 64);
     strncpy(s_updated_config.project_name, "no project", 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
+    s_updated_config.crc32 = 0;
 
     return STATUS_CODE_INTERNAL_ERROR;
   } else {
@@ -64,29 +69,33 @@ static StatusCode prv_flash_complete() {
     strncpy(s_updated_config.project_name, name, 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
+    s_updated_config.crc32 = 0;
 
-    config_commit(&s_updated_config);
-
-    // send respond datagram
-
-    // restart mcu ?
-    return STATUS_CODE_OK;
+    return config_commit(&s_updated_config);
   }
 }
 
 static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context) {
   // # This process assumes |data_len| less than FLASH_PAGE_BYTES #
   if (s_remaining_size < data_len) {
+    LOG_DEBUG("out of range\n");
     return STATUS_CODE_OUT_OF_RANGE;
   }
   // flash page, set data_len to the next multiple of 4
   // |flash_write_len| will never exceed DATA_LEN_MAX
   uint16_t flash_write_len = (data_len + 3) / FLASH_MCU_WRITE_BYTES * FLASH_MCU_WRITE_BYTES;
+  LOG_DEBUG("%i, %i\n", flash_write_len, data_len);
 
   // erase then write data on page
-  status_ok_or_return(flash_erase(s_page));
+  for (uint16_t i = 0; i < data_len; i += FLASH_PAGE_BYTES) {
+    status_ok_or_return(flash_erase(s_page + i / FLASH_PAGE_BYTES));
+  }
+
   status_ok_or_return(flash_write(FLASH_PAGE_TO_ADDR(s_page), data, flash_write_len));
-  s_page++;
+
+  for (uint16_t i = 0; i < data_len; i += FLASH_PAGE_BYTES) {
+    s_page++;
+  }
 
   // add to crc
   s_app_crc = crc32_append_arr(data, data_len, s_app_crc);
@@ -98,22 +107,6 @@ static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context
 
   return STATUS_CODE_OK;
 }
-
-static StatusCode prv_dgram_respond_status(uint8_t *data, uint16_t data_len, void *context) {
-  status = ((DispatcherCallback)context)(data, data_len, NULL);
-  CanDatagramTxConfig tx = {
-    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
-    .destination_nodes_len = 0,
-    .destination_nodes = NULL,
-    .data_len = 1,
-    .data = (uint8_t *)&status,
-    .tx_cb = bootloader_can_transmit,
-    .tx_cmpl_cb = tx_cmpl_cb,
-  };
-  can_datagram_start_tx(&tx);
-  return status;
-}
-
 // static void prv_reset();
 
 StatusCode flash_application_init() {
@@ -123,8 +116,8 @@ StatusCode flash_application_init() {
   s_meta_data.name.funcs.decode = prv_decode_string;
 
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_META,
-                                                   prv_dgram_respond_status, prv_start_flash));
+                                                   prv_start_flash, NULL, true));
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_DATA,
-                                                   prv_dgram_respond_status, prv_flash_page));
+                                                   prv_flash_page, NULL, true));
   return STATUS_CODE_OK;
 }

@@ -10,8 +10,9 @@
 
 // callbacks and context
 static DispatcherCallback s_callback_map[NUM_BOOTLOADER_DATAGRAMS];
-static bool s_respond_with_status[NUM_BOOTLOADER_DATAGRAMS];
+static bool s_send_response[NUM_BOOTLOADER_DATAGRAMS];
 static void *s_context_map[NUM_BOOTLOADER_DATAGRAMS];
+static StatusCode callback_status;
 
 // setup datagram rx config
 static void prv_dispatch(void);
@@ -37,15 +38,15 @@ static void prv_dispatch(void) {
     return;
   }
   // call the callback function
-  StatusCode status = s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
+  callback_status = s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
 
-  if (s_respond_with_status[id]) {  // should respond with statuscode
+  if (s_send_response[id]) {  // should respond with statuscode
     CanDatagramTxConfig s_response_config = {
       .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
       .destination_nodes_len = 0,  // client listens to all datagrams
       .destination_nodes = NULL,
       .data_len = 1,
-      .data = (uint8_t *)&status,
+      .data = (uint8_t *)&callback_status,
       .tx_cb = bootloader_can_transmit,
       .tx_cmpl_cb = tx_cmpl_cb,
     };
@@ -66,12 +67,13 @@ StatusCode dispatcher_init(uint8_t board_id) {
 }
 
 StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallback callback,
-                                        void *context) {
+                                        void *context, bool send_response) {
   if (id >= NUM_BOOTLOADER_DATAGRAMS) {
     return STATUS_CODE_INVALID_ARGS;
   }
   s_callback_map[id] = callback;
   s_context_map[id] = context;
+  s_send_response[id] = send_response;
   return STATUS_CODE_OK;
 }
 

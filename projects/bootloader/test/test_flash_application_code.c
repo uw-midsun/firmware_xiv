@@ -1,7 +1,9 @@
 #include "bootloader_datagram_defs.h"
 #include "bootloader_events.h"
+#include "bootloader_mcu.h"
 #include "crc32.h"
 #include "dispatcher.h"
+#include "flash.h"
 #include "flash_application_code.h"
 #include "flash_application_code.pb.h"
 #include "interrupt.h"
@@ -63,6 +65,7 @@ void setup_test(void) {
   gpio_init();
   soft_timer_init();
   crc32_init();
+  flash_init();
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
@@ -105,8 +108,6 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
 void test_protobuf(void) {
   flash_application_init();
 
-  uint8_t metadata_buffer[2048];
-
   char name[] = "new name";
   char git_version[] = "";
 
@@ -115,15 +116,49 @@ void test_protobuf(void) {
   metadata.git_version.funcs.encode = prv_encode_string;
   metadata.name.arg = name;
   metadata.git_version.arg = git_version;
-  metadata.application_crc = 0;
-  metadata.size = 0;
+  metadata.application_crc = 0x150088C1;
+  metadata.size = 5 * SIZEOF_ARRAY(s_tx_data);
 
-  pb_ostream_t pb_ostream = pb_ostream_from_buffer(metadata_buffer, (size_t)PROTOBUF_MAXSIZE);
+  pb_ostream_t pb_ostream = pb_ostream_from_buffer(s_tx_data, (size_t)PROTOBUF_MAXSIZE);
   pb_encode(&pb_ostream, FlashApplicationCode_fields, &metadata);
+
+  s_tx_config.data_len = pb_ostream.bytes_written;
 
   dgram_helper_mock_tx_datagram(&s_tx_config);
   dgram_helper_mock_rx_datagram(&s_rx_config);
 
   TEST_ASSERT_EQUAL(1, s_rx_config.data_len);
   TEST_ASSERT_OK(s_rx_config.data[0]);
+
+  LOG_DEBUG("completed application metadata transfer\n");
+
+  s_tx_config.dgram_type = BOOTLOADER_DATAGRAM_FLASH_APPLICATION_DATA;
+  s_tx_config.data_len = SIZEOF_ARRAY(s_tx_data);
+
+  uint8_t byte_val = 0;
+  for (uint16_t page = 0; page < 5; ++page) {
+    // set up the 2048 length data
+    for (uint16_t i = 0; i < SIZEOF_ARRAY(s_tx_data); ++i) {
+      s_tx_data[i] = byte_val;
+      byte_val = (byte_val + 1) % 231;
+    }
+
+    dgram_helper_mock_tx_datagram(&s_tx_config);
+    dgram_helper_mock_rx_datagram(&s_rx_config);
+
+    TEST_ASSERT_EQUAL(1, s_rx_config.data_len);
+    TEST_ASSERT_EQUAL_MESSAGE(STATUS_CODE_OK, s_rx_config.data[0], "failed");
+  }
+
+  uint16_t first_page = FLASH_ADDR_TO_PAGE(BOOTLOADER_APPLICATION_START);
+  byte_val = 0;
+  for (uint16_t page = 0; page < 5; ++page) {
+    flash_read(FLASH_PAGE_TO_ADDR(first_page + page), FLASH_PAGE_BYTES, s_tx_data,
+               SIZEOF_ARRAY(s_tx_data));
+
+    for (uint16_t i = 0; i < FLASH_PAGE_BYTES; ++i) {
+      TEST_ASSERT_EQUAL(byte_val, s_tx_data[i]);
+      byte_val = (byte_val + 1) % 231;
+    }
+  }
 }

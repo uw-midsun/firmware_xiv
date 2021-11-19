@@ -158,5 +158,6 @@ StatusCode query_init(BootloaderConfig *config) {
   // set datagram length to protobuf length
   s_response_config.data_len = pb_ostream.bytes_written;
 
-  return dispatcher_register_callback(BOOTLOADER_DATAGRAM_QUERY_COMMAND, prv_check_query, NULL);
+  return dispatcher_register_callback(BOOTLOADER_DATAGRAM_QUERY_COMMAND, prv_check_query, NULL,
+                                      false);
 }
