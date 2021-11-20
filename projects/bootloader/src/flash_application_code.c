@@ -61,15 +61,16 @@ static StatusCode prv_flash_complete() {
     strncpy(s_updated_config.project_name, "no project", 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
-    s_updated_config.crc32 = 0;
 
     return STATUS_CODE_INTERNAL_ERROR;
   } else {
-    strncpy(s_updated_config.git_version, git_version, 64);
-    strncpy(s_updated_config.project_name, name, 64);
+    LOG_DEBUG("name is %s", name);
+    LOG_DEBUG("git is %s", git_version);
+
+    strncpy(s_updated_config.git_version, "asdf", 64);
+    strncpy(s_updated_config.project_name, "sadf", 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
-    s_updated_config.crc32 = 0;
 
     return config_commit(&s_updated_config);
   }

@@ -1,6 +1,7 @@
 #include "bootloader_datagram_defs.h"
 #include "bootloader_events.h"
 #include "bootloader_mcu.h"
+#include "config.h"
 #include "crc32.h"
 #include "dispatcher.h"
 #include "flash.h"
@@ -66,6 +67,7 @@ void setup_test(void) {
   soft_timer_init();
   crc32_init();
   flash_init();
+  config_init();
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
@@ -109,7 +111,7 @@ void test_protobuf(void) {
   flash_application_init();
 
   char name[] = "new name";
-  char git_version[] = "";
+  char git_version[] = "a";
 
   FlashApplicationCode metadata;
   metadata.name.funcs.encode = prv_encode_string;
