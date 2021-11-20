@@ -54,8 +54,6 @@ static StatusCode prv_flash_complete() {
   BootloaderConfig s_updated_config;
   config_get(&s_updated_config);
   if (s_app_crc != s_meta_data.application_crc) {
-    LOG_DEBUG("crc did not match, expected: %x actual: %x\n", s_meta_data.application_crc,
-              s_app_crc);
     // crc does not match
     strncpy(s_updated_config.git_version, "", 64);
     strncpy(s_updated_config.project_name, "no project", 64);
@@ -64,9 +62,6 @@ static StatusCode prv_flash_complete() {
 
     return STATUS_CODE_INTERNAL_ERROR;
   } else {
-    LOG_DEBUG("name is %s", name);
-    LOG_DEBUG("git is %s", git_version);
-
     strncpy(s_updated_config.git_version, "asdf", 64);
     strncpy(s_updated_config.project_name, "sadf", 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
