@@ -110,7 +110,7 @@ int spi(void) {
 
   return 0;
 }
-// Comment to allow other file to run
+// Comment to allow the other file to run
 // int main(void) {
 //   i2c();
 //   spi();
