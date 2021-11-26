@@ -97,16 +97,6 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
                           prv_strnlen(str, MAX_STRING_SIZE));  // write sting
 }
 
-// static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
-//   LOG_DEBUG("%i\n", field->index);
-//   LOG_DEBUG("%s\n", (char *)stream->state);
-//   LOG_DEBUG("%s\n", (char *)*arg);
-
-//   strncpy((char *)*arg, (char *)stream->state, 64);
-
-//   return true;
-// }
-
 void test_protobuf(void) {
   flash_application_init();
 
@@ -149,7 +139,7 @@ void test_protobuf(void) {
     dgram_helper_mock_rx_datagram(&s_rx_config);
 
     TEST_ASSERT_EQUAL(1, s_rx_config.data_len);
-    TEST_ASSERT_EQUAL_MESSAGE(STATUS_CODE_OK, s_rx_config.data[0], "failed");
+    TEST_ASSERT_EQUAL_MESSAGE(STATUS_CODE_OK, s_rx_config.data[0], "sending page failed");
   }
 
   uint16_t first_page = FLASH_ADDR_TO_PAGE(BOOTLOADER_APPLICATION_START);
