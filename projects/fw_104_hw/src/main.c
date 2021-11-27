@@ -1,13 +1,3 @@
-/*
-Write a function that periodically sends a CAN message with id 0xA and a random uint16_t as the
-body, and requests an ACK with an OK status. Write another function that periodically sends a CAN
-message with id 0xB and a different random uint16_t as the body.
-
-Then, register callbacks for both that print the data, but only ACK the 0xA message.
-
-Run the program in two terminals at the same time, and send a screenshot of the output to your lead.
-*/
-
 #include <string.h>
 
 #include "can.h"
@@ -21,10 +11,13 @@ Run the program in two terminals at the same time, and send a screenshot of the 
 #define SEND_TIME_MS 1000
 
 #define CAN_DEVICE_ID 0x1
-#define CAN_MSG_ID 0xA
+#define CAN_MSG_ID_A 0xA
+#define CAN_MSG_ID_B 0xB
 
-#define CAN_MSG_DATA \
+#define CAN_MSG_DATA_A \
   { 0xfef }
+#define CAN_MSG_DATA_B \
+  { 0x123 }
 
 #define CAN_MSG_SIZE 2
 
@@ -59,10 +52,18 @@ static StatusCode prv_ack_handler(CanMessageId msg_id, uint16_t device, CanAckSt
 }
 
 static void prv_can_transmit(SoftTimerId timer_id, void *context) {
-  CanMessage can_message = {
+  CanMessage can_message_a = {
     .source_id = CAN_DEVICE_ID,
-    .msg_id = CAN_MSG_ID,
-    .data_u16 = CAN_MSG_DATA,
+    .msg_id = CAN_MSG_ID_A,
+    .data_u16 = CAN_MSG_DATA_A,
+    .type = CAN_MSG_TYPE_DATA,
+    .dlc = CAN_MSG_SIZE,
+  };
+
+  CanMessage can_message_b = {
+    .source_id = CAN_DEVICE_ID,
+    .msg_id = CAN_MSG_ID_B,
+    .data_u16 = CAN_MSG_DATA_B,
     .type = CAN_MSG_TYPE_DATA,
     .dlc = CAN_MSG_SIZE,
   };
@@ -73,7 +74,8 @@ static void prv_can_transmit(SoftTimerId timer_id, void *context) {
     .expected_bitset = CAN_ACK_EXPECTED_DEVICES(CAN_DEVICE_ID),
   };
 
-  can_transmit(&can_message, &ack_request);
+  can_transmit(&can_message_a, &ack_request);
+  can_transmit(&can_message_b, NULL);
   soft_timer_start_millis(SEND_TIME_MS, prv_can_transmit, NULL, NULL);
 }
 
@@ -96,17 +98,14 @@ int main(void) {
   LOG_DEBUG("Welcome to CAN\n");
 
   init_can();
-  StatusCode status = can_register_rx_handler(CAN_MSG_ID, prv_rx_callback, NULL);
-  if (status == STATUS_CODE_OK) {
-    LOG_DEBUG("Registered successfully\n");
-  }
+  can_register_rx_handler(CAN_MSG_ID_A, prv_rx_callback, NULL);
+  can_register_rx_handler(CAN_MSG_ID_B, prv_rx_callback, NULL);
 
   soft_timer_start_millis(SEND_TIME_MS, prv_can_transmit, NULL, NULL);
 
   Event e = { 0 };
   while (true) {
     while (event_process(&e) == STATUS_CODE_OK) {
-      // rx_handler isn't being called even though can messages are being sent
       can_process_event(&e);
     }
   }
