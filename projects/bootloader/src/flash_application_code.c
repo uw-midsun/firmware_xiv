@@ -33,9 +33,8 @@ static char git_version[64];
 
 #include "log.h"
 static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
-  char *arg_str = (char *)*arg;
   size_t str_len = MIN(stream->bytes_left, (size_t)64);
-  strncpy(arg_str, (char *)stream->state, str_len);
+  strncpy((char *)*arg, (char *)stream->state, str_len);
   return true;
 }
 
