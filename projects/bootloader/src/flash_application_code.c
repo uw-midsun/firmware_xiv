@@ -31,8 +31,11 @@ static StatusCode status;
 static char name[64];
 static char git_version[64];
 
+#include "log.h"
 static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
-  strncpy((char *)*arg, (char *)stream->state, 64);
+  char *arg_str = (char *)*arg;
+  size_t str_len = MIN(stream->bytes_left, (size_t)64);
+  strncpy(arg_str, (char *)stream->state, str_len);
   return true;
 }
 
@@ -46,10 +49,11 @@ static StatusCode prv_start_flash(uint8_t *data, uint16_t data_len, void *contex
   s_remaining_size = s_meta_data.size;
   s_page = FLASH_ADDR_TO_PAGE(BOOTLOADER_APPLICATION_START);
 
+  LOG_DEBUG("recieved flash metadata");
+
   return STATUS_CODE_OK;
 }
 
-#include "log.h"
 static StatusCode prv_flash_complete() {
   BootloaderConfig s_updated_config;
   config_get(&s_updated_config);
@@ -60,10 +64,11 @@ static StatusCode prv_flash_complete() {
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
 
+    config_commit(&s_updated_config);
     return STATUS_CODE_INTERNAL_ERROR;
   } else {
-    strncpy(s_updated_config.git_version, "asdf", 64);
-    strncpy(s_updated_config.project_name, "sadf", 64);
+    strncpy(s_updated_config.project_name, name, 64);
+    strncpy(s_updated_config.git_version, git_version, 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
 
@@ -103,7 +108,6 @@ static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context
 
   return STATUS_CODE_OK;
 }
-// static void prv_reset();
 
 StatusCode flash_application_init() {
   s_meta_data.git_version.arg = git_version;
