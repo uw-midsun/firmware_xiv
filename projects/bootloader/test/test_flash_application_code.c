@@ -169,11 +169,10 @@ void test_flash_application_code_invalid_crc(void) {
       byte_val = (byte_val + 1) % 231;
     }
   }
-  char empty[64] = { 0 };
-  TEST_ASSERT_EQUAL_CHAR_ARRAY_MESSAGE(empty, s_bootloader_config.project_name, 64,
-                                       "project name was changed when crc is wrong");
-  TEST_ASSERT_EQUAL_CHAR_ARRAY_MESSAGE(empty, s_bootloader_config.git_version, 64,
-                                       "git version was changed when crc is wrong");
+
+  config_get(&s_bootloader_config);
+  TEST_ASSERT_EQUAL_STRING("no project", s_bootloader_config.project_name);
+  TEST_ASSERT_EQUAL_STRING("", s_bootloader_config.git_version);
 }
 
 void test_flash_application_code(void) {
@@ -235,8 +234,6 @@ void test_flash_application_code(void) {
   }
 
   config_get(&s_bootloader_config);
-
-  TEST_ASSERT_EQUAL_STRING_LEN(name, s_bootloader_config.project_name, SIZEOF_ARRAY(name));
-  TEST_ASSERT_EQUAL_STRING_LEN(git_version, s_bootloader_config.git_version,
-                               SIZEOF_ARRAY(git_version));
+  TEST_ASSERT_EQUAL_STRING(name, s_bootloader_config.project_name);
+  TEST_ASSERT_EQUAL_STRING(git_version, s_bootloader_config.git_version);
 }

@@ -58,10 +58,8 @@ static StatusCode prv_flash_complete() {
   config_get(&s_updated_config);
   if (s_app_crc != s_meta_data.application_crc) {
     // crc does not match
-    strncpy(s_updated_config.git_version, "", 64);
     strncpy(s_updated_config.project_name, "no project", 64);
-    s_updated_config.application_crc32 = s_meta_data.application_crc;
-    s_updated_config.application_size = s_meta_data.size;
+    strncpy(s_updated_config.git_version, "", 64);
 
     config_commit(&s_updated_config);
     return STATUS_CODE_INTERNAL_ERROR;
