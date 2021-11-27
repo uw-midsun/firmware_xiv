@@ -11,16 +11,10 @@
 #include "dispatcher.h"
 #include "flash.h"
 #include "flash_application_code.pb.h"
+#include "log.h"
+#include "misc.h"
 #include "pb_decode.h"
 #include "status.h"
-
-// process:
-// 1. listen for datagram id 8
-// 2. respond
-// 3. listen for datagram id 9
-// 4. flash
-// 5. respond (waits for flash to finish)
-// 5. repeat 3 - 5
 
 static FlashApplicationCode s_meta_data = FlashApplicationCode_init_default;
 static FlashPage s_page;
@@ -31,7 +25,6 @@ static StatusCode status;
 static char name[64];
 static char git_version[64];
 
-#include "log.h"
 static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
   size_t str_len = MIN(stream->bytes_left, (size_t)64);
   strncpy((char *)*arg, (char *)stream->state, str_len);
@@ -76,7 +69,6 @@ static StatusCode prv_flash_complete() {
 static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context) {
   // # This process assumes |data_len| less than FLASH_PAGE_BYTES #
   if (s_remaining_size < data_len) {
-    LOG_DEBUG("out of range\n");
     return STATUS_CODE_OUT_OF_RANGE;
   }
   // flash page, set data_len to the next multiple of 4
