@@ -28,6 +28,20 @@ static uint32_t prv_compute_crc32(BootloaderConfig *config) {
 }
 
 StatusCode config_init(void) {
+   // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
+  status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
+                                   &s_config_1_blob, sizeof(BootloaderConfig), false));
+  status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
+
+  status_ok_or_return(persist_init(&s_config_2_persist, BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE,
+                                   &s_config_2_blob, sizeof(BootloaderConfig), false));
+  status_ok_or_return(persist_ctrl_periodic(&s_config_2_persist, false));
+  return STATUS_CODE_OK;
+}
+
+
+
+StatusCode config_verify(void) {
   // This function makes sure that both config pages will not end up corrupted
   // The safety functions are that if a page is corrupted but the other is not then
   // the "safe" page is copied over the corrupted page
