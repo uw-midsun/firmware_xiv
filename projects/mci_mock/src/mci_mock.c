@@ -5,7 +5,6 @@
 #include "event_queue.h"
 #include "exported_enums.h"
 #include "fsm.h"
-#include "log.h"
 #include "mci_events.h"
 
 static MciDriveFsmEvent s_drive_output_fsm_map[] = {
