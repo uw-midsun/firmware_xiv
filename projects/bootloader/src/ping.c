@@ -26,6 +26,5 @@ static StatusCode prv_ping_response(uint8_t *data, uint16_t data_len, void *cont
 
 StatusCode ping_init(uint8_t board_id) {
   s_board_id = board_id;
-  return dispatcher_register_callback(BOOTLOADER_DATAGRAM_PING_COMMAND, prv_ping_response, NULL,
-                                      false);
+  return dispatcher_register_callback(BOOTLOADER_DATAGRAM_PING_COMMAND, prv_ping_response, NULL);
 }

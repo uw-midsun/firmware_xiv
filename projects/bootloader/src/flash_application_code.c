@@ -33,6 +33,8 @@ static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field
 }
 
 static StatusCode prv_start_flash(uint8_t *data, uint16_t data_len, void *context) {
+  LOG_DEBUG("recieved flash metadata");
+
   pb_istream_t pb_istream = pb_istream_from_buffer(data, data_len);
   if (!pb_decode(&pb_istream, FlashApplicationCode_fields, &s_meta_data)) {
     return STATUS_CODE_INVALID_ARGS;
@@ -41,8 +43,6 @@ static StatusCode prv_start_flash(uint8_t *data, uint16_t data_len, void *contex
   s_app_crc = 0;
   s_remaining_size = s_meta_data.size;
   s_page = FLASH_ADDR_TO_PAGE(BOOTLOADER_APPLICATION_START);
-
-  LOG_DEBUG("recieved flash metadata");
 
   return STATUS_CODE_OK;
 }
@@ -75,14 +75,19 @@ static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context
   // flash page, set data_len to the next multiple of 4
   // |flash_write_len| will never exceed DATA_LEN_MAX
   uint16_t flash_write_len = (data_len + 3) / FLASH_MCU_WRITE_BYTES * FLASH_MCU_WRITE_BYTES;
-  LOG_DEBUG("%i, %i\n", flash_write_len, data_len);
 
   // erase then write data on page
   for (uint16_t i = 0; i < data_len; i += FLASH_PAGE_BYTES) {
-    status_ok_or_return(flash_erase(s_page + i / FLASH_PAGE_BYTES));
+    StatusCode status = flash_erase(s_page + i / FLASH_PAGE_BYTES);
+    if (status != STATUS_CODE_OK) {
+      return status_response(status, tx_cmpl_cb);
+    }
   }
 
-  status_ok_or_return(flash_write(FLASH_PAGE_TO_ADDR(s_page), data, flash_write_len));
+  StatusCode status = flash_write(FLASH_PAGE_TO_ADDR(s_page), data, flash_write_len);
+  if (status != STATUS_CODE_OK) {
+    return status_response(status, tx_cmpl_cb);
+  }
 
   for (uint16_t i = 0; i < data_len; i += FLASH_PAGE_BYTES) {
     s_page++;
@@ -96,11 +101,7 @@ static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context
     return prv_flash_complete();
   }
 
-  return STATUS_CODE_OK;
-}
-
-static StatusCode prv_flash_page_with_response(uint8_t *data, uint16_t data_len, void *context) {
-  status_response(prv_flash_page(data, data_len, context));
+  return status_response(STATUS_CODE_OK, tx_cmpl_cb);
 }
 
 StatusCode flash_application_init() {
@@ -112,6 +113,6 @@ StatusCode flash_application_init() {
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_META,
                                                    prv_start_flash, NULL));
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_DATA,
-                                                   prv_flash_page_with_response, NULL));
+                                                   prv_flash_page, NULL));
   return STATUS_CODE_OK;
 }

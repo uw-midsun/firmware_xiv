@@ -5,7 +5,6 @@
 
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
-#include "can_datagram.h"
 #include "log.h"
 
 // callbacks and context
@@ -73,7 +72,8 @@ StatusCode status_response(StatusCode code, CanDatagramExitCb callback) {
     .tx_cb = bootloader_can_transmit,
     .tx_cmpl_cb = callback,
   };
-  return can_datagram_start_tx(&s_response_config);
+  can_datagram_start_tx(&s_response_config);
+  return code;
 }
 
 void tx_cmpl_cb(void) {

@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "bootloader_datagram_defs.h"
+#include "can_datagram.h"
 #include "status.h"
 #include "stdbool.h"
 
@@ -23,7 +24,7 @@ StatusCode dispatcher_init(uint8_t board_id);
 // Note that there can only be one callback registered per ID at a time, so calling this more than
 // once with the same ID will replace the earlier callback.
 StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallback callback,
-                                        void *context, bool send_response);
+                                        void *context);
 
 // send a status response datagram
 // used by any bootloader operation that respond with a status code

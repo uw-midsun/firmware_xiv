@@ -99,16 +99,6 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
                           prv_strnlen(str, MAX_STRING_SIZE));  // write sting
 }
 
-void test_config_zero(void) {
-  BootloaderConfig config;
-  config_get(&config);
-  LOG_DEBUG("%i\n", config.crc32);
-  LOG_DEBUG("%i\n", config.controller_board_id);
-  LOG_DEBUG("%s\n", config.controller_board_name);
-  LOG_DEBUG("%s\n", config.project_name);
-  LOG_DEBUG("%s\n", config.git_version);
-}
-
 void test_flash_application_code_invalid_crc(void) {
   flash_application_init();
 
