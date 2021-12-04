@@ -25,6 +25,11 @@ StatusCode dispatcher_init(uint8_t board_id);
 StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallback callback,
                                         void *context, bool send_response);
 
+// send a status response datagram
+// used by any bootloader operation that respond with a status code
+// |callback| is called after the datagram completes transmission.
+StatusCode status_response(StatusCode code, CanDatagramExitCb callback);
+
 // this should be used as the tx_cmpl_cb in every tx datagram
 // this function should not be called directly
 void tx_cmpl_cb(void);

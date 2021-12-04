@@ -14,6 +14,7 @@
 #include "log.h"
 #include "misc.h"
 #include "pb_decode.h"
+#include "reset.h"
 #include "status.h"
 
 static FlashApplicationCode s_meta_data = FlashApplicationCode_init_default;
@@ -55,14 +56,14 @@ static StatusCode prv_flash_complete() {
     strncpy(s_updated_config.git_version, "", 64);
 
     config_commit(&s_updated_config);
-    return STATUS_CODE_INTERNAL_ERROR;
+    return status_response(STATUS_CODE_INTERNAL_ERROR, tx_cmpl_cb);
   } else {
     strncpy(s_updated_config.project_name, name, 64);
     strncpy(s_updated_config.git_version, git_version, 64);
     s_updated_config.application_crc32 = s_meta_data.application_crc;
     s_updated_config.application_size = s_meta_data.size;
 
-    return config_commit(&s_updated_config);
+    return status_response(config_commit(&s_updated_config), reset);
   }
 }
 
@@ -98,6 +99,10 @@ static StatusCode prv_flash_page(uint8_t *data, uint16_t data_len, void *context
   return STATUS_CODE_OK;
 }
 
+static StatusCode prv_flash_page_with_response(uint8_t *data, uint16_t data_len, void *context) {
+  status_response(prv_flash_page(data, data_len, context));
+}
+
 StatusCode flash_application_init() {
   s_meta_data.git_version.arg = git_version;
   s_meta_data.name.arg = name;
@@ -105,8 +110,8 @@ StatusCode flash_application_init() {
   s_meta_data.name.funcs.decode = prv_decode_string;
 
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_META,
-                                                   prv_start_flash, NULL, true));
+                                                   prv_start_flash, NULL));
   status_ok_or_return(dispatcher_register_callback(BOOTLOADER_DATAGRAM_FLASH_APPLICATION_DATA,
-                                                   prv_flash_page, NULL, true));
+                                                   prv_flash_page_with_response, NULL));
   return STATUS_CODE_OK;
 }
