@@ -37,14 +37,14 @@ static StatusCode prv_start_flash(uint8_t *data, uint16_t data_len, void *contex
 
   pb_istream_t pb_istream = pb_istream_from_buffer(data, data_len);
   if (!pb_decode(&pb_istream, FlashApplicationCode_fields, &s_meta_data)) {
-    return STATUS_CODE_INVALID_ARGS;
+    return status_response(STATUS_CODE_INVALID_ARGS, tx_cmpl_cb);
   }
 
   s_app_crc = 0;
   s_remaining_size = s_meta_data.size;
   s_page = FLASH_ADDR_TO_PAGE(BOOTLOADER_APPLICATION_START);
 
-  return STATUS_CODE_OK;
+  return status_response(STATUS_CODE_OK, tx_cmpl_cb);
 }
 
 static StatusCode prv_flash_complete() {
