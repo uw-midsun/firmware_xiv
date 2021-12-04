@@ -11,6 +11,8 @@
 #include "config.h"
 #include "crc32.h"
 #include "dispatcher.h"
+#include "flash.h"
+#include "interrupt.h"
 #include "log.h"
 #include "ms_test_helper_datagram.h"
 #include "test_helpers.h"
@@ -64,7 +66,7 @@ static void prv_encode_id(uint8_t id) {
 
   pb_ostream_t pb_ostream = pb_ostream_from_buffer(s_tx_data, DGRAM_MAX_DATA_SIZE);
 
-  id_proto.id = id;
+  id_proto.new_id = id;
 
   TEST_ASSERT_MESSAGE(pb_encode(&pb_ostream, UpdateId_fields, &id_proto), "failed to encode tx pb");
   s_tx_config.data_len = pb_ostream.bytes_written;
@@ -72,7 +74,15 @@ static void prv_encode_id(uint8_t id) {
 }
 
 void setup_test(void) {
-  TEST_ASSERT_OK(dispatcher_init(s_board_id));
+  flash_init();
+  event_queue_init();
+  interrupt_init();
+  gpio_init();
+  soft_timer_init();
+  crc32_init();
+  config_init();
+
+  dispatcher_init(s_board_id);
   TEST_ASSERT_OK(update_id_init());
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
@@ -82,22 +92,48 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_update_id(void) {
+  // Test determines if config ID is changed to NODE_CHANGE_VALUE
+
+  // Encodes the protobuf
   prv_encode_id(NODE_CHANGE_VALUE);
 
+  // Sends tx datagram
   dgram_helper_mock_tx_datagram(&s_tx_config);
+
+  // Receives rx datagram from update_id.c
   dgram_helper_mock_rx_datagram(&s_rx_config);
 
+  // Verifies datagram rx status
   TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  // Verifies that STATUS_CODE_OK is returned from update_id.c
   TEST_ASSERT_EQUAL(STATUS_CODE_OK, s_rx_config.data[0]);
+
+  BootloaderConfig current_config = { 0 };
+  config_get(&current_config);
+  TEST_ASSERT_EQUAL(NODE_CHANGE_VALUE, current_config.controller_board_id);
 }
 
 void test_corrupt_proto(void) {
   // figure out how to make a bad proto
   // "You can probably feed random bytes into it and it should fail decoding"
+
+  // Test determines if protobuf is corrupted, update_id will fail
+  uint8_t random_bytes[DGRAM_MAX_DATA_SIZE] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+  s_tx_config.data = random_bytes;
+
+  // Sends tx datagram
+  dgram_helper_mock_tx_datagram(&s_tx_config);
+  // Receives rx datagram from update_id.c
+  dgram_helper_mock_rx_datagram(&s_rx_config);
+
+  // Verifies datagram rx status
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+
+  // Verifies that STATUS_CODE_INTERNAL_ERROR is returned from update_id.c
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, s_rx_config.data[0]);
 }
 
 // and I could also test to see if a failing proto works
-// I will need to mock reset
 
 StatusCode TEST_MOCK(reset)(void) {
   // This function mocks reset (does nothing)

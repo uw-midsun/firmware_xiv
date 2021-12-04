@@ -23,6 +23,8 @@ static CanDatagramRxConfig s_datagram_rx = {
   .rx_cmpl_cb = prv_dispatch,
 };
 
+static StatusCode s_response_code;
+
 // when a datagram rx is finished, the corresponding registered callback for that datagram id
 // is called with the datagram data and registered context
 static void prv_dispatch(void) {
@@ -62,4 +64,19 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
 
 void tx_cmpl_cb(void) {
   can_datagram_start_listener(&s_datagram_rx);
+}
+
+StatusCode status_response(StatusCode code, CanDatagramExitCb callback) {
+  s_response_code = code;
+  CanDatagramTxConfig s_response_config = {
+    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
+    .destination_nodes_len = 0,  // client listens to all datagrams
+    .destination_nodes = NULL,
+    .data_len = 1,
+    .data = (uint8_t *)&s_response_code,
+    .tx_cb = bootloader_can_transmit,
+    .tx_cmpl_cb = callback,
+  };
+  can_datagram_start_tx(&s_response_config);
+  return code;
 }

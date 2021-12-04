@@ -3,12 +3,15 @@
 #include <pb_common.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
+#include <stdio.h>
 
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
 #include "can_datagram.h"
 #include "config.h"
 #include "crc32.h"
+#include "dispatcher.h"
+#include "log.h"
 #include "reset.h"
 #include "update_id.pb.h"
 
@@ -31,10 +34,12 @@ static StatusCode prv_callback_update_id(uint8_t *data, uint16_t data_len, void 
   pb_istream_t stream = pb_istream_from_buffer(data, data_len);
   bool status = pb_decode(&stream, UpdateId_fields, &id_proto);
 
+  uint8_t response_data = STATUS_CODE_OK;
+
   if (!status) {
     printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
-    s_response_config.data = STATUS_CODE_INTERNAL_ERROR;
-    return can_datagram_start_tx(&s_response_config);
+    status_response(STATUS_CODE_INTERNAL_ERROR, tx_cmpl_cb);
+    return STATUS_CODE_INTERNAL_ERROR;
   }
 
   BootloaderConfig previous_config = { 0 };
@@ -42,22 +47,26 @@ static StatusCode prv_callback_update_id(uint8_t *data, uint16_t data_len, void 
 
   BootloaderConfig new_board_config = { .crc32 = 0,
                                         .controller_board_id = (uint8_t)id_proto.new_id,
-                                        .controller_board_name[64] =
-                                            previous_config.controller_board_name,
                                         .project_present = previous_config.project_present,
-                                        .project_name[64] = previous_config.project_name,
-                                        .project_info[64] = previous_config.project_info,
-                                        .git_version[64] = previous_config.git_version,
                                         .application_crc32 = previous_config.application_crc32,
                                         .application_size = previous_config.application_size };
 
+  memcpy(new_board_config.controller_board_name, previous_config.controller_board_name,
+         sizeof(new_board_config.controller_board_name));
+  memcpy(new_board_config.project_name, previous_config.project_name,
+         sizeof(new_board_config.project_name));
+  memcpy(new_board_config.project_info, previous_config.project_info,
+         sizeof(new_board_config.project_info));
+  memcpy(new_board_config.git_version, previous_config.git_version,
+         sizeof(new_board_config.git_version));
+
   new_board_config.crc32 = crc32_arr((uint8_t *)&new_board_config, sizeof(BootloaderConfig));
 
-  s_response_config.data = STATUS_CODE_OK;
-  can_datagram_start_tx(&s_response_config);
+  status_ok_or_return(config_commit(&new_board_config));
 
-  // Software reset
-  reset();
+  // Will send STATU_CODE_OK back in datagram and upon tx completion
+  // Will reset software
+  status_response(STATUS_CODE_OK, reset);
 
   // Because of the reset, the return statement will never be reached
   return STATUS_CODE_OK;

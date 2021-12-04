@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "bootloader_datagram_defs.h"
+#include "can_datagram.h"
 #include "status.h"
 
 // Called whenever a registered bootloader datagram ID is received.
@@ -27,3 +28,5 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
 // this should be used as the tx_cmpl_cb in every tx datagram
 // this function should not be called directly
 void tx_cmpl_cb(void);
+
+StatusCode status_response(StatusCode code, CanDatagramExitCb callback);
