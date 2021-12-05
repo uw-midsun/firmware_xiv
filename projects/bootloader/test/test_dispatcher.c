@@ -82,7 +82,7 @@ void test_dispatch_calls_cb(void) {
 
   bool cb_called = false;
   TEST_ASSERT_OK(
-      dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called, false));
+      dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
   dgram_helper_mock_tx_datagram(&tx_config);
   dgram_helper_assert_no_response();
@@ -106,7 +106,7 @@ void test_datagram_completeness(void) {
 
   bool cb_called = false;
   TEST_ASSERT_OK(
-      dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called, false));
+      dispatcher_register_callback(TEST_DATA_GRAM_ID, prv_dispatch_check_cb, &cb_called));
 
   dgram_helper_mock_tx_datagram(&tx_config);
   dgram_helper_assert_no_response();
@@ -138,5 +138,5 @@ void test_noexistant_callback(void) {
 }
 
 void test_register_invalid_id(void) {
-  TEST_ASSERT_NOT_OK(dispatcher_register_callback(NUM_BOOTLOADER_DATAGRAMS, NULL, NULL, false));
+  TEST_ASSERT_NOT_OK(dispatcher_register_callback(NUM_BOOTLOADER_DATAGRAMS, NULL, NULL));
 }

@@ -1,5 +1,5 @@
 #include "reset.h"
-#include "core_cm0.h"
+#include "stm32f0xx.h"
 
 // Resets stm32f0xx board
 void reset(void) {
