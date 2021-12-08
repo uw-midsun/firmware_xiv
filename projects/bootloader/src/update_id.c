@@ -64,8 +64,8 @@ static StatusCode prv_callback_update_id(uint8_t *data, uint16_t data_len, void 
 
   status_ok_or_return(config_commit(&new_board_config));
 
-  // Will send STATU_CODE_OK back in datagram and upon tx completion
-  // Will reset software
+  // Will send STATUS_CODE_OK back in datagram and
+  // upon tx completion will reset software
   status_response(STATUS_CODE_OK, reset);
 
   // Because of the reset, the return statement will never be reached
