@@ -33,6 +33,8 @@ static CanDatagramTxConfig s_response_config = {
   .tx_cmpl_cb = tx_cmpl_cb,
 };
 
+// Decodes protobuf string to c string
+// is inputted to s_name_proto.new_name.funcs.decode
 static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
   size_t str_len = MIN(stream->bytes_left, (size_t)64);
   strncpy((char *)*arg, (char *)stream->state, str_len);
@@ -57,8 +59,6 @@ static StatusCode prv_callback_update_name(uint8_t *data, uint16_t data_len, voi
                                         .project_present = previous_config.project_present,
                                         .application_crc32 = previous_config.application_crc32,
                                         .application_size = previous_config.application_size };
-
-  // FIX name issue where string can't be c array
 
   memcpy(new_board_config.controller_board_name, name,
          sizeof(new_board_config.controller_board_name));

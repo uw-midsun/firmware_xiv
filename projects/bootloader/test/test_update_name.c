@@ -86,6 +86,7 @@ static bool prv_encode_string(pb_ostream_t *stream, const pb_field_iter_t *field
                           prv_strnlen(str, MAX_STRING_SIZE));  // write string
 }
 
+// This function encodes a protobuf with the input name
 static void prv_encode_name(char name[]) {
   // set the encode functions
   s_name_proto.new_name.funcs.encode = prv_encode_string;

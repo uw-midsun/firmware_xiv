@@ -61,6 +61,7 @@ static CanDatagramRxConfig s_rx_config = {
   .rx_cmpl_cb = NULL,
 };
 
+// This function encodes a protobuf with the input id
 static void prv_encode_id(uint8_t id) {
   UpdateId id_proto = UpdateId_init_zero;
 

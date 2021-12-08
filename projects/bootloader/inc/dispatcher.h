@@ -29,4 +29,7 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
 // this function should not be called directly
 void tx_cmpl_cb(void);
 
+// This function returns a status code in a datagram
+// It also allows a callback function to be set, which will
+// be triggered at the end of the tx
 StatusCode status_response(StatusCode code, CanDatagramExitCb callback);
