@@ -47,21 +47,6 @@ StatusCode crc32_init(void) {
 
 // See http://www.sunshine2k.de/articles/coding/crc/understanding_crc.html
 // for information on how this works
-uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
-  // Begin with initial value of 0xFFFFFFFF
-  uint32_t crc = 0xffffffff;
-  uint8_t tbl_idx = 0;
-
-  while (buffer_len--) {
-    tbl_idx = (crc ^ *buffer) & 0xff;
-    crc = (s_crc_table[tbl_idx] ^ (crc >> 8)) & 0xffffffff;
-    buffer++;
-  }
-
-  // Invert the result
-  return ~crc & 0xffffffff;
-}
-
 uint32_t crc32_append_arr(const uint8_t *buffer, size_t buffer_len, uint32_t initial_crc) {
   // Begin with initial value of inverted crc
   uint32_t crc = ~initial_crc;
