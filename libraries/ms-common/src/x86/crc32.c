@@ -47,6 +47,10 @@ StatusCode crc32_init(void) {
 
 // See http://www.sunshine2k.de/articles/coding/crc/understanding_crc.html
 // for information on how this works
+uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
+  return crc32_append_arr(buffer, buffer_len, 0);
+}
+
 uint32_t crc32_append_arr(const uint8_t *buffer, size_t buffer_len, uint32_t initial_crc) {
   // Begin with initial value of inverted crc
   uint32_t crc = ~initial_crc;

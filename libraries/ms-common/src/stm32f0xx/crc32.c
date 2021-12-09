@@ -11,6 +11,10 @@ StatusCode crc32_init(void) {
   return STATUS_CODE_OK;
 }
 
+uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
+  return crc32_append_arr(buffer, buffer_len, 0);
+}
+
 uint32_t crc32_append_arr(const uint8_t *buffer, size_t buffer_len, uint32_t initial_crc) {
   CRC_SetInitRegister(~initial_crc);
   CRC_ResetDR();
