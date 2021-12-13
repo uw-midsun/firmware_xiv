@@ -103,12 +103,12 @@ void setup_test(void) {
   s_test_config_2.crc32 = crc32_arr((uint8_t *)&s_test_config_2, sizeof(BootloaderConfig));
   persist_commit(&s_test_persist_storage_2);
 
-  TEST_ASSERT_OK(config_init());
+  TEST_ASSERT_OK(config_verify());
 }
 void teardown_test(void) {}
 
-void test_config_init(void) {
-  // Test 1, testing if config_init works under normal circumstances
+void test_config_verify(void) {
+  // Test 1, testing if config_verify works under normal circumstances
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
                sizeof(BootloaderConfig), false);
   persist_ctrl_periodic(&s_test_persist_storage_1, false);
@@ -119,14 +119,14 @@ void test_config_init(void) {
 
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &s_test_config_2, sizeof(BootloaderConfig));
 
-  // Test 2, testing if config_init works for a faulty page (in this case, page 1)
+  // Test 2, testing if config_verify works for a faulty page (in this case, page 1)
   // Below, I'm purposefully changing config 1 so that it becomes faulty
   s_test_config_1.controller_board_id = 2;
   s_test_config_1.application_crc32 = 2;
   s_test_config_1.application_size = 2;
   persist_commit(&s_test_persist_storage_1);
 
-  TEST_ASSERT_OK(config_init());
+  TEST_ASSERT_OK(config_verify());
 
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
                sizeof(BootloaderConfig), false);
@@ -138,14 +138,14 @@ void test_config_init(void) {
 
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &s_test_config_2, sizeof(BootloaderConfig));
 
-  // Test 3, testing if config_init works for a faulty page (in this case, page 2)
+  // Test 3, testing if config_verify works for a faulty page (in this case, page 2)
   // Below, I'm purposefully changing config 2 so that it becomes faulty
   s_test_config_2.controller_board_id = 3;
   s_test_config_2.application_crc32 = 3;
   s_test_config_2.application_size = 3;
   persist_commit(&s_test_persist_storage_2);
 
-  TEST_ASSERT_OK(config_init());
+  TEST_ASSERT_OK(config_verify());
 
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
                sizeof(BootloaderConfig), false);
@@ -157,7 +157,7 @@ void test_config_init(void) {
 
   TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &s_test_config_2, sizeof(BootloaderConfig));
 
-  // Test 4, testing if config_init throws the correct error if both pages are corrupted
+  // Test 4, testing if config_verify throws the correct error if both pages are corrupted
   s_test_config_1.controller_board_id = 4;
   s_test_config_1.application_crc32 = 4;
   s_test_config_1.application_size = 4;
@@ -168,7 +168,7 @@ void test_config_init(void) {
   s_test_config_2.application_size = 5;
   persist_commit(&s_test_persist_storage_2);
 
-  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_init());
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_verify());
 }
 
 void test_config_get(void) {
