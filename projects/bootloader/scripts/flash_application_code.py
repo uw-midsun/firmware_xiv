@@ -20,18 +20,36 @@ from protogen import flash_application_code_pb2 as pb2
 OUTGOING_PROTOBUF_ID = 8
 OUTGOING_DATA_ID = 9
 
+STATUS_CODE_OKAY = 0
+STATUS_CODE_ERROR = 1
+STATUS_CODE_TIMEOUT = 2
 
-def flash_application_code(**kwargs):
+# pylint: disable=too-many-arguments
+def flash_application_code(
+    channel,
+    application_code_data,
+    board_ids,
+    name,
+    git_version,
+    sender_receive_own_messages=False
+):
     """Full Flash Application Code Function"""
 
-    flash = FlashApplication(**kwargs)
+    flash = FlashApplication(
+        channel,
+        application_code_data,
+        board_ids,
+        name,
+        git_version,
+        sender_receive_own_messages
+    )
 
     flash.flash_protobuf()
     chunked_application_code = flash.chunks(flash.app_data, 2048)
     for chunk in chunked_application_code:
         # Reset recieved keys in listener
         flash.listener.datagram_messages = {}
-        flash.recv_boards = []
+        flash.recv_boards = set()
         flash.flash_application_chunk(chunk)
 
 
@@ -39,27 +57,39 @@ class FlashApplication:
     """Flash Application Code Protocol"""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, **kwargs):
-        self._check_kwargs(**kwargs)
+    # pylint: disable=too-many-arguments
+    def __init__(
+        self,
+        channel,
+        application_code_data,
+        board_ids,
+        name,
+        git_version,
+        sender_receive_own_messages=False
+    ):
 
-        self.channel = kwargs["channel"]
-        self.app_data = kwargs["application_code_data"]
-        self.board_ids = kwargs["board_ids"]
-        self.name = kwargs["name"]
-        self.git_version = kwargs["git_version"]
+        self.channel = channel
+        self.app_data = application_code_data
+        self.board_ids = board_ids
+        self.name = name
+        self.git_version = git_version
 
-        self.sender = DatagramSender(channel=self.channel, receive_own_messages=False)
+        self.sender = DatagramSender(
+            channel=self.channel,
+            receive_own_messages=sender_receive_own_messages
+        )
         self.listener = DatagramListener(self.listener_callback)
         self.notifier = can.Notifier(self.sender.bus, [self.listener])
 
-        self.recv_boards = []
+        self.recv_boards = set()
         self.status_code = 0
 
     def listener_callback(self, datagram: Datagram, board_id):
         """Check whether the datagram has an OK status code"""
+        self.recv_boards.add(board_id)
         # Ignores non-zero codes from the client
-        if datagram._data != bytearray(0) and board_id != 0:
-            self.status_code = 1
+        if datagram._data != bytearray([0]) and board_id != 0:
+            self.status_code = STATUS_CODE_ERROR
         elif board_id == 0:
             # Mock controller board responses
             # Only runs when testing - client id is 0
@@ -69,7 +99,7 @@ class FlashApplication:
                 mock_msg = Datagram(
                     datagram_type_id=0,
                     node_ids=self.board_ids,
-                    data=bytearray(0))
+                    data=bytearray([0]))
                 self.sender.send(mock_msg, node_id)
 
     def chunks(self, app_code: bytearray, chunk_size):
@@ -105,9 +135,8 @@ class FlashApplication:
         timeout = time.time() + 5
         self.recv_boards = set()
         while set(self.board_ids) != self.recv_boards:
-            self.recv_boards = set(self.listener.datagram_messages.keys())
             if time.time() > timeout:
-                self.status_code = 2
+                self.status_code = STATUS_CODE_TIMEOUT
                 raise Exception("Flash Application Failed - Timeout")
 
         if self.status_code != 0:
@@ -116,38 +145,17 @@ class FlashApplication:
     def flash_application_chunk(self, chunk):
         """Flash Application Code Chunk"""
 
+        self.recv_boards = set()
+
         message_chunk = self.create_message(OUTGOING_DATA_ID, chunk)
         self.sender.send(message_chunk)
 
         self.status_code = 0
         timeout = time.time() + 5
         while set(self.board_ids) != self.recv_boards:
-            self.recv_boards = set(self.listener.datagram_messages.keys())
             if time.time() > timeout:
-                self.status_code = 2
+                self.status_code = STATUS_CODE_TIMEOUT
                 raise Exception("Flash Application Failed - Timeout")
 
         if self.status_code != 0:
             raise Exception("Flash Application Failed - Non-zero status code")
-
-    @staticmethod
-    def _check_kwargs(**kwargs):
-        """This function checks that all variables are as expected"""
-
-        args = [
-            "channel",
-            "board_ids",
-            "application_code_data",
-            "name",
-            "git_version"]
-
-        # Check all arguments are present
-        for arg in args:
-            assert arg in kwargs
-
-        # Check that types are as expected
-        assert isinstance(kwargs["channel"], str)
-        assert isinstance(kwargs["board_ids"], list)
-        assert isinstance(kwargs["application_code_data"], bytes)
-        assert not isinstance(kwargs["name"], list)
-        assert isinstance(kwargs["git_version"], int)

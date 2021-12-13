@@ -2,7 +2,6 @@
 
 import unittest
 from projects.bootloader.scripts.flash_application_code import FlashApplication
-from can_datagram import DatagramSender
 
 TEST_PROTOCOL_VERSION = 1
 TEST_DATAGRAM_TYPE_ID = 1
@@ -25,11 +24,9 @@ class TestFAC(unittest.TestCase):
             board_ids=TEST_NODES,
             application_code_data=bytes(TEST_DATA),
             name=TEST_NAME,
-            git_version=TEST_GIT_VERSION
+            git_version=TEST_GIT_VERSION,
+            sender_receive_own_messages=True
         )
-
-        # Edit DatagramSender to receive own messages for testing
-        flash.sender = DatagramSender(channel=TEST_CHANNEL, receive_own_messages=True)
 
         flash.flash_protobuf()
 
@@ -42,7 +39,7 @@ class TestFAC(unittest.TestCase):
         for chunk in chunked_application_code:
             # Reset recieved keys in listener
             flash.listener.datagram_messages = {}
-            flash.recv_boards = []
+            flash.recv_boards = set()
 
             flash.flash_application_chunk(chunk)
 
