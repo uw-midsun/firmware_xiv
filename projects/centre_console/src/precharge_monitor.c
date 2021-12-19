@@ -16,6 +16,7 @@ static void prv_timer_cleanup(PrechargeMonitor *storage) {
 static StatusCode prv_precharge_completed_callback(const CanMessage *msg, void *context,
                                                    CanAckStatus *ack_reply) {
   PrechargeMonitor *storage = (PrechargeMonitor *)context;
+  LOG_DEBUG("precharge completed\n");
   precharge_monitor_cancel(storage);
   event_raise(storage->success_event.id, storage->success_event.data);
   return STATUS_CODE_OK;
@@ -23,6 +24,7 @@ static StatusCode prv_precharge_completed_callback(const CanMessage *msg, void *
 
 static void prv_timeout_cb(SoftTimerId timer_id, void *context) {
   PrechargeMonitor *storage = (PrechargeMonitor *)context;
+  LOG_DEBUG("precharge timedout\n");
   event_raise(storage->fail_event.id, storage->fail_event.data);
   prv_timer_cleanup(storage);
 }
@@ -35,6 +37,7 @@ bool precharge_monitor_cancel(PrechargeMonitor *storage) {
 
 StatusCode precharge_monitor_start(PrechargeMonitor *storage) {
   soft_timer_cancel(storage->timer_id);
+  LOG_DEBUG("requesting begin precharge\n");
   CAN_TRANSMIT_BEGIN_PRECHARGE();
   return soft_timer_start_millis(storage->timeout_ms, prv_timeout_cb, storage, &storage->timer_id);
 }
