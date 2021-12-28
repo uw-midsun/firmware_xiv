@@ -1,46 +1,62 @@
-# pylint: skip-file
-"""This client script handles the jump-to-application process of controller boards."""
+"""This script handles the client side jump-to-application protocol"""
+
+# pylint: disable=W0612
 
 import time
 import can
 
-from can_datagram import Datagram
-from can_datagram import DatagramSender
-from can_datagram import DatagramListener
+from can_datagram import Datagram, DatagramSender, DatagramListener
 
-DATAGRAM_TYPE_ID = 5
-DATAGRAM_DATA = []
+STATUS_CODE_OK = 0
+CLIENT_ID = 0
+
+JUMP_TO_APP_DATAGRAM_TYPE_ID = 5
+JUMP_TO_APP_DATAGRAM_DATA = []
+
+# For testing purposes
+RESPONSE_DATAGRAM_TYPE_ID = 0
+RESPONSE_DATAGRAM_NODE_IDS = [CLIENT_ID]
+RESPONSE_DATAGRAM_DATA = [STATUS_CODE_OK]
 
 
 def jump_to_application(node_ids, sender: DatagramSender):
-    """This function sends a jump-to-application datagram to specified boards,
-    handles responses, then returns the statuses"""
-    statuses = {}
+    """Jump To Application Protocol"""
 
+    recv_boards_statuses = {}
     # Avoids mutating outside object
-    node_ids_copy = node_ids.copy()
+    node_ids_copy = set(node_ids)
+    # Nested to have access to 'recv_board_statuses'
 
     def trigger_callback(msg, board_id):
-        """This function is nested because it requires access to the statuses dictionary"""
-        # Paases when datagram isn't a jump-to-application one
-        if msg.datagram_type_id != DATAGRAM_TYPE_ID:
-            statuses[board_id] = int.from_bytes(msg.data, "big")
-            # Deals with while loop condition
+        """Listener callback that pairs board_ids with their status"""
+
+        # Mocks controller board response datagrams
+        # Only runs when testing ('receive_own_messages' is true)
+        if msg.datagram_type_id == JUMP_TO_APP_DATAGRAM_TYPE_ID:
+            for node_id in node_ids:
+                mock_message = Datagram(
+                    datagram_type_id=RESPONSE_DATAGRAM_TYPE_ID,
+                    node_ids=RESPONSE_DATAGRAM_NODE_IDS,
+                    data=bytearray(RESPONSE_DATAGRAM_DATA))
+                sender.send(mock_message, node_id)
+        elif msg.datagram_type_id == RESPONSE_DATAGRAM_TYPE_ID:
+            # To satisfy while loop condition
             node_ids_copy.remove(board_id)
+        else:
+            raise Exception("Jump Application Failed - Unknown Datagram ID")
+        recv_boards_statuses[board_id] = int.from_bytes(msg.data, "little")
 
     listener = DatagramListener(trigger_callback)
-
     notifier = can.Notifier(sender.bus, [listener])
-
     message = Datagram(
-        datagram_type_id=DATAGRAM_TYPE_ID,
-        node_ids=node_ids_copy,
-        data=bytearray(DATAGRAM_DATA))
+        datagram_type_id=JUMP_TO_APP_DATAGRAM_TYPE_ID,
+        node_ids=list(node_ids_copy),
+        data=bytearray(JUMP_TO_APP_DATAGRAM_DATA))
+
     sender.send(message)
 
     timeout = time.time() + 10
-    # Retrieves response datagrams until there are none or timeout
-    while node_ids_copy != []:
+    while node_ids_copy:
         if time.time() > timeout:
             break
-    return statuses
+    return recv_boards_statuses
