@@ -1,12 +1,16 @@
+#include "race_switch.h"
+
 #include <stdbool.h>
 
+#include "can.h"
+#include "can_transmit.h"
+#include "can_unpack.h"
 #include "centre_console_events.h"
 #include "event_queue.h"
 #include "fsm.h"
 #include "gpio.h"
 #include "gpio_it.h"
 #include "log.h"
-#include "race_switch.h"
 #include "status.h"
 #include "voltage_regulator.h"
 
@@ -69,6 +73,7 @@ static void prv_state_race_off_output(Fsm *fsm, const Event *e, void *context) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, true);
   storage->current_state = RACE_STATE_OFF;
+  CAN_TRANSMIT_RACE_NORMAL_STATUS(false);
 }
 
 // Triggered when the fsm switches to the race mode
@@ -77,6 +82,23 @@ static void prv_state_race_on_output(Fsm *fsm, const Event *e, void *context) {
   RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
   voltage_regulator_set_enabled(&storage->voltage_storage, false);
   storage->current_state = RACE_STATE_ON;
+  CAN_TRANSMIT_RACE_NORMAL_STATUS(true);
+}
+
+static StatusCode prv_racemode_callback(const CanMessage *msg, void *context,
+                                        CanAckStatus *ack_reply) {
+  RaceSwitchFsmStorage *storage = (RaceSwitchFsmStorage *)context;
+  uint8_t is_race_mode = false;
+  CAN_UNPACK_RACE_NORMAL_SWITCH_MODE(msg, &is_race_mode);
+  voltage_regulator_set_enabled(&storage->voltage_storage, !is_race_mode);
+
+  if (is_race_mode) {
+    event_raise_no_data(RACE_SWITCH_EVENT_ON);
+  } else {
+    event_raise_no_data(RACE_SWITCH_EVENT_OFF);
+  }
+
+  return STATUS_CODE_OK;
 }
 
 bool race_switch_fsm_process_event(RaceSwitchFsmStorage *storage, Event *e) {
@@ -110,6 +132,9 @@ StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
                                                  INTERRUPT_EDGE_RISING_FALLING,
                                                  prv_gpio_interrupt_handler, storage));
 
+  status_ok_or_return(can_register_rx_handler(SYSTEM_CAN_MESSAGE_RACE_NORMAL_SWITCH_MODE,
+                                              prv_racemode_callback, storage));
+
   status_ok_or_return(
       voltage_regulator_init(&storage->voltage_storage, &s_voltage_regulator_settings));
 
@@ -131,6 +156,7 @@ StatusCode race_switch_fsm_init(RaceSwitchFsmStorage *storage) {
   } else {
     fsm_init(&storage->race_switch_fsm, RACE_SWITCH_FSM_NAME, &race_switch_off, storage);
   }
+
   return STATUS_CODE_OK;
 }
 

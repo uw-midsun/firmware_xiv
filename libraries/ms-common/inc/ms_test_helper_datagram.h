@@ -27,6 +27,6 @@ StatusCode dgram_helper_mock_tx_datagram(CanDatagramTxConfig *tx_config);
 // recieves the next datagram sent through can
 StatusCode dgram_helper_mock_rx_datagram(CanDatagramRxConfig *rx_config);
 
-// process all events until datagram is not active
-// required to complete datagram rx when mock_tx_datagram does not expect a response
-void dgram_helper_process_all(void);
+// process all event until datagram finished
+// make sure no more datagrams are sent
+void dgram_helper_assert_no_response(void);

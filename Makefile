@@ -25,7 +25,7 @@
 #   make test [PL] [PR|LI] [TE] [SD] [DF] - Builds and runs the specified unit test, assuming all tests if TE is not defined
 #   make pytest [PR] [TE] - Runs the specified python unit test, assuming all tests in scripts directory of a project if TE is not defined
 #   make pytest_all - Runs all python tests in the scripts directory of every project
-#   make install_requirements - Installs python requirements for every project
+#   make install_requirements - Installs python requirements for every project, LCOV, protocol buffer dependencies and nanopb
 #   make codegen - Generates header files for CAN messages used in firmware
 # 	make codegen_dbc - Generates a DBC file from protobuf / .asciipb file
 # 	make codegen_protos - Generates protobuf files
@@ -302,7 +302,7 @@ bootloader_protos:
 	@echo "Compiling protos..."
 	@mkdir -p $(BOOTLOADER_DIR)/protogen
 	@for i in $$(ls $(BOOTLOADER_DIR)/protos); do \
-		protoc -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i; \
+		protoc --python_out=$(BOOTLOADER_DIR)/protogen -I=$(BOOTLOADER_DIR)/protos -ocommand.pb $$i; \
 		python $(PYTHONPATHNANO)/generator/nanopb_generator.py -I=$(BOOTLOADER_DIR)/protos command.pb; \
 	done
 	@mv *.pb *.pb.c *.pb.h $(BOOTLOADER_DIR)/protogen
@@ -415,12 +415,28 @@ install_requirements:
 	fi
 
 .PHONY: codecov
-codecov: 
+codecov:
 	@cd $(BUILD_DIR)/obj/x86 && \
 	gcov **/*.o  --branch-counts --function-summaries --branch-probabilities --all-blocks && \
 	lcov --capture --directory . --output-file coverage.info && \
 	lcov -r coverage.info $(IGNORE_CODECOV_FILES) -o coverage.info && \
 	genhtml coverage.info --output-directory ../../../$(CODECOV_DIR) --legend --show-details
+
+# Required for CI to build successfully
+.PHONY: install_requirements_ci
+install_requirements_ci:
+	@sudo apt-get install lcov -y
+	@sudo apt-get update
+	@sudo apt-get install protobuf-compiler
+	@rm -rf $(VENV_DIR)
+	@mkdir $(VENV_DIR)
+	@virtualenv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate; \
+	pip install -r requirements.txt
+	@if [ ! -d "$(PYTHONPATHNANO)" ]; then \
+	cd $(PYTHONPATHNANO)/.. && git clone https://github.com/nanopb/nanopb.git \
+	&& cd $(PYTHONPATHNANO)/generator/proto && make; \
+	fi
 
 MU_PROJS :=
 -include $(MU_DIR)/integration_tests/deps.mk
