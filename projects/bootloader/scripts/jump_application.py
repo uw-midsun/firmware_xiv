@@ -8,6 +8,7 @@ import can
 from can_datagram import Datagram, DatagramSender, DatagramListener
 
 STATUS_CODE_OK = 0
+
 CLIENT_ID = 0
 
 JUMP_TO_APP_DATAGRAM_TYPE_ID = 5
@@ -25,8 +26,8 @@ def jump_to_application(node_ids, sender: DatagramSender):
     recv_boards_statuses = {}
     # Avoids mutating outside object
     node_ids_copy = set(node_ids)
-    # Nested to have access to 'recv_board_statuses'
 
+    # Nested to have access to 'recv_board_statuses'
     def trigger_callback(msg, board_id):
         """Listener callback that pairs board_ids with their status"""
 
@@ -44,6 +45,7 @@ def jump_to_application(node_ids, sender: DatagramSender):
             node_ids_copy.remove(board_id)
         else:
             raise Exception("Jump Application Failed - Unknown Datagram ID")
+
         recv_boards_statuses[board_id] = int.from_bytes(msg.data, "little")
 
     listener = DatagramListener(trigger_callback)

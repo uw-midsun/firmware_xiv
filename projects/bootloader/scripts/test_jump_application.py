@@ -31,6 +31,7 @@ class TestJumpApplication(unittest.TestCase):
 
     def test_jump_application(self):
         """Tests the jump_to_application function"""
+
         sender = DatagramSender(channel=TEST_CHANNEL, receive_own_messages=True)
         recv_boards_statuses = jump_to_application(TEST_NODE_IDS, sender)
         self.assertEqual(recv_boards_statuses, TEST_EXPECTED_STATUSES)
