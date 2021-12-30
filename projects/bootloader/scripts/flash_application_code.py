@@ -47,7 +47,7 @@ def flash_application_code(
     flash.flash_protobuf()
     chunked_application_code = flash.chunks(flash.app_data, 2048)
     for chunk in chunked_application_code:
-        # Reset recieved keys in listener
+        # Reset received keys in listener
         flash.listener.datagram_messages = {}
         flash.recv_boards = set()
         flash.flash_application_chunk(chunk)
