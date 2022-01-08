@@ -3,7 +3,7 @@ name: CI
 on:
   # Run on all pull requests and all pushes to master
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
 
   # Allow running this workflow manually
@@ -57,7 +57,7 @@ jobs:
 
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Install Python tooling
         run: |
@@ -135,3 +135,8 @@ jobs:
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
+
+      - name: Cppcheck MISRA-C Compilence
+        run: |
+          sudo apt-get install cppcheck
+          cppcheck --addon=misra.py projects
