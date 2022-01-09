@@ -149,4 +149,4 @@ jobs:
         run: |
           sudo apt-get install cppcheck
           cppcheck
-          find . -path **/src/** > cppcheck --enable=all --addon=misra.py --file-list=-,
+          find . -path **/src/** | cppcheck --enable=all --addon=misra.py --file-list=-
