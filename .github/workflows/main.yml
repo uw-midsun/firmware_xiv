@@ -148,4 +148,4 @@ jobs:
       - name: Cppcheck MISRA-C Compilence
         run: |
           sudo apt-get install cppcheck
-          cppcheck --addon=misra.py --cppcheck-build-dir=cppcheckbuild projects
+          cppcheck --addon=misra.py projects
