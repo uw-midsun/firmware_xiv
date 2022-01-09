@@ -1,4 +1,4 @@
-name: CI
+name: Misra-CI
 
 on:
   # Run on all pull requests and all pushes to master
