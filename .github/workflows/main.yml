@@ -136,9 +136,9 @@ jobs:
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
 
-  misra-check:
+  misra-cppcheck:
     runs-on: ubuntu-20.04
-    timeout-minutes: 12
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -148,4 +148,5 @@ jobs:
       - name: Cppcheck MISRA-C Compilence
         run: |
           sudo apt-get install cppcheck
-          cppcheck --addon=misra.py . --file-filter=**/src/**
+          cppcheck
+          cppcheck --addon=misra.py .
