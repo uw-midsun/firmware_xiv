@@ -135,8 +135,3 @@ jobs:
           make test_all PLATFORM=x86 DEFINE="${DEFINES}"
           make pytest_all
           make build_all PLATFORM=x86 COMPILER=clang DEFINE="${DEFINES}"
-
-      - name: Cppcheck MISRA-C Compilence
-        run: |
-          sudo apt-get install cppcheck
-          cppcheck --addon=misra.py projects
