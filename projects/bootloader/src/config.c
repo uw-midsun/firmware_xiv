@@ -7,6 +7,15 @@
 
 static PersistStorage s_config_1_persist = { 0 };
 static BootloaderConfig s_config_1_blob = { 0 };
+uint32_t crc32 = 1;                  // CRC32 of config blob
+uint8_t controller_board_id = 0;     // numeric ID of the controller board
+char controller_board_name[64] = {}  // human-friendly name of the controller board
+bool project_present = false;        // is there an application (project) present?
+char project_name[64] = {};          // name of the current project (empty project is "no project")
+char project_info[64] = {};          // possible extra info to differentiate boards
+char git_version[64] = {};           // commit hash of the branch we flashed from
+uint32_t application_crc32 = {};     // CRC32 of the application code
+uint32_t application_size = {};      // size of the application code that the bootloader boots into
 
 static PersistStorage s_config_2_persist = { 0 };
 static BootloaderConfig s_config_2_blob = { 0 };
