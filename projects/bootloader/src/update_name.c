@@ -19,9 +19,7 @@
 // The client script will make sure only one board is edited per command and
 // will make sure the id given is not currently used
 
-static UpdateName s_name_proto = UpdateName_init_zero;
-
-static char name[64];
+static char s_name[64];
 
 static CanDatagramTxConfig s_response_config = {
   .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
@@ -34,7 +32,7 @@ static CanDatagramTxConfig s_response_config = {
 };
 
 // Decodes protobuf string to c string
-// is inputted to s_name_proto.new_name.funcs.decode
+// is inputted to name_proto.new_name.funcs.decode
 static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field, void **arg) {
   size_t str_len = MIN(stream->bytes_left, (size_t)64);
   strncpy((char *)*arg, (char *)stream->state, str_len);
@@ -42,11 +40,15 @@ static bool prv_decode_string(pb_istream_t *stream, const pb_field_iter_t *field
 }
 
 static StatusCode prv_callback_update_name(uint8_t *data, uint16_t data_len, void *context) {
+  UpdateName name_proto = UpdateName_init_zero;
+  name_proto.new_name.arg = s_name;
+  name_proto.new_name.funcs.decode = prv_decode_string;
+
   pb_istream_t stream = pb_istream_from_buffer(data, data_len);
-  bool status = pb_decode(&stream, UpdateName_fields, &s_name_proto);
+  bool status = pb_decode(&stream, UpdateName_fields, &name_proto);
 
   if (!status) {
-    printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+    LOG_WARN("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     status_response(STATUS_CODE_INTERNAL_ERROR, tx_cmpl_cb);
     return STATUS_CODE_INTERNAL_ERROR;
   }
@@ -60,7 +62,7 @@ static StatusCode prv_callback_update_name(uint8_t *data, uint16_t data_len, voi
                                         .application_crc32 = previous_config.application_crc32,
                                         .application_size = previous_config.application_size };
 
-  memcpy(new_board_config.controller_board_name, name,
+  memcpy(new_board_config.controller_board_name, s_name,
          sizeof(new_board_config.controller_board_name));
   memcpy(new_board_config.project_name, previous_config.project_name,
          sizeof(new_board_config.project_name));
@@ -71,10 +73,13 @@ static StatusCode prv_callback_update_name(uint8_t *data, uint16_t data_len, voi
 
   new_board_config.crc32 = crc32_arr((uint8_t *)&new_board_config, sizeof(BootloaderConfig));
 
-  status_ok_or_return(config_commit(&new_board_config));
+  if (config_commit(&new_board_config) == STATUS_CODE_INTERNAL_ERROR) {
+    status_response(STATUS_CODE_INTERNAL_ERROR, tx_cmpl_cb);
+    return STATUS_CODE_INTERNAL_ERROR;
+  }
 
   // Will send STATUS_CODE_OK back in datagram and
-  // upon tx completion will reset software
+  // upon tx completion will reset from software
   status_response(STATUS_CODE_OK, reset);
 
   // Because of the reset, the return statement will never be reached
@@ -82,9 +87,6 @@ static StatusCode prv_callback_update_name(uint8_t *data, uint16_t data_len, voi
 }
 
 StatusCode update_name_init(void) {
-  s_name_proto.new_name.arg = name;
-  s_name_proto.new_name.funcs.decode = prv_decode_string;
-
   return dispatcher_register_callback(BOOTLOADER_DATAGRAM_UPDATE_NAME, prv_callback_update_name,
                                       NULL);
 }

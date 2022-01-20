@@ -61,6 +61,16 @@ static CanDatagramRxConfig s_rx_config = {
   .rx_cmpl_cb = NULL,
 };
 
+static BootloaderConfig reset_config = { .crc32 = 1,
+                                         .controller_board_id = 1,
+                                         .controller_board_name = "a",
+                                         .project_present = true,
+                                         .project_name = "a",
+                                         .project_info = "a",
+                                         .git_version = "a",
+                                         .application_crc32 = 1,
+                                         .application_size = 1 };
+
 // This function encodes a protobuf with the input id
 static void prv_encode_id(uint8_t id) {
   UpdateId id_proto = UpdateId_init_zero;
@@ -88,6 +98,7 @@ void setup_test(void) {
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
+  config_commit(&reset_config);
 }
 
 void teardown_test(void) {}

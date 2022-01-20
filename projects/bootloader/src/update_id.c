@@ -37,7 +37,7 @@ static StatusCode prv_callback_update_id(uint8_t *data, uint16_t data_len, void 
   uint8_t response_data = STATUS_CODE_OK;
 
   if (!status) {
-    printf("Decoding failed: %s\n", PB_GET_ERROR(&stream));
+    LOG_WARN("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     status_response(STATUS_CODE_INTERNAL_ERROR, tx_cmpl_cb);
     return STATUS_CODE_INTERNAL_ERROR;
   }
@@ -62,7 +62,10 @@ static StatusCode prv_callback_update_id(uint8_t *data, uint16_t data_len, void 
 
   new_board_config.crc32 = crc32_arr((uint8_t *)&new_board_config, sizeof(BootloaderConfig));
 
-  status_ok_or_return(config_commit(&new_board_config));
+  if (config_commit(&new_board_config) == STATUS_CODE_INTERNAL_ERROR) {
+    status_response(STATUS_CODE_INTERNAL_ERROR, tx_cmpl_cb);
+    return STATUS_CODE_INTERNAL_ERROR;
+  }
 
   // Will send STATUS_CODE_OK back in datagram and
   // upon tx completion will reset software
