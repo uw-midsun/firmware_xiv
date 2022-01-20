@@ -23,10 +23,13 @@ typedef struct BootloaderConfig {
   uint32_t application_size;       // size of the application code that the bootloader boots into
 } BootloaderConfig;
 
+// Initializes config from flash
+StatusCode config_init(void);
+
 // Initializes the config and will return a STATUS_CODE_INTERNAL_ERROR if both pages are corrupted
 // Additionally, it will check if the two redundant pages are the same and will correct if one is
 // corrupted
-StatusCode config_init(void);
+StatusCode config_verify(void);
 
 // Gets the config for page 1, and memcpys it to the input config pointer
 // If config is NULL, function will return early to avoid a segfault
