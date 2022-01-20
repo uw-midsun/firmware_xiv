@@ -63,21 +63,6 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
   return STATUS_CODE_OK;
 }
 
-StatusCode status_response(StatusCode code, CanDatagramExitCb callback) {
-  callback_status = code;
-  CanDatagramTxConfig s_response_config = {
-    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
-    .destination_nodes_len = 0,  // client listens to all datagrams
-    .destination_nodes = NULL,
-    .data_len = 1,
-    .data = (uint8_t *)&callback_status,
-    .tx_cb = bootloader_can_transmit,
-    .tx_cmpl_cb = callback,
-  };
-  can_datagram_start_tx(&s_response_config);
-  return code;
-}
-
 void tx_cmpl_cb(void) {
   can_datagram_start_listener(&s_datagram_rx);
 }
