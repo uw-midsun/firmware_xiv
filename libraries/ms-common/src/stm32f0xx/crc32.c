@@ -1,4 +1,5 @@
 #include "crc32.h"
+
 #include "log.h"
 #include "stm32f0xx.h"
 
@@ -11,6 +12,11 @@ StatusCode crc32_init(void) {
 }
 
 uint32_t crc32_arr(const uint8_t *buffer, size_t buffer_len) {
+  return crc32_append_arr(buffer, buffer_len, 0);
+}
+
+uint32_t crc32_append_arr(const uint8_t *buffer, size_t buffer_len, uint32_t initial_crc) {
+  CRC_SetInitRegister(~initial_crc);
   CRC_ResetDR();
 
   // The CRC32 peripheral consumes words (u32) by default - split into u32 and

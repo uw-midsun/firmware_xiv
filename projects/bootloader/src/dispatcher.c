@@ -5,12 +5,12 @@
 
 #include "bootloader_can.h"
 #include "bootloader_datagram_defs.h"
-#include "can_datagram.h"
 #include "log.h"
 
 // callbacks and context
 static DispatcherCallback s_callback_map[NUM_BOOTLOADER_DATAGRAMS];
 static void *s_context_map[NUM_BOOTLOADER_DATAGRAMS];
+static StatusCode callback_status;
 
 // setup datagram rx config
 static void prv_dispatch(void);
@@ -22,6 +22,8 @@ static CanDatagramRxConfig s_datagram_rx = {
   // .node_id = ?, // node id is set at dispatcher_init
   .rx_cmpl_cb = prv_dispatch,
 };
+
+static StatusCode s_response_code;
 
 // when a datagram rx is finished, the corresponding registered callback for that datagram id
 // is called with the datagram data and registered context
@@ -35,6 +37,7 @@ static void prv_dispatch(void) {
     LOG_WARN("Unregistered Callback for Command: %i\n", id);
     return;
   }
+  // call the callback function
   s_callback_map[id](s_data, s_datagram_rx.data_len, s_context_map[id]);
 }
 
@@ -62,4 +65,19 @@ StatusCode dispatcher_register_callback(BootloaderDatagramId id, DispatcherCallb
 
 void tx_cmpl_cb(void) {
   can_datagram_start_listener(&s_datagram_rx);
+}
+
+StatusCode status_response(StatusCode code, CanDatagramExitCb callback) {
+  s_response_code = code;
+  CanDatagramTxConfig s_response_config = {
+    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
+    .destination_nodes_len = 0,  // client listens to all datagrams
+    .destination_nodes = NULL,
+    .data_len = 1,
+    .data = (uint8_t *)&s_response_code,
+    .tx_cb = bootloader_can_transmit,
+    .tx_cmpl_cb = callback,
+  };
+  can_datagram_start_tx(&s_response_config);
+  return code;
 }
