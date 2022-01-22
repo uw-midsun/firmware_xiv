@@ -151,7 +151,7 @@ class TestCanDatagramListener(unittest.TestCase):
         self.assertEqual(self.message.serialize(), message.serialize())
         self.assertEqual(self.callback_triggered, True)
 
-    def triggerCallback(self, msg):
+    def triggerCallback(self, msg, board_id):
         self.message = msg
         self.callback_triggered = True
 
