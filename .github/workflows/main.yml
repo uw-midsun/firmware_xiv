@@ -45,7 +45,7 @@ jobs:
 
       - name: Install STM32 toolchain
         env:
-          GCC_PATH: gcc-arm-none-eabi-8-2019-q3-update-linux
+          GCC_PATH: gcc-arm-none-eabi-8-2019-q3-update
           GCC_ARCHIVE_PATH: gcc-arm-none-eabi-8-2019-q3-update-linux.tar.bz2
           GCC_URL: https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/8-2019q3/RC1.1/gcc-arm-none-eabi-8-2019-q3-update-linux.tar.bz2
         run: |
@@ -58,6 +58,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
+
+
 
       - name: Install Python tooling
         run: |
