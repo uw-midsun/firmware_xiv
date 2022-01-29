@@ -7,32 +7,21 @@
 
 static PersistStorage s_config_1_persist = { 0 };
 static BootloaderConfig s_config_1_blob = { 0 };
-uint32_t crc32 = 1;                  // CRC32 of config blob
-uint8_t controller_board_id = 0;     // numeric ID of the controller board
-char controller_board_name[64] = {}  // human-friendly name of the controller board
-bool project_present = false;        // is there an application (project) present?
-char project_name[64] = {};          // name of the current project (empty project is "no project")
-char project_info[64] = {};          // possible extra info to differentiate boards
-char git_version[64] = {};           // commit hash of the branch we flashed from
-uint32_t application_crc32 = {};     // CRC32 of the application code
-uint32_t application_size = {};      // size of the application code that the bootloader boots into
+s_config_1_blob->crc32 = prv_compute_crc32(&s_config_1_blob);
 
 static PersistStorage s_config_2_persist = { 0 };
 static BootloaderConfig s_config_2_blob = { 0 };
+s_config_2_blob->crc32 = prv_compute_crc32(&s_config_2_blob);
 
 // This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
 
 static uint32_t prv_compute_crc32(BootloaderConfig *config) {
-  // This function temporarily saves the current CRC, then sets it to 0
-  // It then uses the crc32_arr function to calculate the crc of the blob
-  // The CRC is then set back to its original value and the calculated is returned
   uint32_t temp_crc = config->crc32;
   config->crc32 = 0;
   uint32_t calculated_crc = crc32_arr((uint8_t *)config, sizeof(BootloaderConfig));
   config->crc32 = temp_crc;
-
   return calculated_crc;
 }
 
