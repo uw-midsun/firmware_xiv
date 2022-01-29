@@ -1,152 +1,16 @@
-# firmware_xiv
-[![Build Status](https://github.com/uw-midsun/firmware_xiv/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/uw-midsun/firmware_xiv/actions/workflows/main.yml)
+<!--
+    General guidelines
+    These are just guidelines, not strict rules - document however seems best.
+    A README for a firmware-only project (e.g. Babydriver, MU, bootloader, CAN explorer) should answer the following questions:
+        - What is it?
+        - What problem does it solve?
+        - How do I use it? (with usage examples / example commands, etc)
+        - How does it work? (architectural overview)
+    A README for a board project (powering a hardware board, e.g. power distribution, centre console, charger, BMS carrier) should answer the following questions:
+        - What is the purpose of the board?
+        - What are all the things that the firmware needs to do?
+        - How does it fit into the overall system?
+        - How does it work? (architectural overview, e.g. what each module's purpose is or how data flows through the firmware)
+-->
+# soft_999_{ivy_bao}_fw_102
 
-This repository contains all firmware for the [University of Waterloo](https://uwaterloo.ca/)'s [Midnight Sun Solar Rayce Car](http://www.uwmidsun.com/) team's 14th car.
-
-## Getting Started
-
-Assuming you have our [Vagrant box](https://github.com/uw-midsun/box) installed:
-
-```bash
-# Clone the repo
-git clone https://github.com/uw-midsun/firmware_xiv.git firmware_xiv
-cd firmware_xiv
-
-# Basic commands to verify that building and testing work
-make build_all PLATFORM=x86
-make build_all PLATFORM=stm32f0xx
-make test_all PLATFORM=x86
-```
-
-## Usage
-
-```bash
-# Commands are of the format:
-# make cmd VAR=val ...
-
-# Flashes the specified project (defaults to stm32f0xx)
-# Append PROBE=stlink-v2 for discovery boards
-make program PROJECT=test_project
-
-# Run all tests within the library or project
-# Append TEST=module for a specific test
-make test LIBRARY=ms-common
-
-# Run a project on x86
-make run PROJECT=test_project
-
-# Flashes the project/test and attaches an instance of GDB
-make gdb TEST=can LIBRARY=ms-common
-
-# Creates a new project or library
-make new PROJECT=new_project_name
-
-# Nukes the build directory - use when things aren't working
-make clean
-
-# Linting and formatting - used to help enforce our coding style
-make format
-make lint
-make pylint
-
-# Define a symbol from the command line - for example, setting the log level
-make test LIBRARY=ms-common DEFINE="LOG_LEVEL_VERBOSITY=LOG_LEVEL_WARN"
-
-# Intall python requirements for every project
-make install_requirements
-
-# Note that for python make commands, you will likely need to be in virtualenv. After running install_requirements, run
-source .venv/bin/activate
-
-# Run all python tests within the scripts directory of a project
-# Append TEST=module to run a specific test
-make pytest PROJECT=test_project
-
-# Run every python test in the scripts directory for all projects
-make pytest_all
-
-# Install package requirements for every project
-make install_requirements 
-
-# Run codegen
-make codegen
-
-# Generate dbc file
-make codegen_dbc
-
-# Generate code coverage reports. Note: ALL projects must have been compiled with coverage symbols 
-# Only works for x86 with GCC currently.
-# After running clean, build_all COVERAGE=true, and test_all, run
-make codecov
-# and open codecov/index.html to view the report. 
-```
-
-We use [GNU Make](https://www.gnu.org/software/make/manual/) for our build system. See [Managing Projects with GNU Make, 3.Xth Edition](http://wanderinghorse.net/computing/make/book/ManagingProjectsWithGNUMake-3.1.3.pdf) for a fantastic supplement to the manual.
-
-Extensive documentation of our supported commands can be found in our [Makefile](Makefile). Note that commands such as `test` and `gdb` will automatically build the project if any changes have been made. You do not need to explicitly build projects except for [continuous integration](#continuous-integration).
-
-### Optional x86 Extended Debugging
-
-If you have Clang/LLVM/Bear installed and want to debug on x86 more easily/more in depth.
-
-#### Static Analysis
-
-To create a compile commands database, run
-
-```bash
-make clean
-bear make build_all PLATFORM=x86
-```
-
-Then to perform static analysis, run
-
-```bash
-clang-tidy $PATH_TO_C_FILE -checks=*
-```
-
-#### Address Sanitation, Memory Analysis and Stack Pointers
-
-To build in debug with memory and address sanitation and extended stack traces on faults, run
-
-```bash
-make clean
-make build_all PLATFORM=x86 COMPILER=clang COPTIONS=asan
-```
-
-If you run any of the resulting binaries and a memory error of any kind occurs there will be detailed information on the cause.
-
-#### Thread Sanitation
-
-To build in debug with thread sanitation run
-
-```bash
-make clean
-make build_all PLATFORM=x86 COMPILER=clang COPTIONS=tsan
-```
-
-If you run any of the resulting binaries and there is any multithreaded code this will find any race conditions.
-
-## Continuous Integration
-
-We use GitHub Actions to run our continuous integration tests, which consists of linting project code, and compiling and running unit tests against each supported platform. The continuous integration workflow will also warn you if any generated code that should be committed, such as CAN message headers generated by [codegen tooling](codegen), has not been updated. Another GitHub Actions workflow also posts a release containing our CAN system's [DBC file](https://docs.fileformat.com/database/dbc/) on every push to master.
-
-More information can be found by reading our [main workflow file](.github/workflows/main.yml).
-
-## Dependencies
-
-- GNU ARM Embedded toolchain
-- GNU Make 4.0 or above
-- [Unity&mdash;Throw the Switch](http://www.throwtheswitch.org/unity/): our C unit testing framework
-
-### Optional Dependencies
-
-- [Clang/LLVM toolchain](http://releases.llvm.org/download.html)
-- [Bear (Build EAR)](https://github.com/rizsotto/Bear)
-
-## Contributions
-
-Before submitting an issue or a pull request to the project, please take a moment to review our code style guide first.
-
-## License
-
-The firmware is made available under the [MIT License](https://opensource.org/licenses/MIT).
