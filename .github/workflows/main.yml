@@ -34,14 +34,14 @@ jobs:
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
           sudo apt-fast -y install gcc-8
-          sudo apt-fast -y install clang-6.0
-          sudo apt-fast -y install clang-format-6.0
+          sudo apt-fast -y install clang-5.0
+          sudo apt-fast -y install clang-format-5.0
           sudo apt-fast -y install libc6-i386
           # for vcan module
           sudo apt-fast -y install linux-modules-extra-$(uname -r)
           ln -sf `which gcc-8` ~/.local/bin/gcc
-          ln -sf `which clang-6.0` ~/.local/bin/clang
-          ln -sf `which clang-format-6.0` ~/.local/bin/clang-format
+          ln -sf `which clang-5.0` ~/.local/bin/clang
+          ln -sf `which clang-format-5.0` ~/.local/bin/clang-format
 
       - name: Install STM32 toolchain
         env:
@@ -58,8 +58,6 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-
-
 
       - name: Install Python tooling
         run: |
