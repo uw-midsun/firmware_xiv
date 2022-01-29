@@ -7,11 +7,11 @@
 
 static PersistStorage s_config_1_persist = { 0 };
 static BootloaderConfig s_config_1_blob = { 0 };
-s_config_1_blob->crc32 = prv_compute_crc32(&s_config_1_blob);
+s_config_1_blob.crc32 = prv_compute_crc32(&s_config_1_blob);
 
 static PersistStorage s_config_2_persist = { 0 };
 static BootloaderConfig s_config_2_blob = { 0 };
-s_config_2_blob->crc32 = prv_compute_crc32(&s_config_2_blob);
+s_config_2_blob.crc32 = prv_compute_crc32(&s_config_2_blob);
 
 // This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
