@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include "gpio.h"
 #include "i2c.h"
+#include "spi.h"
 #include "log.h"
 
 
@@ -27,4 +28,29 @@ StatusCode read_pedal_adc(void){
     status_ok_or_return(i2c_write_reg(I2C_PORT_1, CONFIG_REGISTER_ADDR, 1, i2c_data_read, 1));
 
     return STATUS_CODE_OK;
+}
+
+#define SPI_MOSI \ 
+    {.port= GPIO_PORT_B, .pin=15}
+
+#define SPI_MISO \ 
+    {.port= GPIO_PORT_B, .pin=14}
+#define SPI_SCLK \ 
+    {.port= GPIO_PORT_B, .pin=13}
+#define SPI_SS \ 
+    {.port= GPIO_PORT_B, .pin=12}
+
+StatusCode I_SPI(){
+  SpiSettings spi_settings {
+    .baudrate = 600000,
+    .mode = SPI_MODE_0,
+    .mosi = SPI_MOSI,
+    .miso = SPI_MISO,
+    .sclk = SPI_SCLK,
+    .cs = SPI_SS
+  };
+  spi_init(SPI_PORT_1, &spi_settings);
+
+  status_ok_or_return()
+  return STATUS_CODE_OK;
 }
