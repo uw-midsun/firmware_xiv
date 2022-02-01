@@ -3,6 +3,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include "log.h"
+#include "mcp2515_defs.h"
 
 
 #define I2C1_SDA \
@@ -50,7 +51,30 @@ StatusCode I_SPI(){
     .cs = SPI_SS
   };
   spi_init(SPI_PORT_1, &spi_settings);
+ 
+ //took this from previous pull request of FW104
+  uint8_t tx_bytes = 0b01001001;
+  // dont understand how all the messages come together?
+  // 
+  // MCP2515_CANCTRL_OPMODE_LOOPBACK 0x40 loopback mode
+  // where is transmit buffers??
+  // one shot mode not found in the driver defs
+  // 
+  // #define MCP2515_CANCTRL_CLKOUT_MASK 0x07 looks like clkout pin 
+  // #define MCP2515_CANCTRL_CLKOUT_CLKPRE_2 0x05 looks like syslock 2
+ 
+ 
+ // Calculate transmission length
+  uint16_t tx_len = 1;
 
-  status_ok_or_return()
+  // Allocate space for response
+  uint8_t response = 0 ;
+
+  // Do the exchange
+  status_ok_or_return(spi_exchange(SPI_PORT_1, &tx_bytes, tx_len, &response, 1));
+
+  // Log the output
+    LOG_DEBUG("TXB1CNTRL[3]: %d\n", response);
+
   return STATUS_CODE_OK;
 }
