@@ -4,7 +4,6 @@
 #include "wait.h"
 
 #define COUNTER_A_PERIOD 500
-#define COUNTER_B_PERIOD 1000
 
 typedef struct {
   uint8_t counter_a;
