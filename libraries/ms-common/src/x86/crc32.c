@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-
 // Generated using pyCRC --model crc-32 --algorithm table-driven
 // Note that the final CRC needed to be inverted
 // See https://pycrc.org/

@@ -47,7 +47,7 @@ StatusCode config_init(void) {
   uint32_t config_1_check_crc = 0;
   uint32_t config_2_check_crc = 0;
 
-  // Check for if the bootloader config is still zero. If it is, then calculate the crc of the
+  // Check for if the bootloader config is still zero. If it is not, then calculate the crc of the
   // config to fill in the static configs
   if (memcmp(&s_config_1_blob, &s_config_empty, sizeof(BootloaderConfig)) != 0) {
     config_1_check_crc = prv_compute_crc32(&s_config_1_blob);
