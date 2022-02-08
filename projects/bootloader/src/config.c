@@ -5,15 +5,13 @@
 #include "persist.h"
 #include "soft_timer.h"
 
-// The output of prv_compute_crc32 for an empty config with crc32 of 0
-#define EMPTY_BOOTLOADER_CRC 0x70DEAA08
-
 static PersistStorage s_config_1_persist = { 0 };
-static BootloaderConfig s_config_1_blob = { .crc32 = EMPTY_BOOTLOADER_CRC };
+static BootloaderConfig s_config_1_blob = { 0 };
 
 static PersistStorage s_config_2_persist = { 0 };
-static BootloaderConfig s_config_2_blob = { .crc32 = EMPTY_BOOTLOADER_CRC };
+static BootloaderConfig s_config_2_blob = { 0 };
 
+static BootloaderConfig s_config_empty = { 0 };
 // This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
@@ -27,24 +25,17 @@ static uint32_t prv_compute_crc32(BootloaderConfig *config) {
 }
 
 StatusCode config_init(void) {
-  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
-  status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
-                                   &s_config_1_blob, sizeof(BootloaderConfig), false));
-  status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
+  // This function uses persist_init to pull the flash page and puts it into the type
+  // BootloaderConfig blob
 
-  status_ok_or_return(persist_init(&s_config_2_persist, BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE,
-                                   &s_config_2_blob, sizeof(BootloaderConfig), false));
-  status_ok_or_return(persist_ctrl_periodic(&s_config_2_persist, false));
-  return STATUS_CODE_OK;
-}
-
-StatusCode config_verify(void) {
-  // This function makes sure that both config pages will not end up corrupted
+  // It makes sure that both config pages will not end up corrupted
   // The safety functions are that if a page is corrupted but the other is not then
   // the "safe" page is copied over the corrupted page
   // If both are corrupted then a critical error is returned
 
   // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
+  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
+
   status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
                                    &s_config_1_blob, sizeof(BootloaderConfig), false));
   status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
@@ -53,8 +44,18 @@ StatusCode config_verify(void) {
                                    &s_config_2_blob, sizeof(BootloaderConfig), false));
   status_ok_or_return(persist_ctrl_periodic(&s_config_2_persist, false));
 
-  uint32_t config_1_check_crc = prv_compute_crc32(&s_config_1_blob);
-  uint32_t config_2_check_crc = prv_compute_crc32(&s_config_2_blob);
+  uint32_t config_1_check_crc = 0;
+  uint32_t config_2_check_crc = 0;
+
+  // Check for if the bootloader config is still zero. If it is, then calculate the crc of the
+  // config to fill in the static configs
+  if (memcmp(&s_config_1_blob, &s_config_empty, sizeof(BootloaderConfig)) != 0) {
+    config_1_check_crc = prv_compute_crc32(&s_config_1_blob);
+  }
+
+  if (memcmp(&s_config_2_blob, &s_config_empty, sizeof(BootloaderConfig)) != 0) {
+    config_2_check_crc = prv_compute_crc32(&s_config_2_blob);
+  }
 
   // checks to see if there are differences in crc to detect corruption
   bool is_config_1_corrupted = !(s_config_1_blob.crc32 == config_1_check_crc);

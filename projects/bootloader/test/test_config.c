@@ -103,7 +103,7 @@ void setup_test(void) {
   s_test_config_2.crc32 = crc32_arr((uint8_t *)&s_test_config_2, sizeof(BootloaderConfig));
   persist_commit(&s_test_persist_storage_2);
 
-  TEST_ASSERT_OK(config_verify());
+  TEST_ASSERT_OK(config_init());
 }
 void teardown_test(void) {}
 
@@ -126,7 +126,7 @@ void test_config_verify(void) {
   s_test_config_1.application_size = 2;
   persist_commit(&s_test_persist_storage_1);
 
-  TEST_ASSERT_OK(config_verify());
+  TEST_ASSERT_OK(config_init());
 
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
                sizeof(BootloaderConfig), false);
@@ -145,7 +145,7 @@ void test_config_verify(void) {
   s_test_config_2.application_size = 3;
   persist_commit(&s_test_persist_storage_2);
 
-  TEST_ASSERT_OK(config_verify());
+  TEST_ASSERT_OK(config_init());
 
   persist_init(&s_test_persist_storage_1, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE, &s_test_config_1,
                sizeof(BootloaderConfig), false);
@@ -168,7 +168,7 @@ void test_config_verify(void) {
   s_test_config_2.application_size = 5;
   persist_commit(&s_test_persist_storage_2);
 
-  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_verify());
+  TEST_ASSERT_EQUAL(STATUS_CODE_INTERNAL_ERROR, config_init());
 }
 
 void test_config_get(void) {
