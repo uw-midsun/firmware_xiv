@@ -94,3 +94,6 @@ codegen/system_can.dbc
 *.gcda
 *.gcno
 codecov/
+
+# The MISRA script generates these
+*.dump

@@ -6,7 +6,7 @@ See https://uwmidsun.atlassian.net/l/c/mHxmqjvn for more information.
 ENTRY(Reset_Handler)
 
 /* bootloader size - this must be as small as possible while aligned on 2K and large enough */
-_bootloader_size = 32K;
+_bootloader_size = 48K;
 
 _flash_start = 0x08000000;
 _flash_size = 128K;
