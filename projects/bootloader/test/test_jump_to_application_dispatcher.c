@@ -68,7 +68,7 @@ void setup_test(void) {
   soft_timer_init();
   flash_init();
   crc32_init();
-  config_init();
+  TEST_ASSERT_OK(config_verify());
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
