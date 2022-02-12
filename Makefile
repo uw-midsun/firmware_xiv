@@ -35,6 +35,8 @@
 #   make mu [TE] - Build and run the specified MU integration test, or all integration tests if TE is not defined
 #   make fastmu [TE] - Don't build and just run the MU integration test, or all if TE is not defined.
 #   make analyzestack [PR] - Analyzes the maximum stack size of the specified project
+#   make install_misra - Installs cppcheck requirements for checking MISRA C compliance
+#   make misra [PR] - Checks code compliance using MISRA C 2012 rules of the specified project
 #
 # Platform specific:
 #   make gdb [PL=stm32f0xx] [PL] [PR] [PB]
@@ -52,6 +54,7 @@ LIB_DIR := libraries
 MAKE_DIR := make
 CODEGEN_DIR := codegen
 MU_DIR := mu
+MISRA_DIR := misra
 
 ifeq ($(MAKECMDGOALS),mu)
 PLATFORM ?= x86
@@ -455,3 +458,15 @@ mu: $(MU_PROJS:%=$(BIN_DIR)/%) socketcan fastmu
 
 # Dummy force target for pre-build steps
 .PHONY: .FORCE
+
+.PHONY: install_misra
+install_misra:
+	@sudo apt-get update
+	@sudo apt-get install cppcheck
+
+.PHONY: misra
+misra:
+	@cppcheck --dump $(PROJECT_DIR)
+	@python3 $(MISRA_DIR)/misra.py $(PROJECT_DIR)/src/*.dump
+	@rm $(PROJECT_DIR)/src/*.dump
+	@rm $(PROJECT_DIR)/test/*.dump
