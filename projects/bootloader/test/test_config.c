@@ -106,6 +106,25 @@ void setup_test(void) {
   TEST_ASSERT_OK(config_init());
 }
 
+void test_default_config_changes(void) {
+  // The test tests for the default config changes, the two flash pages are firstly cleared and then
+  // config_init will be called  Then it will verify that the config obtained from config_get is the
+  // default config and then test that the default config was correctly  recorded on flash by
+  // calling config_init again with a config_get.
+  flash_erase(BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE);
+  flash_erase(BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE);
+
+  config_init();
+
+  BootloaderConfig test_input_config = { 0 };
+  config_get(&test_input_config);
+  TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &test_input_config, sizeof(BootloaderConfig));
+
+  config_init();
+  config_get(&test_input_config);
+  TEST_ASSERT_EQUAL_MEMORY(&s_test_config_1, &test_input_config, sizeof(BootloaderConfig));
+}
+
 void teardown_test(void) {}
 
 void test_config_verify(void) {
