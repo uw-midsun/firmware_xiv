@@ -5,13 +5,31 @@
 #include "persist.h"
 #include "soft_timer.h"
 
+// 63 is the maximum controller board ID, so it is easy to tell if it is invalid by setting it to 63
+#define DEFAULT_CONTROLLER_BOARD_ID 63
+
 static PersistStorage s_config_1_persist = { 0 };
-static BootloaderConfig s_config_1_blob = { 0 };
+static BootloaderConfig s_config_1_blob = { .crc32 = 0,
+                                            .controller_board_id = DEFAULT_CONTROLLER_BOARD_ID,
+                                            .controller_board_name = "<unset>",
+                                            .project_present = false,
+                                            .project_name = "",
+                                            .project_info = "",
+                                            .git_version = "",
+                                            .application_crc32 = 0,
+                                            .application_size = 0 };
 
 static PersistStorage s_config_2_persist = { 0 };
-static BootloaderConfig s_config_2_blob = { 0 };
+static BootloaderConfig s_config_2_blob = { .crc32 = 0,
+                                            .controller_board_id = DEFAULT_CONTROLLER_BOARD_ID,
+                                            .controller_board_name = "<unset>",
+                                            .project_present = false,
+                                            .project_name = "",
+                                            .project_info = "",
+                                            .git_version = "",
+                                            .application_crc32 = 0,
+                                            .application_size = 0 };
 
-static BootloaderConfig s_config_empty = { 0 };
 // This sets a type flash page to the config pages from bootloader_mcu
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
@@ -33,9 +51,11 @@ StatusCode config_init(void) {
   // the "safe" page is copied over the corrupted page
   // If both are corrupted then a critical error is returned
 
-  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
-  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
+  s_config_1_blob.crc32 = prv_compute_crc32(&s_config_1_blob);
+  s_config_2_blob.crc32 = prv_compute_crc32(&s_config_2_blob);
 
+  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
+  // persist_init pulls the flash page and puts it into the type BootloaderConfig blob
   status_ok_or_return(persist_init(&s_config_1_persist, BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE,
                                    &s_config_1_blob, sizeof(BootloaderConfig), false));
   status_ok_or_return(persist_ctrl_periodic(&s_config_1_persist, false));
@@ -46,6 +66,9 @@ StatusCode config_init(void) {
 
   uint32_t config_1_check_crc = 0;
   uint32_t config_2_check_crc = 0;
+
+  // Used for comparison only
+  static BootloaderConfig s_config_empty;
 
   // Check for if the bootloader config is still zero. If it is not, then calculate the crc of the
   // config to fill in the static configs

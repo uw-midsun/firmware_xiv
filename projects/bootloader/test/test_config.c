@@ -105,6 +105,7 @@ void setup_test(void) {
 
   TEST_ASSERT_OK(config_init());
 }
+
 void teardown_test(void) {}
 
 void test_config_verify(void) {
