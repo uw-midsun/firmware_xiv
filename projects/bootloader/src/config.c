@@ -68,7 +68,7 @@ StatusCode config_init(void) {
   uint32_t config_2_check_crc = 0;
 
   // Used for comparison only
-  static BootloaderConfig s_config_empty;
+  BootloaderConfig s_config_empty = { 0 };
 
   // Check for if the bootloader config is still zero. If it is not, then calculate the crc of the
   // config to fill in the static configs
