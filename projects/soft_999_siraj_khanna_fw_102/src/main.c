@@ -3,14 +3,14 @@
 #include "soft_timer.h"
 #include "wait.h"
 
-#define wait_ms 500
+#define WAIT_MS 500
 
 typedef struct count {
   uint8_t counter_a;
   uint8_t counter_b;
 } count;
 
-void prv_timer_callback(SoftTimerId id, void *context) {
+static void prv_timer_callback(SoftTimerId id, void *context) {
   count *c = context;
 
   if (c->counter_a % 2 == 0) {
@@ -25,15 +25,15 @@ void prv_timer_callback(SoftTimerId id, void *context) {
   }
 
   // delay now
-  soft_timer_start_millis(wait_ms, prv_timer_callback, c, NULL);
+  soft_timer_start_millis(WAIT_MS, prv_timer_callback, c, NULL);
 }
 
 int main(void) {
   interrupt_init();
   soft_timer_init();
 
-  struct count c_ = { 0 };
-  soft_timer_start_millis(wait_ms, prv_timer_callback, &c_, NULL);
+  struct count counter = { 0 };
+  soft_timer_start_millis(wait_ms, prv_timer_callback, &counter, NULL);
 
   while (true) {
     wait();
