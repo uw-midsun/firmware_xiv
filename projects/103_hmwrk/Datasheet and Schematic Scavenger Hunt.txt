@@ -1,0 +1,51 @@
+What bit in what register should be set on the MCP2515 CAN controller to enable one-shot mode?
+
+A.Bit 4 in register CANCTRL (CANCTRL[3])
+
+In the MCP2515, what are the 3 bytes you’d send over spi if you wanted to write 0x17 to register 0x0f?
+
+A.	0x2
+	0x0f
+	0x17
+
+What is the digital output code (16 bits) for the MCP3427 when the input voltage is 0
+
+A. 0000000000000000
+
+What is the first Opcode byte to start a conversion on the ADS1259.
+
+A. 0000 100x (08h or 09h)
+
+What is the address (hex) for GPIO in the MCP23008?
+
+A.09h
+
+What are the fault codes for the LTC6811 when a fault is detected in bits 15-12?
+
+A.0b1XXX
+
+On the MSXIV power select board, what port and pin should be set to what state to shut down the LTC4417?
+
+A.Port B pin 15 shuts down the device when pin x is low (below 0.8v)
+
+On the MSXIV pedal board, does the controller board talk to the ADC via SPI, CAN, I2C, or UART?
+
+A.I2C
+
+What communication protocol is used by the MSXIV BMS carrier to communicate with the AFE and current sense board?
+
+A.SPI
+
+What port and pin are used for the MSXIV CAN interrupt for the charger interface board?
+
+A. Port A pin 8
+
+What port and pin control the horn in the MSXIV steering wheel board?
+
+A. Port B pin 1
+
+What protocol is used by the MSXIV MCI to communicate with the MCP2515? What ports and pins does this use?
+
+A. SPI. It uses port B pins 12-15
+
+
