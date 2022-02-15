@@ -33,7 +33,7 @@ int main(void) {
   soft_timer_init();
 
   struct count counter = { 0 };
-  soft_timer_start_millis(wait_ms, prv_timer_callback, &counter, NULL);
+  soft_timer_start_millis(WAIT_MS, prv_timer_callback, &counter, NULL);
 
   while (true) {
     wait();
