@@ -1,15 +1,18 @@
 #include <stdint.h>
+
 #include "interrupt.h"
 #include "log.h"
 #include "soft_timer.h"
 #include "wait.h"
+
+#define COUNTER_A_PERIOD_MS 500
 
 typedef struct Counters {
   uint8_t counter_a;
   uint8_t counter_b;
 } Counters;
 
-void prv_timer_callback(SoftTimerId timer_id, void *context) {
+static void prv_timer_callback(SoftTimerId timer_id, void *context) {
   Counters *storage = context;
 
   ++storage->counter_a;
@@ -20,7 +23,7 @@ void prv_timer_callback(SoftTimerId timer_id, void *context) {
     LOG_DEBUG("Counter B: %i\n", storage->counter_b);
   }
 
-  soft_timer_start_millis(500, prv_timer_callback, storage, NULL);
+  soft_timer_start_millis(COUNTER_A_PERIOD_MS, prv_timer_callback, storage, NULL);
 }
 
 int main(void) {
