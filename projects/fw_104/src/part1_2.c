@@ -88,3 +88,66 @@ void i2c_func(void) {
 
   return 0;
 }
+
+  // Part 2.
+  // Based on SPI smoketest.
+
+#include "spi.h"  // Normally included at top of file.
+// I included it here to keep part 2 items together
+#include "mcp2515_defs.h"
+
+/*
+Based on the MSXII charger interface board schematics,
+write a function that initializes SPI then writes the following information to the CANCTRL
+register of the CAN controller IC:
+- Set loopback mode
+- Do not request abort of transmit buffers
+- Enable one shot mode
+- Disable CLKOUT pin
+- Set the CLKOUT prescaler to System Clock / 2.
+Then, send the READ STATUS instruction and print the TXB1CNTRL[3] bit from the return
+*/
+// CAN Controller IC datasheet:
+// https://ww1.microchip.com/downloads/en/DeviceDoc/MCP2515-Stand-Alone-CAN-Controller-with-SPI-20001801J.pdf
+
+// Send WRITE cmd, the addr to write to, and the data to write
+static uint8_t tx_bytes_ctrl[] = { MCP2515_CMD_WRITE, MCP2515_CTRL_REG_CANCTRL, 0b01010010 };
+
+// Send READ_STATUS cmd
+static uint8_t tx_bytes_read_status[] = { MCP2515_CMD_READ_STATUS };
+#define EXPECTED_RESPONSE_LENGTH 1
+static SpiPort port_to_use = SPI_PORT_2;
+
+const SpiSettings settings_to_use = {
+  .baudrate = 6000000,
+  .mode = SPI_MODE_0,
+  // Adjust GPIO pins as needed
+  .mosi = { .port = GPIO_PORT_B, 15 },
+  .miso = { .port = GPIO_PORT_B, 14 },
+  .sclk = { .port = GPIO_PORT_B, 13 },
+  .cs = { .port = GPIO_PORT_B, 12 },
+};
+
+void spi_func() {
+  gpio_init();
+  spi_init(port_to_use, &settings_to_use);
+
+  // Set CANCTRL
+  uint16_t tx_len = SIZEOF_ARRAY(tx_bytes_ctrl);
+  uint8_t response[EXPECTED_RESPONSE_LENGTH] = { 0 };
+  StatusCode status =
+      spi_exchange(port_to_use, tx_bytes_ctrl, tx_len, response, EXPECTED_RESPONSE_LENGTH);
+  if (status == STATUS_CODE_OK) {
+    LOG_DEBUG("Successfully set CANCTRL");
+  }
+
+  // READ_STATUS
+  tx_len = SIZEOF_ARRAY(tx_bytes_read_status);
+  response[0] = 0;
+  status =
+      spi_exchange(port_to_use, tx_bytes_read_status, tx_len, response, EXPECTED_RESPONSE_LENGTH);
+  if (status == STATUS_CODE_OK) {
+    uint8_t txb1_cntrl = (response[0] >> 4) & 0x01;
+    LOG_DEBUG("Successfully read, TXB1CNTRL[3] bit = %d/n", txb1_cntrl);
+  }
+}
