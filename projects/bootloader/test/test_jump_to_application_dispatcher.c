@@ -17,8 +17,23 @@
 
 #define FAILURE_STATUS 1
 #define SUCCESS_STATUS 0
+#define TEST_DATA_LEN 32
 
+#define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
+#define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
+
+static uint8_t s_rx_data;
 static uint8_t s_board_id = 2;
+
+static BootloaderConfig test_input_config = { .crc32 = 1,
+                                              .controller_board_id = 2,
+                                              .controller_board_name = "a",
+                                              .project_present = true,
+                                              .project_name = "a",
+                                              .project_info = "a",
+                                              .git_version = "a",
+                                              .application_crc32 = 1,
+                                              .application_size = 1 };
 
 static CanStorage s_test_can_storage;
 static CanSettings s_test_can_settings = {
@@ -39,19 +54,22 @@ static CanDatagramSettings s_test_datagram_settings = {
   .error_cb = NULL,
 };
 
-#define TEST_DATA_LEN 32
-
-static uint8_t s_rx_data;
-
 // intialize memory with random numbers for testing
-void initialize_memory(void) {
+StatusCode initialize_memory(bool invalid) {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
 
-  // generating random values in range of uint8(0->255)
-  for (uint16_t i = 0; i < 2048; i++) {
-    buffer[i] = i % 231;
+  if (invalid) {
+    // generating random values in range of uint8(0->255)*rand_factor
+    for (uint16_t i = 0; i < 2048; i++) {
+      buffer[i] = 1;
+    }
+  } else {
+    // generating random values in range of uint8(0->255)*rand_factor
+    for (uint16_t i = 0; i < 2048; i++) {
+      buffer[i] = i % 231;
+    }
   }
 
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
@@ -59,6 +77,8 @@ void initialize_memory(void) {
     flash_write((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, buffer, sizeof(buffer));
     curr_size += sizeof(buffer);
   }
+
+  return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
@@ -68,17 +88,55 @@ void setup_test(void) {
   soft_timer_init();
   flash_init();
   crc32_init();
-  TEST_ASSERT_OK(config_verify());
+
+  flash_erase(BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE);
+  flash_erase(BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE);
+
+  TEST_ASSERT_OK(config_init());
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
   dispatcher_init(s_board_id);
-  initialize_memory();
 }
 
 void teardown_test(void) {}
 
+void test_jump_to_application_works(void) {
+  TEST_ASSERT_OK(initialize_memory(false));
+  TEST_ASSERT_OK(config_commit(&test_input_config));
+
+  TEST_ASSERT_OK(jump_to_application_dispatcher_init());
+  CanDatagramTxConfig tx_config = {
+    .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
+    .destination_nodes_len = 1,
+    .destination_nodes = &s_board_id,
+    .data_len = 0,
+    .data = NULL,
+    .tx_cmpl_cb = tx_cmpl_cb,
+  };
+  CanDatagramRxConfig rx_config = {
+    .destination_nodes = NULL,
+    .data_len = 1,
+    .data = &s_rx_data,
+    .node_id = 0,
+    .rx_cmpl_cb = NULL,
+  };
+
+  dgram_helper_mock_tx_datagram(&tx_config);
+  dgram_helper_mock_rx_datagram(&rx_config);
+
+  TEST_ASSERT_EQUAL(DATAGRAM_STATUS_RX_COMPLETE, can_datagram_get_status());
+  TEST_ASSERT_EQUAL(SUCCESS_STATUS, *(rx_config.data));
+  TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_STATUS_RESPONSE, rx_config.dgram_type);
+}
+
+// to be developed once flash bug is fixed
 void test_jump_to_application_failure(void) {
+  TEST_ASSERT_OK(initialize_memory(false));
+  TEST_ASSERT_OK(config_commit(&test_input_config));
+
+  TEST_ASSERT_OK(initialize_memory(true));
+
   TEST_ASSERT_OK(jump_to_application_dispatcher_init());
   CanDatagramTxConfig tx_config = {
     .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
@@ -103,6 +161,3 @@ void test_jump_to_application_failure(void) {
   TEST_ASSERT_EQUAL(FAILURE_STATUS, *(rx_config.data));
   TEST_ASSERT_EQUAL(BOOTLOADER_DATAGRAM_STATUS_RESPONSE, rx_config.dgram_type);
 }
-
-// to be developed once flash bug is fixed
-void test_jump_to_application_success(void) {}

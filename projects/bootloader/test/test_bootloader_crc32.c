@@ -20,7 +20,7 @@ void initialize_memory(void) {
 
   // generating random values in range of uint8(0->255)
   for (uint16_t i = 0; i < 2048; i++) {
-    buffer[i] = i % 231;
+    buffer[i] = 1;
   }
 
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
@@ -47,5 +47,6 @@ void teardown_test(void) {}
 void test_bootloader_application_crc32() {
   // compute crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
+  printf("%u\n\n", computed_crc32);
   TEST_ASSERT_EQUAL(3900764041, computed_crc32);
 }

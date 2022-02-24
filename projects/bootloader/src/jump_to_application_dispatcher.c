@@ -19,7 +19,6 @@
 static uint8_t s_status;
 
 void prv_jump_to_application_tx_cmpl_cb() {
-  LOG_DEBUG("TX CALLEDDDDD\n");
   jump_to_application();
 }
 static CanDatagramTxConfig s_response_config = {
@@ -39,7 +38,7 @@ static StatusCode prv_jump_to_application_response(uint8_t *data, uint16_t data_
 
   // get the computed crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-  // printf("crc32 is %d\n\n", config.application_crc32);
+  printf("crc32 is %u vs %u\n\n", config.application_crc32, computed_crc32);
   if (config.application_crc32 != computed_crc32) {
     LOG_DEBUG("CRC32 codes do not match returning\n");
     s_status = FAILURE_STATUS;
