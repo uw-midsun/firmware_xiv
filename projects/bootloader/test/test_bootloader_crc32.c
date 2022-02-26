@@ -20,7 +20,7 @@ void initialize_memory(void) {
 
   // generating random values in range of uint8(0->255)
   for (uint16_t i = 0; i < 2048; i++) {
-    buffer[i] = 1;
+    buffer[i] = i % 231;
   }
 
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
@@ -37,7 +37,6 @@ void read_memory(void) {
   uint8_t buffer[2048];
 
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
-    printf("HELLO\n");
     // read flash
     flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer[0]) * 2048,
                buffer, sizeof(buffer[0]) * 2048);
