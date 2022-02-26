@@ -30,6 +30,25 @@ void initialize_memory(void) {
   }
 }
 
+// read memory if needed
+void read_memory(void) {
+  size_t curr_size = 0;
+  // writing the memory using a buffer with 2048 bytes at a time
+  uint8_t buffer[2048];
+
+  while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
+    printf("HELLO\n");
+    // read flash
+    flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer[0]) * 2048,
+               buffer, sizeof(buffer[0]) * 2048);
+    for (uint16_t i = 0; i < 2048; i++) {
+      printf("n: %d\n", buffer[i]);
+    }
+
+    curr_size += sizeof(buffer);
+  }
+}
+
 void setup_test(void) {
   event_queue_init();
   interrupt_init();
@@ -45,8 +64,11 @@ void teardown_test(void) {}
 // test to check if computed crc32 code matches with the config
 // application_crc32
 void test_bootloader_application_crc32() {
+  // uncomment to read memory for debugging
+  // read_memory();
+
   // compute crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-  printf("%u\n\n", computed_crc32);
+  // printf("%u\n\n", computed_crc32);
   TEST_ASSERT_EQUAL(3900764041, computed_crc32);
 }
