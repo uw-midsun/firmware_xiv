@@ -7,7 +7,7 @@
 #include "interrupt.h"
 #include "log.h"
 #include "wait.h"
-#include "gpio_it.h
+#include "gpio_it.h"
 
 
 /*
@@ -26,8 +26,8 @@ register an interrupt with the appropriate InterruptEdge settings (google this o
  */
 
 int main( void ) {
-    gpio_it_init();
     gpio_init();
+    gpio_it_init();
     adc_init( ADC_MODE_SINGLE );
 
     GpioAddress button_addr = {
@@ -44,33 +44,32 @@ int main( void ) {
 
     gpio_init_pin( &button_addr, &pot_settings );
 
+
+    InterruptSettings button_interrupt_settings = {
+        .type = INTERRUPT_TYPE_INTERRUPT,
+        .priority = INTERRUPT_PRIORITY_HIGH,
+    };
+
     adc_set_channel_pin( button_addr, true );
 
-    gpio_it_get_edge( &button_addr, /*interrupt edge?*/);
+    gpio_it_get_edge( &button_addr, INTERRUPT_EDGE_RISING);
+
+
+    uint16_t button_data = 0;
+    void prv_button_interrupt_callback( const GpioAddress *button_addr, void *context) {
+      LOG_DEBUG( "button data: %d\n", button_data );
+    };
+
     gpio_it_register_interrupt( &button_addr,
-                               pot_settings /*is this right?*/,
-                               InterruptEdge edge,
-                               /*GpioItCallback callback*/,
+                               &button_interrupt_settings,
+                               INTERRUPT_EDGE_RISING,
+                               &prv_button_interrupt_callback,
                                NULL );
 
-    if ( gpio_it_register_interrupt( &button_addr ) == STATUS_CODE_OK )
-      LOG_DEBUG( "button data: %d\n", button_data );
 
     while (true) {
       wait();
     }
-
-    /*while( true ) {
-      uint16_t button_data = 0;
-      if (adc_read_raw_pin(button_addr, &button_data) == STATUS_CODE_OK)
-        LOG_DEBUG("button data: %d\n", button_data);
-      else
-        LOG_DEBUG("Failed to read button data");
-      delay_ms(200);
-    }*/
-
-
-
 }
 
 
