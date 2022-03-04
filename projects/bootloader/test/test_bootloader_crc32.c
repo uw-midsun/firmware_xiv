@@ -13,7 +13,7 @@
 #include "unity.h"
 
 // intialize memory with random numbers for testing
-void initialize_memory(void) {
+StatusCode initialize_memory(void) {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
@@ -28,24 +28,8 @@ void initialize_memory(void) {
     flash_write((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, buffer, sizeof(buffer));
     curr_size += sizeof(buffer);
   }
-}
 
-// read memory if needed
-void read_memory(void) {
-  size_t curr_size = 0;
-  // writing the memory using a buffer with 2048 bytes at a time
-  uint8_t buffer[2048];
-
-  while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
-    // read flash
-    flash_read((uintptr_t)BOOTLOADER_APPLICATION_START + curr_size, sizeof(buffer[0]) * 2048,
-               buffer, sizeof(buffer[0]) * 2048);
-    for (uint16_t i = 0; i < 2048; i++) {
-      printf("n: %d\n", buffer[i]);
-    }
-
-    curr_size += sizeof(buffer);
-  }
+  return STATUS_CODE_OK;
 }
 
 void setup_test(void) {
@@ -55,7 +39,6 @@ void setup_test(void) {
   soft_timer_init();
   flash_init();
   crc32_init();
-  initialize_memory();
 }
 
 void teardown_test(void) {}
@@ -63,11 +46,17 @@ void teardown_test(void) {}
 // test to check if computed crc32 code matches with the config
 // application_crc32
 void test_bootloader_application_crc32() {
-  // uncomment to read memory for debugging
-  // read_memory();
+  // to intialize memory we erase all
+  // the flash pages and intialize it after
+  for (int i = 0; i < NUM_FLASH_PAGES; i++) {
+    flash_erase((FlashPage)i);
+  }
+  TEST_ASSERT_OK(initialize_memory());
 
   // compute crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-  // printf("%u\n\n", computed_crc32);
+
+  // the value for this specific mem intialization
+  // and its crc was obtained through using python's zlib library
   TEST_ASSERT_EQUAL(3900764041, computed_crc32);
 }

@@ -17,7 +17,6 @@
 
 #define FAILURE_STATUS 1
 #define SUCCESS_STATUS 0
-#define TEST_DATA_LEN 32
 
 #define BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_1_START))
 #define BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE (FLASH_ADDR_TO_PAGE(BOOTLOADER_CONFIG_PAGE_2_START))
@@ -55,13 +54,13 @@ static CanDatagramSettings s_test_datagram_settings = {
 };
 
 // intialize memory with random numbers for testing
-StatusCode initialize_memory(bool invalid) {
+StatusCode initialize_memory(uint8_t invalid) {
   size_t curr_size = 0;
   // writing the memory using a buffer with 2048 bytes at a time
   uint8_t buffer[2048];
 
   if (invalid) {
-    // generating random values in range of uint8(0->255)*rand_factor
+    // setting everything to 1 for testing purposes
     for (uint16_t i = 0; i < 2048; i++) {
       buffer[i] = 1;
     }
@@ -91,8 +90,7 @@ void setup_test(void) {
 
   flash_erase(BOOTLOADER_CONFIG_PAGE_1_FLASH_PAGE);
   flash_erase(BOOTLOADER_CONFIG_PAGE_2_FLASH_PAGE);
-
-  TEST_ASSERT_OK(config_init());
+  config_init();
 
   ms_test_helper_datagram_init(&s_test_can_storage, &s_test_can_settings, s_board_id,
                                &s_test_datagram_settings);
@@ -102,7 +100,14 @@ void setup_test(void) {
 void teardown_test(void) {}
 
 void test_jump_to_application_works(void) {
-  TEST_ASSERT_OK(initialize_memory(false));
+  // to intialize memory we erase all
+  // the flash pages and intialize it after
+  for (int i = 0; i < NUM_FLASH_PAGES; i++) {
+    flash_erase((FlashPage)i);
+  }
+  TEST_ASSERT_OK(initialize_memory(0));
+
+  // commit the config so we have the updated application crc32 code
   TEST_ASSERT_OK(config_commit(&test_input_config));
 
   TEST_ASSERT_OK(jump_to_application_dispatcher_init());
@@ -132,10 +137,21 @@ void test_jump_to_application_works(void) {
 
 // to be developed once flash bug is fixed
 void test_jump_to_application_failure(void) {
-  TEST_ASSERT_OK(initialize_memory(false));
+  // to intialize memory we erase all
+  // the flash pages and intialize it after
+  for (int i = 0; i < NUM_FLASH_PAGES; i++) {
+    flash_erase((FlashPage)i);
+  }
+  TEST_ASSERT_OK(initialize_memory(0));
+
+  // commit the config so we have the updated application crc32 code
   TEST_ASSERT_OK(config_commit(&test_input_config));
 
-  TEST_ASSERT_OK(initialize_memory(true));
+  // now we erase the flash pages and update the memory
+  for (int i = 0; i < NUM_FLASH_PAGES; i++) {
+    flash_erase((FlashPage)i);
+  }
+  TEST_ASSERT_OK(initialize_memory(1));
 
   TEST_ASSERT_OK(jump_to_application_dispatcher_init());
   CanDatagramTxConfig tx_config = {
