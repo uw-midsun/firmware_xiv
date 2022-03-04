@@ -5,6 +5,8 @@
 #include "status.h"
 #include "stdint.h"
 
-// setup the ping response, when a ping is recieved, a response with
-// Datagram Id BOOTLOADER_DATAGRAM_PING_RESPONSE will be sent, with the |board_id| as data.
+// This function registers a dispatcher callback
+// and intializes the jump to application
+// if the application_crc32 code of config matches the computed
+// crc32 of the flash memory
 StatusCode jump_to_application_dispatcher_init();
