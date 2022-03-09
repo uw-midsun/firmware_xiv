@@ -9,28 +9,18 @@
 #include "log.h"
 #include "wait.h"
 
-/*
- * Create a project that reads an ADC converted reading from pin A6
- * whenever a button connected to pin B2 is pressed and logs the output.
- * The adc reading should trigger whenever the button is released,
- * not initially when the button is pressed.
- * Follow the same submission procedures as the firmware 102 homework,
- * except the suffix of the branch should be fw_103.
 
-Hints:
-assume the button is active-high
-
-register an interrupt with the appropriate InterruptEdge settings (google this or ask someone / your
-lead)
-
- */
+static void prv_button_interrupt_callback(const GpioAddress *potentiometer_addr, void *context) {
+  button_data = adc_read_converted_pin(GpioAddress address, uint16_t *reading);
+  LOG_DEBUG("button data: %d\n", );
+};
 
 int main(void) {
   gpio_init();
   gpio_it_init();
   adc_init(ADC_MODE_SINGLE);
 
-  GpioAddress button_addr = {
+  GpioAddress potentiometer_addr = {
     .port = GPIO_PORT_A,
     .pin = 6,
   };
@@ -42,23 +32,16 @@ int main(void) {
     .alt_function = GPIO_ALTFN_ANALOG,
   };
 
-  gpio_init_pin(&button_addr, &pot_settings);
+  gpio_init_pin(&potentiometer_addr, &pot_settings);
 
   InterruptSettings button_interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_HIGH,
   };
 
-  adc_set_channel_pin(button_addr, true);
+  adc_set_channel_pin(potentiometer_addr, true);
 
-  gpio_it_get_edge(&button_addr, INTERRUPT_EDGE_RISING);
-
-  uint16_t button_data = 0;
-  void prv_button_interrupt_callback(const GpioAddress *button_addr, void *context) {
-    LOG_DEBUG("button data: %d\n", button_data);
-  };
-
-  gpio_it_register_interrupt(&button_addr, &button_interrupt_settings, INTERRUPT_EDGE_RISING,
+  gpio_it_register_interrupt(&potentiometer_addr, &button_interrupt_settings, INTERRUPT_EDGE_RISING,
                              &prv_button_interrupt_callback, NULL);
 
   while (true) {
