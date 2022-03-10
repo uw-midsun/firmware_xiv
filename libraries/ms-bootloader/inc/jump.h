@@ -1,5 +1,5 @@
 #pragma once
-
+// This library allows client to jump to an arbitrary memory address
 #include <stdint.h>
 #include <stdnoreturn.h>
 #include <string.h>

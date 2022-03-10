@@ -59,8 +59,9 @@ static void prv_handle_rx(Fsm *fsm, const Event *e, void *context) {
 
   // Process bootloader messages
   if (rx_msg.source_id == SYSTEM_CAN_DEVICE_BOOTLOADER) {
-#ifdef APP_COMP_ON_BOOT
+#ifdef BOOTLOADER_APPLICATIONB  // *NOTE: jump to bootloader does not actually return
     jump_to_bootloader();
+    return;
 #endif
     result = bootloader_can_receive(&rx_msg);
     return;

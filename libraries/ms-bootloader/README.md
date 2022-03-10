@@ -15,6 +15,4 @@
 
 # ms-bootloader
 
-<!--
-    ms-bootloader currently contains the jump_to_bootloader project, which allows an application to jump back to the bootloader on command
->
+ms-bootloader currently contains the jump_to_bootloader project, which allows an application to jump back to the bootloader on command
