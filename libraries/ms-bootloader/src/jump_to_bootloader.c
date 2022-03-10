@@ -10,6 +10,7 @@
 #include "stm32f0xx_syscfg.h"
 
 void jump_to_bootloader(void) {
+#ifdef BOOTLOADER_APPLICATION // don't do anything if we're not in the bootloader/application
   // Disable all interrupts so their is no interference when working with vector tables
   __disable_irq();
 
@@ -27,4 +28,5 @@ void jump_to_bootloader(void) {
   __enable_irq();
   // jump to bootloader
   perform_jump(initial_sp, reset_handler_pc);
+#endif // BOOTLOADER_APPLICATION
 }
