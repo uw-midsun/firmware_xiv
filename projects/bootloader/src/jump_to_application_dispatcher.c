@@ -1,5 +1,6 @@
 #include "jump_to_application_dispatcher.h"
 
+#include <inttypes.h>
 #include <stdint.h>
 
 #include "bootloader_crc32.h"
@@ -39,8 +40,8 @@ static StatusCode prv_jump_to_application_response(uint8_t *data, uint16_t data_
 
   // get the computed crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-  LOG_DEBUG("application crc32 is %lu vs computed crc32 %lu\n\n", config.application_crc32,
-            computed_crc32);
+  LOG_DEBUG("application crc32 is " PRIu32 " vs computed crc32 " PRIu32 "\n\n",
+            config.application_crc32, computed_crc32);
 
   if (config.application_crc32 != computed_crc32) {
     LOG_DEBUG("CRC32 codes do not match!!!\n");
