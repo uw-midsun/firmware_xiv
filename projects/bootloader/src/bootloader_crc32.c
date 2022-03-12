@@ -19,7 +19,7 @@ uint32_t calculate_application_crc32() {
   size_t curr_size = 0;        // memory size that has been read
   uint8_t buffer[BUFFER_LEN];  // buffer for holding 2048 bytes of flash
   uint32_t crc_temp = 0;
-  uint8_t firstByte = 0, secondByte = 0, thirdByte = 0, fourthByte = 0;
+  uint8_t first_byte = 0, second_byte = 0, third_byte = 0, fourth_byte = 0;
 
   while (curr_size < BOOTLOADER_APPLICATION_SIZE) {
     // read from flash
@@ -30,17 +30,17 @@ uint32_t calculate_application_crc32() {
     crc_temp = crc32_arr(buffer, sizeof(buffer[0]) * BUFFER_LEN);
 
     // extact bytes of each buffer value in little endian form
-    firstByte = (crc_temp << 24) >> 24;
-    crc32_codes[crc32_code_number] = firstByte;
+    first_byte = (crc_temp << 24) >> 24;
+    crc32_codes[crc32_code_number] = first_byte;
 
-    secondByte = (crc_temp << 16) >> 24;
-    crc32_codes[crc32_code_number + 1] = secondByte;
+    second_byte = (crc_temp << 16) >> 24;
+    crc32_codes[crc32_code_number + 1] = second_byte;
 
-    thirdByte = (crc_temp << 8) >> 24;
-    crc32_codes[crc32_code_number + 2] = thirdByte;
+    third_byte = (crc_temp << 8) >> 24;
+    crc32_codes[crc32_code_number + 2] = third_byte;
 
-    fourthByte = (crc_temp) >> 24;
-    crc32_codes[crc32_code_number + 3] = fourthByte;
+    fourth_byte = (crc_temp) >> 24;
+    crc32_codes[crc32_code_number + 3] = fourth_byte;
 
     crc32_code_number += 4;
     curr_size += sizeof(buffer);

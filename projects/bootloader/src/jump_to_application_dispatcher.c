@@ -21,6 +21,7 @@ static uint8_t s_status;
 void prv_jump_to_application_tx_cmpl_cb() {
   jump_to_application();
 }
+
 static CanDatagramTxConfig s_response_config = {
   .dgram_type = BOOTLOADER_DATAGRAM_STATUS_RESPONSE,
   .destination_nodes_len = 0,
@@ -38,14 +39,15 @@ static StatusCode prv_jump_to_application_response(uint8_t *data, uint16_t data_
 
   // get the computed crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-  // printf("crc32 is %u vs %u\n\n", config.application_crc32, computed_crc32);
+  LOG_DEBUG("application crc32 is %u vs computed crc32 %u\n\n", config.application_crc32,
+            computed_crc32);
+
   if (config.application_crc32 != computed_crc32) {
     LOG_DEBUG("CRC32 codes do not match!!!\n");
     s_status = FAILURE_STATUS;
     return can_datagram_start_tx(&s_response_config);
   }
 
-  jump_to_application();
   s_status = SUCCESS_STATUS;
   return can_datagram_start_tx(&s_response_config);
 }
