@@ -39,7 +39,7 @@ static StatusCode prv_jump_to_application_response(uint8_t *data, uint16_t data_
 
   // get the computed crc32 code
   uint32_t computed_crc32 = calculate_application_crc32();
-  LOG_DEBUG("application crc32 is %u vs computed crc32 %u\n\n", config.application_crc32,
+  LOG_DEBUG("application crc32 is %lu vs computed crc32 %lu\n\n", config.application_crc32,
             computed_crc32);
 
   if (config.application_crc32 != computed_crc32) {
