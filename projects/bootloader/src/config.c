@@ -1,4 +1,6 @@
 #include "config.h"
+#include "bootloader_crc32.h"
+#include "bootloader_mcu.h"
 #include "crc32.h"
 #include "flash.h"
 #include "log.h"
@@ -7,6 +9,8 @@
 
 // 63 is the maximum controller board ID, so it is easy to tell if it is invalid by setting it to 63
 #define DEFAULT_CONTROLLER_BOARD_ID 63
+
+#define BUFFER_LEN 2048
 
 static PersistStorage s_config_1_persist = { 0 };
 static BootloaderConfig s_config_1_blob = { .crc32 = 0,
@@ -117,6 +121,7 @@ StatusCode config_commit(BootloaderConfig *input_config) {
   }
 
   input_config->crc32 = prv_compute_crc32(input_config);
+  input_config->application_crc32 = calculate_application_crc32();
 
   // This memcpy copies over the input config onto the config page 1
   // This copy is commited into the storage, to change s_config_1_blob

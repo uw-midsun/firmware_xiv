@@ -4,7 +4,10 @@
 #include <stdnoreturn.h>
 #include <string.h>
 
+#include "bootloader_crc32.h"
 #include "bootloader_mcu.h"
+#include "config.h"
+#include "log.h"
 #include "stm32f0xx_misc.h"
 #include "stm32f0xx_syscfg.h"
 
@@ -19,9 +22,6 @@ static noreturn __attribute__((naked)) void prv_perform_jump(uint32_t sp, uint32
 }
 
 void jump_to_application(void) {
-  // TODO(SOFT-413): check that this is safe with a crc of the application code
-  // TODO(SOFT-413): deinitialize any libraries the bootloader uses before doing this
-
   __disable_irq();   // we don't want any interrupts while we're messing with the vector table
   __set_CONTROL(0);  // use MSP (main stack pointer) as the stack pointer
 
