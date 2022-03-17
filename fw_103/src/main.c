@@ -23,22 +23,22 @@ int main(void) {
   gpio_init();
   gpio_it_init();
 
-  static GpioAddress button_addr = {
+  GpioAddress button_addr = {
     .port = GPIO_PORT_B,
     .pin = 2,
   };
 
-  static GpioAddress adc_address = {
+  GpioAddress adc_address = {
     .port = GPIO_PORT_A,
     .pin = 6,
   };
 
-  static InterruptSettings s_interrupt_settings = {
+  InterruptSettings s_interrupt_settings = {
     .type = INTERRUPT_TYPE_INTERRUPT,
     .priority = INTERRUPT_PRIORITY_NORMAL,
   };
 
-  static GpioSettings button_settings = {
+  GpioSettings button_settings = {
     GPIO_DIR_IN,
     GPIO_STATE_HIGH,
     GPIO_RES_NONE,
@@ -54,8 +54,9 @@ int main(void) {
 
   gpio_init_pin(&button_addr, &button_settings);
   gpio_init_pin(&adc_address, &adc_settings);
-  adc_set_channel_pin(adc_address, true);
   adc_init(ADC_MODE_SINGLE);
+  adc_set_channel_pin(adc_address, true);
+
   // AdcChannel adc_channel = NUM_ADC_CHANNELS;
   // adc_get_channel(adc_address, &adc_channel);
   // adc_set_channel(adc_channel, true);
