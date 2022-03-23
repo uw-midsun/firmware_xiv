@@ -6,6 +6,13 @@
 #include "log.h"
 #include "soft_timer.h"
 
+static void prv_interrupt_callback(const GpioAddress *address, void *context) {
+  GpioAddress *ADC_addr = context;
+  uint16_t ADC_reading = 0;
+  adc_read_raw_pin(*ADC_addr, &ADC_reading);
+  LOG_DEBUG("%d\n", ADC_reading);
+}
+
 int main(void) {
   interrupt_init();
   soft_timer_init();
@@ -41,14 +48,13 @@ int main(void) {
 
   gpio_init_pin(&button_addr, &button_settings);
 
-  static void prv_interrupt_callback(const GpioAddress *address, void *context) {
-    uint16_t ADC_reading = 0;
-    adc_read_raw_pin(ADC_addr, &ADC_reading);
-    LOG_DEBUG(%d\n, ADC_reading);
-  }
-
   gpio_it_register_interrupt(&button_addr, &interrupt_settings, INTERRUPT_EDGE_FALLING,
-                             prv_interrupt_callback, NULL);
+                             prv_interrupt_callback, &ADC_addr);
+
+  while (true) {
+    delay_ms(1000);
+    gpio_it_trigger_interrupt(&button_addr);
+  }
 
   return 0;
 }
