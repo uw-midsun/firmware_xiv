@@ -66,6 +66,7 @@ StatusCode uart_init(UartPort uart, UartSettings *settings, UartStorage *storage
   gpio_init_pin(&settings->tx, &gpio_settings);
   gpio_init_pin(&settings->rx, &gpio_settings);
 
+  USART_DeInit(s_port[uart].base);  
   USART_InitTypeDef usart_init;
   USART_StructInit(&usart_init);
   usart_init.USART_BaudRate = settings->baudrate;
@@ -144,6 +145,7 @@ static void prv_handle_irq(UartPort uart) {
   }
 
   if (USART_GetITStatus(s_port[uart].base, USART_IT_RXNE) == SET) {
+    GPIO_WriteBit(GPIOB, 0x01 << 4, (BitAction)1);
     prv_rx_push(uart);
   }
 
