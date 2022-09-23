@@ -20,7 +20,7 @@ cantools==35.5.0
 # MPXE
 python-can==3.3.3
 # cantools==35.3.0
-protobuf==3.15.0
+protobuf==3.18.3
 
 # Codegen
 Mako==1.0.6
