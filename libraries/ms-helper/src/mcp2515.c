@@ -274,7 +274,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
                  MCP2515_CANCTRL_OPMODE_CONFIG | MCP2515_CANCTRL_CLKOUT_CLKPRE_4);
 
   // set RXB0 ctrl BUKT bit on to enable rollover to rx1
-  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);
+  prv_bit_modify(storage, MCP2515_CTRL_REG_RXB0CTRL, 1 << 3, 1 << 3);  // Replace the magic numbers
 
   prv_configure_filters(storage, settings->filters);
 
@@ -310,6 +310,7 @@ StatusCode mcp2515_init(Mcp2515Storage *storage, const Mcp2515Settings *settings
   prv_bit_modify(storage, MCP2515_CTRL_REG_CANCTRL, MCP2515_CANCTRL_OPMODE_MASK, opmode);
   // Active-low interrupt pin
   const GpioSettings gpio_settings = {
+    // potentially set up the rest of the fields
     .direction = GPIO_DIR_IN,
   };
 
