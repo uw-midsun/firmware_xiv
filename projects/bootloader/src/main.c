@@ -8,6 +8,7 @@
 #include "flash.h"
 #include "interrupt.h"
 #include "jump_to_application.h"
+#include "jump_to_bootloader.h"
 #include "log.h"
 #include "ping.h"
 #include "query.h"

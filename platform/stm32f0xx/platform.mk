@@ -44,6 +44,7 @@ endif
 DEFAULT_LINKER_SCRIPT ?= stm32f0_default.ld
 ifeq ($(MAKECMDGOALS),temp-bootloader-write)
 DEFAULT_LINKER_SCRIPT := stm32f0_application.ld
+CFLAGS += -DBOOTLOADER_APPLICATION
 endif
 
 # Device openocd config file

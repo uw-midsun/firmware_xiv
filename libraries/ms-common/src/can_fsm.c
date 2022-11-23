@@ -1,9 +1,11 @@
 #include "can_fsm.h"
+
 #include "bootloader_can.h"
 #include "can.h"
 #include "can_hw.h"
 #include "can_msg_defs.h"
 #include "can_rx.h"
+#include "jump_to_bootloader.h"
 
 FSM_DECLARE_STATE(can_rx_fsm_handle);
 FSM_DECLARE_STATE(can_tx_fsm_handle);
@@ -57,6 +59,10 @@ static void prv_handle_rx(Fsm *fsm, const Event *e, void *context) {
 
   // Process bootloader messages
   if (rx_msg.source_id == SYSTEM_CAN_DEVICE_BOOTLOADER) {
+#ifdef BOOTLOADER_APPLICATION  // *NOTE: jump to bootloader does not actually return
+    jump_to_bootloader();
+    return;
+#endif
     result = bootloader_can_receive(&rx_msg);
     return;
   }

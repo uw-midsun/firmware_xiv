@@ -13,7 +13,7 @@ $(T)_SRC := $(wildcard $($(T)_SRC_ROOT)/src/*.c) \
 
 $(T)_INC_DIRS += $($(T)_DIR)/protogen
 
-$(T)_DEPS := ms-common ms-helper nanopb
+$(T)_DEPS := ms-common ms-helper nanopb ms-bootloader
 
 $(T)_LINKER_SCRIPT := stm32f0_bootloader.ld
 $(T)_test_config_MOCKS := persist_init

@@ -5,16 +5,5 @@
 # $(T)_INC_DIRS: $(T)_DIR/inc{/$(PLATFORM)}
 # $(T)_SRC: $(T)_DIR/src{/$(PLATFORM)}/*.{c,s}
 
-$(T)_DEPS := $(PLATFORM_LIB) libcore
-ifneq (,$(IS_MU))
-$(T)_DEPS += mu-gen mu-store
-endif
-
-$(T)_DEPS += ms-bootloader
-
-ifeq (x86,$(PLATFORM))
-$(T)_EXCLUDE_TESTS := pwm pwm_input
-$(T)_CFLAGS += -DX86
-else 
-$(T)_EXCLUDE_TESTS := wait
-endif
+# Specify the libraries you want to include
+$(T)_DEPS := 
