@@ -1,5 +1,5 @@
 # General/CI
-setuptools==58.3.0
+setuptools==65.5.1
 
 # Code Quality
 astroid==2.5.3
